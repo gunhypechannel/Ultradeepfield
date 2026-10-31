@@ -6015,11 +6015,12 @@ function drawClashes(W, t, T) {
     /* v194 in a demo battle every commander's fleet in the rings fights too: fleets take turns firing at the nearest enemy fleet */
     if (live && atCube && G.cubeDemo && W.fleets) { if (!W.dmT || tn - W.dmT > 500) { W.dmT = tn; W.dmA = []; W.dmD = []; for (const [fid, fo] of W.fleets) if (/^dm[AD]/.test(fid) && fo.grp && fo.grp.visible && fo.grp.userData.slots) (fid[2] === "A" ? W.dmA : W.dmD).push(fo.grp); }
       const LA = W.dmA, LD = W.dmD; if (LA.length && LD.length) for (let s2 = 0; s2 < (MOBILE ? 5 : 9); s2++) { const fromA = Math.random() < .55, own = fromA ? LA : LD, foe = fromA ? LD : LA, sg = own[(fromA ? (o.ja = (o.ja || 0) + 1) : (o.jd = (o.jd || 0) + 1)) % own.length];
-        let dg = null, dd = 1e9; for (let j = 0; j < 5; j++) { const cand = foe[(Math.random() * foe.length) | 0], d2 = cand.position.distanceToSquared(sg.position); if (d2 < dd) { dd = d2; dg = cand; } }
-        const ss = alive(sg), ds = dg ? alive(dg) : []; if (!ss.length || !ds.length) continue; wpos(sg, ss[(Math.random() * ss.length) | 0], V); wpos(dg, ds[(Math.random() * ds.length) | 0], V2);
-        o.bl.push({ a: V.clone(), b: V2.clone(), t0: tn, col: fromA ? [1, .35, .3] : [.4, 1, 1] }); } }
+        let dg = null, dd = 1e9; for (let j = 0; j < 12; j++) { const cand = foe[(Math.random() * foe.length) | 0], d2 = cand.position.distanceToSquared(sg.position); if (d2 < dd) { dd = d2; dg = cand; } }
+        if (!dg || dd > 4900) continue; /* only at enemies in range: no shots across the whole battlefield */
+        const ss = alive(sg), ds = alive(dg); if (!ss.length || !ds.length) continue; wpos(sg, ss[(Math.random() * ss.length) | 0], V); wpos(dg, ds[(Math.random() * ds.length) | 0], V2);
+        o.bl.push({ a: V.clone(), b: V2.clone(), t0: tn, L: V.distanceTo(V2), col: fromA ? [1, .35, .3] : [.4, 1, 1] }); } }
     o.bl = o.bl.filter(b => tn - b.t0 < 320); let n = 0;
-    for (const b of o.bl) { if (n >= 240) break; const s0 = (tn - b.t0) / 320, s1 = Math.min(1, s0 + .22); P.set([b.a.x + (b.b.x - b.a.x) * s0, b.a.y + (b.b.y - b.a.y) * s0, b.a.z + (b.b.z - b.a.z) * s0, b.a.x + (b.b.x - b.a.x) * s1, b.a.y + (b.b.y - b.a.y) * s1, b.a.z + (b.b.z - b.a.z) * s1], n * 6);
+    for (const b of o.bl) { if (n >= 240) break; const s0 = (tn - b.t0) / 320, s1 = Math.min(1, s0 + (b.L ? Math.min(.22, 3.5 / b.L) : .22)); /* long shots draw a short bolt, not a line */ P.set([b.a.x + (b.b.x - b.a.x) * s0, b.a.y + (b.b.y - b.a.y) * s0, b.a.z + (b.b.z - b.a.z) * s0, b.a.x + (b.b.x - b.a.x) * s1, b.a.y + (b.b.y - b.a.y) * s1, b.a.z + (b.b.z - b.a.z) * s1], n * 6);
       C.set([b.col[0] * .5, b.col[1] * .5, b.col[2] * .5, b.col[0], b.col[1], b.col[2]], n * 6); if (s1 >= 1 && Math.random() < .35) { const sb = o.booms.find(x => tn - x.t0 > 700); if (sb) { sb.t0 = tn; sb.sp.position.copy(b.b); sb.big = 0; } } n++; }
     o.bolts.geometry.setDrawRange(0, n * 2); o.bolts.geometry.attributes.position.needsUpdate = true; o.bolts.geometry.attributes.color.needsUpdate = true;
     if (k > .88 && !o.ended) { o.ended = 1; const win = c.winner === c.you; (W.bursts = W.bursts || []).push({ p: new TH.Vector3(q.x, q.y + 3, q.z), t: tn, col: c.winner === "draw" ? "#ffd66a" : win ? "#7be39a" : "#ff6b5a", txt: c.winner === "draw" ? "Stalemate" : c.you ? (win ? "Victory!" : "Defeat") : "Battle over" }); }
