@@ -665,7 +665,7 @@ canvas.dthumb{display:block}
 .qbar{display:flex;gap:6px;padding:5px 10px 7px;overflow-x:auto;scrollbar-width:none;background:rgba(3,12,20,.55)}.qbar::-webkit-scrollbar{display:none}
 .qc{flex:1.5 1 0;min-width:0;display:flex;align-items:center;gap:5px;padding:4px 8px;border-radius:9px;border:1px solid #1f4a66;background:rgba(14,36,52,.75);color:#cfe7f3;font-family:var(--f-display);font-size:11px;cursor:pointer;white-space:nowrap}
 .qc svg{flex:none;width:14px;height:14px;color:var(--cyan)}.qc .qn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;text-align:left}.qc b{flex:none;color:var(--cyan);font-weight:600}.qc i{font-style:normal;color:var(--muted)}
-.qc.idle{flex:1 1 0;border-color:rgba(240,169,69,.55);color:var(--amber);animation:pulse 2.4s infinite}.qc.idle svg,.qc.idle b{color:var(--amber)}.rstrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.rstrow>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rstrow small{color:var(--muted);font-size:12px}.qc.free{border-color:#f0a945;background:linear-gradient(180deg,rgba(255,211,107,.28),rgba(240,169,69,.16));color:#ffe3a3;animation:none}.qc.free svg,.qc.free b{color:#ffd36b}.qc.free.all{flex:0 0 auto;font-weight:700}
+.qc.idle{flex:1 1 0;border-color:rgba(240,169,69,.55);color:var(--amber);animation:pulse 2.4s infinite}.qc.idle svg,.qc.idle b{color:var(--amber)}#sessw{position:fixed;inset:0;z-index:250;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(2,6,12,.82)}#sessw .sessbox{max-width:360px;background:linear-gradient(180deg,#11202d,#0b1520);border:1px solid #2c5468;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px;color:#d5e4ec}#sessw b{font:700 18px var(--f-display);color:#55d6e8}#sessw p{margin:0;font-size:14px;color:#9fc3d4}.rstrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.rstrow>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rstrow small{color:var(--muted);font-size:12px}.qc.free{border-color:#f0a945;background:linear-gradient(180deg,rgba(255,211,107,.28),rgba(240,169,69,.16));color:#ffe3a3;animation:none}.qc.free svg,.qc.free b{color:#ffd36b}.qc.free.all{flex:0 0 auto;font-weight:700}
 .vols{display:flex;flex-direction:column;gap:6px;margin:6px 0}.vrow{display:grid;grid-template-columns:96px 1fr 44px;align-items:center;gap:10px;font-size:14px;color:#eef3f6}
 .vrow input{width:100%;accent-color:var(--cyan);height:28px}.vrow b{font-family:var(--f-display);font-size:13px;color:var(--cyan);text-align:right}.vrow input:disabled{opacity:.4}
 .toast{background:rgba(11,21,32,.96);border:1px solid var(--line-hi);border-left:3px solid var(--cyan);padding:8px 12px;font-size:14px;animation:up .2s ease-out;box-shadow:0 6px 18px rgba(0,0,0,.5)}
@@ -4094,6 +4094,10 @@ function progress() {
 const KEY = "novaDominion.save.v1";
 const store = { db: null, uid: null, dirty: false, writing: false, mode: "device", lastPlayer: "", ready: false }; // v200: ready once the account save has been read
 const dirty = () => { store.dirty = true; };
+const SESS = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+function sessTakeover() { if (store.paused) return; store.paused = true; let el = document.getElementById("sessw"); if (el) return; el = document.createElement("div"); el.id = "sessw";
+  el.innerHTML = `<div class="sessbox"><b>Playing on another device</b><p>Your empire was just saved from another phone, tablet or browser. This copy stopped saving so it can't overwrite that progress.</p><button class="btn wide" id="sessgo">Continue here</button></div>`;
+  document.body.appendChild(el); el.querySelector("#sessgo").onclick = () => location.reload(); }
 async function flush() {
   syncPlayer();
   if (!store.dirty || store.writing) return;
@@ -4103,7 +4107,7 @@ async function flush() {
   try { localStorage.setItem(KEY, json); localStorage.setItem(KEY + ".sig", sig); if (Date.now() - SEC.bakT > 300000 && !SEC.blocked) { SEC.bakT = Date.now(); localStorage.setItem(KEY + ".bak", json); localStorage.setItem(KEY + ".bak.sig", sig); } } catch (e) {}
   if (cloudOk) {
     store.writing = true;
-    try { await store.db.doc(`data/users/${store.uid}/save`).set({ v: 3, savedAt: S.savedAt, json, sig }); store.mode = "cloud"; srvBackup(json, sig); }
+    try { if (store.paused) { store.writing = false; return; } await store.db.doc(`data/users/${store.uid}/save`).set({ v: 3, savedAt: S.savedAt, json, sig, sess: SESS }); store.mode = "cloud"; srvBackup(json, sig); }
     catch (e) { if (e && (e.code === "invalid_argument" || e.code === "revoked" || e.code === "not_granted")) { store.db = null; store.mode = "device"; } else store.dirty = true; }
     finally { store.writing = false; }
   }
@@ -4297,9 +4301,13 @@ async function connectCloud() {
           else if (behind) toast("Your account's save was behind this device. This device's empire was kept and saved to your account.", "warn"); } }
       else if (foreign) { try { localStorage.setItem(KEY + ".device", JSON.stringify(S)); } catch (e) {}
         const hn = S.homeName; S = newState(); FOG = null; S.homeName = hn; live = false; advance(now()); live = true; view = "base"; rebuild(); render(true); intro(); toast("New account: a fresh homeworld is ready for you."); }
-      S.uid = uid;
+      S.uid = uid; if (snap && snap.exists) S.cloudAt = Math.max(S.cloudAt || 0, +(snap.data() || {}).savedAt || 0); /* v204: the save already on the server is not "another device" */
     } catch (e) {}
     store.ready = true;
+    /* v204: if your empire is saved from another device while this one is open, this copy stops saving (two open copies used to save
+       over each other every few seconds, so progress and alliances flipped back and forth) and asks you to continue here */
+    try { db.doc(`data/users/${uid}/save`).onSnapshot(s3 => { const v = s3 && s3.exists ? s3.data() : null; if (!v || !v.sess || v.sess === SESS || store.paused) return;
+      if ((+v.savedAt || 0) > (S.cloudAt || 0)) sessTakeover(); }, () => {}); } catch (e) {}
     if (G.askFac) G.askFac(); // v138: the cloud save is in (or there is none): now ask for a faction only if this empire never chose one
     store.mode = "cloud"; dirty();
     let gotP = false, gotPl = false;
@@ -4346,7 +4354,11 @@ async function connectCloud() {
     db.doc("inbound/" + uid).onSnapshot(snap => { G.inbound = snap.exists && Array.isArray(snap.data().items) ? snap.data().items.map(cleanInbound).filter(Boolean) : []; radarSweep(); softRender(); redAlert(); }, () => {});
     db.collection("alliances").limit(300).onSnapshot(snap => {
       const o = {}; for (const d of snap.docs) { const a = cleanAlly(d.id, d.data()); if (a) o[d.id] = a; } G.alliances = o;
-      if (S.ally && (!o[S.ally] || !o[S.ally].members[G.me])) { S.ally = null; dirty(); }
+      if (S.ally && (!o[S.ally] || !o[S.ally].members[G.me])) { const aid = S.ally; /* v204: the list can come from the device's cache or be cut short;
+          only the alliance's own record decides. It used to drop you on any list that lacked it, so you kept having to found it again */
+        if (!o[aid] && G.allyKeep && G.allyKeep.id === aid) G.alliances[aid] = G.allyKeep; /* keep showing it while the server is asked */ db.doc("alliances/" + aid).get().then(s2 => { const a2 = s2.exists ? cleanAlly(aid, s2.data()) : null;
+          if (a2 && a2.members[G.me]) { G.alliances[aid] = a2; helpApply(); softRender(); } else if (S.ally === aid) { S.ally = null; dirty(); softRender(); } }).catch(() => {}); }
+      if (S.ally && G.alliances[S.ally]) G.allyKeep = G.alliances[S.ally];
       helpApply(); chatInit(); softRender();
     }, () => {});
     db.doc("event/nexus").onSnapshot(s => { G.nexus = s.exists ? cleanNexus(s.data()) : null; softRender(); }, () => {});
