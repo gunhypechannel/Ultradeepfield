@@ -4102,9 +4102,10 @@ async function flush() {
   }
 }
 function syncPlayer() {
+  if (S && S.cname) G.myName = S.cname;
   if (G.mode !== "online" || !G.db || !G.me || !G.myHome) return;
   const d = { joined: G.joinedAt, last: Math.floor(now() / 600000) * 600000, score: score(), wins: S.wins, planets: myPlanets().length, home: G.myHome, ally: S.ally || null,
-    tech: { weapons: S.r.weapons, shields: S.r.shields, armor: S.r.armor, esp: S.r.espionage || 0 }, pvp: (S.pvp || {}).pts || 0, rec: S.rec || { w: 0, l: 0, d: 0 }, bio: (S.bio || "").slice(0, 160), fac: facOf(), lvl: cmdLevel(score()), ast: S.r.astro || 0, av: S.avatar || null, mv: myMoves(), cf: secFlag(), sh: hash(G.me) % SHARDS, gw: S.gw && S.gw.i === gwIdx(now()) ? { i: S.gw.i, p: S.gw.pts } : null };
+    tech: { weapons: S.r.weapons, shields: S.r.shields, armor: S.r.armor, esp: S.r.espionage || 0 }, pvp: (S.pvp || {}).pts || 0, rec: S.rec || { w: 0, l: 0, d: 0 }, bio: (S.bio || "").slice(0, 160), nm: S.cname || "", fac: facOf(), lvl: cmdLevel(score()), ast: S.r.astro || 0, av: S.avatar || null, mv: myMoves(), cf: secFlag(), sh: hash(G.me) % SHARDS, gw: S.gw && S.gw.i === gwIdx(now()) ? { i: S.gw.i, p: S.gw.pts } : null };
   const j = JSON.stringify(d); if (j === store.lastPlayer) return; store.lastPlayer = j;
   serial("me", () => G.db.doc("players/" + G.me).set(d).catch(() => { store.lastPlayer = ""; }));
 }
@@ -4258,7 +4259,7 @@ async function connectCloud() {
     const uid = await user.id(); if (!uid) return initOffline();
     store.db = db; store.uid = uid; G.db = db; G.user = user; G.me = uid;
     ownerCheck(user); // the game's owner has every premium skin unlocked
-    try { G.myName = (await user.me()).name || ""; } catch (e) {}
+    try { G.myName = (await user.me()).name || ""; } catch (e) {} if (S && S.cname) G.myName = S.cname;
     try {
       const snap = await db.doc(`data/users/${uid}/save`).get();
       if (snap.exists) { const d = snap.data();
@@ -4277,7 +4278,7 @@ async function connectCloud() {
       for (let k = 0; k < SHARDS; k++) db.collection(coll).where("sh", "==", k).limit(1000).onSnapshot(s => { parts[k] = s; took(s); merge(); }, () => {}); };
     shardSub("players", snaps => {
       const o = {}; for (const snap of snaps) for (const d of snap.docs) { if (o[d.id]) continue; const v = d.data(); if (v && typeof v === "object") o[d.id] = { score: okInt(v.score), wins: okInt(v.wins), planets: okInt(v.planets), last: +v.last || 0, joined: +v.joined || 0, home: typeof v.home === "string" ? v.home : null, ally: typeof v.ally === "string" ? v.ally : null, tech: { weapons: okInt((v.tech || {}).weapons), shields: okInt((v.tech || {}).shields), armor: okInt((v.tech || {}).armor), esp: okInt((v.tech || {}).esp) },
-        pvp: okInt(v.pvp), rec: { w: okInt((v.rec || {}).w), l: okInt((v.rec || {}).l), d: okInt((v.rec || {}).d) }, bio: typeof v.bio === "string" ? v.bio.slice(0, 160) : "", fac: FACTIONS[v.fac] ? v.fac : "terran", lvl: okInt(v.lvl), ast: v.ast == null ? 18 : okInt(v.ast), av: typeof v.av === "string" && (v.av === "photo" || AV_IDS.includes(v.av) || /^[fmac][0-3]$/.test(v.av)) ? v.av : null, mv: cleanMv(v.mv), gw: v.gw && Number.isInteger(v.gw.i) ? { i: v.gw.i, p: okInt(v.gw.p) } : null }; }
+        pvp: okInt(v.pvp), rec: { w: okInt((v.rec || {}).w), l: okInt((v.rec || {}).l), d: okInt((v.rec || {}).d) }, bio: typeof v.bio === "string" ? v.bio.slice(0, 160) : "", nm: typeof v.nm === "string" ? v.nm.replace(/[\u0000-\u001f<>]/g, "").slice(0, 20) : "", fac: FACTIONS[v.fac] ? v.fac : "terran", lvl: okInt(v.lvl), ast: v.ast == null ? 18 : okInt(v.ast), av: typeof v.av === "string" && (v.av === "photo" || AV_IDS.includes(v.av) || /^[fmac][0-3]$/.test(v.av)) ? v.av : null, mv: cleanMv(v.mv), gw: v.gw && Number.isInteger(v.gw.i) ? { i: v.gw.i, p: okInt(v.gw.p) } : null }; }
       G.players = o; gotP = true; if (gotPl) maybeJoin(); refreshNames(); softRender();
     });
     shardSub("planets", (snaps, chg) => {
@@ -4387,7 +4388,7 @@ let namesBusy = false;
 async function refreshNames() {
   if (!G.user || namesBusy) return; namesBusy = true;
   try { const ids = Object.keys(G.players); if (!ids.length) return; const ps = await G.user.profiles(ids); let ch = false;
-    for (const id of ids) { const n = (ps[id] && ps[id].name) || ""; if (G.names[id] !== n) { G.names[id] = n; ch = true; } }
+    for (const id of ids) { const n = (G.players[id] && G.players[id].nm) || (ps[id] && ps[id].name) || ""; /* v191: a chosen commander name wins over the account name */ if (G.names[id] !== n) { G.names[id] = n; ch = true; } }
     if (ch) softRender(); } catch (e) {} finally { namesBusy = false; }
 }
 const nameOf = uid => !uid ? "Hive" : uid === G.me ? "You" : isBot(uid) ? BOT_BY[uid].name + (BOT_HOSTILE ? " (bot)" : " (ally)") : (G.names[uid] || "Unnamed commander");
@@ -11844,6 +11845,7 @@ const TUT = [
   { lv: 4, t: "Reach Commander Level 4", say: "Keep upgrading your mines and winning fights. Every resource you spend earns experience.", ok: () => cmdLevel(score()) >= 4, go: { v: "build", s: "res" }, path: bPath("metalMine", "res"), rw: { m: 3000, c: 2000, g: 1000, shards: 5 } }
 ];
 const tutOn = () => S && S.tut && !S.tut.off && S.tut.i < TUT.length;
+const TUT_SNOOZE = 5 * 60000, tutSnoozed = () => !!(S && S.tut && S.tut.snz > now());
 function tutShow() {
   const st = TUT[S.tut.i]; if (!st) return;
   if (st.go) { if (sheet) closeSheet(); ACT.nav(st.go); if (st.rcat) { sub.rcat = st.rcat; render(); } }
@@ -11867,7 +11869,7 @@ function guideVisible(el) {
   const cy = r.top + r.height / 2; if (top.closest("#dock") || cy > innerHeight - 160 || cy < 130) return 2; return 0; // tucked under the dock or top bar: scroll it into view
 }
 function guidePick() {
-  const st = tutOn() && G.ready && !battle && !advLines && !$("#adv") && !$("#authw") && !(sheet && sheet.type === "faction") ? TUT[S.tut.i] : null; if (!st) return null;
+  const st = tutOn() && !tutSnoozed() && G.ready && !battle && !advLines && !$("#adv") && !$("#authw") && !(sheet && sheet.type === "faction") ? TUT[S.tut.i] : null; if (!st) return null;
   const path = st.ok(S) ? [['#coach [data-act="tutClaim"], #coach .cpill', "Collect your reward"]] : st.path ? st.path() : [SHOWME];
   for (const [sel, label, when] of path) { if (when && !when()) continue; for (const el of document.querySelectorAll(sel)) { if (el.classList.contains("on") || (el.disabled && /^(boost|finish)$/.test(el.dataset.act || ""))) continue; /* a tab already open, or a speed-up you can't use */ const v = guideVisible(el); if (v) return { el, label, v }; } }
   const cx = sheet && document.querySelector('.sheet [data-act="close"]'); if (cx && guideVisible(cx)) return { el: cx, label: "Close this to continue", v: 1 }; // something is in the way: close it first
@@ -11906,10 +11908,11 @@ let coachHtml = "";
 function coachRender(force) {
   if (!S) return; if (!S.tut) S.tut = { i: S.intro && score() > 200 ? TUT.length : 0, open: 1 }; // veterans skip the Academy
   if (view === "mail" && !S.tutMail) { S.tutMail = 1; dirty(); }
-  let w = $("#coach"); const on = tutOn() && !battle && G.ready;
+  if (S.tut.snz && S.tut.snz <= now()) { S.tut.snz = 0; S.tut.open = 1; dirty(); force = true; } /* v191: back after a 5-minute break, opened up */
+  let w = $("#coach"); const on = tutOn() && !battle && G.ready && !tutSnoozed();
   if (!on) { if (w) w.remove(); coachHtml = ""; return; }
   const st = TUT[S.tut.i], done = st.ok(S), lv = cmdLevel(score()), open = S.tut.open && !sheet && !advLines;
-  const html = open ? `<div class="cbox${done ? " done" : ""}"><div class="chd"><img class="cav" src="${ADV_BUST}" alt="${ADV}"><div class="cti"><small>ADVISOR · FLIGHT ACADEMY · STEP ${S.tut.i + 1} OF ${TUT.length}</small><b>${esc(st.t)}</b></div><button class="cx" data-act="tutMin" aria-label="Minimise the Academy">–</button></div>
+  const html = open ? `<div class="cbox${done ? " done" : ""}"><div class="chd"><img class="cav" src="${ADV_BUST}" alt="${ADV}"><div class="cti"><small>ADVISOR · FLIGHT ACADEMY · STEP ${S.tut.i + 1} OF ${TUT.length}</small><b>${esc(st.t)}</b></div><button class="cx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button></div>
       <p>${done ? "Done! Collect your reward." : esc(st.say)}</p>
       <div class="cbar"><i style="width:${Math.min(100, S.tut.i / TUT.length * 100)}%"></i></div><div class="clv">Commander Lv.${lv} → <b>Lv.5</b> · reward ${fmt((st.rw.m || 0) + (st.rw.c || 0) + (st.rw.g || 0))} res${st.rw.shards ? ` · ◆${st.rw.shards}` : ""}</div>
       <div class="cbt">${done ? `<button class="btn amber" data-act="tutClaim">Collect reward</button>` : `<button class="btn" data-act="tutShow">Show me</button>`}<button class="btn ghost sm" data-act="tutSkip">Skip tutorial</button></div></div>`
@@ -13039,6 +13042,7 @@ function shProfile() {
   const online = !me && P.last > now() - 15 * 60000;
   return `<div class="hd">${avCanvas(uid, "avc big")}<div style="flex:1;min-width:0"><div class="chapter" style="color:${F.acc}">${F.n}${online ? ' · <span style="color:var(--green)">● online</span>' : ""}</div><h2>${esc(nm)}</h2><p class="note">${titleOf(lvl)} · Level ${lvl} ${tierBadge(P.score || 0)} ${tierBadge(P.pvp || 0, PVP_T)}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
     ${me ? `<div class="row2"><button class="btn wide" data-act="avatars">Change avatar</button><button class="btn ghost wide" data-act="achOpen">✦ Achievements · ${fmt(achPts())} AP</button></div>` : ""}
+    ${me ? `<h2 class="sec">Commander name</h2><div class="cnrow"><input class="minput" id="cnin" maxlength="20" autocomplete="nickname" value="${esc(G.myName || "")}" placeholder="Your commander name"><button class="btn" data-act="nameSave">Save</button></div><p class="note">Every commander in the galaxy sees this name.</p>` : ""}
     ${me ? `<h2 class="sec">Bio</h2><textarea class="minput" id="bioin" maxlength="160" rows="5" placeholder="Write a short bio other commanders will see on your card">${esc(S.bio || "")}</textarea><button class="btn wide" data-act="bioSave">Save bio</button>` : `<h2 class="sec">Bio</h2><p class="bio">${P.bio ? esc(P.bio) : '<span class="note">No bio yet.</span>'}</p>`}
     <div class="pstats"><div><b>${fmt(rec.w)}</b><small>Wins</small></div><div><b>${fmt(rec.l)}</b><small>Losses</small></div><div><b>${fmt(rec.d)}</b><small>Draws</small></div><div><b>${tot ? Math.round(rec.w / tot * 100) : 0}%</b><small>Win rate</small></div></div>
     <dl class="kv"><dt>Leaderboard</dt><dd>${rk ? "#" + rk : "–"} by score · ${rp ? "#" + rp : "–"} in PvP</dd><dt>Score</dt><dd>${fmt(P.score || 0)}</dd><dt>PvP points</dt><dd>${fmt(P.pvp || 0)}</dd><dt>Worlds</dt><dd>${P.planets || 1}</dd>${P.ally && G.alliances[P.ally] ? `<dt>Alliance</dt><dd>${esc(allyTag(P.ally))}</dd>` : ""}</dl>
@@ -13392,10 +13396,10 @@ const ACT = {
   },
   find: d => { G.find = d.r; if (view !== "galaxy") { view = "galaxy"; render(); } else mapOverlay(); openSheet({ type: "find" }); },
   findClear: () => { G.find = null; closeSheet(); mapOverlay(); },
-  tutShow: () => { S.tut.open = 0; dirty(); coachRender(true); tutShow(); },
+  tutShow: () => { S.tut.open = 0; S.tut.snz = 0; dirty(); coachRender(true); tutShow(); },
   tutClaim: () => tutClaim(),
-  tutMin: () => { S.tut.open = 0; dirty(); coachRender(true); },
-  tutOpen: () => { S.tut.open = 1; dirty(); coachRender(true); },
+  tutMin: () => { S.tut.open = 0; S.tut.snz = now() + TUT_SNOOZE; dirty(); coachRender(true); toast("Academy hidden. It'll pop back up in 5 minutes, or open it any time from the Quests tab."); },
+  tutOpen: () => { S.tut.open = 1; S.tut.snz = 0; dirty(); coachRender(true); },
   tutSkip: () => { if (!confirm("Skip the Flight Academy? You can't restart it.")) return; S.tut.off = 1; dirty(); coachRender(true); toast("Academy skipped. The Advisor and your quests on the Quests tab still guide you."); },
   fleetMap: d => { closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } // v98: wait for the map to be ready, then fly to the fleet and follow it
     let tries = 0; const go = () => { if (!G3 || !G3.cam) { if (tries++ < 50) setTimeout(go, 100); return; } const f = S.fleets.find(x => x.id === d.id); if (!f) return toast("That fleet has landed.", "warn");
@@ -13649,6 +13653,12 @@ const ACT = {
   unfriend: d => { S.friends = (S.friends || []).filter(u => u !== d.u); dirty(); render(true); },
   block: d => { S.blocked = (S.blocked || []).concat(d.u).filter((u, i, a) => a.indexOf(u) === i); dirty(); toast("Blocked. You won't see their messages."); render(true); },
   unblock: d => { S.blocked = (S.blocked || []).filter(u => u !== d.u); dirty(); render(true); },
+  nameSave: () => { const v = (($("#cnin") || {}).value || "").replace(/[\u0000-\u001f<>]/g, "").replace(/\s+/g, " ").trim();
+    if (v.length < 2 || v.length > 20) return toast("Pick a name of 2 to 20 characters.", "warn");
+    if (!/^[\p{L}\p{N} ._'-]+$/u.test(v)) return toast("Use letters, numbers, spaces and . _ ' - only.", "warn");
+    const low = v.toLowerCase(); if (["you", "hive", "unnamed commander", "commander", "admin", "advisor"].includes(low) || BOTS.some(b => b.name.toLowerCase() === low)) return toast("That name is reserved. Try another.", "warn");
+    if (Object.entries(G.names).some(([id, n]) => id !== G.me && (n || "").toLowerCase() === low)) return toast("Another commander already uses that name.", "warn");
+    if (v === S.cname) return; S.cname = v; G.myName = v; dirty(); syncPlayer(); toast(`You are now Commander ${v}.`, "win"); render(true); },
   bioSave: () => { const v = (($("#bioin") || {}).value || "").replace(/[\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 160); S.bio = v; dirty(); syncPlayer(); toast("Bio saved.", "win"); render(true); },
   allyOpen: () => { closeSheet(); ACT.nav({ v: "ally" }); },
   askHelp: () => { const a = myAlly(), job = myJob(); if (!a || !job || !G.db) return toast("Join an alliance and start a construction first.", "warn");
@@ -14107,6 +14117,7 @@ setTimeout(() => boot((window.claude && window.claude.hot && window.claude.hot.d
 <style>
 #fbBtn{position:fixed;left:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 72px);z-index:65;display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:18px;border:1px solid rgba(127,230,243,.45);background:rgba(6,18,30,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#bff3fa;font:600 12px "Oxanium",sans-serif;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 4px 14px rgba(0,0,0,.45);opacity:.85;touch-action:manipulation}
 #fbBtn:active{opacity:1}
+.cnrow{display:flex;gap:8px;align-items:stretch}.cnrow .minput{flex:1;min-width:0}.cnrow .btn{flex:none}
 body:has(.sheet) #fbBtn,body:has(#adv) #fbBtn,body:has(#udfAuth) #fbBtn{display:none}
 #fbW{position:fixed;inset:0;z-index:95;display:none;align-items:flex-end;justify-content:center;background:rgba(2,6,12,.6)}
 #fbW.on{display:flex}
