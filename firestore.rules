@@ -7,8 +7,19 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     function isOwner() { return signedIn() && request.auth.uid in ['OWNER_UID']; }
 
-    // each commander's saved empire: private to that commander
-    match /data/users/{uid}/{rest=**} {
+    // each commander's saved empire: private to that commander.
+    // The server keeps saves in order: every save carries the next number (seq), so a stale copy open on another device
+    // can't save over newer progress. A save that would wipe out more than half of a built-up empire is refused unless
+    // the game marks it as deliberate (starting over, restoring a backup, importing).
+    match /data/users/{uid}/save {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn() && request.auth.uid == uid;
+      allow update: if signedIn() && request.auth.uid == uid
+        && (!('seq' in resource.data) || request.resource.data.get('seq', 0) == resource.data.seq + 1)
+        && (!('lv' in resource.data) || resource.data.lv < 10 || request.resource.data.get('shrink', false) == true
+            || request.resource.data.get('lv', 0) * 2 >= resource.data.lv);
+    }
+    match /data/users/{uid}/backups/{b} {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
 

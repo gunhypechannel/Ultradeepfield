@@ -12,7 +12,7 @@
   Doc.prototype.get = function () { return Promise.resolve(snapDoc(this.path)); };
   Doc.prototype.set = function (d, opt) {
     if (!window.__authUser) return Promise.reject(err("permission-denied"));
-    var p = this.path; log.push(["set", p, clone(d)]);
+    var p = this.path; if (window.__rule && !window.__rule(p, store[p], d)) return Promise.reject(err("permission-denied")); log.push(["set", p, clone(d)]);
     store[p] = opt && opt.merge && store[p] ? Object.assign(clone(store[p]), strip(d)) : strip(clone(d)); notify(); return Promise.resolve();
   };
   Doc.prototype.update = function () {
