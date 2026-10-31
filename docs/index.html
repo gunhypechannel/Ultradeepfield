@@ -925,6 +925,9 @@ main.full{padding:0;overflow:hidden;gap:0}
 .fcard .route{font-size:13px;color:var(--muted)}
 .fcard .tl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;font-size:12px;color:var(--muted)}
 .fcard .tl b{display:block;color:var(--text);font-family:var(--f-display);font-size:13px;font-variant-numeric:tabular-nums}
+.gm-acct{display:flex;align-items:center;gap:10px;margin:10px 4px 4px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--hull)}.gm-acct .ga-i{font-size:20px}.gm-acct .ga-t{flex:1;min-width:0;display:flex;flex-direction:column}.gm-acct small{color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase}.gm-acct b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.fchips{margin:10px 0 2px}.fchips button{flex:none;padding:7px 12px;white-space:nowrap}.fchips button b{color:var(--cyan);margin-left:2px}
+.fworlds{display:flex;flex-direction:column;gap:8px}.fworld .units{margin:0}
 .fcard .acts{display:flex;gap:6px;flex-wrap:wrap}
 .shard{color:#c9a6ff;font-family:var(--f-display)}
 .spdbar{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--line);background:var(--void)}
@@ -4052,8 +4055,8 @@ const Q = [
   { t: "Build 4 Rocket Batteries to guard your homeworld", ok: s => s.def.rocket >= 4, rw: { m: 800, c: 400 }, go: "fleetdef" },
   { t: "Upgrade the Shipyard to Lv.2 and build a Small Cargo", ok: s => s.b.shipyard >= 2 && own("hauler") >= 1, rw: { m: 1500, c: 1000, g: 300 }, go: "fleet" },
   { t: "Win 4 battles", ok: s => s.wins >= 4, rw: { m: 2000, c: 1200, g: 500, boost: 1 }, go: "galaxy" },
-  { t: "Upgrade the Shipyard to Lv.4, research Impulse Drive Lv.3, then build a Colony Ship", ok: s => own("ark") >= 1 || s.captures >= 1, rw: { m: 2000, c: 1500, g: 600 }, go: "fleet" },
-  { t: "Occupy a planet. Send a Colony Ship with escorts.", ok: s => s.captures >= 1, rw: { m: 3000, c: 2000, g: 800, boost: 1 }, go: "galaxy" },
+  { t: "Upgrade the Shipyard to Lv.4, research Impulse Drive Lv.3 and Astrophysics Lv.2, then build a Colony Ship", ok: s => own("ark") >= 1 || s.captures >= 1, rw: { m: 2000, c: 1500, g: 600 }, go: "fleet" },
+  { t: "Occupy a planet. Send a Colony Ship with escorts (Astrophysics Lv.2 lets you hold a second world).", ok: s => s.captures >= 1, rw: { m: 3000, c: 2000, g: 800, boost: 1 }, go: "galaxy" },
   { t: "Build a Metal Extractor on one of your colonies", ok: s => myPlanets().some(p => p.kind !== "home" && (p.b || {}).metalMine >= 1), rw: { m: 2500, c: 1500, g: 500 }, go: "base" },
   { t: "Research Laser Technology Lv.2 and build a Pathfinder", ok: s => own("lancer") >= 1, rw: { m: 3000, c: 2000, g: 600 }, go: "lab" },
   { t: "Hold 3 planets at once", ok: s => myPlanets().length >= 3, rw: { m: 4000, c: 2500, g: 1000, boost: 1 }, go: "galaxy" },
@@ -4089,15 +4092,16 @@ function progress() {
 
 /* ---------- save / sync ---------- */
 const KEY = "novaDominion.save.v1";
-const store = { db: null, uid: null, dirty: false, writing: false, mode: "device", lastPlayer: "" };
+const store = { db: null, uid: null, dirty: false, writing: false, mode: "device", lastPlayer: "", ready: false }; // v200: ready once the account save has been read
 const dirty = () => { store.dirty = true; };
 async function flush() {
   syncPlayer();
   if (!store.dirty || store.writing) return;
   store.dirty = false; S.savedAt = now();
+  const cloudOk = store.db && store.uid && store.ready; if (cloudOk) S.cloudAt = S.savedAt; // the cloud copy this device last wrote or read
   const json = JSON.stringify(S), sig = secSig(json);
   try { localStorage.setItem(KEY, json); localStorage.setItem(KEY + ".sig", sig); if (Date.now() - SEC.bakT > 300000 && !SEC.blocked) { SEC.bakT = Date.now(); localStorage.setItem(KEY + ".bak", json); localStorage.setItem(KEY + ".bak.sig", sig); } } catch (e) {}
-  if (store.db && store.uid) {
+  if (cloudOk) {
     store.writing = true;
     try { await store.db.doc(`data/users/${store.uid}/save`).set({ v: 3, savedAt: S.savedAt, json, sig }); store.mode = "cloud"; }
     catch (e) { if (e && (e.code === "invalid_argument" || e.code === "revoked" || e.code === "not_granted")) { store.db = null; store.mode = "device"; } else store.dirty = true; }
@@ -4265,10 +4269,24 @@ async function connectCloud() {
     try { G.myName = (await user.me()).name || ""; } catch (e) {} if (S && S.cname) G.myName = S.cname;
     try {
       const snap = await db.doc(`data/users/${uid}/save`).get();
+      /* v200: which empire wins when you sign in. It used to be "newest savedAt", but every device stamps its save as it plays, so a
+         second phone's brand-new planet (saved while you were still typing your password) beat your real empire and then overwrote
+         it. Now: an empire on this device that belongs to another account never wins; a device that has synced with this account
+         takes the account's save whenever it changed elsewhere since; a device that never synced takes the account's save. The
+         one exception keeps a well-built empire from being replaced by a near-empty account save (that is how a wiped save heals). */
+      const lp = S.spent || 0, foreign = S.uid && S.uid !== uid;
       if (snap.exists) { const d = snap.data();
         if (typeof d.json === "string" && d.sig && d.sig !== secSig(d.json)) secLog("save", "the cloud save was edited outside the game.", "It was ignored.", 3);
-        else if (typeof d.json === "string" && (d.savedAt || 0) > (S.savedAt || 0)) { S = migrate(JSON.parse(d.json)); secBoot(); FOG = null; live = false; advance(now()); live = true; toast("Loaded your saved empire."); } }
+        else if (typeof d.json === "string") { const cs = JSON.parse(d.json), cp = cs.spent || 0, cAt = d.savedAt || 0, behind = lp > 5000 && cp < lp * .5 && !foreign;
+          const take = foreign || (!behind && (S.uid === uid ? cAt > (S.cloudAt || 0) : true));
+          if (take) { try { if (lp > 0) localStorage.setItem(KEY + ".device", JSON.stringify(S)); } catch (e) {}
+            S = migrate(cs); S.cloudAt = cAt; secBoot(); FOG = null; live = false; advance(now()); live = true; render(true); toast(foreign ? "Signed in. Loaded this account's empire." : "Loaded your saved empire.", "win"); }
+          else if (behind) toast("Your account's save was behind this device. This device's empire was kept and saved to your account.", "warn"); } }
+      else if (foreign) { try { localStorage.setItem(KEY + ".device", JSON.stringify(S)); } catch (e) {}
+        const hn = S.homeName; S = newState(); FOG = null; S.homeName = hn; live = false; advance(now()); live = true; view = "base"; rebuild(); render(true); intro(); toast("New account: a fresh homeworld is ready for you."); }
+      S.uid = uid;
     } catch (e) {}
+    store.ready = true;
     if (G.askFac) G.askFac(); // v138: the cloud save is in (or there is none): now ask for a faction only if this empire never chose one
     store.mode = "cloud"; dirty();
     let gotP = false, gotPl = false;
@@ -10224,9 +10242,11 @@ function fleetLabel(f) {
   return f.mission === "reinforce" ? "Reinforcing" : f.assault ? "Joint strike" : f.n.ark ? "Invading" : "Attacking";
 }
 function vFleets() {
-  const T = now(), raid = S.raid, P = actPlanet();
-  // using a colony: its own fleets and garrison; the homeworld view keeps every fleet in the empire
-  const sorted = S.fleets.filter(f => !P || f.from === P.id || f.pid === P.id).sort((a, b) => ((fleetBounds(a) || [0, 9e15])[1]) - ((fleetBounds(b) || [0, 9e15])[1]));
+  const T = now(), raid = S.raid, hw = homePlanet(), mine = myPlanets();
+  // every fleet from every planet you own, on one screen; chips narrow it to one planet
+  const worlds = [hw, ...mine.filter(p => p.kind !== "home")].filter(Boolean), fromOf = f => f.from && G.byId[f.from] ? f.from : hw ? hw.id : "";
+  const fsel = sub.ffrom && worlds.some(p => p.id === sub.ffrom) ? sub.ffrom : "all";
+  const sorted = S.fleets.filter(f => fsel === "all" || fromOf(f) === fsel || f.pid === fsel).sort((a, b) => ((fleetBounds(a) || [0, 9e15])[1]) - ((fleetBounds(b) || [0, 9e15])[1]));
   const cards = sorted.map(f => {
     const tg = fleetTarget(f), o = f.from && G.byId[f.from] ? G.byId[f.from] : homePlanet(), bnd = fleetBounds(f), tot = Object.values(f.n || {}).reduce((a, b) => a + b, 0);
     const ships = Object.entries(f.n || {}).filter(([, v]) => v).map(([k, v]) => `${fmt(v)} ${SH[k].n}`).join(", ") || (f.loot ? "Cargo only" : "—");
@@ -10240,19 +10260,19 @@ function vFleets() {
       <div class="tl"><span>Departed<b>${ago(f.out) === "now" ? "just now" : ago(f.out) + " ago"}</b></span><span>${bnd ? bnd[2] : "Status"}<b>${bnd ? `<span data-end="${bnd[1]}">${ftime(rem)}</span>` : "in battle"}</b></span><span>Speed · fuel<b>${f.spd || 100}% · ${fmt(f.fuel || 0)}</b></span></div>
       <div class="acts"><button class="btn ghost sm" data-act="fleetMap" data-id="${f.id}">Show on map</button>${f.mission === "attack" && f.phase === "out" && !f.assault && G.mode === "online" && rem > 20000 ? `<button class="btn sm" data-act="callJoint" data-id="${f.id}">Call allies to join</button>` : f.assault && G.assaults[f.assault] ? `<span class="pill go">Joint · ${memberCount(G.assaults[f.assault])}/${G.assaults[f.assault].max}</span>${!f.launched && now() < G.assaults[f.assault].launch ? `<button class="btn sm" data-act="assault" data-id="${f.assault}">＋ Add participants</button>` : ""}` : ""}${canRecall ? `<button class="btn ghost sm" data-act="recallF" data-id="${f.id}">Recall</button>` : ""}${canHurry && rem > 0 ? `<button class="btn amber sm" data-act="hurry" data-id="${f.id}" ${S.shards >= shardCost(rem) ? "" : "disabled"}>Hurry <span class="shard">◆${shardCost(rem)}</span></button>` : ""}</div></div>`;
   }).join("");
-  const stationed = myPlanets().filter(p => p.kind !== "home" && garrisonCount(p)).map(p => `<button class="tgt" data-act="baseSel" data-id="${p.id}"><canvas data-p="${p.id}"></canvas><span><span class="nm">${esc(p.name)}</span><br><span class="sub">${Object.entries(p.garrison).map(([k, v]) => `${fmt(v)} ${SH[k].n}`).join(", ")}</span></span><span class="pill go">${fmt(garrisonCount(p))}</span></button>`).join("");
-  const home = Object.entries(S.ships).filter(([, v]) => v > 0);
-  if (P) return planetCtx(P) + `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 class="sec" style="flex:1">${esc(P.name)} · ${fleetsUsed()} / ${maxFleets()} slots</h2><span class="shard" title="Void Shards">◆ ${fmt(S.shards)}</span></div>
-    ${radarCard()}${jsFleetSection()}<h2 class="sec">Fleets from ${esc(P.name)} · ${sorted.length}</h2>${cards || `<div class="empty">No fleets from ${esc(P.name)} in flight. Pick a target on the Galaxy map and launch from this planet.</div>`}
-    <h2 class="sec">Garrison on ${esc(P.name)}</h2>${unitGrid(cleanShips(P.garrison || {}))}
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn wide" style="flex:1" data-act="planet" data-id="${P.id}">Fleet orders</button><button class="btn ghost" style="flex:1" data-act="planets">Move ships & resources</button></div>
-    <p class="note">${S.fleets.length - sorted.length ? `${S.fleets.length - sorted.length} other fleet${S.fleets.length - sorted.length > 1 ? "s are" : " is"} flying from your other planets. ` : ""}Switch planets with ‹ › to see their fleets.</p>`;
-  return planetCtx(null) + `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 class="sec" style="flex:1">Fleet command · ${fleetsUsed()} / ${maxFleets()} slots</h2><span class="shard" title="Void Shards">◆ ${fmt(S.shards)}</span></div>
+  const shipsAt = p => p.kind === "home" || p === hw ? Object.fromEntries(Object.entries(S.ships).filter(([, v]) => v > 0)) : cleanShips(p.garrison || {});
+  const count = o => Object.values(o).reduce((x, y) => x + y, 0);
+  const chips = worlds.length > 1 ? `<div class="segc fchips">${[["all", "All planets", S.fleets.length], ...worlds.map(p => [p.id, p === hw ? `🏠 ${p.name}` : p.name, S.fleets.filter(f => fromOf(f) === p.id).length])].map(([k, l, n]) => `<button class="${fsel === k ? "on" : ""}" data-act="ffrom" data-v="${k}">${esc(l)}${n ? ` <b>${n}</b>` : ""}</button>`).join("")}</div>` : "";
+  const docks = worlds.map(p => { const sh = shipsAt(p), n = count(sh), out = S.fleets.filter(f => fromOf(f) === p.id).length;
+    return `<div class="fcard fworld"><div class="top"><b>${p === hw ? "🏠 " : ""}${esc(p === hw ? S.homeName : p.name)}</b><span class="pill ${n ? "go" : ""}">${fmt(n)} ships${out ? ` · ${out} out` : ""}</span></div>
+      ${n ? unitGrid(sh) : '<p class="note" style="margin:0">No ships docked here.</p>'}
+      <div class="acts"><button class="btn sm" data-act="planet" data-id="${p.id}">Fleet orders</button><button class="btn ghost sm" data-act="baseSel" data-id="${p === hw ? "" : p.id}">Open base</button>${worlds.length > 1 ? `<button class="btn ghost sm" data-act="ffrom" data-v="${p.id}">Its fleets</button>` : ""}</div></div>`; }).join("");
+  const label = fsel === "all" ? "In flight · all planets" : `In flight from ${esc((G.byId[fsel] || {}).name || S.homeName)}`;
+  return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 class="sec" style="flex:1">Fleet command · ${fleetsUsed()} / ${maxFleets()} slots</h2><span class="shard" title="Void Shards">◆ ${fmt(S.shards)}</span></div>
     ${radarCard()}${rewardsCard()}${repairCard()}${gateCard()}${raid ? `<div class="radar"><b class="h">⚠ HIVE RAID</b><div class="row"><span>${esc(S.homeName)}<small>Lv.${raid.lvl} raiders</small></span><b style="font-family:var(--f-display);color:var(--red)" data-end="${raid.at}">${ftime(raid.at - T)}</b></div></div>` : ""}
-    ${jsFleetSection()}<h2 class="sec">In flight · ${S.fleets.length}</h2>${cards || `<div class="empty">No fleets in flight. Pick a target on the Galaxy map.</div>`}
+    ${jsFleetSection()}${chips}<h2 class="sec">${label} · ${sorted.length}</h2>${cards || `<div class="empty">${fsel === "all" ? "No fleets in flight. Pick a target on the Galaxy map." : "No fleets from this planet in flight."}</div>`}
     ${(S.strikes || []).length ? `<h2 class="sec">Missiles in flight</h2><div class="queue">${S.strikes.map(s => { const p = G.byId[s.pid]; return `<div class="qrow"><div><div class="lbl">Ballistic ×${s.n}</div><div class="what">→ ${esc(p ? p.name : "target")}</div></div><div class="acts"><span class="t" data-end="${s.at}">${ftime(s.at - T)}</span></div><div class="bar"><i data-s="${s.out}" data-e="${s.at}"></i></div></div>`; }).join("")}</div>` : ""}
-    <h2 class="sec">Stationed on colonies</h2>${stationed ? `<div class="list">${stationed}</div>` : '<p class="note">No ships stationed on colonies.</p>'}
-    <h2 class="sec">At ${esc(S.homeName)}</h2>${home.length ? unitGrid(Object.fromEntries(home)) : '<p class="note">No ships at home.</p>'}
+    <h2 class="sec">Ships at your planets · ${worlds.length}</h2><div class="fworlds">${docks}</div>
     <p class="note">Void Shards (◆) buy instant speed-ups. Earn them from directives, daily tasks and Cube titles.</p>`;
 }
 /* attack screens: pick a doctrine, then see the odds and the projected outcome from a dozen simulated runs */
@@ -11937,8 +11957,16 @@ const TUT = [
   { lv: 3, t: "Explore a pyramid space station", say: "Derelict pyramid stations drift all over the map. Low-level vaults are unguarded: free shards and relics.", ok: s => (s.stats || {}).pyramids >= 1 || s.fleets.some(f => f.yid), find: "y", path: mapPath('.sheet [data-act="launch"]', '.sheet .tgt[data-act="pyramid"]'), rw: { m: 800, c: 800, g: 400, shards: 1 } },
   { lv: 4, t: "Read your reports in Mail", say: "Every battle, scan and message lands in Mail. Replays show you exactly why you won or lost.", ok: s => !!s.tutMail, go: { v: "mail" }, path: () => [DOCKT("mail", "Open Mail")], rw: { m: 500, c: 500, g: 500 } },
   { lv: 5, t: "Raid a Lv.5 pirate hideout", say: "Pirates hoard loot and drop rare items. Bring a dozen fighters or more.", ok: s => (s.stats || {}).pirates >= 1, find: "x", pirLvl: "5", path: mapPath('.sheet [data-act="launch"]', '.sheet .tgt[data-act="pirate"], .sheet [data-act="pirate"]'), rw: { m: 1500, c: 1000, g: 500, shards: 2 } },
-  { lv: 4, t: "Reach Commander Level 4", say: "Keep upgrading your mines and winning fights. Every resource you spend earns experience.", ok: () => cmdLevel(score()) >= 4, go: { v: "build", s: "res" }, path: bPath("metalMine", "res"), rw: { m: 3000, c: 2000, g: 1000, shards: 5 } }
+  { lv: 4, t: "Reach Commander Level 4", say: "Keep upgrading your mines and winning fights. Every resource you spend earns experience.", ok: () => cmdLevel(score()) >= 4, go: { v: "build", s: "res" }, path: bPath("metalMine", "res"), rw: { m: 3000, c: 2000, g: 1000, shards: 5 } },
+  /* v200: the road to a second world. Astrophysics decides how many planets you may hold (one more every 2 levels) and it needs
+     Research Center Lv.3, Espionage Technology Lv.4 and Impulse Drive Lv.3, so the Academy walks new commanders through all of it */
+  { lv: 5, t: "Upgrade the Research Center to Lv.3", say: "Next goal: a second world. Astrophysics decides how many planets we can hold, and it needs Research Center Lv.3, Espionage Technology Lv.4 and Impulse Drive Lv.3. Start with the Research Center.", ok: () => lvlOf("lab") >= 3, go: { v: "build", s: "fac" }, path: bPath("lab", "fac"), rw: { m: 2500, c: 4000, g: 1500, shards: 1 } },
+  { lv: 5, t: "Research Impulse Drive to Lv.3", say: "Impulse Drive speeds up Colony Ships and heavier hulls, and Astrophysics needs Lv.3. Find it under Engine Research.", ok: s => (s.r.impulse || 0) >= 3, go: { v: "lab" }, rcat: "Drive", path: rPath("impulse", "Drive"), rw: { m: 6000, c: 10000, g: 2000, shards: 2 } },
+  { lv: 5, t: "Research Espionage Technology to Lv.4", say: "Better probes, and the last thing Astrophysics needs. Take Espionage Technology to Lv.4 under Advanced Research.", ok: s => (s.r.espionage || 0) >= 4, go: { v: "lab" }, rcat: "Advanced", path: rPath("espionage", "Advanced"), rw: { m: 3000, c: 9000, g: 2000, shards: 2 } },
+  { lv: 5, t: "Research Astrophysics Lv.1", say: "Everything is in place. Start Astrophysics under Advanced Research: it charts stable orbits for settlers.", ok: s => (s.r.astro || 0) >= 1, go: { v: "lab" }, rcat: "Advanced", path: rPath("astro", "Advanced"), rw: { m: 4000, c: 8000, g: 4000, shards: 3 } },
+  { lv: 5, t: "Research Astrophysics Lv.2", say: "One more level and we can hold a second world. Every 2 levels of Astrophysics adds a planet, up to 10.", ok: s => (s.r.astro || 0) >= 2, go: { v: "lab" }, rcat: "Advanced", path: rPath("astro", "Advanced"), rw: { m: 8000, c: 12000, g: 6000, shards: 5 } }
 ];
+const TUT_V1 = 17; // the Academy's length before the Astrophysics steps were added
 const tutOn = () => S && S.tut && !S.tut.off && S.tut.i < TUT.length;
 const TUT_SNOOZE = 5 * 60000, tutSnoozed = () => !!(S && S.tut && S.tut.snz > now());
 function tutShow() {
@@ -11996,12 +12024,13 @@ function tutClaim() {
   S.tut.i++; S.tut.open = 0; dirty(); try { SFX.research(); } catch (e) {} // v81: straight on to the next task; the guide is already pointing at it
   const nx = TUT[S.tut.i];
   if (nx) toast(`Academy step done: +${fmt(rw.m || 0)} metal, +${fmt(rw.c || 0)} crystal${rw.g ? `, +${fmt(rw.g)} gas` : ""}${rw.shards ? `, ◆${rw.shards}` : ""}.`, "win");
-  else { S.say.push("That's the Academy done, Commander. You're level 4 and you know the ropes.", "From here your quests on the Quests tab take over. The galaxy is yours to win."); flushSay(); }
+  else { S.say.push("That's the Academy done, Commander. Astrophysics Lv.2 means we can hold a second world.", "Upgrade the Shipyard to Lv.4 and build a Colony Ship, then send it with escorts to a free planet. Your quests on the Quests tab take it from here."); flushSay(); }
   coachRender(true);
 }
 let coachHtml = "";
 function coachRender(force) {
   if (!S) return; if (!S.tut) S.tut = { i: S.intro && score() > 200 ? TUT.length : 0, open: 1 }; // veterans skip the Academy
+  if (!S.tutAstro) { S.tutAstro = 1; if (S.tut.i >= TUT_V1 && (S.r.astro || 0) >= 2) S.tut.i = TUT.length; else if (S.tut.i >= TUT_V1) S.tut.open = 1; dirty(); } /* v200: finished commanders without Astrophysics Lv.2 get the new steps */
   if (view === "mail" && !S.tutMail) { S.tutMail = 1; dirty(); }
   if (S.tut.snz && S.tut.snz <= now()) { S.tut.snz = 0; S.tut.open = 1; dirty(); force = true; } /* v191: back after a 5-minute break, opened up */
   let w = $("#coach"); const on = tutOn() && !battle && G.ready && !tutSnoozed() && !G.cubeDemo; /* v194: not over a demo battle */
@@ -13348,6 +13377,7 @@ function trayRender() {
     <div class="gm-list">${gl("nav", ic2(NAVI.fleet), "Shipyard", 'data-v="build" data-s="ships"')}${gl("planets", ic2(MI.orbit), "Control Center")}${gl("nav", ic2(NAVI.fleets), "Fleet", 'data-v="fleets"')}</div>
     <div class="gm-list">${gl("nav", ic2(MI.shield), "Defense", 'data-v="build" data-s="def"')}${gl("nav", ic2(MI.alert), "Missile", 'data-v="build" data-s="mis"')}</div>
     <div class="gm-list">${gl("mtab", ic2(MI.shield).replace("<svg", '<svg style="color:#e06bd8"'), "Element", 'data-k="elements"')}${gl("mastery", ic2(TRAY_I.path), "Mastery", "", mastN)}${gl("allyOpen", ic2(MI.wings), "Alliance", "", helpN)}${gl("ranks", ic2(TRAY_I.trophy), "Ranking")}${gl("friends", ic2(TRAY_I.friends), "Friends")}${gl("faction", ic2(TRAY_I.flag), "Faction")}</div>
+    ${window.udfAccount ? `<div class="gm-acct"><span class="ga-i">👤</span><span class="ga-t"><small>Signed in as</small><b>${esc(window.udfAccount.label())}</b></span><button class="btn ghost sm" data-act="udfSignOut">Sign out</button></div>` : ""}
     ${view === "galaxy" ? `<div class="gm-h">Finder</div><div class="tray-grid">${it.filter(x => x[0] === "find" || x[0] === "findClear").map(btn).join("")}</div>` : view === "base" ? `<div class="gm-list">${gl("basedet", ic2(MI.box), "Planet details")}</div>` : ""}`;
   el.classList.toggle("gmopen", open); // lift the whole bar above the floating top HUD while the drawer is out, so nothing covers it
   morph(el, `<button class="gscrim${open ? " on" : ""}" data-act="trayToggle" aria-label="Close the menu" tabindex="${open ? 0 : -1}"></button><div class="tray-panel gmenu${open ? " open" : ""}" aria-hidden="${!open}" role="dialog" aria-label="Game menu"><div class="gm-hd"><b>Game Menu</b><button class="x" data-act="trayToggle" aria-label="Close the menu">✕</button></div>${drawer}</div>${cubeBand()}${banner}`);
@@ -13807,6 +13837,7 @@ const ACT = {
   detail: d => openSheet({ type: "detail", kind: d.kind, k: d.k, qty: 1, tab: 0, pid: d.pid || null }),
   bcat: d => { sub.bcat = d.v; sub.build = "bld"; view = "build"; render(true); },
   rcat: d => { sub.rcat = d.v || null; render(); $("#view").scrollTop = 0; },
+  ffrom: d => { sub.ffrom = d.v === "all" ? null : d.v; render(); },
   dtab: d => { if (sheet) { sheet.tab = +d.i; renderSheet(); } },
   prodRate: d => { if (!PROD_K.includes(d.k)) return; S.prod = S.prod || {}; const v = Math.round(pf(d.k) * 100); S.prod[d.k] = v <= 0 ? 100 : v - 10; dirty(); renderSheet(); render(); },
   labs: () => openSheet({ type: "labs" }),
@@ -14161,6 +14192,7 @@ const INTRO = ["Commander. We made it, barely. The convoy is gone, and this worl
   "We're not alone either. Other commanders orbit the Void, and any colony can change hands.",
   "Start with the Metal Extractor. I'll post directives on the Base tab. Complete them and Fleet Command will send supplies."];
 function intro() { if (!S.intro) { S.intro = true; dirty(); say(INTRO); } }
+window.udfBeforeSignOut = async () => { try { if (S) { dirty(); await flush(); } } catch (e) {} }; // v200: the last moves reach your account before you sign out
 function start(data) {
   let fresh = false; try { fresh = localStorage.getItem("voidFresh") === "1"; if (fresh) { localStorage.removeItem("voidFresh"); const old = localStorage.getItem(KEY); if (old) localStorage.setItem(KEY + ".backup", old); } } catch (e) {}
   if (fresh) { S = newState(); S.savedAt = now(); dirty(); }

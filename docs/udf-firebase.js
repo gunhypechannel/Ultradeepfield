@@ -110,21 +110,23 @@
     "#udfAuth .l{background:none;border:0;color:#55d6e8;padding:6px;font-size:14px;text-decoration:underline}" +
     "#udfAuth .or{display:flex;align-items:center;gap:10px;color:#7d95a5;font-size:12px;letter-spacing:.14em}#udfAuth .or:before,#udfAuth .or:after{content:'';flex:1;height:1px;background:#1d3647}" +
     "#udfAuth .er{min-height:18px;color:#ff6262;font-size:14px;text-align:center}#udfAuth .ok{color:#71df90}" +
-    "#udfAuth .row{display:flex;justify-content:space-between}";
+    "#udfAuth .row{display:flex;justify-content:space-between}" +
+    "#udfAuth .pw{position:relative}#udfAuth .pw input{padding-right:70px}#udfAuth .pw .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:auto;padding:6px 10px;background:none;border:0;color:#55d6e8;font-size:14px}";
   var GICON = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.2l7.9 6.2C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-2.9-.8-4.6s.3-3.2.8-4.6l-7.9-6.2C1 16.6 0 20.2 0 24s1 7.4 2.7 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.2 0-11.5-4.1-13.4-9.7l-7.9 6.2C6.6 42.6 14.6 48 24 48z"/></svg>';
 
   function signInScreen(auth) {
     return new Promise(function (resolve) {
       var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
       var w = document.createElement("div"); w.id = "udfAuth"; document.body.appendChild(w);
-      var mode = "in", signingUp = null; /* a new account finishes setting its commander name before the game starts */
+      var mode = "in", signingUp = null;
+      function lastEmail() { try { return localStorage.getItem("udf.lastEmail") || ""; } catch (x) { return ""; } } /* a new account finishes setting its commander name before the game starts */
       function draw(msg, okMsg) {
         var up = mode === "up", reset = mode === "reset";
         w.innerHTML = '<form class="bx" novalidate><div class="logo"></div><h1>ULTRA DEEP FIELD</h1><p>' + (reset ? "We'll email you a link to set a new password." : up ? "Create your commander account." : "Sign in to join the galaxy.") + '</p>' +
           (reset ? "" : '<button type="button" class="g" data-a="google">' + GICON + 'Continue with Google</button><div class="or">OR</div>') +
           (up ? '<input name="n" autocomplete="nickname" placeholder="Commander name" maxlength="24">' : "") +
-          '<input name="e" type="email" autocomplete="email" placeholder="Email" inputmode="email">' +
-          (reset ? "" : '<input name="p" type="password" autocomplete="' + (up ? "new-password" : "current-password") + '" placeholder="Password' + (up ? ' (6+ characters)' : "") + '">') +
+          '<input name="e" type="email" autocomplete="email" placeholder="Email" inputmode="email" value="' + lastEmail().replace(/"/g, "&quot;") + '">' +
+          (reset ? "" : '<div class="pw"><input name="p" type="password" autocomplete="' + (up ? "new-password" : "current-password") + '" placeholder="Password' + (up ? ' (6+ characters)' : "") + '"><button type="button" class="eye" data-a="eye" aria-label="Show password">Show</button></div>') +
           '<div class="er' + (okMsg ? " ok" : "") + '" role="alert">' + (msg || okMsg || "") + '</div>' +
           '<button type="submit" class="p">' + (reset ? "Send reset link" : up ? "Create account" : "Sign in") + '</button>' +
           '<div class="row">' + (mode === "in" ? '<button type="button" class="l" data-a="up">New here? Create account</button><button type="button" class="l" data-a="reset">Forgot password?</button>' : '<button type="button" class="l" data-a="in">Back to sign in</button>') + '</div></form>';
@@ -146,10 +148,11 @@
             if (/popup-blocked|operation-not-supported/.test(c)) return auth.signInWithRedirect(prov).catch(fail);
             fail(err);
           });
-        } else { mode = a; draw(); }
+        } else if (a === "eye") { var pi = w.querySelector("input[name=p]"); if (pi) { var sh = pi.type === "password"; pi.type = sh ? "text" : "password"; b.textContent = sh ? "Hide" : "Show"; } }
+        else { mode = a; draw(); }
       });
       w.addEventListener("submit", function (e) {
-        e.preventDefault(); var f = e.target, em = (f.e.value || "").trim();
+        e.preventDefault(); var f = e.target, em = (f.e.value || "").trim(); try { if (em) localStorage.setItem("udf.lastEmail", em); } catch (x) {}
         if (mode === "reset") { auth.sendPasswordResetEmail(em).then(function () { mode = "in"; draw("", "Check your email for the reset link."); }, fail); return; }
         var pw = f.p.value || "";
         if (mode === "up") {
@@ -206,11 +209,12 @@
   };
   window.udfAccount = {
     label: function () { var u = sdkReady && window.firebase && firebase.auth().currentUser; return u ? (u.email || u.displayName || "Signed in") : "Not signed in"; },
-    signOut: function () { if (!window.firebase) return; firebase.auth().signOut().then(function () { location.reload(); }); }
+    signOut: function () { if (!window.firebase) return; /* save the empire to the account first, then sign out */
+      Promise.resolve(window.udfBeforeSignOut && window.udfBeforeSignOut()).catch(function () {}).then(function () { return firebase.auth().signOut(); }).then(function () { location.reload(); }); }
   };
   document.addEventListener("click", function (e) {
     var b = e.target.closest && e.target.closest("[data-act=udfSignOut]"); if (!b) return;
-    e.preventDefault(); e.stopPropagation(); if (confirm("Sign out of Ultra Deep Field on this device?")) window.udfAccount.signOut();
+    e.preventDefault(); e.stopPropagation(); if (confirm("Sign out of Ultra Deep Field on this device? Your empire is saved to your account first, so you can sign back in on any phone.")) window.udfAccount.signOut();
   }, true);
   if (configured) start(); /* show the sign-in screen right away instead of waiting for the game to ask */
 })();
