@@ -10879,7 +10879,7 @@ const backBar = () => `<div class="sbk"><button class="sbkb" data-act="back">‹
 function closeSheet() { sheetStack = []; if (sheet && sheet.type === "faction" && S && !S.faction) { S.faction = "terran"; dirty(); try { syncPlayer(); } catch (e) {} if (C3) C3.fac = null; toast("You lead the Terran Union. You can change your faction any time from Faction in your profile."); } /* v122: closing the picker without choosing keeps the default, so it never asks again */ if (sheet && sheet.type === "faction" && S && !S.intro) setTimeout(intro, 60);
   if (G.find === "o") { G.find = null; setTimeout(() => { try { mapOverlay(); } catch (e) {} }, 0); } /* v114: Coordinates is a one-shot tool: closing it frees every other marker for tapping again */
   sheet = null; G.sel = null; G.selNode = null; const a = $("#sheetwrap"); if (!a) return;
-  if (reduced) { a.remove(); return; } a.id = ""; a.querySelectorAll("[id]").forEach(e => e.removeAttribute("id")); a.classList.add("closing"); setTimeout(() => a.remove(), 210); }
+  if (reduced) { a.remove(); guideNow(); return; } a.id = ""; a.querySelectorAll("[id]").forEach(e => e.removeAttribute("id")); a.classList.add("closing"); a.style.pointerEvents = "none"; guideNow(); setTimeout(() => { a.remove(); guideNow(); }, 210); }
 /* v186 a slider held in a panel (the Cube page's fleet speed, a unit's quantity) is never replaced under your finger: the panel used to
    redraw itself during the drag (any pause of a fifth of a second, or a live update), the slider vanished mid-gesture and the thumb
    jumped back. Redraws wait until you let go, and the panel keeps its scroll position. */
@@ -10887,6 +10887,7 @@ document.addEventListener("pointerdown", e => { if (e.target.matches && e.target
 const rangeUp = () => { if (!G.rangeHeld) return; G.rangeHeld = 0; if (!G.rangeLate) return; G.rangeLate = 0; const sh = $(".sheet"), st = sh ? sh.scrollTop : 0; renderSheet(); const s2 = $(".sheet"); if (s2) s2.scrollTop = st; };
 for (const ev of ["pointerup", "pointercancel"]) addEventListener(ev, rangeUp, true);
 function renderSheet() {
+  if (!sheet) return; /* v190: a card closed while a redraw was pending */
   if (G.rangeHeld && sheet) { G.rangeLate = 1; return; }
   let w = $("#sheetwrap");
   let html = ({ planet: shPlanet, report: shReport, settings: shSettings, void: shVoid, assault: shAssault, targets: shTargets, node: shNode, bld: shBld, nexus: shNexus, skin: shSkin, find: shFind, pirate: shPirate, pyramid: shPyramid, fctl: shFctl, station: shStation, ally: shAlly, layers: shLayers, tile: shTile, graphics: shGfx, cuberes: shCubeRes, basedet: shBaseDet, planets: shPlanets,
@@ -11761,7 +11762,7 @@ function nextIn(kind, pid) {
 }
 function jobDone(kind, title, at, pid, extra) {
   if (!live) { AWAY[kind].push(title); return; }
-  if (!freshAt(at) || !remindOn()) return;
+  if (!freshAt(at) || !remindOn() || tutOn()) return; /* v190: during the Academy these pop-ups covered the tabs it points at */
   const nx = nextIn(kind, pid), where = pid && G.byId[pid] ? G.byId[pid].name + " · " : "";
   remind(kind, RM_KIND[kind][0], where + title, (extra ? extra + " " : "") + (nx ? `Next: ${nx.n}, ready in <span data-end="${nx.e}">${ftime(nx.e - now())}</span>${nx.more ? ` · ${nx.more} more queued` : ""}` : "Queue is empty. Start the next job."), !nx, pid);
 }
@@ -11819,20 +11820,21 @@ const DOCKT = (v, l) => v === "build" ? ['[data-act="qgo"][data-q="b"], #view [d
 const SHOWME = ['#coach [data-act="tutShow"], #coach .cpill', "Tap here and I'll take you there"];
 const bPath = (k, cat) => () => S.bq && S.bq.k === k ? [[`[data-act="finish"][data-free="1"]`, "Tap Free to finish it instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed it up"], [".qrow .t", "Under construction. It finishes on its own"], ['[data-act="sub"][data-g="build"][data-v="bld"]', "Open Structures to watch it"], DOCKT("build", "Tap Build")]
   : [[`.sheet [data-act="up"][data-k="${k}"]`, `Tap ${S.b[k] ? "Upgrade" : "Build"}`], [`article.bn[data-kind="b"][data-k="${k}"]`, `Choose ${B[k].n}`], [`[data-act="bcat"][data-v="${cat}"]`, `Open ${cat === "fac" ? "Facility" : "Resource"}`], ['[data-act="sub"][data-g="build"][data-v="bld"]', "Open Structures"], DOCKT("build", "Tap Build")];
-const rPath = (k, cat) => () => S.rq && S.rq.k === k ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish it instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed it up"], [".qrow .t", "Researching. It finishes on its own"], ['[data-act="sub"][data-g="build"][data-v="research"]', "Open Research to watch it"], DOCKT("build", "Tap Build")]
-  : [[`.sheet [data-act="research"][data-k="${k}"]`, "Tap Research"], [`article.bn[data-kind="r"][data-k="${k}"]`, `Choose ${R[k].n}`], ['.rhd [data-act="rcat"][data-v=""]', "Back to all research"], [`[data-act="rcat"][data-v="${cat}"]`, `Open ${cat === "Drive" ? "Engine" : cat} Research`], ['[data-act="sub"][data-g="build"][data-v="research"]', "Open Research"], DOCKT("build", "Tap Build")];
+const rPath = (k, cat) => () => S.rq && S.rq.k === k ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish it instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed it up"], [".qrow .t", "Researching. It finishes on its own"], ['[data-act="sub"][data-g="build"][data-v="research"]', "Open Research to watch it"], ['.qc[data-act="qgo"][data-q="r"]', "Tap Lab"], DOCKT("build", "Tap Build")]
+  : [[`.sheet [data-act="research"][data-k="${k}"]`, "Tap Research"], [`article.bn[data-kind="r"][data-k="${k}"]`, `Choose ${R[k].n}`], ['.rhd [data-act="rcat"][data-v=""]', "Back to all research"], [`[data-act="rcat"][data-v="${cat}"]`, `Open ${cat === "Drive" ? "Engine" : cat} Research`], ['[data-act="sub"][data-g="build"][data-v="research"]', "Open Research"], ['.qc[data-act="qgo"][data-q="r"]', "Tap Lab"], DOCKT("build", "Tap Build")];
 const mapPath = (final, pick) => () => [['.sheet [data-act="launch"]', "Send your fleet"], [final, "Choose this one"], pick ? [pick, "Pick a target"] : null, SHOWME].filter(Boolean);
 const TUT = [
   { lv: 1, t: "Build a Metal Extractor", say: "Everything starts with metal. Open Structures and build your first Metal Extractor.", ok: s => s.b.metalMine >= 1, go: { v: "build", s: "res" }, path: bPath("metalMine", "res"), rw: { m: 300, c: 150 } },
   { lv: 1, t: "Build a Solar Array", say: "Extractors need power. A Solar Array keeps them running at full speed.", ok: s => s.b.solar >= 1, go: { v: "build", s: "res" }, path: bPath("solar", "res"), rw: { m: 300, c: 200 } },
   { lv: 1, t: "Build a Crystal Refinery", say: "Crystal pays for research and better hulls. Get a refinery going.", ok: s => s.b.crystalMine >= 1, go: { v: "build", s: "res" }, path: bPath("crystalMine", "res"), rw: { m: 400, c: 250 } },
   { lv: 1, t: "Upgrade the Metal Extractor to Lv.2", say: "Upgrades multiply your income. Jobs under five minutes finish for free: tap Free when it appears.", ok: s => s.b.metalMine >= 2, go: { v: "build", s: "res" }, path: bPath("metalMine", "res"), rw: { m: 500, c: 300 } },
+  { lv: 1, t: "Build a Gas Synthesizer", say: "Drones, ships and research all burn gas. Get a synthesizer running.", ok: s => s.b.gasSynth >= 1, go: { v: "build", s: "res" }, path: bPath("gasSynth", "res"), rw: { m: 300, c: 150, g: 450 } },
   { lv: 2, t: "Build Drone Works", say: "Drone Works speeds up every construction and unlocks the Shipyard. You'll find it under Facility.", ok: s => s.b.robotics >= 1, go: { v: "build", s: "fac" }, path: bPath("robotics", "fac"), rw: { m: 600, c: 300, g: 150 } },
   { lv: 2, t: "Build the Shipyard", say: "No fleet, no empire. Build the Shipyard.", ok: s => s.b.shipyard >= 1, go: { v: "build", s: "fac" }, path: bPath("shipyard", "fac"), rw: { m: 1200, c: 500 } },
   { lv: 2, t: "Build the Research Center", say: "Ships need engines, and engines need research. Build a Research Center under Facility.", ok: s => s.b.lab >= 1, go: { v: "build", s: "fac" }, path: bPath("lab", "fac"), rw: { m: 800, c: 1000, g: 300 } },
-  { lv: 3, t: "Research Energy Technology", say: "Energy Technology is the root of the tech tree, and Combustion Drive needs it. Start it now.", ok: s => s.r.energyT >= 1, go: { v: "lab" }, rcat: "Basic", path: rPath("energyT", "Basic"), rw: { m: 1000, c: 800, shards: 1 } },
-  { lv: 3, t: "Research Combustion Drive", say: "Combustion Drive powers your first warships. Once it is done, the Shipyard can build Light Fighters.", ok: s => s.r.drive >= 1, go: { v: "lab" }, rcat: "Drive", path: rPath("drive", "Drive"), rw: { m: 1200, c: 600, g: 200 } },
-  { lv: 3, t: "Build 3 Light Fighters", say: "Light Fighters are cheap and fast: perfect for your first raids. Queue three of them, then speed them up.", ok: () => own("fighter") >= 3, go: { v: "build", s: "ships" },
+  { lv: 3, t: "Research Energy Technology", say: "Energy Technology is the root of the tech tree, and Combustion Drive needs it. Start it now.", ok: s => s.r.energyT >= 1, go: { v: "lab" }, rcat: "Basic", path: rPath("energyT", "Basic"), rw: { m: 2500, c: 1200, g: 700, shards: 1 } },
+  { lv: 3, t: "Research Combustion Drive", say: "Combustion Drive powers your first warships. Once it is done, the Shipyard can build Light Fighters.", ok: s => s.r.drive >= 1, go: { v: "lab" }, rcat: "Drive", path: rPath("drive", "Drive"), rw: { m: 3500, c: 1200, g: 300 } },
+  { lv: 3, t: "Build 3 Light Fighters", say: "Light Fighters are cheap and fast: perfect for your first raids. Queue three of them. Academy crews build them in a minute each.", ok: () => own("fighter") >= 3, fast: "fighter", go: { v: "build", s: "ships" }, /* v190: academy fighters take a minute each (they took ~10, a half-hour wait mid-tutorial) */
     path: () => S.sq.some(q => q.k === "fighter") ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish them instantly"], ['.qrow [data-act="boost"]', "Tap to use a Boost: 5 minutes faster"], [".qrow .t", "Fighters in production. They join your fleet as they finish"], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard to watch them"], DOCKT("build", "Tap Build")] : [['.sheet [data-act="make"][data-k="fighter"]', "Set 3, then tap Build"], ['article.bn[data-kind="s"][data-k="fighter"]', "Choose Light Fighter"], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")], rw: { m: 800, c: 400, shards: 2 } },
   { lv: 3, t: "Defeat a Hive garrison", say: "The amber worlds belong to the Hive. I've marked a weak one near us: send the fighters.", ok: s => s.wins >= 1, hive: 1, path: () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : mapPath('.sheet [data-act="launch"]')(), rw: { m: 1200, c: 700, g: 300, shards: 3 } },
   { lv: 3, t: "Gather from a resource field", say: "Resource fields pay out to whoever holds them. Fields already held by a rival must be fought for, so pick a free one.", ok: s => (s.stats || {}).gathers >= 1 || s.fleets.some(f => f.nid), find: "m", path: mapPath('.sheet [data-act="gather"], .sheet [data-act="launch"]', '.sheet .tgt[data-act="node"]'), rw: { m: 1000, c: 600, g: 300 } },
@@ -11855,6 +11857,8 @@ function tutShow() {
    tap, with a soft spotlight around it. Each moment it takes the furthest point along the step's path that is on screen, so it
    leads you tap by tap; it stays until the step is done, then points at Collect reward. It hides during battles and dialogues. */
 const GD = { el: null, label: "", scrolled: null, t: 0 };
+const guideNow = () => { GD.t = 0; try { coachRender(); } catch (e) {} };
+document.addEventListener("click", () => setTimeout(guideNow, 0), true);
 function guideVisible(el) {
   const r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2 || getComputedStyle(el).visibility === "hidden") return 0;
   if (r.bottom < 0 || r.top > innerHeight) return 2; // off-screen in a list: scroll to it
@@ -13260,6 +13264,9 @@ function trayRender() {
 
 /* ---------- actions ---------- */
 function act(fn) { advance(now()); fn(); progress(); dirty(); render(true); }
+/* v190: starting a build, upgrade, research or ship order from its card closes the card (no swiping it away), and the
+   tutorial pointer moves to the next tap straight away */
+function doneCard() { if (sheet && (sheet.type === "bld" || sheet.type === "detail")) closeSheet(); guideNow(); }
 function takeShips(n) { const av = originAvail(), o = {}; for (const k in n) { const v = Math.min(n[k] || 0, av[k] || 0); if (v > 0) o[k] = v; } return o; }
 function sendFleet(p, n, mission, extra) {
   const h = originPlanet(); if (!h) return null;
@@ -13349,7 +13356,7 @@ const ACT = {
     if (bqN() >= Q_MAX) return toast(`The construction queue is full (${Q_MAX} jobs).`, "warn");
     if (usedOf(null) + bqN() >= homeFields()) return toast("No free fields on your homeworld.", "warn");
     const lvl = bNext(k), c = cost(B[k], lvl); if (!pay(c)) return toast("Not enough resources.", "warn"); const t = now();
-    if (!S.bq) S.bq = { k, lvl, s: t, e: t + bTimeL(k, lvl), c }; else { bqList().push({ k, lvl, c }); toast(`${B[k].n} Lv.${lvl} queued · ${bqN()}/${Q_MAX}`); } }),
+    if (!S.bq) S.bq = { k, lvl, s: t, e: t + bTimeL(k, lvl), c }; else { bqList().push({ k, lvl, c }); toast(`${B[k].n} Lv.${lvl} queued · ${bqN()}/${Q_MAX}`); } doneCard(); }),
   qcancel: d => act(() => { const list = d.q === "r" ? rqList() : bqList(), i = +d.i, it = list[i]; if (!it) return; list.splice(i, 1); refundRes(it.c); toast("Removed from the queue. Resources refunded."); }),
   planets: () => openSheet({ type: "planets" }),
   basedet: () => openSheet({ type: "basedet" }),
@@ -13545,15 +13552,15 @@ const ACT = {
     const c = d.s ? mul(SH[it.k].c, it.n) : it.c; settle(p); for (const r of ["m", "c", "g"]) p.st[r] += c[r] || 0; S.spent -= total(c); putPlanet(p); toast(`Removed from ${p.name}'s queue. Refunded to its stockpile.`); }),
   research: d => act(() => { const k = d.k; if (missing(R[k].req).length || rMaxed(k, rNext(k))) return; if (rqN() >= Q_MAX) return toast(`The research queue is full (${Q_MAX} jobs).`, "warn");
     const lvl = rNext(k), c = cost(R[k], lvl); if (!pay(c)) return toast("Not enough resources.", "warn"); const t = now();
-    if (!S.rq) S.rq = { k, lvl, s: t, e: t + rTimeL(k, lvl), c }; else { rqList().push({ k, lvl, c }); toast(`${R[k].n} Lv.${lvl} queued · ${rqN()}/${Q_MAX}`); } }),
+    if (!S.rq) S.rq = { k, lvl, s: t, e: t + rTimeL(k, lvl), c }; else { rqList().push({ k, lvl, c }); toast(`${R[k].n} Lv.${lvl} queued · ${rqN()}/${Q_MAX}`); } doneCard(); }),
   step: d => { const el = $("#q-" + d.k); el.value = Math.max(1, (+el.value || 1) + +d.d); tickUI(); },
   make: d => act(() => {
     const def = d.kind === "def" ? DF[d.k] : SH[d.k]; let n = Math.max(1, Math.floor(+($("#q-" + d.k) || {}).value || 1));
     if (missing(def.req).length || allyBlock(def)) return;
     if (def.max) n = Math.min(n, def.max - (d.kind === "def" ? S.def[d.k] : own(d.k)) - S.sq.filter(x => x.k === d.k).reduce((a, x) => a + x.left, 0)); if (n <= 0) return;
     const c = mul(def.c, n); if (!pay(c)) return toast("Not enough resources.", "warn");
-    const each = uTime(def.c) * (d.kind === "def" && officer("engineer") ? .75 : 1), item = { k: d.k, kind: d.kind, n, left: n, each, next: 0 };
-    if (!S.sq.length) item.next = now() + each; S.sq.push(item); toast(`${def.n} ×${n} queued`);
+    const each = Math.min(uTime(def.c) * (d.kind === "def" && officer("engineer") ? .75 : 1), tutOn() && TUT[S.tut.i].fast === d.k ? 60000 : Infinity), item = { k: d.k, kind: d.kind, n, left: n, each, next: 0 };
+    if (!S.sq.length) item.next = now() + each; S.sq.push(item); toast(`${def.n} ×${n} queued`); doneCard();
   }),
   cancel: d => act(() => { const q = d.q === "b" ? "bq" : "rq"; const it = S[q]; if (!it) return; refundRes(it.c); S[q] = null; if (q === "bq") startNextB(now()); else startNextR(now()); toast("Cancelled. Resources refunded."); }),
   boost: d => act(() => { if (!S.boosts) return; const t = now();
@@ -14100,7 +14107,7 @@ setTimeout(() => boot((window.claude && window.claude.hot && window.claude.hot.d
 <style>
 #fbBtn{position:fixed;left:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 72px);z-index:65;display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:18px;border:1px solid rgba(127,230,243,.45);background:rgba(6,18,30,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#bff3fa;font:600 12px "Oxanium",sans-serif;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 4px 14px rgba(0,0,0,.45);opacity:.85;touch-action:manipulation}
 #fbBtn:active{opacity:1}
-body:has(.sheet) #fbBtn,body:has(#udfAuth) #fbBtn{display:none}
+body:has(.sheet) #fbBtn,body:has(#adv) #fbBtn,body:has(#udfAuth) #fbBtn{display:none}
 #fbW{position:fixed;inset:0;z-index:95;display:none;align-items:flex-end;justify-content:center;background:rgba(2,6,12,.6)}
 #fbW.on{display:flex}
 #fbW form{width:min(480px,100%);background:linear-gradient(180deg,#11202d,#0b1520);border:1px solid #2c5468;border-radius:18px 18px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 16px);display:flex;flex-direction:column;gap:10px;color:#d5e4ec;font-family:"Barlow Semi Condensed",sans-serif}
