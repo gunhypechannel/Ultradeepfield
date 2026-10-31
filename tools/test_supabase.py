@@ -1,0 +1,58 @@
+import asyncio, json, sys, subprocess, time, os
+from playwright.async_api import async_playwright
+D=os.path.dirname(__file__); SITE=sys.argv[1]
+SB=open(os.path.join(D,"mock-supabase.js")).read(); FBM=open(os.path.join(D,"mock-firebase-slow.js")).read()
+H=json.load(open("ex/heal.json"))
+OLD="window.__seed={'data/users/uid_novatestdev_test/save':"+json.dumps({"v":3,"savedAt":1,"json":H["local"],"sig":H["localSig"]})+"};"
+async def main():
+    srv=subprocess.Popen([sys.executable,"-m","http.server","8775","-d",SITE],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL); time.sleep(1)
+    try:
+      async with async_playwright() as p:
+        b=await p.chromium.launch(executable_path="/usr/bin/google-chrome",args=["--no-sandbox"])
+        ctx=await b.new_context(viewport={"width":390,"height":844},is_mobile=True,has_touch=True)
+        await ctx.add_init_script(OLD)
+        pg=await ctx.new_page(); errs=[]; dlg=[]
+        pg.on("pageerror",lambda e: errs.append((e.stack or str(e))[:400]))
+        pg.on("console",lambda m: errs.append("console: "+m.text[:300]) if m.type=="error" else None)
+        async def on_dialog(d): dlg.append(d.message[:90]); await d.accept()
+        pg.on("dialog",lambda d: asyncio.ensure_future(on_dialog(d)))
+        await ctx.route(lambda u: not u.startswith("http://localhost") and "gstatic.com/firebasejs" not in u and "cdn.jsdelivr.net" not in u, lambda r: r.abort())
+        await ctx.route("https://cdn.jsdelivr.net/**",lambda r: r.fulfill(status=200,content_type="application/javascript",body=SB))
+        await ctx.route("https://www.gstatic.com/firebasejs/**",lambda r: r.fulfill(status=200,content_type="application/javascript",body=FBM if "app-compat" in r.request.url else "/**/"))
+        await pg.goto("http://localhost:8775/",wait_until="domcontentloaded")
+        await pg.wait_for_selector("#udfAuth",timeout=15000)
+        print("1 sign-in screen shown, google button:", await pg.evaluate("!!document.querySelector('#udfAuth .g')"), "| old adapter loaded:", await pg.evaluate("!!window.firebase"))
+        await pg.click("[data-a=up]"); await pg.fill("input[name=n]","Nova"); await pg.fill("input[name=e]","nova@test.dev"); await pg.fill("input[name=p]","abcdef"); await pg.click("button.p")
+        await pg.wait_for_timeout(9000)
+        print("2 signed in, mode:", await pg.evaluate("__T.G.mode"), "| me:", await pg.evaluate("__T.G.me"), "| name:", await pg.evaluate("__T.G.myName"))
+        print("  offer shown:", await pg.evaluate("!!document.getElementById('oldw')"))
+        rows=await pg.evaluate("Object.keys(window.__sbRows).map(k=>k.split('/')[0]).reduce((o,k)=>(o[k]=(o[k]||0)+1,o),{})"); print("  rows by kind:", rows)
+        before=await pg.evaluate("({b:Object.values(__T.S.b).reduce((a,v)=>a+v,0), ships:Object.values(__T.S.ships).reduce((a,v)=>a+v,0)})")
+        await pg.click("#oldw [data-act=empOld]"); await pg.wait_for_selector("#udfOld",timeout=8000)
+        await pg.fill("#udfOld input[name=e]","nova@test.dev"); await pg.fill("#udfOld input[name=p]","abcdef"); await pg.click("#udfOld button.p")
+        await pg.wait_for_timeout(5000)
+        after=await pg.evaluate("({b:Object.values(__T.S.b).reduce((a,v)=>a+v,0), ships:Object.values(__T.S.ships).reduce((a,v)=>a+v,0)})")
+        old=json.loads(H["local"]); ob=sum(old["b"].values()); osh=sum(old["ships"].values())
+        print("3 moved from old server: levels", before["b"], "->", after["b"], "(old server had", ob, ") ships", before["ships"], "->", after["ships"], "(old", osh, ") | dialogs:", dlg)
+        await pg.wait_for_timeout(3000); await pg.evaluate("(async()=>{__T.dirty(); await __T.flush();})()"); await pg.wait_for_timeout(800)
+        sv=await pg.evaluate("(()=>{const k=Object.keys(window.__sbRows).find(k=>/save$/.test(k)); const d=window.__sbRows[k]; return {seq:d.seq, lv:d.lv, shrink:d.shrink}})()"); print("4 server save:", sv, "| store.seq", await pg.evaluate("__T.store.seq"))
+        # another player's world changes on the server: shows up live
+        pid=await pg.evaluate("Object.keys(window.__sbRows).find(k=>k.startsWith('planets/')&&window.__sbRows[k].owner!==__T.G.me)")
+        if pid:
+            await pg.evaluate("(k=>{const d=JSON.parse(JSON.stringify(window.__sbRows[k])); d.name='Zed Prime'; window.__sbServerWrite(k,d);})('"+pid+"')"); await pg.wait_for_timeout(1500)
+            print("5 live planet update:", await pg.evaluate("(__T.G.byId['"+pid.split('/')[1]+"']||{}).name"))
+        else: print("5 no other planet found")
+        await pg.evaluate("(()=>{const me=__T.G.me; window.__sbServerWrite('alliances/al1',{name:'Deep Fielders',tag:'DFX',leader:me,members:{[me]:Date.now()},at:Date.now()});})()"); await pg.wait_for_timeout(1500)
+        print("6 alliance from its member list:", await pg.evaluate("__T.S.ally"))
+        await pg.evaluate("window.__sbDrop()"); await pg.evaluate("window.__sbServerWrite('alliances/al2',{name:'Missed While Offline',tag:'MWO',leader:'x',members:{x:1},at:1})"); await pg.wait_for_timeout(2000)
+        print("7 caught up after the live link dropped:", await pg.evaluate("!!__T.G.alliances.al2"))
+        await pg.evaluate("(async()=>{__T.dirty(); await __T.flush();})()"); await pg.wait_for_timeout(800)
+        await pg.reload(wait_until="domcontentloaded"); await pg.wait_for_timeout(9000)
+        print("8 after reload: sign-in screen:", await pg.evaluate("!!document.getElementById('udfAuth')"), "| levels:", await pg.evaluate("Object.values(__T.S.b).reduce((a,v)=>a+v,0)"), "| ally:", await pg.evaluate("__T.S.ally"), "| takeover:", await pg.evaluate("!!document.getElementById('sessw')"), "| offer:", await pg.evaluate("!!document.getElementById('oldw')"))
+        await pg.evaluate("(async()=>{__T.dirty(); await __T.flush();})()"); await pg.wait_for_timeout(800)
+        print("  save seq now:", await pg.evaluate("(()=>{const k=Object.keys(window.__sbRows).find(k=>/save$/.test(k)); return window.__sbRows[k].seq})()"), "| players row:", await pg.evaluate("!!window.__sbRows['players/'+__T.G.me]"), "| profile:", await pg.evaluate("JSON.stringify(window.__sbRows['profiles/'+__T.G.me])"))
+        await pg.screenshot(path="ex/sb1.png")
+        print("errors:", errs[:6])
+        await b.close()
+    finally: srv.terminate()
+asyncio.run(main())

@@ -1,7 +1,9 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><meta name="theme-color" content="#05090f"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/favicon-32.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Deep Field"><meta name="description" content="Build an empire across the deep field. Play with friends in a shared galaxy."></head><body>
 <title>Ultra Deep Field</title>
 <script src="firebase-config.js"></script>
-<script src="udf-firebase.js"></script><!-- Ultra Deep Field, formerly Void of War. The old name stays in this note: apps installed before the rename only accept updates that contain it. -->
+<script src="supabase-config.js"></script>
+<script>/* v206: the game runs on Supabase once supabase-config.js is filled in; until then on the old Firebase server */(function(){var c=window.UDF_SUPABASE||{},on=c.url&&c.anonKey&&String(c.url+c.anonKey).indexOf("PASTE")<0;document.write('<script src="'+(on?"udf-supabase.js":"udf-firebase.js")+'"><\/script>');})();</script>
+<!-- udf-firebase.js --><!-- Ultra Deep Field, formerly Void of War. The old name stays in this note: apps installed before the rename only accept updates that contain it. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;600;700;800&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">
@@ -665,7 +667,7 @@ canvas.dthumb{display:block}
 .qbar{display:flex;gap:6px;padding:5px 10px 7px;overflow-x:auto;scrollbar-width:none;background:rgba(3,12,20,.55)}.qbar::-webkit-scrollbar{display:none}
 .qc{flex:1.5 1 0;min-width:0;display:flex;align-items:center;gap:5px;padding:4px 8px;border-radius:9px;border:1px solid #1f4a66;background:rgba(14,36,52,.75);color:#cfe7f3;font-family:var(--f-display);font-size:11px;cursor:pointer;white-space:nowrap}
 .qc svg{flex:none;width:14px;height:14px;color:var(--cyan)}.qc .qn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;text-align:left}.qc b{flex:none;color:var(--cyan);font-weight:600}.qc i{font-style:normal;color:var(--muted)}
-.qc.idle{flex:1 1 0;border-color:rgba(240,169,69,.55);color:var(--amber);animation:pulse 2.4s infinite}.qc.idle svg,.qc.idle b{color:var(--amber)}#sessw{position:fixed;inset:0;z-index:250;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(2,6,12,.82)}#sessw .sessbox{max-width:360px;background:linear-gradient(180deg,#11202d,#0b1520);border:1px solid #2c5468;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px;color:#d5e4ec}#sessw b{font:700 18px var(--f-display);color:#55d6e8}#sessw p{margin:0;font-size:14px;color:#9fc3d4}.rstrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.rstrow>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rstrow small{color:var(--muted);font-size:12px}.qc.free{border-color:#f0a945;background:linear-gradient(180deg,rgba(255,211,107,.28),rgba(240,169,69,.16));color:#ffe3a3;animation:none}.qc.free svg,.qc.free b{color:#ffd36b}.qc.free.all{flex:0 0 auto;font-weight:700}
+.qc.idle{flex:1 1 0;border-color:rgba(240,169,69,.55);color:var(--amber);animation:pulse 2.4s infinite}.qc.idle svg,.qc.idle b{color:var(--amber)}#oldw,#sessw{position:fixed;inset:0;z-index:250;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(2,6,12,.82)}#oldw .sessbox,#sessw .sessbox{max-width:360px;background:linear-gradient(180deg,#11202d,#0b1520);border:1px solid #2c5468;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px;color:#d5e4ec}#oldw b,#sessw b{font:700 18px var(--f-display);color:#55d6e8}#oldw p,#sessw p{margin:0;font-size:14px;color:#9fc3d4}.rstrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.rstrow>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rstrow small{color:var(--muted);font-size:12px}.qc.free{border-color:#f0a945;background:linear-gradient(180deg,rgba(255,211,107,.28),rgba(240,169,69,.16));color:#ffe3a3;animation:none}.qc.free svg,.qc.free b{color:#ffd36b}.qc.free.all{flex:0 0 auto;font-weight:700}
 .vols{display:flex;flex-direction:column;gap:6px;margin:6px 0}.vrow{display:grid;grid-template-columns:96px 1fr 44px;align-items:center;gap:10px;font-size:14px;color:#eef3f6}
 .vrow input{width:100%;accent-color:var(--cyan);height:28px}.vrow b{font-family:var(--f-display);font-size:13px;color:var(--cyan);text-align:right}.vrow input:disabled{opacity:.4}
 .toast{background:rgba(11,21,32,.96);border:1px solid var(--line-hi);border-left:3px solid var(--cyan);padding:8px 12px;font-size:14px;animation:up .2s ease-out;box-shadow:0 6px 18px rgba(0,0,0,.5)}
@@ -4290,7 +4292,7 @@ async function connectCloud() {
     ownerCheck(user); // the game's owner has every premium skin unlocked
     try { G.myName = (await user.me()).name || ""; } catch (e) {} if (S && S.cname) G.myName = S.cname;
     try {
-      const snap = await db.doc(`data/users/${uid}/save`).get();
+      const snap = await db.doc(`data/users/${uid}/save`).get(); if (!snap.exists) setTimeout(oldOffer, 1500);
       /* v200: which empire wins when you sign in. It used to be "newest savedAt", but every device stamps its save as it plays, so a
          second phone's brand-new planet (saved while you were still typing your password) beat your real empire and then overwrote
          it. Now: an empire on this device that belongs to another account never wins; a device that has synced with this account
@@ -11469,7 +11471,7 @@ function mSave() {
     ${mrow("Last saved", S.savedAt ? ago(S.savedAt) + " ago" : "Not yet")}${mrow("Storage", store.mode === "cloud" ? "Your account" : "This browser")}
     <button class="mbtn" data-act="saveNow">Save now</button>
     <h3 style="margin-top:14px">Move your empire</h3><p>Copy this empire between the Claude version and the website. Export a file here, then import it in the other one. Each version keeps its own copy afterwards.</p>
-    <button class="mbtn" data-act="empExport">Export empire file</button><button class="mbtn" data-act="empImport">Import empire file</button>
+    <button class="mbtn" data-act="empExport">Export empire file</button><button class="mbtn" data-act="empImport">Import empire file</button>${window.udfOld && window.udfOld.available ? `<button class="mbtn" data-act="empOld">Bring my empire from the old server</button>` : ""}
     <h3 style="margin-top:14px">Restore a backup</h3><p>Lost progress? Your account keeps hourly and daily backups on the server, and this device keeps its own copies. Check them here and restore the one that has what you lost. Your colonies stay as they are.</p>
     ${menu.rest ? (menu.rest.length ? menu.rest.map(r => `<div class="rstrow"><div><b>${esc(r.label)}</b><small>${r.at ? (/^\d/.test(ago(r.at)) ? ago(r.at) + " ago" : "just now") : "date unknown"} · homeworld buildings ${r.lv} levels · research ${r.rl} · ${fmt(r.ships)} ships · ${fmt(r.res)} resources</small></div><button class="btn sm" data-act="restUse" data-k="${r.k}">Restore</button></div>`).join("") : '<p class="note">No other copies are stored on this device.</p>') : '<button class="mbtn" data-act="restScan">Show backups</button>'}</div>`;
 }
@@ -11498,20 +11500,32 @@ function empImport() {
   inp.onchange = async () => {
     const f = inp.files && inp.files[0]; if (!f) return; let d, st;
     try { d = JSON.parse(await f.text()); } catch (e) { return toast("That isn't an empire file.", "warn"); }
+    empLoad(d, false);
+  };
+  inp.click();
+}
+/* v206: checks an empire (from a file, or read straight from the old server) and brings it across */
+function empLoad(d, fromOld) { let st;
+  {
     if (!d || typeof d.json !== "string" || typeof d.sig !== "string") return toast("That isn't an empire file.", "warn");
     if (d.sig !== secSig(d.json)) return toast("This file was changed outside the game, so it can't be imported.", "loss");
     try { st = JSON.parse(d.json); } catch (e) { return toast("That empire file is damaged.", "warn"); }
     if (!st || !st.b || !st.r || !st.ships || !st.res) return toast("That isn't an empire file.", "warn");
     let planets = Array.isArray(d.planets) ? d.planets : [];
-    if (planets.length && d.psig !== secSig(d.json + "|" + JSON.stringify(planets))) return toast("This file was changed outside the game, so it can't be imported.", "loss");
+    if (planets.length && !fromOld && d.psig !== secSig(d.json + "|" + JSON.stringify(planets))) return toast("This file was changed outside the game, so it can't be imported.", "loss");
     if (planets.length && G.mode !== "online") return toast("Connect to the shared galaxy first, so your worlds can come across too.", "warn");
     const lv = cmdLevel(Object.values(st.b).reduce((a, v) => a + (+v || 0), 0) * 100);
     const home = planets.find(p => p && p.kind === "home"), cols = planets.filter(p => p && p.kind !== "home").length;
-    if (!confirm(`Replace the empire here with the one in this file?\n\nComing across: buildings, research, ships, resources, items${home ? `, your homeworld ${home.name || ""} (name, moon, skin, buildings)` : ""}${cols ? ` and ${cols} ${cols > 1 ? "colonies" : "colony"}` : ""}. Alliances and friends from the other galaxy stay there, and fleets in flight come home first.\n\nThe empire you have here now is overwritten.`)) return;
+    if (!confirm(`Replace the empire here with the one ${fromOld ? "from the old server" : "in this file"}?\n\nComing across: buildings, research, ships, resources, items${home ? `, your homeworld ${home.name || ""} (name, moon, skin, buildings)` : ""}${cols ? ` and ${cols} ${cols > 1 ? "colonies" : "colony"}` : ""}. Alliances and friends from the other galaxy stay there, and fleets in flight come home first.\n\nThe empire you have here now is overwritten.`)) return;
     empApply(st, planets);
-  };
-  inp.click();
+  }
 }
+async function empOld() { closeOld(); let d; try { d = await window.udfOld.fetch(); } catch (e) { return toast((e && e.message) || "Couldn't reach the old server.", "warn"); } if (d) empLoad(d, true); }
+function closeOld() { const el = document.getElementById("oldw"); if (el) el.remove(); }
+/* v206: the first sign-in on the new server offers to bring the empire from the old one */
+function oldOffer() { if (!window.udfOld || !window.udfOld.available || document.getElementById("oldw")) return; const el = document.createElement("div"); el.id = "oldw";
+  el.innerHTML = `<div class="sessbox"><b>Played before the move?</b><p>The game moved to a new server. If you played on the old one, bring your empire across: your homeworld, buildings, research, ships, resources and worlds. Alliances need founding or joining again.</p><button class="btn wide" data-act="empOld">Bring my empire</button><button class="btn ghost wide" data-act="oldNo">I'm new: start fresh</button></div>`;
+  document.body.appendChild(el); }
 function empApply(st, planets) { store.shrinkOk = true;
   const lp = S.lp, homeName = S.homeName; st = migrate(st);
   for (const f of st.fleets || []) for (const k in f.n || {}) st.ships[k] = (st.ships[k] || 0) + f.n[k];
@@ -13494,7 +13508,7 @@ const ACT = {
     menu.rename = false; dirty(); toast(`Homeworld renamed to ${v}.`); render(true);
   },
   saveNow: () => { dirty(); flush().then(() => { toast(store.mode === "cloud" ? "Saved to your account." : "Saved in this browser.", "win"); renderMenu(); }); },
-  empExport: () => empExport(), empImport: () => empImport(),
+  empExport: () => empExport(), empImport: () => empImport(), empOld: () => empOld(), oldNo: () => closeOld(),
   restScan: async () => { flush().catch(() => {}); menu.rest = restCopies(); if (menu.open) menu.open.settings = true; renderMenu();
     if (!store.db || !store.uid) return; try { const snap = await store.db.collection(`data/users/${store.uid}/backups`).limit(40).get(), rows = [];
       for (const d of snap.docs) { const v = d.data() || {}; if (typeof v.json !== "string") continue; let st; try { st = JSON.parse(v.json); } catch (e) { continue; } const sum = o => Object.values(o || {}).reduce((a, x) => a + (+x || 0), 0);
