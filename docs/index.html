@@ -11389,8 +11389,44 @@ function mSave() {
   return `<div class="mcard"><h3>${MI.save.replace("<svg", '<svg style="width:24px;height:24px"')}Save</h3>
     <p>${store.mode === "cloud" ? "Your empire saves to your account every few seconds and whenever you leave the page. Open the game on any device signed in to the same account to keep playing." : "Your empire saves in this browser every few seconds. Sign in to sync it across devices."}</p>
     ${mrow("Last saved", S.savedAt ? ago(S.savedAt) + " ago" : "Not yet")}${mrow("Storage", store.mode === "cloud" ? "Your account" : "This browser")}
-    <button class="mbtn" data-act="saveNow">Save now</button></div>`;
+    <button class="mbtn" data-act="saveNow">Save now</button>
+    <h3 style="margin-top:14px">Move your empire</h3><p>Copy this empire between the Claude version and the website. Export a file here, then import it in the other one. Each version keeps its own copy afterwards.</p>
+    <button class="mbtn" data-act="empExport">Export empire file</button><button class="mbtn" data-act="empImport">Import empire file</button></div>`;
 }
+/* v192: move an empire between the Claude version and the website. Export writes the same signed save the cloud keeps;
+   import checks the signature, keeps this galaxy's homeworld, returns any fleets home and drops links to the old galaxy
+   (alliance, friends, strikes), then replaces this empire. */
+async function empExport() {
+  dirty(); try { await flush(); } catch (e) {}
+  const json = JSON.stringify(S), file = JSON.stringify({ app: "ultra-deep-field", kind: "empire", v: 3, savedAt: S.savedAt || now(), json, sig: secSig(json) }), name = "ultra-deep-field-empire.json";
+  let dl = null; try { if (window.claude && window.claude.use) dl = await window.claude.use("downloads"); } catch (e) {}
+  if (dl) { try { const r = await dl.save({ filename: name, data: file }); if (r && r.status === "saved") toast("Empire file saved. Open the other version and tap Import empire file.", "win"); } catch (e) { toast(e && e.code === "declined" ? "Export cancelled." : "Couldn't save the file here.", "warn"); } return; }
+  try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([file], { type: "application/json" })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); toast("Empire file downloaded. Open the other version and tap Import empire file.", "win"); }
+  catch (e) { toast("Couldn't save the file here.", "warn"); }
+}
+function empImport() {
+  const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".json,application/json";
+  inp.onchange = async () => {
+    const f = inp.files && inp.files[0]; if (!f) return; let d, st;
+    try { d = JSON.parse(await f.text()); } catch (e) { return toast("That isn't an empire file.", "warn"); }
+    if (!d || typeof d.json !== "string" || typeof d.sig !== "string") return toast("That isn't an empire file.", "warn");
+    if (d.sig !== secSig(d.json)) return toast("This file was changed outside the game, so it can't be imported.", "loss");
+    try { st = JSON.parse(d.json); } catch (e) { return toast("That empire file is damaged.", "warn"); }
+    if (!st || !st.b || !st.r || !st.ships || !st.res) return toast("That isn't an empire file.", "warn");
+    const lv = cmdLevel(Object.values(st.b).reduce((a, v) => a + (+v || 0), 0) * 100);
+    if (!confirm("Replace the empire here with the one in this file?\n\nBuildings, research, ships, resources and items come across. Your homeworld here keeps its name and place, and alliances, friends and fleets in flight from the other galaxy don't carry over.\n\nThe empire you have here now is overwritten.")) return;
+    empApply(st);
+  };
+  inp.click();
+}
+function empApply(st) {
+  const lp = S.lp, homeName = S.homeName; st = migrate(st);
+  for (const f of st.fleets || []) for (const k in f.n || {}) st.ships[k] = (st.ships[k] || 0) + f.n[k];
+  Object.assign(st, { fleets: [], ally: null, strikes: [], probes: [], caches: [], raid: null, nextRaid: null, botRaid: null, nextBotRaid: null, friends: [], blocked: [], lp, homeName, t: now(), savedAt: now(), imported: (st.imported || 0) + 1 });
+  S = st; secBoot(); FOG = null; live = false; advance(now()); live = true; dirty(); flush(); try { rebuild(); } catch (e) {} syncPlayer(); try { closeMenu(); } catch (e) {} render(true);
+  toast("Empire imported. Your buildings, research, ships and resources are here now.", "win");
+}
+
 const TRADE_VAL = { m: 1, c: 1.5, g: 3 }, RES_N = { m: "Metal", c: "Crystal", g: "Gas", s: "Void Shards" };
 const boostPrice = () => { const k = Math.min(12, Math.pow(1.15, S.boostBuys || 0)); /* v79: the price stops rising at 12x */ return { m: Math.round(3000 * k), c: Math.round(2000 * k), g: Math.round(600 * k) }; };
 function mShop() {
@@ -13322,7 +13358,8 @@ const ACT = {
     S.homeName = v; const h = homePlanet(); if (h) { h.name = v; putPlanet(h); }
     menu.rename = false; dirty(); toast(`Homeworld renamed to ${v}.`); render(true);
   },
-  saveNow: () => { dirty(); flush().then(() => { toast(store.mode === "cloud" ? "Saved to your Claude account." : "Saved in this browser.", "win"); renderMenu(); }); },
+  saveNow: () => { dirty(); flush().then(() => { toast(store.mode === "cloud" ? "Saved to your account." : "Saved in this browser.", "win"); renderMenu(); }); },
+  empExport: () => empExport(), empImport: () => empImport(),
   mreset: () => { menu.confirm = true; renderMenu(); },
   mresetNo: () => { menu.confirm = false; renderMenu(); },
   mreport: d => { closeMenu(); S.unread = 0; dirty(); openSheet({ type: "report", id: d.id }); },
