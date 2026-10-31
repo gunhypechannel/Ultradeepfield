@@ -5643,8 +5643,16 @@ function fleetPath(f, T) { if (f.parkAt === "nexus") { const q = G3 ? G3.nexus.p
 /* v174 a fleet holding station at the Cube: an inclined attack orbit (fleets spread over every face, above and below), breathing in
    on strafing passes and out again, never closer than the hull's corners plus the fleet's own size and a gap. A fleet that has just
    arrived slides round from where it stopped on the near side into its orbit (along the orbit, never across the Cube). */
-function cubeOrbit(c, id, T, rad, f) { const h = hash(id), inc = .1 + (h % 38) / 100, dir = h % 4 ? 1 : -1, ph = (h % 628) / 100, R0 = Math.max(CUBE_STAND + (h % 15), (CUBE_CORNER + rad + 4) / .86, (f.parkR || 0) + CUBE_CORNER);
-  const at = tt => { const a = ph + tt * dir * 4.4 / R0 * 1e-3, R = R0 * (1 + .14 * Math.sin(tt * 1.1e-4 + ph)); return [a, R, Math.sin(a * 1.3 + ph) * R * inc]; };
+function cubeOrbit(c, id, T, rad, f) { const h = hash(id); let inc = .1 + (h % 38) / 100, dir = h % 4 ? 1 : -1, ph = (h % 628) / 100, R0 = Math.max(CUBE_STAND + (h % 15), (CUBE_CORNER + rad + 4) / .86, (f.parkR || 0) + CUBE_CORNER);
+  /* v194 a demo battle's commanders hold ordered rings instead of a random shell: defenders on the inner rings turning one way,
+     attackers on the outer rings turning the other, evenly spaced and stacked in tiers, the attack rings diving in on strafing passes */
+  const dmo = /^dm([AD])(r?)(\d+)$/.exec(id); let tierY = null, att = false, ring = 0;
+  if (dmo) { att = dmo[1] === "A"; const i = +dmo[3] + (dmo[2] ? 60 : 0), per = 16, slot = i % per; ring = Math.floor(i / per);
+    dir = att ? -1 : 1; ph = (slot + (ring % 2) * .5) / per * TAU; inc = 0; tierY = (ring - 2) * (rad * 2 + 3);
+    R0 = Math.max(CUBE_STAND, (CUBE_CORNER + rad + 4) / .86) + (att ? rad * 2 + 18 : 0) + (ring % 2) * (rad + 2); }
+  const at = tt => { const a = ph + tt * dir * 4.4 / R0 * 1e-3;
+    if (tierY != null) { const dive = att ? .16 * Math.max(0, Math.sin(tt * 1.6e-4 + ring * 1.3)) : 0; return [a, R0 * (1 - dive), tierY]; }
+    const R = R0 * (1 + .14 * Math.sin(tt * 1.1e-4 + ph)); return [a, R, Math.sin(a * 1.3 + ph) * R * inc]; };
   const to = v => ({ x: c.x + Math.cos(v[0]) * v[1], y: c.y + v[2], z: c.z + Math.sin(v[0]) * v[1] });
   let p = at(T), n = at(T + 1500); const k = f.arrive && T - f.arrive < 20000 && T >= f.arrive ? 1 - (1 - (T - f.arrive) / 20000) ** 2 : 1; // ease out: it carries its speed in and slows as it settles
   if (k < 1) { const hp = fleetHome(f), o = hp ? P3(hp, T) : { x: f.ox || 0, z: f.oy || 0 }, s = cubeStand(c, { x: f.ox || o.x, z: f.oy || o.z }), a0 = Math.atan2(s.z - c.z, s.x - c.x);
@@ -5817,6 +5825,7 @@ function fleetLod(W, pxK) {
     let shown = true; for (let p = g; p; p = p.parent) if (!p.visible) { shown = false; break; } // a fleet inside a hidden group (the siege squadrons off-screen) must not reach the shared batch
     const inView = shown && FL_FR.intersectsSphere(FL_S), k = sc / Math.max(.1, FL_S.center.distanceTo(cp)) * pxK; let allFar = true;
     for (const e of u.groups) { const px = e.len * k; let lv = !inView ? 3 : px < far ? 2 : px < midPx ? 1 : 0; // 0 full, 1 middle, 2 stand-in, 3 culled
+      if (lv < 3 && e.lv != null && e.lv < 3 && lv !== e.lv) { if (lv < e.lv) { if (px < (e.lv === 2 ? far : midPx) * 1.2) lv = e.lv; } else if (px > (lv === 2 ? far : midPx) * .83) lv = e.lv; } e.lv = lv; /* v194: hysteresis */
       if (u.noBatch && lv < 3) { for (const m of e.meshes) m.visible = lv < 2; e.lod.visible = lv === 2; W.flStat[lv] += e.ss.length; allFar = false; continue; } // wrecks: their own full meshes, or their own stand-in
       for (const m of e.meshes) m.visible = lv === 0; e.lod.visible = false; W.flStat[lv] += e.ss.length; if (lv === 0) allFar = false;
       if ((lv === 1 || lv === 2) && e.K) { const G0 = shipGeo(e.K, e.k);
@@ -5976,20 +5985,20 @@ function drawClashes(W, t, T) {
   for (const c of G.clashes.slice()) { const e = tn - c.t0, k = e / c.dur;
     if (k >= 1 || !c.loc) { clashDispose(W, c); G.clashes = G.clashes.filter(x => x !== c); continue; }
     const q = c.loc === NEXUS ? W.nexus.position : P3(c.loc, T), R = (c.loc.kind === "planet" || G.byId[c.loc.id] ? plRad(c.loc) * 2.6 : c.loc === NEXUS ? 30 : 2.2) + 2.4, ang = (c.seed % 628) / 100;
-    if (!c.o) { const boltsG = new TH.BufferGeometry(); boltsG.setAttribute("position", new TH.BufferAttribute(new Float32Array(48 * 6), 3).setUsage(TH.DynamicDrawUsage)); boltsG.setAttribute("color", new TH.BufferAttribute(new Float32Array(48 * 6), 3).setUsage(TH.DynamicDrawUsage));
+    if (!c.o) { const boltsG = new TH.BufferGeometry(); boltsG.setAttribute("position", new TH.BufferAttribute(new Float32Array(240 * 6), 3).setUsage(TH.DynamicDrawUsage)); boltsG.setAttribute("color", new TH.BufferAttribute(new Float32Array(240 * 6), 3).setUsage(TH.DynamicDrawUsage));
       const bolts = new TH.LineSegments(boltsG, new TH.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 1, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); bolts.frustumCulled = false; bolts.renderOrder = 14; W.scene.add(bolts);
       const boomT = W.glow.boom || (W.glow.boom = glowTex("255,170,80", 1)), booms = [];
       for (let i = 0; i < 14; i++) { const sp = new TH.Sprite(W.additive(boomT, 0xffffff, 0)); sp.renderOrder = 15; W.scene.add(sp); booms.push({ sp, t0: -1e9 }); }
       const mk = (n, col, hostile) => { const g = fleet3D(W, clashShips(n) || genComp(clashCnt(n)), col, hostile); g.userData.size = (.75 + Math.min(1.1, Math.log10(clashCnt(n) + 1) * .3)) * .5; W.scene.add(g); return g; };
       c.o = { ga: mk(c.a, c.aCol, c.you !== "a"), gd: mk(c.d, c.dCol, c.you === "a"), bolts, booms, bl: [], la: -1, ld: -1, ended: 0 }; }
-    const o = c.o, dx = Math.cos(ang), dz = Math.sin(ang), wob = Math.sin(e * .0011) * .6;
+    const atCube = c.loc === NEXUS, angN = ang + (atCube ? e * .00007 : 0), o = c.o, dx = Math.cos(angN), dz = Math.sin(angN), wob = Math.sin(e * .0011) * (atCube ? 7 : .6); /* v194 strafing runs round the Cube */
     // attackers sweep in during the first 2 s, then hold a firing line; defenders hold in front of the target
     // v178 at the Cube the defenders hold a line just outside its hull (they used to hold 11 units from its centre: inside it)
-    const inK = clamp(e / 2000, 0, 1), cube = c.loc === NEXUS, aR = R * ((cube ? 1.9 : 1.5) + (1 - inK) * 3), dR = R * (cube ? 1.05 : .35);
+    const inK = clamp(e / 2000, 0, 1), cube = c.loc === NEXUS, aR = R * ((cube ? 1.9 - .45 * Math.max(0, Math.sin(e * .0009)) : 1.5) + (1 - inK) * 3), dR = R * (cube ? 1.05 : .35);
     o.ga.position.set(q.x + dx * aR - dz * wob, q.y + 1 + Math.sin(e * .0017) * .4, q.z + dz * aR + dx * wob); o.gd.position.set(q.x + dx * dR + dz * wob * .6, q.y + .6, q.z + dz * dR - dx * wob * .6);
     o.ga.lookAt(o.gd.position); o.gd.lookAt(o.ga.position);
-    const pxS = (W.size[1] / 2) / Math.tan(W.camera.fov * Math.PI / 360) * W.renderer.getPixelRatio();
-    for (const [g, sz] of [[o.ga, o.ga.userData.size], [o.gd, o.gd.userData.size]]) { g.scale.setScalar(fs * sz); g.updateMatrixWorld(); if (g.userData.eng) g.userData.eng.material.uniforms.uScale.value = pxS * fs * sz; if (g.userData.anim) g.userData.anim(reduced ? 0 : t); }
+    const pxS = (W.size[1] / 2) / Math.tan(W.camera.fov * Math.PI / 360) * W.renderer.getPixelRatio(), fsT = cube ? 1.55 : fs; c.fs = c.fs ? c.fs + (fsT - c.fs) * .1 : fsT; const fsC = c.fs;
+    for (const [g, sz] of [[o.ga, o.ga.userData.size], [o.gd, o.gd.userData.size]]) { g.scale.setScalar(fsC * sz); g.updateMatrixWorld(); if (g.userData.eng) g.userData.eng.material.uniforms.uScale.value = pxS * fsC * sz; if (g.userData.anim) g.userData.anim(reduced ? 0 : t); }
     const alive = g => (g.userData.slots || []).filter(s => !s.dead), wpos = (g, s, out) => g.localToWorld(out.set(s.x, s.y, s.z));
     // losses follow the report round by round over the first 85% of the clip
     const rs = c.rounds, ri = rs.length ? Math.min(rs.length - 1, Math.floor(clamp(k / .85, 0, .999) * rs.length)) : -1;
@@ -5997,14 +6006,22 @@ function drawClashes(W, t, T) {
     const boom = (p, big) => { const b = o.booms.find(x => tn - x.t0 > 700) || o.booms[0]; b.t0 = tn; b.sp.position.copy(p); b.big = big; };
     for (const [g, f, key] of [[o.ga, fa, "la"], [o.gd, fd, "ld"]]) { const sh = g.userData.slots || []; const keep = f <= 0 ? 0 : Math.max(1, Math.ceil(sh.length * f));
       if (o[key] !== keep) { sh.forEach((s, i) => { const dead = i >= keep; if (!s.dead && dead && o[key] >= 0) boom(wpos(g, s, V).clone(), 1); s.dead = dead; }); o[key] = keep; } } // the rear ships go first, each in a fireball
-    for (const b of o.booms) { const a = (tn - b.t0) / 650; if (a < 0 || a > 1) { b.sp.material.opacity = 0; continue; } b.sp.material.opacity = (1 - a) * (b.big ? 1 : .7); b.sp.scale.setScalar(fs * (b.big ? 1.6 : .6) * (.4 + a * 1.6)); }
+    for (const b of o.booms) { const a = (tn - b.t0) / 650; if (a < 0 || a > 1) { b.sp.material.opacity = 0; continue; } b.sp.material.opacity = (1 - a) * (b.big ? 1 : .7); b.sp.scale.setScalar(fsC * (b.big ? 1.6 : .6) * (.4 + a * 1.6)); }
     // bolts: short streaks racing between random ships of the two lines, with sparks where they land
     const P = o.bolts.geometry.attributes.position.array, C = o.bolts.geometry.attributes.color.array, live = k < .86 && !reduced;
-    if (live) for (let s = 0; s < 3; s++) { const fromA = Math.random() < .5 + (fa - fd) * .3, src = fromA ? o.ga : o.gd, dst = fromA ? o.gd : o.ga, ss = alive(src), ds = alive(dst);
-      if (!ss.length) continue; wpos(src, ss[(Math.random() * ss.length) | 0], V); if (ds.length) wpos(dst, ds[(Math.random() * ds.length) | 0], V2); else V2.set(q.x, q.y, q.z);
+    const aliveA = live ? alive(o.ga) : [], aliveD = live ? alive(o.gd) : [], nShots = atCube ? clamp(Math.ceil((aliveA.length + aliveD.length) / 10), 3, 14) : 3;
+    if (live) for (let s = 0; s < nShots; s++) { const fromA = Math.random() < .5 + (fa - fd) * .3, src = fromA ? o.ga : o.gd, dst = fromA ? o.gd : o.ga, ss = fromA ? aliveA : aliveD, ds = fromA ? aliveD : aliveA;
+      if (!ss.length) continue; const turn = fromA ? (o.ia = (o.ia || 0) + 1) : (o.id = (o.id || 0) + 1); wpos(src, ss[turn % ss.length], V); if (ds.length) wpos(dst, ds[(Math.random() * ds.length) | 0], V2); else V2.set(q.x, q.y, q.z);
       o.bl.push({ a: V.clone(), b: V2.clone(), t0: tn, col: fromA ? (c.you === "a" ? [.4, 1, 1] : [1, .35, .3]) : (c.you === "a" ? [1, .45, .2] : [.4, 1, 1]) }); }
+    /* v194 in a demo battle every commander's fleet in the rings fights too: fleets take turns firing at the nearest enemy fleet */
+    if (live && atCube && G.cubeDemo && W.fleets) { if (!W.dmT || tn - W.dmT > 500) { W.dmT = tn; W.dmA = []; W.dmD = []; for (const [fid, fo] of W.fleets) if (/^dm[AD]/.test(fid) && fo.grp && fo.grp.visible && fo.grp.userData.slots) (fid[2] === "A" ? W.dmA : W.dmD).push(fo.grp); }
+      const LA = W.dmA, LD = W.dmD; if (LA.length && LD.length) for (let s2 = 0; s2 < (MOBILE ? 5 : 9); s2++) { const fromA = Math.random() < .55, own = fromA ? LA : LD, foe = fromA ? LD : LA, sg = own[(fromA ? (o.ja = (o.ja || 0) + 1) : (o.jd = (o.jd || 0) + 1)) % own.length];
+        let dg = null, dd = 1e9; for (let j = 0; j < 12; j++) { const cand = foe[(Math.random() * foe.length) | 0], d2 = cand.position.distanceToSquared(sg.position); if (d2 < dd) { dd = d2; dg = cand; } }
+        if (!dg || dd > 4900) continue; /* only at enemies in range: no shots across the whole battlefield */
+        const ss = alive(sg), ds = alive(dg); if (!ss.length || !ds.length) continue; wpos(sg, ss[(Math.random() * ss.length) | 0], V); wpos(dg, ds[(Math.random() * ds.length) | 0], V2);
+        o.bl.push({ a: V.clone(), b: V2.clone(), t0: tn, L: V.distanceTo(V2), col: fromA ? [1, .35, .3] : [.4, 1, 1] }); } }
     o.bl = o.bl.filter(b => tn - b.t0 < 320); let n = 0;
-    for (const b of o.bl) { if (n >= 48) break; const s0 = (tn - b.t0) / 320, s1 = Math.min(1, s0 + .22); P.set([b.a.x + (b.b.x - b.a.x) * s0, b.a.y + (b.b.y - b.a.y) * s0, b.a.z + (b.b.z - b.a.z) * s0, b.a.x + (b.b.x - b.a.x) * s1, b.a.y + (b.b.y - b.a.y) * s1, b.a.z + (b.b.z - b.a.z) * s1], n * 6);
+    for (const b of o.bl) { if (n >= 240) break; const s0 = (tn - b.t0) / 320, s1 = Math.min(1, s0 + (b.L ? Math.min(.22, 3.5 / b.L) : .22)); /* long shots draw a short bolt, not a line */ P.set([b.a.x + (b.b.x - b.a.x) * s0, b.a.y + (b.b.y - b.a.y) * s0, b.a.z + (b.b.z - b.a.z) * s0, b.a.x + (b.b.x - b.a.x) * s1, b.a.y + (b.b.y - b.a.y) * s1, b.a.z + (b.b.z - b.a.z) * s1], n * 6);
       C.set([b.col[0] * .5, b.col[1] * .5, b.col[2] * .5, b.col[0], b.col[1], b.col[2]], n * 6); if (s1 >= 1 && Math.random() < .35) { const sb = o.booms.find(x => tn - x.t0 > 700); if (sb) { sb.t0 = tn; sb.sp.position.copy(b.b); sb.big = 0; } } n++; }
     o.bolts.geometry.setDrawRange(0, n * 2); o.bolts.geometry.attributes.position.needsUpdate = true; o.bolts.geometry.attributes.color.needsUpdate = true;
     if (k > .88 && !o.ended) { o.ended = 1; const win = c.winner === c.you; (W.bursts = W.bursts || []).push({ p: new TH.Vector3(q.x, q.y + 3, q.z), t: tn, col: c.winner === "draw" ? "#ffd66a" : win ? "#7be39a" : "#ff6b5a", txt: c.winner === "draw" ? "Stalemate" : c.you ? (win ? "Victory!" : "Defeat") : "Battle over" }); }
@@ -6168,7 +6185,7 @@ function drawCubeWar(W, t, T) {
     cubeSweep(W, q.last, V, q.rad + 4); cubeClear(W, V2, q.rad + 4); (q.last || (q.last = new TH.Vector3())).copy(V);
     q.g.position.copy(V); q.g.lookAt(V2); if (!staging) q.g.rotateZ(-.25 * Math.sign(q.w));
     // after the event, the losers withdraw: they fade out one squadron at a time as the crowning goes on
-    const gone = crowning && !q.cap && ((hash(String(q.ph)) % 100) / 100) < (T - endAt) / (CW_CROWN * .6); q.g.visible = !gone;
+    const gone = crowning && !q.cap && ((hash(String(q.ph)) % 100) / 100) < (T - endAt) / (CW_CROWN * .6); q.g.visible = !gone && !G.cubeDemo; /* v194: the event's scenery squadrons step aside while a demo battle is on */
     q.g.scale.setScalar(sc); const ud = q.g.userData; if (ud.anim) ud.anim(t); if (ud.eng) ud.eng.material.uniforms.uScale.value = pxS * sc; }
   // fire: beams and torpedoes from the ships, disruptor bolts from the Cube (only while the battle is on)
   const flash = (p, k, dur) => { const f = C.flashes.find(x => !x.s.visible); if (!f) return; f.s.position.copy(p); f.t0 = t; f.dur = dur || 900; f.k = k; f.s.visible = true; };
@@ -7028,18 +7045,19 @@ function draw3D(t) {
     // in one frame, a long freeze and a burst of GPU uploads right as the battle ended
     let o = W.fleets.get(id); if (o && ((f.js && o.nk !== sumShips(f.n) + f.jsK + f.form) || !!o.cf !== cf) && (W.fleetMade = (W.fleetMade || 0) + 1) <= 3) { const h0 = o.hist; disposeObj(W, o); o = fleetObj(W, f, hostile, cf); o.hist = h0; W.fleets.set(id, o); } // the army grows as members arrive
     if (!o) { if ((W.fleetMade = (W.fleetMade || 0) + 1) > 3) continue; o = fleetObj(W, f, hostile, cf); W.fleets.set(id, o); } if (f.js && o.nk == null) o.nk = sumShips(f.n) + f.jsK + f.form; if (o.cf == null) o.cf = cf; // v124: at most 3 new fleet models a frame (v178: the keys are set by fleetObj, so a deferred rebuild is retried next frame)
+    const fsT = path.cube ? 1.55 : fs; o.fsC = o.fsC ? o.fsC + (fsT - o.fsC) * .06 : fsT; const fsF = o.fsC; /* v194: fleets at the Cube keep one size (they rescaled, and re-orbited, with every zoom) */
     let pt, nx;
-    if (path.cube) { const ws0 = fs * (o.grp.userData.size || 1), rad = (o.grp.userData.R || 4) * ws0 * .7, r = cubeOrbit(path.b, id, T, rad, f); pt = r.pt; nx = r.nx;
+    if (path.cube) { const ws0 = fsF * (o.grp.userData.size || 1), rad = (o.grp.userData.R || 4) * ws0 * .7, r = cubeOrbit(path.b, id, T, rad, f); pt = r.pt; nx = r.nx;
       V3.set(pt.x, pt.y, pt.z); cubeSweep(W, o.lastC, V3, rad + 2); pt = { x: V3.x, y: V3.y, z: V3.z }; (o.lastC || (o.lastC = new TH.Vector3())).copy(V3); }
     else if (path.park) { const gat = f.phase === "gather", R = gat ? 2.6 : f.jsK === "mass" ? 6.5 : f.parkR || 4, a = t * (gat ? .00035 : f.phase === "muster" ? .00009 : f.parkR ? .00011 : .0008) + (hash(id) % 10); /* v106: a strike waiting at the muster point holds a slow, stately orbit */ // v96: gatherers hold a slow, tight mining orbit
       pt = { x: path.b.x + Math.cos(a) * R, y: path.b.y + (gat ? .7 + .25 * Math.sin(t * .0011) : 1), z: path.b.z + Math.sin(a) * R }; nx = { x: path.b.x + Math.cos(a + .1) * R, y: pt.y, z: path.b.z + Math.sin(a + .1) * R }; }
     else { pt = ARC(path.a, path.b, path.k); nx = ARC(path.a, path.b, Math.min(1, path.k + .01)); if (path.k >= 1) nx = { x: pt.x + (path.b.x - path.a.x) * .01, y: pt.y, z: pt.z + (path.b.z - path.a.z) * .01 };
       // v174 any course that passes close to the Cube (crossing the map over the Void) is lifted round its hull, never through it
-      const np = W.nexus.position; if (Math.hypot(pt.x - np.x, pt.y - np.y, pt.z - np.z) < CUBE_CORNER + 30) { const rad = (o.grp.userData.R || 4) * fs * (o.grp.userData.size || 1) * .7 + 2; V3.set(pt.x, pt.y, pt.z); cubeSweep(W, o.lastC, V3, rad); pt = { x: V3.x, y: V3.y, z: V3.z }; (o.lastC || (o.lastC = new TH.Vector3())).copy(V3); V3.set(nx.x, nx.y, nx.z); cubeClear(W, V3, rad); nx = { x: V3.x, y: V3.y, z: V3.z }; } else if (o.lastC) o.lastC = null; }
+      const np = W.nexus.position; if (Math.hypot(pt.x - np.x, pt.y - np.y, pt.z - np.z) < CUBE_CORNER + 30) { const rad = (o.grp.userData.R || 4) * fsF * (o.grp.userData.size || 1) * .7 + 2; V3.set(pt.x, pt.y, pt.z); cubeSweep(W, o.lastC, V3, rad); pt = { x: V3.x, y: V3.y, z: V3.z }; (o.lastC || (o.lastC = new TH.Vector3())).copy(V3); V3.set(nx.x, nx.y, nx.z); cubeClear(W, V3, rad); nx = { x: V3.x, y: V3.y, z: V3.z }; } else if (o.lastC) o.lastC = null; }
     o.grp.position.set(pt.x, pt.y, pt.z); o.grp.lookAt(nx.x, nx.y, nx.z);
     // bank into turns, and drop in and out of warp with a flare at each end of the trip
     const yaw = Math.atan2(nx.x - pt.x, nx.z - pt.z); if (o.yaw != null) { let dy = yaw - o.yaw; if (dy > Math.PI) dy -= TAU; if (dy < -Math.PI) dy += TAU; o.bank += (clamp(-dy * 30, -.55, .55) - o.bank) * .08; } o.yaw = yaw; o.grp.rotateZ(o.bank);
-    const wk = path.park || path.k >= 1 ? 1 : Math.min(clamp(path.k / .03, 0, 1), id === "raid" ? 1 : clamp((1 - path.k) / .03, 0, 1)), ws = fs * (o.grp.userData.size || 1) * (.25 + .75 * wk);
+    const wk = path.park || path.k >= 1 ? 1 : Math.min(clamp(path.k / .03, 0, 1), id === "raid" ? 1 : clamp((1 - path.k) / .03, 0, 1)), ws = fsF * (o.grp.userData.size || 1) * (.25 + .75 * wk);
     o.grp.scale.setScalar(ws);
     if (o.warp) { const fl = 1 - wk; o.warp.visible = fl > .02; o.warp.material.opacity = fl * .9; o.warp.position.set(pt.x, pt.y, pt.z); o.warp.scale.setScalar(fs * 9 * (.4 + fl)); }
     { const ud = o.grp.userData; if (ud.anim && !reduced) ud.anim(t); if (ud.eng) ud.eng.material.uniforms.uScale.value = pxS * ws; }
@@ -7049,7 +7067,7 @@ function draw3D(t) {
     // hidden and not rebuilt (120 parked fleets in a 60 vs 60 battle were 240 invisible line draws a frame)
     // v179 the green joint-strike courses converging on the Cube (dozens of alliance armies) drew a cloud of green tracers round it during
     // the live event: those are hidden (your own keep theirs on the map, not in the cinematic). Red attack and white retreat lines stay.
-    const cubeB = id !== "raid" && (path.cube || fleetTarget(f) === NEXUS), noLine = cubeB && routeKind(f) === "joint" && (!mineF.has(f) || cineOn);
+    const cubeB = id !== "raid" && (path.cube || fleetTarget(f) === NEXUS), noLine = (cubeB && routeKind(f) === "joint" && (!mineF.has(f) || cineOn)) || !!f.demo; /* v194: a demo's 120+ courses were a red starburst over the battle */
     o.line.visible = !path.park && !noLine; o.trail.visible = !noLine && (!path.park || (o.hist.length > 1 && Math.hypot(o.hist[0][0] - o.hist[o.hist.length - 1][0], o.hist[0][2] - o.hist[o.hist.length - 1][2]) > .05));
     if (o.line.visible) { const la = o.line.geometry.attributes.position;
       for (let i = 0; i <= 32; i++) { const q = ARC(path.a, path.b, path.k + (1 - path.k) * i / 32); la.setXYZ(i, q.x, q.y, q.z); } la.needsUpdate = true; }
@@ -11932,7 +11950,7 @@ function guideVisible(el) {
   const cy = r.top + r.height / 2; if (top.closest("#dock") || cy > innerHeight - 160 || cy < 130) return 2; return 0; // tucked under the dock or top bar: scroll it into view
 }
 function guidePick() {
-  const st = tutOn() && !tutSnoozed() && G.ready && !battle && !advLines && !$("#adv") && !$("#authw") && !(sheet && sheet.type === "faction") ? TUT[S.tut.i] : null; if (!st) return null;
+  const st = tutOn() && !tutSnoozed() && !G.cubeDemo && !(G3 && (G3.cam.siege || G3.cam.cine)) && G.ready && !battle && !advLines && !$("#adv") && !$("#authw") && !(sheet && sheet.type === "faction") ? TUT[S.tut.i] : null; if (!st) return null;
   const path = st.ok(S) ? [['#coach [data-act="tutClaim"], #coach .cpill', "Collect your reward"]] : st.path ? st.path() : [SHOWME];
   for (const [sel, label, when] of path) { if (when && !when()) continue; for (const el of document.querySelectorAll(sel)) { if (el.classList.contains("on") || (el.disabled && /^(boost|finish)$/.test(el.dataset.act || ""))) continue; /* a tab already open, or a speed-up you can't use */ const v = guideVisible(el); if (v) return { el, label, v }; } }
   const cx = sheet && document.querySelector('.sheet [data-act="close"]'); if (cx && guideVisible(cx)) return { el: cx, label: "Close this to continue", v: 1 }; // something is in the way: close it first
@@ -11972,7 +11990,7 @@ function coachRender(force) {
   if (!S) return; if (!S.tut) S.tut = { i: S.intro && score() > 200 ? TUT.length : 0, open: 1 }; // veterans skip the Academy
   if (view === "mail" && !S.tutMail) { S.tutMail = 1; dirty(); }
   if (S.tut.snz && S.tut.snz <= now()) { S.tut.snz = 0; S.tut.open = 1; dirty(); force = true; } /* v191: back after a 5-minute break, opened up */
-  let w = $("#coach"); const on = tutOn() && !battle && G.ready && !tutSnoozed();
+  let w = $("#coach"); const on = tutOn() && !battle && G.ready && !tutSnoozed() && !G.cubeDemo; /* v194: not over a demo battle */
   if (!on) { if (w) w.remove(); coachHtml = ""; return; }
   const st = TUT[S.tut.i], done = st.ok(S), lv = cmdLevel(score()), open = S.tut.open && !sheet && !advLines;
   const html = open ? `<div class="cbox${done ? " done" : ""}"><div class="chd"><img class="cav" src="${ADV_BUST}" alt="${ADV}"><div class="cti"><small>ADVISOR · FLIGHT ACADEMY · STEP ${S.tut.i + 1} OF ${TUT.length}</small><b>${esc(st.t)}</b></div><button class="cx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button></div>
