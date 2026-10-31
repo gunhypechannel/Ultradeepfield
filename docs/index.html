@@ -4103,10 +4103,23 @@ async function flush() {
   try { localStorage.setItem(KEY, json); localStorage.setItem(KEY + ".sig", sig); if (Date.now() - SEC.bakT > 300000 && !SEC.blocked) { SEC.bakT = Date.now(); localStorage.setItem(KEY + ".bak", json); localStorage.setItem(KEY + ".bak.sig", sig); } } catch (e) {}
   if (cloudOk) {
     store.writing = true;
-    try { await store.db.doc(`data/users/${store.uid}/save`).set({ v: 3, savedAt: S.savedAt, json, sig }); store.mode = "cloud"; }
+    try { await store.db.doc(`data/users/${store.uid}/save`).set({ v: 3, savedAt: S.savedAt, json, sig }); store.mode = "cloud"; srvBackup(json, sig); }
     catch (e) { if (e && (e.code === "invalid_argument" || e.code === "revoked" || e.code === "not_granted")) { store.db = null; store.mode = "device"; } else store.dirty = true; }
     finally { store.writing = false; }
   }
+}
+/* v202 the server keeps a history of every empire, not just the latest save: one backup per hour for the last 24 hours and one per day
+   for the last 7 days (data/users/<you>/backups/h0..h23 and d0..d6), so lost progress can be restored from any device. A copy that has
+   suddenly shrunk to under half of what this session started with is never written over the history. */
+const empSize = st => { const sum = o => Object.values(o || {}).reduce((a, v) => a + (+v || 0), 0); return { lv: sum(st.b) + sum(st.r), ships: sum(st.ships) }; };
+const empScore = z => z.lv + z.ships / 1000;
+async function srvBackup(json, sig) {
+  if (!store.db || !store.uid || !store.ready) return; const T = now(), d = new Date(T), z = empSize(S);
+  if (!store.bkBase) store.bkBase = z; if (store.bkBase.lv > 10 && empScore(z) < empScore(store.bkBase) * .5) return;
+  const col = `data/users/${store.uid}/backups/`, doc = { v: 3, at: T, json, sig, lv: z.lv, ships: z.ships }, hk = "h" + d.getUTCHours(), dk = "d" + d.getUTCDay(), hs = Math.floor(T / 3600000), ds = Math.floor(T / 864e5);
+  store.bk = store.bk || {};
+  try { if (store.bk.h !== hs || T - (store.bk.hT || 0) > 600000) { store.bk.h = hs; store.bk.hT = T; await store.db.doc(col + hk).set(doc); }
+    if (store.bk.d !== ds || T - (store.bk.dT || 0) > 3600000) { store.bk.d = ds; store.bk.dT = T; await store.db.doc(col + dk).set(doc); } } catch (e) {}
 }
 function syncPlayer() {
   if (S && S.cname) G.myName = S.cname;
@@ -4274,10 +4287,10 @@ async function connectCloud() {
          it. Now: an empire on this device that belongs to another account never wins; a device that has synced with this account
          takes the account's save whenever it changed elsewhere since; a device that never synced takes the account's save. The
          one exception keeps a well-built empire from being replaced by a near-empty account save (that is how a wiped save heals). */
-      const lp = S.spent || 0, foreign = S.uid && S.uid !== uid;
+      const lp = empScore(empSize(S)), foreign = S.uid && S.uid !== uid; /* v203: progress = building + research levels and ships ("spent" was 0 on imported empires) */
       if (snap.exists) { const d = snap.data();
         if (typeof d.json === "string" && d.sig && d.sig !== secSig(d.json)) secLog("save", "the cloud save was edited outside the game.", "It was ignored.", 3);
-        else if (typeof d.json === "string") { const cs = JSON.parse(d.json), cp = cs.spent || 0, cAt = d.savedAt || 0, behind = lp > 5000 && cp < lp * .5 && !foreign;
+        else if (typeof d.json === "string") { const cs = JSON.parse(d.json), cp = empScore(empSize(cs)), cAt = d.savedAt || 0, behind = lp > 5 && cp < lp * .5 && !foreign;
           const take = foreign || (!behind && (S.uid === uid ? cAt > (S.cloudAt || 0) : true));
           if (take) { try { if (lp > 0) localStorage.setItem(KEY + ".device", JSON.stringify(S)); } catch (e) {}
             S = migrate(cs); S.cloudAt = cAt; secBoot(); FOG = null; live = false; advance(now()); live = true; render(true); toast(foreign ? "Signed in. Loaded this account's empire." : "Loaded your saved empire.", "win"); }
@@ -11436,8 +11449,8 @@ function mSave() {
     <button class="mbtn" data-act="saveNow">Save now</button>
     <h3 style="margin-top:14px">Move your empire</h3><p>Copy this empire between the Claude version and the website. Export a file here, then import it in the other one. Each version keeps its own copy afterwards.</p>
     <button class="mbtn" data-act="empExport">Export empire file</button><button class="mbtn" data-act="empImport">Import empire file</button>
-    <h3 style="margin-top:14px">Restore from this device</h3><p>Lost progress? This phone or computer keeps its own copies of your empire. Check them here, and restore one if it has what you lost. Your colonies stay as they are.</p>
-    ${menu.rest ? (menu.rest.length ? menu.rest.map(r => `<div class="rstrow"><div><b>${esc(r.label)}</b><small>${r.at ? (/^\d/.test(ago(r.at)) ? ago(r.at) + " ago" : "just now") : "date unknown"} · homeworld buildings ${r.lv} levels · research ${r.rl} · ${fmt(r.ships)} ships · ${fmt(r.res)} resources</small></div><button class="btn sm" data-act="restUse" data-k="${r.k}">Restore</button></div>`).join("") : '<p class="note">No other copies are stored on this device.</p>') : '<button class="mbtn" data-act="restScan">Check this device for copies</button>'}</div>`;
+    <h3 style="margin-top:14px">Restore a backup</h3><p>Lost progress? Your account keeps hourly and daily backups on the server, and this device keeps its own copies. Check them here and restore the one that has what you lost. Your colonies stay as they are.</p>
+    ${menu.rest ? (menu.rest.length ? menu.rest.map(r => `<div class="rstrow"><div><b>${esc(r.label)}</b><small>${r.at ? (/^\d/.test(ago(r.at)) ? ago(r.at) + " ago" : "just now") : "date unknown"} · homeworld buildings ${r.lv} levels · research ${r.rl} · ${fmt(r.ships)} ships · ${fmt(r.res)} resources</small></div><button class="btn sm" data-act="restUse" data-k="${r.k}">Restore</button></div>`).join("") : '<p class="note">No other copies are stored on this device.</p>') : '<button class="mbtn" data-act="restScan">Show backups</button>'}</div>`;
 }
 /* v201 the copies each device keeps of the empire: the last save, the 5-minute backup and the copy set aside when signing in took the
    account's save instead. Restoring one replaces the empire's own progress (homeworld buildings, research, ships, resources, items);
@@ -13461,12 +13474,19 @@ const ACT = {
   },
   saveNow: () => { dirty(); flush().then(() => { toast(store.mode === "cloud" ? "Saved to your account." : "Saved in this browser.", "win"); renderMenu(); }); },
   empExport: () => empExport(), empImport: () => empImport(),
-  restScan: () => { flush().catch(() => {}); menu.rest = restCopies(); if (menu.open) menu.open.settings = true; renderMenu(); },
-  restUse: d => { let j = null; try { j = localStorage.getItem(d.k); } catch (e) {} let st; try { st = JSON.parse(j); } catch (e) {} if (!st || !st.b) return toast("That copy can't be read.", "warn");
+  restScan: async () => { flush().catch(() => {}); menu.rest = restCopies(); if (menu.open) menu.open.settings = true; renderMenu();
+    if (!store.db || !store.uid) return; try { const snap = await store.db.collection(`data/users/${store.uid}/backups`).limit(40).get(), rows = [];
+      for (const d of snap.docs) { const v = d.data() || {}; if (typeof v.json !== "string") continue; let st; try { st = JSON.parse(v.json); } catch (e) { continue; } const sum = o => Object.values(o || {}).reduce((a, x) => a + (+x || 0), 0);
+        rows.push({ k: "srv:" + d.id, label: (d.id[0] === "d" ? "Daily server backup · " : "Hourly server backup · ") + new Date(v.at || 0).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }), at: +v.at || 0, lv: sum(st.b), rl: sum(st.r), ships: sum(st.ships), res: (st.res.m || 0) + (st.res.c || 0) + (st.res.g || 0) }); }
+      rows.sort((a, b) => b.at - a.at); menu.rest = (menu.rest || []).concat(rows); renderMenu(); } catch (e) {} },
+  restUse: async d => { let j = null;
+    if (String(d.k).startsWith("srv:")) { try { const sn = await store.db.doc(`data/users/${store.uid}/backups/${d.k.slice(4)}`).get(), v = sn.exists ? sn.data() : null; if (v && v.sig === secSig(v.json)) j = v.json; } catch (e) {} if (!j) return toast("That backup can't be read.", "warn"); }
+    else try { j = localStorage.getItem(d.k); } catch (e) {}
+    let st; try { st = JSON.parse(j); } catch (e) {} if (!st || !st.b) return toast("That copy can't be read.", "warn");
     const r = (menu.rest || []).find(x => x.k === d.k); if (!confirm(`Restore this copy?\n\n${r ? `${r.label}: homeworld buildings ${r.lv} levels, research ${r.rl}, ${fmt(r.ships)} ships.` : ""}\n\nYour current homeworld progress, research, ships and resources are replaced. Colonies stay as they are.`)) return;
     try { localStorage.setItem(KEY + ".device", JSON.stringify(S)); } catch (e) {} /* the empire being replaced becomes the set-aside copy, so a restore can be undone */
     const uid = S.uid, lp = S.lp, home = S.homeName; st = migrate(st); Object.assign(st, { uid, lp, homeName: home, t: now(), savedAt: now() });
-    S = st; secBoot(); FOG = null; live = false; advance(now()); live = true; menu.rest = null; dirty(); flush(); try { rebuild(); } catch (e) {} syncPlayer(); render(true); toast("Restored. Your empire is saved to your account.", "win"); },
+    S = st; secBoot(); FOG = null; live = false; advance(now()); live = true; menu.rest = null; dirty(); flush(); try { rebuild(); } catch (e) {} syncPlayer(); render(true); store.bkBase = null; toast("Restored. Your empire is saved to your account.", "win"); },
   mreset: () => { menu.confirm = true; renderMenu(); },
   mresetNo: () => { menu.confirm = false; renderMenu(); },
   mreport: d => { closeMenu(); S.unread = 0; dirty(); openSheet({ type: "report", id: d.id }); },
