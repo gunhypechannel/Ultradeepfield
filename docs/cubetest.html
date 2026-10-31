@@ -5974,7 +5974,10 @@ function mapClash(loc, rep, def) {
   const youA = !def && (rep.aUids || []).includes(G.me);
   clashPush({ key: rep.id, loc, age, a: rep.start.a || {}, d: rep.start.d || {}, rounds: (rep.rounds || []).filter(r => r && r.a && r.d), winner: rep.winner, aCol: youA ? 0x55d6e8 : 0xff5a5a, dCol: youA ? 0xff7a3a : 0x55d6e8, rep: rep.id, you: youA ? "a" : "d" });
 }
-function clashPush(c) { const tn = performance.now(); G.clashes = G.clashes.filter(x => tn - x.t0 < x.dur || x.o); if (G.clashes.some(x => x.key === c.key)) return; while (G.clashes.length >= 6) { const x = G.clashes.shift(); if (G3 && x.o) clashDispose(G3, x); }
+function clashPush(c) { const tn = performance.now(); G.clashes = G.clashes.filter(x => tn - x.t0 < x.dur || x.o); if (G.clashes.some(x => x.key === c.key)) return;
+  /* v195: a new clash at the same place takes over: the older one fades out in a second instead of fighting on inside it (two sets of
+     the same ships drawn through each other flickered, most of all at the Cube where a stress test's clashes follow each other) */
+  for (const x of G.clashes) if (x.loc === c.loc && tn - x.t0 < x.dur * .92) x.dur = Math.max(1, (tn - x.t0) / .92 + 1000); while (G.clashes.length >= 6) { const x = G.clashes.shift(); if (G3 && x.o) clashDispose(G3, x); }
   G.clashes.push(Object.assign(c, { t0: tn - Math.max(0, c.age || 0), dur: 26000, nA: clashCnt(c.a) || 1, nD: clashCnt(c.d) || 1, seed: hash(c.key) })); }
 function clashDispose(W, c) { const o = c.o; if (!o) return; for (const g of [o.ga, o.gd]) if (g) { W.scene.remove(g); disposeFleet(g); } W.scene.remove(o.bolts); o.bolts.geometry.dispose(); o.bolts.material.dispose(); for (const s of o.booms) { W.scene.remove(s.sp); s.sp.material.dispose(); } c.o = null; }
 function drawClashes(W, t, T) {
