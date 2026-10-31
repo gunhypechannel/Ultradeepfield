@@ -665,7 +665,7 @@ canvas.dthumb{display:block}
 .qbar{display:flex;gap:6px;padding:5px 10px 7px;overflow-x:auto;scrollbar-width:none;background:rgba(3,12,20,.55)}.qbar::-webkit-scrollbar{display:none}
 .qc{flex:1.5 1 0;min-width:0;display:flex;align-items:center;gap:5px;padding:4px 8px;border-radius:9px;border:1px solid #1f4a66;background:rgba(14,36,52,.75);color:#cfe7f3;font-family:var(--f-display);font-size:11px;cursor:pointer;white-space:nowrap}
 .qc svg{flex:none;width:14px;height:14px;color:var(--cyan)}.qc .qn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;text-align:left}.qc b{flex:none;color:var(--cyan);font-weight:600}.qc i{font-style:normal;color:var(--muted)}
-.qc.idle{flex:1 1 0;border-color:rgba(240,169,69,.55);color:var(--amber);animation:pulse 2.4s infinite}.qc.idle svg,.qc.idle b{color:var(--amber)}.qc.free{border-color:#f0a945;background:linear-gradient(180deg,rgba(255,211,107,.28),rgba(240,169,69,.16));color:#ffe3a3;animation:none}.qc.free svg,.qc.free b{color:#ffd36b}.qc.free.all{flex:0 0 auto;font-weight:700}
+.qc.idle{flex:1 1 0;border-color:rgba(240,169,69,.55);color:var(--amber);animation:pulse 2.4s infinite}.qc.idle svg,.qc.idle b{color:var(--amber)}.rstrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.rstrow>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rstrow small{color:var(--muted);font-size:12px}.qc.free{border-color:#f0a945;background:linear-gradient(180deg,rgba(255,211,107,.28),rgba(240,169,69,.16));color:#ffe3a3;animation:none}.qc.free svg,.qc.free b{color:#ffd36b}.qc.free.all{flex:0 0 auto;font-weight:700}
 .vols{display:flex;flex-direction:column;gap:6px;margin:6px 0}.vrow{display:grid;grid-template-columns:96px 1fr 44px;align-items:center;gap:10px;font-size:14px;color:#eef3f6}
 .vrow input{width:100%;accent-color:var(--cyan);height:28px}.vrow b{font-family:var(--f-display);font-size:13px;color:var(--cyan);text-align:right}.vrow input:disabled{opacity:.4}
 .toast{background:rgba(11,21,32,.96);border:1px solid var(--line-hi);border-left:3px solid var(--cyan);padding:8px 12px;font-size:14px;animation:up .2s ease-out;box-shadow:0 6px 18px rgba(0,0,0,.5)}
@@ -11435,8 +11435,18 @@ function mSave() {
     ${mrow("Last saved", S.savedAt ? ago(S.savedAt) + " ago" : "Not yet")}${mrow("Storage", store.mode === "cloud" ? "Your account" : "This browser")}
     <button class="mbtn" data-act="saveNow">Save now</button>
     <h3 style="margin-top:14px">Move your empire</h3><p>Copy this empire between the Claude version and the website. Export a file here, then import it in the other one. Each version keeps its own copy afterwards.</p>
-    <button class="mbtn" data-act="empExport">Export empire file</button><button class="mbtn" data-act="empImport">Import empire file</button></div>`;
+    <button class="mbtn" data-act="empExport">Export empire file</button><button class="mbtn" data-act="empImport">Import empire file</button>
+    <h3 style="margin-top:14px">Restore from this device</h3><p>Lost progress? This phone or computer keeps its own copies of your empire. Check them here, and restore one if it has what you lost. Your colonies stay as they are.</p>
+    ${menu.rest ? (menu.rest.length ? menu.rest.map(r => `<div class="rstrow"><div><b>${esc(r.label)}</b><small>${r.at ? (/^\d/.test(ago(r.at)) ? ago(r.at) + " ago" : "just now") : "date unknown"} · homeworld buildings ${r.lv} levels · research ${r.rl} · ${fmt(r.ships)} ships · ${fmt(r.res)} resources</small></div><button class="btn sm" data-act="restUse" data-k="${r.k}">Restore</button></div>`).join("") : '<p class="note">No other copies are stored on this device.</p>') : '<button class="mbtn" data-act="restScan">Check this device for copies</button>'}</div>`;
 }
+/* v201 the copies each device keeps of the empire: the last save, the 5-minute backup and the copy set aside when signing in took the
+   account's save instead. Restoring one replaces the empire's own progress (homeworld buildings, research, ships, resources, items);
+   colonies live on the server and are untouched. */
+const REST_K = [[KEY, "Last save on this device"], [KEY + ".bak", "Backup copy (saved every 5 minutes)"], [KEY + ".device", "Copy set aside when you signed in"]];
+function restCopies() { const out = [];
+  for (const [k, label] of REST_K) { let j = null; try { j = localStorage.getItem(k); } catch (e) {} if (!j) continue; let st; try { st = JSON.parse(j); } catch (e) { continue; } if (!st || !st.b || !st.r || !st.res) continue;
+    const sum = o => Object.values(o || {}).reduce((a, v) => a + (+v || 0), 0); out.push({ k, label, at: +st.savedAt || 0, lv: sum(st.b), rl: sum(st.r), ships: sum(st.ships), res: (st.res.m || 0) + (st.res.c || 0) + (st.res.g || 0), cur: j === JSON.stringify(S) }); }
+  return out; }
 /* v192: move an empire between the Claude version and the website. Export writes the same signed save the cloud keeps;
    import checks the signature, keeps this galaxy's homeworld, returns any fleets home and drops links to the old galaxy
    (alliance, friends, strikes), then replaces this empire. */
@@ -13451,6 +13461,12 @@ const ACT = {
   },
   saveNow: () => { dirty(); flush().then(() => { toast(store.mode === "cloud" ? "Saved to your account." : "Saved in this browser.", "win"); renderMenu(); }); },
   empExport: () => empExport(), empImport: () => empImport(),
+  restScan: () => { flush().catch(() => {}); menu.rest = restCopies(); if (menu.open) menu.open.settings = true; renderMenu(); },
+  restUse: d => { let j = null; try { j = localStorage.getItem(d.k); } catch (e) {} let st; try { st = JSON.parse(j); } catch (e) {} if (!st || !st.b) return toast("That copy can't be read.", "warn");
+    const r = (menu.rest || []).find(x => x.k === d.k); if (!confirm(`Restore this copy?\n\n${r ? `${r.label}: homeworld buildings ${r.lv} levels, research ${r.rl}, ${fmt(r.ships)} ships.` : ""}\n\nYour current homeworld progress, research, ships and resources are replaced. Colonies stay as they are.`)) return;
+    try { localStorage.setItem(KEY + ".device", JSON.stringify(S)); } catch (e) {} /* the empire being replaced becomes the set-aside copy, so a restore can be undone */
+    const uid = S.uid, lp = S.lp, home = S.homeName; st = migrate(st); Object.assign(st, { uid, lp, homeName: home, t: now(), savedAt: now() });
+    S = st; secBoot(); FOG = null; live = false; advance(now()); live = true; menu.rest = null; dirty(); flush(); try { rebuild(); } catch (e) {} syncPlayer(); render(true); toast("Restored. Your empire is saved to your account.", "win"); },
   mreset: () => { menu.confirm = true; renderMenu(); },
   mresetNo: () => { menu.confirm = false; renderMenu(); },
   mreport: d => { closeMenu(); S.unread = 0; dirty(); openSheet({ type: "report", id: d.id }); },
