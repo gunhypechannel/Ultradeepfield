@@ -6012,6 +6012,12 @@ function drawClashes(W, t, T) {
     if (live) for (let s = 0; s < nShots; s++) { const fromA = Math.random() < .5 + (fa - fd) * .3, src = fromA ? o.ga : o.gd, dst = fromA ? o.gd : o.ga, ss = fromA ? aliveA : aliveD, ds = fromA ? aliveD : aliveA;
       if (!ss.length) continue; const turn = fromA ? (o.ia = (o.ia || 0) + 1) : (o.id = (o.id || 0) + 1); wpos(src, ss[turn % ss.length], V); if (ds.length) wpos(dst, ds[(Math.random() * ds.length) | 0], V2); else V2.set(q.x, q.y, q.z);
       o.bl.push({ a: V.clone(), b: V2.clone(), t0: tn, col: fromA ? (c.you === "a" ? [.4, 1, 1] : [1, .35, .3]) : (c.you === "a" ? [1, .45, .2] : [.4, 1, 1]) }); }
+    /* v194 in a demo battle every commander's fleet in the rings fights too: fleets take turns firing at the nearest enemy fleet */
+    if (live && atCube && G.cubeDemo && W.fleets) { if (!W.dmT || tn - W.dmT > 500) { W.dmT = tn; W.dmA = []; W.dmD = []; for (const [fid, fo] of W.fleets) if (/^dm[AD]/.test(fid) && fo.grp && fo.grp.visible && fo.grp.userData.slots) (fid[2] === "A" ? W.dmA : W.dmD).push(fo.grp); }
+      const LA = W.dmA, LD = W.dmD; if (LA.length && LD.length) for (let s2 = 0; s2 < (MOBILE ? 5 : 9); s2++) { const fromA = Math.random() < .55, own = fromA ? LA : LD, foe = fromA ? LD : LA, sg = own[(fromA ? (o.ja = (o.ja || 0) + 1) : (o.jd = (o.jd || 0) + 1)) % own.length];
+        let dg = null, dd = 1e9; for (let j = 0; j < 5; j++) { const cand = foe[(Math.random() * foe.length) | 0], d2 = cand.position.distanceToSquared(sg.position); if (d2 < dd) { dd = d2; dg = cand; } }
+        const ss = alive(sg), ds = dg ? alive(dg) : []; if (!ss.length || !ds.length) continue; wpos(sg, ss[(Math.random() * ss.length) | 0], V); wpos(dg, ds[(Math.random() * ds.length) | 0], V2);
+        o.bl.push({ a: V.clone(), b: V2.clone(), t0: tn, col: fromA ? [1, .35, .3] : [.4, 1, 1] }); } }
     o.bl = o.bl.filter(b => tn - b.t0 < 320); let n = 0;
     for (const b of o.bl) { if (n >= 240) break; const s0 = (tn - b.t0) / 320, s1 = Math.min(1, s0 + .22); P.set([b.a.x + (b.b.x - b.a.x) * s0, b.a.y + (b.b.y - b.a.y) * s0, b.a.z + (b.b.z - b.a.z) * s0, b.a.x + (b.b.x - b.a.x) * s1, b.a.y + (b.b.y - b.a.y) * s1, b.a.z + (b.b.z - b.a.z) * s1], n * 6);
       C.set([b.col[0] * .5, b.col[1] * .5, b.col[2] * .5, b.col[0], b.col[1], b.col[2]], n * 6); if (s1 >= 1 && Math.random() < .35) { const sb = o.booms.find(x => tn - x.t0 > 700); if (sb) { sb.t0 = tn; sb.sp.position.copy(b.b); sb.big = 0; } } n++; }
@@ -6177,7 +6183,7 @@ function drawCubeWar(W, t, T) {
     cubeSweep(W, q.last, V, q.rad + 4); cubeClear(W, V2, q.rad + 4); (q.last || (q.last = new TH.Vector3())).copy(V);
     q.g.position.copy(V); q.g.lookAt(V2); if (!staging) q.g.rotateZ(-.25 * Math.sign(q.w));
     // after the event, the losers withdraw: they fade out one squadron at a time as the crowning goes on
-    const gone = crowning && !q.cap && ((hash(String(q.ph)) % 100) / 100) < (T - endAt) / (CW_CROWN * .6); q.g.visible = !gone;
+    const gone = crowning && !q.cap && ((hash(String(q.ph)) % 100) / 100) < (T - endAt) / (CW_CROWN * .6); q.g.visible = !gone && !G.cubeDemo; /* v194: the event's scenery squadrons step aside while a demo battle is on */
     q.g.scale.setScalar(sc); const ud = q.g.userData; if (ud.anim) ud.anim(t); if (ud.eng) ud.eng.material.uniforms.uScale.value = pxS * sc; }
   // fire: beams and torpedoes from the ships, disruptor bolts from the Cube (only while the battle is on)
   const flash = (p, k, dur) => { const f = C.flashes.find(x => !x.s.visible); if (!f) return; f.s.position.copy(p); f.t0 = t; f.dur = dur || 900; f.k = k; f.s.visible = true; };
