@@ -11398,7 +11398,8 @@ function mSave() {
    (alliance, friends, strikes), then replaces this empire. */
 async function empExport() {
   dirty(); try { await flush(); } catch (e) {}
-  const json = JSON.stringify(S), file = JSON.stringify({ app: "ultra-deep-field", kind: "empire", v: 3, savedAt: S.savedAt || now(), json, sig: secSig(json) }), name = "ultra-deep-field-empire.json";
+  const json = JSON.stringify(S), planets = G.mode === "online" ? myPlanets().map(p => planetDoc(p)) : [], pj = JSON.stringify(planets);
+  const file = JSON.stringify({ app: "ultra-deep-field", kind: "empire", v: 3, savedAt: S.savedAt || now(), json, sig: secSig(json), planets, psig: secSig(json + "|" + pj) }), name = "ultra-deep-field-empire.json";
   let dl = null; try { if (window.claude && window.claude.use) dl = await window.claude.use("downloads"); } catch (e) {}
   if (dl) { try { const r = await dl.save({ filename: name, data: file }); if (r && r.status === "saved") toast("Empire file saved. Open the other version and tap Import empire file.", "win"); } catch (e) { toast(e && e.code === "declined" ? "Export cancelled." : "Couldn't save the file here.", "warn"); } return; }
   try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([file], { type: "application/json" })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); toast("Empire file downloaded. Open the other version and tap Import empire file.", "win"); }
@@ -11413,18 +11414,44 @@ function empImport() {
     if (d.sig !== secSig(d.json)) return toast("This file was changed outside the game, so it can't be imported.", "loss");
     try { st = JSON.parse(d.json); } catch (e) { return toast("That empire file is damaged.", "warn"); }
     if (!st || !st.b || !st.r || !st.ships || !st.res) return toast("That isn't an empire file.", "warn");
+    let planets = Array.isArray(d.planets) ? d.planets : [];
+    if (planets.length && d.psig !== secSig(d.json + "|" + JSON.stringify(planets))) return toast("This file was changed outside the game, so it can't be imported.", "loss");
+    if (planets.length && G.mode !== "online") return toast("Connect to the shared galaxy first, so your worlds can come across too.", "warn");
     const lv = cmdLevel(Object.values(st.b).reduce((a, v) => a + (+v || 0), 0) * 100);
-    if (!confirm("Replace the empire here with the one in this file?\n\nBuildings, research, ships, resources and items come across. Your homeworld here keeps its name and place, and alliances, friends and fleets in flight from the other galaxy don't carry over.\n\nThe empire you have here now is overwritten.")) return;
-    empApply(st);
+    const home = planets.find(p => p && p.kind === "home"), cols = planets.filter(p => p && p.kind !== "home").length;
+    if (!confirm(`Replace the empire here with the one in this file?\n\nComing across: buildings, research, ships, resources, items${home ? `, your homeworld ${home.name || ""} (name, moon, skin, buildings)` : ""}${cols ? ` and ${cols} ${cols > 1 ? "colonies" : "colony"}` : ""}. Alliances and friends from the other galaxy stay there, and fleets in flight come home first.\n\nThe empire you have here now is overwritten.`)) return;
+    empApply(st, planets);
   };
   inp.click();
 }
-function empApply(st) {
+function empApply(st, planets) {
   const lp = S.lp, homeName = S.homeName; st = migrate(st);
   for (const f of st.fleets || []) for (const k in f.n || {}) st.ships[k] = (st.ships[k] || 0) + f.n[k];
   Object.assign(st, { fleets: [], ally: null, strikes: [], probes: [], caches: [], raid: null, nextRaid: null, botRaid: null, nextBotRaid: null, friends: [], blocked: [], lp, homeName, t: now(), savedAt: now(), imported: (st.imported || 0) + 1 });
   S = st; secBoot(); FOG = null; live = false; advance(now()); live = true; dirty(); flush(); try { rebuild(); } catch (e) {} syncPlayer(); try { closeMenu(); } catch (e) {} render(true);
-  toast("Empire imported. Your buildings, research, ships and resources are here now.", "win");
+  const res = empWorlds(planets || []); dirty(); flush(); render(true);
+  toast(`Empire imported${res.home ? `, homeworld ${res.home}` : ""}${res.cols ? ` and ${res.cols} ${res.cols > 1 ? "colonies" : "colony"}` : ""}.${res.taken ? ` ${res.taken} ${res.taken > 1 ? "worlds were" : "world was"} already held by another commander here.` : ""}`, "win");
+}
+/* worlds: the homeworld here takes on the old one's name, look and buildings (it keeps its place in this galaxy); colonies are
+   the same fixed worlds in every galaxy, so each one is claimed here unless another commander already holds it */
+function empWorlds(list) {
+  const out = { home: "", cols: 0, taken: 0 }; if (G.mode !== "online" || !G.me) return out;
+  const KEEP = ["b", "cq", "st", "sq", "garrison", "moon", "debris", "nm", "sk", "sv", "px", "tn", "at", "rg", "rc"];
+  for (const src of list.slice(0, MAX_PLANETS + 1)) {
+    const c = cleanDoc(src); if (!c) continue;
+    if (src.kind === "home") {
+      const h = G.byId[G.myHome]; if (!h) continue;
+      for (const k of KEEP) if (src[k] !== undefined) h[k] = c[k] !== undefined ? c[k] : src[k];
+      if (typeof src.name === "string" && src.name.trim()) h.name = src.name.slice(0, 24);
+      if (src.fields > (h.fields || 0)) h.fields = src.fields;
+      h.owner = G.me; putPlanet(h); S.homeName = h.name; out.home = h.name; continue;
+    }
+    const p = G.byId[c.id]; if (!p || p.kind === "home") continue;
+    if (p.owner && p.owner !== G.me && !isBot(p.owner)) { out.taken++; continue; } /* bot-held worlds were won from bots in the other galaxy too */
+    for (const k of KEEP) if (src[k] !== undefined) p[k] = c[k] !== undefined ? c[k] : src[k];
+    p.owner = G.me; p.capturedAt = c.capturedAt || now(); p.ag = null; putPlanet(p); out.cols++;
+  }
+  dirty(); syncPlayer(); return out;
 }
 
 const TRADE_VAL = { m: 1, c: 1.5, g: 3 }, RES_N = { m: "Metal", c: "Crystal", g: "Gas", s: "Void Shards" };
