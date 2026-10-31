@@ -2456,13 +2456,16 @@ function patchWorlds(ids) {
   if (!G.idx || !G.list) return false; let bots = null, owners = false; const botsOf = () => bots || (bots = botDocs()); // bot records only when a world has no human owner
   for (const id of ids) { const i = G.idx.get(id); if (i === undefined) return false;
     const dd = G.docs[id], d = dd && dd.owner && !isBot(dd.owner) ? dd : (botsOf()[id] || dd), g = GENI.get(id), old = G.list[i], w = g ? worldOf(g, d) : d; if (!w) return false;
-    if (!old || old.owner !== w.owner) owners = true; G.list[i] = w; G.byId[id] = w; (G.patched || (G.patched = new Set())).add(id); }
+    if (!old || old.owner !== w.owner || w.owner === G.me) owners = true; G.list[i] = w; G.byId[id] = w; (G.patched || (G.patched = new Set())).add(id); }
   if (owners) MYP = { ref: null, me: null, v: [] }; // ownership moved: refresh "your worlds"
   if (S && G.myHome && G.byId[G.myHome]) S.homeName = G.byId[G.myHome].name; return true;
 }
 /* your worlds, cached per world list (it is rebuilt whenever a planet changes hands) so 40,000 worlds aren't scanned on every call */
 let MYP = { ref: null, me: null, v: [] };
-const myPlanets = () => { if (!G.me) return []; if (MYP.ref !== G.list || MYP.me !== G.me) MYP = { ref: G.list, me: G.me, v: G.list.filter(p => p.owner === G.me) }; return MYP.v.filter(p => p.owner === G.me); };
+const myPlanets = () => { if (!G.me) return []; if (MYP.ref !== G.list || MYP.me !== G.me) MYP = { ref: G.list, me: G.me, v: G.list.filter(p => p.owner === G.me) }; return MYP.v.map(p => G.byId[p.id] || p).filter(p => p.owner === G.me); };
+/* v196: always the live world objects. When the server echoed a world back, patchWorlds swapped in a fresh object but this cache kept
+   the old one (it only reset when an owner changed), so the game finished jobs on a stale copy: a colony job rushed with Free sat at
+   0:00 ("stuck") until the stale copy's own timer ran out */
 /* ---------- coordinates: every location has a fixed address, Layer:System:Position ("3:82:5") ----------
    Each layer is cut into 499 systems by the angle where the location began its orbit; inside a system the positions are
    numbered from the inside out. Worlds, resource fields, hideouts, Cubes, open orbits, bot homeworlds and the 10,000 commander
