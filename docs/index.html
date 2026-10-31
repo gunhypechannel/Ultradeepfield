@@ -665,7 +665,7 @@ canvas.dthumb{display:block}
 .qbar{display:flex;gap:6px;padding:5px 10px 7px;overflow-x:auto;scrollbar-width:none;background:rgba(3,12,20,.55)}.qbar::-webkit-scrollbar{display:none}
 .qc{flex:1.5 1 0;min-width:0;display:flex;align-items:center;gap:5px;padding:4px 8px;border-radius:9px;border:1px solid #1f4a66;background:rgba(14,36,52,.75);color:#cfe7f3;font-family:var(--f-display);font-size:11px;cursor:pointer;white-space:nowrap}
 .qc svg{flex:none;width:14px;height:14px;color:var(--cyan)}.qc .qn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;text-align:left}.qc b{flex:none;color:var(--cyan);font-weight:600}.qc i{font-style:normal;color:var(--muted)}
-.qc.idle{flex:1 1 0;border-color:rgba(240,169,69,.55);color:var(--amber);animation:pulse 2.4s infinite}.qc.idle svg,.qc.idle b{color:var(--amber)}
+.qc.idle{flex:1 1 0;border-color:rgba(240,169,69,.55);color:var(--amber);animation:pulse 2.4s infinite}.qc.idle svg,.qc.idle b{color:var(--amber)}.qc.free{border-color:#f0a945;background:linear-gradient(180deg,rgba(255,211,107,.28),rgba(240,169,69,.16));color:#ffe3a3;animation:none}.qc.free svg,.qc.free b{color:#ffd36b}.qc.free.all{flex:0 0 auto;font-weight:700}
 .vols{display:flex;flex-direction:column;gap:6px;margin:6px 0}.vrow{display:grid;grid-template-columns:96px 1fr 44px;align-items:center;gap:10px;font-size:14px;color:#eef3f6}
 .vrow input{width:100%;accent-color:var(--cyan);height:28px}.vrow b{font-family:var(--f-display);font-size:13px;color:var(--cyan);text-align:right}.vrow input:disabled{opacity:.4}
 .toast{background:rgba(11,21,32,.96);border:1px solid var(--line-hi);border-left:3px solid var(--cyan);padding:8px 12px;font-size:14px;animation:up .2s ease-out;box-shadow:0 6px 18px rgba(0,0,0,.5)}
@@ -5975,7 +5975,10 @@ function mapClash(loc, rep, def) {
   const youA = !def && (rep.aUids || []).includes(G.me);
   clashPush({ key: rep.id, loc, age, a: rep.start.a || {}, d: rep.start.d || {}, rounds: (rep.rounds || []).filter(r => r && r.a && r.d), winner: rep.winner, aCol: youA ? 0x55d6e8 : 0xff5a5a, dCol: youA ? 0xff7a3a : 0x55d6e8, rep: rep.id, you: youA ? "a" : "d" });
 }
-function clashPush(c) { const tn = performance.now(); G.clashes = G.clashes.filter(x => tn - x.t0 < x.dur || x.o); if (G.clashes.some(x => x.key === c.key)) return; while (G.clashes.length >= 6) { const x = G.clashes.shift(); if (G3 && x.o) clashDispose(G3, x); }
+function clashPush(c) { const tn = performance.now(); G.clashes = G.clashes.filter(x => tn - x.t0 < x.dur || x.o); if (G.clashes.some(x => x.key === c.key)) return;
+  /* v195: a new clash at the same place takes over: the older one fades out in a second instead of fighting on inside it (two sets of
+     the same ships drawn through each other flickered, most of all at the Cube where a stress test's clashes follow each other) */
+  for (const x of G.clashes) if (x.loc === c.loc && tn - x.t0 < x.dur * .92) x.dur = Math.max(1, (tn - x.t0) / .92 + 1000); while (G.clashes.length >= 6) { const x = G.clashes.shift(); if (G3 && x.o) clashDispose(G3, x); }
   G.clashes.push(Object.assign(c, { t0: tn - Math.max(0, c.age || 0), dur: 26000, nA: clashCnt(c.a) || 1, nD: clashCnt(c.d) || 1, seed: hash(c.key) })); }
 function clashDispose(W, c) { const o = c.o; if (!o) return; for (const g of [o.ga, o.gd]) if (g) { W.scene.remove(g); disposeFleet(g); } W.scene.remove(o.bolts); o.bolts.geometry.dispose(); o.bolts.material.dispose(); for (const s of o.booms) { W.scene.remove(s.sp); s.sp.material.dispose(); } c.o = null; }
 function drawClashes(W, t, T) {
@@ -7067,7 +7070,7 @@ function draw3D(t) {
     // hidden and not rebuilt (120 parked fleets in a 60 vs 60 battle were 240 invisible line draws a frame)
     // v179 the green joint-strike courses converging on the Cube (dozens of alliance armies) drew a cloud of green tracers round it during
     // the live event: those are hidden (your own keep theirs on the map, not in the cinematic). Red attack and white retreat lines stay.
-    const cubeB = id !== "raid" && (path.cube || fleetTarget(f) === NEXUS), noLine = (cubeB && routeKind(f) === "joint" && (!mineF.has(f) || cineOn)) || !!f.demo; /* v194: a demo's 120+ courses were a red starburst over the battle */
+    const cubeB = id !== "raid" && (path.cube || fleetTarget(f) === NEXUS), noLine = (cubeB && routeKind(f) === "joint" && (!mineF.has(f) || cineOn))
     o.line.visible = !path.park && !noLine; o.trail.visible = !noLine && (!path.park || (o.hist.length > 1 && Math.hypot(o.hist[0][0] - o.hist[o.hist.length - 1][0], o.hist[0][2] - o.hist[o.hist.length - 1][2]) > .05));
     if (o.line.visible) { const la = o.line.geometry.attributes.position;
       for (let i = 0; i <= 32; i++) { const q = ARC(path.a, path.b, path.k + (1 - path.k) * i / 32); la.setXYZ(i, q.x, q.y, q.z); } la.needsUpdate = true; }
@@ -11866,12 +11869,20 @@ function awaySummary() {
   AWAY.b = []; AWAY.r = []; AWAY.s = [];
 }
 /* the queue bar under the events strip: what each production queue is doing right now, at a glance, from any screen */
+/* v195 every job inside the free-finish window right now: home construction, research, and each colony's construction */
+function freeJobs() { const T = now(), w = freeWin(), out = []; if (!S) return out;
+  if (S.bq && S.bq.e > T && S.bq.e - T <= w) out.push(["b", null]); if (S.rq && S.rq.e > T && S.rq.e - T <= w) out.push(["r", null]);
+  for (const p of myPlanets()) if (p.kind !== "home" && p.cq && p.cq.e > T && p.cq.e - T <= w) out.push(["cb", p]); return out; }
 function qbarHTML() {
-  const chip = (q, icon, label, nx, ok) => !ok ? "" : `<button class="qc${nx ? "" : " idle"}" data-act="qgo" data-q="${q}" aria-label="${label}: ${nx ? nx.n : "idle"}">${NAVI[icon]}<span class="qn">${nx ? esc(nx.n) : label}</span>${nx ? `<b data-end="${nx.e}">${ftime(nx.e - now())}</b>${nx.more ? `<i>+${nx.more}</i>` : ""}` : "<b>idle ›</b>"}</button>`;
+  const P0 = actPlanet(), finOf = q => q === "b" ? (P0 ? "cb:" + P0.id : "b") : q === "r" ? "r" : null; let shownFree = 0; /* v195 */
+  const chip = (q, icon, label, nx, ok) => { if (!ok) return ""; const fin = nx && finOf(q), free = fin && nx.e - now() <= freeWin();
+    if (free) shownFree++; if (free) return `<button class="qc free" data-act="finish" data-q="${fin}" data-free="1" aria-label="${label}: finish ${nx.n} now, free">${NAVI[icon]}<span class="qn">⚡ Free · ${esc(nx.n)}</span><b data-end="${nx.e}">${ftime(nx.e - now())}</b></button>`;
+    return `<button class="qc${nx ? "" : " idle"}" data-act="qgo" data-q="${q}"${fin ? ` data-freeat="${nx.e - freeWin()}" data-fq="${fin}"` : ""} aria-label="${label}: ${nx ? nx.n : "idle"}">${NAVI[icon]}<span class="qn">${nx ? esc(nx.n) : label}</span>${nx ? `<b data-end="${nx.e}">${ftime(nx.e - now())}</b>${nx.more ? `<i>+${nx.more}</i>` : ""}` : "<b>idle ›</b>"}</button>`; };
   // on a colony the Build and Ships chips show that colony's own queues; research is shared by every planet
   const P = actPlanet(), cb = P && P.cq ? { n: `${B[P.cq.k].n} ${P.cq.lvl}`, e: P.cq.e, more: cqList(P).length } : null, cs = P && P.sq ? { n: `${SH[P.sq.k].n} ×${P.sq.n}`, e: colSqEnd(P), more: csList(P).length } : null;
   const html = chip("b", "build", "Build", P ? cb : nextIn("b"), true) + chip("r", "lab", "Lab", nextIn("r"), labPower() > 0) + chip("s", "fleet", "Ships", P ? cs : nextIn("s"), P ? ((P.b || {}).shipyard || 0) > 0 : S.b.shipyard > 0);
-  return `<div class="qbar" role="group" aria-label="Production queues">${html}</div>`;
+  const nf = freeJobs().length, all = nf >= 2 || nf > shownFree ? `<button class="qc free all" data-act="freeAll" aria-label="Finish all ${nf} jobs that are free now">⚡<span class="qn">Free all</span><b>${nf}</b></button>` : "";
+  return `<div class="qbar" role="group" aria-label="Production queues">${all}${html}</div>`;
 }
 document.addEventListener("pointerdown", unlockAudio, { passive: true });
 document.addEventListener("touchend", unlockAudio, { passive: true });
@@ -12892,6 +12903,8 @@ function tickUI() {
   const T = now();
   document.querySelectorAll("[data-end]").forEach(el => { el.textContent = ftime(+el.dataset.end - T); });
   // a paid finish button turns into a free one the moment its job crosses the free-finish window
+  document.querySelectorAll(".qc[data-freeat]").forEach(b => { if (T >= +b.dataset.freeat) { b.removeAttribute("data-freeat"); b.dataset.act = "finish"; b.dataset.q = b.dataset.fq; b.dataset.free = "1"; b.classList.add("free"); const qn = b.querySelector(".qn"); if (qn) qn.textContent = "⚡ Free · " + qn.textContent; } });
+  { const nf = freeJobs().length; if (nf !== tickUI.nf) { tickUI.nf = nf; softRender(); } }
   document.querySelectorAll("button[data-freeat]").forEach(b => { if (T >= +b.dataset.freeat) { b.removeAttribute("data-freeat"); b.dataset.free = "1"; b.className = "btn amber"; b.removeAttribute("style"); b.setAttribute("aria-label", "Finish now, free"); b.textContent = "Free"; } });
   const ck = document.getElementById("clock"); if (ck) ck.textContent = clockStr();
   if (view === "galaxy") updateVbtn();
@@ -13534,6 +13547,8 @@ const ACT = {
     if (f.phase === "out" && cut > 0) f.out = Math.min(f.out, T - 1);
     toast(`Fleet hurried for ◆${c}.`, "win"); advance(now());
   }),
+  freeAll: () => act(() => { const T = now(), js = freeJobs(); for (const [k, p] of js) { if (k === "b") S.bq.e = T; else if (k === "r") S.rq.e = T; else p.cq.e = T; }
+    if (js.length) { advance(now()); toast(`Finished ${js.length} job${js.length > 1 ? "s" : ""} free.`, "win"); } }),
   finish: d => act(() => {
     const T = now(), q = d.q; let rem = 0, apply = null;
     if (q === "b" && S.bq) { rem = S.bq.e - T; apply = () => { S.bq.e = T; }; }
@@ -13633,7 +13648,7 @@ const ACT = {
     if (usedOf(p) + qn >= fieldsOf(p)) return toast(`No free fields on ${p.name}.`, "warn");
     const lvl = cNext(p, k), c = cost(B[k], lvl); if (!payCol(p, c)) return toast(`${p.name}'s stockpile is too small. Build up its extractors or wait.`, "warn");
     const t = now(); if (!p.cq) { p.cq = { k, lvl, s: t, e: t + bTimeL(k, lvl, p) }; toast(`${p.name}: building ${B[k].n} Lv.${lvl}`); } else { cqList(p).push({ k, lvl, c }); toast(`${p.name}: ${B[k].n} Lv.${lvl} queued · ${qn + 1}/${Q_MAX}`); }
-    putPlanet(p); }),
+    putPlanet(p); doneCard(); }),
   cqcancel: d => act(() => { const p = G.byId[d.id]; if (!p) return; const list = d.s ? csList(p) : cqList(p), it = list[+d.i]; if (!it) return; list.splice(+d.i, 1);
     const c = d.s ? mul(SH[it.k].c, it.n) : it.c; settle(p); for (const r of ["m", "c", "g"]) p.st[r] += c[r] || 0; S.spent -= total(c); putPlanet(p); toast(`Removed from ${p.name}'s queue. Refunded to its stockpile.`); }),
   research: d => act(() => { const k = d.k; if (missing(R[k].req).length || rMaxed(k, rNext(k))) return; if (rqN() >= Q_MAX) return toast(`The research queue is full (${Q_MAX} jobs).`, "warn");
