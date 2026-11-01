@@ -638,6 +638,27 @@ canvas.dthumb{display:block}
 .bio{margin:0;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border-left:3px solid var(--cyan);font-size:13.5px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
 .pstats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.pstats div{display:flex;flex-direction:column;align-items:center;padding:8px 4px;border-radius:10px;background:rgba(255,255,255,.04)}.pstats b{font-family:var(--f-display);font-size:18px;color:#f2f6f8}.pstats small{font-size:10.5px;color:var(--muted)}.pstats.sm b{font-size:15px}
 .row2{display:flex;gap:8px}.row2 > *{flex:1}
+.cmdh{display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:16px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(85,214,232,.07),rgba(255,255,255,.015) 38%),var(--panel,#121a22);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.cmdtop{display:flex;align-items:center;gap:14px;min-width:0}
+.cmdav{position:relative;flex:none;width:68px;height:68px;padding:0;border:0;border-radius:50%;background:none;cursor:pointer;box-shadow:0 0 0 2px rgba(85,214,232,.55),0 0 18px rgba(85,214,232,.25)}
+.cmdav canvas{width:100%;height:100%;border-radius:50%;display:block}
+.cmdav span{position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);padding:1px 7px;border-radius:7px;background:#0b141b;border:1px solid rgba(85,214,232,.6);color:var(--cyan);font-family:var(--f-display);font-size:10px;letter-spacing:.06em;white-space:nowrap}
+.cmdid{min-width:0;flex:1;display:flex;flex-direction:column;gap:6px}
+.cmdid > b{font-family:var(--f-display);font-size:21px;font-weight:700;color:#f2f6f8;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmdtags{display:flex;flex-wrap:wrap;gap:5px}.cmdtags .pill{font-size:10.5px}
+.cmdxp .xp{height:6px}.cmdxpl{display:flex;justify-content:space-between;gap:8px;margin-top:5px;font-size:12px;color:var(--muted)}.cmdxpl b{color:#e8f2f8;font-weight:600}
+.cmdst{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.cmdst > div{min-width:0;display:flex;flex-direction:column;gap:3px;padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05)}
+.cmdst small{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.cmdst b{display:flex;align-items:center;gap:3px;font-family:var(--f-display);font-size:16px;font-weight:600;color:#f2f6f8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmdst b em{font-style:normal;font-size:12px;color:var(--muted);font-weight:400}.cmdst b svg{width:14px;height:14px}
+.cmdrec{display:flex;flex-direction:column;gap:6px}
+.cmdrecl{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;color:var(--muted)}.cmdrecl b{font-family:var(--f-display);font-size:14px;color:#e8f2f8}.cmdrecl b.w{color:#5fe08a}.cmdrecl b.l{color:#ff7a6a}.cmdrecl .r{margin-left:auto;color:#cfe2ea}
+.cmdbar{display:flex;height:5px;border-radius:3px;overflow:hidden;background:#0f171d}.cmdbar i{display:block;height:100%}.cmdbar .w{background:#5fe08a}.cmdbar .d{background:#7f8c96}.cmdbar .l{background:#ff6a5a}
+.cmdbio{all:unset;box-sizing:border-box;display:block;width:100%;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.03);border-left:3px solid var(--cyan);font-size:13.5px;line-height:1.45;color:#dfeaf0;white-space:pre-wrap;overflow-wrap:anywhere;cursor:pointer}.cmdbio span{color:var(--muted)}
+.cmdgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.cmdbt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:62px;padding:8px 4px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:#dfeaf0;font:600 12px var(--f-body,inherit);cursor:pointer;transition:background .15s,border-color .15s}
+.cmdbt svg{width:22px;height:22px;color:var(--cyan)}.cmdbt:hover,.cmdbt:focus-visible{background:rgba(85,214,232,.09);border-color:rgba(85,214,232,.5)}.cmdbt:active{transform:scale(.97)}
 .flist{display:flex;flex-direction:column;gap:4px}.frow{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.03)}
 .frow.conv{flex-direction:column;align-items:flex-start;border:1px solid rgba(255,255,255,.06);color:var(--text);font:inherit;text-align:left;cursor:pointer}.frow.conv small{color:var(--muted);font-size:12px}
 .fname{flex:1;min-width:0;display:flex;flex-direction:column;background:none;border:0;color:var(--text);text-align:left;font:inherit;cursor:pointer;padding:0}.fname small{color:var(--muted);font-size:11px}
@@ -2718,6 +2739,8 @@ const CPROF = {
 const ROLE_N = { interceptor: "Interceptor", fighter: "Fighter", support: "Support", frigate: "Frigate", battleship: "Battleship", carrier: "Carrier", bomber: "Bomber", cruiser: "Cruiser", capital: "Capital ship", titan: "Titan", turret: "Defense", station: "Station" };
 const SMALL_R = new Set(["interceptor", "fighter", "bomber"]), BIG_R = new Set(["battleship", "capital", "titan", "carrier", "station"]);
 const cprof = k => CPROF[k] || ["fighter", "laser", 0, .1, 4, 0];
+/* v201 weapon scale in battle replays: 0 small craft (thin darts), 1 escorts and cruisers (bolts), 2 capital hulls (heavy lances) */
+const szOf = q => BIG_R.has(q.role) || bLen(q.k) >= .9 ? 2 : SMALL_R.has(q.role) || (q.role !== "frigate" && bLen(q.k) < .55) ? 0 : 1;
 const unitCost = k => SH[k] ? total(SH[k].c) : DF[k] ? total(DF[k].c) : AL[k] ? AL[k].val : k === "fortress" ? 60000 : 1000;
 const unitPow = s => (s.atk + (s.sh * SHM + s.hull) / 6) / 10;
 /* fleet doctrines: the player picks one per attack; the AI sides use their own */
@@ -11457,16 +11480,21 @@ function vCmd() {
   ensureDaily();
   const sc = score(), L = cmdLevel(sc), mx = L >= CMD_MAX, a = lvlXP(L), b = mx ? a + 1 : lvlXP(L + 1), name = G.myName || "Commander", rank = myRank();
   const ic = (svg, col) => svg.replace("<svg", `<svg style="width:26px;height:26px;color:${col || "#38dfee"}"`);
-  const profile = `<section class="acc" style="padding:16px;display:flex;flex-direction:column;gap:10px">
-    <div style="display:flex;align-items:center;gap:12px"><span class="avatar" style="width:48px;height:48px;font-size:20px">${esc((name[0] || "C").toUpperCase())}</span>
-      <div style="min-width:0;flex:1"><div style="font-size:21px;color:#f2f6f8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(name)}</div><div style="color:#2fd8e6;font-size:14px">${titleOf(L)} · Level ${L} / ${CMD_MAX}${rank ? ` · Rank #${rank}` : ""}</div></div></div>
-    <div class="xp"><i style="width:${clamp((sc - a) / (b - a) * 100, 0, 100)}%"></i></div>
-    ${mrow("Score", mx ? `${fmt(sc)} <small style="color:#ffd36b">max level</small>` : `${fmt(sc)} <small style="color:#93a1ac">/ ${fmt(b)} for Lv.${L + 1}</small>`)}${mrow("Homeworld", esc(S.homeName))}${mrow("Worlds", `${Math.max(1, myPlanets().length)} / ${worldCap()} <small style="color:#93a1ac">Astrophysics Lv.${S.r.astro}</small>`)}${mrow("Fleet slots", `${S.fleets.length} / ${maxFleets()}`)}${mrow("Boosts", `<span style="color:var(--amber)">${MI.bolt}</span> ${S.boosts}`)}${mrow("Void Shards", `<span class="shard">◆ ${fmt(S.shards || 0)}</span>`)}
-    <div class="pstats sm"><div><b>${fmt((S.rec || {}).w || 0)}</b><small>Wins</small></div><div><b>${fmt((S.rec || {}).l || 0)}</b><small>Losses</small></div><div><b>${fmt((S.rec || {}).d || 0)}</b><small>Draws</small></div><div><b>${fmt((S.pvp || {}).pts || 0)}</b><small>PvP pts</small></div></div>
-    <p class="bio">${S.bio ? esc(S.bio) : '<span class="note">No bio yet. Add one from your player card.</span>'}</p>
-    <div class="row2"><button class="mbtn" data-act="profile" data-u="${G.me}">Player card & bio</button><button class="mbtn" data-act="ranks">Rankings</button></div>
-    <div class="row2"><button class="mbtn" data-act="friends">Friends</button><button class="mbtn" data-act="chat">Chat</button></div>
-    <button class="mbtn" data-act="skin">Rename & reskin homeworld</button><button class="mbtn" data-act="faction">Faction · ${FACTIONS[facOf()].n}</button></section>`;
+  /* v201 commander card: portrait and level, a slim progress bar, six stat tiles, the battle record as one split bar, and a 3 x 2 grid of actions */
+  const rec = S.rec || {}, w = rec.w || 0, lo = rec.l || 0, dr = rec.d || 0, fights = w + lo + dr, pct = clamp((sc - a) / (b - a) * 100, 0, 100);
+  const sv = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const CI = { card: sv('<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14 10h4M14 13.5h3"/>'), rank: MI.rank, friends: sv('<circle cx="9" cy="8" r="3.2"/><path d="M3 20c.7-3.6 3-5.4 6-5.4s5.3 1.8 6 5.4"/><path d="M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.6.7 2.6 2.4 3 5.2"/>'),
+    chat: sv('<path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/>'), world: sv('<circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.4 2.3 3.6 5 3.6 8s-1.2 5.7-3.6 8c-2.4-2.3-3.6-5-3.6-8S9.6 6.3 12 4z"/>'), fac: MI.shield };
+  const tile = (l, v, s) => `<div><small>${l}</small><b>${v}</b>${s ? `<i>${s}</i>` : ""}</div>`, btn = (act, icon, l, extra) => `<button class="cmdbt" data-act="${act}"${extra || ""}>${icon}<span>${l}</span></button>`;
+  const profile = `<section class="cmdh">
+    <div class="cmdtop"><button class="cmdav" data-act="profile" data-u="${G.me}" aria-label="Your player card">${avCanvas(G.me)}<span>LV ${L}</span></button>
+      <div class="cmdid"><b>${esc(name)}</b><div class="cmdtags"><span class="pill ok">${titleOf(L)}</span>${rank ? `<span class="pill amb">Rank #${rank}</span>` : ""}<span class="pill">${esc(FACTIONS[facOf()].n)}</span></div></div></div>
+    <div class="cmdxp"><div class="xp"><i style="width:${pct}%"></i></div><div class="cmdxpl"><span>Level ${L} / ${CMD_MAX}</span><span>${mx ? '<b style="color:var(--amber)">Max level</b>' : `<b>${fmt(sc)}</b> / ${fmt(b)} score for Lv.${L + 1}`}</span></div></div>
+    <div class="cmdst">${tile("Homeworld", esc(S.homeName))}${tile("Worlds", `${Math.max(1, myPlanets().length)}<em> / ${worldCap()}</em>`)}${tile("Fleets", `${S.fleets.length}<em> / ${maxFleets()}</em>`)}${tile("Boosts", `<span style="color:var(--amber)">${MI.bolt}</span>${S.boosts}`)}${tile("Void Shards", `<span class="shard">◆ ${fmt(S.shards || 0)}</span>`)}${tile("PvP points", fmt((S.pvp || {}).pts || 0))}</div>
+    <div class="cmdrec"><div class="cmdrecl"><span><b class="w">${fmt(w)}</b> wins</span><span><b class="l">${fmt(lo)}</b> losses</span><span><b>${fmt(dr)}</b> draws</span><span class="r">${fights ? Math.round(w / fights * 100) + "% win rate" : "No battles yet"}</span></div>
+      <div class="cmdbar">${fights ? `<i class="w" style="width:${w / fights * 100}%"></i><i class="d" style="width:${dr / fights * 100}%"></i><i class="l" style="width:${lo / fights * 100}%"></i>` : ""}</div></div>
+    <button class="cmdbio" data-act="profile" data-u="${G.me}">${S.bio ? esc(S.bio) : '<span>Write a short bio on your player card ›</span>'}</button>
+    <div class="cmdgrid">${btn("profile", CI.card, "Player card", ` data-u="${G.me}"`)}${btn("ranks", CI.rank, "Rankings")}${btn("friends", CI.friends, "Friends")}${btn("chat", CI.chat, "Chat")}${btn("skin", CI.world, "Homeworld")}${btn("faction", CI.fac, "Faction")}</div></section>`;
   return `<div class="cmd gstack">${profile}
     ${acc("alliance", ic(MI.wings), "Alliance", myAlly() ? `<span class="pill ok">[${esc(myAlly().tag)}]</span>` : `<span class="pill ok">Bot pact</span>`, pactCard() + allySection())}
     ${acc("elements", ic(MI.shield, "#e06bd8"), "Elements (Runes)", `${Object.values(S.runes || {}).reduce((a, b) => a + b, 0) ? `<span class="pill amb">${Object.values(S.runes || {}).reduce((a, b) => a + b, 0)} to socket</span>` : ""}`, mElem())}
@@ -12221,7 +12249,7 @@ function playBattle(r) {
   // each side flies its own faction: you always in yours; a rival commander in theirs, with the side colour on their trim
   battle.acc = battleAcc(r);
   battle.superSide = r.dName === "Collective Warden" ? "d" : r.aName === "The Cube" ? "a" : null; // v109: the Super Cube fights as one grand Cube
-  for (const q of R.squads) { cardPal(q.k); shipArtSoon(q.k, battle.acc[q.side], "side"); } // start baking every unit type now (and sample its card)
+  for (const q of R.squads) { cardPal(q.k); shipArtSoon(q.k, battle.acc[q.side], "side"); if (q.role === "carrier") shipArtSoon(q.k === "lord" ? "drone" : "fighter", battle.acc[q.side], "side"); } // start baking every unit type now (and sample its card), and a carrier's fighter wing
   bindBattleCam(w.querySelector("#bcv"));
   sbPrep(); SFX.att = 1; SFX.cut = 0; // and synthesise the battle sound bank (a few small steps, once)
   battleCtl(); startAnim();
@@ -12253,18 +12281,21 @@ const visN = (role, n) => n <= 0 ? 0 : Math.min(role === "titan" || role === "st
 /* v54 battle effects: a big volley also becomes a laser-rail salvo (parallel beams sweeping across the field), a missile swarm
    (many missiles with smoke trails), or, for stations, titans and beam weapons, a charged mega beam */
 function spawnVolley(b, v) {
-  const lo = b.lowFx, cap = PERF.battleCap, wk = v.wk, many = v.n + v.ic, mis = wk === "missile" || wk === "torpedo", q = b.Q[v.s], side = q.side;
-  let cnt = v.bounce ? 1 : mis ? clamp(Math.round((2 + Math.log2(1 + many) * 1.6) * cap), 2, lo ? 2 : 14) : clamp(1 + Math.floor(Math.log10(1 + many * 2)), 1, lo ? 1 : 5);
+  const lo = b.lowFx, cap = PERF.battleCap, wk = v.wk, many = v.n + v.ic, mis = wk === "missile" || wk === "torpedo", q = b.Q[v.s], side = q.side, sz = q.sz != null ? q.sz : (q.sz = szOf(q));
+  if (q.role === "carrier") (b.ctgt = b.ctgt || [])[v.s] = v.e; // its fighter wing flies at whatever the carrier is shooting
+  let cnt = v.bounce ? 1 : mis ? clamp(Math.round((2 + Math.log2(1 + many) * 1.6) * cap), 2, lo ? 2 : 14) : sz === 0 ? clamp(2 + Math.floor(Math.log2(1 + many) * .7), 2, lo ? 1 : 6) : clamp(1 + Math.floor(Math.log10(1 + many * 2)), 1, lo ? 1 : 5); // small craft: a spray of little darts
   if (b.Q.length > 60 && cnt > (mis ? 4 : 2)) cnt = mis ? 4 : 2; // crowded battles (10 vs 10): fewer bolts per volley so the field never turns into a white blob
   /* v67: heavy gunships always show their cannon fire (big plasma shells with trails), and every capital ship flashes when it fires */
   const heavy = q.k === "battleship" || q.k === "bastion" || q.k === "destroyer" || q.role === "battleship"; if (heavy) cnt = Math.max(cnt, lo ? 2 : 3);
   if (heavy || q.role === "capital" || q.role === "titan" || q.role === "cruiser" || q.role === "station") { (b.muz = b.muz || []).push({ s: v.s, t: v.t, big: q.role !== "cruiser", col: q.k === "worldbreaker" ? "#ff2a1a" : SIDE_COL[side].shot }); if (b.muz.length > 40) b.muz.shift(); }
   const icN = v.ic > 0 ? Math.round(cnt * v.ic / (v.ic + v.n + 1e-9)) : 0, tr = TRAVEL[wk] || .3, gap = mis ? .045 : .07;
-  for (let j = 0; j < cnt; j++) b.fx.push({ t0: v.t + j * gap, t1: v.t + j * gap + tr * (mis ? 1 + (j % 3) * .14 : 1), v, last: j === cnt - 1, first: j === 0, n: cnt, mis, ic: j < icN && j !== cnt - 1, side, off: ((hash(v.t + "|" + j) % 100) / 100 - .5), hv: heavy ? 1 : 0 });
+  for (let j = 0; j < cnt; j++) b.fx.push({ t0: v.t + j * gap, t1: v.t + j * gap + tr * (mis ? 1 + (j % 3) * .14 : 1), v, last: j === cnt - 1, first: j === 0, n: cnt, mis, ic: j < icN && j !== cnt - 1, side, off: ((hash(v.t + "|" + j) % 100) / 100 - .5), hv: heavy ? 1 : 0, sz });
   if (lo || v.bounce) return;
   if (q.k === "worldbreaker") { b.beams = b.beams.filter(m => m.s !== v.s); b.beams.push({ t0: v.t, s: v.s, e: v.e, side, w: 12, charge: .32, life: .55, wb: 1 }); return; } // the Cube Destroyer always fires its red beam, never dropped by the beam limit
-  if (wk === "beam" || q.role === "station" || q.role === "titan") { if (b.beams.filter(m => !m.wb).length < 3) b.beams.push({ t0: v.t, s: v.s, e: v.e, side, w: clamp(3 + Math.log10(1 + many * (q.pow || 1)) * 1.4, 3, 12), charge: .3, life: .45 }); }
-  else if (!heavy && (wk === "laser" || wk === "mass" || wk === "ion" || wk === "flak" || wk === "plasma") && many >= 3) { b.salvos.push({ t0: v.t, s: v.s, e: v.e, side, wk, n: clamp(Math.round((1 + Math.log2(many) * .8) * cap), 1, 6), w: clamp(1 + Math.log10(1 + many) * .9, 1, 4), life: .26 }); if (b.salvos.length > (b.Q.length > 60 ? 5 : 18)) b.salvos.shift(); }
+  if (wk === "beam" || q.role === "station" || q.role === "titan") { if (b.beams.filter(m => !m.wb && !m.lance).length < 3) b.beams.push({ t0: v.t, s: v.s, e: v.e, side, w: clamp(3 + Math.log10(1 + many * (q.pow || 1)) * 1.4, 3, 12), charge: .3, life: .45 }); }
+  /* v201: a capital hull's lasers are heavy lances, a thick short-lived beam that stops on its target */
+  else if (sz === 2 && !heavy && (wk === "laser" || wk === "ion" || wk === "plasma" || wk === "mass" || wk === "acid")) { if (b.beams.filter(m => m.lance).length < (b.Q.length > 60 ? 3 : 6)) b.beams.push({ t0: v.t, s: v.s, e: v.e, side, w: clamp(3.2 + Math.log10(1 + many * (q.pow || 1)) * 1.1, 3.2, 8), charge: .14, life: .3, lance: 1, wk }); }
+  else if (!heavy && sz >= 1 && (wk === "laser" || wk === "mass" || wk === "ion" || wk === "flak" || wk === "plasma") && many >= 3) { b.salvos.push({ t0: v.t, s: v.s, e: v.e, side, wk, n: clamp(Math.round((1 + Math.log2(many) * .8) * cap), 1, 6), w: clamp(1 + Math.log10(1 + many) * .9, 1, 4), life: .26 }); if (b.salvos.length > (b.Q.length > 60 ? 5 : 18)) b.salvos.shift(); }
 }
 /* an explosion in layers: a white flash, rolling fireballs, sparks, a shockwave, and smoke that lingers and drifts */
 function bExplode(b, x, y, size, t, d) {
@@ -12525,6 +12556,32 @@ function drawBattle(t) {
   };
   // far planes first, then a veil of haze, then the near planes on top: real layered depth
   { let hazed = false; for (const i of b.ord) { if (!hazed && b.z[i] >= .5) { hazed = true; if (!lo) { ctx.globalAlpha = 1; ctx.fillStyle = "rgba(9,20,38,.2)"; ctx.fillRect(-30, -30, W + 60, H + 60); } } drawSq(Q[i], i); } }
+  /* v201 carrier wings: every carrier formation keeps a wing of small fighters cycling out of its hangar, strafing the carrier's
+     target with little darts and returning to land. Art only: the carrier's own volleys still carry its real damage */
+  if (!b.superSide) { b.wclk = (b.wclk || 0) + (b.paused || b.done || b.intro > 0 ? 0 : real * b.speed);
+    const liveFoe = sd => { for (const j of b.ord) if (Q[j].side !== sd && b.n[j] > 0 && !(pos[j].fl & 6) && scr[j]) return j; return -1; };
+    for (let i = 0; i < Q.length; i++) { const q = Q[i]; if (q.role !== "carrier" || b.n[i] <= 0 || (pos[i].fl & 6) || (busy && tot[i] === -1)) continue;
+      const g = b.geo && b.geo[i]; if (!g || g.f !== b.gf) continue;
+      let j = (b.ctgt || [])[i]; if (j == null || b.n[j] <= 0 || (pos[j].fl & 6)) j = liveFoe(q.side);
+      const wk = q.k === "lord" ? "drone" : "fighter", acc = b.acc[q.side], col = SIDE_COL[q.side], n = busy && tot[i] > 0 ? tot[i] : b.n[i];
+      const nD = lo ? 2 : busy ? 3 : clamp(3 + Math.floor(Math.log2(n)), 3, q.k === "supercarrier" ? 9 : 6), P = q.k === "supercarrier" ? 5200 : 4400;
+      const C = scr[i], hx = C.x + g.face * g.L * .08, hy = C.y + g.L * .06, E = j >= 0 ? scr[j] : null, Ld = Math.max(10 * d, g.L * .28);
+      const R0 = Math.max(g.L * .55, W * .045), ex = E ? E.x : C.x, ey = E ? E.y : C.y - g.L * .5;
+      const at = (u, k) => { // where fighter k is at phase u of its sortie
+        const ph = k * 2.399, oa = ph + (u - .3) / .45 * TAU * .85, ox = ex + Math.cos(oa) * R0, oy = ey + Math.sin(oa) * R0 * .5;
+        if (u < .3) { const s = u / .3, e2 = s * s * (3 - 2 * s), ia = ph, ix = ex + Math.cos(ia) * R0, iy = ey + Math.sin(ia) * R0 * .5, mx = (hx + ix) / 2 + Math.sin(ph) * W * .06, my = Math.min(hy, iy) - g.L * (.5 + (k % 3) * .2);
+          return [(1 - e2) * (1 - e2) * hx + 2 * (1 - e2) * e2 * mx + e2 * e2 * ix, (1 - e2) * (1 - e2) * hy + 2 * (1 - e2) * e2 * my + e2 * e2 * iy]; }
+        if (u < .75) return [ox, oy];
+        const s = (u - .75) / .25, e2 = s * s * (3 - 2 * s), fa2 = ph + TAU * .85, fx = ex + Math.cos(fa2) * R0, fy = ey + Math.sin(fa2) * R0 * .5, mx = (fx + hx) / 2 - Math.sin(ph) * W * .05, my = Math.max(fy, hy) + g.L * (.35 + (k % 2) * .2);
+        return [(1 - e2) * (1 - e2) * fx + 2 * (1 - e2) * e2 * mx + e2 * e2 * hx, (1 - e2) * (1 - e2) * fy + 2 * (1 - e2) * e2 * my + e2 * e2 * hy]; };
+      for (let k = 0; k < nD; k++) { const u = ((b.wclk / P) + k / nD + (i * .137)) % 1, [x, y] = at(u, k), [x2, y2] = at(Math.min(.999, u + .006), k), vx = x2 - x, vy = y2 - y;
+        const grow = Math.min(1, u / .05, (1 - u) / .05), sz = Ld * (.35 + .65 * grow), fc = vx >= 0 ? 1 : -1, ang = clamp(Math.atan2(vy, Math.abs(vx) || 1e-6), -.7, .7) * fc;
+        ctx.save(); if (!lo) { ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .8 * grow; ctx.drawImage(glowSprite(col.gk || (col.gk = `rgba(${col.glow},1)`)), x - fc * sz * .55 - sz * .35, y - sz * .12, sz * .7, sz * .24); ctx.globalCompositeOperation = "source-over"; }
+        ctx.globalAlpha = grow; ctx.translate(x, y); ctx.rotate(ang); drawSide(ctx, wk, 0, 0, sz, acc, fc, true); ctx.restore();
+        // strafing runs: short darts at the target while on the attack orbit
+        if (E && u > .32 && u < .74 && !lo) { const fp2 = (b.wclk / 140 + k * .31) % 1; if (fp2 < .55) { const dx = ex - x, dy = ey - y, l2 = Math.hypot(dx, dy) || 1, pr2 = fp2 / .55, bx = x + dx * pr2 * .9, by = y + dy * pr2 * .9, ln2 = 6 * d;
+            ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.strokeStyle = col.shot; ctx.lineWidth = 1.2 * d; ctx.globalAlpha = .9; ctx.beginPath(); ctx.moveTo(bx - dx / l2 * ln2, by - dy / l2 * ln2); ctx.lineTo(bx, by); ctx.stroke();
+            if (pr2 > .9) { const hr = 4 * d; ctx.globalAlpha = .7; ctx.drawImage(glowSprite(col.shot), ex + (k % 3 - 1) * 4 * d - hr, ey + (k % 2 ? 3 : -3) * d - hr, hr * 2, hr * 2); } ctx.restore(); } } } } }
   /* v78 capital wrecks: a destroyed capital ship splits along a fracture line into two hull sections that drift apart with their own
      momentum and spin (nothing slows them in vacuum), the torn edges glowing white-hot and cooling to orange as they separate */
   b.wrecks = (b.wrecks || []).filter(w => t - w.t < w.life);
@@ -12571,7 +12628,16 @@ function drawBattle(t) {
   // mega beams from stations, titans and beam batteries: a charge-up glow, then a roaring column with a blinding impact
   b.beams = b.beams.filter(m => T - m.t0 <= m.charge + m.life);
   for (const m of b.beams) { const age = T - m.t0; if (age < 0) continue; const A = scr[m.s], E = scr[m.e]; if (!A || !E) continue;
-    const sx = A.x + (m.wb ? (b.face[m.s] || 1) * Math.min(W * .1 * bLen("worldbreaker") * A.s, W * .55 * A.s) * .62 : 0), sy = A.y + (m.wb ? Math.min(W * .1 * bLen("worldbreaker") * A.s, W * .55 * A.s) * .07 : 0), ex = E.x, ey = E.y, dx = ex - sx, dy = ey - sy, L2 = Math.hypot(dx, dy) || 1, ux = dx / L2, uy = dy / L2, col = (Q[m.s] || {}).k === "worldbreaker" ? "#ff2a1a" : m.side === "a" ? "#6fe4ff" : "#ff7a5a"; // the Cube Destroyer always fires its red laser
+    const sx = A.x + (m.wb ? (b.face[m.s] || 1) * Math.min(W * .1 * bLen("worldbreaker") * A.s, W * .55 * A.s) * .62 : 0), sy = A.y + (m.wb ? Math.min(W * .1 * bLen("worldbreaker") * A.s, W * .55 * A.s) * .07 : 0), ex = E.x, ey = E.y, dx = ex - sx, dy = ey - sy, L2 = Math.hypot(dx, dy) || 1, ux = dx / L2, uy = dy / L2, col = (Q[m.s] || {}).k === "worldbreaker" ? "#ff2a1a" : m.wk === "ion" ? "#c3b2ff" : m.wk === "acid" ? "#a6ff6a" : m.side === "a" ? "#6fe4ff" : "#ff7a5a"; // the Cube Destroyer always fires its red laser
+    if (m.lance) { /* v201 heavy lance from a capital hull: a quick charge at a hardpoint, then a thick beam that ends in a burst on the target */
+      const [hx, hy] = hp(m.s, m.t0 + .4, 1), [tx, ty] = hp(m.e, m.t0 + .7, 0), lx = tx - hx, ly = ty - hy;
+      if (age < m.charge) { const k = age / m.charge, r = (5 + 16 * k) * d; ctx.globalAlpha = .5 + .5 * k; ctx.drawImage(glowSprite(col), hx - r, hy - r, r * 2, r * 2); ctx.drawImage(glowSprite("#ffffff"), hx - r * .35, hy - r * .35, r * .7, r * .7); continue; }
+      const k = (age - m.charge) / m.life, al = k < .1 ? k / .1 : Math.pow(Math.max(0, 1 - (k - .1) / .9), 1.6), w = m.w * d * (.85 + .15 * Math.sin(t * .11 + m.s)) * (busy ? .7 : 1), reach = Math.min(1, k * 5);
+      if (!m.fs) { m.fs = 1; SFX.laser(m.side === "d"); b.shake = Math.max(b.shake, 3 * d); }
+      for (const [lw, a, c2] of [[4.5, .16, col], [2.2, .5, col], [1, .95, "#eefcff"], [.4, 1, "#ffffff"]]) { ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + lx * reach, hy + ly * reach); ctx.strokeStyle = c2; ctx.globalAlpha = al * a * (.45 + .55 * dim); ctx.lineWidth = w * lw; ctx.stroke(); }
+      const mr = (7 + m.w * 2.2) * d * al; ctx.globalAlpha = al; ctx.drawImage(glowSprite(col), hx - mr, hy - mr, mr * 2, mr * 2);
+      if (reach >= 1) { const ir = (10 + m.w * 3) * d * al; ctx.drawImage(glowSprite(col), tx - ir, ty - ir, ir * 2, ir * 2); ctx.drawImage(glowSprite("#ffffff"), tx - ir * .4, ty - ir * .4, ir * .8, ir * .8); }
+      continue; }
     if (age < m.charge) { const k = age / m.charge, r = (6 + 34 * k) * d; if (!m.cs) { m.cs = 1; SFX.charge(sp(sx, sy)); } ctx.globalAlpha = .5 + .5 * k; ctx.drawImage(glowSprite(col), sx - r, sy - r, r * 2, r * 2); ctx.drawImage(glowSprite("#ffffff"), sx - r * .4, sy - r * .4, r * .8, r * .8); continue; }
     const k = (age - m.charge) / m.life, al = k < .08 ? k / .08 : Math.pow(Math.max(0, 1 - (k - .08) / .92), 1.8), fl = .8 + .2 * Math.sin(t * .09), w = m.w * d * fl, len = Math.max(L2 * 1.5, W);
     if (!m.fs) { m.fs = 1; SFX.megaBeam(sp(sx, sy)); b.shake = Math.max(b.shake, 11 * d); b.flash = Math.max(b.flash, .28); }
@@ -12586,17 +12652,17 @@ function drawBattle(t) {
     ctx.globalAlpha = (1 - k) * .9; ctx.drawImage(glowSprite(m.col), fx2 - r, fy2 - r, r * 2, r * 2); ctx.globalAlpha = 1 - k; ctx.drawImage(glowSprite("#ffffff"), fx2 - r * .35, fy2 - r * .35, r * .7, r * .7); }
   ctx.globalAlpha = 1;
   for (const f of b.fx) {
-    if (T < f.t0) continue; const v = f.v, s = scr[v.s], e = scr[v.e], p = clamp((T - f.t0) / (f.t1 - f.t0), 0, 1), col = SIDE_COL[f.side].shot;
+    if (T < f.t0) continue; const v = f.v, s = scr[v.s], e = scr[v.e], p = clamp((T - f.t0) / (f.t1 - f.t0), 0, 1), col = SIDE_COL[f.side].shot, ks = f.sz === 0 ? .5 : f.sz === 2 ? 1.45 : 1; // v201: shot size follows hull size
     const [sx, sy] = hp(v.s, f.off + f.t0 * .13, 1), [ex, ey] = hp(v.e, f.off * 1.7 + .5, 0), stop = f.ic ? .6 : 1, q = Math.min(p, stop) / 1;
     if (f.first && !f.snd) { f.snd = 1; if (f.mis) SFX.swarm(f.n, sp(sx, sy)); }
     const curve = v.wk === "missile" || v.wk === "torpedo", mx = (sx + ex) / 2 + f.off * W * .25, my = (sy + ey) / 2 - Math.abs(f.off) * H * .08;
     const px = curve ? (1 - q) * (1 - q) * sx + 2 * (1 - q) * q * mx + q * q * ex : sx + (ex - sx) * q, py = (curve ? (1 - q) * (1 - q) * sy + 2 * (1 - q) * q * my + q * q * ey : sy + (ey - sy) * q) + (curve ? Math.sin(q * 11 + f.off * 30) * (1 - q) * q * 14 * d : 0); /* v78: missiles weave as their guidance corrects */
-    if (!lo && p < .14 && !f.mis && v.wk !== "beam") { const mr = (f.hv ? 13 : 5) * d * (1 - p / .14) * Math.max(.6, s.s); ctx.globalAlpha = 1 - p / .14; ctx.drawImage(glowSprite(col), sx - mr, sy - mr, mr * 2, mr * 2); ctx.globalAlpha = 1; } // v78: a muzzle flash for every shot
+    if (!lo && p < .14 && !f.mis && v.wk !== "beam") { const mr = (f.hv ? 13 : 5 * ks) * d * (1 - p / .14) * Math.max(.6, s.s); ctx.globalAlpha = 1 - p / .14; ctx.drawImage(glowSprite(col), sx - mr, sy - mr, mr * 2, mr * 2); ctx.globalAlpha = 1; } // v78: a muzzle flash for every shot
     if (v.wk === "beam") { const al = Math.pow(1 - p, 1.5); ctx.strokeStyle = col; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.globalAlpha = al * .25; ctx.lineWidth = 9 * d; ctx.stroke(); ctx.globalAlpha = al; ctx.lineWidth = 3 * d; ctx.stroke(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.1 * d; ctx.stroke(); ctx.globalAlpha = 1; }
-    else if (v.wk === "laser" || v.wk === "mass" || v.wk === "flak") { const tx = ex - sx, ty = ey - sy, L2 = Math.hypot(tx, ty) || 1, ln = (v.wk === "mass" ? 34 : v.wk === "flak" ? 6 : 16) * d;
-      ctx.strokeStyle = v.wk === "mass" ? "#e8f4ff" : col; ctx.beginPath(); ctx.moveTo(px - tx / L2 * ln, py - ty / L2 * ln); ctx.lineTo(px, py); ctx.globalAlpha = .3; ctx.lineWidth = 6 * d; ctx.stroke(); ctx.globalAlpha = 1; ctx.lineWidth = (v.wk === "flak" ? 1.6 : 2.2) * d; ctx.stroke();
+    else if (v.wk === "laser" || v.wk === "mass" || v.wk === "flak") { const tx = ex - sx, ty = ey - sy, L2 = Math.hypot(tx, ty) || 1, ln = (v.wk === "mass" ? 34 : v.wk === "flak" ? 6 : 16) * d * (f.sz === 0 ? .6 : ks);
+      ctx.strokeStyle = v.wk === "mass" ? "#e8f4ff" : col; ctx.beginPath(); ctx.moveTo(px - tx / L2 * ln, py - ty / L2 * ln); ctx.lineTo(px, py); ctx.globalAlpha = .3; ctx.lineWidth = 6 * d * ks; ctx.stroke(); ctx.globalAlpha = 1; ctx.lineWidth = (v.wk === "flak" ? 1.6 : 2.2) * d * Math.max(.6, ks); ctx.stroke();
       if (v.wk === "mass" && !lo) { ctx.globalAlpha = .16 * (1 - p); ctx.lineWidth = 1 * d; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(px, py); ctx.stroke(); ctx.globalAlpha = 1; const hr = 4 * d; ctx.drawImage(glowSprite("#ffffff"), px - hr, py - hr, hr * 2, hr * 2); } } // v78 railgun: a hypervelocity slug leaves an ionised wake
-    else { const rr = (f.hv ? 15 * e.s : v.wk === "torpedo" ? 9 : v.wk === "plasma" ? 8 : v.wk === "ion" ? 7 : v.wk === "acid" ? 7 : 4) * d, c2 = v.wk === "ion" ? "#b9a6ff" : v.wk === "acid" ? "#a6ff6a" : v.wk === "torpedo" ? "#ff9ad6" : col;
+    else { const rr = (f.hv ? 15 * e.s : (v.wk === "torpedo" ? 9 : v.wk === "plasma" ? 8 : v.wk === "ion" ? 7 : v.wk === "acid" ? 7 : 4) * (f.mis ? 1 : ks)) * d, c2 = v.wk === "ion" ? "#b9a6ff" : v.wk === "acid" ? "#a6ff6a" : v.wk === "torpedo" ? "#ff9ad6" : col;
       if (f.hv) { const tx2 = ex - sx, ty2 = ey - sy, l2 = Math.hypot(tx2, ty2) || 1, tl = 46 * d * e.s; ctx.strokeStyle = c2; ctx.globalAlpha = .45; ctx.lineWidth = rr * .9; ctx.beginPath(); ctx.moveTo(px - tx2 / l2 * tl, py - ty2 / l2 * tl); ctx.lineTo(px, py); ctx.stroke(); ctx.globalAlpha = 1; ctx.drawImage(glowSprite("#ffffff"), px - rr * .45, py - rr * .45, rr * .9, rr * .9); } // a heavy plasma shell with its glowing trail
       ctx.drawImage(glowSprite(c2), px - rr, py - rr, rr * 2, rr * 2);
       if (!curve && !lo && (v.wk === "plasma" || v.wk === "ion" || v.wk === "acid")) { ctx.save(); ctx.translate(px, py); ctx.rotate(Math.atan2(ey - sy, ex - sx)); ctx.drawImage(glowSprite(c2), -rr * 2.4, -rr * .5, rr * 3, rr); ctx.drawImage(glowSprite("#ffffff"), -rr * .55, -rr * .3, rr * 1.1, rr * .6); ctx.restore(); } // v78 plasma: a layered bolt, white core and a stretched glowing tail
