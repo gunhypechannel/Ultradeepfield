@@ -9542,6 +9542,7 @@ function vQuests() {
       <div class="evbar2"><i style="width:${Math.min(100, s.pts / top * 100)}%"></i>${SOLO_TIERS.map(([need]) => `<u style="left:${need / top * 100}%"></u>`).join("")}</div><p class="note" style="margin-top:4px"><b>${fmt(s.pts)}</b> points</p>
       ${SOLO_TIERS.map(([need, rw], i) => { const okT = s.pts >= need, got = s.claimed.includes(i); return `<div class="tier"><span class="tn">Tier ${i + 1}<small>${fmt(need)} pts</small></span><span class="trw">${rwText(rw)}</span>${got ? '<span class="pill ok">Claimed</span>' : `<button class="btn sm${okT ? " amber" : " ghost"}" data-act="soloClaim" data-i="${i}" ${okT ? "" : "disabled"}>Claim</button>`}</div>`; }).join("")}</section>
     ${dailyTasksCard(endDay, T)}
+    <h2 class="sec">Plunder & rewards</h2>${rewardsCard()}
     <h2 class="sec">Path to Mastery</h2>${mMastery()}</div>`;
 }
 function costHTML(c) {
@@ -10336,7 +10337,7 @@ function vFleets() {
       <div class="route">${ships}</div>
       ${bnd ? `<div class="bar" style="grid-column:auto"><i data-s="${bnd[0]}" data-e="${bnd[1]}"></i></div>` : ""}
       <div class="tl"><span>Departed<b>${ago(f.out) === "now" ? "just now" : ago(f.out) + " ago"}</b></span><span>${bnd ? bnd[2] : "Status"}<b>${bnd ? `<span data-end="${bnd[1]}">${ftime(rem)}</span>` : "in battle"}</b></span><span>Speed · fuel<b>${f.spd || 100}% · ${fmt(f.fuel || 0)}</b></span></div>
-      <div class="acts"><button class="btn ghost sm" data-act="fleetMap" data-id="${f.id}">Show on map</button>${f.mission === "attack" && f.phase === "out" && !f.assault && G.mode === "online" && rem > 20000 ? `<button class="btn sm" data-act="callJoint" data-id="${f.id}">Call allies to join</button>` : f.assault && G.assaults[f.assault] ? `<span class="pill go">Joint · ${memberCount(G.assaults[f.assault])}/${G.assaults[f.assault].max}</span>${!f.launched && now() < G.assaults[f.assault].launch ? `<button class="btn sm" data-act="assault" data-id="${f.assault}">＋ Add participants</button>` : ""}` : ""}${canRecall ? `<button class="btn ghost sm" data-act="recallF" data-id="${f.id}">Recall</button>` : ""}${canHurry && rem > 0 ? `<button class="btn amber sm" data-act="hurry" data-id="${f.id}" ${S.shards >= shardCost(rem) ? "" : "disabled"}>Hurry <span class="shard">◆${shardCost(rem)}</span></button>` : ""}</div></div>`;
+      <div class="acts"><button class="btn ghost sm" data-act="fleetMap" data-id="${f.id}">Show on map</button>${f.mission === "attack" && f.phase === "out" && !f.assault && G.mode === "online" && rem > 20000 ? `<button class="btn sm" data-act="callJoint" data-id="${f.id}">Call allies to join</button>` : f.assault && G.assaults[f.assault] ? `<span class="pill go">Joint · ${memberCount(G.assaults[f.assault])}/${G.assaults[f.assault].max}</span>${!f.launched && now() < G.assaults[f.assault].launch ? `<button class="btn sm" data-act="assault" data-id="${f.assault}">＋ Add participants</button>` : ""}` : ""}${canRecall ? `<button class="btn ghost sm" data-act="recallF" data-id="${f.id}">Recall</button>` : ""}${canHurry && rem > 0 ? `<button class="btn amber sm" data-act="hurry" data-id="${f.id}" ${S.shards >= shardCost(rem) ? "" : "disabled"}>Hurry <span class="shard">◆${shardCost(rem)}</span></button>` : ""}${!f.assault && f.phase !== "resolving" && rem > 20000 ? `<button class="btn ghost sm" data-act="fBoost" data-id="${f.id}" ${S.shards >= boostCost(f) ? "" : "disabled"}>⚡ Afterburners <span class="shard">◆${boostCost(f)}</span></button>${S.boosts > 0 ? `<button class="btn ghost sm" data-act="fBoostItem" data-id="${f.id}">Use boost −5 min · ${S.boosts}</button>` : ""}` : ""}</div></div>`;
   }).join("");
   const shipsAt = p => p.kind === "home" || p === hw ? Object.fromEntries(Object.entries(S.ships).filter(([, v]) => v > 0)) : cleanShips(p.garrison || {});
   const count = o => Object.values(o).reduce((x, y) => x + y, 0);
@@ -10344,14 +10345,15 @@ function vFleets() {
   const docks = worlds.map(p => { const sh = shipsAt(p), n = count(sh), out = S.fleets.filter(f => fromOf(f) === p.id).length;
     return `<div class="fcard fworld"><div class="top"><b>${p === hw ? "🏠 " : ""}${esc(p === hw ? S.homeName : p.name)}</b><span class="pill ${n ? "go" : ""}">${fmt(n)} ships${out ? ` · ${out} out` : ""}</span></div>
       ${n ? unitGrid(sh) : '<p class="note" style="margin:0">No ships docked here.</p>'}
-      <div class="acts"><button class="btn sm" data-act="planet" data-id="${p.id}">Fleet orders</button><button class="btn ghost sm" data-act="baseSel" data-id="${p === hw ? "" : p.id}">Open base</button>${worlds.length > 1 ? `<button class="btn ghost sm" data-act="ffrom" data-v="${p.id}">Its fleets</button>` : ""}</div></div>`; }).join("");
+      <div class="acts"><button class="btn sm" data-act="fDeploy" data-id="${p === hw ? "home" : p.id}" ${n ? "" : "disabled"}>🚀 Deploy</button><button class="btn ghost sm" data-act="fTransport" data-id="${p === hw ? "home" : p.id}" ${worlds.length > 1 ? "" : "disabled"}>⇄ Transport</button></div></div>`; }).join("");
   const label = fsel === "all" ? "In flight · all planets" : `In flight from ${esc((G.byId[fsel] || {}).name || S.homeName)}`;
   return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 class="sec" style="flex:1">Fleet command · ${fleetsUsed()} / ${maxFleets()} slots</h2><span class="shard" title="Void Shards">◆ ${fmt(S.shards)}</span></div>
-    ${radarCard()}${rewardsCard()}${repairCard()}${gateCard()}${raid ? `<div class="radar"><b class="h">⚠ HIVE RAID</b><div class="row"><span>${esc(S.homeName)}<small>Lv.${raid.lvl} raiders</small></span><b style="font-family:var(--f-display);color:var(--red)" data-end="${raid.at}">${ftime(raid.at - T)}</b></div></div>` : ""}
-    ${jsFleetSection()}${chips}<h2 class="sec">${label} · ${sorted.length}</h2>${cards || `<div class="empty">${fsel === "all" ? "No fleets in flight. Pick a target on the Galaxy map." : "No fleets from this planet in flight."}</div>`}
+    ${radarCard()}${raid ? `<div class="radar"><b class="h">⚠ HIVE RAID</b><div class="row"><span>${esc(S.homeName)}<small>Lv.${raid.lvl} raiders</small></span><b style="font-family:var(--f-display);color:var(--red)" data-end="${raid.at}">${ftime(raid.at - T)}</b></div></div>` : ""}
+    ${chips}<h2 class="sec">${label} · ${sorted.length}</h2>${cards || `<div class="empty">${fsel === "all" ? "No fleets in flight. Deploy ships from a planet below." : "No fleets from this planet in flight."}</div>`}
+    ${jsFleetSection()}
     ${(S.strikes || []).length ? `<h2 class="sec">Missiles in flight</h2><div class="queue">${S.strikes.map(s => { const p = G.byId[s.pid]; return `<div class="qrow"><div><div class="lbl">Ballistic ×${s.n}</div><div class="what">→ ${esc(p ? p.name : "target")}</div></div><div class="acts"><span class="t" data-end="${s.at}">${ftime(s.at - T)}</span></div><div class="bar"><i data-s="${s.out}" data-e="${s.at}"></i></div></div>`; }).join("")}</div>` : ""}
     <h2 class="sec">Ships at your planets · ${worlds.length}</h2><div class="fworlds">${docks}</div>
-    <p class="note">Void Shards (◆) buy instant speed-ups. Earn them from directives, daily tasks and Cube titles.</p>`;
+    ${worlds.length > 1 ? "" : `<p class="note">Transport moves ships and resources between your planets once you hold two or more.</p>`}`;
 }
 /* attack screens: pick a doctrine, then see the odds and the projected outcome from a dozen simulated runs */
 function oddsBlock(o) {
@@ -13604,6 +13606,11 @@ const ACT = {
     if (!S.bq) S.bq = { k, lvl, s: t, e: t + bTimeL(k, lvl), c }; else { bqList().push({ k, lvl, c }); toast(`${B[k].n} Lv.${lvl} queued · ${bqN()}/${Q_MAX}`); } doneCard(); }),
   qcancel: d => act(() => { const list = d.q === "r" ? rqList() : bqList(), i = +d.i, it = list[i]; if (!it) return; list.splice(i, 1); refundRes(it.c); toast("Removed from the queue. Resources refunded."); }),
   planets: () => openSheet({ type: "planets" }),
+  /* v208 Fleets tab: Deploy sends ships from that planet (pick a target; launches use the planet you deploy from), Transport opens
+     the move-between-planets panel with that planet already set as the source */
+  fDeploy: d => { sub.base = d.id || "home"; if (sheet) closeSheet(); ACT.nav({ v: "galaxy" }); sub.gal = sub.gal || "targets"; openSheet({ type: "targets" });
+    const p = d.id && d.id !== "home" ? G.byId[d.id] : null; toast(`Pick a target. Ships launch from ${p ? p.name : S.homeName}.`); },
+  fTransport: d => { if (myPlanets().length < 2) return toast("Hold two or more planets to transport between them.", "warn"); openSheet({ type: "planets", lf: d.id || "home" }); },
   basedet: () => openSheet({ type: "basedet" }),
   selClear: () => { if (C3) C3.sel = null; selBar(); },
   bldPreview: d => bldPreview(d.k), // v101
