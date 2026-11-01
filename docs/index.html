@@ -215,7 +215,44 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 .hexf .avc{display:block;width:100%;height:100%;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);object-fit:cover}.avbig b{font-family:var(--f-display);font-size:16px}.avbig small{color:var(--green);font-size:11px}
 .hexgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:8px 6px;margin-bottom:10px}.hexb{aspect-ratio:.88;padding:3px;border:0;cursor:pointer;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:rgba(85,214,232,.25)}
 .hexb .avc{display:block;width:100%;height:100%;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}.hexb.cur{background:rgba(93,255,138,.6)}.hexb.on{background:linear-gradient(160deg,#ffd66a,#ff9a2a)}
-.alist{display:flex;flex-direction:column;gap:6px}.alr{display:flex;align-items:stretch;gap:6px}.alr.me .alopen{border-color:var(--cyan);background:rgba(85,214,232,.1)}
+/* v210 fleet path: the hull ladder on the Quests tab and the Advisor's next-step line */
+.fpath{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:8px}.fpn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025);text-align:center;opacity:.55;min-width:0}.fpn i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:700 11px var(--f-display);font-style:normal;background:#1a252e;color:var(--muted)}.fpn b{font-size:11.5px;color:#e8f2f8;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fpn small{font-size:10px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fpn.done{opacity:.85}.fpn.done i{background:rgba(95,224,138,.2);color:#5fe08a}.fpn.next{opacity:1;border-color:rgba(255,199,106,.7);background:rgba(255,199,106,.08);box-shadow:0 0 14px rgba(255,199,106,.15)}.fpn.next i{background:var(--amber);color:#1a1206}.fpn.next small{color:#ffd66a}
+.cneed{font-size:12.5px;padding:6px 10px;border-radius:8px;background:rgba(255,199,106,.08);border-left:3px solid var(--amber);color:#e8f2f8}.cneed small{color:var(--muted)}
+/* v210 How to play: counters as a "best against" list */
+.ctrl{display:flex;flex-direction:column;gap:4px;margin:8px 0}.ctrl span{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.035)}.ctrl b{color:#f2f6f8}.ctrl i{font-style:normal;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}.ctrl em{font-style:normal;text-align:right;color:#ffd66a}
+/* v210 rankings: icon tabs, a lit podium for the top three (2-1-3, rising third to first), your standing, then the board */
+.rkwrap{display:flex;flex-direction:column;gap:12px}.rkhd h2{font-family:var(--f-display);font-size:26px;letter-spacing:.04em;background:linear-gradient(180deg,#fff,#9fe9f5);-webkit-background-clip:text;background-clip:text;color:transparent}
+.rktabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:4px;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid var(--line)}
+.rktabs button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:40px;border:0;border-radius:10px;background:none;color:var(--muted);font:600 13px var(--f-body,inherit);cursor:pointer;transition:background .2s,color .2s}.rktabs svg{width:17px;height:17px}
+.rktabs button.on{background:linear-gradient(180deg,rgba(85,214,232,.28),rgba(85,214,232,.08));color:#effcff;box-shadow:inset 0 0 0 1px rgba(85,214,232,.55),0 0 16px rgba(85,214,232,.18)}
+.rkpod{position:relative;display:grid;grid-template-columns:1fr 1.18fr 1fr;align-items:end;gap:8px;padding:30px 4px 0;border-radius:18px;overflow:hidden;background:radial-gradient(70% 90% at 50% 100%,rgba(255,214,106,.16),transparent 70%),linear-gradient(180deg,rgba(85,214,232,.06),rgba(0,0,0,.25));border:1px solid var(--line)}
+.rkpod::before{content:"";position:absolute;left:50%;top:38%;width:420px;height:420px;margin:-210px 0 0 -210px;background:repeating-conic-gradient(rgba(255,214,106,.1) 0 7deg,transparent 7deg 20deg);border-radius:50%;-webkit-mask:radial-gradient(circle,#000 20%,transparent 68%);mask:radial-gradient(circle,#000 20%,transparent 68%);animation:rkspin 40s linear infinite;pointer-events:none}
+.rkp{all:unset;position:relative;z-index:1;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;cursor:pointer;animation:rkrise .7s cubic-bezier(.2,1.3,.4,1) both}
+.rkp.p3{--mc:#e5a06a;--mg:229,160,106;animation-delay:.05s}.rkp.p2{--mc:#d6e6f0;--mg:214,230,240;animation-delay:.3s}.rkp.p1{--mc:#ffd66a;--mg:255,214,106;animation-delay:.55s}
+.rkav{position:relative;width:62px;height:62px;margin-bottom:8px}.p2 .rkav{width:70px;height:70px}.p1 .rkav{width:92px;height:92px}
+.rkav::before{content:"";position:absolute;inset:-4px;border-radius:50%;background:conic-gradient(from 0deg,var(--mc),transparent 30%,var(--mc) 50%,transparent 80%,var(--mc));animation:rkspin 5s linear infinite}
+.rkav::after{content:"";position:absolute;inset:-10px;border-radius:50%;box-shadow:0 0 24px rgba(var(--mg),.55);animation:rkpulse 2.4s ease-in-out infinite;pointer-events:none}
+.rkring{position:relative;z-index:1;display:block;width:100%;height:100%;border-radius:50%;overflow:hidden;background:#0b141b;box-shadow:0 0 0 2px #0b141b}.rkring canvas,.rkring .podav,.rkring .alemb{display:block;width:100%!important;height:100%!important;border-radius:50%;object-fit:cover}
+.rkav em{position:absolute;z-index:2;left:50%;bottom:-9px;transform:translateX(-50%);min-width:22px;height:22px;padding:0 5px;border-radius:11px;display:grid;place-items:center;font:700 12px var(--f-display);font-style:normal;color:#1a1206;background:var(--mc);box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.rkcrown{position:absolute;z-index:2;left:50%;top:-30px;transform:translateX(-50%);font-style:normal;font-size:30px;line-height:1;color:#ffd66a;text-shadow:0 0 12px rgba(255,190,60,.9),0 2px 0 #8a5a10;animation:rkbob 2.2s ease-in-out infinite}
+.rkp b{max-width:100%;font-family:var(--f-display);font-size:13px;color:#f2f6f8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.p1 b{font-size:15px;color:#fff3c8}.rkp small{font-family:var(--f-display);font-size:12px;color:var(--mc)}
+.rkstep{width:100%;margin-top:6px;display:grid;place-items:center;border-radius:10px 10px 0 0;border-top:2px solid var(--mc);background:linear-gradient(180deg,rgba(var(--mg),.32),rgba(var(--mg),.05));box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.p3 .rkstep{height:44px}.p2 .rkstep{height:62px}.p1 .rkstep{height:86px}.rkstep span{font:700 15px var(--f-display);letter-spacing:.12em;color:var(--mc);text-shadow:0 0 10px rgba(var(--mg),.6)}.p1 .rkstep span{font-size:20px}
+.rkp.me b{color:var(--cyan)}.rkp:focus-visible .rkring{outline:2px solid var(--cyan)}
+.rkme{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:10px;border-radius:14px;border:1px solid rgba(85,214,232,.45);background:linear-gradient(90deg,rgba(85,214,232,.12),rgba(255,255,255,.02))}
+.rkme > div{display:flex;flex-direction:column;gap:2px;min-width:0}.rkme small{font-size:9.5px;letter-spacing:.12em;color:var(--muted)}.rkme b{font-family:var(--f-display);font-size:18px;color:#f2f6f8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rkme b span{font-size:13px}.rkme em{font-style:normal;font-size:11px;color:var(--muted)}
+.rkwrap .lb{border-radius:12px;transition:background .15s,border-color .15s}.rkwrap .lb .lp{font-family:var(--f-display)}
+@keyframes rkspin{to{transform:rotate(360deg)}}@keyframes rkpulse{0%,100%{opacity:.45}50%{opacity:1}}@keyframes rkbob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-4px)}}
+@keyframes rkrise{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.rkp,.rkav::before,.rkav::after,.rkcrown,.rkpod::before{animation:none}}/* v210 alliance tab: the Commander card's look (alhero banner) and matching panels for every card on the page */
+.alcrest{position:relative;flex:none;width:76px;height:76px;padding:0;border:0;border-radius:18px;cursor:pointer;background:radial-gradient(circle at 50% 40%,rgba(85,214,232,.22),rgba(10,20,30,.9) 70%);box-shadow:0 0 0 1.5px rgba(85,214,232,.55),0 0 22px rgba(85,214,232,.22)}
+.alcrest .alemb{width:100%;height:100%}.alcrest span{position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);padding:1px 7px;border-radius:7px;background:#0b141b;border:1px solid rgba(255,199,106,.7);color:var(--amber);font-family:var(--f-display);font-size:10px;letter-spacing:.06em;white-space:nowrap}
+.alkick{font-family:var(--f-display);font-size:10px;letter-spacing:.16em;color:var(--cyan)}.alhero .cmdid > b em{font-style:normal;color:var(--amber)}
+.alhero{background:linear-gradient(160deg,rgba(255,199,106,.08),rgba(85,214,232,.06) 40%,rgba(255,255,255,.015) 70%),var(--panel,#121a22)}
+.allyv .mcard{border-radius:16px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(85,214,232,.05),rgba(255,255,255,.01) 40%),var(--panel,#121a22);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.allyv .mcard > h3{font-family:var(--f-display);font-size:15px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#e8f6fb;padding-bottom:8px;border-bottom:1px solid rgba(85,214,232,.18)}
+.allyv .mcard .mrow{padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.025)}.allyv .mailhd h2{font-family:var(--f-display);letter-spacing:.03em}
+.allyv .alopen{border-radius:14px;background:linear-gradient(90deg,rgba(85,214,232,.08),rgba(255,255,255,.02)),var(--panel,#121a22);border-color:var(--line)}.allyv .alopen:hover{border-color:rgba(85,214,232,.55)}.alist{display:flex;flex-direction:column;gap:6px}.alr{display:flex;align-items:stretch;gap:6px}.alr.me .alopen{border-color:var(--cyan);background:rgba(85,214,232,.1)}
 .alopen{flex:1;min-width:0;display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;border:1px solid rgba(85,214,232,.22);background:linear-gradient(90deg,rgba(20,44,74,.85),rgba(10,22,38,.85));color:var(--text);text-align:left;font:inherit;cursor:pointer}
 .alemb{width:56px;height:56px;flex:none;object-fit:contain;filter:drop-shadow(0 0 6px rgba(0,0,0,.6))}
 .crestpk{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;margin:4px 0}.crestpk button{background:rgba(10,24,36,.6);border:1.5px solid #24485c;border-radius:12px;padding:3px;cursor:pointer;aspect-ratio:1}.crestpk button.on{border-color:var(--amber);box-shadow:0 0 10px rgba(255,190,80,.5)}.crestpk img{width:100%;height:100%;object-fit:contain;display:block}.aln{display:flex;flex-direction:column;gap:3px;min-width:0}.aln b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.aln b em{font-style:normal;color:var(--cyan)}
@@ -1328,7 +1365,7 @@ const SH = {
   ark:        { n: "Colony Ship", cls: "Colony Ship", c: { m: 10000, c: 20000, g: 10000 }, atk: 50, sh: 100, hull: 3000, cargo: 7500, bs: 2500, fu: 1000, dt: "impulse", sz: .7, req: { shipyard: 4, impulse: 3 }, d: "Carries colonists. If the defenders fall, the planet becomes yours." },
   corvette:   { n: "Cruiser", cls: "Cruiser", c: { m: 20000, c: 7000, g: 2000 }, atk: 400, sh: 50, hull: 2700, cargo: 800, bs: 15000, fu: 300, dt: "impulse", sz: .75, req: { shipyard: 5, impulse: 4, ionT: 2 }, d: "The fastest warship. Rapid fire against Light Fighters and Rocket Batteries." },
   battleship: { n: "Battleship", cls: "Battleship", c: { m: 45000, c: 15000 }, atk: 1000, sh: 200, hull: 6000, cargo: 1500, bs: 10000, fu: 500, dt: "hyper", sz: .9, req: { shipyard: 7, hyper: 4 }, d: "Heavy line ship. Rapid fire against Pathfinders." },
-  bastion:    { n: "Battlecruiser", cls: "Battlecruiser", c: { m: 30000, c: 40000, g: 15000 }, atk: 700, sh: 400, hull: 7000, cargo: 750, bs: 10000, fu: 250, dt: "hyper", sz: .9, req: { shipyard: 8, hyper: 5, hyperT: 5, laserT: 12 }, d: "Hunts fleets. Rapid fire against Battleships, Cruisers, Heavy Fighters and freighters." },
+  bastion:    { n: "Battlecruiser", cls: "Battlecruiser", c: { m: 30000, c: 40000, g: 15000 }, atk: 700, sh: 400, hull: 7000, cargo: 750, bs: 10000, fu: 250, dt: "hyper", sz: .9, req: { shipyard: 8, hyper: 5, hyperT: 5, laserT: 8 } /* v210: Laser Lv.8 (was 12), so Battlecruisers open before Destroyers */, d: "Hunts fleets. Rapid fire against Battleships, Cruisers, Heavy Fighters and freighters." },
   bomber:     { n: "Bomber", cls: "Bomber", c: { m: 50000, c: 25000, g: 15000 }, atk: 1000, sh: 500, hull: 7500, cargo: 500, bs: 4000, fu: 700, dt: "impulse", up: [["hyper", 8, 5000, 700]], sz: .85, req: { shipyard: 8, impulse: 6, plasmaT: 5 }, d: "Breaks defenses. Rapid fire against turrets. Refits to hyperspace at Hyperspace Drive Lv.8." },
   destroyer:  { n: "Destroyer", cls: "Destroyer", c: { m: 60000, c: 50000, g: 15000 }, atk: 2000, sh: 500, hull: 11000, cargo: 2000, bs: 5000, fu: 1000, dt: "hyper", sz: 1, req: { shipyard: 9, hyper: 6, hyperT: 5 }, d: "Escort killer. Rapid fire against Battlecruisers and Laser Turrets." },
   dreadnought:{ n: "Reaper", cls: "Reaper", c: { m: 85000, c: 55000, g: 20000 }, atk: 2800, sh: 700, hull: 14000, cargo: 10000, bs: 7000, fu: 1100, dt: "hyper", sz: 1.2, req: { shipyard: 10, hyper: 7, hyperT: 6, shields: 6 }, d: "A flagship that hunts capital ships. Rapid fire against Battleships, Bombers and Destroyers." },
@@ -2153,7 +2190,9 @@ const pxOf = p => p && p.px && PXS[p.px] ? PXS[p.px] : null;
 const OWNER_IDS = ["u_yGzkQJxSJSPopEz8xWm8SQ"]; // the game owner's account on this artifact (an opaque id)
 const ownerFree = () => { if (!G.owner && OWNER_IDS.includes(G.me)) G.owner = true; if (G.owner && S && !S.ownerFree) { S.ownerFree = 1; dirty(); } return !!(G.owner || (S && S.ownerFree) || G.mode === "offline"); }; // a solo galaxy has no one else to be fair to: every skin is open there
 function ownerCheck(user) { try { Promise.resolve(user && user.isOwner && user.isOwner()).then(v => { if (v) { G.owner = true; ownerFree(); try { render(true); if (sheet) renderSheet(); } catch (e) {} } }).catch(() => {}); } catch (e) {} }
-const pxOwned = k => !!(ownerFree() || (S && S.pxOwn || {})[k]);
+/* v210: pre-release, every player on the server can wear every premium skin for free. At release this flag goes false and skins become a paid unlock. */
+const FREE_SKINS = true;
+const pxOwned = k => !!(FREE_SKINS || ownerFree() || (S && S.pxOwn || {})[k]);
 const pxMul = (p, r) => { const s = pxOf(p); return s && (s.r === r || s.r === "all") ? 1 + s.b : 1; };
 const pxPerk = s => `+${Math.round(s.b * 100)}% ${{ m: "metal", c: "crystal", g: "gas", all: "metal, crystal and gas" }[s.r]} output on the world wearing it`;
 const PXC = {}; // id → { surf, emi, art } (canvases), generated once, a step at a time
@@ -2382,8 +2421,8 @@ function pxPortrait2(id, Z, lay) {
 /* the skin catalogue: in the Void Shop ("shop") to buy, in Rename & reskin ("sheet") to buy or put on that world */
 function pxGrid(mode) {
   const p = mode === "sheet" && sheet ? G.byId[sheet.id] : null, sel = mode === "sheet" ? (sheet.px != null ? sheet.px : (p && p.px) || "") : null;
-  return `${ownerFree() ? `<p class="note" style="color:#8affb4">Every premium skin is unlocked for you, free${G.mode === "offline" ? " in your solo galaxy" : ", as the game's owner"}.</p>` : ""}<p class="note pxdiag">Skin status · ${G.mode === "online" ? "shared galaxy" : G.mode === "offline" ? "solo galaxy" : G.mode} · owner ${G.owner ? "confirmed on this device" : S && S.ownerFree ? "remembered from another device" : "not confirmed"} · ${Object.keys(PXC).filter(k => PXC[k] && PXC[k].art).length}/${Object.keys(PXS).length} skins rendered</p><div class="pxlist">${Object.entries(PXS).map(([k, s]) => { const o = pxOwned(k), on = sel === k;
-    const btn = o ? (mode === "sheet" ? `<button class="btn sm${on ? " amber" : ""}" data-act="pxPick" data-k="${k}">${on ? "✓ Selected" : "Apply"}</button>` : `<span class="own">${ownerFree() && !(S.pxOwn || {})[k] ? "Free for you" : "Owned"}</span><button class="btn sm" data-act="skin">Apply</button>`)
+  return `${FREE_SKINS ? `<p class="note" style="color:#8affb4">Pre-release: every premium skin is free for everyone on this server. After release they become a paid unlock.</p>` : ownerFree() ? `<p class="note" style="color:#8affb4">Every premium skin is unlocked for you, free${G.mode === "offline" ? " in your solo galaxy" : ", as the game's owner"}.</p>` : ""}<p class="note pxdiag">Skin status · ${G.mode === "online" ? "shared galaxy" : G.mode === "offline" ? "solo galaxy" : G.mode} · owner ${G.owner ? "confirmed on this device" : S && S.ownerFree ? "remembered from another device" : "not confirmed"} · ${Object.keys(PXC).filter(k => PXC[k] && PXC[k].art).length}/${Object.keys(PXS).length} skins rendered</p><div class="pxlist">${Object.entries(PXS).map(([k, s]) => { const o = pxOwned(k), on = sel === k;
+    const btn = o ? (mode === "sheet" ? `<button class="btn sm${on ? " amber" : ""}" data-act="pxPick" data-k="${k}">${on ? "✓ Selected" : "Apply"}</button>` : `<span class="own">${(S.pxOwn || {})[k] ? "Owned" : FREE_SKINS ? "Free in pre-release" : "Free for you"}</span><button class="btn sm" data-act="skin">Apply</button>`)
       : `<button class="btn amber sm" data-act="pxBuy" data-k="${k}" ${(S.shards || 0) >= s.cost ? "" : "disabled"}><span class="shard">◆</span>${fmt(s.cost)}</button>`;
     return `<div class="pxcard${on ? " on" : ""}" style="--pc:${s.glow}"><canvas data-px="${k}" role="img" aria-label="${esc(s.n)}"></canvas><div class="pxt"><b>${esc(s.n)}</b><small>${esc(s.d)}</small><em>${pxPerk(s)}</em><div class="pxb">${btn}</div></div></div>`; }).join("")}</div>`;
 }
@@ -9557,6 +9596,7 @@ function vQuests() {
       <div class="rw"><span class="cost">${costHTML(st.rw || {})}${st.rw && st.rw.shards ? ` <span class="shard">◆${st.rw.shards}</span>` : ""}</span>${td ? `<button class="btn amber" data-act="tutClaim">Collect</button>` : `<button class="btn ghost" data-act="tutShow">Show me</button>`}</div></article>` : ""}
     <h2 class="sec">Quests · Chapter ${S.chapter} · ${CHAPTERS[S.chapter]}</h2>
     <article class="card quest${ok ? " done hi" : ""}"><header>Directive ${S.quest + 1}</header><p>${esc(q.t)}</p><div class="rw"><span class="cost">${qrw}</span>${ok ? `<button class="btn amber" data-act="claim">Claim reward</button>` : `<button class="btn ghost" data-act="go">Go there</button>`}</div></article>
+    <h2 class="sec">Fleet path · hull ${Math.min(SHIP_PATH.length, (S.shipQ || 0) + 1)} of ${SHIP_PATH.length}</h2>${fleetPathCard()}
     <h2 class="sec">Daily missions</h2>
     <section class="evc" data-ev="login"><div class="evh"><b>DAILY LOGIN · DAY ${ls.claimed ? ls.streak : ls.next}</b><span class="note">streak ${ls.streak}</span></div>
       <div class="cal">${LOGIN_RW.map((rw, i) => { const cyc = (ls.claimed ? ls.streak - 1 : ls.next - 1) % 7, done = i < cyc || (ls.claimed && i === cyc), now0 = !ls.claimed && i === cyc; return `<div class="cd${done ? " done" : ""}${now0 ? " now" : ""}"><small>Day ${i + 1}</small><span>${rw.item ? "🎁" : rw.shards ? "◆" : rw.boosts ? "⚡" : "▣"}</span><em>${rw.shards ? "◆" + rw.shards : rw.boosts ? "⚡" + rw.boosts : rw.item ? SHOP[rw.item].n : fmt(total({ m: rw.m, c: rw.c, g: rw.g }))}</em></div>`; }).join("")}</div>
@@ -10601,6 +10641,19 @@ function shAlly() {
     ${S.ally === a.id ? '<p class="note">This is your alliance.</p>' : S.ally ? '<p class="note">Leave your current alliance before joining another.</p>' : `<button class="btn wide" data-act="allyJoin" data-id="${a.id}" ${full || G.mode !== "online" ? "disabled" : ""}>${full ? "Alliance full" : "Join this alliance"}</button>`}
     <h2 class="sec">Members</h2><div class="lbs">${mem.map((u, i) => { const P = u === G.me ? myPub() : G.players[u] || {}; return `<button class="lb${u === G.me ? " me" : ""}" data-act="profile" data-u="${u}"><span class="lp">${i + 1}</span>${avCanvas(u, "avc lbav")}<span class="ln"><b>${esc(u === G.me ? (G.myName || "You") + " (you)" : nameOf(u))}${u === a.leader ? " ★" : ""}</b><small>${P.planets || 1} world${(P.planets || 1) > 1 ? "s" : ""} · Lv.${P.lvl || 1}</small></span><span class="lv">${fmt(P.score || 0)}</span></button>`; }).join("")}${S.ally === a.id ? allyBots().map((b, i) => `<button class="lb" data-act="profile" data-u="${b.id}"><span class="lp">${mem.length + i + 1}</span>${avCanvas(b.id, "avc lbav")}<span class="ln"><b>${esc(b.name)} <i class="bottag">BOT</i></b><small>Bot ally · strength ${b.tier}</small></span><span class="lv">${fmt(botScore(b))}</span></button>`).join("") : ""}</div>`;
 }
+/* v210 alliance banner, in the Commander card's style: big emblem, tag and name, level progress, six stat tiles and a grid of actions */
+function allyHero(a, nStrikes) {
+  const mem = Object.keys(a.members).length, L = allyLevel(a), fv = allyFund(a), lo = L > 1 ? allyNeed(L - 1) : 0, hi = allyNeed(L), pct = L >= 10 ? 100 : clamp((fv - lo) / (hi - lo) * 100, 0, 100);
+  const rows = boardRows("alliances"), ri = rows.findIndex(r => r.id === a.id), row = rows[ri] || {}, gb = Math.round(gloryBonus() * 100);
+  const sv = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const tile = (l, v) => `<div><small>${l}</small><b>${v}</b></div>`, btn = (act, icon, l, extra) => `<button class="cmdbt" data-act="${act}"${extra || ""}>${icon}<span>${l}</span></button>`;
+  return `<section class="cmdh alhero">
+    <div class="cmdtop"><button class="alcrest" data-act="allyOpen2" data-id="${a.id}" aria-label="Open the member list">${allyEmblem(a.tag, a.id)}<span>LV ${L}</span></button>
+      <div class="cmdid"><small class="alkick">ALLIANCE</small><b><em>[${esc(a.tag)}]</em> ${esc(a.name)}</b><div class="cmdtags">${ri >= 0 ? `<span class="pill amb">${ri < 3 ? ["🥇", "🥈", "🥉"][ri] + " " : ""}Rank #${ri + 1}</span>` : ""}<span class="pill">Led by ${esc(a.leader === G.me ? "you" : nameOf(a.leader))}</span>${gb ? `<span class="pill ok">${esc(GLORY_T[gb])}</span>` : ""}</div></div></div>
+    <div class="cmdxp"><div class="xp"><i style="width:${pct}%"></i></div><div class="cmdxpl"><span>Alliance level ${L} / 10</span><span>${L >= 10 ? '<b style="color:var(--amber)">Max level</b>' : `fund <b>${Math.round(pct)}%</b> to Lv.${L + 1}`}</span></div></div>
+    <div class="cmdst">${tile("Power", fmt(row.val || 0))}${tile("Members", `${mem}<em> / ${allyCap(a)}</em>`)}${tile("Bot allies", allyBots().length)}${tile("Joint strikes", nStrikes ? `<span style="color:var(--green)">${nStrikes} open</span>` : "None")}${tile("Strike capacity", fmt(rallyCap(S.r.command, empB("allyDepot"))))}${tile("Cube bonus", gb ? `<span style="color:var(--amber)">+${gb}%</span>` : "–")}</div>
+    <div class="cmdgrid">${btn("allyOpen2", sv('<circle cx="9" cy="8" r="3.2"/><path d="M3 20c.7-3.6 3-5.4 6-5.4s5.3 1.8 6 5.4"/><path d="M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.6.7 2.6 2.4 3 5.2"/>'), "Members", ` data-id="${a.id}"`)}${btn("allyChat", sv('<path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/>'), "Alliance chat")}${btn("nexus", sv('<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>'), "The Cube")}${btn("allyView", sv('<path d="M4 6h16M4 12h16M4 18h10"/>'), "Alliance list", ' data-v="list"')}${btn("nav", MI.rank, "Rankings", ' data-v="rank"')}${a.leader === G.me ? btn("allyCrestOpen", sv('<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/>'), "Emblem") : btn("nav", sv('<circle cx="12" cy="12" r="8"/><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/>'), "Galaxy", ' data-v="galaxy"')}</div></section>`;
+}
 function vAlly() {
   if (sub.allyView === "list") return `<div class="gstack allyv">${allyListView()}</div>`;
   if (!myAlly()) return `<div class="gstack allyv">${sub.allyView === "create" ? allyCreateView() : allyInfoView()}</div>`;
@@ -10609,7 +10662,7 @@ function vAlly() {
     return `<button class="tgt" data-act="assault" data-id="${x.id}"><span class="lvl" style="color:#5dff8a;border-color:#5dff8a">${n}</span><span><span class="nm">⚔ ${esc(p ? p.name : "Target")}</span><br><span class="sub">led by ${esc(nameOf(x.leader))} · launches in <span data-end="${x.arrive}">${ftime(x.arrive - T)}</span></span></span><span class="pill ${mine ? "ok" : "go"}">${mine ? "Joined" : "Join"}</span></button>`; };
   const ranks = boardRows("alliances").slice(0, 10);
   return `<div class="gstack allyv">
-    <div class="mcard"><h3>${NAVI.ally.replace("<svg", '<svg style="width:24px;height:24px;color:#5dff8a"')}${a ? `[${esc(a.tag)}] ${esc(a.name)}` : "Alliances"}</h3><p>${a ? "Defend each other through the alliance depot, strike together with joint attacks, and hold the Cube as one." : "Join or found an alliance to defend each other, launch joint strikes and fight for the Cube together."}</p><button class="btn ghost" data-act="allyView" data-v="list">Alliance list</button></div>
+    ${allyHero(a, strikes.length)}
     ${a ? depotCard(a) : ""}
     <div class="mcard"><h3>⚔ Joint strikes (war)</h3>${strikes.length ? `<div class="list">${strikes.map(rallyRow).join("")}</div>` : `<p class="note">No joint strikes open. Start one from any enemy world, Cube boss or space monster: pick a 5, 10, 30 or 60 minute timer. Allies send ships to your world, and when the timer ends the whole joint strike marches as one fleet.</p>`}
       <dl class="kv"><dt>Your joint strike capacity</dt><dd>${fmt(rallyCap(S.r.command, empB("allyDepot")))} ships · ${rallySlots(S.r.command)} commanders</dd></dl><p class="note">Capacity grows with Command research and the Alliance Depot. Up to 30 commanders can join, so the whole alliance can be invited.</p></div>
@@ -11716,7 +11769,7 @@ function mGame() {
 function mEtc() {
   const tip = (h, p) => `<div class="mcard"><h3>${h}</h3><p>${p}</p></div>`;
   return `<div class="mcard"><h3>${MI.orbit.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Neighbourhood tour</h3><p>A guided flight over the map: your homeworld, the worlds around you, your layer and the galaxy beyond.</p><button class="btn wide" data-act="mapTour">▶ Start the tour</button></div>` + tip(`${MI.box.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}How to play`, "Build extractors and solar power, research technology, then raise a fleet. The Advisor and your quests on the Quests tab walk you through each system in order.") +
-    tip(`${MI.swords.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Counters`, "Ships use classic OGame stats and rapid fire. Cruisers shred Light Fighters, Battlecruisers hunt Battleships, Bombers crack turrets, Destroyers break Battlecruisers and Reapers hunt capital ships. Each ship card lists its class and what it's strong against.") +
+    tip(`${MI.swords.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Counters`, "Every ship has a target it's best against, and rapid fire lets it hit that target several times per round. Bring the right counter:" + `<span class="ctrl">${[["Cruiser", "Light Fighters"], ["Battlecruiser", "Battleships"], ["Bomber", "Turrets and defenses"], ["Destroyer", "Battlecruisers"], ["Reaper", "Capital ships"]].map(([a, b]) => `<span><b>${a}</b><i>best against</i><em>${b}</em></span>`).join("")}</span>Each ship card lists its class and what it's best against.`) +
     tip(`${MI.shield.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Losses and repairs`, "Repair docks recover 30% of the ships you lose in any battle, and 70% of destroyed defenses are rebuilt. A bad fight hurts, but it won't end your empire.") +
     tip(`${MI.orbit.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Planets`, `Each planet has 169 to 255 fields, and every building level uses one. Capture planets with a Colony Ship. Astrophysics research decides how many you can hold: 1 extra world every 2 levels, up to ${MAX_PLANETS}. A newly captured planet is shielded for 7 days.`) +
     tip(`${MI.wings.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}New commander protection`, "For your first 3 days, or until you reach 300 score, other commanders can't attack your colonies. Use the time to learn against the Hive.");
@@ -12063,7 +12116,7 @@ function flushSay() { if (S.say.length && !battle && !(sheet && sheet.type === "
    why it matters, "Show me" takes you there and rings the exact button, and finishing a step pays a reward. Skippable. */
 /* v81: every step carries a path of taps (path), from the dock tab down to the final button; the guide below walks it */
 const DOCKT = (v, l) => v === "build" ? ['[data-act="qgo"][data-q="b"], #view [data-act="nav"][data-v="build"]', l] : [`#dock [data-act="nav"][data-v="${v}"]`, l]; // v123: Build lives in the top bar now
-const SHOWME = ['#coach [data-act="tutShow"], #coach .cpill', "Tap here and I'll take you there"];
+const SHOWME = ['#coach [data-act="tutShow"], #coach [data-act="shipShow"], #coach .cpill', "Tap here and I'll take you there"];
 const bPath = (k, cat) => () => S.bq && S.bq.k === k ? [[`[data-act="finish"][data-free="1"]`, "Tap Free to finish it instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed it up"], [".qrow .t", "Under construction. It finishes on its own"], ['[data-act="sub"][data-g="build"][data-v="bld"]', "Open Structures to watch it"], DOCKT("build", "Tap Build")]
   : [[`.sheet [data-act="up"][data-k="${k}"]`, `Tap ${S.b[k] ? "Upgrade" : "Build"}`], [`article.bn[data-kind="b"][data-k="${k}"]`, `Choose ${B[k].n}`], [`[data-act="bcat"][data-v="${cat}"]`, `Open ${cat === "fac" ? "Facility" : "Resource"}`], ['[data-act="sub"][data-g="build"][data-v="bld"]', "Open Structures"], DOCKT("build", "Tap Build")];
 const rPath = (k, cat) => () => S.rq && S.rq.k === k ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish it instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed it up"], [".qrow .t", "Researching. It finishes on its own"], ['[data-act="sub"][data-g="build"][data-v="research"]', "Open Research to watch it"], ['.qc[data-act="qgo"][data-q="r"]', "Tap Lab"], DOCKT("build", "Tap Build")]
@@ -12099,7 +12152,48 @@ const TUT = [
 const TUT_V1 = 17; // the Academy's length before the Astrophysics steps were added
 const tutOn = () => S && S.tut && !S.tut.off && S.tut.i < TUT.length;
 const TUT_SNOOZE = 5 * 60000, tutSnoozed = () => !!(S && S.tut && S.tut.snz > now());
-function tutShow() {
+/* v210 fleet path: one hull class at a time in the order the tech tree opens them, so nobody is left wondering what to build next.
+   The Advisor hops between this and the Academy (after its basics) or the quest path; "Show me" leads to the next missing requirement. */
+const SHIP_PATH = [["fighter", 5, "Light Fighters are the backbone of every early fleet. Five of them clear the weakest Hive garrisons."],
+  ["heavyFighter", 3, "Heavy Fighters carry real armour and are best against Small Cargos and raiders. Impulse Drive and Armour Technology open them up."],
+  ["corvette", 3, "Cruisers are the fastest warships and best against Light Fighters and Rocket Batteries: the counter to any fighter swarm."],
+  ["battleship", 2, "Battleships are your first capital hulls: heavy guns, thick hulls, best against Pathfinders. Hyperspace Drive gets them moving."],
+  ["bastion", 2, "Battlecruisers hunt fleets. They're best against Battleships, Cruisers and Heavy Fighters, so they punish any line of capital ships."],
+  ["destroyer", 1, "Destroyers are escort killers, best against Battlecruisers and Laser Turrets. Bring one when the enemy fields Battlecruisers."],
+  ["bomber", 1, "Bombers crack defenses: best against turrets. Send them at fortified worlds once Plasma Technology is ready."],
+  ["dreadnought", 1, "The Reaper is a flagship that hunts capital ships: best against Battleships, Bombers and Destroyers. The top of the fleet path."]];
+const TUT_BASICS = 12; // the Academy runs alone through its basics (first buildings, research, fighters, the first Hive win), then the Advisor hops
+const RCAT_OF = k => (RCAT.find(([, ks]) => ks.includes(k)) || ["Basic"])[0];
+function reqStep(req, depth) { // the first requirement on the road to req that can be worked on right now
+  for (const [k, l] of missing(req)) { const D = B[k] || R[k]; if (!D) continue; const inner = (depth || 0) < 6 && reqStep(D.req, (depth || 0) + 1); if (inner) return inner; return { k, l, n: D.n, cur: lvlOf(k), r: !B[k] }; }
+  return null;
+}
+function shipStep() {
+  const i = S.shipQ || 0, e = SHIP_PATH[i]; if (!e) return null; const [k, n, say] = e, d = SH[k], need = reqStep(d.req), c = d.c || {};
+  const rw = { m: Math.round((c.m || 0) * n * .15), c: Math.round((c.c || 0) * n * .15), g: Math.round((c.g || 0) * n * .15), shards: i + 1 };
+  const make = () => S.sq.some(q => q.k === k) ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish them instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed them up"], [".qrow .t", `${d.n}s in production`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard to watch them"], DOCKT("build", "Tap Build")]
+    : [[`.sheet [data-act="make"][data-k="${k}"]`, `Set ${n}, then tap Build`], [`article.bn[data-kind="s"][data-k="${k}"]`, `Choose ${d.n}`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")];
+  return { i, k, n, d, need, say, rw, t: `Build ${n} ${d.n}${n > 1 ? "s" : ""}`, ok: () => own(k) >= n,
+    go: need ? (need.r ? { v: "lab" } : { v: "build", s: B[need.k].cat === "fac" ? "fac" : "res" }) : { v: "build", s: "ships" }, rcat: need && need.r ? RCAT_OF(need.k) : null,
+    path: need ? (need.r ? rPath(need.k, RCAT_OF(need.k)) : bPath(need.k, B[need.k].cat === "fac" ? "fac" : "res")) : make };
+}
+function advPick() { // what the Advisor shows: a finished task first, then the Academy basics, then hop between the main path and the fleet path
+  const st = tutOn() ? TUT[S.tut.i] : null, sp = shipStep(), main = st ? "tut" : "dir";
+  if (st && st.ok(S)) return "tut";
+  if (st && S.tut.i < TUT_BASICS) return "tut";
+  if (sp && sp.ok()) return "ship";
+  if (!st && quest().ok(S)) return "dir";
+  return sp && S.advHop ? "ship" : main;
+}
+function shipShow() { const sp = shipStep(); if (!sp) return; if (sheet) closeSheet(); ACT.nav(sp.go); if (sp.rcat) { sub.rcat = sp.rcat; render(); } }
+/* the fleet path on the Quests tab: every hull in order, done, next (with what it needs) or still ahead */
+function fleetPathCard() {
+  const sp = shipStep(), cur = S.shipQ || 0;
+  return `<div class="fpath">${SHIP_PATH.map(([k, n], i) => { const d = SH[k], st = i < cur ? "done" : i === cur ? "next" : "";
+    return `<div class="fpn ${st}"><i>${i < cur ? "✓" : i + 1}</i><b>${esc(d.n)}</b><small>${i === cur && sp ? (sp.ok() ? "Ready to claim" : sp.need ? `${esc(sp.need.n)} Lv.${sp.need.l}` : `Build ${n}`) : i < cur ? "Done" : `× ${n}`}</small></div>`; }).join("")}</div>
+    ${sp ? `<article class="card quest${sp.ok() ? " done hi" : ""}"><header>${esc(sp.t)}</header><p>${esc(sp.say)}</p>${sp.need && !sp.ok() ? `<p class="note">Next step: <b>${esc(sp.need.n)} Lv.${sp.need.l}</b> (you have Lv.${sp.need.cur}).</p>` : ""}
+      <div class="rw"><span class="cost">${costHTML(sp.rw)} <span class="shard">◆${sp.rw.shards}</span></span>${sp.ok() ? `<button class="btn amber" data-act="shipClaim">Claim reward</button>` : `<button class="btn ghost" data-act="shipShow">Show me</button>`}</div></article>` : `<p class="note">Every hull on the fleet path is built. Your fleet is complete.</p>`}`;
+}function tutShow() {
   const st = TUT[S.tut.i]; if (!st) return;
   if (st.go) { if (sheet) closeSheet(); ACT.nav(st.go); if (st.rcat) { sub.rcat = st.rcat; render(); } }
   else if (st.find) { if (st.pirLvl) G.pirLvl = st.pirLvl; ACT.find({ r: st.find }); }
@@ -12122,8 +12216,8 @@ function guideVisible(el) {
   const cy = r.top + r.height / 2; if (top.closest("#dock") || cy > innerHeight - 160 || cy < 130) return 2; return 0; // tucked under the dock or top bar: scroll it into view
 }
 function guidePick() {
-  const st = tutOn() && !tutSnoozed() && !G.cubeDemo && !(G3 && (G3.cam.siege || G3.cam.cine)) && G.ready && !battle && !advLines && !$("#adv") && !$("#authw") && !(sheet && sheet.type === "faction") ? TUT[S.tut.i] : null; if (!st) return null;
-  const path = st.ok(S) ? [['#coach [data-act="tutClaim"], #coach .cpill', "Collect your reward"]] : st.path ? st.path() : [SHOWME];
+  const st = !G.cubeDemo && !(G3 && (G3.cam.siege || G3.cam.cine)) && G.ready && !battle && !advLines && !$("#adv") && !$("#authw") && !(sheet && sheet.type === "faction") && !tutSnoozed() && !(S.pathSnz > now()) ? (m => m === "tut" ? TUT[S.tut.i] : m === "ship" ? shipStep() : null)(advPick()) : null; if (!st) return null;
+  const path = st.ok(S) ? [['#coach [data-act="tutClaim"], #coach [data-act="shipClaim"], #coach .cpill', "Collect your reward"]] : st.path ? st.path() : [SHOWME];
   for (const [sel, label, when] of path) { if (when && !when()) continue; for (const el of document.querySelectorAll(sel)) { if (el.classList.contains("on") || (el.disabled && /^(boost|finish)$/.test(el.dataset.act || ""))) continue; /* a tab already open, or a speed-up you can't use */ const v = guideVisible(el); if (v) return { el, label, v }; } }
   const cx = sheet && document.querySelector('.sheet [data-act="close"]'); if (cx && guideVisible(cx)) return { el: cx, label: "Close this to continue", v: 1 }; // something is in the way: close it first
   return null;
@@ -12151,11 +12245,20 @@ function tutClaim() {
   const st = TUT[S.tut.i]; if (!st || !st.ok(S)) return; const rw = st.rw || {};
   for (const k of ["m", "c", "g"]) if (rw[k]) S.res[k] += rw[k]; if (rw.shards) S.shards = (S.shards || 0) + rw.shards;
   logReward(`Academy · ${st.t}`, rw, { shards: rw.shards || 0, kind: "quest" });
-  S.tut.i++; S.tut.open = 0; dirty(); try { SFX.research(); } catch (e) {} // v81: straight on to the next task; the guide is already pointing at it
+  S.tut.i++; S.tut.open = 0; if (S.tut.i > TUT_BASICS) S.advHop = 1; dirty(); try { SFX.research(); } catch (e) {} // v81: straight on to the next task; the guide is already pointing at it
   const nx = TUT[S.tut.i];
   if (nx) toast(`Academy step done: +${fmt(rw.m || 0)} metal, +${fmt(rw.c || 0)} crystal${rw.g ? `, +${fmt(rw.g)} gas` : ""}${rw.shards ? `, ◆${rw.shards}` : ""}.`, "win");
-  else { S.say.push("That's the Academy done, Commander. Astrophysics Lv.2 means we can hold a second world.", "Upgrade the Shipyard to Lv.4 and build a Colony Ship, then send it with escorts to a free planet. Your quests on the Quests tab take it from here."); flushSay(); }
+  else { S.say.push("That's the Academy done, Commander. Astrophysics Lv.2 means we can hold a second world.", "Upgrade the Shipyard to Lv.4 and build a Colony Ship, then send it with escorts to a free planet. I'll keep pointing you at the next directive on your path."); S.pathOpen = 1; flushSay(); }
   coachRender(true);
+}
+/* v210: what the Advisor says about the next directive on the quest path */
+function pathHint(q) {
+  if (q.hive) return `Hive garrisons of Lv.${q.hive} sit ${hiveWhere(q.hive)}. Scout one first, then send a fleet that outguns it. Tap below and I'll find the nearest.`;
+  const g = q.go || "";
+  if (/^build/.test(g)) return /def$/.test(g) ? "Defenses keep raiders off your homeworld. Tap below and I'll open the defense list." : /fac$/.test(g) ? "Facilities speed up everything else. Tap below and I'll open the right building." : "Stronger mines mean bigger fleets later. Tap below and I'll open your resource buildings.";
+  if (g === "lab") return "New technology unlocks heavier hulls and better weapons. Tap below to open Research.";
+  if (g === "fleet") return "We need more hulls. Tap below and I'll open the Shipyard.";
+  return "Head out onto the galaxy map. Check your targets with a probe before you commit the fleet.";
 }
 let coachHtml = "";
 function coachRender(force) {
@@ -12163,13 +12266,32 @@ function coachRender(force) {
   if (!S.tutAstro) { S.tutAstro = 1; if (S.tut.i >= TUT_V1 && (S.r.astro || 0) >= 2) S.tut.i = TUT.length; else if (S.tut.i >= TUT_V1) S.tut.open = 1; dirty(); } /* v200: finished commanders without Astrophysics Lv.2 get the new steps */
   if (view === "mail" && !S.tutMail) { S.tutMail = 1; dirty(); }
   if (S.tut.snz && S.tut.snz <= now()) { S.tut.snz = 0; S.tut.open = 1; dirty(); force = true; } /* v191: back after a 5-minute break, opened up */
-  let w = $("#coach"); const on = tutOn() && !battle && G.ready && !tutSnoozed() && !G.cubeDemo; /* v194: not over a demo battle */
-  if (!on) { if (w) w.remove(); coachHtml = ""; return; }
+  let w = $("#coach"); const mode = !battle && G.ready && !G.cubeDemo && !tutSnoozed() && !(S.pathSnz > now()) ? advPick() : null; /* v194: not over a demo battle; v210: the Advisor hops between the Academy or quest path and the fleet path */
+  if (!mode) { if (w) w.remove(); coachHtml = ""; return; }
+  const hop = (mode === "ship" ? (tutOn() || quest()) : shipStep()) && !(mode !== "ship" && tutOn() && S.tut.i < TUT_BASICS) ? `<button class="btn ghost sm" data-act="advHop">${mode === "ship" ? "Main path ›" : "Fleet path ›"}</button>` : "";
+  if (mode === "ship") { const sp = shipStep(), done = sp.ok(), open = S.pathOpen && !sheet && !advLines, rwt = (sp.rw.m || 0) + (sp.rw.c || 0) + (sp.rw.g || 0);
+    const html = open ? `<div class="cbox path ship${done ? " done" : ""}"><div class="chd"><img class="cav" src="${ADV_BUST}" alt="${ADV}"><div class="cti"><small>ADVISOR · FLEET PATH · HULL ${sp.i + 1} OF ${SHIP_PATH.length}</small><b>${esc(sp.t)}</b></div><button class="cx" data-act="pathMin" aria-label="Hide the Advisor for 5 minutes">✕</button></div>
+      <p>${done ? "Fine ships, Commander. Claim it and I'll show you the next hull." : esc(sp.say)}</p>${!done && sp.need ? `<div class="cneed">Next step: <b>${esc(sp.need.n)} Lv.${sp.need.l}</b> <small>(you have Lv.${sp.need.cur})</small></div>` : ""}
+      <div class="cbar"><i style="width:${sp.i / SHIP_PATH.length * 100}%"></i></div><div class="clv">Reward ${fmt(rwt)} res · ◆${sp.rw.shards}</div>
+      <div class="cbt">${done ? `<button class="btn amber" data-act="shipClaim">Claim reward</button>` : `<button class="btn" data-act="shipShow">Show me</button>`}${hop}<button class="btn ghost sm" data-act="pathFold">Later</button></div></div>`
+      : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "shipClaim" : "pathOpen"}" aria-label="${done ? "Claim the fleet path reward" : "Open the Advisor"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : "⛭"}</span><b class="cpt"><small>${done ? "HULL READY" : "FLEET PATH"}</small>${done ? "Claim reward ▸" : esc(sp.need ? `${sp.need.n} Lv.${sp.need.l} → ${sp.d.n}` : sp.t)}</b></button>`;
+    if (!w) { w = document.createElement("div"); w.id = "coach"; $("#app").appendChild(w); force = true; } w.style.display = sheet || view === "quests" ? "none" : "";
+    if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
+    return; }
+  if (mode === "dir") { const q = quest(), done = q.ok(S), open = S.pathOpen && !sheet && !advLines, rwt = (q.rw.m || 0) + (q.rw.c || 0) + (q.rw.g || 0);
+    const html = open ? `<div class="cbox path${done ? " done" : ""}"><div class="chd"><img class="cav" src="${ADV_BUST}" alt="${ADV}"><div class="cti"><small>ADVISOR · CHAPTER ${S.chapter} · ${esc(CHAPTERS[S.chapter].toUpperCase())} · DIRECTIVE ${S.quest + 1}</small><b>${esc(q.t)}</b></div><button class="cx" data-act="pathMin" aria-label="Hide the Advisor for 5 minutes">✕</button></div>
+      <p>${done ? "Directive complete, Commander. Claim it and I'll brief you on the next one." : esc(pathHint(q))}</p>
+      <div class="clv">Reward ${fmt(rwt)} res${q.rw.boost ? ` · ⚡${q.rw.boost}` : ""} · ◆1</div>
+      <div class="cbt">${done ? `<button class="btn amber" data-act="claim">Claim reward</button>` : `<button class="btn" data-act="go">Take me there</button>`}${hop}<button class="btn ghost sm" data-act="pathFold">Later</button></div></div>`
+      : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "claim" : "pathOpen"}" aria-label="${done ? "Claim the directive reward" : "Open the Advisor"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : S.quest + 1}</span><b class="cpt"><small>${done ? "DIRECTIVE DONE" : "NEXT ON YOUR PATH"}</small>${done ? "Claim reward ▸" : esc(q.t)}</b></button>`;
+    if (!w) { w = document.createElement("div"); w.id = "coach"; $("#app").appendChild(w); force = true; } w.style.display = sheet || view === "quests" ? "none" : "";
+    if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
+    return; }
   const st = TUT[S.tut.i], done = st.ok(S), lv = cmdLevel(score()), open = S.tut.open && !sheet && !advLines;
   const html = open ? `<div class="cbox${done ? " done" : ""}"><div class="chd"><img class="cav" src="${ADV_BUST}" alt="${ADV}"><div class="cti"><small>ADVISOR · FLIGHT ACADEMY · STEP ${S.tut.i + 1} OF ${TUT.length}</small><b>${esc(st.t)}</b></div><button class="cx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button></div>
       <p>${done ? "Done! Collect your reward." : esc(st.say)}</p>
       <div class="cbar"><i style="width:${Math.min(100, S.tut.i / TUT.length * 100)}%"></i></div><div class="clv">Commander Lv.${lv} → <b>Lv.5</b> · reward ${fmt((st.rw.m || 0) + (st.rw.c || 0) + (st.rw.g || 0))} res${st.rw.shards ? ` · ◆${st.rw.shards}` : ""}</div>
-      <div class="cbt">${done ? `<button class="btn amber" data-act="tutClaim">Collect reward</button>` : `<button class="btn" data-act="tutShow">Show me</button>`}<button class="btn ghost sm" data-act="tutSkip">Skip tutorial</button></div></div>`
+      <div class="cbt">${done ? `<button class="btn amber" data-act="tutClaim">Collect reward</button>` : `<button class="btn" data-act="tutShow">Show me</button>`}${hop}<button class="btn ghost sm" data-act="tutSkip">Skip tutorial</button></div></div>`
     : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "tutClaim" : "tutOpen"}" aria-label="${done ? "Collect the Academy reward" : "Open the Flight Academy"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : `${S.tut.i + 1}/${TUT.length}`}</span><b class="cpt"><small>${done ? "STEP DONE" : "NEXT TASK"}</small>${done ? "Collect reward ▸" : esc(st.t)}</b></button>`;
   if (!w) { w = document.createElement("div"); w.id = "coach"; $("#app").appendChild(w); force = true; } w.style.display = sheet || view === "quests" ? "none" : ""; /* v123: the Quests tab shows the same step in full */
   if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
@@ -12564,23 +12686,35 @@ function drawBattle(t) {
       const g = b.geo && b.geo[i]; if (!g || g.f !== b.gf) continue;
       let j = (b.ctgt || [])[i]; if (j == null || b.n[j] <= 0 || (pos[j].fl & 6)) j = liveFoe(q.side);
       const wk = q.k === "lord" ? "drone" : "fighter", acc = b.acc[q.side], col = SIDE_COL[q.side], n = busy && tot[i] > 0 ? tot[i] : b.n[i];
-      const nD = lo ? 2 : busy ? 3 : clamp(3 + Math.floor(Math.log2(n)), 3, q.k === "supercarrier" ? 9 : 6), P = q.k === "supercarrier" ? 5200 : 4400;
-      const C = scr[i], hx = C.x + g.face * g.L * .08, hy = C.y + g.L * .06, E = j >= 0 ? scr[j] : null, Ld = Math.max(10 * d, g.L * .28);
-      const R0 = Math.max(g.L * .55, W * .045), ex = E ? E.x : C.x, ey = E ? E.y : C.y - g.L * .5;
+      /* v210: slower, flown sorties instead of a spinning orbit. Fighters roll out of the hangar, accelerate onto a strafing run past
+         the target, bank round and make a second pass back toward the carrier, then glide home. Pairs fly lead and wingman. */
+      const nD = lo ? 2 : busy ? 2 : clamp(2 + Math.floor(Math.log2(n)) & ~1, 2, q.k === "supercarrier" ? 8 : 6), P = q.k === "supercarrier" ? 13000 : 11000;
+      const C = scr[i], hx = C.x + g.face * g.L * .08, hy = C.y + g.L * .06, E = j >= 0 ? scr[j] : null, Ld = Math.max(9 * d, g.L * .24);
+      const R0 = Math.max(g.L * .55, W * .045), ex = E ? E.x : C.x + g.face * W * .2, ey = E ? E.y : C.y - g.L * .5, sg = ex >= hx ? 1 : -1, A = Math.max(R0 * 1.5, W * .08);
+      const bez = (s, a, b2, c, e) => { const r = 1 - s; return r * r * r * a + 3 * r * r * s * b2 + 3 * r * s * s * c + s * s * s * e; };
       const at = (u, k) => { // where fighter k is at phase u of its sortie
-        const ph = k * 2.399, oa = ph + (u - .3) / .45 * TAU * .85, ox = ex + Math.cos(oa) * R0, oy = ey + Math.sin(oa) * R0 * .5;
-        if (u < .3) { const s = u / .3, e2 = s * s * (3 - 2 * s), ia = ph, ix = ex + Math.cos(ia) * R0, iy = ey + Math.sin(ia) * R0 * .5, mx = (hx + ix) / 2 + Math.sin(ph) * W * .06, my = Math.min(hy, iy) - g.L * (.5 + (k % 3) * .2);
-          return [(1 - e2) * (1 - e2) * hx + 2 * (1 - e2) * e2 * mx + e2 * e2 * ix, (1 - e2) * (1 - e2) * hy + 2 * (1 - e2) * e2 * my + e2 * e2 * iy]; }
-        if (u < .75) return [ox, oy];
-        const s = (u - .75) / .25, e2 = s * s * (3 - 2 * s), fa2 = ph + TAU * .85, fx = ex + Math.cos(fa2) * R0, fy = ey + Math.sin(fa2) * R0 * .5, mx = (fx + hx) / 2 - Math.sin(ph) * W * .05, my = Math.max(fy, hy) + g.L * (.35 + (k % 2) * .2);
-        return [(1 - e2) * (1 - e2) * fx + 2 * (1 - e2) * e2 * mx + e2 * e2 * hx, (1 - e2) * (1 - e2) * fy + 2 * (1 - e2) * e2 * my + e2 * e2 * hy]; };
-      for (let k = 0; k < nD; k++) { const u = ((b.wclk / P) + k / nD + (i * .137)) % 1, [x, y] = at(u, k), [x2, y2] = at(Math.min(.999, u + .006), k), vx = x2 - x, vy = y2 - y;
-        const grow = Math.min(1, u / .05, (1 - u) / .05), sz = Ld * (.35 + .65 * grow), fc = vx >= 0 ? 1 : -1, ang = clamp(Math.atan2(vy, Math.abs(vx) || 1e-6), -.7, .7) * fc;
-        ctx.save(); if (!lo) { ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .8 * grow; ctx.drawImage(glowSprite(col.gk || (col.gk = `rgba(${col.glow},1)`)), x - fc * sz * .55 - sz * .35, y - sz * .12, sz * .7, sz * .24); ctx.globalCompositeOperation = "source-over"; }
-        ctx.globalAlpha = grow; ctx.translate(x, y); ctx.rotate(ang); drawSide(ctx, wk, 0, 0, sz, acc, fc, true); ctx.restore();
-        // strafing runs: short darts at the target while on the attack orbit
-        if (E && u > .32 && u < .74 && !lo) { const fp2 = (b.wclk / 140 + k * .31) % 1; if (fp2 < .55) { const dx = ex - x, dy = ey - y, l2 = Math.hypot(dx, dy) || 1, pr2 = fp2 / .55, bx = x + dx * pr2 * .9, by = y + dy * pr2 * .9, ln2 = 6 * d;
-            ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.strokeStyle = col.shot; ctx.lineWidth = 1.2 * d; ctx.globalAlpha = .9; ctx.beginPath(); ctx.moveTo(bx - dx / l2 * ln2, by - dy / l2 * ln2); ctx.lineTo(bx, by); ctx.stroke();
+        const jy = ((k >> 1) % 3 - 1) * R0 * .18, y1 = ey - R0 * .32 + jy, y2 = ey + R0 * .3 + jy, xs = ex - sg * A, xf = ex + sg * A;
+        if (u < .2) { const s0 = u / .2, s = s0 * s0 * (1.6 - .6 * s0); // slow roll-out, then full throttle
+          return [bez(s, hx, hx + g.face * Ld * 3, xs - sg * A * .7, xs), bez(s, hy, hy - g.L * .1, y1 + R0 * .2, y1)]; }
+        if (u < .8) { const v = (u - .2) / .6;
+          if (v < .42) return [xs + sg * 2 * A * (v / .42), y1];
+          if (v < .58) { const th = -Math.PI / 2 + Math.PI * (v - .42) / .16, cy = (y1 + y2) / 2, ry = (y2 - y1) / 2; return [xf + sg * A * .28 * Math.cos(th), cy + ry * Math.sin(th)]; }
+          return [xf - sg * 2 * A * ((v - .58) / .42), y2]; }
+        const s0 = (u - .8) / .2, s = 1 - (1 - s0) * (1 - s0); // easing off into the hangar
+        return [bez(s, xs, xs - sg * A * .6, hx + g.face * Ld * 2.5, hx), bez(s, y2, y2 + R0 * .1, hy + g.L * .2, hy)]; };
+      const nP = nD >> 1 || 1;
+      for (let k = 0; k < nD; k++) { const wing = k & 1, u = ((b.wclk / P) + (k >> 1) / nP + (i * .137) - wing * .014 + 1) % 1, [x0, y0] = at(u, k), [x2, y2] = at(Math.min(.999, u + .004), k);
+        const x = x0 - (wing ? sg * Ld * .2 : 0), y = y0 + (wing ? Ld * .7 : 0), vx = x2 - x0, vy = y2 - y0, vl = Math.hypot(vx, vy) || 1e-6, cx = vx / vl, fc = vx >= 0 ? 1 : -1;
+        const grow = Math.min(1, u / .04, (1 - u) / .04), sz = Ld * (.4 + .6 * grow), ang = clamp(Math.atan2(vy, Math.abs(vx) || 1e-6), -.55, .55) * fc;
+        if (!lo) { const [tx, ty] = at(Math.max(0, u - .02), k), tox = wing ? -sg * Ld * .2 : 0, toy = wing ? Ld * .7 : 0; // engine trail
+          ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .35 * grow; ctx.strokeStyle = col.shot; ctx.lineWidth = Math.max(1, sz * .09); ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(tx + tox, ty + toy); ctx.lineTo(x - cx * sz * .4, y - (vy / vl) * sz * .4); ctx.stroke();
+          ctx.globalAlpha = .7 * grow; const gr = sz * .22; ctx.drawImage(glowSprite(col.gk || (col.gk = `rgba(${col.glow},1)`)), x - cx * sz * .45 - gr, y - (vy / vl) * sz * .45 - gr, gr * 2, gr * 2); ctx.restore(); }
+        ctx.save(); ctx.globalAlpha = grow; ctx.translate(x, y); ctx.rotate(ang); ctx.scale(Math.max(.16, Math.abs(cx)) * fc, 1); drawSide(ctx, wk, 0, 0, sz, acc, 1, true); ctx.restore();
+        // guns only on the inbound half of each pass, nose toward the target
+        const v = (u - .2) / .6, inb = E && u > .2 && u < .8 && !lo && ((v < .42 && v / .42 < .55) || (v >= .58 && (v - .58) / .42 < .55));
+        if (inb) { const fp2 = (b.wclk / 170 + k * .29) % 1; if (fp2 < .6) { const dx = ex - x, dy = ey - y, l2 = Math.hypot(dx, dy) || 1, pr2 = fp2 / .6, bx = x + dx * pr2 * .95, by = y + dy * pr2 * .95, ln2 = 7 * d;
+            ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.strokeStyle = col.shot; ctx.lineWidth = 1.3 * d; ctx.globalAlpha = .9; ctx.beginPath(); ctx.moveTo(bx - dx / l2 * ln2, by - dy / l2 * ln2); ctx.lineTo(bx, by); ctx.stroke();
             if (pr2 > .9) { const hr = 4 * d; ctx.globalAlpha = .7; ctx.drawImage(glowSprite(col.shot), ex + (k % 3 - 1) * 4 * d - hr, ey + (k % 2 ? 3 : -3) * d - hr, hr * 2, hr * 2); } ctx.restore(); } } } } }
   /* v78 capital wrecks: a destroyed capital ship splits along a fracture line into two hull sections that drift apart with their own
      momentum and spin (nothing slows them in vacuum), the torn edges glowing white-hot and cooling to orange as they separate */
@@ -13175,16 +13309,24 @@ const myRankIn = kind => boardRows(kind).findIndex(r => r.me) + 1;
 function shRanks(st) {
   st = st || sheet; const inView = st !== sheet;
   const t = ["players", "pvp", "alliances"].includes(st.tab) ? st.tab : "players", rows = boardRows(t), mi = rows.findIndex(r => r.me);
-  const show = rows.slice(0, 50); if (mi >= 50) show.push(rows[mi]);
-  const tabs = `<div class="segc">${[["players", "Commanders"], ["pvp", "PvP"], ["alliances", "Alliances"]].map(([k, l]) => `<button class="${k === t ? "on" : ""}" data-act="ranksTab" data-v="${k}">${l}</button>`).join("")}</div>`;
+  const show = rows.slice(3, 50); if (mi >= 50) show.push(rows[mi]);
+  const sv = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const tabs = `<div class="rktabs">${[["players", "Commanders", sv('<circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-4 3.5-6 7-6s6.2 2 7 6"/>')], ["pvp", "PvP", sv('<path d="M5 19l9-9M14 5l5 5-4 1-1 4-5-5zM4 15l5 5"/>')], ["alliances", "Alliances", sv('<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/>')]].map(([k, l, ic]) => `<button class="${k === t ? "on" : ""}" data-act="ranksTab" data-v="${k}">${ic}<span>${l}</span></button>`).join("")}</div>`;
+  /* v210 podium: the top three stand on steps in 2-1-3 order and rise in ascending order (third, then second, then first) */
+  const pnm = r => t === "alliances" ? r.name : r.me ? (G.myName || "You") : r.bot ? (BOT_BY[r.id] || {}).name || "Bot" : nameOf(r.id);
+  const top = rows.slice(0, 3), pod = top.length ? `<div class="rkpod">${[1, 0, 2].filter(i => top[i]).map(i => { const r = top[i], al = t === "alliances";
+    return `<button class="rkp p${i + 1}${r.me ? " me" : ""}" data-act="${al ? "allyOpen2" : "profile"}" ${al ? `data-id="${r.id}"` : `data-u="${r.id}"`} aria-label="Rank ${i + 1}: ${esc(pnm(r))}"><div class="rkav">${i === 0 ? '<i class="rkcrown" aria-hidden="true">♛</i>' : ""}<span class="rkring">${al ? allyEmblem("", r.id) : avCanvas(r.id, "avc podav")}</span><em>${i + 1}</em></div>
+      <b>${esc(pnm(r))}${r.me ? " (you)" : ""}</b><small>${fmt(r.val)}${t === "pvp" ? " pts" : ""}</small><div class="rkstep"><span>${["1ST", "2ND", "3RD"][i]}</span></div></button>`; }).join("")}</div>` : "";
+  const me = mi >= 0 ? rows[mi] : null, gap = me && mi > 0 ? rows[mi - 1].val - me.val : 0;
+  const mine = me ? `<div class="rkme"><div><small>YOUR RANK</small><b>#${mi + 1}</b><em>of ${rows.length}</em></div><div><small>${t === "pvp" ? "PVP POINTS" : "SCORE"}</small><b>${fmt(me.val)}</b></div><div><small>${mi > 0 ? "TO NEXT RANK" : "STATUS"}</small><b>${mi > 0 ? "+" + fmt(Math.max(1, gap)) : '<span style="color:var(--amber)">Top of the board</span>'}</b></div></div>` : "";
   const row = (r, i) => { const pos = rows.indexOf(r) + 1, medal = pos <= 3 ? ["🥇", "🥈", "🥉"][pos - 1] : `#${pos}`;
     if (t === "alliances") return `<div class="lb${r.me ? " me" : ""}"><span class="lp">${medal}</span><span class="ln"><b>${esc(r.name)}</b><small>${r.sub}</small></span><span class="lv">${fmt(r.val)}</span></div>`;
     const nm = r.me ? (G.myName || "You") + " (you)" : r.bot ? (BOT_BY[r.id] || {}).name || "Bot" : nameOf(r.id);
     const open = st.pick === r.id && !r.me, fr = (S.friends || []).includes(r.id), bl = (S.blocked || []).includes(r.id);
     const acts = open ? `<div class="lbact"><button class="btn sm" data-act="profile" data-u="${r.id}">View profile card</button><button class="btn ghost sm" data-act="${fr ? "unfriend" : "befriend"}" data-u="${r.id}">${fr ? "Unfriend" : "Add friend"}</button><button class="btn ghost sm" data-act="dmOpen" data-u="${r.id}" ${r.bot || G.mode !== "online" ? "disabled" : ""}>Message</button><button class="btn ghost sm" data-act="${bl ? "unblock" : "block"}" data-u="${r.id}">${bl ? "Unblock" : "Block"}</button></div>` : "";
     return `<button class="lb${r.me ? " me" : ""}${open ? " open" : ""}" data-act="${r.me ? "profile" : "rankPick"}" data-u="${r.id}"><span class="lp">${medal}</span>${avCanvas(r.id, "avc lbav")}<span class="ln"><b>${esc(nm)}${r.bot ? ' <i class="botk">bot</i>' : ""}</b><small>${t === "pvp" ? tierBadge(r.val, PVP_T) : tierBadge(r.val)} ${r.p && r.p.planets ? `· ${r.p.planets} world${r.p.planets > 1 ? "s" : ""}` : ""}${r.p && r.p.ally && G.alliances[r.p.ally] ? ` · [${esc(G.alliances[r.p.ally].tag)}]` : ""}</small></span><span class="lv">${fmt(r.val)}</span></button>${acts}`; };
-  return `<div class="hd"><div><div class="chapter">Leaderboards</div><h2>Rankings</h2><p class="note">${t === "pvp" ? "PvP points come from damage dealt to other commanders' ships, plus a bonus for each win." : t === "alliances" ? "Alliances rank by the combined score of their members." : "Commanders rank by score. Bots from the Void Concord are listed too."}${G.mode !== "online" ? " Join the shared galaxy to compete with other players." : ""}</p></div>${inView ? "" : `<button class="x" data-act="close" aria-label="Close">✕</button>`}</div>
-    ${tabs}<div class="lbs">${show.map(row).join("") || '<p class="note">No one here yet.</p>'}</div>`;
+  return `<div class="rkwrap"><div class="hd rkhd"><div><div class="chapter">Leaderboards</div><h2>Rankings</h2><p class="note">${t === "pvp" ? "PvP points come from damage dealt to other commanders' ships, plus a bonus for each win." : t === "alliances" ? "Alliances rank by the combined score of their members." : "Commanders rank by score. Bots from the Void Concord are listed too."}${G.mode !== "online" ? " Join the shared galaxy to compete with other players." : ""}</p></div>${inView ? "" : `<button class="x" data-act="close" aria-label="Close">✕</button>`}</div>
+    ${tabs}${pod}${mine}<div class="lbs">${show.map(row).join("") || (top.length ? "" : '<p class="note">No one here yet.</p>')}</div></div>`;
 }
 /* ---------- player cards ---------- */
 /* ---------- commander avatars (v62): eight distinct painted commanders, or your own photo ----------
@@ -13713,6 +13855,13 @@ const ACT = {
   tutShow: () => { S.tut.open = 0; S.tut.snz = 0; dirty(); coachRender(true); tutShow(); },
   tutClaim: () => tutClaim(),
   tutMin: () => { S.tut.open = 0; S.tut.snz = now() + TUT_SNOOZE; dirty(); coachRender(true); toast("Academy hidden. It'll pop back up in 5 minutes, or open it any time from the Quests tab."); },
+  shipShow: () => shipShow(),
+  shipClaim: () => act(() => { const sp = shipStep(); if (!sp || !sp.ok()) return; for (const r of ["m", "c", "g"]) S.res[r] += sp.rw[r] || 0; S.shards = (S.shards || 0) + sp.rw.shards; S.shipQ = sp.i + 1; S.advHop = 0;
+    logReward("Fleet path · " + sp.t, sp.rw, { shards: sp.rw.shards, kind: "quest" }); try { SFX.research(); } catch (e) {} const nx = shipStep(); toast(nx ? `Fleet path reward collected. Next hull: ${nx.d.n}.` : "Fleet path complete. Every hull class is yours.", "win"); coachRender(true); }),
+  advHop: () => { S.advHop = S.advHop ? 0 : 1; S.pathOpen = 1; dirty(); coachRender(true); },
+  pathOpen: () => { S.pathOpen = 1; S.pathSnz = 0; dirty(); coachRender(true); },
+  pathFold: () => { S.pathOpen = 0; dirty(); coachRender(true); },
+  pathMin: () => { S.pathOpen = 0; S.pathSnz = now() + TUT_SNOOZE; dirty(); coachRender(true); toast("Advisor hidden for 5 minutes. Your next directive is always on the Quests tab."); },
   tutOpen: () => { S.tut.open = 1; S.tut.snz = 0; dirty(); coachRender(true); },
   tutSkip: () => { if (!confirm("Skip the Flight Academy? You can't restart it.")) return; S.tut.off = 1; dirty(); coachRender(true); toast("Academy skipped. The Advisor and your quests on the Quests tab still guide you."); },
   fleetMap: d => { closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } // v98: wait for the map to be ready, then fly to the fleet and follow it
@@ -13888,7 +14037,7 @@ const ACT = {
     else if (d.q === "r" && S.rq) S.rq.e = Math.max(t, S.rq.e - 300000);
     else if (d.q === "s" && S.sq[0]) S.sq[0].next -= 300000; else return;
     S.boosts--; spdAdd(300000); advance(now()); }),
-  claim: () => act(() => { const q = quest(); if (!q.ok(S)) return; for (const r of ["m", "c", "g"]) S.res[r] += q.rw[r] || 0; S.boosts += q.rw.boost || 0; S.quest++; S.shards = (S.shards || 0) + 1; logReward("Directive · " + q.t, q.rw, { shards: 1, boosts: q.rw.boost || 0, kind: "quest" }); toast("Reward collected, plus ◆3 Void Shards.", "win");
+  claim: () => act(() => { const q = quest(); if (!q.ok(S)) return; for (const r of ["m", "c", "g"]) S.res[r] += q.rw[r] || 0; S.boosts += q.rw.boost || 0; S.quest++; S.advHop = 1; S.shards = (S.shards || 0) + 1; logReward("Directive · " + q.t, q.rw, { shards: 1, boosts: q.rw.boost || 0, kind: "quest" }); toast("Reward collected, plus ◆3 Void Shards.", "win");
     const lines = { 2: ["Power is online. Watch the energy meter. If it goes red, the extractors slow down."],
       8: ["The Shipyard is ready. Light Fighters are cheap and fast. Three should be enough for a low-level Hive garrison."],
       9: ["Fighters ready. Open the Galaxy map. Amber worlds are held by the Hive. Pick a low level one and check the odds before you launch."],
@@ -13952,6 +14101,7 @@ const ACT = {
   // social, rankings, chat, mastery, alliance help, factions and the tray
   trayToggle: () => { G.trayOpen = !G.trayOpen; trayRender(); dock(); },
   chat: () => { chatInit(); openSheet({ type: "chat", ch: "g" }); },
+  allyChat: () => { chatInit(); openSheet({ type: "chat", ch: "a" }); },
   chatTab: d => { sheet.ch = d.v; sheet.to = null; renderSheet(); },
   chatSend: () => chatSend(),
   dmOpen: d => { if (!d.u || d.u === G.me) return; chatInit(); openSheet({ type: "chat", ch: "d", to: d.u }); },
