@@ -1369,7 +1369,7 @@ const SH = {
   bastion:    { n: "Battlecruiser", cls: "Battlecruiser", c: { m: 30000, c: 40000, g: 15000 }, atk: 700, sh: 400, hull: 7000, cargo: 750, bs: 10000, fu: 250, dt: "hyper", sz: .9, req: { shipyard: 8, hyper: 5, hyperT: 5, laserT: 8 } /* v210: Laser Lv.8 (was 12), so Battlecruisers open before Destroyers */, d: "Hunts fleets. Rapid fire against Battleships, Cruisers, Heavy Fighters and freighters." },
   bomber:     { n: "Bomber", cls: "Bomber", c: { m: 50000, c: 25000, g: 15000 }, atk: 1000, sh: 500, hull: 7500, cargo: 500, bs: 4000, fu: 700, dt: "impulse", up: [["hyper", 8, 5000, 700]], sz: .85, req: { shipyard: 8, impulse: 6, plasmaT: 5 }, d: "Breaks defenses. Rapid fire against turrets. Refits to hyperspace at Hyperspace Drive Lv.8." },
   destroyer:  { n: "Destroyer", cls: "Destroyer", c: { m: 60000, c: 50000, g: 15000 }, atk: 2000, sh: 500, hull: 11000, cargo: 2000, bs: 5000, fu: 1000, dt: "hyper", sz: 1, req: { shipyard: 9, hyper: 6, hyperT: 5 }, d: "Escort killer. Rapid fire against Battlecruisers and Laser Turrets." },
-  dreadnought:{ n: "Reaper", cls: "Reaper", c: { m: 85000, c: 55000, g: 20000 }, atk: 2800, sh: 700, hull: 14000, cargo: 10000, bs: 7000, fu: 1100, dt: "hyper", sz: 1.2, req: { shipyard: 10, hyper: 7, hyperT: 6, shields: 6 }, d: "A flagship that hunts capital ships. Rapid fire against Battleships, Bombers and Destroyers." },
+  dreadnought:{ n: "Reaper", cls: "Reaper", c: { m: 85000, c: 55000, g: 20000 }, atk: 2800, sh: 700, hull: 14000, cargo: 10000, bs: 7000, fu: 1100, dt: "hyper", sz: 1.2, req: { shipyard: 10, hyper: 7, hyperT: 6, shields: 6 }, d: "The king of the fleet: a towering flagship that hunts capital ships. Rapid fire against Battleships, Bombers and Destroyers." },
   worldbreaker:{ n: "Cube Destroyer", cls: "Cube Destroyer", c: { m: 5000000, c: 4000000, g: 1000000 }, atk: 200000, sh: 50000, hull: 900000, cargo: 10000000, bs: 100, fu: 1, dt: "hyper", sz: 1.6, req: { shipyard: 12, hyper: 12, hyperT: 10 }, d: "The ultimate weapon of assimilation: a battle sphere, massive, heavily armoured and armed with devastating firepower and rapid fire. Only a few exist, making it one of the rarest and most feared ships in the galaxy. Only large numbers of Destroyers can bring it down." }
 };
 for (const k in SH) SH[k].spd = SH[k].bs / 12500; // relative to the Light Fighter, which flies at the reference pace
@@ -4616,8 +4616,10 @@ const unitName = k => k === "fortress" ? "Orbital Fortress" : k === "supercube" 
 /* round and boxy giants only fill the middle of their wide sprite, so they are drawn larger to fill their place */
 const DRAWK = { worldbreaker: 3.2, cube: 2.9, sphere: 2.9 }, FOOTK = k => DRAWK[k] ? DRAWK[k] / 1.9 : 1;
 const BOSSK = { cube: 1.7, sphere: 1.35, swhale: 1.8, slevi: 1.8, ssquid: 1.6, leviathan: 1.5 }, BOSS_GLOW = { cube: "90,255,140", sphere: "90,255,140", swhale: "110,200,255", slevi: "255,138,74", ssquid: "200,120,255", leviathan: "180,255,90" };
+/* v212 size ladder: fighter < heavy fighter < pathfinder < cruiser < bomber < heavy cruiser < escort carrier < battleship < battlecruiser < destroyer
+   < Citadel Supercarrier < Reaper (king of the fleet) < Discovery Class < Cube Destroyer (about twice the Reaper) */
 const bLen = k => k === "worldbreaker" ? 2 * (SIDE_LEN.dreadnought || 1.25) * 1.08 : Math.pow(SIDE_LEN[k] || .5, 1.15) * (BOSSK[k] || 1);
-const SIDE_LEN = { spyProbe: .3, cube: 1.2, sphere: .8, cdrone: .4, tender: .6, guardian: .8, escortCarrier: .92, supercarrier: 1.2, eclipse: 1.4, fighter: .38, heavyFighter: .44, hauler: .5, heavyCargo: .7, recycler: .72, lancer: .55, ark: .6, corvette: .68, battleship: .9, bastion: .88, bomber: .8, destroyer: 1.05, dreadnought: 1.25, worldbreaker: 1.5, drone: .38, spitter: .42, brute: .6, lord: .8, leviathan: 1.2, swhale: 1.5, slevi: 1.5, ssquid: 1.05 };
+const SIDE_LEN = { spyProbe: .3, cube: 1.2, sphere: .8, cdrone: .4, tender: .6, guardian: .82, escortCarrier: .9, supercarrier: 1.42, eclipse: 1.75, fighter: .38, heavyFighter: .46, hauler: .5, heavyCargo: .7, recycler: .72, lancer: .55, ark: .6, corvette: .66, battleship: .96, bastion: 1.04, bomber: .78, destroyer: 1.14, dreadnought: 1.6, worldbreaker: 1.5, drone: .38, spitter: .42, brute: .6, lord: .8, leviathan: 1.2, swhale: 1.5, slevi: 1.5, ssquid: 1.05 };
 function drawSide(ctx, k, x, y, L, accent, face, glow) {
   // realistic baked render when WebGL is available; the vector drawing below is the fallback
   if (SH[k] || AL[k]) { const art = shipArtSoon(k, accent, "side"); accent = String(accent).split("@")[0]; if (art) { const w = L * (DRAWK[k] || (AL[k] ? 2 : 1.8)), h = w / 2; ctx.save(); ctx.translate(x, y); ctx.scale(face, 1); ctx.drawImage(art, -w / 2, -h / 2, w, h); ctx.restore(); return; } }
@@ -11716,11 +11718,25 @@ function labBattle() {
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) }), { id: LAB_ID, recDone: 1 });
   S.reports.unshift(rep); if (S.reports.length > 40) S.reports.length = 40; return rep;
 }
-/* ---------- Mail: one inbox for battle reports, espionage reports, direct messages and every alert ---------- */
+/* v212 the owner's duel: one commander against one, 3 million of every warship each plus huge carrier wings (12 million Halo Escort
+   Carriers and 9 million Citadel Supercarriers a side). Shown only in the game owner's Mail > Saved; rebuilt from a fixed seed on each
+   device and kept in memory, never in the save, so it adds nothing to the cloud save. */
+const DUEL_ID = "lab-duel-1v1", DUEL_K = ["fighter", "heavyFighter", "lancer", "corvette", "bomber", "guardian", "battleship", "bastion", "destroyer", "dreadnought", "eclipse", "worldbreaker"];
+const duelOwner = () => !!(G.owner || (S && S.ownerFree));
+function duelBattle() {
+  if (G.duelRep) return G.duelRep;
+  G.names.pduelA = "Grand Admiral Vexa Thorne"; G.names.pduelD = "Warlord Cato Brin";
+  const fleet = () => { const o = {}; for (const k of DUEL_K) if (SH[k]) o[k] = 3e6; o.escortCarrier = 12e6; o.supercarrier = 9e6; return o; };
+  let res = null, tA = 16, n = 0; const A0 = fleet(), D0 = fleet(); for (const k in A0) n += A0[k] + D0[k];
+  for (let i = 0; i < 5; i++) { res = simulate(stacksOf(fleet(), { weapons: tA, shields: tA, armor: tA }, "pduelA"), stacksOf(fleet(), { weapons: 15, shields: 15, armor: 15 }, "pduelD"), { seed: 31337 + i }); if (res.winner === "a" || res.winner === "d") break; tA += 2; } // one winner, never a draw
+  return (G.duelRep = Object.assign(mkRep({ at: S.duelMail ? S.duelMail.t : now(), kind: "attack", title: `Duel · 1 vs 1 · ${n.toLocaleString("en-US")} units`, aUids: [], aName: G.names.pduelA, dName: G.names.pduelD, lvl: 30, ptype: "gas", fortL: 0, alien: false,
+    start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) }), { id: DUEL_ID, recDone: 1 }));
+}/* ---------- Mail: one inbox for battle reports, espionage reports, direct messages and every alert ---------- */
 const MAIL_F = [["all", "All"], ["battle", "Battles"], ["saved", "★ Saved"], ["spy", "Espionage"], ["dm", "Direct"], ["alert", "Alerts"]];
 function mailItems() {
   const blocked = new Set(S.blocked || []), seen = S.chatSeen || {};
   const dms = Object.values(CHAT.dms || {}).filter(c => !blocked.has(c.with) && c.m.length).map(c => { const lm = c.m[c.m.length - 1]; return { t: lm.t, f: "dm", dm: c, un: c.m.filter(m => m.u !== G.me && m.t > (seen["d:" + c.id] || 0)).length }; });
+  if (duelOwner() && !S.duelMail) { S.duelMail = { t: now() }; dirty(); } // v212: the owner's duel
   if (!S.labMail) { S.labMail = { t: now() }; dirty(); } // the 10 vs 10 simulator test battle, delivered once so it can be watched on any device
   const inRecent = new Set(S.reports.map(r => r.id));
   return S.reports.filter(r => r.id !== LAB_ID).map(r => ({ t: r.t || r.at, f: "battle", rep: r })).concat((S.savedReps || []).filter(r => !inRecent.has(r.id)).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))).concat([{ t: S.labMail.t, f: "battle", lab: 1 }], (S.spyReps || []).map(s => ({ t: s.at, f: "spy", spy: s })), dms, S.log.map(l => ({ t: l.t, f: "alert", log: l }))).sort((a, b) => b.t - a.t);
@@ -11728,11 +11744,12 @@ function mailItems() {
 const mailUnread = () => { const t0 = S.mailSeen || 0; let n = 0; try { for (const x of mailItems()) n += x.f === "dm" ? x.un : x.t > t0 ? 1 : 0; } catch (e) {} return n; };
 function vMail() {
   const f = MAIL_F.some(x => x[0] === sub.mail) ? sub.mail : (sub.mail = "all"), all = mailItems(), prev = G.mailPrev || 0, cnt = k => all.filter(x => x.f === k && (x.f === "dm" ? x.un : x.t > prev)).length;
-  const list = f === "saved" ? (S.labSaved ? [{ t: S.labMail ? S.labMail.t : now(), f: "battle", lab: 1 }] : []).concat((S.savedReps || []).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))) : all.filter(x => f === "all" || x.f === f).slice(0, 80);
+  const list = f === "saved" ? (duelOwner() && S.duelMail && S.duelSaved !== 0 ? [{ t: S.duelMail.t, f: "battle", duel: 1 }] : []).concat(S.labSaved ? [{ t: S.labMail ? S.labMail.t : now(), f: "battle", lab: 1 }] : []).concat((S.savedReps || []).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))) : all.filter(x => f === "all" || x.f === f).slice(0, 80);
   const tabs = `<div class="segc mailtabs">${MAIL_F.map(([k, l]) => { const n = k === "all" ? 0 : cnt(k); return `<button class="${f === k ? "on" : ""}" data-act="sub" data-g="mail" data-v="${k}">${l}${n ? ` <i class="cbadge">${n}</i>` : ""}</button>`; }).join("")}</div>`;
   const row = x => { const nw = x.f === "dm" ? x.un > 0 : x.t > prev, tag = nw ? '<i class="mnew">NEW</i>' : "", when = `${ago(x.t)} ago`;
     if (x.spy) { const s = x.spy; return `<button class="mrowc spy${nw ? " unread" : ""}" data-act="spyOpen" data-id="${s.id}"><span class="mi">${AI.spy}</span><span class="mt"><b>Espionage report · ${esc(s.name)}</b><small>${s.res ? fmt(total(s.res)) + " resources · " : ""}${s.units ? fmt(sumN(s.units)) + (s.alien ? " Hive" : " defending") + " units" : "fleet hidden"}</small></span><span class="mw">${tag}<time>${when}</time></span></button>`; }
     if (x.rep) { const r = x.rep, win = repWin(r); return `<button class="mrowc ${win ? "good" : "bad"}${nw ? " unread" : ""}" data-act="mreport" data-id="${r.id}"><span class="mi">${MI.swords}</span><span class="mt"><b>${esc(r.title)}</b><small>${r.captured ? (r.kind === "defense" ? "Planet lost" : "Planet captured") : win ? "Victory" : r.winner === "draw" ? "Draw" : "Defeat"}${r.loot && total(r.loot) ? ` · plunder ${fmt(total(r.loot))}` : ""}</small></span><span class="mw">${tag}<time>${when}</time></span></button>`; }
+    if (x.duel) return `<button class="mrowc good lab" data-act="duelBattle"><span class="mi">👑</span><span class="mt"><b>Duel · 1 vs 1 · 3 million of every warship a side</b><small>Your private stress test: two commanders, every class from Light Fighters to Cube Destroyers, plus 12 million escort carriers and 9 million Citadel Supercarriers each. Tap to build it and watch (it takes a moment).</small></span><span class="mw"><time>${ago(x.t)} ago</time></span></button>`;
     if (x.lab) return `<button class="mrowc good lab${nw ? " unread" : ""}" data-act="labBattle"><span class="mi">📽</span><span class="mt"><b>Simulator test · 10 vs 10 commanders · 20,658,867 units</b><small>The stress-test battle. Tap to rebuild it on this device and watch the full replay (a few seconds to load).</small></span><span class="mw">${tag}<time>${when}</time></span></button><button class="btn ${S.labSaved ? "amber" : "ghost"} sm labsv" data-act="labSave">${S.labSaved ? "★ Saved" : "☆ Save to favourites"}</button>`;
     if (x.dm) { const c = x.dm, lm = c.m[c.m.length - 1]; return `<button class="mrowc dm${nw ? " unread" : ""}" data-act="dmOpen" data-u="${esc(c.with)}"><span class="mi av">${avCanvas(c.with)}</span><span class="mt"><b>${esc(nameOf(c.with))}${x.un ? ` <i class="cbadge">${x.un}</i>` : ""}</b><small>${lm.u === G.me ? "You: " : ""}${esc(lm.x.slice(0, 70))}</small></span><span class="mw"><time>${when}</time></span></button>`; }
     const l = x.log; return `<div class="mrowc alert ${l.kind === "win" ? "good" : l.kind === "loss" ? "bad" : l.kind === "warn" ? "warn" : ""}${nw ? " unread" : ""}"><span class="mi">${l.kind === "warn" || l.kind === "loss" ? MI.alert : MI.mail}</span><span class="mt"><b>${esc(l.msg)}</b></span><span class="mw">${tag}<time>${when}</time></span></div>`; };
@@ -12162,7 +12179,7 @@ const SHIP_PATH = [["fighter", 5, "Light Fighters are the backbone of every earl
   ["bastion", 2, "Battlecruisers hunt fleets. They're best against Battleships, Cruisers and Heavy Fighters, so they punish any line of capital ships."],
   ["destroyer", 1, "Destroyers are escort killers, best against Battlecruisers and Laser Turrets. Bring one when the enemy fields Battlecruisers."],
   ["bomber", 1, "Bombers crack defenses: best against turrets. Send them at fortified worlds once Plasma Technology is ready."],
-  ["dreadnought", 1, "The Reaper is a flagship that hunts capital ships: best against Battleships, Bombers and Destroyers. The top of the fleet path."]];
+  ["dreadnought", 1, "The Reaper is the king of the fleet, a towering flagship that hunts capital ships: best against Battleships, Bombers and Destroyers. The top of the fleet path."]];
 const TUT_BASICS = 12; // the Academy runs alone through its basics (first buildings, research, fighters, the first Hive win), then the Advisor hops
 const RCAT_OF = k => (RCAT.find(([, ks]) => ks.includes(k)) || ["Basic"])[0];
 function reqStep(req, depth) { // the first requirement on the road to req that can be worked on right now
@@ -12378,7 +12395,7 @@ function playBattle(r) {
   battleCtl(); startAnim();
 }
 /* v76: any replay can be saved to Mail › Saved from the replay toolbar. The 10 vs 10 is rebuilt on demand, so it is saved as a flag, not a copy */
-const bSaved = r => r && (r.id === LAB_ID ? !!S.labSaved : repSaved(r.id));
+const bSaved = r => r && (r.id === LAB_ID ? !!S.labSaved : r.id === DUEL_ID ? S.duelSaved !== 0 : repSaved(r.id));
 /* v78 free camera: drag to pan, pinch or wheel to zoom (1x to 3.5x), double-tap for the tactical overview */
 const camFree = b => { if (b.vw && b.vw.mode !== "free") { b.vw.mode = "free"; b.vw.ts = b.vw.s; b.vw.tx = b.vw.x; b.vw.ty = b.vw.y; battleCtl(); } };
 function bindBattleCam(cv) {
@@ -12689,9 +12706,11 @@ function drawBattle(t) {
       const wk = q.k === "lord" ? "drone" : "fighter", acc = b.acc[q.side], col = SIDE_COL[q.side], n = busy && tot[i] > 0 ? tot[i] : b.n[i];
       /* v210: slower, flown sorties instead of a spinning orbit. Fighters roll out of the hangar, accelerate onto a strafing run past
          the target, bank round and make a second pass back toward the carrier, then glide home. Pairs fly lead and wingman. */
-      const nD = lo ? 2 : busy ? 2 : clamp(2 + Math.floor(Math.log2(n)) & ~1, 2, q.k === "supercarrier" ? 8 : 6), P = q.k === "supercarrier" ? 13000 : 11000;
-      const C = scr[i], hx = C.x + g.face * g.L * .08, hy = C.y + g.L * .06, E = j >= 0 ? scr[j] : null, Ld = Math.max(9 * d, g.L * .24);
-      const R0 = Math.max(g.L * .55, W * .045), ex = E ? E.x : C.x + g.face * W * .2, ey = E ? E.y : C.y - g.L * .5, sg = ex >= hx ? 1 : -1, A = Math.max(R0 * 1.5, W * .08);
+      const sup = q.k === "supercarrier", nD = lo ? 2 : busy ? (sup ? 6 : 2) : sup ? clamp(8 + Math.floor(Math.log2(n)) & ~1, 8, 14) : clamp(2 + Math.floor(Math.log2(n)) & ~1, 2, 6), P = sup ? 13000 : 11000; // v212: the Citadel Supercarrier launches a full air wing
+      const C = scr[i], hx = C.x + g.face * g.L * .08, hy = C.y + g.L * .06, E = j >= 0 ? scr[j] : null, Ld = Math.max(sup ? 13 * d : 9 * d, g.L * (sup ? .17 : .24));
+      if (sup && !lo) { const pu = .55 + .45 * Math.sin(b.wclk / 260), hr = g.L * .16 * pu; ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .85; // the open hangar bay, pulsing as each flight launches
+        ctx.drawImage(glowSprite(col.gk || (col.gk = `rgba(${col.glow},1)`)), hx - hr, hy - hr * .5, hr * 2, hr); ctx.globalAlpha = .5; ctx.drawImage(glowSprite("#ffffff"), hx - hr * .4, hy - hr * .2, hr * .8, hr * .4); ctx.restore(); }
+      const R0 = Math.max(g.L * (sup ? .4 : .55), W * (sup ? .06 : .045)), ex = E ? E.x : C.x + g.face * W * .2, ey = E ? E.y : C.y - g.L * .5, sg = ex >= hx ? 1 : -1, A = Math.max(R0 * 1.5, W * .08);
       const bez = (s, a, b2, c, e) => { const r = 1 - s; return r * r * r * a + 3 * r * r * s * b2 + 3 * r * s * s * c + s * s * s * e; };
       const at = (u, k) => { // where fighter k is at phase u of its sortie
         const jy = ((k >> 1) % 3 - 1) * R0 * .18, y1 = ey - R0 * .32 + jy, y2 = ey + R0 * .3 + jy, xs = ex - sg * A, xf = ex + sg * A;
@@ -14435,7 +14454,8 @@ const ACT = {
     const cv = $("#galaxy"); if (!cv) return; camTo(0, 0, fitZ(cv.width, cv.height)); },
   report: d => { S.unread = 0; dirty(); openSheet({ type: "report", id: d.id }); },
   replay: d => { const r = findRep(d.id); closeSheet(); if (r) playBattle(r); },
-  bsave: () => { const b = battle; if (!b) return; if (b.r.id === LAB_ID) { S.labSaved = S.labSaved ? 0 : 1; dirty(); toast(S.labSaved ? "10 vs 10 saved. Find it under Mail › Saved." : "10 vs 10 removed from Saved.", S.labSaved ? "win" : ""); } else ACT.repSave({ id: b.r.id }); battleCtl(); },
+  bsave: () => { const b = battle; if (!b) return; if (b.r.id === DUEL_ID) { S.duelSaved = S.duelSaved === 0 ? 1 : 0; dirty(); toast(S.duelSaved ? "Duel kept in Mail › Saved." : "Duel removed from Saved. Tap ☆ again during this replay to keep it.", S.duelSaved ? "win" : ""); battleCtl(); return; } if (b.r.id === LAB_ID) { S.labSaved = S.labSaved ? 0 : 1; dirty(); toast(S.labSaved ? "10 vs 10 saved. Find it under Mail › Saved." : "10 vs 10 removed from Saved.", S.labSaved ? "win" : ""); } else ACT.repSave({ id: b.r.id }); battleCtl(); },
+  duelBattle: () => { if (!duelOwner()) return; toast("Building the 1 vs 1 duel…"); setTimeout(() => { try { playBattle(duelBattle()); } catch (e) { toast("Couldn't build the duel on this device.", "warn"); } }, 60); },
   labSave: () => { S.labSaved = S.labSaved ? 0 : 1; dirty(); toast(S.labSaved ? "10 vs 10 saved. Find it under Mail › Saved." : "10 vs 10 removed from Saved.", S.labSaved ? "win" : ""); render(true); },
   repSave: d => { const r = findRep(d.id); if (!r) return; S.savedReps = S.savedReps || []; const i = S.savedReps.findIndex(x => x.id === d.id);
     if (i >= 0) { S.savedReps.splice(i, 1); toast("Report removed from Saved."); } else { if (S.savedReps.length >= 30) return toast("You can keep 30 saved reports. Remove one first.", "warn"); S.savedReps.unshift(r); toast("Report saved. Find it under Mail › Saved.", "win"); }
