@@ -2083,6 +2083,17 @@ function makeHome(uid, existing) {
 /* ---------- 100 bot commanders: deterministic, so every client sees the same bots without a server ---------- */
 const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted from hour 0 at this moment
 const BOT_HOSTILE = false; // the bots are pact allies of every commander: they never raid, and they answer strike requests
+/* v217: only your 100 nearest bot commanders keep the pact. They are fixed the first time your homeworld exists (measured then,
+   so a pact never flips as the orbits turn) and saved with your game. Every other bot is hostile: it raids your colonies, shows
+   red on the map and its worlds can be attacked. The bots also keep warring with each other. Each player has their own 100. */
+const FRIEND_BOTS = 100;
+function friendBotSet() { if (!S) return null; const want = Math.min(FRIEND_BOTS, BOTS.length);
+  if (!(S.friendBots && S.friendBots.length === want && S.friendBots.every(id => BOT_BY[id]))) { const h = homePlanet(); if (!h) return null; const T = now(), hq = pos(h, T);
+    S.friendBots = BOTS.map(b => { const q = pos(botHome(b), T); return [b.id, Math.hypot(q.x - hq.x, q.y - hq.y)]; }).sort((a, b) => a[1] - b[1]).slice(0, want).map(x => x[0]); G.fbSet = null; try { dirty(); } catch (e) {} }
+  if (!G.fbSet || G.fbSrc !== S.friendBots) { G.fbSet = new Set(S.friendBots); G.fbSrc = S.friendBots; } return G.fbSet; }
+const botFriend = uid => { if (BOT_HOSTILE) return false; const s = friendBotSet(); return !s || s.has(uid); };
+const hostileBots = () => BOTS.filter(b => !botFriend(b.id));
+const friendBots = () => BOTS.filter(b => botFriend(b.id));
 const BOT_RINGS = [43, 67, 95, 125, 156].map(r => r * SC); // centres of layers 5, 4, 3, 2, 1
 const BOT_NAMES = (() => {
   const first = ["Marauder Kro Dessik", "Captain Jorr Velaskan", "Commander Rhyss Talgar", "Baroness Quell Arunda", "General Ossik Thrane", "Admiral Tyrene Vasq", "Inquisitor Malec Sorn", "Warlord Dax Morrovan", "Lord Kaelus Drane", "Overlord Venn Sabrask"];
@@ -2136,9 +2147,9 @@ const BOT_REARM = 3 * 3600e3;
 const botStrike = (b, lvl) => { const n = botGarrison(b, Math.max(1, lvl)); for (const k in n) n[k] = Math.max(1, Math.round(n[k] * .6)); return n; };
 const maxReq = () => 2 + ((S && S.r.command) || 0);
 function allyStacks(ids, lvl) { const out = []; for (const id of ids || []) { const b = BOT_BY[id]; if (b) out.push(...stacksOf(botStrike(b, lvl), botTech(b), b.id)); } return out; }
-function nearAllies(target) { const T = now(), q = pos(target, T); return BOTS.map(b => { const h = pos(botHome(b), T); return [b, Math.hypot(h.x - q.x, h.y - q.y)]; }).sort((a, b) => a[1] - b[1]).slice(0, 6).map(x => x[0]); }
+function nearAllies(target) { const T = now(), q = pos(target, T); return friendBots().map(b => { const h = pos(botHome(b), T); return [b, Math.hypot(h.x - q.x, h.y - q.y)]; }).sort((a, b) => a[1] - b[1]).slice(0, 6).map(x => x[0]); }
 function callAllies(f) {
-  const T = now(), ids = (sheet && sheet.bots || []).filter(id => BOT_BY[id] && !(((S.botReq || {})[id] || 0) > T)).slice(0, maxReq()); if (!ids.length) return;
+  const T = now(), ids = (sheet && sheet.bots || []).filter(id => BOT_BY[id] && botFriend(id) && !(((S.botReq || {})[id] || 0) > T)).slice(0, maxReq()); if (!ids.length) return;
   f.allies = ids; S.botReq = S.botReq || {}; for (const id of ids) S.botReq[id] = T + BOT_REARM;
   toast(`${ids.map(id => BOT_BY[id].name).join(", ")} accepted your strike request. Their ships arrive with yours.`, "win");
 }
@@ -3191,7 +3202,7 @@ function events() {
   if (S.raid) ev.push({ at: S.raid.at, run: raidHits });
   if (G.ready) {
     const cols = myPlanets().filter(p => p.kind !== "home");
-    if (!BOT_HOSTILE) { S.botRaid = null; S.nextBotRaid = null; }
+    if (!hostileBots().length) { S.botRaid = null; S.nextBotRaid = null; }
     else if (!S.botRaid && !S.nextBotRaid && cols.length) S.nextBotRaid = S.t + botRaidGap();
     if (S.nextBotRaid) ev.push({ at: S.nextBotRaid, run: () => botRaidLaunch(S.nextBotRaid) });
     if (S.botRaid) ev.push({ at: S.botRaid.arrive, run: botRaidHits });
@@ -3370,7 +3381,7 @@ function defenseItem(rep, p, captured) {
    takes the field (and part of what the loser had gathered), the loser flies home. Bots work the fields too, in 4-hour shifts. */
 const OCC_SLOT = 4 * 3600e3;
 // the bot pact covers planets, not fields: bot crews can be fought for a field like anyone else; alliance members never fight each other
-const fieldName = uid => isBot(uid) ? BOT_BY[uid].name + " (bot)" : nameOf(uid);
+const fieldName = uid => isBot(uid) ? BOT_BY[uid].name + (botFriend(uid) ? " (ally bot)" : " (hostile bot)") : nameOf(uid);
 const fieldAlly = uid => !!uid && !isBot(uid) && isAlly(uid);
 function botOcc(n, T) {
   const slot = Math.floor(T / OCC_SLOT), h = hash("occ" + n.id + ":" + slot);
@@ -3487,14 +3498,14 @@ function raidHits() {
   addReport(rep); if (hp) { mapClash(hp, rep); addBurn({ pid: hp.id, at, n: null, win: res.winner === "a", hive: 1, debris: 1 }); battleDebris(hp, rep); }
   S.nextRaid = at + HIVE_RAID_MS; // v65: the Hive raids your homeworld every 8 hours
 }
-/* bots are hostile to every commander: they strike colonies (never homeworlds), more often as they grow; radar sees them coming */
+/* v217: hostile bots (all but your 100 nearest) strike colonies (never homeworlds), more often as they grow; radar sees them coming */
 const botRaidGap = () => Math.max(2, (6 + Math.random() * 4) / (1 + botDays() * .05)) * 3600e3;
 function botRaidLaunch(at) {
   S.nextBotRaid = null;
   const cols = myPlanets().filter(p => p.kind !== "home" && !(p.shieldUntil > at));
   if (!cols.length) { S.nextBotRaid = at + 6 * 3600e3; return; }
   // raiders come from the bots of the colony's own layer (the Core is raided by the Inner Belt bots)
-  const p = cols[(Math.random() * cols.length) | 0], ln = Math.min(5, layerOf(p.r).n), pool = BOTS.filter(x => layerOf(x.rad).n === ln), b = pool[(Math.random() * pool.length) | 0] || BOTS[0];
+  const p = cols[(Math.random() * cols.length) | 0], ln = Math.min(5, layerOf(p.r).n), hb = hostileBots(), pool = hb.filter(x => layerOf(x.rad).n === ln), b = pool[(Math.random() * pool.length) | 0] || hb[(Math.random() * hb.length) | 0]; if (!b) { S.nextBotRaid = at + 6 * 3600e3; return; }
   const n = botGarrison(b, p.lvl); for (const k in n) n[k] = Math.max(1, Math.round(n[k] * .7));
   const bh = botHome(b), hq = pos(bh, at), tt = travelMs(bh, p, n, { drive: 2, impulse: 2, hyper: 1 }, 100);
   S.botRaid = { id: "br" + (S.seq++), bot: b.id, pid: p.id, out: at, arrive: at + Math.max(5 * 60000, tt), ox: hq.x, oy: hq.y, n };
@@ -3635,7 +3646,7 @@ function applyAssault(f, r) {
 /* ---------- alliances ---------- */
 const ALLY_MAX = 50, ALLY_COST = { m: 100000, c: 50000, g: 25000 }, ALLY_LVL = 3; // founding needs commander Lv.3 and these resources
 G.alliances = {};
-const isAlly = uid => !!(uid && uid !== G.me && ((!BOT_HOSTILE && isBot(uid)) || (S && S.ally && (G.players[uid] || {}).ally === S.ally)));
+const isAlly = uid => !!(uid && uid !== G.me && ((isBot(uid) && botFriend(uid)) || (S && S.ally && (G.players[uid] || {}).ally === S.ally)));
 function myAlly() { if (S && S.soloAlly && G.mode !== "online" && S.ally === S.soloAlly.id && !G.alliances[S.ally]) G.alliances[S.ally] = cleanAlly(S.ally, S.soloAlly); const a = S && S.ally ? G.alliances[S.ally] : null; return a && a.members[G.me] ? a : null; }
 const allyTag = aid => { const a = G.alliances[aid]; return a ? `[${a.tag}] ${a.name}` : "a former alliance"; };
 function cleanAlly(id, d) {
@@ -4583,9 +4594,9 @@ async function refreshNames() {
     for (const id of ids) { const n = (G.players[id] && G.players[id].nm) || (ps[id] && ps[id].name) || ""; /* v191: a chosen commander name wins over the account name */ if (G.names[id] !== n) { G.names[id] = n; ch = true; } }
     if (ch) softRender(); } catch (e) {} finally { namesBusy = false; }
 }
-const nameOf = uid => !uid ? "Hive" : uid === G.me ? "You" : isBot(uid) ? BOT_BY[uid].name + (BOT_HOSTILE ? " (bot)" : " (ally)") : (G.names[uid] || "Unnamed commander");
+const nameOf = uid => !uid ? "Hive" : uid === G.me ? "You" : isBot(uid) ? BOT_BY[uid].name + (botFriend(uid) ? " (ally)" : " (hostile)") : (G.names[uid] || "Unnamed commander");
 /* other commanders get any hue except the cyan band reserved for you and the amber band used by the Hive */
-const colorOf = uid => { if (uid === G.me) return "#55d6e8"; if (isBot(uid)) return BOT_HOSTILE ? "#ff4d4d" : "#5fe0c0"; if (isAlly(uid)) return "#71df90"; let h = 50 + hash(uid || "") % 240; if (h >= 160) h += 60; return `hsl(${h % 360},85%,66%)`; };
+const colorOf = uid => { if (uid === G.me) return "#55d6e8"; if (isBot(uid)) return botFriend(uid) ? "#5fe0c0" : "#ff4d4d"; if (isAlly(uid)) return "#71df90"; let h = 50 + hash(uid || "") % 240; if (h >= 160) h += 60; return `hsl(${h % 360},85%,66%)`; };
 let softPending = false;
 function softRender() { if (softPending) return; softPending = true; requestAnimationFrame(() => { softPending = false; if (S) render(true); }); }
 
@@ -10509,10 +10520,10 @@ function nexusRules() {
 }
 /* the bot pact: every bot commander is allied with you */
 function pactCard() {
-  if (BOT_HOSTILE) return ""; const T = now(), ready = BOTS.filter(b => !(((S.botReq || {})[b.id] || 0) > T)).length;
-  const top = BOTS.slice().sort((a, b) => b.tier - a.tier || botScore(b) - botScore(a)).slice(0, 6);
-  return `<div class="mcard"><h3><span style="color:#5fe0c0">◆</span>Void Concord · bot pact</h3><p>All ${BOTS.length} bot commanders are your allies. They never raid you, their worlds show teal on the map, and you can call them into any strike from the attack screen.</p>
-    ${mrow("Allies ready for a strike", `${ready} / ${BOTS.length}`)}${mrow("Allies per strike", maxReq())}${mrow("Pact age", ftime(Math.max(0, T - BOT_EPOCH)))}
+  if (BOT_HOSTILE) return ""; const T = now(), FB = friendBots(), nH = BOTS.length - FB.length, ready = FB.filter(b => !(((S.botReq || {})[b.id] || 0) > T)).length;
+  const top = FB.slice().sort((a, b) => b.tier - a.tier || botScore(b) - botScore(a)).slice(0, 6);
+  return `<div class="mcard"><h3><span style="color:#5fe0c0">◆</span>Void Concord · bot pact</h3><p>Your ${FB.length} nearest bot commanders are your allies. They never raid you, their worlds show teal on the map, and you can call them into any strike from the attack screen.</p><p style="color:#ff8a7a">The other ${fmt(nH)} bots are hostile to everyone: they raid your colonies, their worlds show red on the map, and you can attack them.</p>
+    ${mrow("Allies ready for a strike", `${ready} / ${FB.length}`)}${mrow("Hostile bots", `<span style="color:#ff8a7a">${fmt(nH)}</span>`)}${mrow("Allies per strike", maxReq())}${mrow("Pact age", ftime(Math.max(0, T - BOT_EPOCH)))}
     <div class="board">${top.map((b, i) => `<span class="rk">${i + 1}</span><span class="nm"><i class="sw" style="background:#5fe0c0"></i>${esc(b.name)}</span><span class="v">str ${b.tier}</span><span class="v">${fmt(botScore(b))}</span>`).join("")}</div></div>`;
 }
 function allySection() {
@@ -10933,8 +10944,8 @@ setInterval(() => { try { if (S && S.ldb && G.mode !== "online" && G.ready && !G
 const ALLY_BOTS = 30;
 function allyBots() { if (BOT_HOSTILE || !S) return []; const h = homePlanet(); if (!h) return [];
   // v131: 30 bot allies (was 8); the ones you already had stay, the nearest others fill the rest
-  if (!S.allyBots || S.allyBots.length < Math.min(ALLY_BOTS, BOTS.length) || S.allyBots.some(id => !BOT_BY[id])) { const hq = pos(h, now()), keep = (S.allyBots || []).filter(id => BOT_BY[id]).slice(0, ALLY_BOTS);
-    S.allyBots = keep.concat(BOTS.filter(b => !keep.includes(b.id)).map(b => { const q = pos(botHome(b), now()); return [b.id, Math.hypot(q.x - hq.x, q.y - hq.y)]; }).sort((a, b) => a[1] - b[1]).slice(0, ALLY_BOTS - keep.length).map(x => x[0])); dirty(); }
+  if (!S.allyBots || S.allyBots.length < Math.min(ALLY_BOTS, friendBots().length) || S.allyBots.some(id => !BOT_BY[id] || !botFriend(id))) { const hq = pos(h, now()), keep = (S.allyBots || []).filter(id => BOT_BY[id] && botFriend(id)).slice(0, ALLY_BOTS);
+    S.allyBots = keep.concat(friendBots().filter(b => !keep.includes(b.id)).map(b => { const q = pos(botHome(b), now()); return [b.id, Math.hypot(q.x - hq.x, q.y - hq.y)]; }).sort((a, b) => a[1] - b[1]).slice(0, ALLY_BOTS - keep.length).map(x => x[0])); dirty(); }
   return S.allyBots.map(id => BOT_BY[id]).filter(Boolean); }
 function strikeAddBot(a, b) {
   if (!a || !b || (a.members || {})[b.id]) return false; if (memberCount(a) >= strikeMax(a)) return toast("All joint strike slots are taken.", "warn"), false;
