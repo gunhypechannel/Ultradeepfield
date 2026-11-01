@@ -2086,8 +2086,9 @@ const BOT_HOSTILE = false; // the bots are pact allies of every commander: they 
 /* v217: only your 100 nearest bot commanders keep the pact. They are fixed the first time your homeworld exists (measured then,
    so a pact never flips as the orbits turn) and saved with your game. Every other bot is hostile: it raids your colonies, shows
    red on the map and its worlds can be attacked. The bots also keep warring with each other. Each player has their own 100. */
-const FRIEND_BOTS = 100;
+const FRIEND_BOTS = 30; /* v218: the Void Concord pact is disbanded. Your only friendly bots are the 30 nearest, the bots in your alliance (allyBots), who join your joint strikes; all 970 others are hostile to everyone */
 function friendBotSet() { if (!S) return null; const want = Math.min(FRIEND_BOTS, BOTS.length);
+  if (!(S.friendBots && S.friendBots.length === want && S.friendBots.every(id => BOT_BY[id]))) { if (S.allyBots && S.allyBots.length === want && S.allyBots.every(id => BOT_BY[id])) { S.friendBots = S.allyBots.slice(); G.fbSet = null; try { dirty(); } catch (e) {} } }
   if (!(S.friendBots && S.friendBots.length === want && S.friendBots.every(id => BOT_BY[id]))) { const h = homePlanet(); if (!h) return null; const T = now(), hq = pos(h, T);
     S.friendBots = BOTS.map(b => { const q = pos(botHome(b), T); return [b.id, Math.hypot(q.x - hq.x, q.y - hq.y)]; }).sort((a, b) => a[1] - b[1]).slice(0, want).map(x => x[0]); G.fbSet = null; try { dirty(); } catch (e) {} }
   if (!G.fbSet || G.fbSrc !== S.friendBots) { G.fbSet = new Set(S.friendBots); G.fbSrc = S.friendBots; } return G.fbSet; }
@@ -10519,7 +10520,7 @@ function nexusRules() {
       <div class="prz"><b>Every fight</b><span>Event points for the weekly rankings, PvP points for damage dealt</span></div></div>`;
 }
 /* the bot pact: every bot commander is allied with you */
-function pactCard() {
+function pactCard() { return ""; /* v218: the Void Concord pact is disbanded */
   if (BOT_HOSTILE) return ""; const T = now(), FB = friendBots(), nH = BOTS.length - FB.length, ready = FB.filter(b => !(((S.botReq || {})[b.id] || 0) > T)).length;
   const top = FB.slice().sort((a, b) => b.tier - a.tier || botScore(b) - botScore(a)).slice(0, 6);
   return `<div class="mcard"><h3><span style="color:#5fe0c0">◆</span>Void Concord · bot pact</h3><p>Your ${FB.length} nearest bot commanders are your allies. They never raid you, their worlds show teal on the map, and you can call them into any strike from the attack screen.</p><p style="color:#ff8a7a">The other ${fmt(nH)} bots are hostile to everyone: they raid your colonies, their worlds show red on the map, and you can attack them.</p>
@@ -11300,7 +11301,7 @@ function shieldSection(p) {
   return `<h2 class="sec" id="shield">Planetary shield${inbound.length ? ` · <span style="color:var(--red)">${inbound.length} inbound</span>` : ""}</h2>${body}`;
 }
 /* ask nearby pact bots to join a strike */
-function strikeReqSection(target, lvl) {
+function strikeReqSection(target, lvl) { return ""; /* v218: no pact bots to call in; alliance bots join joint strikes instead */
   if (BOT_HOSTILE) return ""; const T = now(), sel = sheet.bots || (sheet.bots = []), list = nearAllies(target);
   return `<h2 class="sec">Allied strike request · ${sel.length}/${maxReq()}</h2><p class="note">Pact allies near the target can join your attack. Their ships arrive with yours and fight beside them; their losses are their own. Each ally rearms for 3 hours afterwards.</p>
     <div class="list">${list.map(b => { const until = (S.botReq || {})[b.id] || 0, busy = until > T, on = sel.includes(b.id), tot = sumN(botStrike(b, lvl));
@@ -11593,7 +11594,7 @@ function vCmd() {
     <button class="cmdbio" data-act="profile" data-u="${G.me}">${S.bio ? esc(S.bio) : '<span>Write a short bio on your player card ›</span>'}</button>
     <div class="cmdgrid">${btn("profile", CI.card, "Player card", ` data-u="${G.me}"`)}${btn("ranks", CI.rank, "Rankings")}${btn("friends", CI.friends, "Friends")}${btn("chat", CI.chat, "Chat")}${btn("skin", CI.world, "Homeworld")}${btn("faction", CI.fac, "Faction")}</div></section>`;
   return `<div class="cmd gstack">${profile}
-    ${acc("alliance", ic(MI.wings), "Alliance", myAlly() ? `<span class="pill ok">[${esc(myAlly().tag)}]</span>` : `<span class="pill ok">Bot pact</span>`, pactCard() + allySection())}
+    ${acc("alliance", ic(MI.wings), "Alliance", myAlly() ? `<span class="pill ok">[${esc(myAlly().tag)}]</span>` : `<span class="pill">None</span>`, pactCard() + allySection())}
     ${acc("elements", ic(MI.shield, "#e06bd8"), "Elements (Runes)", `${Object.values(S.runes || {}).reduce((a, b) => a + b, 0) ? `<span class="pill amb">${Object.values(S.runes || {}).reduce((a, b) => a + b, 0)} to socket</span>` : ""}`, mElem())}
     ${acc("vshop", ic(MI.tag, "#c9a6ff"), "Void Shop", `<span class="shard">◆ ${fmt(S.shards || 0)}</span>`, mShopVoid())}
     ${acc("depot", ic(MI.tag), "Supply Depot", "", mShop())}
@@ -13388,7 +13389,7 @@ function shRanks(st) {
     const open = st.pick === r.id && !r.me, fr = (S.friends || []).includes(r.id), bl = (S.blocked || []).includes(r.id);
     const acts = open ? `<div class="lbact"><button class="btn sm" data-act="profile" data-u="${r.id}">View profile card</button><button class="btn ghost sm" data-act="${fr ? "unfriend" : "befriend"}" data-u="${r.id}">${fr ? "Unfriend" : "Add friend"}</button><button class="btn ghost sm" data-act="dmOpen" data-u="${r.id}" ${r.bot || G.mode !== "online" ? "disabled" : ""}>Message</button><button class="btn ghost sm" data-act="${bl ? "unblock" : "block"}" data-u="${r.id}">${bl ? "Unblock" : "Block"}</button></div>` : "";
     return `<button class="lb${r.me ? " me" : ""}${open ? " open" : ""}" data-act="${r.me ? "profile" : "rankPick"}" data-u="${r.id}"><span class="lp">${medal}</span>${avCanvas(r.id, "avc lbav")}<span class="ln"><b>${esc(nm)}${r.bot ? ' <i class="botk">bot</i>' : ""}</b><small>${t === "pvp" ? tierBadge(r.val, PVP_T) : tierBadge(r.val)} ${r.p && r.p.planets ? `· ${r.p.planets} world${r.p.planets > 1 ? "s" : ""}` : ""}${r.p && r.p.ally && G.alliances[r.p.ally] ? ` · [${esc(G.alliances[r.p.ally].tag)}]${allyGlory(r.p.ally) ? " " + GLORY_IC[allyGlory(r.p.ally).bonus] : ""}` : ""}</small></span><span class="lv">${fmt(r.val)}</span></button>${acts}`; };
-  return `<div class="rkwrap"><div class="hd rkhd"><div><div class="chapter">Leaderboards</div><h2>Rankings</h2><p class="note">${t === "pvp" ? "PvP points come from damage dealt to other commanders' ships, plus a bonus for each win." : t === "alliances" ? "Alliances rank by the combined score of their members." : "Commanders rank by score. Bots from the Void Concord are listed too."}${G.mode !== "online" ? " Join the shared galaxy to compete with other players." : ""}</p></div>${inView ? "" : `<button class="x" data-act="close" aria-label="Close">✕</button>`}</div>
+  return `<div class="rkwrap"><div class="hd rkhd"><div><div class="chapter">Leaderboards</div><h2>Rankings</h2><p class="note">${t === "pvp" ? "PvP points come from damage dealt to other commanders' ships, plus a bonus for each win." : t === "alliances" ? "Alliances rank by the combined score of their members." : "Commanders rank by score. Bot commanders are listed too."}${G.mode !== "online" ? " Join the shared galaxy to compete with other players." : ""}</p></div>${inView ? "" : `<button class="x" data-act="close" aria-label="Close">✕</button>`}</div>
     ${tabs}${pod}${mine}<div class="lbs">${show.map(row).join("") || (top.length ? "" : '<p class="note">No one here yet.</p>')}</div></div>`;
 }
 /* ---------- player cards ---------- */
@@ -13534,7 +13535,7 @@ function avPhotoPick() {
   inp.click();
 }
 function shProfile() {
-  const uid = sheet.u || G.me, me = uid === G.me, bot = isBot(uid) && BOT_BY[uid], P = me ? myPub() : bot ? { score: botScore(bot), planets: botColonyIds(bot).length + 1, lvl: cmdLevel(botScore(bot)), fac: "terran", bio: `A commander of the Void Concord, strength tier ${bot.tier}.`, rec: { w: 0, l: 0, d: 0 }, last: now() } : G.players[uid];
+  const uid = sheet.u || G.me, me = uid === G.me, bot = isBot(uid) && BOT_BY[uid], P = me ? myPub() : bot ? { score: botScore(bot), planets: botColonyIds(bot).length + 1, lvl: cmdLevel(botScore(bot)), fac: "terran", bio: `${botFriend(uid) ? "A bot commander in your alliance" : "A hostile bot commander"}, strength tier ${bot.tier}.`, rec: { w: 0, l: 0, d: 0 }, last: now() } : G.players[uid];
   if (!P) return `<div class="hd"><div><h2>Unknown commander</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
   const nm = me ? G.myName || "You" : nameOf(uid), lvl = P.lvl || cmdLevel(P.score || 0), rec = P.rec || { w: 0, l: 0, d: 0 }, F = FACTIONS[P.fac] || FACTIONS.terran, friend = (S.friends || []).includes(uid), blocked = (S.blocked || []).includes(uid);
   const rk = boardRows("players").findIndex(r => r.id === uid) + 1, rp = boardRows("pvp").findIndex(r => r.id === uid) + 1, tot = rec.w + rec.l + rec.d;
