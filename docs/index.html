@@ -249,6 +249,25 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 .alcrest .alemb{width:100%;height:100%}.alcrest span{position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);padding:1px 7px;border-radius:7px;background:#0b141b;border:1px solid rgba(255,199,106,.7);color:var(--amber);font-family:var(--f-display);font-size:10px;letter-spacing:.06em;white-space:nowrap}
 .alkick{font-family:var(--f-display);font-size:10px;letter-spacing:.16em;color:var(--cyan)}.alhero .cmdid > b em{font-style:normal;color:var(--amber)}
 .alhero{background:linear-gradient(160deg,rgba(255,199,106,.08),rgba(85,214,232,.06) 40%,rgba(255,255,255,.015) 70%),var(--panel,#121a22)}
+/* v216 Cube champion badges and banner */
+.glps{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 1px}
+.glp{display:inline-flex;align-items:center;gap:4px;font:700 10.5px/1.1 var(--f-display);letter-spacing:.04em;padding:3px 8px;border-radius:9px;border:1px solid;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.glp.big{font-size:12px;padding:4px 10px}
+.glp.g15{color:#ffd36b;border-color:rgba(255,211,107,.75);background:linear-gradient(180deg,rgba(255,211,107,.24),rgba(240,169,69,.08));box-shadow:0 0 10px rgba(255,211,107,.35)}
+.glp.g10{color:#e6eef3;border-color:rgba(207,216,223,.6);background:rgba(207,216,223,.1)}
+.glp.g5{color:#eaa874;border-color:rgba(208,138,85,.6);background:rgba(208,138,85,.1)}
+.glp.hold{color:#7dffb0;border-color:rgba(93,255,138,.6);background:rgba(93,255,138,.1);animation:pulse 1.6s ease-in-out infinite}
+.rkp .glp{margin:2px auto 0;font-size:9.5px;padding:2px 6px;white-space:normal;text-align:center;justify-content:center;line-height:1.15}
+.glban{display:flex;gap:12px;align-items:center;margin:10px 0 4px;padding:10px 12px;border-radius:12px;border:1px solid}
+.glban>i{font-style:normal;font-size:32px;line-height:1;filter:drop-shadow(0 0 8px rgba(255,211,107,.55))}
+.glban>div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.glban small{font:600 9.5px var(--f-display);letter-spacing:.14em;opacity:.85}
+.glban b{font:800 18px/1.15 var(--f-display);letter-spacing:.03em}
+.glban span{font-size:12px;color:#cfe3ec}
+.glban.g15{color:#ffd36b;border-color:rgba(255,211,107,.65);background:linear-gradient(100deg,rgba(255,211,107,.22),rgba(240,169,69,.05) 60%,transparent);box-shadow:inset 0 0 22px rgba(255,211,107,.12),0 0 16px rgba(255,211,107,.2)}
+.glban.g10{color:#e6eef3;border-color:rgba(207,216,223,.5);background:linear-gradient(100deg,rgba(207,216,223,.14),transparent)}
+.glban.g5{color:#eaa874;border-color:rgba(208,138,85,.55);background:linear-gradient(100deg,rgba(208,138,85,.16),transparent)}
+@media (prefers-reduced-motion:reduce){.glp.hold{animation:none}}
 .allyv .mcard{border-radius:16px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(85,214,232,.05),rgba(255,255,255,.01) 40%),var(--panel,#121a22);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 .allyv .mcard > h3{font-family:var(--f-display);font-size:15px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#e8f6fb;padding-bottom:8px;border-bottom:1px solid rgba(85,214,232,.18)}
 .allyv .mcard .mrow{padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.025)}.allyv .mailhd h2{font-family:var(--f-display);letter-spacing:.03em}
@@ -4037,6 +4056,17 @@ function nexusDefense(cur) {
   return { stacks: st, n, alien: false };
 }
 const gloryBonus = () => { const g = G.glory, a = S && S.ally; if (!g || !a) return 0; const r = g.ranks.find(x => x.aid === a); return r ? r.bonus / 100 : 0; };
+/* v216 Cube champions: an alliance's title from the last Battle for the Cube (it lasts until the next battle is closed out) shows
+   everywhere the alliance does: its own page, the alliance list and sheet, Rankings and each member's profile card. During a live
+   battle the alliance holding the Cube also gets a pulsing "Holding the Cube" badge. */
+const GLORY_IC = { 15: "👑", 10: "🥈", 5: "🥉" }, GLORY_PL = { 15: "CHAMPIONS", 10: "2ND PLACE", 5: "3RD PLACE" };
+const allyGlory = aid => { const g = G.glory; return aid && g && g.ranks ? g.ranks.find(r => r.aid === aid) || null : null; };
+const allyHolds = aid => { if (!aid) return false; try { const T = now(); return evActive(T) && nexusNow(T).holder === aid; } catch (e) { return false; } };
+const gloryPill = (aid, big) => { const r = allyGlory(aid), h = allyHolds(aid), z = big ? " big" : "";
+  return (r ? `<span class="glp g${r.bonus}${z}">${GLORY_IC[r.bonus]} ${esc(GLORY_T[r.bonus])}</span>` : "") + (h ? `<span class="glp hold${z}">■ Holding the Cube</span>` : ""); };
+const gloryPills = aid => { const s = gloryPill(aid); return s ? `<span class="glps">${s}</span>` : ""; };
+const gloryBanner = aid => { const r = allyGlory(aid); if (!r) return "";
+  return `<div class="glban g${r.bonus}"><i aria-hidden="true">${GLORY_IC[r.bonus]}</i><div><small>BATTLE FOR THE CUBE · ${GLORY_PL[r.bonus]}</small><b>${esc(GLORY_T[r.bonus])}</b><span>${esc(GLORY_GIVES[r.bonus] || "")} · until the next battle ends</span></div></div>`; };
 async function resolveNexus(f) {
   G.resolving.add(f.id);
   const T0 = now(), back = msg => { f.phase = "back"; f.back = Math.max(T0, f.arrive) + (f.tt || 60000); note(msg, "warn"); };
@@ -10611,7 +10641,7 @@ function allyListView() {
   return `${allyHd("Alliance list", `${all.length} alliance${all.length === 1 ? "" : "s"} in the galaxy, ranked by the combined score of their members.`, true)}
     <div class="cin"><input id="allyq" class="minput" value="${esc(sub.allyQ || "")}" autocomplete="off" placeholder="Search by alliance name" aria-label="Alliance name"><button class="btn" data-act="allySearch">Search</button></div>
     <div class="alist">${show.map(r => { const a = G.alliances[r.id], n = a ? Object.keys(a.members).length : 0, cap = a ? allyCap(a) : ALLY_MAX, tag = a ? a.tag : "?", full = n >= cap, canJoin = a && !S.ally && !full && G.mode === "online";
-      return `<div class="alr${r.me ? " me" : ""}"><button class="alopen" data-act="allyOpen2" data-id="${r.id}" aria-label="Open ${esc(a ? a.name : r.name)}">${allyEmblem(tag, r.id)}<span class="aln"><b><em>[${esc(tag)}]</em> ${esc(a ? a.name : r.name)}</b><small>${a ? avCanvas(a.leader, "avc alav") : ""}${esc(a ? nameOf(a.leader) : "?")}</small></span>
+      return `<div class="alr${r.me ? " me" : ""}"><button class="alopen" data-act="allyOpen2" data-id="${r.id}" aria-label="Open ${esc(a ? a.name : r.name)}">${allyEmblem(tag, r.id)}<span class="aln"><b><em>[${esc(tag)}]</em> ${esc(a ? a.name : r.name)}</b>${gloryPills(r.id)}<small>${a ? avCanvas(a.leader, "avc alav") : ""}${esc(a ? nameOf(a.leader) : "?")}</small></span>
         <span class="alst"><span>${r.rank <= 3 ? ["🥇", "🥈", "🥉"][r.rank - 1] : "#" + r.rank} · ${fmt(r.val)}</span><span class="${full ? "full" : ""}">${NAVI.ally.replace("<svg", '<svg style="width:13px;height:13px"')} ${n}/${cap}</span></span></button>
         ${r.me ? '<span class="aljoin mine" aria-label="Your alliance">★</span>' : `<button class="aljoin" data-act="allyJoin" data-id="${r.id}" ${canJoin ? "" : "disabled"} aria-label="Join ${esc(a ? a.name : r.name)}">+</button>`}</div>`; }).join("") || `<p class="note" style="text-align:center;padding:18px 0">${q ? "No alliance matches that name." : "No alliances yet. Be the first to found one."}</p>`}</div>
     ${pages > 1 ? `<div class="segc alpg2"><button data-act="allyPg" data-v="${pg - 1}" ${pg <= 1 ? "disabled" : ""} aria-label="Previous page">‹ Prev</button><button class="on" disabled>Page ${pg} of ${pages}</button><button data-act="allyPg" data-v="${pg + 1}" ${pg >= pages ? "disabled" : ""} aria-label="Next page">Next ›</button></div>` : ""}
@@ -10640,8 +10670,8 @@ function allyCreateView() {
 /* one alliance, opened from the list: members (with avatars, like Rankings), score and Join */
 function shAlly() {
   const a = G.alliances[sheet.id]; if (!a) return ""; const mem = Object.keys(a.members).sort((x, y) => ((G.players[y] || {}).score || 0) - ((G.players[x] || {}).score || 0)), full = mem.length >= allyCap(a), row = boardRows("alliances").findIndex(r => r.id === a.id);
-  return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">Alliance · rank #${row + 1}</div><h2><span class="altag big">${esc(a.tag)}</span> ${esc(a.name)}</h2><p class="note">Led by ${esc(nameOf(a.leader))} · ${mem.length}/${allyCap(a)} members · Lv.${allyLevel(a)}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
-    ${S.ally === a.id ? '<p class="note">This is your alliance.</p>' : S.ally ? '<p class="note">Leave your current alliance before joining another.</p>' : `<button class="btn wide" data-act="allyJoin" data-id="${a.id}" ${full || G.mode !== "online" ? "disabled" : ""}>${full ? "Alliance full" : "Join this alliance"}</button>`}
+  return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">Alliance · rank #${row + 1}</div><h2><span class="altag big">${esc(a.tag)}</span> ${esc(a.name)}</h2>${gloryPills(a.id)}<p class="note">Led by ${esc(nameOf(a.leader))} · ${mem.length}/${allyCap(a)} members · Lv.${allyLevel(a)}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
+    ${gloryBanner(a.id)}${S.ally === a.id ? '<p class="note">This is your alliance.</p>' : S.ally ? '<p class="note">Leave your current alliance before joining another.</p>' : `<button class="btn wide" data-act="allyJoin" data-id="${a.id}" ${full || G.mode !== "online" ? "disabled" : ""}>${full ? "Alliance full" : "Join this alliance"}</button>`}
     <h2 class="sec">Members</h2><div class="lbs">${mem.map((u, i) => { const P = u === G.me ? myPub() : G.players[u] || {}; return `<button class="lb${u === G.me ? " me" : ""}" data-act="profile" data-u="${u}"><span class="lp">${i + 1}</span>${avCanvas(u, "avc lbav")}<span class="ln"><b>${esc(u === G.me ? (G.myName || "You") + " (you)" : nameOf(u))}${u === a.leader ? " ★" : ""}</b><small>${P.planets || 1} world${(P.planets || 1) > 1 ? "s" : ""} · Lv.${P.lvl || 1}</small></span><span class="lv">${fmt(P.score || 0)}</span></button>`; }).join("")}${S.ally === a.id ? allyBots().map((b, i) => `<button class="lb" data-act="profile" data-u="${b.id}"><span class="lp">${mem.length + i + 1}</span>${avCanvas(b.id, "avc lbav")}<span class="ln"><b>${esc(b.name)} <i class="bottag">BOT</i></b><small>Bot ally · strength ${b.tier}</small></span><span class="lv">${fmt(botScore(b))}</span></button>`).join("") : ""}</div>`;
 }
 /* v210 alliance banner, in the Commander card's style: big emblem, tag and name, level progress, six stat tiles and a grid of actions */
@@ -10652,8 +10682,8 @@ function allyHero(a, nStrikes) {
   const tile = (l, v) => `<div><small>${l}</small><b>${v}</b></div>`, btn = (act, icon, l, extra) => `<button class="cmdbt" data-act="${act}"${extra || ""}>${icon}<span>${l}</span></button>`;
   return `<section class="cmdh alhero">
     <div class="cmdtop"><button class="alcrest" data-act="allyOpen2" data-id="${a.id}" aria-label="Open the member list">${allyEmblem(a.tag, a.id)}<span>LV ${L}</span></button>
-      <div class="cmdid"><small class="alkick">ALLIANCE</small><b><em>[${esc(a.tag)}]</em> ${esc(a.name)}</b><div class="cmdtags">${ri >= 0 ? `<span class="pill amb">${ri < 3 ? ["🥇", "🥈", "🥉"][ri] + " " : ""}Rank #${ri + 1}</span>` : ""}<span class="pill">Led by ${esc(a.leader === G.me ? "you" : nameOf(a.leader))}</span>${gb ? `<span class="pill ok">${esc(GLORY_T[gb])}</span>` : ""}</div></div></div>
-    <div class="cmdxp"><div class="xp"><i style="width:${pct}%"></i></div><div class="cmdxpl"><span>Alliance level ${L} / 10</span><span>${L >= 10 ? '<b style="color:var(--amber)">Max level</b>' : `fund <b>${Math.round(pct)}%</b> to Lv.${L + 1}`}</span></div></div>
+      <div class="cmdid"><small class="alkick">ALLIANCE</small><b><em>[${esc(a.tag)}]</em> ${esc(a.name)}</b><div class="cmdtags">${ri >= 0 ? `<span class="pill amb">${ri < 3 ? ["🥇", "🥈", "🥉"][ri] + " " : ""}Rank #${ri + 1}</span>` : ""}<span class="pill">Led by ${esc(a.leader === G.me ? "you" : nameOf(a.leader))}</span>${gloryPill(a.id)}</div></div></div>
+    ${gloryBanner(a.id)}<div class="cmdxp"><div class="xp"><i style="width:${pct}%"></i></div><div class="cmdxpl"><span>Alliance level ${L} / 10</span><span>${L >= 10 ? '<b style="color:var(--amber)">Max level</b>' : `fund <b>${Math.round(pct)}%</b> to Lv.${L + 1}`}</span></div></div>
     <div class="cmdst">${tile("Power", fmt(row.val || 0))}${tile("Members", `${mem}<em> / ${allyCap(a)}</em>`)}${tile("Bot allies", allyBots().length)}${tile("Joint strikes", nStrikes ? `<span style="color:var(--green)">${nStrikes} open</span>` : "None")}${tile("Strike capacity", fmt(rallyCap(S.r.command, empB("allyDepot"))))}${tile("Cube bonus", gb ? `<span style="color:var(--amber)">+${gb}%</span>` : "–")}</div>
     <div class="cmdgrid">${btn("allyOpen2", sv('<circle cx="9" cy="8" r="3.2"/><path d="M3 20c.7-3.6 3-5.4 6-5.4s5.3 1.8 6 5.4"/><path d="M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.6.7 2.6 2.4 3 5.2"/>'), "Members", ` data-id="${a.id}"`)}${btn("allyChat", sv('<path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/>'), "Alliance chat")}${btn("nexus", sv('<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>'), "The Cube")}${btn("allyView", sv('<path d="M4 6h16M4 12h16M4 18h10"/>'), "Alliance list", ' data-v="list"')}${btn("nav", MI.rank, "Rankings", ' data-v="rank"')}${a.leader === G.me ? btn("allyCrestOpen", sv('<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/>'), "Emblem") : btn("nav", sv('<circle cx="12" cy="12" r="8"/><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/>'), "Galaxy", ' data-v="galaxy"')}</div></section>`;
 }
@@ -12708,14 +12738,14 @@ function drawBattle(t) {
       const wk = q.k === "lord" ? "drone" : "fighter", acc = b.acc[q.side], col = SIDE_COL[q.side], n = busy && tot[i] > 0 ? tot[i] : b.n[i];
       /* v210: slower, flown sorties instead of a spinning orbit. Fighters roll out of the hangar, accelerate onto a strafing run past
          the target, bank round and make a second pass back toward the carrier, then glide home. Pairs fly lead and wingman. */
-      const sup = q.k === "supercarrier", nD = lo ? 2 : busy ? (sup ? 6 : 2) : sup ? clamp(8 + Math.floor(Math.log2(n)) & ~1, 8, 14) : clamp(2 + Math.floor(Math.log2(n)) & ~1, 2, 6), P = sup ? 13000 : 11000; // v212: the Citadel Supercarrier launches a full air wing
-      const C = scr[i], hx = C.x + g.face * g.L * .08, hy = C.y + g.L * .06, E = j >= 0 ? scr[j] : null, Ld = Math.max(sup ? 13 * d : 9 * d, g.L * (sup ? .17 : .24));
+      const sup = q.k === "supercarrier", nD = lo ? 2 : busy ? (sup ? 12 : 2) : sup ? clamp(16 + 2 * Math.floor(Math.log2(n)) & ~1, 16, 28) : clamp(2 + Math.floor(Math.log2(n)) & ~1, 2, 6), P = sup ? 13000 : 11000; // v212/v215: the Citadel Supercarrier launches a full air wing, twice as many smaller fighters (16-28)
+      const C = scr[i], hx = C.x + g.face * g.L * .08, hy = C.y + g.L * .06, E = j >= 0 ? scr[j] : null, Ld = Math.max(sup ? 8 * d : 9 * d, g.L * (sup ? .1 : .24));
       if (sup && !lo) { const pu = .55 + .45 * Math.sin(b.wclk / 260), hr = g.L * .16 * pu; ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .85; // the open hangar bay, pulsing as each flight launches
         ctx.drawImage(glowSprite(col.gk || (col.gk = `rgba(${col.glow},1)`)), hx - hr, hy - hr * .5, hr * 2, hr); ctx.globalAlpha = .5; ctx.drawImage(glowSprite("#ffffff"), hx - hr * .4, hy - hr * .2, hr * .8, hr * .4); ctx.restore(); }
       const R0 = Math.max(g.L * (sup ? .4 : .55), W * (sup ? .06 : .045)), ex = E ? E.x : C.x + g.face * W * .2, ey = E ? E.y : C.y - g.L * .5, sg = ex >= hx ? 1 : -1, A = Math.max(R0 * 1.5, W * .08);
       const bez = (s, a, b2, c, e) => { const r = 1 - s; return r * r * r * a + 3 * r * r * s * b2 + 3 * r * s * s * c + s * s * s * e; };
       const at = (u, k) => { // where fighter k is at phase u of its sortie
-        const jy = ((k >> 1) % 3 - 1) * R0 * .18, y1 = ey - R0 * .32 + jy, y2 = ey + R0 * .3 + jy, xs = ex - sg * A, xf = ex + sg * A;
+        const jy = (sup ? (k >> 1) % 5 - 2 : (k >> 1) % 3 - 1) * R0 * (sup ? .12 : .18), y1 = ey - R0 * .32 + jy, y2 = ey + R0 * .3 + jy, xs = ex - sg * A, xf = ex + sg * A;
         if (u < .2) { const s0 = u / .2, s = s0 * s0 * (1.6 - .6 * s0); // slow roll-out, then full throttle
           return [bez(s, hx, hx + g.face * Ld * 3, xs - sg * A * .7, xs), bez(s, hy, hy - g.L * .1, y1 + R0 * .2, y1)]; }
         if (u < .8) { const v = (u - .2) / .6;
@@ -13338,15 +13368,15 @@ function shRanks(st) {
   const pnm = r => t === "alliances" ? r.name : r.me ? (G.myName || "You") : r.bot ? (BOT_BY[r.id] || {}).name || "Bot" : nameOf(r.id);
   const top = rows.slice(0, 3), pod = top.length ? `<div class="rkpod">${[1, 0, 2].filter(i => top[i]).map(i => { const r = top[i], al = t === "alliances";
     return `<button class="rkp p${i + 1}${r.me ? " me" : ""}" data-act="${al ? "allyOpen2" : "profile"}" ${al ? `data-id="${r.id}"` : `data-u="${r.id}"`} aria-label="Rank ${i + 1}: ${esc(pnm(r))}"><div class="rkav">${i === 0 ? '<i class="rkcrown" aria-hidden="true">♛</i>' : ""}<span class="rkring">${al ? allyEmblem("", r.id) : avCanvas(r.id, "avc podav")}</span><em>${i + 1}</em></div>
-      <b>${esc(pnm(r))}${r.me ? " (you)" : ""}</b><small>${fmt(r.val)}${t === "pvp" ? " pts" : ""}</small><div class="rkstep"><span>${["1ST", "2ND", "3RD"][i]}</span></div></button>`; }).join("")}</div>` : "";
+      <b>${esc(pnm(r))}${r.me ? " (you)" : ""}</b>${al && allyGlory(r.id) ? `<span class="glp g${allyGlory(r.id).bonus}">${GLORY_IC[allyGlory(r.id).bonus]} ${esc(GLORY_T[allyGlory(r.id).bonus])}</span>` : ""}<small>${fmt(r.val)}${t === "pvp" ? " pts" : ""}</small><div class="rkstep"><span>${["1ST", "2ND", "3RD"][i]}</span></div></button>`; }).join("")}</div>` : "";
   const me = mi >= 0 ? rows[mi] : null, gap = me && mi > 0 ? rows[mi - 1].val - me.val : 0;
   const mine = me ? `<div class="rkme"><div><small>YOUR RANK</small><b>#${mi + 1}</b><em>of ${rows.length}</em></div><div><small>${t === "pvp" ? "PVP POINTS" : "SCORE"}</small><b>${fmt(me.val)}</b></div><div><small>${mi > 0 ? "TO NEXT RANK" : "STATUS"}</small><b>${mi > 0 ? "+" + fmt(Math.max(1, gap)) : '<span style="color:var(--amber)">Top of the board</span>'}</b></div></div>` : "";
   const row = (r, i) => { const pos = rows.indexOf(r) + 1, medal = pos <= 3 ? ["🥇", "🥈", "🥉"][pos - 1] : `#${pos}`;
-    if (t === "alliances") return `<div class="lb${r.me ? " me" : ""}"><span class="lp">${medal}</span><span class="ln"><b>${esc(r.name)}</b><small>${r.sub}</small></span><span class="lv">${fmt(r.val)}</span></div>`;
+    if (t === "alliances") return `<div class="lb${r.me ? " me" : ""}"><span class="lp">${medal}</span><span class="ln"><b>${esc(r.name)}</b>${gloryPills(r.id)}<small>${r.sub}</small></span><span class="lv">${fmt(r.val)}</span></div>`;
     const nm = r.me ? (G.myName || "You") + " (you)" : r.bot ? (BOT_BY[r.id] || {}).name || "Bot" : nameOf(r.id);
     const open = st.pick === r.id && !r.me, fr = (S.friends || []).includes(r.id), bl = (S.blocked || []).includes(r.id);
     const acts = open ? `<div class="lbact"><button class="btn sm" data-act="profile" data-u="${r.id}">View profile card</button><button class="btn ghost sm" data-act="${fr ? "unfriend" : "befriend"}" data-u="${r.id}">${fr ? "Unfriend" : "Add friend"}</button><button class="btn ghost sm" data-act="dmOpen" data-u="${r.id}" ${r.bot || G.mode !== "online" ? "disabled" : ""}>Message</button><button class="btn ghost sm" data-act="${bl ? "unblock" : "block"}" data-u="${r.id}">${bl ? "Unblock" : "Block"}</button></div>` : "";
-    return `<button class="lb${r.me ? " me" : ""}${open ? " open" : ""}" data-act="${r.me ? "profile" : "rankPick"}" data-u="${r.id}"><span class="lp">${medal}</span>${avCanvas(r.id, "avc lbav")}<span class="ln"><b>${esc(nm)}${r.bot ? ' <i class="botk">bot</i>' : ""}</b><small>${t === "pvp" ? tierBadge(r.val, PVP_T) : tierBadge(r.val)} ${r.p && r.p.planets ? `· ${r.p.planets} world${r.p.planets > 1 ? "s" : ""}` : ""}${r.p && r.p.ally && G.alliances[r.p.ally] ? ` · [${esc(G.alliances[r.p.ally].tag)}]` : ""}</small></span><span class="lv">${fmt(r.val)}</span></button>${acts}`; };
+    return `<button class="lb${r.me ? " me" : ""}${open ? " open" : ""}" data-act="${r.me ? "profile" : "rankPick"}" data-u="${r.id}"><span class="lp">${medal}</span>${avCanvas(r.id, "avc lbav")}<span class="ln"><b>${esc(nm)}${r.bot ? ' <i class="botk">bot</i>' : ""}</b><small>${t === "pvp" ? tierBadge(r.val, PVP_T) : tierBadge(r.val)} ${r.p && r.p.planets ? `· ${r.p.planets} world${r.p.planets > 1 ? "s" : ""}` : ""}${r.p && r.p.ally && G.alliances[r.p.ally] ? ` · [${esc(G.alliances[r.p.ally].tag)}]${allyGlory(r.p.ally) ? " " + GLORY_IC[allyGlory(r.p.ally).bonus] : ""}` : ""}</small></span><span class="lv">${fmt(r.val)}</span></button>${acts}`; };
   return `<div class="rkwrap"><div class="hd rkhd"><div><div class="chapter">Leaderboards</div><h2>Rankings</h2><p class="note">${t === "pvp" ? "PvP points come from damage dealt to other commanders' ships, plus a bonus for each win." : t === "alliances" ? "Alliances rank by the combined score of their members." : "Commanders rank by score. Bots from the Void Concord are listed too."}${G.mode !== "online" ? " Join the shared galaxy to compete with other players." : ""}</p></div>${inView ? "" : `<button class="x" data-act="close" aria-label="Close">✕</button>`}</div>
     ${tabs}${pod}${mine}<div class="lbs">${show.map(row).join("") || (top.length ? "" : '<p class="note">No one here yet.</p>')}</div></div>`;
 }
@@ -13503,7 +13533,7 @@ function shProfile() {
     ${me ? `<h2 class="sec">Commander name</h2><div class="cnrow"><input class="minput" id="cnin" maxlength="20" autocomplete="nickname" value="${esc(G.myName || "")}" placeholder="Your commander name"><button class="btn" data-act="nameSave">Save</button></div><p class="note">Every commander in the galaxy sees this name.</p>` : ""}
     ${me ? `<h2 class="sec">Bio</h2><textarea class="minput" id="bioin" maxlength="160" rows="5" placeholder="Write a short bio other commanders will see on your card">${esc(S.bio || "")}</textarea><button class="btn wide" data-act="bioSave">Save bio</button>` : `<h2 class="sec">Bio</h2><p class="bio">${P.bio ? esc(P.bio) : '<span class="note">No bio yet.</span>'}</p>`}
     <div class="pstats"><div><b>${fmt(rec.w)}</b><small>Wins</small></div><div><b>${fmt(rec.l)}</b><small>Losses</small></div><div><b>${fmt(rec.d)}</b><small>Draws</small></div><div><b>${tot ? Math.round(rec.w / tot * 100) : 0}%</b><small>Win rate</small></div></div>
-    <dl class="kv"><dt>Leaderboard</dt><dd>${rk ? "#" + rk : "–"} by score · ${rp ? "#" + rp : "–"} in PvP</dd><dt>Score</dt><dd>${fmt(P.score || 0)}</dd><dt>PvP points</dt><dd>${fmt(P.pvp || 0)}</dd><dt>Worlds</dt><dd>${P.planets || 1}</dd>${P.ally && G.alliances[P.ally] ? `<dt>Alliance</dt><dd>${esc(allyTag(P.ally))}</dd>` : ""}</dl>
+    <dl class="kv"><dt>Leaderboard</dt><dd>${rk ? "#" + rk : "–"} by score · ${rp ? "#" + rp : "–"} in PvP</dd><dt>Score</dt><dd>${fmt(P.score || 0)}</dd><dt>PvP points</dt><dd>${fmt(P.pvp || 0)}</dd><dt>Worlds</dt><dd>${P.planets || 1}</dd>${P.ally && G.alliances[P.ally] ? `<dt>Alliance</dt><dd>${esc(allyTag(P.ally))}${gloryPills(P.ally)}</dd>` : ""}</dl>
     ${me ? `<div class="row2"><button class="btn ghost wide" data-act="ranks">Leaderboards</button><button class="btn ghost wide" data-act="faction">Faction</button></div>` : `<div class="row2"><button class="btn wide" data-act="${friend ? "unfriend" : "befriend"}" data-u="${uid}">${friend ? "Remove friend" : "Add friend"}</button><button class="btn ghost wide" data-act="dmOpen" data-u="${uid}" ${G.mode === "online" && !bot ? "" : "disabled"}>Message</button></div>
       <button class="btn ghost wide sm" data-act="${blocked ? "unblock" : "block"}" data-u="${uid}">${blocked ? "Unblock" : "Block messages from this commander"}</button>`}`;
 }
