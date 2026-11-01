@@ -4100,9 +4100,40 @@ const SESS = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 function sessTakeover(why) { if (store.paused) return; store.paused = true; let el = document.getElementById("sessw"); if (el) return; el = document.createElement("div"); el.id = "sessw";
   el.innerHTML = `<div class="sessbox">${why === "shrink" ? `<b>Your saved empire is bigger</b><p>The empire on your account has much more progress than this copy, so the server refused to save over it. Reload to get your full empire back.</p>` : `<b>Playing on another device</b><p>Your empire was just saved from another phone, tablet or browser. This copy stopped saving so it can't overwrite that progress.</p>`}<button class="btn wide" id="sessgo">Continue here</button></div>`;
   document.body.appendChild(el); el.querySelector("#sessgo").onclick = () => location.reload(); }
+/* v207 seamless hand-off between devices: when your empire is saved from another phone, tablet or browser, this copy stops saving
+   and quietly loads that newer save in place (straight away if it is on screen, or the moment you come back to it) instead of
+   showing the "Playing on another device" wall and reloading the whole game. Fleets in flight, stationed guards, build and
+   research timers all come across, and anything that finished while you were away is caught up. */
+function followCloud(v) { if (!store.db || !store.uid) return; store.paused = true; store.follow = v || store.follow || null;
+  if (document.hidden) return; clearTimeout(store.followT); store.followT = setTimeout(() => adoptCloud(store.follow), 500); }
+async function adoptCloud(v) {
+  if (store.adopting || !store.db || !store.uid) return;
+  if (battle || (G.resolving && G.resolving.size)) { clearTimeout(store.followT); store.followT = setTimeout(() => adoptCloud(v), 1500); return; } // let a battle on screen finish first
+  store.adopting = true;
+  try {
+    const s = await store.db.doc(`data/users/${store.uid}/save`).get(); const c = s && s.exists ? s.data() : null; if (c) v = c; // always take the newest copy
+    if (!v || typeof v.json !== "string") { store.paused = false; return; }
+    if (v.sig && v.sig !== secSig(v.json)) { secLog("save", "the cloud save was edited outside the game.", "It was ignored.", 3); return sessTakeover(); }
+    if (v.sess === SESS || (+v.seq || 0) <= (store.seq || 0) && store.seq) { store.seq = Math.max(store.seq || 0, +v.seq || 0); store.paused = false; store.follow = null; return; }
+    const wasHidden = store.wasHidden, uid = S.uid, lp = S.lp; let st;
+    try { st = migrate(JSON.parse(v.json)); } catch (e) { return sessTakeover(); }
+    st.uid = uid; if (lp !== undefined) st.lp = lp; st.cloudAt = +v.savedAt || 0;
+    S = st; store.seq = +v.seq || 0; store.follow = null; store.dirty = false;
+    secBoot(); FOG = null; live = false; advance(now()); live = true; if (typeof menu === "object" && menu) menu.rest = null;
+    store.paused = false; try { rebuild(); } catch (e) {}
+    if (sheet) { try { renderSheet(); } catch (e) { try { closeSheet(); } catch (e2) {} } }
+    render(true); syncPlayer();
+    if (wasHidden || performance.now() - (store.syncToast || -1e9) > 60000) { store.syncToast = performance.now(); toast("Synced with your other device. Fleets, stations and timers are up to date.", "win"); }
+  } catch (e) { store.dirty = true; }
+  finally { store.adopting = false; store.wasHidden = false; }
+}
+/* save within about a second of anything you do (launching an attack, stationing ships, starting a build), instead of waiting for
+   the 6-second timer, so putting one phone down and picking up another never misses your last moves */
+function saveSoon() { clearTimeout(store.soonT); store.soonT = setTimeout(() => { if (store.dirty) flush(); }, 900); }
 async function flush() {
   syncPlayer();
-  if (!store.dirty || store.writing) return;
+  if (store.writing && store.dirty) { store.again = true; return; } /* v207: a save asked for mid-write runs right after it instead of being dropped */
+  if (!store.dirty || store.writing || store.adopting || store.checking) return;
   store.dirty = false; S.savedAt = now();
   const cloudOk = store.db && store.uid && store.ready; if (cloudOk) S.cloudAt = S.savedAt; // the cloud copy this device last wrote or read
   const json = JSON.stringify(S), sig = secSig(json);
@@ -4114,9 +4145,9 @@ async function flush() {
     catch (e) { let why = null; /* v205: a refused save: find out whether another device saved first or this copy would have wiped progress */
       if (e && e.code === "not_granted") try { const s4 = await store.db.doc(`data/users/${store.uid}/save`).get(), v = s4.exists ? s4.data() : null;
         if (v) { if (v.sess && v.sess !== SESS && (+v.seq || 0) >= (store.seq || 0)) why = "other"; else if (v.sess === SESS && (+v.seq || 0) !== (store.seq || 0)) { store.seq = +v.seq || 0; why = "retry"; } else if ((+v.lv || 0) >= 10 && empSize(S).lv * 2 < (+v.lv || 0)) why = "shrink"; else if ((+v.seq || 0) !== (store.seq || 0)) { store.seq = +v.seq || 0; why = "retry"; } } } catch (e2) {}
-      if (why === "other" || why === "shrink") sessTakeover(why); else if (why === "retry") store.dirty = true;
+      if (why === "other") followCloud(null); else if (why === "shrink") sessTakeover(why); else if (why === "retry") store.dirty = true;
       else if (e && (e.code === "invalid_argument" || e.code === "revoked" || e.code === "not_granted")) { store.db = null; store.mode = "device"; } else store.dirty = true; }
-    finally { store.writing = false; }
+    finally { store.writing = false; if (store.again) { store.again = false; setTimeout(flush, 250); } }
   }
 }
 /* v202 the server keeps a history of every empire, not just the latest save: one backup per hour for the last 24 hours and one per day
@@ -4215,6 +4246,17 @@ function loadLocal() {
 setInterval(flush, 6000);
 document.addEventListener("visibilitychange", () => { if (document.hidden) { dirty(); flush(); } });
 addEventListener("pagehide", () => { dirty(); flush(); });
+/* v207: back on this device (phone unlocked, app reopened, tab switched): ask the server first, and if the empire moved on elsewhere
+   load that save in place before this copy writes anything. The live link is often asleep after a phone has been in a pocket. */
+document.addEventListener("visibilitychange", async () => {
+  if (document.hidden) { store.wasHidden = true; return; }
+  if (!store.db || !store.uid || !store.ready || store.checking) return;
+  store.checking = true;
+  try { const s = await store.db.doc(`data/users/${store.uid}/save`).get(), v = s && s.exists ? s.data() : null;
+    if (v && v.sess && v.sess !== SESS && ((+v.seq || 0) > (store.seq || 0) || (+v.savedAt || 0) > (S.cloudAt || 0))) { store.checking = false; store.paused = true; await adoptCloud(v); }
+    else if (store.paused && store.follow !== undefined && !document.getElementById("sessw")) { store.checking = false; await adoptCloud(store.follow); } }
+  catch (e) {} finally { store.checking = false; store.wasHidden = false; }
+});
 
 /* ---------- v80 commander login (the Android app and solo play outside claude.ai) ----------
    Inside claude.ai you are signed in by your Claude account. Everywhere else the empire on the device is locked behind a commander
@@ -4314,8 +4356,8 @@ async function connectCloud() {
     store.ready = true;
     /* v204: if your empire is saved from another device while this one is open, this copy stops saving (two open copies used to save
        over each other every few seconds, so progress and alliances flipped back and forth) and asks you to continue here */
-    try { db.doc(`data/users/${uid}/save`).onSnapshot(s3 => { const v = s3 && s3.exists ? s3.data() : null; if (!v || !v.sess || v.sess === SESS || store.paused) return;
-      if ((+v.savedAt || 0) > (S.cloudAt || 0) || (+v.seq || 0) > (store.seq || 0)) sessTakeover(); }, () => {}); } catch (e) {}
+    try { db.doc(`data/users/${uid}/save`).onSnapshot(s3 => { const v = s3 && s3.exists ? s3.data() : null; if (!v || !v.sess || v.sess === SESS || store.adopting) return;
+      if ((+v.savedAt || 0) > (S.cloudAt || 0) || (+v.seq || 0) > (store.seq || 0)) followCloud(v); }, () => {}); } catch (e) {}
     if (G.askFac) G.askFac(); // v138: the cloud save is in (or there is none): now ask for a faction only if this empire never chose one
     store.mode = "cloud"; dirty();
     let gotP = false, gotPl = false;
@@ -13452,7 +13494,7 @@ function trayRender() {
 }
 
 /* ---------- actions ---------- */
-function act(fn) { advance(now()); fn(); progress(); dirty(); render(true); }
+function act(fn) { advance(now()); fn(); progress(); dirty(); render(true); saveSoon(); }
 /* v190: starting a build, upgrade, research or ship order from its card closes the card (no swiping it away), and the
    tutorial pointer moves to the next tap straight away */
 function doneCard() { if (sheet && (sheet.type === "bld" || sheet.type === "detail")) closeSheet(); guideNow(); }
@@ -14227,7 +14269,7 @@ document.addEventListener("click", e => {
   const run = () => f(el.dataset, el), a = el.dataset.act;
   if (el.classList.contains("toggle") && !reduced) { el.classList.toggle("on"); el.setAttribute("aria-pressed", el.classList.contains("on")); requestAnimationFrame(() => setTimeout(run, 140)); return; } // let the knob glide before the screen updates
   if (VT_ACTS.has(a) && document.startViewTransition && !reduced && !G.vt && !battle) { G.vt = 1; try { const tr = document.startViewTransition(run); tr.finished.finally(() => { G.vt = 0; }); } catch (err) { G.vt = 0; run(); } return; }
-  run();
+  run(); saveSoon(); // v207: whatever the tap changed reaches your account within about a second
 });
 document.addEventListener("input", e => {
   if (sheet && sheet.type === "detail" && (e.target.id === "dqr" || e.target.classList.contains("dqn"))) { sheet.qty = clamp(Math.floor(+e.target.value || 1), 1, 9999); const o = e.target.id === "dqr" ? $(".dqn") : $("#dqr"); if (o) o.value = sheet.qty; clearTimeout(ACT._dq); ACT._dq = setTimeout(() => renderSheet(), 180); return; }
