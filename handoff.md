@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-01 (America/Phoenix). Current game version: **v229** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v36**.
+Last updated: 2026-11-01 (America/Phoenix). Current game version: **v230** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v38**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -76,3 +76,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v228:** each ship class fires in its own colour from its card art (`SHOT_COL`, `shotCol`): bolts, muzzle flashes, rail salvos and lances. Aliens, monsters and defences keep the side colour.
 - **v229:** iPhone/iPad memory. `gpuNap()` shrinks the galaxy map and colony WebGL buffers (and their 2D overlays) to 1 px while a battle is open and restores them on close; iOS draws battles with 20+ squadrons at 1.5x; iOS keeps fewer cached ship pictures (40 battle, 32 other). Server: `can_read` now lets a player read back their own `feedback/` docs, so feedback and crash reports (which upsert) are no longer rejected for non-owners.
 - **v229 sign-in (udf-supabase.js, cache udf-v37):** asks the browser for persistent storage (`navigator.storage.persist()`), so the saved sign-in survives on iPhone/iPad Home Screen apps. On iOS the sign-in screen shows a tip: in Safari, "sign in from the Home Screen icon" (the icon and Safari keep separate sign-ins); in the icon, "you'll stay signed in on this iPad". Sessions never time out (auth.sessions not_after is null).
+- **v230:** full-screen galaxy map. `#app.gal` puts the dock and chat bar over the map (absolute, like the top HUD), so when the HUD fades after 15 s idle the whole screen is map, and touch fades them back in without the map resizing. `--dockH` and `--botH` (ResizeObserver) lift the bottom map controls (`.ov.bl`, `.tourcap`) above them.

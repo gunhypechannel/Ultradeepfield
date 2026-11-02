@@ -942,7 +942,14 @@ main.full{padding:0;overflow:hidden;gap:0}
 /* v93 cinematic view: the map's controls step aside, letterbox bars slide in, angle presets along the bottom */
 #app.cine #hud,#app.cine #tray,#app.cine #dock,#app.cine .ov,#app.cine .tourcap,#app.cine #fleethud{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .4s,visibility .4s}
 /* v109 idle map: after 15 s without input every HUD layer fades so the galaxy fills the screen; any touch, scroll or key brings it back */
-#hud,#tray,#dock,.ov,#fleethud,#cubepanel,#galaxyfx{transition:opacity .8s ease}#app.hudidle #hud,#app.hudidle #tray,#app.hudidle #dock,#app.hudidle .ov,#app.hudidle .tourcap,#app.hudidle #fleethud,#app.hudidle #cubepanel{opacity:0;pointer-events:none}#app.hudidle #galaxyfx{opacity:0;visibility:hidden;transition:opacity .8s ease,visibility 0s .8s}/* v150: once faded, the label layer is hidden too, so the browser stops painting it each frame */
+#hud,#tray,#dock,.ov,#fleethud,#cubepanel,#galaxyfx{transition:opacity .8s ease}#app.hudidle #hud,#app.hudidle #tray,#app.hudidle #dock,#app.hudidle .ov,#app.hudidle .tourcap,#app.hudidle #fleethud,#app.hudidle #cubepanel{opacity:0;pointer-events:none}#app.hudidle #galaxyfx{opacity:0;visibility:hidden;transition:opacity .8s ease,visibility 0s .8s}
+/* v230 full-screen map: on the galaxy the dock and chat bar float over the map (like the top HUD), so when they fade after 15 s idle the
+   whole screen is map, and they fade back over it on the next touch without the map resizing or jumping */
+#app.gal #dock,#app.gal #tray{position:absolute;left:0;right:0;z-index:15}
+#app.gal #dock{bottom:0}#app.gal #tray{bottom:var(--dockH,64px)}
+#app.gal .ov.bl{bottom:calc(var(--botH,110px) + 12px)}
+#app.gal .tourcap{bottom:calc(var(--botH,110px) + 150px)}
+#app.gal #dock,#app.gal #tray{transition:opacity .6s ease}/* v150: once faded, the label layer is hidden too, so the browser stops painting it each frame */
 #cinebar{position:fixed;inset:0;z-index:40;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between}
 #cinebar .cb-top,#cinebar .cb-bot{pointer-events:auto;background:#000;animation:cbIn .5s ease both}
 #cinebar .cb-top{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 12px;min-height:56px;box-shadow:0 8px 24px rgba(0,0,0,.6)}
@@ -2101,7 +2108,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 229;
+const GAME_V = 230;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9764,7 +9771,9 @@ function render(keepScroll) {
         if (G.slideDir && colHost && !reduced) { colHost.classList.remove("slin-r", "slin-l"); void colHost.offsetWidth; colHost.classList.add(G.slideDir > 0 ? "slin-r" : "slin-l"); } G.slideDir = 0; } thumbs(m); if (keepScroll) m.scrollTop = st; m.style.scrollBehavior = "";
       if (changedView && !reduced) { m.classList.remove("fade"); void m.offsetWidth; m.classList.add("fade"); } }
   }
-  render.last = view; $("#app").classList.toggle("imm", view === "base" || view === "galaxy"); hud(); dock(); trayRender(); tickUI(); startAnim();
+  render.last = view; $("#app").classList.toggle("imm", view === "base" || view === "galaxy"); $("#app").classList.toggle("gal", view === "galaxy"); /* v230: the map runs under the dock too */
+  if (!render.botRO && window.ResizeObserver && $("#dock") && $("#tray")) { const bo = () => { const a = $("#app"), dk = $("#dock").offsetHeight, tr = $("#tray").offsetHeight; a.style.setProperty("--dockH", dk + "px"); a.style.setProperty("--botH", (dk + tr) + "px"); };
+    render.botRO = new ResizeObserver(bo); render.botRO.observe($("#dock")); render.botRO.observe($("#tray")); bo(); } hud(); dock(); trayRender(); tickUI(); startAnim();
   const inSheet = ae && ae.tagName === "INPUT" && ae.type !== "range" && ae.closest && ae.closest(".sheet");
   if (sheet && !inSheet) renderSheet();
 }
