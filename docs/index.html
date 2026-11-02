@@ -2101,7 +2101,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 226;
+const GAME_V = 227;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -10498,7 +10498,7 @@ function foSumHTML(P) { const over = P.ships && P.load > P.cap, canFit = over &&
   return `<dl class="kv"><dt>Ships</dt><dd>${fmt(P.ships)}</dd><dt>Cargo</dt><dd style="color:${over ? "var(--red)" : "inherit"}">${fmt(P.load)} / ${fmt(P.cap)}</dd><dt>Flight</dt><dd>${P.tt ? ftime(P.tt) + (P.st.mode === "xfer" ? " each way" : "") : "–"}</dd><dt>Fuel</dt><dd>${fmt(P.fuel)} gas</dd></dl>
     ${P.msg && P.tp ? `<p class="note" style="color:var(--amber);margin:0">${esc(P.msg)}</p>` : ""}${canFit || over ? `<button class="btn ghost sm wide" data-act="foFit">${canFit ? "＋ Add cargo ships to fit" : "Trim the load to fit"}</button>` : ""}`; }
 /* v226 the Fleets tab keeps just three buttons; Deploy and Transport open their own panel for destination, ships and resources */
-function fleetQuick() { return `<div class="foquick"><button class="btn" data-act="foOpen" data-v="dep">🚀<span>Deploy</span></button><button class="btn" data-act="foOpen" data-v="xfer">⇄<span>Transport</span></button><button class="btn ghost" data-act="fDeploy" data-id="home">⚔<span>Attack</span></button></div>`; }
+function fleetQuick() { return `<div class="foquick"><button class="btn" data-act="foOpen" data-v="dep">🚀<span>Deploy</span></button><button class="btn" data-act="foOpen" data-v="xfer">⇄<span>Transport</span></button><button class="btn ghost" data-act="find" data-r="${["x", "q", "w", "y"].includes(G.find) ? G.find : "x"}">⚔<span>Attack</span></button></div>`; } /* v227: Attack opens the Finder (pirates, Cubes, monsters, pyramids), on the last kind you searched */
 function shFo() { const st = sub.fo || (sub.fo = { mode: "dep", ships: {}, res: {} }), x = st.mode === "xfer";
   return `<div class="hd"><div><div class="chapter">Fleet orders</div><h2>${x ? "⇄ Transport" : "🚀 Deploy"}</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${fleetOrders()}`; }
 const foRedraw = () => sheet && sheet.type === "fo" ? renderSheet() : render();
