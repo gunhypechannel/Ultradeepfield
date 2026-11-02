@@ -2137,7 +2137,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 243;
+const GAME_V = 244;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9686,8 +9686,8 @@ function colTap(el, e) {
   const r = el.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; let best = null, bd = 40;
   for (const h of C3.hits) { const d = Math.min(Math.hypot(h.x - x, h.y - y), Math.hypot(h.tx - x, h.ty - y)); if (d < bd) { bd = d; best = h; } }
   C3.sel = best ? best.k : null; selBar(); SFX.click();
-  // tapping the shipyard opens its build list; tapping the research center opens the research you can start
-  if (best && (best.k === "shipyard" || best.k === "lab")) { const bt = baseTarget(); if (bt.lv(best.k) > 0) { if (best.k === "shipyard") openSheet({ type: "yard", pid: bt.key === "home" ? null : bt.key }); else if (S.b.lab) openSheet({ type: "labs" }); } }
+  // v244 tapping a building opens its card (upgrade, cost, requirements); the shipyard and research center cards lead on to ships and research
+  if (best && B[best.k]) { const bt = baseTarget(); openSheet({ type: "detail", kind: "b", k: best.k, qty: 1, tab: 0, pid: bt.key === "home" ? null : bt.key }); }
 }
 function mountColony() {
   const slot = $("#colslot"); if (!slot && !(colHost && colHost.isConnected)) return; // after an in-place patch the base is already mounted
@@ -11395,7 +11395,7 @@ function renderSheet() {
   if (G.rangeHeld && sheet) { G.rangeLate = 1; return; }
   let w = $("#sheetwrap");
   let html = ({ planet: shPlanet, report: shReport, settings: shSettings, void: shVoid, assault: shAssault, targets: shTargets, node: shNode, bld: shBld, nexus: shNexus, skin: shSkin, find: shFind, pirate: shPirate, pyramid: shPyramid, fctl: shFctl, station: shStation, ally: shAlly, layers: shLayers, tile: shTile, graphics: shGfx, cuberes: shCubeRes, basedet: shBaseDet, planets: shPlanets, fo: shFo, allymem: shAllyMem, altools: () => { const a = myAlly(); return a ? `<div class="hd"><div><div class="chapter">[${esc(a.tag)}] ${esc(a.name)}</div><h2>${allyRank(a, G.me) === "lead" ? "Leader" : "Captain"} tools</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${allyTools(a) || '<p class="note">Only the leader and captains have these tools.</p>'}` : ""; },
-    yard: shYard, labs: shLabs, sound: shSound, shop: shShop, vip: shVip, spyrep: shSpyRep, events: shEvents, ach: shAch, avatars: shAvatars, detail: shDetail, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
+    yard: shYard, labs: shLabs, sound: shSound, shop: shShop, vip: shVip, spyrep: shSpyRep, events: shEvents, ach: shAch, avatars: shAvatars, detail: () => { const h = shDetail(), P = sheet.pid ? G.byId[sheet.pid] : null; return h && sheet.kind === "b" && P && sheet.k === "shipyard" && (P.b || {}).shipyard ? h + `<div class="dp"><button class="btn wide" data-act="yardOpen" data-id="${P.id}">Open shipyard</button></div>` : h; }, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
     mastery: () => `<div class="hd"><div><div class="chapter">Progression</div><h2>Path to Mastery</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${mMastery()}` })[sheet.type]();
   if (!html) { closeSheet(); return; }
   html += sheet.type === "faction" && !S.faction ? "" : backBar(); html = `<div class="grab" aria-hidden="true"></div>` + html;
@@ -14326,6 +14326,7 @@ const ACT = {
   allyOpenSet: d => { const a = myAlly(); if (!a || !allyCan(a, "open")) return; const v = d.v === "1" || d.v === 1; allyMutate(a.id, x => { x.open = v; }, v ? "Your alliance is open: anyone can join." : "Your alliance is private: it isn't taking new members."); },
   allyMem: d => openSheet({ type: "allymem", id: d.id, u: d.u }),
   allyToolsOpen: () => openSheet({ type: "altools" }),
+  yardOpen: d => openSheet({ type: "yard", pid: d.id || null }),
   allyBioSave: () => { const a = myAlly(), el = $("#albio"); if (!a || allyRank(a, G.me) !== "lead" || !el) return; const v = el.value.trim().slice(0, 300); el.blur(); allyMutate(a.id, x => { x.bio = v; }, "Alliance bio saved."); },
   allyTitleSet: () => { const a = sheet && G.alliances[sheet.id], u = sheet && sheet.u, el = $("#altitle"); if (!a || !u || !el || !(allyRank(a, G.me) === "lead" || allyCan(a, "rank", u))) return; const v = el.value.trim().slice(0, 24); el.blur();
     allyMutate(a.id, x => { x.titles = Object.assign({}, x.titles || {}); if (v) x.titles[u] = v; else delete x.titles[u]; }, v ? `${nameOf(u)} is now “${v}”.` : `${nameOf(u)}'s title was cleared.`); },

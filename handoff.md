@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-02 (America/Phoenix). Current game version: **v243** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v52**.
+Last updated: 2026-11-02 (America/Phoenix). Current game version: **v244** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v53**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -91,3 +91,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v241:** the station painting belongs to the Alliance Space Station card (`art/allyStation.webp`, an <img> in place of the 3D render); the Orbital Fortress card has its old art back.
 - **v242:** a "Leader tools" (or "Captain tools") button in the alliance banner opens the tools in their own sheet (`altools`). Wars stay alliance against alliance only.
 - **v243:** fleets circling the Cube (other than your own) and the demo armies no longer draw course lines or trails (`noLine`): in the 60 vs 60 test, 120 short dashed courses re-drawn every frame flickered white all round the Cube.
+- **v244:** tapping any building in your base opens its building card (level, next level, cost, requirements, Upgrade) instead of jumping to the ships or research screen; the Shipyard card's Production tab and the Research Center's Research tab lead on from there, and a colony Shipyard card has an Open shipyard button. (The first v244, an Upgrade panel on the planet card, was reverted.)
