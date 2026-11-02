@@ -247,10 +247,20 @@
     session = loadSdk().then(function () { return sb.auth.getSession(); }).then(function (r) {
       var s = r && r.data && r.data.session;
       if (s && RECOVERY) return signInScreen("newpw");
-      return s ? s.user : signInScreen("in");
+      if (s) return s.user;
+      /* v237: no usable sign-in: wipe whatever stale one is left on this device (no network), so an old token can't sign the next login out */
+      return Promise.resolve(sb.auth.signOut({ scope: "local" })).catch(function () {}).then(function () { return signInScreen("in"); });
     }).then(function (u) {
       me = u; startLive();
-      sb.auth.onAuthStateChange(function (ev, s) { if (s && s.user) me = s.user; if (ev === "SIGNED_OUT" && !signingOut) location.reload(); });
+      /* v237: a SIGNED_OUT we didn't ask for is usually a stale token racing the fresh login (another tab, or the old sign-in this
+         device kept). Put the last good session back before giving up; only a real sign-out sends you to the login screen. */
+      var good = null, mending = false; sb.auth.getSession().then(function (r) { if (r && r.data && r.data.session) good = r.data.session; }).catch(function () {});
+      sb.auth.onAuthStateChange(function (ev, s) { if (s && s.user) { me = s.user; good = s; }
+        if (ev !== "SIGNED_OUT" || signingOut || mending) return; mending = true;
+        setTimeout(function () { sb.auth.getSession().then(function (r) {
+          if (r && r.data && r.data.session) return true;
+          return good ? sb.auth.setSession({ access_token: good.access_token, refresh_token: good.refresh_token }).then(function (x) { return !!(x && x.data && x.data.session); }) : false;
+        }).catch(function () { return false; }).then(function (ok) { mending = false; if (!ok) location.reload(); }); }, 600); });
       /* public commander name, so other players see who you are */
       new Doc("profiles/" + u.id).set({ name: nameOf(u), at: Date.now() }).catch(function () {});
       return true;
