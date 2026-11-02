@@ -643,6 +643,10 @@ canvas.dthumb{display:block}
 .forders .forow{display:flex;align-items:center;gap:8px}.forders .fol{flex:1;min-width:0;display:flex;flex-direction:column;font-size:14px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.forders .fol small{color:var(--muted);font-size:11px}.forders .fol .ci{font-size:15px}
 .forders .forow input{width:112px;flex:none;background:#081521;border:1px solid rgba(85,214,232,.4);color:var(--text);border-radius:8px;padding:8px 10px;font:600 15px var(--f-display);text-align:right}.forders .forow input:focus{outline:none;border-color:var(--cyan)}
 .forders #fosum .kv{margin:2px 0}
+/* v233 speed choices with flight time and gas, and the arrival time */
+.forders .fospd{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.forders .fospd button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 2px;border-radius:9px;border:1px solid var(--line);background:var(--hull);color:var(--text);font-size:11px;line-height:1.15}.forders .fospd button b{font:700 14px var(--f-display)}.forders .fospd button.on{border-color:var(--cyan);background:var(--cyan-soft);box-shadow:0 0 10px rgba(85,214,232,.25)}
+.fg{color:var(--gas)!important}.forders .foeta{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:6px;padding:8px;border-radius:9px;background:rgba(85,214,232,.07);border:1px solid rgba(85,214,232,.25)}.forders .foeta span{display:flex;flex-direction:column;font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}.forders .foeta b{font:700 15px var(--f-display);color:var(--text);letter-spacing:0;text-transform:none}
+.fcard .ftl small{display:block;font-size:11px;color:var(--muted);font-weight:400}
 /* v226 the three fleet buttons on the Fleets tab */
 .foquick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.foquick .btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 6px;font-size:22px;line-height:1}.foquick .btn span{font-size:12px;letter-spacing:.08em}
 /* the tray: one bottom bar for every menu, sliding open into a grid */
@@ -2110,7 +2114,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 232;
+const GAME_V = 233;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -2120,6 +2124,7 @@ const BOT_HOSTILE = false; // the bots are pact allies of every commander: they 
 /* v217: only your 100 nearest bot commanders keep the pact. They are fixed the first time your homeworld exists (measured then,
    so a pact never flips as the orbits turn) and saved with your game. Every other bot is hostile: it raids your colonies, shows
    red on the map and its worlds can be attacked. The bots also keep warring with each other. Each player has their own 100. */
+const BOT_RAIDS = false; /* v233: for now bots are hostile only to each other: no raids on players (their bot wars go on). true = raids back on */
 const FRIEND_BOTS = 30; /* v218: the Void Concord pact is disbanded. Your only friendly bots are the 30 nearest, the bots in your alliance (allyBots), who join your joint strikes; all 970 others are hostile to everyone */
 function friendBotSet() { if (!S) return null; const want = Math.min(FRIEND_BOTS, BOTS.length);
   if (!(S.friendBots && S.friendBots.length === want && S.friendBots.every(id => BOT_BY[id]))) { if (S.allyBots && S.allyBots.length === want && S.allyBots.every(id => BOT_BY[id])) { S.friendBots = S.allyBots.slice(); G.fbSet = null; try { dirty(); } catch (e) {} } }
@@ -3237,7 +3242,7 @@ function events() {
   if (S.raid) ev.push({ at: S.raid.at, run: raidHits });
   if (G.ready) {
     const cols = myPlanets().filter(p => p.kind !== "home");
-    if (!hostileBots().length) { S.botRaid = null; S.nextBotRaid = null; }
+    if (!BOT_RAIDS || !hostileBots().length) { S.botRaid = null; S.nextBotRaid = null; }
     else if (!S.botRaid && !S.nextBotRaid && cols.length) S.nextBotRaid = S.t + botRaidGap();
     if (S.nextBotRaid) ev.push({ at: S.nextBotRaid, run: () => botRaidLaunch(S.nextBotRaid) });
     if (S.botRaid) ev.push({ at: S.botRaid.arrive, run: botRaidHits });
@@ -4629,7 +4634,7 @@ async function refreshNames() {
     for (const id of ids) { const n = (G.players[id] && G.players[id].nm) || (ps[id] && ps[id].name) || ""; /* v191: a chosen commander name wins over the account name */ if (G.names[id] !== n) { G.names[id] = n; ch = true; } }
     if (ch) softRender(); } catch (e) {} finally { namesBusy = false; }
 }
-const nameOf = uid => !uid ? "Hive" : uid === G.me ? "You" : isBot(uid) ? BOT_BY[uid].name + (botFriend(uid) ? " (ally)" : " (hostile)") : (G.names[uid] || "Unnamed commander");
+const nameOf = uid => !uid ? "Hive" : uid === G.me ? "You" : isBot(uid) ? BOT_BY[uid].name + (botFriend(uid) ? " (ally)" : BOT_RAIDS ? " (hostile)" : " (rival)") : (G.names[uid] || "Unnamed commander");
 /* other commanders get any hue except the cyan band reserved for you and the amber band used by the Hive */
 const colorOf = uid => { if (uid === G.me) return "#55d6e8"; if (isBot(uid)) return botFriend(uid) ? "#5fe0c0" : "#ff4d4d"; if (isAlly(uid)) return "#71df90"; let h = 50 + hash(uid || "") % 240; if (h >= 160) h += 60; return `hsl(${h % 360},85%,66%)`; };
 let softPending = false;
@@ -10499,16 +10504,21 @@ function foPlan() {
   const fp = byId(st.from), tp = st.to ? byId(st.to) : null; if (!fp) return null;
   const avail = fp.kind === "home" ? homeShipsAvail() : cleanShips(fp.garrison || {}), src = fp.kind === "home" ? S.res : colStock(fp);
   const n = {}; for (const k in st.ships) { const v = clamp(Math.floor(+st.ships[k] || 0), 0, avail[k] || 0); if (v > 0) n[k] = v; }
-  const ships = Object.values(n).reduce((a, b) => a + b, 0), fuel = ships && tp ? fuelFor(fp, tp, n, 100) : 0;
+  const spd = [100, 75, 50, 25, 10].includes(+st.spd) ? +st.spd : 100; /* v233: throttle */
+  const ships = Object.values(n).reduce((a, b) => a + b, 0), fuel = ships && tp ? fuelFor(fp, tp, n, spd) : 0;
   const want = {}; for (const r of ["m", "c", "g"]) want[r] = clamp(Math.floor(+st.res[r] || 0), 0, Math.floor(src[r] || 0)); want.g = Math.max(0, Math.min(want.g, Math.floor((src.g || 0) - fuel)));
-  const cap = Math.floor(cargoOf(n)), load = total(want), tt = ships && tp ? travelMs(fp, tp, n, S.r, 100) : 0;
+  const cap = Math.floor(cargoOf(n)), load = total(want), tt = ships && tp ? travelMs(fp, tp, n, S.r, spd) : 0;
   const cargoK = Object.keys(avail).filter(k => SH[k] && SH[k].cargo >= 1000 && k !== "ark").sort((a, b) => SH[b].cargo - SH[a].cargo);
   const msg = !tp ? "Deploy and Transport move ships and resources between your planets. Colonize a second planet to use them." : !ships ? "Choose the ships to send." : load > cap ? `Too much cargo: ${fmt(load)} / ${fmt(cap)} space.` : (src.g || 0) < fuel ? `${fp.kind === "home" ? S.homeName : fp.name} needs ${fmt(fuel)} gas for fuel.` : slotsFull() ? "All fleet slots are busy." : st.mode === "xfer" && !load ? "Choose resources to deliver." : "";
-  return { st, worlds, idOf, hw, fp, tp, avail, src, n, ships, fuel, want, cap, load, tt, cargoK, msg, ok: !msg };
+  return { st, worlds, idOf, hw, fp, tp, avail, src, n, ships, fuel, want, cap, load, tt, cargoK, msg, spd, ok: !msg };
 }
 const foNm = (P, p) => p === P.hw ? S.homeName : p.name;
-function foSumHTML(P) { const over = P.ships && P.load > P.cap, canFit = over && P.cargoK.some(k => (P.avail[k] || 0) > (P.n[k] || 0));
-  return `<dl class="kv"><dt>Ships</dt><dd>${fmt(P.ships)}</dd><dt>Cargo</dt><dd style="color:${over ? "var(--red)" : "inherit"}">${fmt(P.load)} / ${fmt(P.cap)}</dd><dt>Flight</dt><dd>${P.tt ? ftime(P.tt) + (P.st.mode === "xfer" ? " each way" : "") : "–"}</dd><dt>Fuel</dt><dd>${fmt(P.fuel)} gas</dd></dl>
+const atClock = ms => new Date(ms).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+function foSumHTML(P) { const over = P.ships && P.load > P.cap, canFit = over && P.cargoK.some(k => (P.avail[k] || 0) > (P.n[k] || 0)), T = now();
+  const speeds = P.ships && P.tp ? `<div class="fosec"><b>Speed</b><span class="note" style="margin:0">slower burns less gas</span></div><div class="fospd">${[100, 75, 50, 25, 10].map(v => { const tt = travelMs(P.fp, P.tp, P.n, S.r, v), fu = fuelFor(P.fp, P.tp, P.n, v);
+    return `<button class="${v === P.spd ? "on" : ""}" data-act="foSpd" data-v="${v}"><b>${v}%</b><span>⏱ ${ftime(tt)}</span><span class="fg">⛽ ${fmt(fu)}</span></button>`; }).join("")}</div>
+    <div class="foeta"><span>Flight<b>${ftime(P.tt)}${P.st.mode === "xfer" ? " each way" : ""}</b></span><span>Arrives<b>${atClock(T + P.tt)}</b></span>${P.st.mode === "xfer" ? `<span>Back home<b>${atClock(T + P.tt * 2)}</b></span>` : ""}<span>Gas<b class="fg">${fmt(P.fuel)}</b></span></div>` : "";
+  return speeds + `<dl class="kv"><dt>Ships</dt><dd>${fmt(P.ships)}</dd><dt>Cargo</dt><dd style="color:${over ? "var(--red)" : "inherit"}">${fmt(P.load)} / ${fmt(P.cap)}</dd><dt>Gas left at ${esc(foNm(P, P.fp))}</dt><dd>${fmt(Math.max(0, (P.src.g || 0) - P.fuel - (P.want.g || 0)))}</dd></dl>
     ${P.msg && P.tp ? `<p class="note" style="color:var(--amber);margin:0">${esc(P.msg)}</p>` : ""}${canFit || over ? `<button class="btn ghost sm wide" data-act="foFit">${canFit ? "＋ Add cargo ships to fit" : "Trim the load to fit"}</button>` : ""}`; }
 /* v226 the Fleets tab keeps just three buttons; Deploy and Transport open their own panel for destination, ships and resources */
 /* v231 what a fleet in flight is carrying, by resource: plunder and pirate or Cube loot on the way home, the haul from a field
@@ -10567,7 +10577,7 @@ function vFleets() {
       <div class="route">${esc(o ? o.name : S.homeName)} → ${esc(tg ? tg.name : "—")}${f.phase === "back" || f.phase === "gather" ? ` → ${esc(fleetHome(f) ? fleetHome(f).name : S.homeName)}` : ""} · ${fmt(tot)} ships${cargo}</div>
       <div class="route">${ships}</div>${fleetResRow(f)}
       ${bnd ? `<div class="bar" style="grid-column:auto"><i data-s="${bnd[0]}" data-e="${bnd[1]}"></i></div>` : ""}
-      <div class="tl"><span>Departed<b>${ago(f.out) === "now" ? "just now" : ago(f.out) + " ago"}</b></span><span>${bnd ? bnd[2] : "Status"}<b>${bnd ? `<span data-end="${bnd[1]}">${ftime(rem)}</span>` : "in battle"}</b></span><span>Speed · fuel<b>${f.spd || 100}% · ${fmt(f.fuel || 0)}</b></span></div>
+      <div class="tl ftl"><span>Flight<b>${ftime(f.tt || 0)}</b><small>one way</small></span><span>${bnd ? bnd[2] : "Status"}<b>${bnd ? `<span data-end="${bnd[1]}">${ftime(rem)}</span>` : "in battle"}</b>${bnd ? `<small>at ${atClock(bnd[1])}</small>` : ""}</span><span>Speed<b>${f.spd || 100}%</b><small class="fg">⛽ ${fmt(f.fuel || 0)} gas</small></span></div>
       <div class="acts"><button class="btn ghost sm" data-act="fleetMap" data-id="${f.id}">Show on map</button>${f.mission === "attack" && f.phase === "out" && !f.assault && G.mode === "online" && rem > 20000 ? `<button class="btn sm" data-act="callJoint" data-id="${f.id}">Call allies to join</button>` : f.assault && G.assaults[f.assault] ? `<span class="pill go">Joint · ${memberCount(G.assaults[f.assault])}/${G.assaults[f.assault].max}</span>${!f.launched && now() < G.assaults[f.assault].launch ? `<button class="btn sm" data-act="assault" data-id="${f.assault}">＋ Add participants</button>` : ""}` : ""}${canRecall ? `<button class="btn ghost sm" data-act="recallF" data-id="${f.id}">Recall</button>` : ""}${canHurry && rem > 0 ? `<button class="btn amber sm" data-act="hurry" data-id="${f.id}" ${S.shards >= shardCost(rem) ? "" : "disabled"}>Hurry <span class="shard">◆${shardCost(rem)}</span></button>` : ""}${!f.assault && f.phase !== "resolving" && rem > 20000 ? `<button class="btn ghost sm" data-act="fBoost" data-id="${f.id}" ${S.shards >= boostCost(f) ? "" : "disabled"}>⚡ Afterburners <span class="shard">◆${boostCost(f)}</span></button>${S.boosts > 0 ? `<button class="btn ghost sm" data-act="fBoostItem" data-id="${f.id}">Use boost −5 min · ${S.boosts}</button>` : ""}` : ""}</div></div>`;
   }).join("");
   const shipsAt = p => p.kind === "home" || p === hw ? Object.fromEntries(Object.entries(S.ships).filter(([, v]) => v > 0)) : cleanShips(p.garrison || {});
@@ -13668,7 +13678,7 @@ function avPhotoPick() {
   inp.click();
 }
 function shProfile() {
-  const uid = sheet.u || G.me, me = uid === G.me, bot = isBot(uid) && BOT_BY[uid], P = me ? myPub() : bot ? { score: botScore(bot), planets: botColonyIds(bot).length + 1, lvl: cmdLevel(botScore(bot)), fac: "terran", bio: `${botFriend(uid) ? "A bot commander in your alliance" : "A hostile bot commander"}, strength tier ${bot.tier}.`, rec: { w: 0, l: 0, d: 0 }, last: now() } : G.players[uid];
+  const uid = sheet.u || G.me, me = uid === G.me, bot = isBot(uid) && BOT_BY[uid], P = me ? myPub() : bot ? { score: botScore(bot), planets: botColonyIds(bot).length + 1, lvl: cmdLevel(botScore(bot)), fac: "terran", bio: `${botFriend(uid) ? "A bot commander in your alliance" : BOT_RAIDS ? "A hostile bot commander" : "A rival bot commander, at war with the other bots"}, strength tier ${bot.tier}.`, rec: { w: 0, l: 0, d: 0 }, last: now() } : G.players[uid];
   if (!P) return `<div class="hd"><div><h2>Unknown commander</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
   const nm = me ? G.myName || "You" : nameOf(uid), lvl = P.lvl || cmdLevel(P.score || 0), rec = P.rec || { w: 0, l: 0, d: 0 }, F = FACTIONS[P.fac] || FACTIONS.terran, friend = (S.friends || []).includes(uid), blocked = (S.blocked || []).includes(uid);
   const rk = boardRows("players").findIndex(r => r.id === uid) + 1, rp = boardRows("pvp").findIndex(r => r.id === uid) + 1, tot = rec.w + rec.l + rec.d;
@@ -14291,6 +14301,7 @@ const ACT = {
   logiMode: d => { const s = logiSt(); s.lmode = ["all", "pick"].includes(d.v) ? d.v : "cargo"; logiRedraw(); },
   logiShip: d => { const s = logiSt(); s.ls = s.ls || {}; s.ls[d.k] = +d.p || 0; logiRedraw(); },
   foOpen: d => { const st = sub.fo || (sub.fo = { mode: "dep", ships: {}, res: {} }); st.mode = d.v === "xfer" ? "xfer" : "dep"; openSheet({ type: "fo" }); },
+  foSpd: d => { foBlur(); const st = sub.fo || (sub.fo = { mode: "dep", ships: {}, res: {} }); st.spd = +d.v || 100; foRedraw(); },
   foMode: d => { foBlur(); const st = sub.fo || (sub.fo = { mode: "dep", ships: {}, res: {} }); st.mode = d.v === "xfer" ? "xfer" : "dep"; foRedraw(); },
   foFrom: d => { foBlur(); const st = sub.fo || (sub.fo = { mode: "dep", ships: {}, res: {} }); if (st.from !== d.id) { st.ships = {}; st.res = {}; } st.from = d.id; if (st.to === d.id) st.to = null; foRedraw(); },
   foTo: d => { foBlur(); const st = sub.fo || (sub.fo = { mode: "dep", ships: {}, res: {} }); st.to = d.id; foRedraw(); },
@@ -14299,7 +14310,7 @@ const ACT = {
   foNone: () => { foBlur(); const P = foPlan(); if (!P) return; P.st.ships = {}; foRedraw(); },
   foFit: () => { foBlur(); const P = foPlan(); if (!P) return; let need = P.load - P.cap; for (const k of P.cargoK) { if (need <= 0) break; const per = cargoOf({ [k]: 1 }) || SH[k].cargo, have = P.st.ships[k] || 0, add = Math.min((P.avail[k] || 0) - have, Math.ceil(need / per)); if (add > 0) { P.st.ships[k] = have + add; need -= add * per; } } if (need > 0) { const P2 = foPlan(), k = P2.load ? P2.cap / P2.load : 0; for (const r of ["m", "c", "g"]) P2.st.res[r] = Math.floor((P2.want[r] || 0) * Math.min(1, k)); { const ex = ["m", "c", "g"].reduce((a, r) => a + P2.st.res[r], 0) - P2.cap, big = ["m", "c", "g"].sort((x, y) => P2.st.res[y] - P2.st.res[x])[0]; if (ex > 0) P2.st.res[big] = Math.max(0, P2.st.res[big] - ex); } toast(`Not enough cargo ships here for all of it: the load was trimmed to ${fmt(P2.cap)}.`, "warn"); } foRedraw(); },
   foSend: () => act(() => { foBlur(); if (!canPlay()) return; advance(now()); const P = foPlan(); if (!P || !P.ok) return toast((P && P.msg) || "Nothing to send.", "warn");
-    const sh0 = sheet; if (!sheet) sheet = { type: "_fo" }; const keep = sheet.from; sheet.from = P.st.from; let f; try { f = sendFleet(P.tp, P.n, "transfer", { stay: P.st.mode !== "xfer" }); } finally { if (sheet) sheet.from = keep; if (!sh0) sheet = null; } if (!f) return;
+    const sh0 = sheet; if (!sheet) sheet = { type: "_fo" }; const keep = sheet.from, ks = sheet.speed; sheet.from = P.st.from; sheet.speed = P.spd; let f; try { f = sendFleet(P.tp, P.n, "transfer", { stay: P.st.mode !== "xfer" }); } finally { if (sheet) { sheet.from = keep; sheet.speed = ks; } if (!sh0) sheet = null; } if (!f) return;
     const src = P.fp.kind === "home" ? S.res : (settle(P.fp), P.fp.st); for (const k of ["m", "c", "g"]) src[k] = Math.max(0, src[k] - P.want[k]); f.cargo = P.want; if (P.fp.kind !== "home") putPlanet(P.fp);
     P.st.ships = {}; P.st.res = {}; if (sheet && sheet.type === "fo") closeSheet(); render(); toast(`${fmt(P.ships)} ship${P.ships > 1 ? "s" : ""} ${P.st.mode === "xfer" ? "transporting" : "deploying"} to ${foNm(P, P.tp)}${P.load ? ` with ${fmt(P.load)} resources` : ""}. Arrival in ${ftime(f.tt)}.`, "win"); }),
   foTab: d => { const s = sub.logi || (sub.logi = {}); s.tab = d.v === "xfer" ? "xfer" : "dep"; render(); },
