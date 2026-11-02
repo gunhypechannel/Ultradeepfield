@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-01 (America/Phoenix). Current game version: **v233** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v41**.
+Last updated: 2026-11-01 (America/Phoenix). Current game version: **v234** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v42**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -80,3 +80,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v231:** every fleet card on the Fleets tab shows a cargo line (`fleetResRow`): Plundered / Loot / Gathered on the way home, Gathering (haul when full), Deploying / Delivering cargo, or Holds empty with cargo space. Fleets tab ends with the Plunder & rewards card. `gainHTML()` shows gains in resource colours (`costHTML` tints red when you can't afford it).
 - **v232:** the Plunder & rewards ledger is off the Fleets tab again (it stays on Events); each fleet card shows its own cargo.
 - **v233:** `BOT_RAIDS = false`: bots are hostile only to each other for now (bot wars continue; no raids on players; the 970 non-alliance bots show as "(rival)" and can still be attacked). Fleet orders get a Speed row (100/75/50/25/10%, each with flight time and gas) and an arrival box (flight, arrives at, back home, gas); sending uses that speed. Fleet cards show the flight length, a countdown with the clock time, and speed with gas.
+- **v234:** deeper map zoom. `CAM_MIN = 2.5` (was 8) for pinch, wheel, the +/- buttons, the zoom slider (`ZS_MIN`) and keys, matching the cinematic camera and Planet view (2.8); `CAM_TILT = .06` (was .12) lets the camera tilt down close to the galactic plane.
