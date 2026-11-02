@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-02 (America/Phoenix). Current game version: **v237** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v46**.
+Last updated: 2026-11-02 (America/Phoenix). Current game version: **v238** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v47**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -85,3 +85,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v236:** the Academy step "Reach Commander Level 4" is now Level 3 (Lv.4 took a new player 8+ game hours of waiting).
 - **Sign-in fix (udf-v45, udf-supabase.js):** a stale saved token could sign a fresh login straight back out (auth logs: password login, then "Refresh Token Not Found" refreshes, SIGNED_OUT, reload). Boot with no usable session now clears it locally (`signOut({scope:"local"})`) before the login screen, and an unrequested SIGNED_OUT first tries to restore the last good session before reloading.
 - **v237:** all 55 premium skins are painted. The 31 from the reference sheet were cut out, upscaled 4x with Real-ESRGAN x4plus (run in numpy from the .pth, no torch), and each painting is centred on its globe by a circle fit of its cut-out mask (`docs/skins/`). Every skin listed in `PX_IMG` loads `<id>.webp` and `<id>-map.webp`.
+- **v238:** the six ringed skins (forge, pearl, metropolis, lattice, clockwork, saturn) were redone from the wider-spaced reference sheet with their full rings, drawing the world at .25 of the frame instead of .34 (`PX_RING`, `pxF()` wherever a painting is scaled to its globe). The eight commander avatars are paintings (`docs/avatars/<id>.webp`, `avPic()` in `drawAvatar`; the old drawn portraits are the fallback). Players can no longer use their own photo (`avNorm` drops "photo", the button is gone, `avPhoto` does nothing).

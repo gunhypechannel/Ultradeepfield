@@ -2121,7 +2121,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 237;
+const GAME_V = 238;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -2423,6 +2423,9 @@ const PX_IMG = { warsphere: 0, shatter: ["Shattered Bastion", "A white fortress 
 for (const k of ["bloom", "ember", "abyss", "aurora", "dune", "forge", "pearl", "obsidian", "solar", "eden", "frostfire", "stormtitan", "ruby", "sapphire", "metropolis", "plague", "mirror", "lattice", "phoenix", "reef", "hive", "blacksun", "magnetar", "ruins", "rust", "cosmicegg", "kraken", "lavalamp", "ghost", "clockwork", "saturn"]) if (!(k in PX_IMG)) PX_IMG[k] = 0;
 for (const k in PX_IMG) if (PXS[k]) { PXS[k].img = 1; if (PX_IMG[k]) { PXS[k].n = PX_IMG[k][0]; PXS[k].d = PX_IMG[k][1]; } }
 const PX_DIR = "skins/";
+/* v238: how much of a painting the world fills (its radius over the frame). Ringed skins paint the world smaller so the whole ring fits */
+const PX_RING = { forge: .25, pearl: .25, metropolis: .25, lattice: .25, clockwork: .25, saturn: .25 };
+const pxF = id => (PXS[id] && PXS[id].img && !PXS[id].imgBad && PX_RING[id]) || .34;
 function pxPic(src, ok, bad) { const im = new Image(); im.decoding = "async"; im.onload = () => ok(im); im.onerror = () => bad && bad(); im.src = PX_DIR + src; }
 const hex3 = c => { const v = parseInt(c.slice(1), 16); return [v >> 16 & 255, v >> 8 & 255, v & 255]; };
 function pxGen(id, Wd) {
@@ -4861,7 +4864,7 @@ function drawMoon2D(ctx, x, y, sr, lvl) { if (sr < 4) return; const mr = sr * (.
   g.addColorStop(0, "#e2e4e8"); g.addColorStop(.55, "#8a8e96"); g.addColorStop(1, "#22252a"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU); ctx.fill();
   ctx.fillStyle = "rgba(40,42,48,.45)"; for (const [cx2, cy2, cr] of [[-.3, -.1, .22], [.25, .2, .16], [.05, -.35, .12], [-.1, .35, .1]]) { ctx.beginPath(); ctx.arc(mx + cx2 * mr, my + cy2 * mr, cr * mr, 0, TAU); ctx.fill(); } }
 function drawPlanetBody(ctx, p, x, y, sr, lx, ly) {
-  if (pxOf(p)) { const C = pxReady(p.px); if (C && C.art) { const s2 = sr / .34; ctx.drawImage(C.art, x - s2 / 2, y - s2 / 2, s2, s2); if (p.moon) drawMoon2D(ctx, x, y, sr, p.moon.lvl); return; } pxNeed(p.px); } // premium skin (v67: with its moon)
+  if (pxOf(p)) { const C = pxReady(p.px); if (C && C.art) { const s2 = sr / pxF(p.px); ctx.drawImage(C.art, x - s2 / 2, y - s2 / 2, s2, s2); if (p.moon) drawMoon2D(ctx, x, y, sr, p.moon.lvl); return; } pxNeed(p.px); } // premium skin (v67: with its moon)
   const P = PAL[p.type];
   if (sr > 5) { const g = ctx.createRadialGradient(x, y, sr * .9, x, y, sr * 1.35); const AC = atmoOf(p); g.addColorStop(0, AC + "55"); g.addColorStop(1, AC + "00"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, sr * 1.35, 0, TAU); ctx.fill(); }
   ctx.drawImage(sprite(p.type, p.v || 0), x - sr, y - sr, sr * 2, sr * 2);
@@ -5728,7 +5731,7 @@ function planetDetail(W, p, o) {
   const cl = sk ? new TH.Object3D() : new TH.Mesh(W.sphM || W.sph, new TH.MeshStandardMaterial({ map: cloudTex(p.type), transparent: true, depthWrite: false, roughness: 1 })); cl.scale.setScalar(rad * 1.025); g.add(cl);
   const at = new TH.Mesh(W.sphM || W.sph, fresnelMat(sk ? sk.glow : atmoOf(p), sk ? 3.4 : 2.2, sk ? .75 : 1.6)); at.scale.setScalar(rad * (sk ? 1.1 : 1.12)); g.add(at);
   if (sk) { const Ly = pxLayers(p.px); if (Ly) { const mk = (cv, ord) => { const tx = new TH.CanvasTexture(cv); tx.encoding = TH.sRGBEncoding; tx.anisotropy = texAniso(); const sp = new TH.Sprite(new TH.SpriteMaterial({ map: tx, transparent: true, depthWrite: false, toneMapped: false })); sp.renderOrder = ord; g.add(sp); return sp; };
-    g.userData.lb = mk(Ly.back, 1); g.userData.lf = mk(Ly.front, 9); g.userData.lr = rad; } } // the skin's artwork decorations, exactly as on its card
+    g.userData.lb = mk(Ly.back, 1); g.userData.lf = mk(Ly.front, 9); g.userData.lr = rad; g.userData.pf = pxF(p.px); } } // the skin's artwork decorations, exactly as on its card
   const moons = [];
   if (p.moon) { const m = new TH.Mesh(W.sph, new TH.MeshStandardMaterial({ color: 0xa4a8b0, roughness: 1 })); m.scale.setScalar(rad * (.3 + p.moon.lvl * .02)); g.add(m); moons.push([m, rad * 2.6, .00025, 1.3, .15]); }
   for (let i = 0; i < hash(p.id) % 3; i++) { const m = new TH.Mesh(W.sph, new TH.MeshStandardMaterial({ color: new TH.Color(sk ? (sk.p ? sk.p[Math.min(2, sk.p.length - 1)] : `rgb(${sk.ec.map(v => Math.round(v * .4)).join(",")})`) : P[2]).lerp(new TH.Color(sk ? sk.glow : "#8a8a8a"), sk ? .25 : .35).lerp(new TH.Color("#8a8a8a"), sk ? .3 : 0), roughness: 1, emissive: sk ? new TH.Color(sk.glow) : 0, emissiveIntensity: sk ? .08 : 0 })); /* v77: a skinned world's moons share its palette */ m.scale.setScalar(rad * (.14 + i * .06)); g.add(m); moons.push([m, rad * (2 + i * .9), .0004 / (1 + i), rn() * TAU, (rn() - .5) * .5]); }
@@ -7220,7 +7223,7 @@ function draw3D(t) {
       const Cs = !fg && pxOf(p) ? pxReady(p.px) : null;
       if (Cs && Cs.art) { if (!o.bill || o.billPx !== p.px) { if (o.bill) { o.grp.remove(o.bill); o.bill.material.map.dispose(); o.bill.material.dispose(); } const tx = new TH.CanvasTexture(Cs.art); tx.encoding = TH.sRGBEncoding;
           o.bill = new TH.Sprite(new TH.SpriteMaterial({ map: tx, transparent: true, depthWrite: false })); o.bill.renderOrder = 8; o.billPx = p.px; o.grp.add(o.bill); }
-        const close = px > 16; o.bill.visible = !close; if (!close) { const rEff = Math.max(o.rad, 6 * dc / pxK); o.bill.scale.setScalar(rEff / .34); } } /* v114: skinned worlds no longer balloon from afar (was a 16 px minimum) */
+        const close = px > 16; o.bill.visible = !close; if (!close) { const rEff = Math.max(o.rad, 6 * dc / pxK); o.bill.scale.setScalar(rEff / pxF(p.px)); } } /* v114: skinned worlds no longer balloon from afar (was a 16 px minimum) */
       else if (o.bill) { o.grp.remove(o.bill); o.bill.material.map.dispose(); o.bill.material.dispose(); o.bill = null; o.billPx = null; } }
     if (o.det && (dc > 150 || o.detPx !== (p.px || null) || o.detMoon !== (p.moon ? p.moon.lvl : 0))) { o.grp.remove(o.det); /* v68: a new skin or moon rebuilds the close-up layer at once */ o.det.traverse(x => { if (x.material) x.material.dispose(); if (x.isPoints) x.geometry.dispose(); }); o.det = null; }
     if (dc < 60 && !o.det && !fg && W.detN < PERF.details && W.detMade < 1) { W.detMade++; o.det = planetDetail(W, p, o); /* v124: at most one new close-up a frame, no stalls when zooming in */ o.detPx = p.px || null; o.detMoon = p.moon ? p.moon.lvl : 0; }
@@ -7262,7 +7265,7 @@ function draw3D(t) {
   if (W.shieldM) W.shieldM.uniforms.uT.value = reduced ? 0 : t * .001;
   // v72: keep each skin's decoration layers lined up with its world: on the camera ray through the planet's centre, one just in front
   // of the globe and one just behind it, each scaled so the painted planet outline matches the 3D sphere exactly
-  for (const o of W.dets || []) { const u = o.det && o.det.userData; if (!u || !u.lb) continue; const pp = o.grp.position, cq = W.camera.position, dx = cq.x - pp.x, dy = cq.y - pp.y, dz = cq.z - pp.z, D = Math.hypot(dx, dy, dz) || 1, k = u.lr * 1.15, S0 = u.lr / .34;
+  for (const o of W.dets || []) { const u = o.det && o.det.userData; if (!u || !u.lb) continue; const pp = o.grp.position, cq = W.camera.position, dx = cq.x - pp.x, dy = cq.y - pp.y, dz = cq.z - pp.z, D = Math.hypot(dx, dy, dz) || 1, k = u.lr * 1.15, S0 = u.lr / (u.pf || .34);
     u.lf.position.set(dx / D * k, dy / D * k, dz / D * k); u.lf.scale.setScalar(S0 * Math.max(.05, D - k) / D); u.lb.position.set(-dx / D * k, -dy / D * k, -dz / D * k); u.lb.scale.setScalar(S0 * (D + k) / D); u.lb.visible = u.lf.visible = !(o.bill && o.bill.visible); }
   MAPPROF.mark("worlds");
   pvSkinEnv(W, t);
@@ -8513,7 +8516,7 @@ function planetArt(p) {
   if (pxOf(p)) { const C = pxReady(p.px); if (C && C.art) { // a premium skin: its portrait over a star field
       const W = 640, H = 300, out = document.createElement("canvas"); out.width = W; out.height = H; const x = out.getContext("2d"); x.fillStyle = "#03070d"; x.fillRect(0, 0, W, H);
       for (const [sx, sy, ss, sp] of stars(W, H, 160, hash(p.id) % 997)) { x.globalAlpha = .25 + .6 * sp; x.fillStyle = "#dceef6"; x.fillRect(sx, sy, ss, ss); } x.globalAlpha = 1;
-      const s2 = H * 1.1; x.drawImage(C.art, W / 2 - s2 / 2, H / 2 - s2 / 2, s2, s2); if (p.moon) drawMoon2D(x, W / 2, H / 2, s2 * .34, p.moon.lvl); last[p.id] = out; return cachePut(S, key, out); } pxNeed(p.px); }
+      const s2 = H * 1.1 * .34 / pxF(p.px); x.drawImage(C.art, W / 2 - s2 / 2, H / 2 - s2 / 2, s2, s2); if (p.moon) drawMoon2D(x, W / 2, H / 2, s2 * pxF(p.px), p.moon.lvl); last[p.id] = out; return cachePut(S, key, out); } pxNeed(p.px); }
   try {
     const grp = new TH.Group(), P = PAL[p.type], acc = new TH.Color(P[4]), hive = st === "hive";
     const lights = dv.tier || hive ? lightsTex(hash(p.id), hive ? 26 : 6 + dv.tier * 14, hive) : null;
@@ -13636,7 +13639,7 @@ function shRanks(st) {
 const AV_LIST = [["admiral", "The Admiral"], ["pilot", "Ace Pilot"], ["marine", "Void Marine"], ["spy", "Shadow Agent"], ["warlord", "Xeno Warlord"], ["mystic", "Star Seer"], ["cyborg", "The Augment"], ["android", "Synthetic"]];
 const AV_IDS = AV_LIST.map(a => a[0]);
 const AV_OLD = { f: ["pilot", "mystic", "pilot", "spy"], m: ["admiral", "marine", "admiral", "spy"], a: ["warlord", "mystic", "warlord", "mystic"], c: ["cyborg", "android", "cyborg", "android"] }; // earlier picks map onto the new cast
-const avNorm = id => id === "photo" ? id : AV_IDS.includes(id) ? id : /^[fmac][0-3]$/.test(id || "") ? AV_OLD[id[0]][+id[1]] : null;
+const avNorm = id => AV_IDS.includes(id) ? id : /^[fmac][0-3]$/.test(id || "") ? AV_OLD[id[0]][+id[1]] : null;
 const defAv = uid => AV_IDS[hash(uid || "x") % AV_IDS.length];
 const hexA = (h, a) => { const c = TH_Color0(h); return `rgba(${c[0]},${c[1]},${c[2]},${a})`; };
 function TH_Color0(h) { const n = typeof h === "number" ? h : parseInt(String(h).replace("#", ""), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
@@ -13651,7 +13654,13 @@ function avPhotoLoad(uid, cb) {
     const im = new Image(); im.onload = cb; im.src = u; AV_PHOTO[uid] = im; }).catch(() => { AV_PHOTO[uid] = { complete: false }; });
   return null;
 }
+/* v238: the commanders are paintings now (avatars/<id>.webp); the old drawn portraits stand in until one loads, or if it can't */
+const AV_PIC = {};
+function avPic(id, cb) { let e = AV_PIC[id]; if (!e) { e = AV_PIC[id] = { im: new Image(), ok: 0, bad: 0, cbs: [] }; e.im.decoding = "async"; e.im.onload = () => { e.ok = 1; const c = e.cbs; e.cbs = []; c.forEach(f => { try { f(); } catch (x) {} }); }; e.im.onerror = () => { e.bad = 1; e.cbs = []; }; e.im.src = "avatars/" + id + ".webp"; }
+  if (e.ok) return e.im; if (!e.bad && cb) e.cbs.push(cb); return null; }
 function drawAvatar(cv, id, fac, uid) {
+  if (id === "photo" || !AV_IDS.includes(id)) id = defAv(uid || G.me);
+  { const im = avPic(id, () => { cv._av = null; try { thumbs(document); } catch (x) {} }); if (im) { const W = Math.max(24, cv.clientWidth || 44) * DPR(), x = cv.getContext("2d"); cv.width = cv.height = W; x.imageSmoothingQuality = "high"; x.drawImage(im, 0, 0, W, W); return; } }
   const F = FACTIONS[fac] || FACTIONS.terran, d = DPR(), W = Math.max(24, cv.clientWidth || 44) * d, x = cv.getContext("2d"); cv.width = cv.height = W;
   const s = W, acc = F.acc, P = (px, py) => [px * s, py * s], rr = rnd(hash(id + fac));
   if (id === "photo") { const im = avPhotoLoad(uid || G.me, () => { cv._av = null; drawAvatar(cv, id, fac, uid); });
@@ -13787,13 +13796,12 @@ function shProfile() {
 }
 /* v88: the avatar changer: a big hex preview of the portrait you are looking at, every portrait in a hex grid, and Use */
 function shAvatars() {
-  const cur = avOf(G.me), ids = AV_LIST.map(x => x[0]).concat(S.avPhoto ? ["photo"] : []), pick = ids.includes(sheet.pick) ? sheet.pick : cur, lab = id => id === "photo" ? "Your photo" : (AV_LIST.find(x => x[0] === id) || [0, ""])[1];
+  const cur = avOf(G.me), ids = AV_LIST.map(x => x[0]), pick = ids.includes(sheet.pick) ? sheet.pick : cur, lab = id => id === "photo" ? "Your photo" : (AV_LIST.find(x => x[0] === id) || [0, ""])[1];
   return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">Commander</div><h2>Change avatar</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
     <div class="avbig"><span class="hexf"><canvas class="avc" data-av="${pick}|${facOf()}|${G.me}" role="img" aria-label="${esc(lab(pick))}"></canvas></span><b>${esc(lab(pick))}</b>${pick === cur ? '<small>In use</small>' : ""}</div>
     <div class="hexgrid">${ids.map(id => `<button class="hexb${id === pick ? " on" : ""}${id === cur ? " cur" : ""}" data-act="avSel" data-id="${id}" aria-label="${esc(lab(id))}"><canvas class="avc" data-av="${id}|${facOf()}|${G.me}"></canvas></button>`).join("")}</div>
     <button class="btn amber wide" data-act="avatar" data-id="${pick}" ${pick === cur ? "disabled" : ""}>${pick === cur ? "In use" : "Use"}</button>
-    <button class="btn ghost wide" data-act="avPhoto">📷 ${S.avPhoto ? "Change photo" : "Use a photo from your phone"}</button>
-    <p class="note">Your photo is cropped square, shrunk to a small thumbnail and shown to other commanders on your profile.</p>`;
+`;
 }
 /* ---------- friends ---------- */
 function shFriends() {
@@ -14529,8 +14537,8 @@ const ACT = {
   lbClaim: d => act(() => { const B = bonusState(), i = +d.i, t = LB_T[i]; B.lv2 = B.lv2 || []; if (!t || cmdLevel(score()) < t[0] || B.lv2.includes(i)) return; B.lv2.push(i); grantRw(t[1], `Level Bonus · Lv.${t[0]}`); SFX.research(); toast(`Level ${t[0]} bonus claimed.`, "win"); }),
   avatars: () => openSheet({ type: "avatars" }),
   avSel: d => { if (!sheet) return; sheet.pick = d.id; renderSheet(); },
-  avPhoto: () => avPhotoPick(),
-  avatar: d => { if (!AV_IDS.includes(d.id) && !(d.id === "photo" && S.avPhoto)) return; S.avatar = d.id; dirty(); store.lastPlayer = ""; syncPlayer(); hud.last = ""; render(true); if (sheet) renderSheet(); toast("Avatar updated.", "win"); },
+  avPhoto: () => {}, /* v238: own photos retired */
+  avatar: d => { if (!AV_IDS.includes(d.id)) return; S.avatar = d.id; dirty(); store.lastPlayer = ""; syncPlayer(); hud.last = ""; render(true); if (sheet) renderSheet(); toast("Avatar updated.", "win"); },
   rwAll: () => { sub.rwAll = !sub.rwAll; render(true); },
   tenderGo: () => { sub.scls = "utility"; ACT.nav({ v: "build", s: "ships" }); },
   repairNow: d => act(() => { const ks = d.k === "all" ? Object.keys(S.wrecks || {}) : [d.k], c = {}; for (const k of ks) if (SH[k] && S.wrecks[k] > 0) { const x = repairCostOf(k, S.wrecks[k]); for (const r in x) c[r] = (c[r] || 0) + x[r]; }
