@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-01 (America/Phoenix). Current game version: **v220** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v27**.
+Last updated: 2026-11-01 (America/Phoenix). Current game version: **v221** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v28**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -66,3 +66,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v216:** Cube champion titles (`allyGlory`, `gloryPill`, `gloryBanner`) on the alliance page, alliance list and sheet, Rankings and profile cards; a "Holding the Cube" badge during a live battle.
 - **v217–v219:** the Void Concord bot pact is disbanded. Each player's 30 nearest bots (`FRIEND_BOTS`, `S.friendBots`, the same as `allyBots()`) are friendly and join joint strikes; the other 970 are hostile to everyone and raid colonies. (v218 was taken by an app build that changed only `sw.js`.)
 - **v220:** `GAME_V` plus `version.json` "Update now" bar; the service worker always asks the server for fresh files (no 10-minute browser cache).
+- **v221:** the Void Shark swims like a shark (an S-wave from head to tail with a full tail sweep, the head yawing against it) and cruises a little faster on the map; faint glowing tiger stripes on its back.
