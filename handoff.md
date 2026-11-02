@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-01 (America/Phoenix). Current game version: **v224** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v31**.
+Last updated: 2026-11-01 (America/Phoenix). Current game version: **v225** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v32**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -70,3 +70,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v222:** the Fleets tab has one Fleet orders panel (Deploy or Transport; From with ship counts; Transport adds To, resource %, and Cargo fly back / Choose ships by type % stay / All ships stay) instead of a card per planet. `logiSt()` keeps the planner state on the Planets sheet or in `sub.logi`.
 - **v223:** the In flight list always shows every planet (planet filter chips removed).
 - **v224:** crash reports. When a launch finds the last session was killed, its flight log goes to `feedback/crash-<uid>-<t>` (kind "crash": beat JSON with version, view, sheet, fps, render scale, textures, geometries, cached art, DPR, screen size, plus the last 24 log lines). Replay speed changes are logged. Read them with SQL: `select data from docs where path like 'feedback/crash-%' order by updated_at desc`.
+- **v225:** Fleet orders rebuilt OGame-style (`fleetOrders`, `foPlan`, state in `sub.fo`): Deploy = ships + resources move to another of your planets and stay; Transport = same picks, deliver and fly home. From/To chips, a number box + Max per ship type and resource, All/Clear, "Add cargo ships to fit" (trims the load if there still isn't room), and an Attack link to the map. Typing only refreshes `#fosum`; buttons blur the box first because `render()` skips the page while an input has focus, and `morph()` never removes attributes (always write explicit styles).
