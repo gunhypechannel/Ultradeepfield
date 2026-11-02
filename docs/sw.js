@@ -1,7 +1,7 @@
 /* Ultra Deep Field service worker: lets phones install the game and opens it fast.
    The game page is always fetched fresh when online (so updates show up), with the last copy as a fallback offline.
    Galaxy data never goes through here: Firebase handles that itself. */
-const CACHE = "udf-v26";
+const CACHE = "udf-v27";
 const SHELL = ["./", "./index.html", "./udf-firebase.js", "./firebase-config.js", "./udf-supabase.js", "./supabase-config.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -12,7 +12,11 @@ self.addEventListener("fetch", e => {
   const lib = /^(fonts\.(googleapis|gstatic)\.com|cdnjs\.cloudflare\.com|www\.gstatic\.com|cdn\.jsdelivr\.net)$/.test(u.hostname) && !/firestore|identitytoolkit|securetoken/.test(u.href);
   if (same && !u.pathname.startsWith("/__/")) {
     // network first for our own files, so a new version of the game shows up on the next open
-    e.respondWith(fetch(r).then(res => { if (res.ok) { const cp = res.clone(); caches.open(CACHE).then(c => c.put(r, cp)); } return res; })
+    /* v220: ask the server every time (a quick "has it changed?" check), never the browser's own 10-minute copy, so a new
+       version shows up on the very next open. version.json is never cached at all. */
+    const fresh = u.pathname.endsWith("/version.json") ? new Request(r, { cache: "no-store" }) : r.mode === "navigate" ? new Request(r.url, { cache: "no-cache", credentials: "same-origin" }) : new Request(r, { cache: "no-cache" });
+    if (u.pathname.endsWith("/version.json")) { e.respondWith(fetch(fresh)); return; }
+    e.respondWith(fetch(fresh).then(res => { if (res.ok) { const cp = res.clone(); caches.open(CACHE).then(c => c.put(r, cp)); } return res; })
       .catch(() => caches.match(r).then(m => m || caches.match("./index.html"))));
   } else if (lib) {
     // fonts, 3D engine and Firebase libraries rarely change: cache first

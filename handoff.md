@@ -1,6 +1,8 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-10-31 (America/Phoenix). Current game version tag: **v208**. Offline cache: **udf-v16**.
+Last updated: 2026-11-01 (America/Phoenix). Current game version: **v220** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v27**.
+
+**This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
 ## What this is
 A space empire strategy game ("the GitHub version"), played by friends and family as an installable web app. There is also an older claude.ai artifact copy of the game; this repo is the website build.
@@ -54,6 +56,13 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 
 ## Release checklist
 1. Edit `docs/index.html` (add a `/* vNNN: … */` note by the change).
-2. Bump `CACHE` in `docs/sw.js`.
+2. Bump `CACHE` in `docs/sw.js`, **and bump `GAME_V` in `docs/index.html` and `docs/version.json` to the same new number.** Open games check `version.json` every 2 minutes and when the tab comes back, and show an "Update now" bar when it's newer than their `GAME_V` (v220).
 3. Run a Playwright check at phone (390 × 844) and Fold (884 × 1030) sizes.
 4. `git fetch origin main && git rebase origin/main`, commit, push to `main`.
+5. Publish the same game to the claude.ai artifact (https://claude.ai/artifact/YSphcWgn5cKuSSYNPhD8hP): `docs/index.html` without the website-only lines.
+
+## Recent versions
+- **v215:** the Citadel Supercarrier launches twice as many, smaller fighters (16–28).
+- **v216:** Cube champion titles (`allyGlory`, `gloryPill`, `gloryBanner`) on the alliance page, alliance list and sheet, Rankings and profile cards; a "Holding the Cube" badge during a live battle.
+- **v217–v219:** the Void Concord bot pact is disbanded. Each player's 30 nearest bots (`FRIEND_BOTS`, `S.friendBots`, the same as `allyBots()`) are friendly and join joint strikes; the other 970 are hostile to everyone and raid colonies. (v218 was taken by an app build that changed only `sw.js`.)
+- **v220:** `GAME_V` plus `version.json` "Update now" bar; the service worker always asks the server for fresh files (no 10-minute browser cache).
