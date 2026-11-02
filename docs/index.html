@@ -2094,7 +2094,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 222;
+const GAME_V = 223;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -10464,7 +10464,7 @@ function vFleets() {
   const T = now(), raid = S.raid, hw = homePlanet(), mine = myPlanets();
   // every fleet from every planet you own, on one screen; chips narrow it to one planet
   const worlds = [hw, ...mine.filter(p => p.kind !== "home")].filter(Boolean), fromOf = f => f.from && G.byId[f.from] ? f.from : hw ? hw.id : "";
-  const fsel = sub.ffrom && worlds.some(p => p.id === sub.ffrom) ? sub.ffrom : "all";
+  const fsel = "all"; /* v223: the in-flight list always shows every planet's fleets (the planet filter was removed) */
   const sorted = S.fleets.filter(f => fsel === "all" || fromOf(f) === fsel || f.pid === fsel).sort((a, b) => ((fleetBounds(a) || [0, 9e15])[1]) - ((fleetBounds(b) || [0, 9e15])[1]));
   const cards = sorted.map(f => {
     const tg = fleetTarget(f), o = f.from && G.byId[f.from] ? G.byId[f.from] : homePlanet(), bnd = fleetBounds(f), tot = Object.values(f.n || {}).reduce((a, b) => a + b, 0);
@@ -10496,10 +10496,10 @@ function vFleets() {
     return `<div class="fcard fworld"><div class="top"><b>${p === hw ? "🏠 " : ""}${esc(p === hw ? S.homeName : p.name)}</b><span class="pill ${n ? "go" : ""}">${fmt(n)} ships${out ? ` · ${out} out` : ""}</span></div>
       ${n ? unitGrid(sh) : '<p class="note" style="margin:0">No ships docked here.</p>'}
       <div class="acts"><button class="btn sm" data-act="fDeploy" data-id="${p === hw ? "home" : p.id}" ${n ? "" : "disabled"}>🚀 Deploy</button><button class="btn ghost sm" data-act="fTransport" data-id="${p === hw ? "home" : p.id}" ${worlds.length > 1 ? "" : "disabled"}>⇄ Transport</button></div></div>`; }).join("");
-  const label = fsel === "all" ? "In flight · all planets" : `In flight from ${esc((G.byId[fsel] || {}).name || S.homeName)}`;
+  const label = "In flight";
   return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 class="sec" style="flex:1">Fleet command · ${fleetsUsed()} / ${maxFleets()} slots</h2><span class="shard" title="Void Shards">◆ ${fmt(S.shards)}</span></div>
     ${radarCard()}${raid ? `<div class="radar"><b class="h">⚠ HIVE RAID</b><div class="row"><span>${esc(S.homeName)}<small>Lv.${raid.lvl} raiders</small></span><b style="font-family:var(--f-display);color:var(--red)" data-end="${raid.at}">${ftime(raid.at - T)}</b></div></div>` : ""}
-    ${orders}${chips}<h2 class="sec">${label} · ${sorted.length}</h2>${cards || `<div class="empty">${fsel === "all" ? "No fleets in flight. Send one with Fleet orders above." : "No fleets from this planet in flight."}</div>`}
+    ${orders}<h2 class="sec">${label} · ${sorted.length}</h2>${cards || `<div class="empty">${fsel === "all" ? "No fleets in flight. Send one with Fleet orders above." : "No fleets from this planet in flight."}</div>`}
     ${jsFleetSection()}
     ${(S.strikes || []).length ? `<h2 class="sec">Missiles in flight</h2><div class="queue">${S.strikes.map(s => { const p = G.byId[s.pid]; return `<div class="qrow"><div><div class="lbl">Ballistic ×${s.n}</div><div class="what">→ ${esc(p ? p.name : "target")}</div></div><div class="acts"><span class="t" data-end="${s.at}">${ftime(s.at - T)}</span></div><div class="bar"><i data-s="${s.out}" data-e="${s.at}"></i></div></div>`; }).join("")}</div>` : ""}
 `;
