@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-01 (America/Phoenix). Current game version: **v228** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v35**.
+Last updated: 2026-11-01 (America/Phoenix). Current game version: **v229** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v36**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -74,3 +74,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v226:** the Fleets tab shows only three buttons (Deploy, Transport, Attack) above In flight. Deploy and Transport open their own sheet (`fo`, `shFo`) holding the order form; `foRedraw()` redraws whichever holds it, and sending closes the sheet.
 - **v227:** the Fleets tab Attack button opens the Finder (pirates by default, or the last kind searched: Cubes, monsters, pyramids).
 - **v228:** each ship class fires in its own colour from its card art (`SHOT_COL`, `shotCol`): bolts, muzzle flashes, rail salvos and lances. Aliens, monsters and defences keep the side colour.
+- **v229:** iPhone/iPad memory. `gpuNap()` shrinks the galaxy map and colony WebGL buffers (and their 2D overlays) to 1 px while a battle is open and restores them on close; iOS draws battles with 20+ squadrons at 1.5x; iOS keeps fewer cached ship pictures (40 battle, 32 other). Server: `can_read` now lets a player read back their own `feedback/` docs, so feedback and crash reports (which upsert) are no longer rejected for non-owners.

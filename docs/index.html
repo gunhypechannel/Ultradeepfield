@@ -2101,7 +2101,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 228;
+const GAME_V = 229;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -7776,7 +7776,7 @@ function studio() {
 function cachePut(S, key, val) {
   S.cache[key] = val; if (!val || !val.getContext) return val;
   const side = key.endsWith("|side"), ord = side ? (S.orderSide || (S.orderSide = [])) : (S.order || (S.order = [])); ord.push(key); // v66: battle sprites keep their own 96 slots, so card art never evicts them mid-fight
-  while (ord.length > (side ? (MOBILE ? 56 : 96) : 48)) { /* v83: phones keep fewer large battle sprites (memory pressure was crashing them) */ const old = ord.shift(), c = S.cache[old]; if (c && c.getContext && c !== val) { c.width = c.height = 0; } delete S.cache[old]; }
+  while (ord.length > (side ? (IOS ? 40 : MOBILE ? 56 : 96) : IOS ? 32 : 48)) /* v229: iOS keeps fewer cached ship pictures */ { /* v83: phones keep fewer large battle sprites (memory pressure was crashing them) */ const old = ord.shift(), c = S.cache[old]; if (c && c.getContext && c !== val) { c.width = c.height = 0; } delete S.cache[old]; }
   return val;
 }
 function shipMats(accent) {
@@ -12520,8 +12520,13 @@ function battleAcc(r) { const mine = r.kind === "defense" || r.kind === "raid" ?
 /* v66: start baking a battle's ship sprites the moment its report opens, so the replay starts with every ship in 3D */
 function battlePrebake(r) { if (!r || !r.start || battlePrebake[r.id]) return; battlePrebake[r.id] = 1; const acc = battleAcc(r);
   for (const sd of ["a", "d"]) { const ks = new Set(Object.keys(r.start[sd] || {})); if (r.sim && Array.isArray(r.sim[sd === "a" ? "A" : "D"])) for (const x of r.sim[sd === "a" ? "A" : "D"]) ks.add(x[0]); for (const k of ks) { cardPal(k); shipArtSoon(k, acc[sd], "side"); } } }
+/* v229 iPhone/iPad memory: iOS closes a page that holds too much graphics memory, without any warning. While a battle is open, the
+   galaxy map and colony 3D views behind it are hidden, so their screen-sized buffers shrink to 1 pixel (and their 2D overlays are
+   emptied); both are rebuilt at full size the moment the battle closes. */
+function gpuNap(on) { for (const W of [G3, C3]) { if (!W || !W.renderer) continue; try { if (on) { W.renderer.setSize(1, 1, false); W.size = [1, 1]; } else W.size = [0, 0]; } catch (e) {} }
+  if (on) for (const id of ["#galaxyfx", "#colfx"]) { const c = $(id); if (c) { c.width = 1; c.height = 1; } } }
 function playBattle(r) {
-  if (battle) closeBattle(); crumb("battle replay: " + String((r && r.title) || "battle").slice(0, 40));
+  if (battle) closeBattle(); crumb("battle replay: " + String((r && r.title) || "battle").slice(0, 40)); gpuNap(true);
   const w = document.createElement("div"); w.className = "battle"; w.id = "battle";
   w.innerHTML = `<canvas id="bcv" aria-label="Battle replay"></canvas>
     <div class="bhud top" id="bhA"></div><div class="bhud bot" id="bhD"></div><div class="bev" id="bev" aria-live="polite"></div>
@@ -12622,7 +12627,7 @@ function settleBattle(b) { // jump to the end: apply every remaining volley so t
 function drawBattle(t) {
   const b = battle, cv = $("#bcv"); if (!cv) return;
   /* v66 adaptive quality: phones start at 1.5x resolution (not 2x); if frames run long the battle steps down to 1.25x then 1x */
-  if (!b.qs) b.qs = Math.min(window.devicePixelRatio || 1, WEAK ? 1.5 : MOBILE ? 2 : 2.5); /* v79: start at a resolution the device can hold */ /* v76 ultra HD: native resolution, the adaptive step-down below keeps it smooth */
+  if (!b.qs) b.qs = Math.min(window.devicePixelRatio || 1, WEAK ? 1.5 : IOS ? (b.Q.length > 20 ? 1.5 : 2) : MOBILE ? 2 : 2.5); /* v229: iPhones and iPads draw big battles (20+ squadrons) at 1.5x to stay under iOS memory limits */ /* v79: start at a resolution the device can hold */ /* v76 ultra HD: native resolution, the adaptive step-down below keeps it smooth */
   /* v83 quality tiers: 0 everything, 1 no sunlit rim, glints, contrast pass or extra bloom passes, 2 also no explosion light on hulls
      and fewer particles. Slow frames raise the tier first and only then lower the resolution; fast frames earn it back */
   if (b.tier == null) b.tier = WEAK ? 2 : MOBILE ? 1 : 0;
@@ -13187,7 +13192,7 @@ function finishBattle() {
     <div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost wide" data-act="breplay">Watch again</button><button class="btn wide" data-act="bdetail" data-id="${r.id}">Full report</button><button class="btn ghost wide" data-act="bclose">Close</button></div></div>`;
   battleCtl();
 }
-function closeBattle() { if (battle) crumb("battle closed"); battle = null; try { SFX.stopAll(); } catch (e) {} const w = $("#battle"); if (w) { if (reduced) w.remove(); else { w.id = ""; w.querySelectorAll("[id]").forEach(e => e.removeAttribute("id")); w.classList.add("closing"); setTimeout(() => w.remove(), 230); } } flushSay(); }
+function closeBattle() { if (battle) crumb("battle closed"); gpuNap(false); battle = null; try { SFX.stopAll(); } catch (e) {} const w = $("#battle"); if (w) { if (reduced) w.remove(); else { w.id = ""; w.querySelectorAll("[id]").forEach(e => e.removeAttribute("id")); w.classList.add("closing"); setTimeout(() => w.remove(), 230); } } flushSay(); }
 
 /* ---------- animation loop ---------- */
 /* phones and tablets: when nobody has touched the screen for 4 seconds (and no battle is playing) the 3D views drop to 30 fps,
