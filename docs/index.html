@@ -744,6 +744,9 @@ canvas.dthumb{display:block}
 .lbw{display:flex;align-items:stretch;gap:6px}.lbw .lb{flex:1;min-width:0}.lbw .lbm{flex:none;width:42px;border-radius:10px;border:1px solid var(--line-hi);background:var(--hull);color:var(--cyan);font-size:20px;line-height:1}
 .lb .ln b .dotst{display:inline-block;vertical-align:middle;margin-right:2px}.rkt{font-style:normal;font-size:10.5px;font-family:var(--f-display);letter-spacing:.06em;padding:1px 6px;border-radius:7px;border:1px solid;vertical-align:middle}.rkt.r-lead{color:#ffd36b;border-color:rgba(255,211,107,.6)}.rkt.r-cap{color:var(--cyan);border-color:rgba(85,214,232,.55)}.rkt.r-rec{color:var(--muted);border-color:var(--line-hi)}
 /* v240 alliance tools */
+.qup h3{margin-bottom:6px}.qul{display:flex;flex-direction:column;gap:6px;margin:4px 0 8px}
+.qur{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.04)}.qur .qun{flex:1;min-width:0;display:flex;flex-direction:column}
+.qur .qun small{color:var(--muted);font-size:11px}.qur .cost{font-size:11px;display:flex;gap:6px;flex-wrap:wrap;max-width:42%}.qur .req{font-size:11px;color:var(--muted);max-width:40%;text-align:right}
 .altl{display:flex;flex-direction:column;gap:6px;margin:4px 0 8px}.altr{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.04)}
 .altr .ln{flex:1;min-width:0;display:flex;flex-direction:column}.altr .ln small{color:var(--muted);font-size:11px}.altr .lbav{width:34px;height:34px;flex:none}
 .alh{margin:12px 0 6px;font-family:var(--f-display);font-size:12px;letter-spacing:.12em;color:var(--amber)}.albio{white-space:pre-wrap;margin:6px 0;font-size:13px;line-height:1.45}
@@ -2137,7 +2140,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 243;
+const GAME_V = 244;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -11470,6 +11473,17 @@ const AI = {
   base: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 20h18M5 20v-7l4-3v10M9 20V7l6-3v16M15 20v-8l4 2v6"/></svg>',
   shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>'
 };
+/* v244 tapping one of your planets lets you upgrade it right there: its main buildings, each with its next level's cost and an Upgrade button */
+const QUP_K = ["metalMine", "crystalMine", "gasSynth", "solar", "fusion", "metalStore", "crystalStore", "gasTank", "robotics", "shipyard", "lab", "fortress", "radar", "nanite"];
+function quickUp(p, st) {
+  const home = st === "myhome", T = now(), lv = k => home ? S.b[k] || 0 : (p.b || {})[k] || 0, ks = QUP_K.filter(k => B[k] && (home ? k in S.b || BPOS[k] : CB.includes(k)));
+  const q = home ? S.bq : p.cq, busy = q ? `<p class="note">⚒ Building <b>${B[q.k].n} ${q.lvl}</b> · <span data-end="${q.e}">${ftime(q.e - T)}</span></p>` : "";
+  const row = k => { const L = lv(k), nx = home ? bNext(k) : cNext(p, k), c = cost(B[k], nx), miss = home ? missing(B[k].req) : missingAt(B[k].req, p);
+    const full = home ? bqN() >= Q_MAX || usedOf(null) + bqN() >= homeFields() : (p.cq ? 1 : 0) + cqList(p).length >= Q_MAX, pay = home ? can(c) : canCol(p, c);
+    const btn = miss.length ? `<span class="req">Needs ${miss.map(([kk, l]) => `${ANY[kk].n} ${l}`).join(", ")}</span>` : `<button class="btn sm${pay && !full ? " amber" : ""}" ${home ? `data-act="up" data-k="${k}"` : `data-act="cup" data-id="${p.id}" data-k="${k}"`} ${full || !pay ? "disabled" : ""}>${q ? "Queue" : L ? "Upgrade" : "Build"} Lv.${nx}</button>`;
+    return `<div class="qur"><span class="qun"><b>${B[k].n}</b><small>Lv.${L} · ${ftime(bTimeL(k, nx, home ? null : p) * (q ? QFAST : 1))}</small></span>${colCost(c)}${btn}</div>`; };
+  return `<div class="mcard qup"><h3>⇧ Upgrade ${esc(p.name)}</h3>${busy}<div class="qul">${ks.map((k, i) => { const nx = home ? bNext(k) : cNext(p, k), c = cost(B[k], nx), ok = !(home ? missing(B[k].req) : missingAt(B[k].req, p)).length && (home ? can(c) : canCol(p, c)); return [k, (ok ? 0 : 100) + i]; }).sort((x, y) => x[1] - y[1]).slice(0, 6).map(x => row(x[0])).join("")}</div><button class="btn ghost wide sm" data-act="${home ? "nav" : "baseSel"}" ${home ? 'data-v="build"' : `data-id="${p.id}"`}>All buildings</button></div>`;
+}
 function actionGrid(p, st) {
   const mine = st === "mine" || st === "myhome", hostile = st === "player" || st === "hive" || st === "razed" || st === "shielded", fav = !!(S.fav || {})[p.id];
   const misOK = st === "player" && p.owner && p.kind !== "home" && !isAlly(p.owner);
@@ -11646,7 +11660,7 @@ function shPlanet() {
   if (st === "myhome") {
     const src = myPlanets().filter(q => q.kind !== "home" && garrisonCount(q) > 0);
     if (src.length && (!sheet.from || sheet.from === "home" || !src.some(q => q.id === sheet.from))) { sheet.from = src[0].id; pick = {}; }
-    return head + info + ag + cineBtn(p.id) + fieldsBar(usedOf(null), fieldsOf(p)) + `<div style="display:flex;gap:8px"><button class="btn wide" data-act="nav" data-v="build">Manage buildings</button><button class="btn ghost wide" data-act="skin" data-id="${p.id}">Rename & reskin</button></div>` +
+    return head + quickUp(p, st) + info + ag + cineBtn(p.id) + fieldsBar(usedOf(null), fieldsOf(p)) + `<div style="display:flex;gap:8px"><button class="btn wide" data-act="nav" data-v="build">Manage buildings</button><button class="btn ghost wide" data-act="skin" data-id="${p.id}">Rename & reskin</button></div>` +
       (src.length ? transferSection(p) : `<h2 class="sec" id="xfer">Transfer ships & resources</h2><p class="note">Station ships on a colony to fly its resources and ships here.</p>`);
   }
   if (p.owner && isAlly(p.owner)) return head + info + ag + cineBtn(p.id) + `<p class="note">This colony belongs to your ally ${esc(nameOf(p.owner))}. Allies can't attack each other.</p>`;
@@ -11654,7 +11668,7 @@ function shPlanet() {
   if (st === "mine") {
     if (sheet.from === p.id) sheet.from = "home";
     const g = p.garrison || {};
-    return head + info + ag + cineBtn(p.id) + (p.shieldUntil > T ? `<div class="callout cy">Shield up for <b data-end="${p.shieldUntil}">${ftime(p.shieldUntil - T)}</b>. Nobody can attack it until then.</div>` : "") + (p.occUntil > T ? `<div class="callout cy">Occupation protection for <b data-end="${p.occUntil}">${ftime(p.occUntil - T)}</b>. It can still be raided, but nobody can occupy it.</div>` : "") +
+    return head + quickUp(p, st) + info + ag + cineBtn(p.id) + (p.shieldUntil > T ? `<div class="callout cy">Shield up for <b data-end="${p.shieldUntil}">${ftime(p.shieldUntil - T)}</b>. Nobody can attack it until then.</div>` : "") + (p.occUntil > T ? `<div class="callout cy">Occupation protection for <b data-end="${p.occUntil}">${ftime(p.occUntil - T)}</b>. It can still be raided, but nobody can occupy it.</div>` : "") +
       `<div style="display:flex;gap:8px"><button class="btn wide" data-act="baseSel" data-id="${p.id}">Open base</button><button class="btn ghost wide" data-act="skin" data-id="${p.id}">Rename & reskin</button></div>` +
       `<h2 class="sec">Garrison</h2>${unitGrid(g)}${garrisonCount(p) || (p.b || {}).fortress ? "" : '<p class="note">Unguarded colonies fall to any attacker with a Colony Ship.</p>'}
       ${shieldSection(p)}${transferSection(p)}
