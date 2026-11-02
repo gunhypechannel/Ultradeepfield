@@ -2101,7 +2101,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 227;
+const GAME_V = 228;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -12462,6 +12462,12 @@ setInterval(() => { try { coachRender(); } catch (e) {} }, 800);
    Attackers deploy at the top, defenders below with their planet on the horizon. Every projectile, shield flare,
    kill and withdrawal comes from the simulation's own volley log, so the counts on screen are the real ones. */
 const SIDE_COL = { a: { main: "#5fd0ff", shot: "#8fe0ff", glow: "120,210,255" }, d: { main: "#ff8a5c", shot: "#ff5a4a", glow: "255,120,90" } };
+/* v228 every ship class fires in its own colour, taken from something distinctive on its card art, so classes read apart in a
+   battle: gold fighter flares, the Heavy Fighter's blue streaks, the Cruiser's violet glow, the Destroyer's green lights, the Reaper's
+   red windows, the Guardian's white shield ring... Aliens, monsters and defences keep the side colour. */
+const SHOT_COL = { fighter: "#ffd75a", heavyFighter: "#4f8cff", lancer: "#ffa040", corvette: "#d27aff", battleship: "#ff6a4a", bastion: "#7a6bff", bomber: "#ff8a2a", destroyer: "#3dff9a", dreadnought: "#ff3b3b", worldbreaker: "#ff2a1a",
+  eclipse: "#8fd8ff", guardian: "#e6f0ff", escortCarrier: "#40f0e0", supercarrier: "#3a8cff", hauler: "#ffb020", heavyCargo: "#e0b860", recycler: "#ffc070", tender: "#7affb0", spyProbe: "#ff6af0", ark: "#ffe0a0" };
+const shotCol = (k, side) => SHOT_COL[k] || SIDE_COL[side].shot;
 const TRAVEL = { laser: .22, plasma: .45, missile: .9, torpedo: 1.1, beam: .3, ion: .35, mass: .16, flak: .14, acid: .5, none: .2 };
 const OFFS = [[0, 0], [.7, .55], [.7, -.55], [1.4, 1], [1.4, -1], [2.1, 0]];
 const GSPR = {};
@@ -12569,7 +12575,7 @@ function spawnVolley(b, v) {
   if (b.Q.length > 60 && cnt > (mis ? 4 : 2)) cnt = mis ? 4 : 2; // crowded battles (10 vs 10): fewer bolts per volley so the field never turns into a white blob
   /* v67: heavy gunships always show their cannon fire (big plasma shells with trails), and every capital ship flashes when it fires */
   const heavy = q.k === "battleship" || q.k === "bastion" || q.k === "destroyer" || q.role === "battleship"; if (heavy) cnt = Math.max(cnt, lo ? 2 : 3);
-  if (heavy || q.role === "capital" || q.role === "titan" || q.role === "cruiser" || q.role === "station") { (b.muz = b.muz || []).push({ s: v.s, t: v.t, big: q.role !== "cruiser", col: q.k === "worldbreaker" ? "#ff2a1a" : SIDE_COL[side].shot }); if (b.muz.length > 40) b.muz.shift(); }
+  if (heavy || q.role === "capital" || q.role === "titan" || q.role === "cruiser" || q.role === "station") { (b.muz = b.muz || []).push({ s: v.s, t: v.t, big: q.role !== "cruiser", col: shotCol(q.k, side) }); if (b.muz.length > 40) b.muz.shift(); }
   const icN = v.ic > 0 ? Math.round(cnt * v.ic / (v.ic + v.n + 1e-9)) : 0, tr = TRAVEL[wk] || .3, gap = mis ? .045 : .07;
   for (let j = 0; j < cnt; j++) b.fx.push({ t0: v.t + j * gap, t1: v.t + j * gap + tr * (mis ? 1 + (j % 3) * .14 : 1), v, last: j === cnt - 1, first: j === 0, n: cnt, mis, ic: j < icN && j !== cnt - 1, side, off: ((hash(v.t + "|" + j) % 100) / 100 - .5), hv: heavy ? 1 : 0, sz });
   if (lo || v.bounce) return;
@@ -12916,7 +12922,7 @@ function drawBattle(t) {
   b.salvos = b.salvos.filter(s => T - s.t0 <= s.life); const dim = Math.min(1, (busy ? 3.5 : 7) / Math.max(1, b.salvos.length + b.beams.length * 2)); // dozens of beams at once must not wash the screen white
   for (const s of b.salvos) { const age = T - s.t0; if (age < 0) continue; const A = scr[s.s], E = scr[s.e]; if (!A || !E) continue;
     const [sx, sy] = hp(s.s, s.t0 + .25, 1), [ex, ey] = hp(s.e, s.t0 + .6, 0), dx = ex - sx, dy = ey - sy, L2 = Math.hypot(dx, dy) || 1, ux = dx / L2, uy = dy / L2, nx = -uy, ny = ux, len = Math.max(L2 * 1.6, W * .9);
-    const k = age / s.life, al = k < .1 ? k / .1 : Math.pow(Math.max(0, 1 - (k - .1) / .9), 2.4), col = s.wk === "ion" ? "#c3b2ff" : s.wk === "plasma" ? (s.side === "a" ? "#7fe8ff" : "#ff9a6a") : SIDE_COL[s.side].shot, w = s.w * d * (busy ? .55 : 1), reach = (busy ? L2 * 1.12 : len) * Math.min(1, k * 6);
+    const k = age / s.life, al = k < .1 ? k / .1 : Math.pow(Math.max(0, 1 - (k - .1) / .9), 2.4), col = SHOT_COL[(Q[s.s] || {}).k] || (s.wk === "ion" ? "#c3b2ff" : s.wk === "plasma" ? (s.side === "a" ? "#7fe8ff" : "#ff9a6a") : SIDE_COL[s.side].shot), w = s.w * d * (busy ? .55 : 1), reach = (busy ? L2 * 1.12 : len) * Math.min(1, k * 6);
     if (!s.snd) { s.snd = 1; SFX.rail(s.side === "d", s.n, sp(sx, sy)); }
     for (let i = 0; i < s.n; i++) { const o = (i - (s.n - 1) / 2) * 5 * d + Math.sin(i * 12.9 + s.t0) * 2 * d, x0 = sx + nx * o + ux * 6 * d, y0 = sy + ny * o, x1 = x0 + ux * reach, y1 = y0 + uy * reach;
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.strokeStyle = col; ctx.globalAlpha = al * .22 * dim; ctx.lineWidth = w * 7; ctx.stroke(); ctx.globalAlpha = al * .85 * dim; ctx.lineWidth = w * 2.3; ctx.stroke(); ctx.strokeStyle = "#fff"; ctx.globalAlpha = al * dim; ctx.lineWidth = w * .9; ctx.stroke(); }
@@ -12924,7 +12930,7 @@ function drawBattle(t) {
   // mega beams from stations, titans and beam batteries: a charge-up glow, then a roaring column with a blinding impact
   b.beams = b.beams.filter(m => T - m.t0 <= m.charge + m.life);
   for (const m of b.beams) { const age = T - m.t0; if (age < 0) continue; const A = scr[m.s], E = scr[m.e]; if (!A || !E) continue;
-    const sx = A.x + (m.wb ? (b.face[m.s] || 1) * Math.min(W * .1 * bLen("worldbreaker") * A.s, W * .55 * A.s) * .62 : 0), sy = A.y + (m.wb ? Math.min(W * .1 * bLen("worldbreaker") * A.s, W * .55 * A.s) * .07 : 0), ex = E.x, ey = E.y, dx = ex - sx, dy = ey - sy, L2 = Math.hypot(dx, dy) || 1, ux = dx / L2, uy = dy / L2, col = (Q[m.s] || {}).k === "worldbreaker" ? "#ff2a1a" : m.wk === "ion" ? "#c3b2ff" : m.wk === "acid" ? "#a6ff6a" : m.side === "a" ? "#6fe4ff" : "#ff7a5a"; // the Cube Destroyer always fires its red laser
+    const sx = A.x + (m.wb ? (b.face[m.s] || 1) * Math.min(W * .1 * bLen("worldbreaker") * A.s, W * .55 * A.s) * .62 : 0), sy = A.y + (m.wb ? Math.min(W * .1 * bLen("worldbreaker") * A.s, W * .55 * A.s) * .07 : 0), ex = E.x, ey = E.y, dx = ex - sx, dy = ey - sy, L2 = Math.hypot(dx, dy) || 1, ux = dx / L2, uy = dy / L2, col = (Q[m.s] || {}).k === "worldbreaker" ? "#ff2a1a" : SHOT_COL[(Q[m.s] || {}).k] ? SHOT_COL[(Q[m.s] || {}).k] : m.wk === "ion" ? "#c3b2ff" : m.wk === "acid" ? "#a6ff6a" : m.side === "a" ? "#6fe4ff" : "#ff7a5a"; // the Cube Destroyer always fires its red laser
     if (m.lance) { /* v201 heavy lance from a capital hull: a quick charge at a hardpoint, then a thick beam that ends in a burst on the target */
       const [hx, hy] = hp(m.s, m.t0 + .4, 1), [tx, ty] = hp(m.e, m.t0 + .7, 0), lx = tx - hx, ly = ty - hy;
       if (age < m.charge) { const k = age / m.charge, r = (5 + 16 * k) * d; ctx.globalAlpha = .5 + .5 * k; ctx.drawImage(glowSprite(col), hx - r, hy - r, r * 2, r * 2); ctx.drawImage(glowSprite("#ffffff"), hx - r * .35, hy - r * .35, r * .7, r * .7); continue; }
@@ -12948,7 +12954,7 @@ function drawBattle(t) {
     ctx.globalAlpha = (1 - k) * .9; ctx.drawImage(glowSprite(m.col), fx2 - r, fy2 - r, r * 2, r * 2); ctx.globalAlpha = 1 - k; ctx.drawImage(glowSprite("#ffffff"), fx2 - r * .35, fy2 - r * .35, r * .7, r * .7); }
   ctx.globalAlpha = 1;
   for (const f of b.fx) {
-    if (T < f.t0) continue; const v = f.v, s = scr[v.s], e = scr[v.e], p = clamp((T - f.t0) / (f.t1 - f.t0), 0, 1), col = SIDE_COL[f.side].shot, ks = f.sz === 0 ? .5 : f.sz === 2 ? 1.45 : 1; // v201: shot size follows hull size
+    if (T < f.t0) continue; const v = f.v, s = scr[v.s], e = scr[v.e], p = clamp((T - f.t0) / (f.t1 - f.t0), 0, 1), col = shotCol((Q[v.s] || {}).k, f.side), ks = f.sz === 0 ? .5 : f.sz === 2 ? 1.45 : 1; // v201: shot size follows hull size
     const [sx, sy] = hp(v.s, f.off + f.t0 * .13, 1), [ex, ey] = hp(v.e, f.off * 1.7 + .5, 0), stop = f.ic ? .6 : 1, q = Math.min(p, stop) / 1;
     if (f.first && !f.snd) { f.snd = 1; if (f.mis) SFX.swarm(f.n, sp(sx, sy)); }
     const curve = v.wk === "missile" || v.wk === "torpedo", mx = (sx + ex) / 2 + f.off * W * .25, my = (sy + ey) / 2 - Math.abs(f.off) * H * .08;
@@ -12958,7 +12964,7 @@ function drawBattle(t) {
     else if (v.wk === "laser" || v.wk === "mass" || v.wk === "flak") { const tx = ex - sx, ty = ey - sy, L2 = Math.hypot(tx, ty) || 1, ln = (v.wk === "mass" ? 34 : v.wk === "flak" ? 6 : 16) * d * (f.sz === 0 ? .6 : ks);
       ctx.strokeStyle = v.wk === "mass" ? "#e8f4ff" : col; ctx.beginPath(); ctx.moveTo(px - tx / L2 * ln, py - ty / L2 * ln); ctx.lineTo(px, py); ctx.globalAlpha = .3; ctx.lineWidth = 6 * d * ks; ctx.stroke(); ctx.globalAlpha = 1; ctx.lineWidth = (v.wk === "flak" ? 1.6 : 2.2) * d * Math.max(.6, ks); ctx.stroke();
       if (v.wk === "mass" && !lo) { ctx.globalAlpha = .16 * (1 - p); ctx.lineWidth = 1 * d; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(px, py); ctx.stroke(); ctx.globalAlpha = 1; const hr = 4 * d; ctx.drawImage(glowSprite("#ffffff"), px - hr, py - hr, hr * 2, hr * 2); } } // v78 railgun: a hypervelocity slug leaves an ionised wake
-    else { const rr = (f.hv ? 15 * e.s : (v.wk === "torpedo" ? 9 : v.wk === "plasma" ? 8 : v.wk === "ion" ? 7 : v.wk === "acid" ? 7 : 4) * (f.mis ? 1 : ks)) * d, c2 = v.wk === "ion" ? "#b9a6ff" : v.wk === "acid" ? "#a6ff6a" : v.wk === "torpedo" ? "#ff9ad6" : col;
+    else { const rr = (f.hv ? 15 * e.s : (v.wk === "torpedo" ? 9 : v.wk === "plasma" ? 8 : v.wk === "ion" ? 7 : v.wk === "acid" ? 7 : 4) * (f.mis ? 1 : ks)) * d, c2 = v.wk === "acid" ? "#a6ff6a" : SHOT_COL[(Q[v.s] || {}).k] ? col : v.wk === "ion" ? "#b9a6ff" : v.wk === "torpedo" ? "#ff9ad6" : col;
       if (f.hv) { const tx2 = ex - sx, ty2 = ey - sy, l2 = Math.hypot(tx2, ty2) || 1, tl = 46 * d * e.s; ctx.strokeStyle = c2; ctx.globalAlpha = .45; ctx.lineWidth = rr * .9; ctx.beginPath(); ctx.moveTo(px - tx2 / l2 * tl, py - ty2 / l2 * tl); ctx.lineTo(px, py); ctx.stroke(); ctx.globalAlpha = 1; ctx.drawImage(glowSprite("#ffffff"), px - rr * .45, py - rr * .45, rr * .9, rr * .9); } // a heavy plasma shell with its glowing trail
       ctx.drawImage(glowSprite(c2), px - rr, py - rr, rr * 2, rr * 2);
       if (!curve && !lo && (v.wk === "plasma" || v.wk === "ion" || v.wk === "acid")) { ctx.save(); ctx.translate(px, py); ctx.rotate(Math.atan2(ey - sy, ex - sx)); ctx.drawImage(glowSprite(c2), -rr * 2.4, -rr * .5, rr * 3, rr); ctx.drawImage(glowSprite("#ffffff"), -rr * .55, -rr * .3, rr * 1.1, rr * .6); ctx.restore(); } // v78 plasma: a layered bolt, white core and a stretched glowing tail
