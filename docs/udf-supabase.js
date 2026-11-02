@@ -21,7 +21,7 @@
   var sb = null, sdkReady = null;
   function loadSdk() {
     if (!sdkReady) sdkReady = (window.supabase && window.supabase.createClient ? Promise.resolve() : loadScript(LIB)).then(function () {
-      sb = window.supabase.createClient(CFG.url, CFG.anonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: "udf.auth" } });
+      sb = window.supabase.createClient(CFG.url, CFG.anonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: "udf.auth" } }); /* v230: ask the browser to keep this site's storage (the saved sign-in) for good; home-screen apps on iPhone and iPad honour it */ try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {}); } catch (x) {}
       return sb;
     });
     return sdkReady;
@@ -157,7 +157,7 @@
     ".udfa .bx{width:min(380px,100%);display:flex;flex-direction:column;gap:12px}" +
     ".udfa .logo{width:88px;height:88px;margin:0 auto 4px;border-radius:22px;background:url(icons/icon-192.png) center/cover;box-shadow:0 0 30px rgba(85,214,232,.35)}" +
     ".udfa h1{margin:0;text-align:center;font:800 26px 'Oxanium',sans-serif;letter-spacing:.06em;color:#eaf6fb}.udfa h2{margin:0;text-align:center;font:800 20px 'Oxanium',sans-serif;color:#eaf6fb}" +
-    ".udfa p{margin:0;text-align:center;color:#7d95a5;font-size:14px}" +
+    ".udfa p{margin:0;text-align:center;color:#7d95a5;font-size:14px}.udfa p.tip{color:#ffd36b;font-size:13px;line-height:1.35}" +
     ".udfa button,.udfa input{font:inherit;font-size:16px;border-radius:12px;padding:13px 14px;width:100%;box-sizing:border-box}" +
     ".udfa input{background:#05090f;border:1px solid #2c5468;color:#eaf6fb;user-select:text;-webkit-user-select:text}" +
     ".udfa .g{background:#fff;color:#1f1f1f;border:0;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px}" +
@@ -171,6 +171,9 @@
   var cssDone = false;
   function addCss() { if (cssDone) return; cssDone = true; var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  /* v230: iPhone/iPad keep a Home Screen web app's storage apart from Safari's, so a sign-in made in Safari doesn't carry over to the icon */
+  var IOS_TAB = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1), DEV = /iPhone|iPod/.test(navigator.userAgent) ? "iPhone" : "iPad";
+  var STANDALONE = !!(navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches));
   function lastEmail() { try { return localStorage.getItem("udf.lastEmail") || ""; } catch (x) { return ""; } }
   function authMsg(e) {
     var m = String((e && (e.message || e.error_description)) || e || "");
@@ -196,6 +199,7 @@
         var google = CFG.google && !reset && !np;
         w.innerHTML = '<form class="bx" novalidate><div class="logo"></div><h1>ULTRA DEEP FIELD</h1><p>' + (np ? "Choose a new password." : reset ? "We'll email you a link to set a new password." : up ? "Create your commander account." : "Sign in to join the galaxy.") + '</p>' +
           (google ? '<button type="button" class="g" data-a="google">' + GICON + 'Continue with Google</button><div class="or">OR</div>' : "") +
+          (IOS_TAB && !reset && !np ? '<p class="tip">' + (STANDALONE ? "You'll stay signed in on this " + DEV + " after this." : "Tip: on " + (DEV === "iPad" ? "an iPad" : "an iPhone") + ", sign in from the game's Home Screen icon. The icon and Safari keep separate sign-ins.") + '</p>' : "") +
           (up ? '<input name="n" autocomplete="nickname" placeholder="Commander name" maxlength="24">' : "") +
           (np ? "" : '<input name="e" type="email" autocomplete="email" placeholder="Email" inputmode="email" value="' + esc(lastEmail()) + '">') +
           (reset ? "" : '<div class="pw"><input name="p" type="password" autocomplete="' + (up || np ? "new-password" : "current-password") + '" placeholder="' + (np ? "New password" : "Password") + (up || np ? ' (6+ characters)' : "") + '"><button type="button" class="eye" data-a="eye" aria-label="Show password">Show</button></div>') +
