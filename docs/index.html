@@ -2094,7 +2094,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 223;
+const GAME_V = 224;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5082,13 +5082,21 @@ const map3DInit = {};
    the session clean. If the next launch finds a session that never closed (the page was killed: the white screen), the log is kept as
    the "last unexpected close" and shown in Graphics settings, so a crash on a phone can be traced from a screenshot. */
 const CRUMB_K = "udf.crumbs";
+/* v224 crash reports: when a launch finds that the last session was killed, its flight log goes to the server's feedback inbox
+   (kind "crash") once you're signed in, so the developer can read what the game was doing when it died. Sent once per crash. */
+setInterval(() => { try { const C = G.lastCrash; if (!G.lastCrashFresh || G.crashSent || !C || !C.ev || !G.db || !G.me || G.me === "local" || G.mode !== "online") return; G.crashSent = 1;
+  const b = C.beat || {}, last = C.ev[C.ev.length - 1], id = "crash-" + String(G.me).slice(0, 36) + "-" + Date.now().toString(36);
+  G.db.doc("feedback/" + id).set({ kind: "crash", status: "new", by: G.me, name: String(G.myName || "").slice(0, 60), at: Date.now(), died: b.t || (last && last[0]) || 0, v: b.v || 0, now: typeof GAME_V !== "undefined" ? GAME_V : 0,
+    text: `Closed unexpectedly${last ? " after: " + last[1] : ""}`.slice(0, 300), beat: JSON.stringify(b).slice(0, 1500), log: C.ev.map(([tt, m]) => new Date(tt).toISOString().slice(11, 19) + " " + m).join("\n").slice(0, 4000),
+    device: navigator.userAgent.slice(0, 200), w: innerWidth, h: innerHeight }).then(() => { G.lastCrashFresh = 0; }, () => { G.crashSent = 0; });
+} catch (e) {} }, 5000);
 let CRUMBS = (() => { try { return JSON.parse(localStorage.getItem(CRUMB_K) || "null"); } catch (e) { return null; } })();
 G.lastCrash = (() => { try { if (CRUMBS && CRUMBS.open && CRUMBS.ev && CRUMBS.ev.length) { localStorage.setItem(CRUMB_K + ".last", JSON.stringify(CRUMBS)); G.lastCrashFresh = 1; return CRUMBS; } return JSON.parse(localStorage.getItem(CRUMB_K + ".last") || "null"); } catch (e) { return null; } })();
 CRUMBS = { open: true, t0: Date.now(), ev: [] };
 function crumbSave() { try { localStorage.setItem(CRUMB_K, JSON.stringify(CRUMBS)); } catch (e) {} }
 function crumb(msg) { CRUMBS.open = true; CRUMBS.ev.push([Date.now(), String(msg).slice(0, 160)]); /* v178: 160, room for an error's stack line or a stress-test result */ if (CRUMBS.ev.length > 24) CRUMBS.ev.splice(0, CRUMBS.ev.length - 24); crumbSave(); }
 function crumbBeat() { const W = typeof G3 !== "undefined" ? G3 : null, mem = performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1e6) + " MB" : "";
-  CRUMBS.beat = { t: Date.now(), view, battle: !!battle, demo: !!G.cubeDemo, dist: W && W.cam ? Math.round(W.cam.dist) : null, fps: frame.ema ? Math.round(1000 / frame.ema) : null, pr: W && W.renderer ? +W.renderer.getPixelRatio().toFixed(2) : null, mem, gl: G.glLost || 0, calls: W && W.renderer ? W.renderer.info.render.calls : null }; CRUMBS.open = true; crumbSave(); }
+  CRUMBS.beat = { v: typeof GAME_V !== "undefined" ? GAME_V : 0, t: Date.now(), view, battle: !!battle, demo: !!G.cubeDemo, dist: W && W.cam ? Math.round(W.cam.dist) : null, fps: frame.ema ? Math.round(1000 / frame.ema) : null, pr: W && W.renderer ? +W.renderer.getPixelRatio().toFixed(2) : null, mem, gl: G.glLost || 0, calls: W && W.renderer ? W.renderer.info.render.calls : null, tex: W && W.renderer ? W.renderer.info.memory.textures : null, geo: W && W.renderer ? W.renderer.info.memory.geometries : null, art: (() => { try { return STU && STU.cache ? Object.keys(STU.cache).length : null; } catch (e) { return null; } })(), sheet: (() => { try { return sheet ? sheet.type : null; } catch (e) { return null; } })(), dpr: +(devicePixelRatio || 1).toFixed(2), w: innerWidth, h: innerHeight }; CRUMBS.open = true; crumbSave(); }
 setInterval(() => { try { if (!document.hidden) crumbBeat(); } catch (e) {} }, 4000);
 document.addEventListener("visibilitychange", () => { if (document.hidden) { CRUMBS.open = false; crumbSave(); } else { CRUMBS.open = true; crumbSave(); } });
 addEventListener("pagehide", () => { CRUMBS.open = false; crumbSave(); });
@@ -14554,7 +14562,7 @@ const ACT = {
   bcam: () => { const b = battle; if (!b || !b.vw) return; if (b.vw.mode === "free") { b.vw.mode = "auto"; } else camFree(b); battleCtl(); },
   bview: () => { const b = battle; if (!b || !b.vw) return; b.vw.mode = "auto"; b.focus = null; battleCtl(); },
   bpause: () => { const b = battle; if (!b || b.done) return; b.paused = !b.paused; battleCtl(); },
-  bspeed: () => { const b = battle; if (!b) return; b.speed = b.speed === 1 ? 2 : b.speed === 2 ? 4 : b.speed === 4 ? .5 : 1; battleCtl(); },
+  bspeed: () => { const b = battle; if (!b) return; b.speed = b.speed === 1 ? 2 : b.speed === 2 ? 4 : b.speed === 4 ? .5 : 1; battleCtl(); try { crumb(`battle speed ${b.speed}x · ${(b.Q || []).length} stacks`); } catch (e) {} },
   bros: d => { const b = battle; if (!b) return; b.rosOpen = b.rosOpen || {}; b.rosOpen[d.s] = !b.rosOpen[d.s]; },
   bfx: () => { const b = battle; if (!b) return; b.lowFx = !b.lowFx; G.lowFx = b.lowFx; battleCtl(); },
   breplay: () => { const b = battle; if (!b) return; const r = b.r, sp = b.speed, lf = b.lowFx; playBattle(r); battle.speed = sp; battle.lowFx = lf; battleCtl(); },
