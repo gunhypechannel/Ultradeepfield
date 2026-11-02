@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-02 (America/Phoenix). Current game version: **v240** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v49**.
+Last updated: 2026-11-02 (America/Phoenix). Current game version: **v241** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v50**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -88,3 +88,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v238:** the six ringed skins (forge, pearl, metropolis, lattice, clockwork, saturn) were redone from the wider-spaced reference sheet with their full rings, drawing the world at .25 of the frame instead of .34 (`PX_RING`, `pxF()` wherever a painting is scaled to its globe). The eight commander avatars are paintings (`docs/avatars/<id>.webp`, `avPic()` in `drawAvatar`; the old drawn portraits are the fallback). Players can no longer use their own photo (`avNorm` drops "photo", the button is gone, `avPhoto` does nothing).
 - **v239:** tapping your planet name opens "Your planets": every world you hold, each shown in its skin (painted name in its glow colour), on a see-through glass panel (`#sheetwrap.glass`, `.pw` rows), with Change this planet's skin and the move panel below. Every planet card (yours, rivals', bots') has 🎥 Cinematic view (`cineObj` now films planets; framed at 4.6× the globe). Avatars are cropped wider (1.45× the hex) so whole heads and hats show.
 - **v240:** new Orbital Fortress painting (`art/fortress.webp`). Cube bosses are harder (`cubeForce`: cubes every 6 levels, 2+1.2×lvl spheres, 8+5×lvl drones; stats ×(.5+.25×lvl), was .3+.12). Alliance leader tools card (`allyTools`): alliance bio (`a.bio`), member titles (`a.titles`, set in the member sheet), one-tap Kick (two taps to confirm, `allyKickQ`), and wars (`a.wars`; either side declaring counts, `warWith`/`atWar`). Enemy commanders' worlds get a pulsing red ring and a red ⚔ label on the map, from much further out.
+- **v241:** the station painting belongs to the Alliance Space Station card (`art/allyStation.webp`, an <img> in place of the 3D render); the Orbital Fortress card has its old art back.

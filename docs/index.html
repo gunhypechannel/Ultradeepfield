@@ -768,6 +768,7 @@ canvas.dthumb{display:block}
 .cbadge{font-style:normal;display:inline-block;min-width:16px;padding:0 4px;border-radius:8px;background:var(--amber);color:#1a1206;font-size:10px;line-height:16px;text-align:center}
 /* alliance station and help */
 .mcard.station canvas{width:100%;height:110px;border-radius:10px;background:#03070d;margin-bottom:6px}
+.mcard.station .stimg{display:block;width:100%;aspect-ratio:1.95;object-fit:cover;border-radius:10px;background:#03070d;margin-bottom:8px}
 /* planet tints */
 .tints{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.tn{aspect-ratio:1;border-radius:50%;border:2px solid rgba(255,255,255,.18);background:var(--tc);color:var(--muted);cursor:pointer;font-size:14px}.tn.on{border-color:#fff;box-shadow:0 0 0 2px var(--cyan)}
 .skins{grid-template-columns:repeat(5,1fr)}
@@ -2136,7 +2137,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 240;
+const GAME_V = 241;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13968,7 +13969,7 @@ function helpCards(a) {
   return `<div class="mcard"><h3>Alliance help</h3>${job ? (asked ? `<p>Help requested for <b>${esc(job.lbl)}</b> · ${Object.keys(mine.by || {}).length} / ${HELP_MAX} helped.</p>` : `<div class="crow"><span class="nm">${esc(job.lbl)}<small>finishes in <b data-end="${job.e}">${ftime(job.e - T)}</b></small></span><button class="btn sm" data-act="askHelp">Ask for help</button></div>`) : '<p class="note">Start a construction to ask your alliance for help.</p>'}
       ${reqs.length ? reqs.map(([u, r]) => { const did = r.by && r.by[G.me]; return `<div class="crow"><span class="nm">${esc(nameOf(u))}<small>${esc(r.k)} · ${Object.keys(r.by || {}).length}/${HELP_MAX}</small></span>${did ? '<span class="pill ok">Helped</span>' : `<button class="btn amber sm" data-act="giveHelp" data-u="${u}" ${today >= HELP_DAY ? "disabled" : ""}>Help</button>`}</div>`; }).join("") : '<p class="note">No one needs help right now.</p>'}
       <p class="note">Each help cuts 4% of the remaining build time (at least 1 minute), up to ${HELP_MAX} per job. You can help ${HELP_DAY} times a day (${today} so far), and every 5 helps you give earn ◆1.</p></div>
-    <div class="mcard station"><canvas data-ship="fortress" data-fac="${facOf()}" role="img" aria-label="Alliance space station"></canvas><h3>Space Station · Lv.${L}</h3>${mrow("Member capacity", `${Object.keys(a.members).length} / ${cap}${L < STATION_MAX ? ` → ${cap + 10}` : " (max)"}`)}
+    <div class="mcard station"><img class="stimg" src="art/allyStation.webp" alt="Alliance space station" loading="lazy"><h3>Space Station · Lv.${L}</h3>${mrow("Member capacity", `${Object.keys(a.members).length} / ${cap}${L < STATION_MAX ? ` → ${cap + 10}` : " (max)"}`)}
       ${c ? `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">${costHTML(c)}<button class="btn sm" data-act="stationUp" ${can(c) ? "" : "disabled"}>Upgrade</button></div><p class="note">Any member can pay to upgrade the station. Each level adds 10 member slots, up to 100.</p>` : '<p class="note">The station is fully built: 100 members.</p>'}</div>`;
 }
 
