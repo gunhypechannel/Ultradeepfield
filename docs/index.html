@@ -743,6 +743,16 @@ canvas.dthumb{display:block}
 /* v235 alliance member rows: online dot, rank tag, manage button; quick join */
 .lbw{display:flex;align-items:stretch;gap:6px}.lbw .lb{flex:1;min-width:0}.lbw .lbm{flex:none;width:42px;border-radius:10px;border:1px solid var(--line-hi);background:var(--hull);color:var(--cyan);font-size:20px;line-height:1}
 .lb .ln b .dotst{display:inline-block;vertical-align:middle;margin-right:2px}.rkt{font-style:normal;font-size:10.5px;font-family:var(--f-display);letter-spacing:.06em;padding:1px 6px;border-radius:7px;border:1px solid;vertical-align:middle}.rkt.r-lead{color:#ffd36b;border-color:rgba(255,211,107,.6)}.rkt.r-cap{color:var(--cyan);border-color:rgba(85,214,232,.55)}.rkt.r-rec{color:var(--muted);border-color:var(--line-hi)}
+/* v239 the planet list: see-through glass so the galaxy shows behind it */
+#sheetwrap.glass .scrim{background:rgba(0,0,0,.18)!important;backdrop-filter:none!important}
+#sheetwrap.glass .sheet{background:rgba(8,16,28,.62)!important;backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2);border-color:rgba(120,200,255,.25)!important}
+.pwl{display:flex;flex-direction:column;gap:8px;margin:6px 0 10px}
+.pw{display:flex;align-items:center;gap:12px;text-align:left;padding:8px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:inherit;font:inherit;width:100%}
+.pw.here{border-color:var(--pc);box-shadow:0 0 0 1px var(--pc) inset,0 0 18px -6px var(--pc)}
+.pw canvas{width:76px;height:76px;flex:none;filter:drop-shadow(0 0 10px var(--pc))}
+.pwt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pwt .nm{font-weight:800;font-size:15px}
+.pws{font-size:12px;color:var(--pc);font-weight:700}.pwt .sub{font-size:11px;color:var(--muted)}
+.pwr{display:flex!important;gap:8px;flex-wrap:wrap;font-size:12px;margin-top:2px}.pwr small{color:var(--muted);margin-left:2px}
 .qjoin{border-color:rgba(240,169,69,.55)!important;background:linear-gradient(160deg,rgba(240,169,69,.12),transparent 60%)}
 /* chat */
 .chatlog{display:flex;flex-direction:column;gap:6px;max-height:46vh;min-height:160px;overflow-y:auto;padding:6px 2px;overscroll-behavior:contain}
@@ -2121,7 +2131,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 238;
+const GAME_V = 239;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -7441,6 +7451,7 @@ function draw3D(t) {
   // v135: a filmed boss, station or monster: the camera rides with it (a monster's heading drives chase, side and head-on)
   if (cam.cineObj) { const q = cineObjPos(W, T); if (!q) cineEnd(); else { goal = Object.assign({}, goal || {}, { tx: q.x, ty: q.y, tz: q.z }); cam.head = q.yaw != null ? q.yaw : (cam.head || 0) + .0002 * (W.dtk || 1);
       // frame it by its real size once its model is up (a Cube boss is many times larger than a squid)
+      if (!cam.cineObj.fit && G.byId[cam.cineObj.id] && W.planets && W.planets.get(cam.cineObj.id)) { const o = W.planets.get(cam.cineObj.id); cam.cineObj.fit = 1; cam.cineObj.r = o.rad; cam.goal = Object.assign({}, cam.goal || {}, { dist: clamp(o.rad * 4.6, 3, 150) }); }
       if (!cam.cineObj.fit) { const id = cam.cineObj.id, o = (id[0] === "y" ? W.pyramids : W.pirates).get(id); if (o && o.grp.visible) { const sp = new TH.Box3().setFromObject(o.mon && o.body ? o.body : o.grp).getBoundingSphere(new TH.Sphere()); if (sp.radius > 0) { cam.cineObj.fit = 1; cam.cineObj.r = sp.radius; cam.goal = Object.assign({}, cam.goal || {}, { dist: clamp(sp.radius * 2.6, 3, 150) }); } } } } }
   // v93 cinematic: preset angles ease around the fleet as it flies; "free" leaves the angle to your finger
   if (cam.cine && (cam.followFleet || cam.followMv || cam.cineBattle || cam.cineObj)) { const want = cineAngle((cam.cineBattle || cam.cineGather) && cam.cine.m !== "free" ? "orbit" : cam.cine.m, cam.head || 0, cam);
@@ -10110,15 +10121,15 @@ function logiBody(mine, fromRow) {
     ${L.msg ? `<p class="note" style="color:var(--amber)">${esc(L.msg)}</p>` : L.capped ? `<p class="note" style="color:var(--amber)">Limited to the cargo space of the ships at ${esc(L.fp.name)}. Build more cargo ships to move more at once.</p>` : ""}
     <button class="btn wide" data-act="logiSend" ${L.ok && canPlay() ? "" : "disabled"}>Send to ${esc(L.tp.name)}</button>`;
 }
-function shPlanets() {
+function shPlanets() { /* v239: tap your planet's name for every world you hold, each shown wearing its skin, over a see-through panel */
   const mine = myPlanets().slice().sort((a, b) => (a.kind === "home" ? -1 : 0) - (b.kind === "home" ? -1 : 0)), cur = sub.base || "home";
-  return `<div class="hd"><div><div class="chapter">Your empire · ${Math.max(1, mine.length)} / ${worldCap()}</div><h2>Planets</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
-    ${logisticsPanel(mine)}
-    <h2 class="sec">Switch base</h2>
-    <div class="list">${mine.map(p => { const id = p.kind === "home" ? "home" : p.id, hm = p.kind === "home", s = hm ? S.res : colStock(p), r = hm ? rates() : colonyRates(p), busy = hm ? (S.sq.length ? "Shipyard busy" : "") : p.sq ? "Shipyard busy" : "";
-      return `<button class="tgt" data-act="baseSel" data-id="${id}"><canvas data-p="${p.id}"></canvas><span><span class="nm">${esc(p.name)}${hm ? " ⌂" : ""}</span><br><span class="sub">${TYPE_N[p.type]} · ${usedOf(hm ? null : p)}/${fieldsOf(p)} fields · ${fmt(hm ? Object.values(S.ships).reduce((a, b) => a + b, 0) : garrisonCount(p))} ships${(hm ? S.b.shipyard : (p.b || {}).shipyard) ? ` · Shipyard Lv.${hm ? S.b.shipyard : p.b.shipyard}${busy ? " (busy)" : ""}` : ""}</span>
-        <span class="cost" style="display:flex;gap:8px;margin-top:3px;flex-wrap:wrap">${["m", "c", "g"].map(k => `<span class="ci r-${k}">${RI[k]}${fmt(s[k])}<small style="color:var(--muted)">&nbsp;+${fmt(r[k])}/m</small></span>`).join("")}</span></span>${cur === id ? '<span class="pill go">Here</span>' : '<span class="pill ok">Go</span>'}</button>`; }).join("")}</div>
-    <p class="note">Each planet with a Shipyard builds its own ships: open the planet, then Details → Shipyard. New ships join that planet's garrison.</p>`;
+  return `<div class="hd"><div><div class="chapter">Your empire · ${Math.max(1, mine.length)} / ${worldCap()} worlds</div><h2>Your planets</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
+    <div class="pwl">${mine.map(p => { const id = p.kind === "home" ? "home" : p.id, hm = p.kind === "home", s = hm ? S.res : colStock(p), r = hm ? rates() : colonyRates(p), sk = pxOf(p), here = cur === id;
+      return `<button class="pw${here ? " here" : ""}" data-act="baseSel" data-id="${id}" style="--pc:${sk ? sk.glow : "#5fd8ff"}"><canvas data-p="${p.id}"></canvas><span class="pwt"><span class="nm">${esc(p.name)}${hm ? " ⌂" : ""}</span>
+        <span class="pws">${sk ? `◆ ${esc(sk.n)}` : `${TYPE_N[p.type]} · natural surface`}</span><span class="sub">${hm ? "Homeworld" : "Colony"} · [${coordStr(p)}] · ${usedOf(hm ? null : p)}/${fieldsOf(p)} fields</span>
+        <span class="cost pwr">${["m", "c", "g"].map(k => `<span class="ci r-${k}">${RI[k]}${fmt(s[k])}<small>+${fmt(r[k])}/m</small></span>`).join("")}</span></span>${here ? '<span class="pill go">Here</span>' : '<span class="pill ok">Go</span>'}</button>`; }).join("")}</div>
+    <div class="row2"><button class="btn ghost wide" data-act="skin" data-id="${cur === "home" ? (homePlanet() || {}).id || "" : cur}">Change this planet's skin</button></div>
+    ${mine.length > 1 ? logisticsPanel(mine) : ""}`;
 }
 function vBaseOld() {
   const selp = sub.base && sub.base !== "home" ? G.byId[sub.base] : null;
@@ -11029,12 +11040,13 @@ function cineAngle(m, yaw, c) { const back = Math.atan2(-Math.cos(yaw), -Math.si
 function cineStart(m) { if (!G3 || !(G3.cam.followFleet || G3.cam.followMv)) return toast("Tap a fleet to follow it first.", "warn"); const c = G3.cam; closeSheet(); c.cine = { m: m || "chase" }; c.goal = { dist: 7 }; $("#app").classList.add("cine"); cineBar(); fleetHud(true); }
 /* v135: film a Cube boss, a pyramid station or a space monster: the camera circles it, with the same angle buttons and free look */
 const cineBtn = id => `<button class="btn ghost wide" style="margin:6px 0" data-act="cineObj" data-id="${esc(id)}">🎥 Cinematic view</button>`;
-function cineObjStart(id, n) { const it = PB[id] || YB[id]; if (!it) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); }
+function cineObjStart(id, n) { const it = PB[id] || YB[id] || G.byId[id]; if (!it) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); }
   if (!G3) { if ((n || 0) < 20) setTimeout(() => cineObjStart(id, (n || 0) + 1), 300); return; }
   const c = G3.cam; if (c.followMv) followMvEnd(G3, 1); c.follow = null; c.followFleet = null; c.vel = null; c.cineObj = { id }; c.cine = { m: "orbit" }; c.head = it.a0 || 0;
   c.goal = { dist: 40 }; $("#app").classList.add("cine"); cineBar(); } // the distance is fitted to the model's real size once it is in view
 /* where the filmed object is now (a monster swims its loop, so its body is tracked when the model exists) */
-function cineObjPos(W, T) { const id = W.cam.cineObj.id, it = PB[id] || YB[id]; if (!it) return null; const o = (id[0] === "y" ? W.pyramids : W.pirates) && (id[0] === "y" ? W.pyramids : W.pirates).get(id);
+function cineObjPos(W, T) { const id = W.cam.cineObj.id, it = PB[id] || YB[id] || G.byId[id]; if (!it) return null;
+  if (G.byId[id] && !PB[id] && !YB[id]) { const o = W.planets && W.planets.get(id); if (o) { const v = o.grp.position; return { x: v.x, y: v.y, z: v.z, yaw: null }; } } const o = (id[0] === "y" ? W.pyramids : W.pirates) && (id[0] === "y" ? W.pyramids : W.pirates).get(id);
   if (o && o.mon && o.body && o.grp.visible) { const v = o.body.getWorldPosition(V3); return { x: v.x, y: v.y, z: v.z, yaw: Math.atan2(Math.cos(o.body.rotation.y), -Math.sin(o.body.rotation.y)) }; } // v144: the heading it swims (the fleets' convention)
   const q = P3(it, T); return { x: q.x, y: q.y, z: q.z, yaw: null }; }
 /* v188 watch a fight on the map in cinematic view: the camera cuts to it and circles it (the existing battle shot, with the angle buttons
@@ -11373,6 +11385,7 @@ function renderSheet() {
   renderSheet.html = html;
   // details pages open full screen; buildings and technologies with a painting use it as the backdrop behind glass panels
   const shEl = w.querySelector(".sheet"), det = sheet.type === "detail", pkey = det ? sheet.kind + "|" + sheet.k + "|" + facOf() : "", pic = det && (ART[sheet.k] || POSTER[pkey]);
+  w.classList.toggle("glass", sheet.type === "planets"); /* v239 */
   if (shEl) { shEl.classList.toggle("full", det); shEl.classList.toggle("pic", !!pic); shEl.classList.toggle("uart", det && (sheet.kind === "s" || sheet.kind === "d")); shEl.style.setProperty("--dart", pic ? `url("${pic}")` : "none");
     // no painting yet: bake the tall studio poster after the sheet has slid in, then fade it in behind the glass
     if (det && !pic && POSTER[pkey] === undefined) { const want = pkey; setTimeout(() => { if (!sheet || sheet.type !== "detail" || sheet.kind + "|" + sheet.k + "|" + facOf() !== want) return; if (posterOf(sheet.kind, sheet.k)) renderSheet(); }, 380); } }
@@ -11607,15 +11620,15 @@ function shPlanet() {
   if (st === "myhome") {
     const src = myPlanets().filter(q => q.kind !== "home" && garrisonCount(q) > 0);
     if (src.length && (!sheet.from || sheet.from === "home" || !src.some(q => q.id === sheet.from))) { sheet.from = src[0].id; pick = {}; }
-    return head + info + ag + fieldsBar(usedOf(null), fieldsOf(p)) + `<div style="display:flex;gap:8px"><button class="btn wide" data-act="nav" data-v="build">Manage buildings</button><button class="btn ghost wide" data-act="skin" data-id="${p.id}">Rename & reskin</button></div>` +
+    return head + info + ag + cineBtn(p.id) + fieldsBar(usedOf(null), fieldsOf(p)) + `<div style="display:flex;gap:8px"><button class="btn wide" data-act="nav" data-v="build">Manage buildings</button><button class="btn ghost wide" data-act="skin" data-id="${p.id}">Rename & reskin</button></div>` +
       (src.length ? transferSection(p) : `<h2 class="sec" id="xfer">Transfer ships & resources</h2><p class="note">Station ships on a colony to fly its resources and ships here.</p>`);
   }
-  if (p.owner && isAlly(p.owner)) return head + info + ag + `<p class="note">This colony belongs to your ally ${esc(nameOf(p.owner))}. Allies can't attack each other.</p>`;
-  if (st === "home") return head + info + ag + `<p class="note">Homeworlds are protected. You can take this commander's colonies, but not their homeworld.</p>`;
+  if (p.owner && isAlly(p.owner)) return head + info + ag + cineBtn(p.id) + `<p class="note">This colony belongs to your ally ${esc(nameOf(p.owner))}. Allies can't attack each other.</p>`;
+  if (st === "home") return head + info + ag + cineBtn(p.id) + `<p class="note">Homeworlds are protected. You can take this commander's colonies, but not their homeworld.</p>`;
   if (st === "mine") {
     if (sheet.from === p.id) sheet.from = "home";
     const g = p.garrison || {};
-    return head + info + ag + (p.shieldUntil > T ? `<div class="callout cy">Shield up for <b data-end="${p.shieldUntil}">${ftime(p.shieldUntil - T)}</b>. Nobody can attack it until then.</div>` : "") + (p.occUntil > T ? `<div class="callout cy">Occupation protection for <b data-end="${p.occUntil}">${ftime(p.occUntil - T)}</b>. It can still be raided, but nobody can occupy it.</div>` : "") +
+    return head + info + ag + cineBtn(p.id) + (p.shieldUntil > T ? `<div class="callout cy">Shield up for <b data-end="${p.shieldUntil}">${ftime(p.shieldUntil - T)}</b>. Nobody can attack it until then.</div>` : "") + (p.occUntil > T ? `<div class="callout cy">Occupation protection for <b data-end="${p.occUntil}">${ftime(p.occUntil - T)}</b>. It can still be raided, but nobody can occupy it.</div>` : "") +
       `<div style="display:flex;gap:8px"><button class="btn wide" data-act="baseSel" data-id="${p.id}">Open base</button><button class="btn ghost wide" data-act="skin" data-id="${p.id}">Rename & reskin</button></div>` +
       `<h2 class="sec">Garrison</h2>${unitGrid(g)}${garrisonCount(p) || (p.b || {}).fortress ? "" : '<p class="note">Unguarded colonies fall to any attacker with a Colony Ship.</p>'}
       ${shieldSection(p)}${transferSection(p)}
@@ -11649,7 +11662,7 @@ function shPlanet() {
     ${oddsBlock(o)}
     <button class="btn wide" data-act="launch" data-id="${p.id}" ${Object.keys(sel).length && !sentOut && st !== "shielded" ? "" : "disabled"}>${sentOut ? "Fleet already en route" : st === "shielded" ? "Shielded" : sheet.joint && jointOK ? `Launch joint strike · ${sheet.jt || 10} min muster` : arks && count < worldCap() ? "Launch invasion" : "Launch attack"}</button>`;
   }
-  return head + info + ag + scan + (st === "player" && !isAlly(p.owner) ? missileSection(p) : "") + body;
+  return head + info + ag + cineBtn(p.id) + scan + (st === "player" && !isAlly(p.owner) ? missileSection(p) : "") + body;
 }
 /* the joint strike screen (v73): countdown to launch, a capacity bar, every member with their ships and arrival status, and the join form */
 function shRally(a) {

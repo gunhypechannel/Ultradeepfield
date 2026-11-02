@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-02 (America/Phoenix). Current game version: **v238** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v47**.
+Last updated: 2026-11-02 (America/Phoenix). Current game version: **v239** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v48**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -86,3 +86,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **Sign-in fix (udf-v45, udf-supabase.js):** a stale saved token could sign a fresh login straight back out (auth logs: password login, then "Refresh Token Not Found" refreshes, SIGNED_OUT, reload). Boot with no usable session now clears it locally (`signOut({scope:"local"})`) before the login screen, and an unrequested SIGNED_OUT first tries to restore the last good session before reloading.
 - **v237:** all 55 premium skins are painted. The 31 from the reference sheet were cut out, upscaled 4x with Real-ESRGAN x4plus (run in numpy from the .pth, no torch), and each painting is centred on its globe by a circle fit of its cut-out mask (`docs/skins/`). Every skin listed in `PX_IMG` loads `<id>.webp` and `<id>-map.webp`.
 - **v238:** the six ringed skins (forge, pearl, metropolis, lattice, clockwork, saturn) were redone from the wider-spaced reference sheet with their full rings, drawing the world at .25 of the frame instead of .34 (`PX_RING`, `pxF()` wherever a painting is scaled to its globe). The eight commander avatars are paintings (`docs/avatars/<id>.webp`, `avPic()` in `drawAvatar`; the old drawn portraits are the fallback). Players can no longer use their own photo (`avNorm` drops "photo", the button is gone, `avPhoto` does nothing).
+- **v239:** tapping your planet name opens "Your planets": every world you hold, each shown in its skin (painted name in its glow colour), on a see-through glass panel (`#sheetwrap.glass`, `.pw` rows), with Change this planet's skin and the move panel below. Every planet card (yours, rivals', bots') has 🎥 Cinematic view (`cineObj` now films planets; framed at 4.6× the globe). Avatars are cropped wider (1.45× the hex) so whole heads and hats show.
