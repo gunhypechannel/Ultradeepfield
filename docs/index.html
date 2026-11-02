@@ -633,6 +633,11 @@ canvas.dthumb{display:block}
 .logi{display:flex;flex-direction:column;gap:8px}.logi .lrow{display:flex;align-items:center;gap:8px;min-width:0}.logi .lk{flex:none;width:38px;font-family:var(--f-display);font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
 .logi .lrow .segc{flex:1;min-width:0;overflow-x:auto;flex-wrap:nowrap}.logi .lrow .segc button{flex:none;padding:7px 10px}
 .logi .lres{display:flex;justify-content:space-between;align-items:center;gap:8px}.logi .lres .ci{display:flex;align-items:center;gap:4px;min-width:0}.logi .lres small{color:var(--muted)}.logi .lres .seg{flex:none}
+/* v222 fleet orders panel */
+.forders{display:flex;flex-direction:column;gap:9px}.forders .foh{font-family:var(--f-display);letter-spacing:.1em;font-size:12px;color:var(--muted)}
+.forders .fotabs button{flex:1;padding:9px 8px;font-size:14px}.forders .lrow .segc button small{color:var(--cyan);font-family:var(--f-display);margin-left:3px}
+.forders .fodock{display:flex;flex-wrap:wrap;gap:5px}.forders .fodock .pill{font-size:11.5px}
+.logi .lships{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto}
 /* the tray: one bottom bar for every menu, sliding open into a grid */
 .tray{position:relative;z-index:12;flex:none;background:linear-gradient(180deg,#0a1f30,#081826);border-top:1px solid #1f4a66}
 .tray-bar{display:flex;flex-direction:column;align-items:stretch}
@@ -2089,7 +2094,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 221;
+const GAME_V = 222;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9982,34 +9987,41 @@ function shBaseDet() {
   return `<div class="hd"><div><div class="chapter">${p ? "Colony" : "Homeworld"} details</div><h2>${esc(p ? p.name : S.homeName)}</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${pp ? planetCard(pp, pStatus(pp)) : ""}${body.replace('<div id="colslot"></div>', "")}`;
 }
 /* logistics between your planets: pick From and To, how much of each resource, and either cargo ships only (they fly back) or every ship (they stay) */
-function logiPlan(mine) {
+/* v222 the move-resources-and-ships planner runs on the Planets sheet or on the Fleets tab's orders panel (state in sub.logi) */
+const logiSt = () => sheet && sheet.type === "planets" ? sheet : (sub.logi || (sub.logi = {}));
+const logiRedraw = () => sheet && sheet.type === "planets" ? renderSheet() : render();
+function logiPlan(mine, st) { st = st || logiSt();
   const ids = mine.map(p => p.kind === "home" ? "home" : p.id), byI = id => id === "home" ? homePlanet() : G.byId[id];
-  const from = ids.includes(sheet.lf) ? sheet.lf : ids[0], to = ids.includes(sheet.lt) && sheet.lt !== from ? sheet.lt : ids.find(x => x !== from); sheet.lf = from; sheet.lt = to;
+  const from = ids.includes(st.lf) ? st.lf : ids[0], to = ids.includes(st.lt) && st.lt !== from ? st.lt : ids.find(x => x !== from); st.lf = from; st.lt = to;
   const fp = byI(from), tp = byI(to), src = fp.kind === "home" ? S.res : colStock(fp), avail = fp.kind === "home" ? homeShipsAvail() : cleanShips(fp.garrison);
-  const pct = sheet.lr || (sheet.lr = { m: 0, c: 0, g: 0 }), mode = sheet.lmode || "cargo", mult = 1 + .15 * (S.r.logistics || 0);
+  const pct = st.lr || (st.lr = { m: 0, c: 0, g: 0 }), mode = ["all", "pick"].includes(st.lmode) ? st.lmode : "cargo", spct = st.ls || (st.ls = {}), mult = 1 + .15 * (S.r.logistics || 0);
   const want = { m: Math.floor(src.m * pct.m / 100), c: Math.floor(src.c * pct.c / 100), g: Math.floor(src.g * pct.g / 100) };
   let n = {};
   if (mode === "all") n = Object.assign({}, avail);
+  else if (mode === "pick") { for (const k in avail) { const v = Math.floor(avail[k] * (spct[k] || 0) / 100); if (v > 0) n[k] = v; } } /* v222: choose ships by type; they stay */
   else { let need = total(want); for (const k of Object.keys(avail).filter(k => SH[k] && SH[k].cargo >= 1000 && k !== "ark").sort((a, b) => SH[b].cargo - SH[a].cargo)) { if (need <= 0) break; const per = SH[k].cargo * mult, take = Math.min(avail[k], Math.ceil(need / per)); if (take > 0) { n[k] = take; need -= take * per; } } }
   const fuel = Object.keys(n).length ? fuelFor(fp, tp, n, 100) : 0; want.g = Math.max(0, Math.min(want.g, Math.floor(src.g - fuel)));
   const cap = cargoOf(n), tt = Object.keys(n).length ? travelMs(fp, tp, n, S.r, 100) : 0, ships = Object.values(n).reduce((a, b) => a + b, 0);
   // more than the holds can take: scale every resource down evenly to fit
   let capped = false; if (ships && total(want) > cap) { const k = cap / total(want); for (const r of ["m", "c", "g"]) want[r] = Math.floor(want[r] * k); capped = true; }
-  const msg = !ships ? (mode === "all" ? `No ships at ${fp.name}.` : total(want) ? `${fp.name} has no cargo ships. Build Small Cargos, Large Cargos or Recyclers there.` : "Pick how much of each resource to send.") : src.g < fuel ? `${fp.name} needs ${fmt(fuel)} gas for fuel.` : slotsFull() ? "All fleet slots are busy." : "";
-  return { from, to, fp, tp, src, avail, n, want, fuel, cap, tt, ships, mode, pct, msg, capped, ok: !msg && ships > 0 && (total(want) > 0 || mode === "all") };
+  const msg = !ships ? (mode === "all" ? `No ships at ${fp.name}.` : mode === "pick" ? (Object.keys(avail).length ? "Choose which ships to send." : `No ships at ${fp.name}.`) : total(want) ? `${fp.name} has no cargo ships. Build Small Cargos, Large Cargos or Recyclers there.` : "Pick how much of each resource to send.") : src.g < fuel ? `${fp.name} needs ${fmt(fuel)} gas for fuel.` : slotsFull() ? "All fleet slots are busy." : "";
+  return { from, to, fp, tp, src, avail, n, want, fuel, cap, tt, ships, mode, pct, spct, msg, capped, ok: !msg && ships > 0 && (total(want) > 0 || mode !== "cargo") };
 }
 function logisticsPanel(mine) {
   if (mine.length < 2) return `<div class="card"><b style="font-family:var(--f-display);letter-spacing:.08em">MOVE RESOURCES & SHIPS</b><p class="note">Once you hold two or more planets you can move resources and ships between them from here.</p></div>`;
+  return `<div class="card logi"><b style="font-family:var(--f-display);letter-spacing:.08em">MOVE RESOURCES & SHIPS</b>${logiBody(mine)}</div>`;
+}
+function logiBody(mine, fromRow) {
   const L = logiPlan(mine), chip = (id, p, act, on) => `<button class="${on ? "on" : ""}" data-act="${act}" data-id="${id}">${esc(p.name)}${p.kind === "home" ? " ⌂" : ""}</button>`;
   const ids = mine.map(p => [p.kind === "home" ? "home" : p.id, p]);
-  return `<div class="card logi"><b style="font-family:var(--f-display);letter-spacing:.08em">MOVE RESOURCES & SHIPS</b>
-    <div class="lrow"><span class="lk">From</span><div class="segc">${ids.map(([id, p]) => chip(id, p, "logiFrom", id === L.from)).join("")}</div></div>
+  return `${fromRow != null ? fromRow : `<div class="lrow"><span class="lk">From</span><div class="segc">${ids.map(([id, p]) => chip(id, p, "logiFrom", id === L.from)).join("")}</div></div>`}
     <div class="lrow"><span class="lk">To</span><div class="segc">${ids.filter(([id]) => id !== L.from).map(([id, p]) => chip(id, p, "logiTo", id === L.to)).join("")}</div><button class="btn ghost sm" data-act="logiSwap" aria-label="Swap from and to">⇅</button></div>
     ${["m", "c", "g"].map(r => `<div class="lres"><span class="ci r-${r}">${RI[r]}<b>${fmt(L.want[r])}</b><small>/ ${fmt(L.src[r])}</small></span><div class="seg">${[0, 25, 50, 100].map(v => `<button class="${L.pct[r] === v ? "on" : ""}" data-act="logiPct" data-r="${r}" data-p="${v}">${v}%</button>`).join("")}</div></div>`).join("")}
-    <div class="segc" style="margin-top:6px"><button class="${L.mode === "cargo" ? "on" : ""}" data-act="logiMode" data-v="cargo">Cargo ships · fly back</button><button class="${L.mode === "all" ? "on" : ""}" data-act="logiMode" data-v="all">All ships · stay</button></div>
+    <div class="segc" style="margin-top:6px"><button class="${L.mode === "cargo" ? "on" : ""}" data-act="logiMode" data-v="cargo">Cargo ships · fly back</button><button class="${L.mode === "pick" ? "on" : ""}" data-act="logiMode" data-v="pick">Choose ships · stay</button><button class="${L.mode === "all" ? "on" : ""}" data-act="logiMode" data-v="all">All ships · stay</button></div>
+    ${L.mode === "pick" ? `<div class="lships">${Object.entries(L.avail).filter(([, v]) => v > 0).map(([k, v]) => { const pc = (L.spct || {})[k] || 0; return `<div class="lres"><span class="ci"><b>${fmt(Math.floor(v * pc / 100))}</b>&nbsp;${esc(unitName(k))}<small>/ ${fmt(v)}</small></span><div class="seg">${[0, 25, 50, 100].map(x => `<button class="${pc === x ? "on" : ""}" data-act="logiShip" data-k="${k}" data-p="${x}">${x}%</button>`).join("")}</div></div>`; }).join("") || '<p class="note">No ships here.</p>'}</div>` : ""}
     <dl class="kv"><dt>Ships</dt><dd>${L.ships ? Object.entries(L.n).map(([k, v]) => `${fmt(v)} ${SH[k].n}`).join(", ") : "–"}</dd><dt>Cargo</dt><dd>${fmt(total(L.want))} / ${fmt(L.cap)}</dd><dt>Flight</dt><dd>${L.tt ? ftime(L.tt) + (L.mode === "cargo" ? " each way" : "") : "–"}</dd><dt>Fuel</dt><dd>${fmt(L.fuel)} gas</dd></dl>
     ${L.msg ? `<p class="note" style="color:var(--amber)">${esc(L.msg)}</p>` : L.capped ? `<p class="note" style="color:var(--amber)">Limited to the cargo space of the ships at ${esc(L.fp.name)}. Build more cargo ships to move more at once.</p>` : ""}
-    <button class="btn wide" data-act="logiSend" ${L.ok && canPlay() ? "" : "disabled"}>Send to ${esc(L.tp.name)}</button></div>`;
+    <button class="btn wide" data-act="logiSend" ${L.ok && canPlay() ? "" : "disabled"}>Send to ${esc(L.tp.name)}</button>`;
 }
 function shPlanets() {
   const mine = myPlanets().slice().sort((a, b) => (a.kind === "home" ? -1 : 0) - (b.kind === "home" ? -1 : 0)), cur = sub.base || "home";
@@ -10470,6 +10482,16 @@ function vFleets() {
   const shipsAt = p => p.kind === "home" || p === hw ? Object.fromEntries(Object.entries(S.ships).filter(([, v]) => v > 0)) : cleanShips(p.garrison || {});
   const count = o => Object.values(o).reduce((x, y) => x + y, 0);
   const chips = worlds.length > 1 ? `<div class="segc fchips">${[["all", "All planets", S.fleets.length], ...worlds.map(p => [p.id, p === hw ? `🏠 ${p.name}` : p.name, S.fleets.filter(f => fromOf(f) === p.id).length])].map(([k, l, n]) => `<button class="${fsel === k ? "on" : ""}" data-act="ffrom" data-v="${k}">${esc(l)}${n ? ` <b>${n}</b>` : ""}</button>`).join("")}</div>` : "";
+  /* v222 fleet orders: one panel (Deploy or Transport, then the planet and amounts) replaces the card per planet */
+  const orders = (() => { const st = sub.logi || (sub.logi = {}), idOf = p => p === hw ? "home" : p.id, multi = worlds.length > 1, mode = st.tab === "xfer" && multi ? "xfer" : "dep";
+    if (!worlds.some(p => idOf(p) === st.lf)) st.lf = "home"; const fp = worlds.find(p => idOf(p) === st.lf) || hw; if (!fp) return "";
+    const tabs = `<div class="segc fotabs"><button class="${mode === "dep" ? "on" : ""}" data-act="foTab" data-v="dep">🚀 Deploy</button><button class="${mode === "xfer" ? "on" : ""}" data-act="foTab" data-v="xfer" ${multi ? "" : "disabled"}>⇄ Transport</button></div>`;
+    const from = multi ? `<div class="lrow"><span class="lk">From</span><div class="segc">${worlds.map(p => { const id = idOf(p), c = count(shipsAt(p)); return `<button class="${id === st.lf ? "on" : ""}" data-act="logiFrom" data-id="${id}">${p === hw ? "🏠 " : ""}${esc(p === hw ? S.homeName : p.name)} <small>${fmt(c)}</small></button>`; }).join("")}</div></div>` : "";
+    if (mode === "xfer") return `<div class="card logi forders"><b class="foh">FLEET ORDERS</b>${tabs}${logiBody(worlds, from)}</div>`;
+    const sh = shipsAt(fp), n = count(sh), nm = fp === hw ? S.homeName : fp.name;
+    return `<div class="card logi forders"><b class="foh">FLEET ORDERS</b>${tabs}${from}
+      <div class="fodock">${n ? Object.entries(sh).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<span class="pill">${fmt(v)} ${esc(unitName(k))}</span>`).join("") : `<span class="note">No ships docked at ${esc(nm)}.</span>`}</div>
+      <button class="btn wide" data-act="fDeploy" data-id="${st.lf}" ${n ? "" : "disabled"}>Pick a target ›</button>${multi ? "" : `<p class="note" style="margin:0">Transport moves ships and resources between your planets once you hold two or more.</p>`}</div>`; })();
   const docks = worlds.map(p => { const sh = shipsAt(p), n = count(sh), out = S.fleets.filter(f => fromOf(f) === p.id).length;
     return `<div class="fcard fworld"><div class="top"><b>${p === hw ? "🏠 " : ""}${esc(p === hw ? S.homeName : p.name)}</b><span class="pill ${n ? "go" : ""}">${fmt(n)} ships${out ? ` · ${out} out` : ""}</span></div>
       ${n ? unitGrid(sh) : '<p class="note" style="margin:0">No ships docked here.</p>'}
@@ -10477,11 +10499,10 @@ function vFleets() {
   const label = fsel === "all" ? "In flight · all planets" : `In flight from ${esc((G.byId[fsel] || {}).name || S.homeName)}`;
   return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 class="sec" style="flex:1">Fleet command · ${fleetsUsed()} / ${maxFleets()} slots</h2><span class="shard" title="Void Shards">◆ ${fmt(S.shards)}</span></div>
     ${radarCard()}${raid ? `<div class="radar"><b class="h">⚠ HIVE RAID</b><div class="row"><span>${esc(S.homeName)}<small>Lv.${raid.lvl} raiders</small></span><b style="font-family:var(--f-display);color:var(--red)" data-end="${raid.at}">${ftime(raid.at - T)}</b></div></div>` : ""}
-    ${chips}<h2 class="sec">${label} · ${sorted.length}</h2>${cards || `<div class="empty">${fsel === "all" ? "No fleets in flight. Deploy ships from a planet below." : "No fleets from this planet in flight."}</div>`}
+    ${orders}${chips}<h2 class="sec">${label} · ${sorted.length}</h2>${cards || `<div class="empty">${fsel === "all" ? "No fleets in flight. Send one with Fleet orders above." : "No fleets from this planet in flight."}</div>`}
     ${jsFleetSection()}
     ${(S.strikes || []).length ? `<h2 class="sec">Missiles in flight</h2><div class="queue">${S.strikes.map(s => { const p = G.byId[s.pid]; return `<div class="qrow"><div><div class="lbl">Ballistic ×${s.n}</div><div class="what">→ ${esc(p ? p.name : "target")}</div></div><div class="acts"><span class="t" data-end="${s.at}">${ftime(s.at - T)}</span></div><div class="bar"><i data-s="${s.out}" data-e="${s.at}"></i></div></div>`; }).join("")}</div>` : ""}
-    <h2 class="sec">Ships at your planets · ${worlds.length}</h2><div class="fworlds">${docks}</div>
-    ${worlds.length > 1 ? "" : `<p class="note">Transport moves ships and resources between your planets once you hold two or more.</p>`}`;
+`;
 }
 /* attack screens: pick a doctrine, then see the odds and the projected outcome from a dozen simulated runs */
 function oddsBlock(o) {
@@ -14171,17 +14192,19 @@ const ACT = {
   tile: d => { if (view !== "galaxy") { view = "galaxy"; render(); } G.sel = null; G.selNode = d.id; openSheet({ type: "tile", id: d.id }); },
   tileGo: d => { const e = EB[d.id]; if (!e) return; if (G3) { const q = P3(e, now()), c = G3.cam; c.follow = null; c.followFleet = null; c.vel = null; c.goal = { tx: q.x, ty: q.y, tz: q.z, dist: 42 }; } else { const q = pos(e, now()); camTo(q.x, q.y); } ACT.tile({ id: d.id }); },
   orbL: d => { G.orbL = +d.v || 0; renderSheet(); },
-  logiFrom: d => { sheet.lf = d.id; if (sheet.lt === d.id) sheet.lt = null; renderSheet(); },
-  logiTo: d => { sheet.lt = d.id; renderSheet(); },
-  logiSwap: () => { const a = sheet.lf; sheet.lf = sheet.lt; sheet.lt = a; renderSheet(); },
-  logiPct: d => { sheet.lr = sheet.lr || { m: 0, c: 0, g: 0 }; sheet.lr[d.r] = +d.p || 0; renderSheet(); },
-  logiMode: d => { sheet.lmode = d.v === "all" ? "all" : "cargo"; renderSheet(); },
+  logiFrom: d => { const s = logiSt(); if (s.lf !== d.id) s.ls = {}; s.lf = d.id; if (s.lt === d.id) s.lt = null; logiRedraw(); },
+  logiTo: d => { const s = logiSt(); s.lt = d.id; logiRedraw(); },
+  logiSwap: () => { const s = logiSt(), a = s.lf; s.lf = s.lt; s.lt = a; s.ls = {}; logiRedraw(); },
+  logiPct: d => { const s = logiSt(); s.lr = s.lr || { m: 0, c: 0, g: 0 }; s.lr[d.r] = +d.p || 0; logiRedraw(); },
+  logiMode: d => { const s = logiSt(); s.lmode = ["all", "pick"].includes(d.v) ? d.v : "cargo"; logiRedraw(); },
+  logiShip: d => { const s = logiSt(); s.ls = s.ls || {}; s.ls[d.k] = +d.p || 0; logiRedraw(); },
+  foTab: d => { const s = sub.logi || (sub.logi = {}); s.tab = d.v === "xfer" ? "xfer" : "dep"; render(); },
   logiSend: () => act(() => {
-    if (!canPlay()) return; advance(now()); const mine = myPlanets().slice().sort((a, b) => (a.kind === "home" ? -1 : 0) - (b.kind === "home" ? -1 : 0)), L = logiPlan(mine);
+    if (!canPlay()) return; advance(now()); const mine = myPlanets().slice().sort((a, b) => (a.kind === "home" ? -1 : 0) - (b.kind === "home" ? -1 : 0)), st = logiSt(), L = logiPlan(mine, st);
     if (!L.ok) return toast(L.msg || "Nothing to send.", "warn");
-    const keep = sheet.from; sheet.from = L.from; const f = sendFleet(L.tp, L.n, "transfer", { stay: L.mode === "all" }); sheet.from = keep; if (!f) return;
+    const sh0 = sheet; if (!sheet) sheet = { type: "_logi" }; const keep = sheet.from; sheet.from = L.from; let f; try { f = sendFleet(L.tp, L.n, "transfer", { stay: L.mode !== "cargo" }); } finally { if (sheet) sheet.from = keep; if (!sh0) sheet = null; } if (!f) return;
     const src = L.fp.kind === "home" ? S.res : (settle(L.fp), L.fp.st); for (const k of ["m", "c", "g"]) src[k] = Math.max(0, src[k] - L.want[k]); f.cargo = L.want; if (L.fp.kind !== "home") putPlanet(L.fp);
-    sheet.lr = { m: 0, c: 0, g: 0 }; toast(`${fmt(L.ships)} ship${L.ships > 1 ? "s" : ""} launched from ${L.fp.name} with ${fmt(total(L.want))} resources. Arrive at ${L.tp.name} in ${ftime(f.tt)}.`, "win"); }),
+    st.lr = { m: 0, c: 0, g: 0 }; st.ls = {}; if (!sh0) render(); toast(`${fmt(L.ships)} ship${L.ships > 1 ? "s" : ""} launched from ${L.fp.name} with ${fmt(total(L.want))} resources. Arrive at ${L.tp.name} in ${ftime(f.tt)}.`, "win"); }),
   // social, rankings, chat, mastery, alliance help, factions and the tray
   trayToggle: () => { G.trayOpen = !G.trayOpen; trayRender(); dock(); },
   chat: () => { chatInit(); openSheet({ type: "chat", ch: "g" }); },
