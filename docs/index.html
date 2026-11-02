@@ -643,6 +643,8 @@ canvas.dthumb{display:block}
 .forders .forow{display:flex;align-items:center;gap:8px}.forders .fol{flex:1;min-width:0;display:flex;flex-direction:column;font-size:14px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.forders .fol small{color:var(--muted);font-size:11px}.forders .fol .ci{font-size:15px}
 .forders .forow input{width:112px;flex:none;background:#081521;border:1px solid rgba(85,214,232,.4);color:var(--text);border-radius:8px;padding:8px 10px;font:600 15px var(--f-display);text-align:right}.forders .forow input:focus{outline:none;border-color:var(--cyan)}
 .forders #fosum .kv{margin:2px 0}
+/* v226 the three fleet buttons on the Fleets tab */
+.foquick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.foquick .btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 6px;font-size:22px;line-height:1}.foquick .btn span{font-size:12px;letter-spacing:.08em}
 /* the tray: one bottom bar for every menu, sliding open into a grid */
 .tray{position:relative;z-index:12;flex:none;background:linear-gradient(180deg,#0a1f30,#081826);border-top:1px solid #1f4a66}
 .tray-bar{display:flex;flex-direction:column;align-items:stretch}
@@ -2099,7 +2101,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 225;
+const GAME_V = 226;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -10495,6 +10497,11 @@ const foNm = (P, p) => p === P.hw ? S.homeName : p.name;
 function foSumHTML(P) { const over = P.ships && P.load > P.cap, canFit = over && P.cargoK.some(k => (P.avail[k] || 0) > (P.n[k] || 0));
   return `<dl class="kv"><dt>Ships</dt><dd>${fmt(P.ships)}</dd><dt>Cargo</dt><dd style="color:${over ? "var(--red)" : "inherit"}">${fmt(P.load)} / ${fmt(P.cap)}</dd><dt>Flight</dt><dd>${P.tt ? ftime(P.tt) + (P.st.mode === "xfer" ? " each way" : "") : "–"}</dd><dt>Fuel</dt><dd>${fmt(P.fuel)} gas</dd></dl>
     ${P.msg && P.tp ? `<p class="note" style="color:var(--amber);margin:0">${esc(P.msg)}</p>` : ""}${canFit || over ? `<button class="btn ghost sm wide" data-act="foFit">${canFit ? "＋ Add cargo ships to fit" : "Trim the load to fit"}</button>` : ""}`; }
+/* v226 the Fleets tab keeps just three buttons; Deploy and Transport open their own panel for destination, ships and resources */
+function fleetQuick() { return `<div class="foquick"><button class="btn" data-act="foOpen" data-v="dep">🚀<span>Deploy</span></button><button class="btn" data-act="foOpen" data-v="xfer">⇄<span>Transport</span></button><button class="btn ghost" data-act="fDeploy" data-id="home">⚔<span>Attack</span></button></div>`; }
+function shFo() { const st = sub.fo || (sub.fo = { mode: "dep", ships: {}, res: {} }), x = st.mode === "xfer";
+  return `<div class="hd"><div><div class="chapter">Fleet orders</div><h2>${x ? "⇄ Transport" : "🚀 Deploy"}</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${fleetOrders()}`; }
+const foRedraw = () => sheet && sheet.type === "fo" ? renderSheet() : render();
 function fleetOrders() {
   const P = foPlan(); if (!P) return ""; const st = P.st, multi = P.worlds.length > 1, count = o => Object.values(o).reduce((a, b) => a + b, 0);
   const shipsOf = p => p.kind === "home" ? homeShipsAvail() : cleanShips(p.garrison || {});
@@ -10502,10 +10509,10 @@ function fleetOrders() {
     <p class="note" style="margin:0">${st.mode === "xfer" ? "Ships deliver the resources and fly back home." : "Ships and resources move to the other planet and stay there."}</p>`;
   const chips = (act, list, cur) => `<div class="segc">${list.map(p => `<button class="${P.idOf(p) === cur ? "on" : ""}" data-act="${act}" data-id="${P.idOf(p)}">${p === P.hw ? "🏠 " : ""}${esc(foNm(P, p))} <small>${fmt(count(shipsOf(p)))}</small></button>`).join("")}</div>`;
   const attack = `<button class="btn ghost sm wide" data-act="fDeploy" data-id="${st.from}">⚔ Attack or raid: pick a target on the map ›</button>`;
-  if (!multi) return `<div class="card logi forders"><b class="foh">FLEET ORDERS</b>${tabs}<p class="note" style="margin:0">${esc(P.msg)}</p>${attack}</div>`;
+  if (!multi) return `<div class="logi forders">${tabs}<p class="note" style="margin:0">${esc(P.msg)}</p></div>`;
   const row = (kind, key, label, max, val) => `<div class="forow"><span class="fol">${label}<small>${fmt(max)}</small></span><input type="number" inputmode="numeric" min="0" max="${Math.floor(max)}" step="1" data-fo="${kind}:${key}" value="${val || ""}" placeholder="0" aria-label="${kind === "s" ? "Ships" : "Amount"}"><button class="btn ghost sm" data-act="foMax" data-k="${kind}:${key}">Max</button></div>`;
   const sk = Object.keys(P.avail).filter(k => P.avail[k] > 0).sort((a, b) => (SH[b].cargo >= 1000) - (SH[a].cargo >= 1000) || P.avail[b] - P.avail[a]);
-  return `<div class="card logi forders"><b class="foh">FLEET ORDERS</b>${tabs}
+  return `<div class="logi forders">${tabs}
     <div class="lrow"><span class="lk">From</span>${chips("foFrom", P.worlds, st.from)}</div>
     <div class="lrow"><span class="lk">To</span>${chips("foTo", P.worlds.filter(p => P.idOf(p) !== st.from), st.to)}</div>
     <div class="fosec"><b>Ships</b><span><button class="btn ghost sm" data-act="foAll">All</button><button class="btn ghost sm" data-act="foNone">Clear</button></span></div>
@@ -10513,8 +10520,7 @@ function fleetOrders() {
     <div class="fosec"><b>Resources</b></div>
     ${["m", "c", "g"].map(r => row("r", r, `<span class="ci r-${r}">${RI[r]}</span>`, P.src[r] || 0, st.res[r])).join("")}
     <div id="fosum">${foSumHTML(P)}</div>
-    <button class="btn wide" id="fosend" data-act="foSend" ${P.ok && canPlay() ? "" : "disabled"}>${st.mode === "xfer" ? "⇄ Transport" : "🚀 Deploy"} to ${esc(P.tp ? foNm(P, P.tp) : "–")}</button>
-    ${attack}</div>`;
+    <button class="btn wide" id="fosend" data-act="foSend" ${P.ok && canPlay() ? "" : "disabled"}>${st.mode === "xfer" ? "⇄ Transport" : "🚀 Deploy"} to ${esc(P.tp ? foNm(P, P.tp) : "–")}</button></div>`;
 }
 const foBlur = () => { const a = document.activeElement; if (a && a.matches && a.matches("[data-fo]")) a.blur(); }; /* render() skips the page while a box has focus */
 function foRefresh() { const P = foPlan(), s = $("#fosum"), b = $("#fosend"); if (!P) return; if (s) s.innerHTML = foSumHTML(P); if (b) b.disabled = !(P.ok && canPlay()); }
@@ -10542,7 +10548,7 @@ function vFleets() {
   const shipsAt = p => p.kind === "home" || p === hw ? Object.fromEntries(Object.entries(S.ships).filter(([, v]) => v > 0)) : cleanShips(p.garrison || {});
   const count = o => Object.values(o).reduce((x, y) => x + y, 0);
   const chips = worlds.length > 1 ? `<div class="segc fchips">${[["all", "All planets", S.fleets.length], ...worlds.map(p => [p.id, p === hw ? `🏠 ${p.name}` : p.name, S.fleets.filter(f => fromOf(f) === p.id).length])].map(([k, l, n]) => `<button class="${fsel === k ? "on" : ""}" data-act="ffrom" data-v="${k}">${esc(l)}${n ? ` <b>${n}</b>` : ""}</button>`).join("")}</div>` : "";
-  const orders = fleetOrders();
+  const orders = fleetQuick();
   const docks = worlds.map(p => { const sh = shipsAt(p), n = count(sh), out = S.fleets.filter(f => fromOf(f) === p.id).length;
     return `<div class="fcard fworld"><div class="top"><b>${p === hw ? "🏠 " : ""}${esc(p === hw ? S.homeName : p.name)}</b><span class="pill ${n ? "go" : ""}">${fmt(n)} ships${out ? ` · ${out} out` : ""}</span></div>
       ${n ? unitGrid(sh) : '<p class="note" style="margin:0">No ships docked here.</p>'}
@@ -11228,7 +11234,7 @@ function renderSheet() {
   if (!sheet) return; /* v190: a card closed while a redraw was pending */
   if (G.rangeHeld && sheet) { G.rangeLate = 1; return; }
   let w = $("#sheetwrap");
-  let html = ({ planet: shPlanet, report: shReport, settings: shSettings, void: shVoid, assault: shAssault, targets: shTargets, node: shNode, bld: shBld, nexus: shNexus, skin: shSkin, find: shFind, pirate: shPirate, pyramid: shPyramid, fctl: shFctl, station: shStation, ally: shAlly, layers: shLayers, tile: shTile, graphics: shGfx, cuberes: shCubeRes, basedet: shBaseDet, planets: shPlanets,
+  let html = ({ planet: shPlanet, report: shReport, settings: shSettings, void: shVoid, assault: shAssault, targets: shTargets, node: shNode, bld: shBld, nexus: shNexus, skin: shSkin, find: shFind, pirate: shPirate, pyramid: shPyramid, fctl: shFctl, station: shStation, ally: shAlly, layers: shLayers, tile: shTile, graphics: shGfx, cuberes: shCubeRes, basedet: shBaseDet, planets: shPlanets, fo: shFo,
     yard: shYard, labs: shLabs, sound: shSound, shop: shShop, vip: shVip, spyrep: shSpyRep, events: shEvents, ach: shAch, avatars: shAvatars, detail: shDetail, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
     mastery: () => `<div class="hd"><div><div class="chapter">Progression</div><h2>Path to Mastery</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${mMastery()}` })[sheet.type]();
   if (!html) { closeSheet(); return; }
@@ -14249,17 +14255,18 @@ const ACT = {
   logiPct: d => { const s = logiSt(); s.lr = s.lr || { m: 0, c: 0, g: 0 }; s.lr[d.r] = +d.p || 0; logiRedraw(); },
   logiMode: d => { const s = logiSt(); s.lmode = ["all", "pick"].includes(d.v) ? d.v : "cargo"; logiRedraw(); },
   logiShip: d => { const s = logiSt(); s.ls = s.ls || {}; s.ls[d.k] = +d.p || 0; logiRedraw(); },
-  foMode: d => { foBlur(); const st = sub.fo || (sub.fo = { mode: "dep", ships: {}, res: {} }); st.mode = d.v === "xfer" ? "xfer" : "dep"; render(); },
-  foFrom: d => { foBlur(); const st = sub.fo || (sub.fo = { mode: "dep", ships: {}, res: {} }); if (st.from !== d.id) { st.ships = {}; st.res = {}; } st.from = d.id; if (st.to === d.id) st.to = null; render(); },
-  foTo: d => { foBlur(); const st = sub.fo || (sub.fo = { mode: "dep", ships: {}, res: {} }); st.to = d.id; render(); },
-  foMax: d => { foBlur(); const P = foPlan(); if (!P) return; const [kd, key] = String(d.k).split(":"); if (kd === "s") P.st.ships[key] = P.avail[key] || 0; else { const room = kd === "r" && P.ships ? Math.max(0, P.cap - (P.load - (P.want[key] || 0))) : Infinity; P.st.res[key] = Math.floor(Math.min(P.src[key] || 0, room, key === "g" ? Math.max(0, (P.src.g || 0) - P.fuel) : Infinity)); } render(); },
-  foAll: () => { foBlur(); const P = foPlan(); if (!P) return; P.st.ships = Object.assign({}, P.avail); render(); },
-  foNone: () => { foBlur(); const P = foPlan(); if (!P) return; P.st.ships = {}; render(); },
-  foFit: () => { foBlur(); const P = foPlan(); if (!P) return; let need = P.load - P.cap; for (const k of P.cargoK) { if (need <= 0) break; const per = cargoOf({ [k]: 1 }) || SH[k].cargo, have = P.st.ships[k] || 0, add = Math.min((P.avail[k] || 0) - have, Math.ceil(need / per)); if (add > 0) { P.st.ships[k] = have + add; need -= add * per; } } if (need > 0) { const P2 = foPlan(), k = P2.load ? P2.cap / P2.load : 0; for (const r of ["m", "c", "g"]) P2.st.res[r] = Math.floor((P2.want[r] || 0) * Math.min(1, k)); { const ex = ["m", "c", "g"].reduce((a, r) => a + P2.st.res[r], 0) - P2.cap, big = ["m", "c", "g"].sort((x, y) => P2.st.res[y] - P2.st.res[x])[0]; if (ex > 0) P2.st.res[big] = Math.max(0, P2.st.res[big] - ex); } toast(`Not enough cargo ships here for all of it: the load was trimmed to ${fmt(P2.cap)}.`, "warn"); } render(); },
+  foOpen: d => { const st = sub.fo || (sub.fo = { mode: "dep", ships: {}, res: {} }); st.mode = d.v === "xfer" ? "xfer" : "dep"; openSheet({ type: "fo" }); },
+  foMode: d => { foBlur(); const st = sub.fo || (sub.fo = { mode: "dep", ships: {}, res: {} }); st.mode = d.v === "xfer" ? "xfer" : "dep"; foRedraw(); },
+  foFrom: d => { foBlur(); const st = sub.fo || (sub.fo = { mode: "dep", ships: {}, res: {} }); if (st.from !== d.id) { st.ships = {}; st.res = {}; } st.from = d.id; if (st.to === d.id) st.to = null; foRedraw(); },
+  foTo: d => { foBlur(); const st = sub.fo || (sub.fo = { mode: "dep", ships: {}, res: {} }); st.to = d.id; foRedraw(); },
+  foMax: d => { foBlur(); const P = foPlan(); if (!P) return; const [kd, key] = String(d.k).split(":"); if (kd === "s") P.st.ships[key] = P.avail[key] || 0; else { const room = kd === "r" && P.ships ? Math.max(0, P.cap - (P.load - (P.want[key] || 0))) : Infinity; P.st.res[key] = Math.floor(Math.min(P.src[key] || 0, room, key === "g" ? Math.max(0, (P.src.g || 0) - P.fuel) : Infinity)); } foRedraw(); },
+  foAll: () => { foBlur(); const P = foPlan(); if (!P) return; P.st.ships = Object.assign({}, P.avail); foRedraw(); },
+  foNone: () => { foBlur(); const P = foPlan(); if (!P) return; P.st.ships = {}; foRedraw(); },
+  foFit: () => { foBlur(); const P = foPlan(); if (!P) return; let need = P.load - P.cap; for (const k of P.cargoK) { if (need <= 0) break; const per = cargoOf({ [k]: 1 }) || SH[k].cargo, have = P.st.ships[k] || 0, add = Math.min((P.avail[k] || 0) - have, Math.ceil(need / per)); if (add > 0) { P.st.ships[k] = have + add; need -= add * per; } } if (need > 0) { const P2 = foPlan(), k = P2.load ? P2.cap / P2.load : 0; for (const r of ["m", "c", "g"]) P2.st.res[r] = Math.floor((P2.want[r] || 0) * Math.min(1, k)); { const ex = ["m", "c", "g"].reduce((a, r) => a + P2.st.res[r], 0) - P2.cap, big = ["m", "c", "g"].sort((x, y) => P2.st.res[y] - P2.st.res[x])[0]; if (ex > 0) P2.st.res[big] = Math.max(0, P2.st.res[big] - ex); } toast(`Not enough cargo ships here for all of it: the load was trimmed to ${fmt(P2.cap)}.`, "warn"); } foRedraw(); },
   foSend: () => act(() => { foBlur(); if (!canPlay()) return; advance(now()); const P = foPlan(); if (!P || !P.ok) return toast((P && P.msg) || "Nothing to send.", "warn");
     const sh0 = sheet; if (!sheet) sheet = { type: "_fo" }; const keep = sheet.from; sheet.from = P.st.from; let f; try { f = sendFleet(P.tp, P.n, "transfer", { stay: P.st.mode !== "xfer" }); } finally { if (sheet) sheet.from = keep; if (!sh0) sheet = null; } if (!f) return;
     const src = P.fp.kind === "home" ? S.res : (settle(P.fp), P.fp.st); for (const k of ["m", "c", "g"]) src[k] = Math.max(0, src[k] - P.want[k]); f.cargo = P.want; if (P.fp.kind !== "home") putPlanet(P.fp);
-    P.st.ships = {}; P.st.res = {}; render(); toast(`${fmt(P.ships)} ship${P.ships > 1 ? "s" : ""} ${P.st.mode === "xfer" ? "transporting" : "deploying"} to ${foNm(P, P.tp)}${P.load ? ` with ${fmt(P.load)} resources` : ""}. Arrival in ${ftime(f.tt)}.`, "win"); }),
+    P.st.ships = {}; P.st.res = {}; if (sheet && sheet.type === "fo") closeSheet(); render(); toast(`${fmt(P.ships)} ship${P.ships > 1 ? "s" : ""} ${P.st.mode === "xfer" ? "transporting" : "deploying"} to ${foNm(P, P.tp)}${P.load ? ` with ${fmt(P.load)} resources` : ""}. Arrival in ${ftime(f.tt)}.`, "win"); }),
   foTab: d => { const s = sub.logi || (sub.logi = {}); s.tab = d.v === "xfer" ? "xfer" : "dep"; render(); },
   logiSend: () => act(() => {
     if (!canPlay()) return; advance(now()); const mine = myPlanets().slice().sort((a, b) => (a.kind === "home" ? -1 : 0) - (b.kind === "home" ? -1 : 0)), st = logiSt(), L = logiPlan(mine, st);
