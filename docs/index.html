@@ -2121,7 +2121,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 235;
+const GAME_V = 236;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -12423,7 +12423,7 @@ const TUT = [
   { lv: 3, t: "Explore a pyramid space station", say: "Derelict pyramid stations drift all over the map. Low-level vaults are unguarded: free shards and relics.", ok: s => (s.stats || {}).pyramids >= 1 || s.fleets.some(f => f.yid), find: "y", path: () => tutWaitShips() || mapPath('.sheet [data-act="pyrGo"]', '.sheet [data-act="pyramid"]')(), rw: { m: 800, c: 800, g: 400, shards: 1 } },
   { lv: 4, t: "Read your reports in Mail", say: "Every battle, scan and message lands in Mail. Replays show you exactly why you won or lost.", ok: s => !!s.tutMail, go: { v: "mail" }, path: () => [DOCKT("mail", "Open Mail")], rw: { m: 500, c: 500, g: 500 } },
   { lv: 5, t: "Raid a Lv.5 pirate hideout", say: "Pirates hoard loot and drop rare items. This first crew is a small one: send every fighter you have.", ok: s => (s.stats || {}).pirates >= 1, find: "x", pirLvl: "5", path: () => tutWaitShips() || mapPath('.sheet [data-act="raid"]', '.sheet .tgt[data-act="pirate"], .sheet [data-act="pirate"]')(), rw: { m: 1500, c: 1000, g: 500, shards: 2 } },
-  { lv: 4, t: "Reach Commander Level 4", say: "Keep upgrading your mines and winning fights. Every resource you spend earns experience.", ok: () => cmdLevel(score()) >= 4, go: { v: "build", s: "res" }, path: () => { const k = growPick(); return bPath(k, B[k].cat === "fac" ? "fac" : "res")(); }, rw: { m: 3000, c: 2000, g: 1000, shards: 5 } },
+  { lv: 4, t: "Reach Commander Level 3", say: "Keep upgrading your mines and winning fights. Every resource you spend earns experience.", ok: () => cmdLevel(score()) >= 3, /* v236: Lv.4 took a new player many hours of waiting here */ go: { v: "build", s: "res" }, path: () => { const k = growPick(); return bPath(k, B[k].cat === "fac" ? "fac" : "res")(); }, rw: { m: 3000, c: 2000, g: 1000, shards: 5 } },
   /* v200: the road to a second world. Astrophysics decides how many planets you may hold (one more every 2 levels) and it needs
      Research Center Lv.3, Espionage Technology Lv.4 and Impulse Drive Lv.3, so the Academy walks new commanders through all of it */
   { lv: 5, t: "Upgrade the Research Center to Lv.3", say: "Next goal: a second world. Astrophysics decides how many planets we can hold, and it needs Research Center Lv.3, Espionage Technology Lv.4 and Impulse Drive Lv.3. Start with the Research Center.", ok: () => lvlOf("lab") >= 3, go: { v: "build", s: "fac" }, path: bPath("lab", "fac"), rw: { m: 2500, c: 4000, g: 1500, shards: 1 } },
