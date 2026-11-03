@@ -670,8 +670,9 @@ canvas.dthumb{display:block}
 .cubeband{display:flex;align-items:center;gap:8px;width:100%;padding:5px 12px;border:0;border-top:1px solid #1f6a2a;background:linear-gradient(90deg,rgba(93,255,106,.16),rgba(6,20,10,.92) 55%);color:#c8ffd0;font-size:12px;text-align:left;cursor:pointer}
 .cubeband b{font-family:var(--f-display);letter-spacing:.1em;color:#7dff86;font-size:11.5px}.cubeband span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;color:#a8e8b0}.cubeband i{font-style:normal;color:#fff}.cubeband .cbq{flex:none;color:#5dff6a;text-shadow:0 0 8px #5dff6a;text-align:left}
 .cubeband.live{animation:cubePulse 2.2s ease-in-out infinite}@keyframes cubePulse{50%{background:linear-gradient(90deg,rgba(93,255,106,.3),rgba(6,20,10,.92) 60%)}}
-#authw{position:fixed;inset:0;z-index:99990;display:grid;place-items:center;padding:20px;overflow:auto;background:radial-gradient(900px 600px at 50% 0%,rgba(85,214,232,.07),transparent 60%),rgba(2,6,10,.97)}
-.authbox{width:100%;max-width:380px;display:grid;gap:12px;padding:24px;border-radius:18px;background:rgba(11,22,34,.94);border:1px solid rgba(93,255,138,.3);box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 40px rgba(93,255,138,.12);color:#eef3f6}
+#authw{position:fixed;inset:0;z-index:99990;display:grid;place-items:end center;padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 4vh);overflow:auto;background:linear-gradient(180deg,transparent 55%,rgba(2,6,12,.85)),url(art/login.webp) center top/cover,#02060c} /* v263 the title art behind the device login too */
+.authbox{width:100%;max-width:380px;display:grid;gap:10px;padding:18px;margin-top:38vh;border-radius:24px;background:linear-gradient(180deg,rgba(10,30,52,.55),rgba(3,12,24,.82));border:1px solid rgba(110,200,255,.42);box-shadow:0 0 34px rgba(40,140,255,.28),inset 0 1px 0 rgba(255,255,255,.12);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#eef3f6}
+.authbox input:not([type=checkbox]){border-radius:999px!important;padding:0 18px!important;border-color:rgba(110,200,255,.5)!important;background:rgba(2,10,22,.78)!important}.authlogo{display:none}
 .authbox h2{margin:0;font-family:var(--f-display);letter-spacing:.06em;font-size:21px}.authbox p{margin:0;color:#b6c7d2;font-size:15px}
 .authbox label{display:grid;gap:5px;font-size:13px;color:#93a8b6;letter-spacing:.04em}.authbox input:not([type=checkbox]){height:46px;padding:0 12px;border-radius:10px;border:1px solid #2c5468;background:#06111a;color:#fff;font-size:17px}
 .authbox .authchk{display:flex;align-items:center;gap:8px;font-size:14px}.authbox .authchk input{width:20px;height:20px}
@@ -2237,7 +2238,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 262;
+const GAME_V = 263;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9803,6 +9804,54 @@ function folkBuild(W, bt) {
   W.folk = { meshes: [torso, pack, helm, vis, legL, legR, armL, armR, shinL, shinR, foreL, foreR, shadow, vest, band, tool, rifle, truck, ore, wheelM, car, glow, heads, tails, drone, blink, bench], torso, pack, helm, vis, legL, legR, armL, armR, shinL, shinR, foreL, foreR, shadow, vest, band, tool, rifle, truck, ore, wheelM, car, glow, heads, tails, drone, blink,
     people, idx, trucks, cars, drones, benches, plot, spokes, node, rn, key: bt.key + "|" + N + "|" + spokes.length + "|" + fac, last: 0 };
 }
+/* v263 people and vehicles walk around buildings, not through them. Their routes used to be straight lines from the hub ring out along
+   each building's bearing, so a route crossed any building standing in the way (the Gas Synthesizer's crew walked through the Radar,
+   the Lunar Base's through Robotics) and ended a couple of metres inside its own building. Now each building's footprint is measured
+   from its real model (the solid parts at body height, not its ground shadow, flat deck plates or parts overhead), and a route is found on a fine grid round every
+   footprint and the HQ, keeping to the roads wherever they're clear, then straightened where the way is open. It ends at the
+   building's door, on the side facing the hub. Worked out again whenever a building is built or upgraded. */
+function folkFoot(W) { const sig = Object.keys(W.keys).sort().map(k => k + W.keys[k]).join(",") + "|" + Object.keys(W.blds).length; if (W.fpSig === sig && W.fpObs) return W.fpObs;
+  const obs = {}, bb = new TH.Box3(), gb = new TH.Box3();
+  for (const k in W.blds) { const m = W.blds[k]; if (!m) continue; m.updateMatrixWorld(true); bb.makeEmpty();
+    m.traverse(o => { if (!o.isMesh || !o.geometry || o.material === W.aoMat || !o.visible) return; if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); gb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld); if (gb.max.y - gb.min.y < .15 || gb.max.y < .12 || gb.min.y > .9) return; bb.union(gb); }); // only what stands on the ground at body height: a dish or gantry overhead doesn't block the way
+    if (!bb.isEmpty()) obs[k] = { x0: bb.min.x, x1: bb.max.x, z0: bb.min.z, z1: bb.max.z }; }
+  W.fpSig = sig; W.fpObs = obs; W.fpPaths = {}; W.fpGrid = null; return obs; }
+function folkGrid(W) { if (W.fpGrid) return W.fpGrid; const obs = folkFoot(W), C = .4, X0 = -26, Z0 = -21, NX = 131, NZ = 106, blk = new Uint8Array(NX * NZ), road = new Uint8Array(NX * NZ), PAD = .42;
+  for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) { const x = X0 + i * C, z = Z0 + j * C, n = j * NX + i, rr = Math.hypot(x, z);
+    if (rr < 3.25) { blk[n] = 1; continue; } // the HQ
+    for (const k in obs) { const o = obs[k]; if (x > o.x0 - PAD && x < o.x1 + PAD && z > o.z0 - PAD && z < o.z1 + PAD) { blk[n] = 2 + Object.keys(obs).indexOf(k); break; } }
+    if (rr >= 3.4 && rr <= 4.35) road[n] = 1; else for (const k in W.keys) { if (!BPOS[k]) continue; const [bx, bz] = BPOS[k], L = Math.hypot(bx, bz), ux = bx / L, uz = bz / L, d = x * ux + z * uz; if (d > 4.3 && d < L - 2.5 && Math.abs(-x * uz + z * ux) < .62) { road[n] = 1; break; } } }
+  return (W.fpGrid = { C, X0, Z0, NX, NZ, blk, road, keys: Object.keys(obs) }); }
+function folkPath(W, k) { folkFoot(W); if (W.fpPaths[k] !== undefined) return W.fpPaths[k]; const G0 = folkGrid(W), { C, X0, Z0, NX, NZ, blk, road } = G0, obs = W.fpObs, o = obs[k];
+  const [bx, bz] = BPOS[k], a = Math.atan2(bz, bx), hub = [Math.cos(a) * 3.6, Math.sin(a) * 3.6];
+  // the door: where the line from the building's centre to the hub leaves its footprint, a step outside
+  let door; if (o) { const cx = (o.x0 + o.x1) / 2, cz = (o.z0 + o.z1) / 2, dx = hub[0] - cx, dz = hub[1] - cz, L = Math.hypot(dx, dz) || 1, ux = dx / L, uz = dz / L, hx = (o.x1 - o.x0) / 2 + .6, hz = (o.z1 - o.z0) / 2 + .6, s = Math.min(Math.abs(ux) > 1e-4 ? hx / Math.abs(ux) : 1e9, Math.abs(uz) > 1e-4 ? hz / Math.abs(uz) : 1e9); door = [cx + ux * s, cz + uz * s]; }
+  else door = [Math.cos(a) * Math.max(4.4, Math.hypot(bx, bz) - 2.1), Math.sin(a) * Math.max(4.4, Math.hypot(bx, bz) - 2.1)];
+  const cell = (x, z) => [clamp(Math.round((x - X0) / C), 0, NX - 1), clamp(Math.round((z - Z0) / C), 0, NZ - 1)], free = n => !blk[n];
+  const nearFree = (x, z) => { const [i0, j0] = cell(x, z); for (let r = 0; r < 12; r++) for (let dj = -r; dj <= r; dj++) for (let di = -r; di <= r; di++) { if (Math.max(Math.abs(di), Math.abs(dj)) !== r) continue; const i = i0 + di, j = j0 + dj; if (i < 0 || j < 0 || i >= NX || j >= NZ) continue; if (free(j * NX + i)) return j * NX + i; } return -1; };
+  if (o) { // a neighbour standing in front of the door: use the nearest open spot round the footprint instead
+    const [di, dj] = cell(door[0], door[1]); if (blk[dj * NX + di]) { let best = null, bd = 1e9; const x0 = o.x0 - .6, x1 = o.x1 + .6, z0 = o.z0 - .6, z1 = o.z1 + .6, per = 2 * (x1 - x0 + z1 - z0);
+      for (let q = 0; q < 96; q++) { let u = q / 96 * per, x, z; if (u < x1 - x0) { x = x0 + u; z = z0; } else if ((u -= x1 - x0) < z1 - z0) { x = x1; z = z0 + u; } else if ((u -= z1 - z0) < x1 - x0) { x = x1 - u; z = z1; } else { u -= x1 - x0; x = x0; z = z1 - u; }
+        const [ci, cj] = cell(x, z); if (blk[cj * NX + ci]) continue; const d = Math.hypot(x - hub[0], z - hub[1]); if (d < bd) { bd = d; best = [x, z]; } } if (best) door = best; } }
+  const s0 = nearFree(hub[0], hub[1]), g0 = nearFree(door[0], door[1]); if (s0 < 0 || g0 < 0) return (W.fpPaths[k] = null);
+  { const [di, dj] = cell(door[0], door[1]); if (blk[dj * NX + di]) door = [X0 + (g0 % NX) * C, Z0 + ((g0 / NX) | 0) * C]; } // never end inside anything
+  // A* over the grid (8 directions), cheaper along the roads
+  const gS = new Float32Array(NX * NZ).fill(1e9), from = new Int32Array(NX * NZ).fill(-1), shut = new Uint8Array(NX * NZ), open = [s0], gx = g0 % NX, gz = (g0 / NX) | 0, hh = n => Math.hypot(n % NX - gx, ((n / NX) | 0) - gz) * .62;
+  gS[s0] = 0; const fS = new Float32Array(NX * NZ).fill(1e9); fS[s0] = hh(s0); let found = false, guard = 0;
+  while (open.length && guard++ < 40000) { let bi = 0; for (let q = 1; q < open.length; q++) if (fS[open[q]] < fS[open[bi]]) bi = q; const n = open[bi]; open[bi] = open[open.length - 1]; open.pop(); if (n === g0) { found = true; break; } if (shut[n]) continue; shut[n] = 1; const ni = n % NX, nj = (n / NX) | 0;
+    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { if (!di && !dj) continue; const i = ni + di, j = nj + dj; if (i < 0 || j < 0 || i >= NX || j >= NZ) continue; const m = j * NX + i; if (!free(m) || shut[m]) continue; if (di && dj && (!free(nj * NX + i) || !free(j * NX + ni))) continue;
+      const g = gS[n] + (di && dj ? 1.414 : 1) * (road[m] ? .62 : 1); if (g < gS[m]) { gS[m] = g; from[m] = n; fS[m] = g + hh(m); open.push(m); } } }
+  if (!found) return (W.fpPaths[k] = null);
+  let pts = []; for (let n = g0; n >= 0; n = from[n]) pts.push([X0 + (n % NX) * C, Z0 + ((n / NX) | 0) * C]); pts.reverse(); pts[0] = hub; pts.push(door);
+  // straighten: keep a corner only where the straight way would cross a footprint or leave the road it was on
+  const clear = (p0, p1) => { const L = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]), n = Math.max(1, Math.ceil(L / (C * .5))); let offRoad = 0, onRoad0 = road[(cell(p0[0], p0[1])[1]) * NX + cell(p0[0], p0[1])[0]];
+    for (let q = 0; q <= n; q++) { const x = p0[0] + (p1[0] - p0[0]) * q / n, z = p0[1] + (p1[1] - p0[1]) * q / n, [i, j] = cell(x, z), m = j * NX + i; if (blk[m]) return false; if (onRoad0 && !road[m]) offRoad++; } return offRoad <= 2; };
+  const out = [pts[0]]; let i = 0; while (i < pts.length - 1) { let j = pts.length - 1; while (j > i + 1 && !clear(pts[i], pts[j])) j--; out.push(pts[j]); i = j; }
+  let L = 0; const cum = [0]; for (let q = 1; q < out.length; q++) { L += Math.hypot(out[q][0] - out[q - 1][0], out[q][1] - out[q - 1][1]); cum.push(L); }
+  return (W.fpPaths[k] = { pts: out, cum, L }); }
+/* where along a route (0..1), and which way it heads there */
+function pathAt(P, s, out) { const d = clamp(s, 0, 1) * P.L, c = P.cum; let q = 1; while (q < c.length - 1 && c[q] < d) q++; const a = P.pts[q - 1], b = P.pts[q], f = (d - c[q - 1]) / Math.max(1e-6, c[q] - c[q - 1]);
+  out[0] = a[0] + (b[0] - a[0]) * f; out[1] = a[1] + (b[1] - a[1]) * f; out[2] = b[0] - a[0]; out[3] = b[1] - a[1]; return out; }
 function folkStep(W, t) {
   const F = W.folk; if (!F) return; const dt = F.last ? Math.min(.1, (t - F.last) / 1000) : 0; F.last = t; if (reduced) return;
   const R = 3.6, P = folkStep.P || (folkStep.P = { m: new TH.Matrix4(), l: new TH.Matrix4(), o: new TH.Matrix4(), q: new TH.Quaternion(), v: new TH.Vector3(), s: new TH.Vector3(), up: new TH.Vector3(0, 1, 0) });
@@ -9819,9 +9868,12 @@ function folkStep(W, t) {
     if (p.leg === "unbench") { if (lerpLeg(p, p.b1, p.b0)) { p.bench.used--; p.bench = null; nextSpoke(p); } return; }
     if (p.leg === "ring") { let da = p.a1 - p.a0; if (da > Math.PI) da -= TAU; if (da < -Math.PI) da += TAU; const len = Math.abs(da) * R + .01; p.s += p.sp * dt / len;
       const a = p.a0 + da * Math.min(1, p.s); p.x = Math.cos(a) * (R + p.off * .3); p.z = Math.sin(a) * (R + p.off * .3); p.yaw = Math.atan2(-Math.sin(a) * (da > 0 ? 1 : -1), Math.cos(a) * (da > 0 ? 1 : -1)); if (p.s >= 1) { p.s = 0; p.leg = "out"; } return; }
-    const a = p.leg === "out" ? p.nd.hub : p.nd.end, b = p.leg === "out" ? p.nd.end : p.nd.hub, dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz) || 1;
+    const PT = folkPath(W, p.k); // v263 the route round the buildings in the way
+    if (PT && PT.L > .1) { p.s += p.sp * dt / PT.L; const s = Math.min(1, p.s), q = pathAt(PT, p.leg === "out" ? s : 1 - s, P.pa || (P.pa = [0, 0, 0, 0])), sg = p.leg === "out" ? 1 : -1, L2 = Math.hypot(q[2], q[3]) || 1, dx = q[2] / L2 * sg, dz = q[3] / L2 * sg, off = p.off * .6 * Math.min(1, s * 6, (1 - s) * 6);
+      p.x = q[0] - dz * off; p.z = q[1] + dx * off; const ty = Math.atan2(dx, dz); let dy = ty - p.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); p.yaw += dy * Math.min(1, dt * 9); } // keep to their side of the way and turn smoothly at corners
+    else { const a = p.leg === "out" ? p.nd.hub : p.nd.end, b = p.leg === "out" ? p.nd.end : p.nd.hub, dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz) || 1;
     p.s += p.sp * dt / len; const s = Math.min(1, p.s), nx = -dz / len, nz = dx / len;
-    p.x = a[0] + dx * s + nx * p.off; p.z = a[1] + dz * s + nz * p.off; p.yaw = Math.atan2(dx, dz);
+    p.x = a[0] + dx * s + nx * p.off; p.z = a[1] + dz * s + nz * p.off; p.yaw = Math.atan2(dx, dz); }
     if (p.s >= 1) { p.s = 0;
       if (p.leg === "out") { p.leg = "back"; if (p.rover) { p.wait = .8; return; }
         p.act = (p.role === "worker" || p.role === "engineer") && F.rn() < .7 ? "work" : "idle"; const [bx, bz] = BPOS[p.k];

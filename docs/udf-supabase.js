@@ -166,7 +166,24 @@
     ".udfa .or{display:flex;align-items:center;gap:10px;color:#7d95a5;font-size:12px;letter-spacing:.14em}.udfa .or:before,.udfa .or:after{content:'';flex:1;height:1px;background:#1d3647}" +
     ".udfa .er{min-height:18px;color:#ff6262;font-size:14px;text-align:center}.udfa .ok{color:#71df90}" +
     ".udfa .row{display:flex;justify-content:space-between}" +
-    ".udfa .pw{position:relative}.udfa .pw input{padding-right:70px}.udfa .pw .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:auto;padding:6px 10px;background:none;border:0;color:#55d6e8;font-size:14px}";
+    ".udfa .pw{position:relative}.udfa .pw input{padding-right:70px}.udfa .pw .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:auto;padding:6px 10px;background:none;border:0;color:#55d6e8;font-size:14px}" +
+    /* v263 the title screen: the U.D.F. key art fills the screen (a blurred copy fills the sides on wide screens) and the sign-in sits on
+       it as a glass panel with capsule fields and a hexagonal Sign in button, in the art's own blue-steel look */
+    "#udfAuth{align-items:flex-end;padding:0;overflow:auto;background:#02060c}" +
+    "#udfAuth:before{content:'';position:fixed;inset:-40px;background:url(art/login.webp) center/cover;filter:blur(24px) brightness(.5) saturate(1.2)}" +
+    "#udfAuth:after{content:'';position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,calc(100dvh * .5628));background:linear-gradient(180deg,transparent 58%,rgba(2,8,16,.55) 78%,rgba(2,6,12,.8)),url(art/login.webp) center top/cover;box-shadow:0 0 60px 20px rgba(2,6,12,.7)}" +
+    "#udfAuth .bx{position:relative;z-index:1;width:min(380px,calc(100% - 44px));margin:40vh auto calc(env(safe-area-inset-bottom,0px) + 3.5vh);padding:14px 16px 10px;gap:9px;border-radius:24px;background:linear-gradient(180deg,rgba(10,30,52,.5),rgba(3,12,24,.78));border:1px solid rgba(110,200,255,.42);box-shadow:0 0 34px rgba(40,140,255,.28),inset 0 1px 0 rgba(255,255,255,.12),inset 0 0 30px rgba(85,214,232,.07);-webkit-backdrop-filter:blur(10px) saturate(1.3);backdrop-filter:blur(10px) saturate(1.3)}" +
+    "#udfAuth .logo,#udfAuth h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);margin:0}" + /* the art carries the title; kept for screen readers */
+    "#udfAuth p{color:#a9c4d8;font-size:13px;text-shadow:0 1px 3px #000}#udfAuth .er{min-height:0}#udfAuth .er:empty{display:none}#udfAuth .l{padding:4px;font-size:13.5px}#udfAuth p.tip{color:#ffd36b}" +
+    "#udfAuth input{border-radius:999px;padding:11px 18px;font-size:16px;background:linear-gradient(180deg,rgba(2,10,22,.78),rgba(6,20,36,.72));border:1px solid rgba(110,200,255,.5);box-shadow:inset 0 2px 8px rgba(0,0,0,.5),0 0 12px rgba(60,160,255,.12);color:#f2f8fc}" +
+    "#udfAuth input:focus{outline:none;border-color:#7fe6f3;box-shadow:inset 0 2px 8px rgba(0,0,0,.5),0 0 16px rgba(85,214,232,.45)}#udfAuth input::placeholder{color:#7f9db2}" +
+    "#udfAuth .pw input{padding-right:76px}#udfAuth .pw .eye{right:10px;color:#7fe6f3}" +
+    "#udfAuth .g{border-radius:999px;padding:10px 18px;font-size:15px;background:linear-gradient(180deg,#fff,#e6edf2);box-shadow:0 0 14px rgba(120,200,255,.25)}" +
+    "#udfAuth .or{color:#8fb2c8}#udfAuth .or:before,#udfAuth .or:after{background:linear-gradient(90deg,transparent,rgba(110,200,255,.45),transparent)}" +
+    "#udfAuth .p{margin-top:2px;padding:12px 18px;border:0;border-radius:0;clip-path:polygon(7% 0,93% 0,100% 50%,93% 100%,7% 100%,0 50%);background:linear-gradient(180deg,#5ab8ff 0%,#1f6fd0 45%,#0b3d86 100%);color:#f4fbff;font:italic 800 21px 'Oxanium',sans-serif;letter-spacing:.04em;text-transform:none;text-shadow:0 2px 6px rgba(0,20,60,.8),0 0 14px rgba(140,220,255,.6);filter:drop-shadow(0 0 12px rgba(60,170,255,.55))}" +
+    "#udfAuth .p:active{filter:drop-shadow(0 0 18px rgba(120,220,255,.9)) brightness(1.15)}" +
+    "#udfAuth .l{color:#8fe6f5;text-decoration:none;text-shadow:0 1px 3px #000}#udfAuth .er{text-shadow:0 1px 3px #000}" +
+    "@media (max-height:560px){#udfAuth:after{display:none}#udfAuth .bx{margin:20px auto}}";
   var GICON = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.2l7.9 6.2C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-2.9-.8-4.6s.3-3.2.8-4.6l-7.9-6.2C1 16.6 0 20.2 0 24s1 7.4 2.7 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.2 0-11.5-4.1-13.4-9.7l-7.9 6.2C6.6 42.6 14.6 48 24 48z"/></svg>';
   var cssDone = false;
   function addCss() { if (cssDone) return; cssDone = true; var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st); }
