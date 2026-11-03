@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-02 (America/Phoenix). Current game version: **v256** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v65**.
+Last updated: 2026-11-02 (America/Phoenix). Current game version: **v257** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v66**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -104,3 +104,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v254:** the pointing hand's label (`#tutguide .tg-tip`) is see-through amber with white text, and its text and ✕ sit on one line.
 - **v255:** battle hulls never squash or flip. Each squadron locks its heading from its first advance (`b.lk`, `b.face`); moving the other way eases `b.rv` up, which dims the main plume and fires paired retro jets from the bow. Flagships do the same (`e.fa`, `e.rv`). Carrier fighters rotate round their loop instead of being squashed. Replay positions and results are unchanged; this is drawing only.
 - **v256:** flagship remaster. `flagMetal` bakes a plated metal texture and roughness map per faction; `flagMats` shares metal, faction-lit windows (`fwin`) and nozzles (`feng`) between the map model and the battle portrait. Five real spine turrets (`gun` in `flagshipModel`, muzzles in `g.userData.guns`). The portrait bakes at 1024 px (768 iOS, 640 weak) from a three-quarter camera with faction rim light and HDR bloom, and records `out.guns`, `out.thr`, `out.bow`, `out.ang` so tracers and plumes leave the real muzzles and nozzles. Flagships now draw over the squadrons. Not checked on real phones.
+- **v257:** the Quests bar (`.dirmini`) is removed from the base view; quests stay on the dock's Quests tab.
