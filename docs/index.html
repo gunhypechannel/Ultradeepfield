@@ -2229,7 +2229,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 249;
+const GAME_V = 250;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4247,7 +4247,7 @@ function cubeDemoFleets(T) { const dm = G.cubeDemo; if (!dm || T > dm.tEnd) retu
 /* everyone else's routed fleets on the map: from the Cube to each loser's homeworld, all leaving at the same moment */
 function routFleets(T) { const out = [], ret = (G.nexus && G.nexus.ret) || {};
   for (const u in ret) { if (u === G.me) continue; const r = ret[u], h = G.list.find(p => p.owner === u && p.kind === "home"); if (!h) continue; const tt = Math.max(60000, travelMs(NEXUS, h, r.n)); if (T < r.at || T > r.at + tt) continue;
-    out.push({ id: "rt-" + u + r.at, phase: "out", pid: h.id, ox: 0, oy: 0, out: r.at, arrive: r.at + tt, n: r.n, mission: "attack", retreat: 1 }); }
+    out.push({ id: "rt-" + u + r.at, phase: "out", pid: h.id, ox: 0, oy: 0, out: r.at, arrive: r.at + tt, n: r.n, mission: "attack", retreat: 1, u }); }
   return out.concat(cubeDemoFleets(T)); }
 function cleanGlory(d) {
   if (!d || typeof d !== "object") return null;
@@ -5307,7 +5307,7 @@ function glWatch(W) {
 function shipPrewarm(W) {
   const idle = f => window.requestIdleCallback ? requestIdleCallback(f, { timeout: 2500 }) : setTimeout(f, 60);
   setTimeout(() => idle(function step() { if (G3 !== W) return;
-    const jobs = W.prewarmJobs || (W.prewarmJobs = [...new Set([facOf(), "terran"])].map(f => fleetKit(W, f)).filter(Boolean).flatMap(K => Object.keys(MINI_CLS).map(k => [K, k])));
+    const jobs = W.prewarmJobs || (W.prewarmJobs = [...new Set([facOf(), "terran"])].map(f => fleetKit(W, f)).filter(Boolean).flatMap(K => ["flagship", ...Object.keys(MINI_CLS)].map(k => [K, k])));
     const t0 = performance.now(); while (jobs.length && performance.now() - t0 < 8) { const [K, k] = jobs.shift(); if (!K.geo[k]) try { shipGeo(K, k); } catch (e) {} }
     if (jobs.length) idle(step); }), 6000);
 }
@@ -6171,14 +6171,20 @@ function fleetKit(W, fac) {
   fac = FACTIONS[fac] ? fac : "terran"; W.fkm = W.fkm || {}; if (W.fkm[fac] !== undefined) return W.fkm[fac];
   W.fkm[fac] = null; if (!studio()) return null;
   try {
-    const pm = new TH.PMREMGenerator(W.renderer), env = new TH.Scene();
+    let envMap = W.fkEnv; /* v250: all factions share one reflection map, now that several can fly at once */
+    if (!envMap) { const pm = new TH.PMREMGenerator(W.renderer), env = new TH.Scene();
     const skyT = texCanvas(256, 128, (x, Wd, Hd) => { const g = x.createLinearGradient(0, 0, 0, Hd); g.addColorStop(0, "#41648c"); g.addColorStop(.5, "#121d2e"); g.addColorStop(1, "#05070b"); x.fillStyle = g; x.fillRect(0, 0, Wd, Hd);
       x.fillStyle = "#ffffff"; x.fillRect(Wd * .1, Hd * .14, Wd * .26, Hd * .08); x.fillStyle = "#ffd2a6"; x.fillRect(Wd * .56, Hd * .3, Wd * .3, Hd * .06); x.fillStyle = "#9fdcff"; x.fillRect(Wd * .3, Hd * .62, Wd * .2, Hd * .04); });
     env.add(new TH.Mesh(new TH.SphereGeometry(50, 24, 12), new TH.MeshBasicMaterial({ map: skyT, side: TH.BackSide })));
-    const envMap = pm.fromScene(env, .02).texture; pm.dispose();
+    envMap = W.fkEnv = pm.fromScene(env, .02).texture; pm.dispose(); }
     const src = shipMats(facAcc(fac)), mats = {};
     for (const k in src) { const m = src[k].clone(); if (m.isMeshStandardMaterial) { m.envMap = envMap; m.envMapIntensity = 1.7; } mats[k] = m; }
     mats.hull.color.set(FACTIONS[fac].hull).multiplyScalar(1.1); mats.dark.color.set(FACTIONS[fac].dark).multiplyScalar(1.25); // a touch brighter: map fleets are seen small and from afar
+    mats.neon = new TH.MeshBasicMaterial({ color: FLAG_GLOW[fac], toneMapped: false }); // v250: the flagship's seams, in the bright colour of its faction card
+    /* v250 the flagship's own plating: brighter than its escorts, faintly lit so its dark side never sinks into space, polished, and edged with a rim of faction light like the card paintings */
+    const FT = { terran: [0xf4f8ff, 0x8c97a4, 0x77828f], solar: [0xfff8e6, 0xd8ae58, 0x9c8452], nyx: [0x8a919c, 0x4c525c, 0x363b44], verdant: [0xd4f2e2, 0x4f9a7c, 0x5a8c78] }[fac], RIM = { terran: .55, solar: .5, nyx: .8, verdant: .55 }[fac];
+    [["fhull", "hull", FT[0], fac === "terran" || fac === "solar" ? .09 : .18], ["fdark", "dark", FT[1], .1], ["ftrim", "trim", FT[2], .08]].forEach(([nm, from, col, em]) => { const m = mats[from].clone(); m.color.set(col); m.emissive.set(col); m.emissiveIntensity = em; if (m.map) m.emissiveMap = m.map; m.envMapIntensity = 2.6; m.metalness = Math.min(m.metalness, .72);
+      const rc = new TH.Color(FLAG_GLOW[fac]).multiplyScalar(RIM * (nm === "fhull" ? 1 : .7)); m.onBeforeCompile = sh => { sh.uniforms.uRim = { value: rc }; sh.fragmentShader = "uniform vec3 uRim;\n" + sh.fragmentShader.replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n  { float rim = 1.0 - clamp(dot(normalize(vViewPosition), normal), 0.0, 1.0); totalEmissiveRadiance += uRim * rim * rim * rim; }"); }; mats[nm] = m; });
     Object.defineProperty(mats, "fac", { value: fac, enumerable: false });
     W.fkm[fac] = { mats, geo: {}, acc: new Map(), engT: glowTex("255,255,255", 1) };
   } catch (e) { W.fkm[fac] = null; }
@@ -6205,15 +6211,16 @@ function shipGeo(K, k) {
   const merged = {}, mid = {}; for (const n in partsMid) mid[n] = mergeGeos(partsMid[n]);
   /* v172 the middle level as two single meshes for the map's shared batches: the lit body (every plating part, its material shown as a
      shade baked into the vertex colours) and the glow (windows, engines, accents) */
-  const SHADE = { hull: [1, 1, 1], dark: [.42, .45, .5], trim: [.26, .28, .3], gold: [.95, .78, .42], glass: [.12, .2, .3] }, GLOW = { engine: [.85, .95, 1], win: [1, .89, .66], accent: [.55, .9, 1], core: [1, .78, .56] };
+  const SHADE = { hull: [1, 1, 1], dark: [.42, .45, .5], trim: [.26, .28, .3], gold: [.95, .78, .42], glass: [.12, .2, .3], fhull: [1.5, 1.5, 1.5], fdark: [.8, .84, .9], ftrim: [.55, .58, .62] }, GLOW = { engine: [.85, .95, 1], win: [1, .89, .66], accent: [.55, .9, 1], core: [1, .78, .56] }; if (K.mats.neon) { const c = K.mats.neon.color; GLOW.neon = [c.r, c.g, c.b]; }
   const tint = (tab) => { const L = []; for (const n in partsMid) if (tab[n]) for (const g0 of partsMid[n]) L.push([g0, tab[n]]); return L.length ? mergeGeosC(L) : null; };
   const midB = tint(SHADE), midG = tint(GLOW);
   for (const n in parts) { merged[n] = mergeGeos(parts[n]); parts[n].forEach(x => x.dispose()); }
   const eng = (g.userData.eng || []).map(([x, y, z, rr]) => { const v = new TH.Vector3(x, y, z).applyMatrix4(g.matrixWorld); return [v.x, v.y, v.z, rr * MINI_SC]; });
+  const glow = (g.userData.glow || []).map(([x, y, z, rr, c, a]) => { const v = new TH.Vector3(x, y, z).applyMatrix4(g.matrixWorld); return [v.x, v.y, v.z, rr * MINI_SC, c, a]; }); // v250: the flagship's halo of soft light
   // v150 the far stand-in: a six-sided spindle the size of the hull (24 triangles instead of thousands), drawn once a ship is a few pixels long
   const len = box.max.z - box.min.z, wid = box.max.x - box.min.x, hgt = box.max.y - box.min.y, c = box.getCenter(new TH.Vector3());
   const lod = new TH.CylinderGeometry(.18, .5, 1, 6, 1); lod.rotateX(Math.PI / 2); lod.scale(wid, Math.max(hgt, wid * .3), len); lod.translate(c.x, c.y, c.z);
-  return (K.geo[k] = { parts: merged, mid, midB, midG, eng, len, wid, lod });
+  return (K.geo[k] = { parts: merged, mid, midB, midG, eng, glow, len, wid, lod });
 }
 /* v150 fleet culling and level of detail. Ship meshes skip three.js's own culling (an instanced formation is wider than one hull's
    bounds), so every formation on the map, behind the camera or not, drew thousands of triangles per hull: the event siege alone was
@@ -6241,8 +6248,9 @@ function fleetLod(W, pxK) {
     const u = g.userData; g.updateWorldMatrix(true, false); FL_S.center.setFromMatrixPosition(g.matrixWorld); const sc = g.matrixWorld.getMaxScaleOnAxis(); FL_S.radius = u.R * sc;
     let shown = true; for (let p = g; p; p = p.parent) if (!p.visible) { shown = false; break; } // a fleet inside a hidden group (the siege squadrons off-screen) must not reach the shared batch
     const inView = shown && FL_FR.intersectsSphere(FL_S), k = sc / Math.max(.1, FL_S.center.distanceTo(cp)) * pxK; let allFar = true;
-    for (const e of u.groups) { const px = e.len * k; let lv = !inView ? 3 : px < far ? 2 : px < midPx ? 1 : 0; // 0 full, 1 middle, 2 stand-in, 3 culled
-      if (lv < 3 && e.lv != null && e.lv < 3 && lv !== e.lv) { if (lv < e.lv) { if (px < (e.lv === 2 ? far : midPx) * 1.2) lv = e.lv; } else if (px > (lv === 2 ? far : midPx) * .83) lv = e.lv; } e.lv = lv; /* v194: hysteresis */
+    for (const e of u.groups) { const px = e.len * k, far1 = e.flag ? 6 : far, mid1 = e.flag ? (MOBILE ? 40 : 30) : midPx; let lv = !inView ? 3 : px < far1 ? 2 : px < mid1 ? 1 : 0; // 0 full, 1 middle, 2 stand-in, 3 culled (v250: a flagship keeps its detail much further out)
+      if (lv < 3 && e.lv != null && e.lv < 3 && lv !== e.lv) { if (lv < e.lv) { if (px < (e.lv === 2 ? far1 : mid1) * 1.2) lv = e.lv; } else if (px > (lv === 2 ? far1 : mid1) * .83) lv = e.lv; } e.lv = lv; /* v194: hysteresis */
+      if (e.flag && u.flagKeep && lv < 3) allFar = false; // v250: a flagship's glow still shows from afar
       if (u.noBatch && lv < 3) { for (const m of e.meshes) m.visible = lv < 2; e.lod.visible = lv === 2; W.flStat[lv] += e.ss.length; allFar = false; continue; } // wrecks: their own full meshes, or their own stand-in
       for (const m of e.meshes) m.visible = lv === 0; e.lod.visible = false; W.flStat[lv] += e.ss.length; if (lv === 0) allFar = false;
       if ((lv === 1 || lv === 2) && e.K) { const G0 = shipGeo(e.K, e.k);
@@ -6283,17 +6291,27 @@ const CUBE_FORM = {
     if (u >= .45) return [0, bob, 0, Math.sin(t * .0016 + s.ph) * .03, 0, Math.sin(t * .0012 + s.ph) * .04];
     const x = u / .45, e = Math.sin(Math.PI * x) ** 2, g = Math.sin(Math.PI * Math.pow(x, .45)) ** 2, out = Math.max(0, Math.sin(TAU * x)) * Math.sin(Math.PI * x); // e: out and back, g: forward surge; no jolt at either end
     return [s.side * e * sp * 1.5 * A, bob + e * sp * .45 * A * (s.i % 2 ? 1 : -1), g * sp * .7 * A, -e * .14 * A, s.side * out * .35 * A, -s.side * e * .6 * A]; } };
-function fleet3D(W, n, col, hostile, big, cube) { // big: a joint strike armada, more hulls in the formation; cube: v174 the Cube event's flagship formation
-  const K = fleetKit(W, hostile ? "terran" : facOf()); if (!K) return miniFleet(W, n, col, hostile);
-  const grp = new TH.Group(), comp = Object.entries(n || {}).filter(([k, v]) => v > 0 && MINI_CLS[k] && !(cube && k === "eclipse"));
+/* v250 each formation built around the faction flagship (hull 0, at the origin). F is the flagship's geometry; escorts clear its hull. */
+const FLAG_SLOT = {
+  wedge: (i, N, sp, F) => { const row = Math.ceil(i / 2), side = i % 2 ? 1 : -1; return [side * (F.wid * .5 + sp * .55 + (row - 1) * sp * .8), (i % 3 - 1) * .3, -F.len * .22 - (row - 1) * sp * .75]; },
+  column: (i, N, sp, F) => [(i % 2 ? .22 : -.22) * sp, 0, -F.len * .56 - sp * .3 - (i - 1) * sp * .62],
+  phalanx: (i, N, sp, F) => { let c = Math.ceil(Math.sqrt(N - 1)); if (c % 2) c++; const e = i - 1, x = e % c, r = Math.floor(e / c), X = (x - (c - 1) / 2) * sp * .85; return [X + Math.sign(X) * (F.wid * .5 + sp * .1), (r % 2) * .35, F.len * .1 - r * sp * .8]; },
+  swarm: (i, N, sp) => { const p = swarmAt(i, sp, 0); return [p[0], p[1], p[2]]; } };
+/* v250 which faction a commander flies: their published choice (bots and pirates have none, so bots fly the Terran look) */
+const playerFac = uid => uid === G.me ? facOf() : (G.players[uid] && FACTIONS[G.players[uid].fac] ? G.players[uid].fac : "terran");
+function fleet3D(W, n, col, hostile, big, cube, flag) { // big: a joint strike armada, more hulls in the formation; cube: v174 the Cube event's flagship formation; flag: v250 the faction whose flagship leads
+  if (cube && !flag) flag = facOf(); if (flag && !FACTIONS[flag]) flag = null;
+  const K = fleetKit(W, flag || (hostile ? "terran" : facOf())); if (!K) return miniFleet(W, n, col, hostile);
+  const grp = new TH.Group(), comp = Object.entries(n || {}).filter(([k, v]) => v > 0 && MINI_CLS[k]);
   if (!comp.length) comp.push(...(hostile ? [["destroyer", 2], ["corvette", 4], ["heavyFighter", 8]] : [["fighter", 6]]));
   const order = { q: 0, x: 0, l: 1, m: 2, s: 3 }; comp.sort((a, b) => order[MINI_CLS[a[0]]] - order[MINI_CLS[b[0]]] || b[1] - a[1]);
-  const ships = cube ? ["eclipse"] : []; // v174 at the Cube a Discovery Class always leads: a picture only, the fleet's ships and numbers are untouched
-  for (const [k, v] of comp) { const cap = { s: 4, m: 3, l: 2, x: 1 }[MINI_CLS[k]] * (big ? 3 : 1); for (let i = 0; i < clamp(Math.ceil(Math.log2(v + 1)) * (big ? 2 : 1), 1, cap) && ships.length < (big ? (MOBILE ? 12 : 18) : MOBILE ? 6 : 9) + (cube ? 1 : 0); i++) ships.push(k); } // phones: up to 6 hulls per squadron
+  const ships = flag ? ["flagship"] : []; // v250 the faction flagship always leads (v174 at the Cube it was a Discovery Class): a picture only, the fleet's ships and numbers are untouched
+  for (const [k, v] of comp) { const cap = { s: 4, m: 3, l: 2, x: 1 }[MINI_CLS[k]] * (big ? 3 : 1); for (let i = 0; i < clamp(Math.ceil(Math.log2(v + 1)) * (big ? 2 : 1), 1, cap) && ships.length < (big ? (MOBILE ? 12 : 18) : MOBILE ? 6 : 9) + (flag ? 1 : 0); i++) ships.push(k); } // phones: up to 6 hulls per squadron
   // wedge: the biggest hull leads, the rest fan out behind it in staggered rows
-  const geos = ships.map(k => shipGeo(K, k)), esc = cube && geos.length > 1 ? geos.slice(1) : geos, sp = Math.max(...esc.map(g => Math.max(g.len * .55, g.wid))) * .9 + .5; // at the Cube the escorts set the spacing, not the flagship
-  const form = typeof big === "string" && FORMS[big] ? big : "wedge", N = ships.length, FM = cube ? CUBE_FORM : FORMS[form], tc = {};
-  const slots = ships.map((k, i) => { const tier = /[lxq]/.test(MINI_CLS[k]) ? "b" : "s", j = tc[tier] = (tc[tier] || 0) + 1; const s = FM.slot(i, N, sp, k, cube ? geos[0] : null, j); return { k, x: s[0], y: s[1], z: s[2], ph: i * 1.3, i, side: s[3] || 0, big: tier === "b" }; });
+  const geos = ships.map(k => shipGeo(K, k)), esc = flag && geos.length > 1 ? geos.slice(1) : geos, sp = Math.max(...esc.map(g => Math.max(g.len * .55, g.wid))) * .9 + .5; // the escorts set the spacing, not the flagship
+  const form = typeof big === "string" && FORMS[big] ? big : "wedge", N = ships.length, FM = cube ? CUBE_FORM : FORMS[form], tc = {}, F0 = flag ? geos[0] : null;
+  const spM = flag && !cube && form === "swarm" ? Math.max(sp, (F0.len * .5 + sp * .6) / 1.08, (F0.wid * .5 + sp * .6) / 1.35) : sp; // the swarm's rings open wide enough to circle the flagship
+  const slots = ships.map((k, i) => { const tier = k === "flagship" || /[lxq]/.test(MINI_CLS[k]) ? "b" : "s", j = tc[tier] = (tc[tier] || 0) + 1; const s = cube ? FM.slot(i, N, sp, k, F0, j) : flag ? (i ? FLAG_SLOT[form](i, N, spM, F0) : [0, 0, 0]) : FM.slot(i, N, sp, k, null, j); return { k, x: s[0], y: s[1], z: s[2], ph: i * 1.3, i, side: s[3] || 0, big: tier === "b" }; });
   const move = FM.move; // v106: each joint strike formation has its own motion
   let acc = K.acc.get(col); if (!acc) { acc = K.mats.accent.clone(); acc.color.set(col); acc.emissive.set(col); acc.emissiveIntensity = 1.1; K.acc.set(col, acc); }
   const groups = [];
@@ -6301,26 +6319,29 @@ function fleet3D(W, n, col, hostile, big, cube) { // big: a joint strike armada,
     for (const [pn, geo] of Object.entries(shipGeo(K, k).parts)) { const im = new TH.InstancedMesh(geo, pn === "accent" ? acc : K.mats[pn], ss.length); im.frustumCulled = false; grp.add(im); meshes.push(im); }
     const lod = new TH.InstancedMesh(shipGeo(K, k).lod, K.mats.hull, ss.length); lod.frustumCulled = false; lod.visible = false; grp.add(lod); // v150 far stand-in
     const mids = []; // v172: the middle level now draws from the map's shared batches (fleetLod), not per fleet
-    groups.push({ ss, meshes, mids, lod, len: shipGeo(K, k).len, k, K }); }
+    groups.push({ ss, meshes, mids, lod, len: shipGeo(K, k).len, k, K, flag: k === "flagship" }); }
   // engine glow: a bright core at each nozzle and a short fading plume behind it, all one point cloud
   const ec = new TH.Color(col).lerp(new TH.Color(0xffffff), .35), pts = [];
-  for (const s of slots) for (const [x, y, z, rr] of shipGeo(K, s.k).eng) for (let j = 0; j < 4; j++) pts.push([s, x, y, z - j * rr * 2.2, rr * (j ? 3.4 - j * .6 : 4.2), j ? .55 - j * .12 : 1]);
+  const fc = flag ? new TH.Color(FLAG_GLOW[flag]) : null, fcE = fc && fc.clone().lerp(new TH.Color(0xffffff), .22);
+  for (const s of slots) { const G1 = shipGeo(K, s.k), fl1 = s.k === "flagship";
+    for (const [x, y, z, rr] of G1.eng) { if (fl1) { for (let j = 0; j < 7; j++) pts.push([s, x, y, z - j * rr * 2.1, rr * (j ? 4.6 - j * .55 : 5.6), j ? .8 - j * .1 : 1, fcE, 0]); } else for (let j = 0; j < 4; j++) pts.push([s, x, y, z - j * rr * 2.2, rr * (j ? 3.4 - j * .6 : 4.2), j ? .55 - j * .12 : 1]); }
+    if (fl1) for (const [x, y, z, rr, c, a] of G1.glow) pts.push([s, x, y, z, rr, a, c ? new TH.Color(c) : fc, 1]); } // the soft halo round its seams, reactors and rings
   const eng = sizedPoints(K.engT, Math.max(1, pts.length), true); eng.renderOrder = 12; grp.add(eng);
   const DM = new TH.Object3D();
   // v172 the full-detail meshes and engine glows are only re-posed while they are on screen (fleetLod flags them); the stand-in slots,
   // which feed the shared batches, always are. 140 fleets re-posing every part every frame was a big share of a 60 vs 60 frame.
   const pose = (t, all) => {
-    for (const s of slots) { const m = move(s, t, N, sp); s.px = s.x + m[0]; s.py = s.y + m[1]; s.pz = s.z + m[2]; s.rx = m[3]; s.ry = m[4]; s.rz = m[5]; }
+    for (const s of slots) { const m = move(s, t, N, spM); s.px = s.x + m[0]; s.py = s.y + m[1]; s.pz = s.z + m[2]; s.rx = m[3]; s.ry = m[4]; s.rz = m[5]; }
     for (const e of groups) { const full = all || e.meshes.some(m => m.visible);
-      e.ss.forEach((s, i) => { DM.position.set(s.px, s.py, s.pz); DM.rotation.set(s.rx, s.ry, s.rz); DM.scale.setScalar(s.dead ? 1e-4 : 1); DM.updateMatrix(); if (full) for (const m of e.meshes) m.setMatrixAt(i, DM.matrix); e.lod.setMatrixAt(i, DM.matrix); });
+      e.ss.forEach((s, i) => { DM.position.set(s.px, s.py, s.pz); DM.rotation.set(s.rx, s.ry, s.rz); DM.scale.setScalar(s.dead ? 1e-4 : e.flag ? grp.userData.fz || 1 : 1); DM.updateMatrix(); if (full) for (const m of e.meshes) m.setMatrixAt(i, DM.matrix); e.lod.setMatrixAt(i, DM.matrix); });
       if (full) for (const m of e.meshes) m.instanceMatrix.needsUpdate = true; if (all || e.lod.visible) e.lod.instanceMatrix.needsUpdate = true; }
     if (!all && !eng.visible) return;
-    const ea = eng.geometry.attributes; pts.forEach(([s, x, y, z, sz, a], i) => { const fl = .85 + .15 * Math.sin(t * .03 + i), c = Math.cos(s.ry), sn = Math.sin(s.ry); ea.position.setXYZ(i, s.px + x * c + z * sn, s.py + y, s.pz - x * sn + z * c); ea.aCol.setXYZW(i, ec.r, ec.g, ec.b, s.dead ? 0 : a); ea.aSize.setX(i, sz * fl); });
+    const ea = eng.geometry.attributes; pts.forEach(([s, x, y, z, sz, a, pc, slow], i) => { const fl = slow ? .82 + .18 * Math.sin(t * .0026 + i * .9) : .85 + .15 * Math.sin(t * .03 + i), c = Math.cos(s.ry), sn = Math.sin(s.ry), C1 = pc || ec, fk = s.k === "flagship" ? grp.userData.fz || 1 : 1, x1 = x * fk, z1 = z * fk; ea.position.setXYZ(i, s.px + x1 * c + z1 * sn, s.py + y * fk, s.pz - x1 * sn + z1 * c); ea.aCol.setXYZW(i, C1.r, C1.g, C1.b, s.dead ? 0 : a); ea.aSize.setX(i, sz * fl * fk); });
     ea.position.needsUpdate = ea.aCol.needsUpdate = ea.aSize.needsUpdate = true; eng.geometry.setDrawRange(0, pts.length); };
   pose(0, true); grp.traverse(c => { if (c !== grp) { c.matrixAutoUpdate = false; c.updateMatrix(); } }); // the parts never move inside their group: fixed local transforms
   grp.userData.anim = pose; grp.userData.eng = eng; grp.userData.detailed = true; grp.userData.slots = slots;
   // v150 bounds for fleetLod: the whole formation (with room for its motion) and the longest hull
-  Object.assign(grp.userData, { groups, orphan: 0, sp, R:Math.max(...slots.map(s => Math.hypot(s.x, s.y, s.z))) + sp * 2.5 });
+  Object.assign(grp.userData, { groups, orphan: 0, sp, flagship: flag, R:Math.max(...slots.map(s => Math.hypot(s.x, s.y, s.z))) + Math.max(sp * 2.5, F0 ? F0.len * .7 : 0) });
   (W.fleetSet || (W.fleetSet = new Set())).add(grp); return grp;
 }
 function disposeFleet(grp) { if (!grp || !grp.userData.detailed) return; if (G3 && G3.fleetSet) G3.fleetSet.delete(grp); const e = grp.userData.eng; if (e) { e.geometry.dispose(); e.material.dispose(); } grp.traverse(o => { if (o.isInstancedMesh && o.dispose) o.dispose(); }); }
@@ -6390,7 +6411,7 @@ const genComp = n => { n = Math.max(3, n || 6); return { fighter: Math.ceil(n * 
 function mapClash(loc, rep, def) {
   if (!loc || !rep || !rep.start || typeof TH === "undefined") return; const age = now() - (rep.at || now()); if (age > 40000 || age < -5000) return; // only battles happening now
   const youA = !def && (rep.aUids || []).includes(G.me);
-  clashPush({ key: rep.id, loc, age, a: rep.start.a || {}, d: rep.start.d || {}, rounds: (rep.rounds || []).filter(r => r && r.a && r.d), winner: rep.winner, aCol: youA ? 0x55d6e8 : 0xff5a5a, dCol: youA ? 0xff7a3a : 0x55d6e8, rep: rep.id, you: youA ? "a" : "d" });
+  clashPush({ key: rep.id, loc, age, a: rep.start.a || {}, d: rep.start.d || {}, rounds: (rep.rounds || []).filter(r => r && r.a && r.d), winner: rep.winner, aCol: youA ? 0x55d6e8 : 0xff5a5a, dCol: youA ? 0xff7a3a : 0x55d6e8, rep: rep.id, you: youA ? "a" : "d", aF: youA ? facOf() : rep.aUids && rep.aUids[0] ? playerFac(rep.aUids[0]) : null, dF: youA ? (rep.dUid ? playerFac(rep.dUid) : null) : facOf() });
 }
 function clashPush(c) { const tn = performance.now(); G.clashes = G.clashes.filter(x => tn - x.t0 < x.dur || x.o); if (G.clashes.some(x => x.key === c.key)) return;
   /* v195: a new clash at the same place takes over: the older one fades out in a second instead of fighting on inside it (two sets of
@@ -6409,8 +6430,8 @@ function drawClashes(W, t, T) {
       const bolts = new TH.LineSegments(boltsG, new TH.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 1, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); bolts.frustumCulled = false; bolts.renderOrder = 14; W.scene.add(bolts);
       const boomT = W.glow.boom || (W.glow.boom = glowTex("255,170,80", 1)), booms = [];
       for (let i = 0; i < 14; i++) { const sp = new TH.Sprite(W.additive(boomT, 0xffffff, 0)); sp.renderOrder = 15; W.scene.add(sp); booms.push({ sp, t0: -1e9 }); }
-      const mk = (n, col, hostile) => { const g = fleet3D(W, clashShips(n) || genComp(clashCnt(n)), col, hostile); g.userData.size = (.75 + Math.min(1.1, Math.log10(clashCnt(n) + 1) * .3)) * .5; W.scene.add(g); return g; };
-      c.o = { ga: mk(c.a, c.aCol, c.you !== "a"), gd: mk(c.d, c.dCol, c.you === "a"), bolts, booms, bl: [], la: -1, ld: -1, ended: 0 }; }
+      const mk = (n, col, hostile, fg) => { const g = fleet3D(W, clashShips(n) || genComp(clashCnt(n)), col, hostile, false, false, fg); g.userData.size = (.75 + Math.min(1.1, Math.log10(clashCnt(n) + 1) * .3)) * .5; W.scene.add(g); return g; };
+      c.o = { ga: mk(c.a, c.aCol, c.you !== "a", c.aF), gd: mk(c.d, c.dCol, c.you === "a", c.dF), bolts, booms, bl: [], la: -1, ld: -1, ended: 0 }; }
     const atCube = c.loc === NEXUS, angN = ang + (atCube ? e * .00007 : 0), o = c.o, dx = Math.cos(angN), dz = Math.sin(angN), wob = Math.sin(e * .0011) * (atCube ? 7 : .6); /* v194 strafing runs round the Cube */
     // attackers sweep in during the first 2 s, then hold a firing line; defenders hold in front of the target
     // v178 at the Cube the defenders hold a line just outside its hull (they used to hold 11 units from its centre: inside it)
@@ -6501,7 +6522,7 @@ function cwBuild(W) { const LITE = MOBILE || FX_LITE(); // phones and the Lite e
   const grp = new TH.Group(); W.add(grp); const r = cwRnd(1107), N = LITE ? 4 : 7;
   const comps = [{ fighter: 60, heavyFighter: 30, corvette: 12 }, { destroyer: 6, corvette: 10, lancer: 8 }, { battleship: 4, destroyer: 4 }, { bomber: 12, heavyFighter: 20 }, { escortCarrier: 2, corvette: 10, fighter: 40 }, { dreadnought: 1, battleship: 3, destroyer: 4 }, { lancer: 10, corvette: 12, fighter: 30 }];
   const forms = ["wedge", "column", "phalanx", "swarm"], sq = [];
-  for (let i = 0; i < N; i++) { const g = fleet3D(W, comps[i % comps.length], 0xffb08a, false, forms[i % 4]); grp.add(g);
+  for (let i = 0; i < N; i++) { const g = fleet3D(W, comps[i % comps.length], 0xffb08a, false, forms[i % 4], false, DEMO_FAC[i % 4]); grp.add(g);
     sq.push({ g, R: 40 + r() * 34, inc: .12 + r() * .22, w: TAU / (240000 + r() * 160000) * (r() < .3 ? -1 : 1), ph: r() * TAU, k: 1 + r() * .35, hp: i < 2 ? 0 : 1 }); }
   // capital ships: one big hull each, closer in and slower
   for (const [k, n] of [["dreadnought", 1], ["supercarrier", 1], ["battleship", 1]].slice(0, LITE ? 2 : 3)) { const g = fleet3D(W, { [k]: n }, 0xffd090, false); grp.add(g); sq.push({ g, R: 30 + r() * 10, inc: .06 + r() * .1, w: TAU / (420000 + r() * 200000), ph: r() * TAU, k: 2.3, cap: 1 }); }
@@ -6591,7 +6612,7 @@ function drawCubeWar(W, t, T) {
   for (const f of S.fleets) if (f.pid === "nexus" && f.arrive && T >= f.arrive - 4000 && !C.extra.has(f.id) && !jsMerged(f) && !f.assault) C.extra.set(f.id, { n: Object.assign({}, f.n), form: "wedge", at: f.arrive, until: f.arrive + 12 * 60000, col: 0x9fe9f7 });
   let joinMade = 0; // v178 fleets landing together join the siege a couple a frame, never all in one frame
   for (const [id, x] of C.extra) { if (T > x.until || !war) { if (x.q) { C.grp.remove(x.q.g); disposeFleet(x.q.g); const qi = C.sq.indexOf(x.q); if (qi >= 0) C.sq.splice(qi, 1); } C.extra.delete(id); continue; } // (v178: indexOf -1 would have spliced off the last squadron)
-    // v174 every player's fleet at the Cube flies behind a Discovery Class flagship (event-only picture: x.n, the real fleet, is untouched)
+    // v174 every player's fleet at the Cube flies behind a flagship (v250: its faction's; a picture only: x.n, the real fleet, is untouched)
     if (!x.q && joinMade++ < 2) { const g = fleet3D(W, x.n, x.col, false, x.form, true); C.grp.add(g); x.q = { g, R: 40 + (hash(id) % 22), inc: .12 + (hash(id + "i") % 30) / 100, w: TAU / 260000 * (hash(id) % 4 ? 1 : -1), ph: (hash(id) % 628) / 100, k: 1.3, joined: 1, flag: 1, arr: x.at - 4000 }; C.sq.push(x.q); } }
   // squadrons and capital ships: slow attack orbits, facing where they fly, banking into the turn
   // v174 none of them may touch the hull: each orbit keeps clear of the Cube's corners by the squadron's own size plus a gap, and
@@ -6987,7 +7008,7 @@ function siegeCam(W, t) {
   const c = W.cam, C = W.cwar, np = W.nexus.position, flags = C ? C.sq.filter(q => q.flag && q.g.visible) : [], s = (t - c.siege.t0) / 1000, sh = Math.floor(s / 16) % (flags.length ? 5 : 4), k = (s % 16) / 16; c.follow = null; c.followFleet = null; c.goal = null; c.vel = null; c.live = 1;
   let tx = np.x, ty = np.y, tz = np.z, d = 120, th = c.siege.th0 + s * .02, ph = 1.38;
   if (C && C.sq.length) { const caps = C.sq.filter(q => q.cap), sqs = C.sq.filter(q => !q.cap);
-    // v174 a chase shot riding just above and behind a player's Discovery Class flagship as it leads its fleet round the Cube
+    // v174 a chase shot riding just above and behind a player's flagship as it leads its fleet round the Cube
     if (sh === 4 && flags.length) { const q = flags[Math.floor(s / 80) % flags.length], p = q.g.position, fw = q.g.getWorldDirection(CC_O); tx = p.x + fw.x * 6; ty = p.y + fw.y * 6; tz = p.z + fw.z * 6; d = 30 - 6 * k; ph = 1.3; th = Math.atan2(-fw.z, -fw.x) + .35 * Math.sin(k * Math.PI); }
     else if (sh === 0) { d = 92 - 14 * k; ph = 1.47; th = c.siege.th0 + s * .012; ty = np.y - 4; } // v187: closer (was 118), so the ships orbiting past the lens read
     else if (sh === 1 && sqs.length) { const q = sqs[Math.floor(s / 64) % sqs.length], p = q.g.position; tx = p.x; ty = p.y; tz = p.z; d = 26 - 4 * k; ph = 1.32; th = Math.atan2(p.x - np.x, p.z - np.z) + (q.w > 0 ? 1.9 : -1.9); }
@@ -7183,7 +7204,7 @@ function synthRounds(a, d, winner) { const out = []; for (let i = 1; i <= 4; i++
 function otherClashes(W, T) {
   for (const v of W.mvL || []) { const m = v.m; if (!["a", "w", "j", "r"].includes(m.m) || T < m.arrive || T - m.arrive > 22000) continue; const loc = tgtById(m.t); if (!loc) continue;
     const a = genComp(m.n), d = genComp(Math.round((m.n || 6) * .8)), winner = m.m === "w" ? (m.win ? "a" : "d") : "a";
-    clashPush({ key: "mv" + v.uid + m.out, loc, age: T - m.arrive, a, d, rounds: synthRounds(a, d, winner), winner, aCol: v.ally ? 0x7be39a : 0xff9a6a, dCol: 0xf0a945, you: null }); } }
+    clashPush({ key: "mv" + v.uid + m.out, loc, age: T - m.arrive, a, d, rounds: synthRounds(a, d, winner), winner, aCol: v.ally ? 0x7be39a : 0xff9a6a, dCol: 0xf0a945, you: null, aF: playerFac(v.uid), dF: null }); } }
 /* ---------- v94 outposts on the map: a beacon on every held open orbit, raised with a deploy animation ---------- */
 function outpostsNear(W, T) { const out = [], seen = new Set();
   for (const f of S.fleets) if (f.phase === "gather" && typeof f.nid === "string" && f.nid[0] === "e" && f.gend > T) { out.push({ id: f.nid, uid: G.me, at: f.arrive, until: f.gend, n: sumShips(f.n) }); seen.add(f.nid); }
@@ -7217,10 +7238,18 @@ function lineDist(ln) {
   if (!a || a.count !== n) { a = new TH.BufferAttribute(new Float32Array(n), 1).setUsage(TH.DynamicDrawUsage); g.setAttribute("lineDistance", a); }
   const d = a.array, P = p.array; d[0] = 0; for (let i = 1; i < n; i++) { const j = i * 3; d[i] = d[i - 1] + Math.hypot(P[j] - P[j - 3], P[j + 1] - P[j - 2], P[j + 2] - P[j - 1]); }
   a.needsUpdate = true; }
+/* v250 whose flagship leads a fleet on the map. Your own fleets fly yours; strikes their leader's or member's; enemies their commander's. Pirate raids have none. */
+const DEMO_FAC = ["terran", "solar", "nyx", "verdant"];
+function fleetFlag(f, hostile) {
+  if (f.raid) return null; if (f.demo) return DEMO_FAC[hash(String(f.id)) % 4];
+  if (hostile) return f.from ? playerFac(f.from) : null;
+  if (f.u) return playerFac(f.u); if (f.js) { const a = G.assaults && G.assaults[f.js]; return playerFac(a && a.leader || G.me); }
+  return facOf(); }
 function fleetObj(W, f, hostile, cube) {
   const col = hostile ? 0xff6262 : f.js ? (f.jsK === "in" ? 0x8affc0 : 0x5dff9a) : f.nid ? 0x9af0c8 : f.xid ? 0xffc06a : f.mission === "attack" ? 0xffb08a : f.mission === "transfer" ? 0xb8a6ff : 0x9fe9f7;
-  const grp = fleet3D(W, hostile && !f.n ? null : f.n, col, hostile, f.js && f.jsK !== "in" ? (f.form || "wedge") : false, !!cube), tot = Object.values(f.n || {}).reduce((a, b) => a + b, 0) || 6;
+  const flag = fleetFlag(f, hostile), grp = fleet3D(W, hostile && !f.n ? null : f.n, col, hostile, f.js && f.jsK !== "in" ? (f.form || "wedge") : false, !!cube, flag), tot = Object.values(f.n || {}).reduce((a, b) => a + b, 0) || 6;
   grp.userData.size = (.75 + Math.min(1.1, Math.log10(tot + 1) * .3)) * .5; // grows with fleet size
+  grp.userData.flagKeep = !!flag && !f.demo; // v250 (a demo's 140 fleets drop their glow from afar, to stay smooth)
   if (f.js && f.jsK !== "in") grp.userData.size *= 1.15 + Math.min(.5, (f.cnt || 1) * .05); // a joint strike army is one big formation, bigger with every commander
   // warp flare: flashes where the fleet jumps out of and back into normal space
   const warp = new TH.Sprite(W.additive(W.glow.warp || (W.glow.warp = glowTex("255,255,255", 1)), col, 0)); warp.renderOrder = 13; W.scene.add(warp);
@@ -7229,7 +7258,7 @@ function fleetObj(W, f, hostile, cube) {
   const tg = new TH.BufferGeometry(); tg.setAttribute("position", new TH.BufferAttribute(new Float32Array(24 * 3), 3));
   const trail = new TH.Line(tg, new TH.LineDashedMaterial({ color: col, transparent: true, opacity: .85, blending: TH.AdditiveBlending, dashSize: .45, gapSize: .7 }));
   W.scene.add(grp); W.scene.add(line); W.scene.add(trail);
-  return { grp, line, trail, warp, hist: [], bank: 0 };
+  return { grp, line, trail, warp, hist: [], bank: 0, fg: flag || "" };
 }
 // v178 the course line and trail now free their geometry and material too: every fleet that ever flew used to leave both behind on the
 // GPU (about 350 buffers per 60 vs 60 battle, growing with every battle watched)
@@ -7451,19 +7480,18 @@ function draw3D(t) {
   for (const e of strikeFleets(T).concat(routFleets(T))) list.push([e.id, e, false]); // v104 joint strikes: members flying in, the massing army, the march; v117 routed garrisons and the 20 vs 20 demo
   if (cam.followFleet && !list.some(x => x[0] === cam.followFleet)) { const mf = S.fleets.find(x => x.id === cam.followFleet); if (mf && jsMerged(mf)) cam.followFleet = "js-" + mf.assault; } // following your ships? follow the whole strike
   if (S.raid) list.push(["raid", { phase: "out", raid: true }, true]);
-  for (const x of visibleInbound(T)) list.push(["in-" + x.id, { phase: "out", pid: x.pid, ox: x.ox, oy: x.oy, out: x.out, arrive: x.arrive, n: x.n, enemy: true, src: x.src }, true]);
+  for (const x of visibleInbound(T)) list.push(["in-" + x.id, { phase: "out", pid: x.pid, ox: x.ox, oy: x.oy, out: x.out, arrive: x.arrive, n: x.n, enemy: true, src: x.src, from: x.from }, true]);
   for (const [id, f, hostile] of list) {
     let path;
     if (id === "raid") { const hp = homePlanet(); if (!hp) continue; const b = P3(hp, T), ang = (hash(G.me || "x") % 360) / 57.3; path = { a: { x: b.x + Math.cos(ang) * 160, y: 30, z: b.z + Math.sin(ang) * 160 }, b, k: 1 - clamp((S.raid.at - T) / 120000, 0, 1) }; }
     else path = fleetPath(f, T);
     if (!path) continue; fseen.add(id);
-    // v174 during the Cube event (and the Cube demo) a fleet bound for the Cube, or holding station at it, flies behind a Discovery Class
-    // flagship; on its way home it is its ordinary self again
+    // v174 during the Cube event (and the Cube demo) a fleet bound for the Cube, or holding station at it, takes the Cube's flagship formation
     const cf = !hostile && id !== "raid" && (path.cube || (f.phase === "out" && !f.retreat && fleetTarget(f) === NEXUS)) && (!!cubePhase(T) || !!f.demo);
     // v178 a rebuild (the army grew, or the Cube formation switched on or off) shares the 3-models-a-frame budget with new fleets, and the
     // old model keeps flying until its replacement is made: 60 routed fleets switching formation at the same instant used to be rebuilt
     // in one frame, a long freeze and a burst of GPU uploads right as the battle ended
-    let o = W.fleets.get(id); if (o && ((f.js && o.nk !== sumShips(f.n) + f.jsK + f.form) || !!o.cf !== cf) && (W.fleetMade = (W.fleetMade || 0) + 1) <= 3) { const h0 = o.hist; disposeObj(W, o); o = fleetObj(W, f, hostile, cf); o.hist = h0; W.fleets.set(id, o); } // the army grows as members arrive
+    let o = W.fleets.get(id); if (o && ((f.js && o.nk !== sumShips(f.n) + f.jsK + f.form) || !!o.cf !== cf || o.fg !== (fleetFlag(f, hostile) || "")) && (W.fleetMade = (W.fleetMade || 0) + 1) <= 3) { const h0 = o.hist; disposeObj(W, o); o = fleetObj(W, f, hostile, cf); o.hist = h0; W.fleets.set(id, o); } // the army grows as members arrive
     if (!o) { if ((W.fleetMade = (W.fleetMade || 0) + 1) > 3) continue; o = fleetObj(W, f, hostile, cf); W.fleets.set(id, o); } if (f.js && o.nk == null) o.nk = sumShips(f.n) + f.jsK + f.form; if (o.cf == null) o.cf = cf; // v124: at most 3 new fleet models a frame (v178: the keys are set by fleetObj, so a deferred rebuild is retried next frame)
     const fsT = path.cube ? 1.55 : fs; o.fsC = o.fsC ? o.fsC + (fsT - o.fsC) * .06 : fsT; const fsF = o.fsC; /* v194: fleets at the Cube keep one size (they rescaled, and re-orbited, with every zoom) */
     let pt, nx;
@@ -7480,7 +7508,7 @@ function draw3D(t) {
     const wk = path.park || path.k >= 1 ? 1 : Math.min(clamp(path.k / .03, 0, 1), id === "raid" ? 1 : clamp((1 - path.k) / .03, 0, 1)), ws = fsF * (o.grp.userData.size || 1) * (.25 + .75 * wk);
     o.grp.scale.setScalar(ws);
     if (o.warp) { const fl = 1 - wk; o.warp.visible = fl > .02; o.warp.material.opacity = fl * .9; o.warp.position.set(pt.x, pt.y, pt.z); o.warp.scale.setScalar(fs * 9 * (.4 + fl)); }
-    { const ud = o.grp.userData; if (ud.anim && !reduced) ud.anim(t); if (ud.eng) ud.eng.material.uniforms.uScale.value = pxS * ws; }
+    { const ud = o.grp.userData; if (ud.flagship) ud.fz = clamp(cd / 26, 1, 2.2); /* v250 the flagship swells as you zoom out, so it still commands the formation from system view */ if (ud.anim && !reduced) ud.anim(t); if (ud.eng) ud.eng.material.uniforms.uScale.value = pxS * ws; }
     if (!reduced && o.grp.userData.ships) for (const s of o.grp.userData.ships) { if (s.userData.y0 == null) s.userData.y0 = s.position.y; s.position.y = s.userData.y0 + Math.sin(t * .002 + s.userData.bob) * .12; }
     { const rc = ROUTE[routeKind(f)]; if (o.rc !== rc) { o.rc = rc; o.line.material.color.setHex(rc); o.trail.material.color.setHex(rc); o.line.material.opacity = rc === ROUTE.back ? .8 : .95; } } // v187: bolder (was .5 and .7)
     // v172 a parked fleet (stationed at the Cube, a world or a field) has no course and no trail: both collapse to a point, so they are
@@ -7542,7 +7570,7 @@ function draw3D(t) {
   if (cam.followMv) { const v = cam.followMv, p = mvPos(v.m, T);
     if (!p) { followMvEnd(W); toast("That fleet has reached its destination."); }
     else { const yh = p[6] ? (cam.head || 0) + .0004 * 16 : Math.atan2(p[4] - p[2], p[5] - p[3]); cam.head = yh; goal = Object.assign({}, goal || {}, { tx: p[0], ty: 0, tz: p[1] });
-      if (!W.mvObj) { W.mvObj = fleet3D(W, null, v.ally ? 0x7be39a : 0xff8a7a, !v.ally); W.mvObj.userData.size = (.75 + Math.min(1.1, Math.log10((v.m.n || 6) + 1) * .3)) * .5; W.scene.add(W.mvObj); }
+      if (!W.mvObj) { W.mvObj = fleet3D(W, null, v.ally ? 0x7be39a : 0xff8a7a, !v.ally, false, false, playerFac(v.uid)); W.mvObj.userData.size = (.75 + Math.min(1.1, Math.log10((v.m.n || 6) + 1) * .3)) * .5; W.scene.add(W.mvObj); }
       const o = W.mvObj, ws = clamp(cam.dist * .0075, .7, 8) * .88 * o.userData.size, oa = t * .00035; o.visible = true;
       if (p[6]) { o.position.set(p[0] + Math.cos(oa) * 2.6, 1.1, p[1] + Math.sin(oa) * 2.6); o.rotation.set(0, -oa, 0); } else { o.position.set(p[0], .4, p[1]); o.rotation.set(0, yh, 0); } o.scale.setScalar(ws); // gatherers circle their field
       if (o.userData.anim && !reduced) o.userData.anim(t); } }
@@ -7979,6 +8007,7 @@ function shipMats(accent) {
     ["plumeCore", new TH.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .85, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })],
     ["bell", new TH.MeshStandardMaterial({ color: 0x3a3f46, metalness: .9, roughness: .38, side: TH.DoubleSide, envMapIntensity: 1.2 })]]) Object.defineProperty(out, n, { value: m, enumerable: false });
   Object.defineProperty(out, "fac", { value: fac, enumerable: false }); // read by the faction kit; hidden from material loops
+  Object.defineProperty(out, "neon", { value: new TH.MeshBasicMaterial({ color: FLAG_GLOW[fac], toneMapped: false }), enumerable: false }); // v250 the flagship's seams
   return (S.cache[key] = out);
 }
 // sleek hull: a lathe profile laid along +x (nose forward), squashed into a flat, wide fuselage
@@ -8011,12 +8040,125 @@ function wingMesh(pts, th, mat) {
   const g = new TH.ExtrudeGeometry(s, { depth: th, bevelEnabled: true, bevelThickness: th * .45, bevelSize: th * .6, bevelSegments: 3, curveSegments: 6 }); g.rotateX(Math.PI / 2); g.translate(0, th / 2, 0);
   return new TH.Mesh(g, mat);
 }
+/* v250 the faction flagships, after the faction card paintings. One long warship, nose toward +x: a knife prow, stacked armoured decks under
+   a command tower, side sponsons with lit hangars, and three long drive prongs astern, on which each faction builds its own look.
+   Terran: steel and cyan, square and modular. Solar: ivory and gold, crowned with two halo rings. Nyx: black, flat and bladed, seamed in
+   red. Verdant: rounded, grown hull in jade with lime veins and one tilted ring. The soft glow is a list of points (g.userData.glow)
+   drawn in the fleet's single glow draw call, so all this adds no draw calls per light. */
+const FLAG_GLOW = { terran: 0x20e4ff, solar: 0xffc23a, nyx: 0xff2a3c, verdant: 0x4dff7a };
+function flagshipModel(g, M, r) {
+  const fac = M.fac || "terran", nyx = fac === "nyx", solar = fac === "solar", verdant = fac === "verdant", NEON = M.neon || M.accent, GL = g.userData.glow = [];
+  const HULL = M.fhull || M.hull, ALT = M.fdark || M.dark, STEEL = M.ftrim || M.trim, PLATE = nyx ? ALT : HULL, TRIM = solar ? M.gold : STEEL;
+  // a block from aft x0 (w0 wide, h0 tall) to fore x1 (w1, h1); round: an oval section instead of square, for the grown Verdant hull
+  const seg = (x0, x1, w0, h0, w1, h1, y, z, mat, round) => { const gm = round ?? verdant ? new TH.CylinderGeometry(.5, .5, 1, 14, 1).rotateZ(Math.PI / 2) : new TH.BoxGeometry(1, 1, 1), P = gm.attributes.position, U = gm.attributes.uv;
+    for (let i = 0; i < P.count; i++) { const t = P.getX(i) + .5; P.setXYZ(i, x0 + (x1 - x0) * t, P.getY(i) * (h0 + (h1 - h0) * t), P.getZ(i) * (w0 + (w1 - w0) * t)); U.setXY(i, U.getX(i) * Math.max(1, Math.abs(x1 - x0) * .55), U.getY(i)); }
+    gm.computeVertexNormals(); const m = new TH.Mesh(gm, mat); m.position.set(0, y || 0, z || 0); g.add(m); return m; };
+  const box = (w, h, d, mat, x, y, z) => { const m = new TH.Mesh(new TH.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); g.add(m); return m; };
+  const cylY = (rr, h, mat, x, y, z, n) => { const m = new TH.Mesh(new TH.CylinderGeometry(rr, rr, h, n || 8), mat); m.position.set(x, y, z); g.add(m); return m; };
+  const barrel = (rr, len, mat, x, y, z) => { const m = new TH.Mesh(new TH.CylinderGeometry(rr * .8, rr, len, 8), mat); m.rotation.z = -Math.PI / 2; m.position.set(x + len / 2, y, z); g.add(m); return m; };
+  const beam = (a, b, t, mat) => { const A = new TH.Vector3(...a), B = new TH.Vector3(...b), d = B.clone().sub(A), m = new TH.Mesh(new TH.BoxGeometry(d.length(), t, t), mat); m.position.copy(A).add(B).multiplyScalar(.5); m.quaternion.setFromUnitVectors(new TH.Vector3(1, 0, 0), d.normalize()); g.add(m); return m; };
+  const glow = (x, y, z, rr, a, c) => GL.push([x, y, z, rr, c || 0, a == null ? .7 : a]);
+  // a glowing seam: a thin bright line with soft light strung along it
+  const seam = (a, b, t, step, rr, al) => { beam(a, b, t || .028, NEON); const L = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]), n = Math.max(1, Math.round(L / (step || .8))); for (let i = 0; i <= n; i++) { const k = i / n; glow(a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k, (rr || .34) * 1.5, Math.min(1, (al == null ? .5 : al) * 1.25)); } };
+  const ring = (x, y, z, R, tube, mat, rx, ry, seg2) => { const m = new TH.Mesh(new TH.TorusGeometry(R, tube, 8, seg2 || 64), mat); m.position.set(x, y, z); m.rotation.set(rx || 0, ry == null ? Math.PI / 2 : ry, 0); g.add(m); return m; };
+  const engine = (x, y, z, rr, len) => { const b = new TH.Mesh(new TH.CylinderGeometry(rr * 1.05, rr * 1.25, len, 16), ALT); b.rotation.z = Math.PI / 2; b.position.set(x, y, z); g.add(b); const t = new TH.Mesh(new TH.TorusGeometry(rr * 1.18, rr * .16, 8, 22), TRIM); t.rotation.y = Math.PI / 2; t.position.set(x - len / 2, y, z); g.add(t);
+    const n = new TH.Mesh(new TH.CircleGeometry(rr, 22), M.engine); n.rotation.y = -Math.PI / 2; n.position.set(x - len / 2 - .02, y, z); g.add(n); g.userData.eng.push([x - len / 2, y, z, rr]); };
+  const turret = (x, y, z, s) => { cylY(.22 * s, .08 * s, TRIM, x, y, z, 10); const b = box(.44 * s, .17 * s, .36 * s, HULL, x, y + .12 * s, z); b.rotation.y = (z > 0 ? -1 : z < 0 ? 1 : 0) * .08; for (const o of [-.09, .09]) barrel(.036 * s, .62 * s, ALT, x + .16 * s, y + .14 * s, z + o * s); };
+  const winRow = (x0, x1, y, z, n, mat) => { for (let i = 0; i < n; i++) box(.075, .04, .02, mat || M.win, x0 + (x1 - x0) * i / Math.max(1, n - 1), y, z); };
+
+  // ---- the shared bones: main hull, prow, decks ----
+  const beamW = nyx ? 2.25 : 1.9, tall = nyx ? .46 : verdant ? .86 : .72;
+  seg(-3.9, 1.1, beamW, tall, beamW * .74, tall * .82, -.12, 0, HULL);
+  seg(1.1, 6.1, beamW * .74, tall * .82, .05, .04, -.12, 0, nyx ? ALT : HULL);
+  seg(-3.6, .7, beamW * .74, tall * .54, beamW * .58, tall * .42, tall * .52, 0, PLATE);
+  seg(.7, 3.8, beamW * .58, tall * .42, .1, .05, tall * .46, 0, PLATE);
+  seg(-3.2, -.5, beamW * .48, tall * .44, beamW * .34, tall * .34, tall, 0, HULL);
+  seg(-3.5, -1.2, beamW * .3, tall * .34, beamW * .22, tall * .22, -tall * .62, 0, ALT);        // ventral bulge
+  // the command tower: stepped blocks, a bridge band of dark glass with lit windows, sensor masts
+  const ty = tall * 1.34; seg(-2, -.85, .68, .54, .5, .42, ty, 0, HULL); seg(-1.84, -1, .74, .12, .56, .1, ty + .32, 0, ALT);
+  seg(-1.02, -.82, .5, .13, .42, .1, ty + .1, 0, M.glass, false); winRow(-1.75, -1.1, ty + .1, .35, 6); winRow(-1.75, -1.1, ty + .1, -.35, 6);
+  cylY(.018, .9, ALT, -1.5, ty + .78, 0); cylY(.012, .55, ALT, -1.28, ty + .6, .14); cylY(.012, .4, ALT, -1.7, ty + .54, -.16); box(.3, .018, .018, ALT, -1.5, ty + .95, 0); glow(-1.5, ty + 1.24, 0, .2, .9);
+  // sponsons on both flanks: long armoured pods with lit hangars
+  for (const s of [1, -1]) { const zS = s * (beamW * .5 + .2), L = nyx ? .3 : .52;
+    seg(-3.75, -.25, L, tall * .72, L * .9, tall * .6, -.16, zS, nyx ? ALT : HULL); seg(-.25, 1.25, L * .9, tall * .6, .08, .14, -.16, zS * .92, nyx ? ALT : HULL); seg(-4.1, -3.75, L * .72, tall * .55, L, tall * .72, -.16, zS, TRIM);
+    const oz = zS + s * (L * .5 + .012); box(1.7, tall * .26, .02, M.trim, -2, -.17, oz); winRow(-2.75, -1.25, -.17, oz + s * .012, 8, nyx ? M.win : M.win); winRow(-3.5, -.4, tall * .09, oz, 9); glow(-2, -.17, oz + s * .1, .55, .35, 0xffe2a8);
+    // overlapping armour slabs along the hull's side
+    for (let i = 0; i < 7; i++) { const x = -3.5 + i * .68, w = .58; seg(x, x + w, .05, tall * .3, .05, tall * .26, tall * .2, s * (beamW * (.5 - i * .017) + .01), i % 2 ? ALT : TRIM, false); }
+    for (let i = 0; i < 5; i++) box(.05, tall * .16, .05, TRIM, -3 + i * .55, tall * .22 - .1, zS - s * L * .58);
+    turret(-1.1, tall * .3, zS, .62); turret(-2.8, tall * .3, zS, .62);
+    // running seams: along the hull, down the prow, along the sponson
+    seam([-3.7, tall * .39 - .12, s * beamW * .5], [1.05, tall * .32 - .12, s * beamW * .372], .032);
+    seam([1.05, tall * .32 - .12, s * beamW * .372], [5.9, -.11, s * .03], .03);
+    seam([-3.9, -.16 - tall * .3, zS + s * L * .3], [-.3, -.16 - tall * .26, zS + s * L * .3], .024, 1.2, .3, .4);
+    seam([-3.3, tall * .74, s * beamW * .29], [.5, tall * .66, s * beamW * .26], .022, 1.3, .28, .4); }
+  // the deck: raised plates, vents and pipes; the guns; aiming lights at the prow
+  for (let i = 0; i < 14; i++) { const x = -3.2 + r() * 6.4, wd = Math.max(.12, beamW * .42 * (1 - Math.max(0, x) / 4.4)), z = (r() - .5) * wd; box(.2 + r() * .46, .035, .08 + r() * .14, i % 3 ? ALT : TRIM, x, tall * (x < .7 ? .74 : .66 - x * .08), z); }
+  for (let i = 0; i < 90; i++) { const x = -3.6 + r() * 7, ww = beamW * .34 * Math.max(.16, 1 - Math.max(0, x) / 4.3), z = (r() - .5) * 2 * ww; box(.04 + r() * .16, .02 + r() * .05, .03 + r() * .1, r() < .5 ? ALT : STEEL, x, tall * (x < .7 ? .8 : .72 - x * .09) + r() * .03, z); }
+  for (let i = 0; i < 40; i++) { const x = -3.6 + r() * 4.8, sd = r() < .5 ? 1 : -1; box(.04 + r() * .14, .02 + r() * .05, .03, STEEL, x, -tall * .1 + r() * tall * .4, sd * beamW * (.52 - Math.max(0, x) * .03)); }
+  turret(2.3, tall * .47, 0, .78); turret(1.1, tall * .66, 0, .95); turret(-.2, tall * .84, 0, 1.05); turret(-2.75, tall * 1.2, 0, .85);
+  // the prow's armour: a raised centre ridge, overlapping plates stepping down each side, gun ports, chevrons of light and hull lights
+  seg(1, 5.2, .22, .12, .03, .03, tall * .22 + .02, 0, ALT, false); seg(3.5, 5.6, .1, .06, .02, .02, .09, 0, TRIM, false);
+  for (const s of [1, -1]) { for (let i = 0; i < 9; i++) { const x = 1.2 + i * .52, k = 1 - (x - 1.1) / 5, w = beamW * .74 * k, h = tall * .82 * k, top = -.12 + h * .5;
+      seg(x, x + .46, w * .36, .018, w * .3, .014, top + .012, s * w * .24, i % 2 ? ALT : TRIM, false);
+      seg(x, x + .46, .018, h * .5, .014, h * .44, -.12, s * (w * .5 - .03), i % 3 ? ALT : STEEL, false);
+      if (i < 7) { box(.05, .03, .02, M.win, x + .22, -.12 + h * .08, s * (w * .5 + .012)); if (i % 2 === 0) box(.1, .05, .02, M.trim, x + .22, -.12 - h * .14, s * (w * .49 + .012)); } }
+    for (const x of [1.5, 2.3, 3.1]) { const k = 1 - (x - 1.1) / 5; beam([x, -.12 + tall * .41 * k + .02, s * beamW * .1 * k], [x + .34, -.12 + tall * .41 * (k - .07) + .02, s * .02], .022, NEON); glow(x + .15, -.12 + tall * .41 * k + .04, s * beamW * .05 * k, .24, .6); }
+  }
+  for (let i = 0; i < 60; i++) { const x = 1.2 + r() * 3.4, k = 1 - (x - 1.1) / 5, sd = r() < .5 ? 1 : -1; box(.05 + r() * .12, .012 + r() * .022, .03 + r() * .07, r() < .5 ? ALT : STEEL, x, -.12 + tall * .41 * k + .012, sd * r() * beamW * .3 * k); }
+  // ribs round the main hull, conduits along the deck, sensor dishes on the tower, a cluster of radiators astern
+  for (let i = 0; i < 9; i++) { const x = -3.7 + i * .55; seg(x, x + .07, beamW * (1 - i * .018) + .02, tall * (1 - i * .012) + .02, beamW * (1 - i * .018) + .02, tall * (1 - i * .012) + .02, -.12, 0, ALT); }
+  for (const z of [.24, -.24, .4, -.4]) { box(3.6, .022, .022, STEEL, -1.5, tall * .8 + .012, z); for (let i = 0; i < 8; i++) box(.05, .036, .05, ALT, -3.1 + i * .46, tall * .8 + .014, z); }
+  for (const [x, z, rr] of [[-1.15, .2, .13], [-1.75, -.22, .16]]) { const d = new TH.Mesh(new TH.SphereGeometry(rr, 12, 6, 0, TAU, 0, Math.PI / 2), STEEL); d.rotation.x = Math.PI; d.position.set(x, ty + .5, z); g.add(d); cylY(.012, .13, ALT, x, ty + .42, z); }
+  for (const s of [1, -1]) for (let i = 0; i < 5; i++) { const f = box(.07, .34, .36, ALT, -3.65 + i * .15, tall * .86, s * (beamW * .3 + .1)); f.rotation.x = s * .55; }
+  // the keel fin and the sensor spike under the prow
+  seg(-2.8, -.5, .07, tall * 1.1, .04, tall * .3, -tall * 1.05, 0, ALT, false); seg(1.4, 3, .05, .22, .03, .05, -tall * .62, 0, ALT, false);
+  // the spine reactor: a lit slot down the middle of the deck
+  box(2.4, .03, .1, M.core, -1.9, tall * 1.23, 0); for (let i = 0; i < 4; i++) glow(-3 + i * .75, tall * 1.26, 0, .5, .5);
+  // windows down the flanks of the upper deck
+  for (const s of [1, -1]) { winRow(-3.2, .3, tall * .56, s * (beamW * .335), 20); winRow(-3, -.7, tall * 1, s * (beamW * .225), 13); }
+  // ---- the three long drive prongs and the main drive ----
+  for (const [y, z, rr] of [[tall * .3, 0, .42], [-tall * .3, beamW * .36, .34], [-tall * .3, -beamW * .36, .34]]) {
+    seg(-6.9, -3.75, .12, .12, rr * 1.7, rr * 1.35, y, z, HULL, verdant ? true : false); seg(-5.25, -4.55, rr * 1.12, rr * .95, rr * 1.36, rr * 1.1, y, z, ALT, verdant ? true : false);
+    for (let i = 0; i < 3; i++) seg(-5.9 + i * .55, -5.8 + i * .55, .3 + i * .1, .25 + i * .08, .3 + i * .1, .25 + i * .08, y, z, TRIM, false);
+    seam([-6.75, y + .07, z], [-3.9, y + rr * .66, z], .024, 1, .3, .42); engine(-6.95, y, z, .15, .24); glow(-7, y, z, .55, .9); }
+  for (const [y, z] of [[.02, .42], [.02, -.42], [-.28, 0]]) engine(-3.98, y, z, .19, .26);
+  // ---- faction signatures ----
+  if (solar) { // ivory and gold: gold bands round the hull, a gold prow and spine, two great halo rings on struts
+    for (const x of [-3, -2, -.9, .2, 1.3]) { const k = 1 - Math.max(0, x - 1.1) / 5; seg(x, x + .16, beamW * k + .03, tall * k + .03, beamW * k * .985 + .03, tall * k * .985 + .03, -.12, 0, M.gold, false); }
+    seg(3.9, 6.15, .34, .19, .05, .05, -.1, 0, M.gold, false); seg(-3.3, -.4, .14, .05, .1, .04, tall * 1.25, 0, M.gold, false);
+    for (const [x, R] of [[.35, 1.72], [-2.15, 2.02]]) { ring(x, .08, 0, R, .085, M.gold); ring(x, .08, 0, R - .1, .036, NEON); ring(x, .08, 0, R + .1, .022, NEON);
+      for (let i = 0; i < 26; i++) { const a = i / 26 * TAU; glow(x, .08 + Math.sin(a) * R, Math.cos(a) * R, .5, .58); }
+      for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + i * Math.PI / 2; beam([x, .08 + Math.sin(a) * .35, Math.cos(a) * .35], [x, .08 + Math.sin(a) * (R - .05), Math.cos(a) * (R - .05)], .055, M.gold); } }
+    for (const s of [1, -1]) for (const x of [-3.4, -2.5, -1.6]) { const b = box(.3, .34, .03, M.gold, x, tall * .2, s * (beamW * .5 + .63)); b.rotation.x = s * .1; }
+    glow(-.6, tall * 1.3, 0, 1.15, .28); }
+  if (nyx) { // black and flat: delta blades, a dorsal blade, red seams crossing the plates and a strip of amber windows
+    for (const s of [1, -1]) { const bl = wingMesh([[1.6, s * .75], [-3.4, s * 2.3], [-4.2, s * 2.25], [-3.3, s * 1.2], [-3, s * .75]], .05, M.dark); bl.position.set(0, -.1, 0); g.add(bl);
+      seam([1.5, -.05, s * .85], [-4.1, -.05, s * 2.32], .034, .9, .36, .55); seam([-3.25, -.05, s * 1.25], [-4.15, -.05, s * 2.2], .02, 1, .26, .4);
+      for (let i = 0; i < 6; i++) { const x = -3.2 + i * .9; seam([x, tall * .78, s * .2], [x + .4, tall * .27, s * beamW * .49], .02, 2, .2, .35); }
+      winRow(-3, .2, -.04, s * beamW * .505, 24, M.win); }
+    const bd = wingMesh([[.7, 0], [-3.3, 0], [-3.6, 1.05], [-1.6, .42]], .02, M.dark); bd.rotation.x = -Math.PI / 2; bd.position.set(0, tall * 1.1, 0); g.add(bd); seam([.65, tall * 1.13, 0], [-1.6, tall * 1.5, 0], .022, 1, .24, .45); seam([-1.6, tall * 1.5, 0], [-3.58, tall * 2.12, 0], .022, 1, .24, .45);
+    glow(-.2, 0, 0, 1.3, .14); glow(-2.2, tall * .5, 0, 1.2, .2); }
+  if (fac === "terran") { // square modular blocks on the deck, hazard-red drive tips, cyan rings round the prongs
+    for (const [x, z, w] of [[-.3, .42, .34], [-.3, -.42, .34], [-3, .5, .44], [-3, -.5, .44], [.5, .28, .22], [.5, -.28, .22]]) { seg(x - w, x + w, w, tall * .18, w * .92, tall * .16, tall * .82, z, ALT, false); box(w * 1.4, .02, .02, NEON, x, tall * .92, z); glow(x, tall * .94, z, .22, .45); }
+    for (const [y, z] of [[tall * .3, 0], [-tall * .3, beamW * .36], [-tall * .3, -beamW * .36]]) { ring(-4.5, y, z, .4, .022, NEON, 0, Math.PI / 2, 24); glow(-7.05, y, z, .36, .95, 0xff5a30); } }
+  if (verdant) { // rounded and grown: lime veins, rib arches over the hull, swept sails, and one thin tilted ring
+    for (let i = 0; i < 6; i++) { const x = -3.2 + i * .82; const R = (beamW * .5 + .02) * (1 - Math.max(0, x) / 6), rib = new TH.Mesh(new TH.TorusGeometry(R, .026, 6, 24, Math.PI), NEON); rib.rotation.y = Math.PI / 2; rib.position.set(x, -.08, 0); rib.scale.y = tall / (beamW * .86); g.add(rib); glow(x, tall * .42, 0, .3, .32); }
+    for (const s of [1, -1]) { const sail = wingMesh([[-.6, 0], [-3.4, 0], [-3.9, s * 1.1], [-2.4, s * 1.25], [-1.2, s * .6]], .025, M.hull); sail.rotation.x = -s * .62; sail.position.set(0, tall * .32, s * beamW * .34); g.add(sail); const vz = s * (beamW * .34 + .85), vy = tall * .32 + .62; seam([-.7, tall * .36, s * (beamW * .34 + .04)], [-2.4, vy + .15, vz + s * .18], .024, .9, .3, .5); seam([-2.4, vy + .15, vz + s * .18], [-3.85, vy, vz - s * .05], .024, .9, .3, .5);
+      for (const x of [-2.4, -1.2]) { const pod = new TH.Mesh(new TH.SphereGeometry(.2, 12, 8), NEON); pod.scale.set(1.5, .6, .6); pod.position.set(x, -tall * .4, s * (beamW * .5 + .52)); g.add(pod); glow(x, -tall * .4, s * (beamW * .5 + .55), .5, .55); } }
+    const R = 2.05; const tr = ring(-1, .3, 0, R, .03, NEON, .34, Math.PI / 2 - .32, 72); for (let i = 0; i < 26; i++) { const a = i / 26 * TAU, v = new TH.Vector3(Math.cos(a) * R, Math.sin(a) * R, 0).applyEuler(tr.rotation); glow(-1 + v.x, .3 + v.y, v.z, .42, .48); }
+    glow(-.8, 0, 0, 1.25, .16); }
+  if (fac === "terran") { glow(-.8, tall * .2, 0, 1.15, .13); }
+  for (const x of [-4, -1.5, 1.5]) glow(x, 0, 0, 2.5, .3); // a wide soft aura, so the flagship stands out on a crowded map from afar
+  const FS = 1.45; g.scale.setScalar(FS); for (const e of g.userData.eng) e[3] *= FS; for (const q of GL) q[3] *= FS; // overall size
+  return g;
+}
 // remastered profiles: longer, finer bows and a gentler taper aft, so every hull reads as a blade rather than a capsule
 // knife bows: every profile runs to a hard point, with stepped shoulders where the armor belt meets the prow
 const PROF = { sleek: [[0, .62], [.04, .9], [.18, 1], [.46, .97], [.6, .84], [.74, .52], [.88, .2], [.97, .04], [1, 0]], blunt: [[0, .84], [.05, 1], [.3, 1], [.58, .96], [.7, .78], [.84, .46], [.95, .14], [1, 0]],
   needle: [[0, .72], [.1, .96], [.3, 1], [.52, .72], [.74, .34], [.92, .08], [1, 0]], egg: [[0, .5], [.08, .86], [.3, 1], [.6, .96], [.8, .58], [.94, .16], [1, 0]] };
 function buildShip(k, M) {
   const g = new TH.Group(), r = rnd(hash(k) + 3); g.userData.eng = [];
+  if (k === "flagship") return flagshipModel(g, M, r);
   const add = (m, x, y, z) => { m.position.set(x || 0, y || 0, z || 0); g.add(m); return m; };
   const box = (w, h, d, mat, x, y, z) => add(new TH.Mesh(new TH.BoxGeometry(w, h, d), mat), x, y, z);
   const cylX = (rt, rb, h, mat, x, y, z) => { const m = add(new TH.Mesh(new TH.CylinderGeometry(rt, rb, h, 20), mat), x, y, z); m.rotation.z = Math.PI / 2; return m; };
@@ -8565,23 +8707,24 @@ function cardGrade(cv, P, k) {
   x.restore();
 }
 function shipArt(k, accent, view) {
-  const kind = SH[k] ? "s" : AL[k] ? "a" : DF[k] || k === "fortress" ? "d" : MS[k] ? "m" : null;
+  const kind = SH[k] || k === "flagship" ? "s" : AL[k] ? "a" : DF[k] || k === "fortress" ? "d" : MS[k] ? "m" : null;
   const S = studio(); if (!S || !kind) return null; const key = k + "|" + accent + "|" + view; if (S.cache[key] !== undefined) return S.cache[key];
   try {
     const M = shipMats(accent), ship = kind === "s" ? buildShip(k, M) : kind === "a" ? buildAlien(k) : kind === "m" ? buildMissile(k, M) : buildDefense(k, M); S.scene.add(ship);
     if ((kind === "d" || kind === "m") && view === "side") ship.rotation.y = -.5; // turrets read better turned a little toward the camera
     if (k === "eclipse" && view === "side") ship.rotation.x = .42; // v170 the Discovery's saucer reads as a disc, not a sliver, tilted a little toward the camera
-    const gl = S.glowT || (S.glowT = glowTex("150,215,255", 1)), gc = kind === "a" ? [0xd8ff9a, 0x7aff3a] : [0x9fdcff, 0x4f9fff];
+    const gl = S.glowT || (S.glowT = glowTex("150,215,255", 1)), FG = k === "flagship" ? M.neon.color : null, gc = FG ? [new TH.Color(0xffffff).lerp(FG, .5), FG] : kind === "a" ? [0xd8ff9a, 0x7aff3a] : [0x9fdcff, 0x4f9fff];
+    if (FG) { const gw = S.glowW || (S.glowW = glowTex("255,255,255", 1)); for (const [x, y, z, rr, c, a] of ship.userData.glow || []) { const sp = new TH.Sprite(new TH.SpriteMaterial({ map: gw, color: c || FG, opacity: a * .6, transparent: true, blending: TH.AdditiveBlending, depthWrite: false })); sp.position.set(x, y, z); sp.scale.setScalar(rr * 1.05); ship.add(sp); } } // v250 the flagship's battle portrait carries its halo
     for (const [x, y, z, rr] of ship.userData.eng) { for (const [d, s, c] of [[.05, 5, gc[0]], [.5, 3.2, gc[1]]]) { const sp = new TH.Sprite(new TH.SpriteMaterial({ map: gl, color: c, transparent: true, blending: TH.AdditiveBlending, depthWrite: false })); sp.position.set(x - rr * d * 2, y, z); sp.scale.setScalar(rr * s); ship.add(sp); } }
     const fxs = []; ship.traverse(c => { if (c.userData && c.userData.fx) fxs.push([c, c.parent]); }); fxs.forEach(([c, p]) => p.remove(c)); // frame the hull, not the plume
     const bb = new TH.Box3().setFromObject(ship), size = bb.getSize(new TH.Vector3()), ctr = bb.getCenter(new TH.Vector3()); ship.position.sub(ctr); fxs.forEach(([c, p]) => { if (!(view === "side" && c.userData.fx === 2)) p.add(c); }); /* v86: card-only effects (the superlaser) stay off battle sprites */
-    const hero = view === "hero", grand = !hero && (k === "worldbreaker" || BOSSK[k]), W = hero || grand ? (grand && WEAK ? 512 : 640) : WEAK ? 352 : 448, H = W / 2, ss = hero ? SSAA : WEAK ? 1.25 : 1.5; /* v86: bosses and the Cube Destroyer bake at hero size */ /* v79: weaker phones bake lighter sprites */ /* v76: ultra HD battle sprites, sharp even when the fit scale makes ships big */ /* v66: battle sprites at 352 px, lighter supersampling: sharp at their on-screen size, a third of the memory, twice as fast to bake */ S.renderer.setSize(Math.round(W * ss), Math.round(H * ss), false); S.camera.aspect = W / H;
+    const hero = view === "hero", grand = !hero && (k === "worldbreaker" || k === "flagship" || BOSSK[k]), W = hero || grand ? (grand && WEAK ? 512 : 640) : WEAK ? 352 : 448, H = W / 2, ss = hero ? SSAA : WEAK ? 1.25 : 1.5; /* v86: bosses and the Cube Destroyer bake at hero size */ /* v79: weaker phones bake lighter sprites */ /* v76: ultra HD battle sprites, sharp even when the fit scale makes ships big */ /* v66: battle sprites at 352 px, lighter supersampling: sharp at their on-screen size, a third of the memory, twice as fast to bake */ S.renderer.setSize(Math.round(W * ss), Math.round(H * ss), false); S.camera.aspect = W / H;
     const dir = hero ? new TH.Vector3(.62, .45, 1) : new TH.Vector3(.06, .32, 1); dir.normalize();
     const span = Math.max(size.x, size.z * (hero ? .9 : .4), size.y * 2.2), dist = span * (hero ? 1.2 : 1.12) * (kind === "d" ? 1.38 : kind === "m" ? .78 : 1); // batteries stand tall: pull back so the whole gun fits
     S.camera.position.copy(dir.multiplyScalar(dist)); S.camera.lookAt(0, 0, 0); S.camera.updateProjectionMatrix();
     S.renderer.render(S.scene, S.camera);
     const out = document.createElement("canvas"); out.width = W; out.height = H; const ox = out.getContext("2d"); ox.imageSmoothingQuality = "high"; ox.drawImage(S.cv, 0, 0, W, H); if (hero) hdrBloom(ox, W, H, S.renderer.toneMappingExposure, 1); /* the battle adds its own bloom to sprites */
-    if (view === "side" && kind === "s" && k !== "eclipse") { const P = cardPal(k); if (P) cardGrade(out, P, k); } // v78: battle hulls take their card's look (v170: not the Discovery, whose own plating, windows and lights already match its card)
+    if (view === "side" && kind === "s" && k !== "eclipse" && k !== "flagship") { const P = cardPal(k); if (P) cardGrade(out, P, k); } // v78: battle hulls take their card's look (v170: not the Discovery, whose own plating, windows and lights already match its card)
     S.scene.remove(ship); ship.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.isSprite) o.material.dispose(); });
     return cachePut(S, key, out);
   } catch (e) { return cachePut(S, key, null); }
@@ -12810,6 +12953,40 @@ const sameUnits = (x, y) => { x = x || {}; y = y || {}; const ks = new Set(Objec
 /* each side's livery: you always in yours, a rival commander in theirs with the side colour on their trim */
 function battleAcc(r) { const mine = r.kind === "defense" || r.kind === "raid" ? "d" : "a", foe = mine === "a" ? "d" : "a", fu = mine === "a" ? r.dUid : (r.aUids || []).find(u => u !== G.me), ff = fu && G.players[fu] && FACTIONS[G.players[fu].fac] ? G.players[fu].fac : null;
   return { [mine]: myAcc(), [foe]: SIDE_COL[foe].main + (ff ? "@" + ff : "") }; }
+/* v250 flagships in the battle replay: a picture only, the simulation and its result are untouched. Each commander in the fight gets their faction's
+   flagship (up to 3 a side), which flies at the heart of their squadrons, fires its own tracers, and goes down when the last of them falls. Pirates, Hives and the Cube have none. */
+function battleFlags(r, Q) { const mineS = r.kind === "defense" || r.kind === "raid" ? "d" : "a", out = { a: [], d: [] }, lab = r.id === LAB_ID || r.id === DUEL_ID;
+  const pf = u => typeof u === "string" && u !== "pirates" && u !== "cube" && (u === G.me || G.players[u] || isBot(u)) ? playerFac(u) : null;
+  for (const sd of ["a", "d"]) { const groups = new Map(); let any = 0;
+    Q.forEach((q, i) => { if (q.side !== sd) return; any = 1; const f = pf(q.own); if (!f) return; const g = groups.get(q.own) || { f, idx: [], w: 0 }; g.idx.push(i); g.w += Math.sqrt(Math.max(1, q.n0 * (q.pow || 1))); groups.set(q.own, g); });
+    if (!any) continue; let L = [...groups.values()].sort((x, y) => y.w - x.w).slice(0, 3);
+    if (!L.length && !(r.kind === "raid" && sd === "a")) { const u = sd === "a" ? (r.aUids || [])[0] : r.dUid, f = lab ? (sd === mineS ? facOf() : DEMO_FAC.find(x => x !== facOf())) : pf(u) || (sd === mineS && !u ? facOf() : null); if (f) L = [{ f, idx: Q.map((q, i) => q.side === sd ? i : -1).filter(i => i >= 0) }]; }
+    out[sd] = L.map(e => ({ f: e.f, idx: e.idx, acc: facAcc(e.f), col: FLAG_GLOW[e.f], rgba: `rgba(${FLAG_GLOW[e.f] >> 16},${FLAG_GLOW[e.f] >> 8 & 255},${FLAG_GLOW[e.f] & 255},1)` })); }
+  return out; }
+function drawBattleFlags(ctx, b, scr, pos, W, H, t, real, T, lo, d) {
+  if (!b.flags) return; const Q = b.Q, L0 = Math.min(W, H) * .24; let shots = b.fgS || (b.fgS = []);
+  for (const sd of ["d", "a"]) for (const e of b.flags[sd]) { const art = shipArtSoon("flagship", e.acc, "side"); if (!art) continue;
+    let sx = 0, sy = 0, sw = 0, gone = false, foeX = 0, foeW = 0;
+    for (const i of e.idx) { const n = b.n[i], p = pos[i], s = scr[i]; if (n > 0 && p && p.fl & 6) gone = true; if (n <= 0 || !p || p.fl & 6 || !s) continue; const w = Math.sqrt(Math.max(1, n * (Q[i].pow || 1))); sx += s.x * w; sy += s.y * w; sw += w; }
+    const foes = []; Q.forEach((q, i) => { if (q.side !== sd && b.n[i] > 0 && pos[i] && !(pos[i].fl & 6) && scr[i]) { foes.push(i); foeX += scr[i].x; foeW++; } });
+    if (sw) { const tx = sx / sw, ty = sy / sw; e.dead = null; if (e.x == null) { e.x = tx; e.y = ty; } const f = reduced ? 1 : Math.min(1, real / 1300); e.x += (tx - e.x) * f; e.y += (ty - e.y) * f; }
+    else { if (e.x == null) continue; if (e.dead == null) { e.dead = t; if (!gone) { for (const [ox, oy, big] of [[0, 0, 1], [-.5, .06, 0], [.45, -.05, 0], [-.2, -.08, 0]]) b.booms.push({ x: e.x + ox * L0, y: e.y + oy * L0, t: t + Math.abs(ox) * 260, big }); b.shake = Math.max(b.shake, 8 * d); } } }
+    const fade = e.dead == null ? 1 : clamp(1 - (t - e.dead) / (gone ? 500 : 950), 0, 1); if (fade <= 0) continue;
+    const tf = foeW ? (foeX / foeW >= e.x ? 1 : -1) : (e.fa != null && e.fa < 0 ? -1 : sd === "a" ? 1 : -1); e.fa = e.fa == null ? tf : e.fa + (tf - e.fa) * Math.min(1, real / 1500); const fsc = Math.abs(e.fa) < .12 ? (e.fa < 0 ? -.12 : .12) : e.fa, face = fsc >= 0 ? 1 : -1;
+    const x = e.x - face * L0 * .1, y = e.y + Math.sin(t * .0011 + e.col) * L0 * .018 - L0 * .06, pul = .5 + .5 * Math.sin(t * .0028 + e.col);
+    ctx.save(); ctx.globalAlpha = fade;
+    if (!lo) { ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = (.3 + .14 * pul) * fade; ctx.drawImage(glowSprite(e.rgba), x - L0 * 1.25, y - L0 * .62, L0 * 2.5, L0 * 1.24); ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = fade; }
+    ctx.translate(x, y); ctx.scale(fsc, 1); ctx.rotate(Math.sin(t * .0007 + e.col) * .012); ctx.drawImage(art, -L0, -L0 / 2, L0 * 2, L0);
+    ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = (.75 + .25 * Math.sin(t * .03 + e.col)) * fade; for (const oy of [-.045, .03, .075]) { ctx.drawImage(glowSprite(e.rgba), -L0 * 1.42, L0 * oy - L0 * .05, L0 * .6, L0 * .1); ctx.drawImage(glowSprite("rgba(255,255,255,1)"), -L0 * 1.02, L0 * oy - L0 * .022, L0 * .14, L0 * .044); }
+    ctx.restore();
+    if (e.dead == null) { const fz = Math.max(11 * d, L0 * .1); ctx.save(); ctx.font = `700 ${fz}px ${getComputedStyle(document.documentElement).getPropertyValue("--f-display") || "sans-serif"}`; ctx.textAlign = "center"; ctx.fillStyle = e.rgba; ctx.shadowColor = e.rgba; ctx.shadowBlur = 8 * d; ctx.globalAlpha = .9; ctx.fillText(FACTIONS[e.f].n, x, y + L0 * .34); ctx.restore(); }
+    if (e.dead == null && !b.paused && !b.done && b.intro <= 0 && foes.length && T >= (e.nt || 0)) { e.nt = T + .28 + Math.random() * .5; const i = foes[(Math.random() * foes.length) | 0]; shots.push({ x: x + face * L0 * (-.45 + Math.random() * 1), y: y - L0 * .06 + Math.random() * L0 * .1, i, t, rgba: e.rgba, hit: 0 }); if (shots.length > 24) shots.shift(); } }
+  // the flagships' guns: bright tracers in their faction's colour
+  b.fgS = shots = shots.filter(o => t - o.t < 200); if (!shots.length) return; ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
+  for (const o of shots) { const s = scr[o.i]; if (!s) continue; const k = (t - o.t) / 200, h0 = clamp(k * 1.5 - .25, 0, 1), h1 = clamp(k * 1.5 + .1, 0, 1), ax = o.x + (s.x - o.x) * h0, ay = o.y + (s.y - o.y) * h0, bx = o.x + (s.x - o.x) * h1, by = o.y + (s.y - o.y) * h1;
+    ctx.globalAlpha = .9; ctx.strokeStyle = o.rgba; ctx.lineWidth = 3.2 * d; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.1 * d; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    if (k > .55 && !o.hit) { o.hit = 1; b.booms.push({ x: s.x, y: s.y, t, small: 1 }); } }
+  ctx.restore(); }
 /* v66: start baking a battle's ship sprites the moment its report opens, so the replay starts with every ship in 3D */
 function battlePrebake(r) { if (!r || !r.start || battlePrebake[r.id]) return; battlePrebake[r.id] = 1; const acc = battleAcc(r);
   for (const sd of ["a", "d"]) { const ks = new Set(Object.keys(r.start[sd] || {})); if (r.sim && Array.isArray(r.sim[sd === "a" ? "A" : "D"])) for (const x of r.sim[sd === "a" ? "A" : "D"]) ks.add(x[0]); for (const k of ks) { cardPal(k); shipArtSoon(k, acc[sd], "side"); } } }
@@ -12834,6 +13011,7 @@ function playBattle(r) {
     roundShown: 0, roundAt: -1e9, shake: 0, hudAt: 0, done: false, hold: 0 };
   // each side flies its own faction: you always in yours; a rival commander in theirs, with the side colour on their trim
   battle.acc = battleAcc(r);
+  battle.flags = battleFlags(r, R.squads); for (const sd of ["a", "d"]) for (const e of battle.flags[sd]) shipArtSoon("flagship", e.acc, "side"); // v250
   battle.superSide = r.dName === "Collective Warden" ? "d" : r.aName === "The Cube" ? "a" : null; // v109: the Super Cube fights as one grand Cube
   for (const q of R.squads) { cardPal(q.k); shipArtSoon(q.k, battle.acc[q.side], "side"); if (q.role === "carrier") shipArtSoon(q.k === "lord" ? "drone" : "fighter", battle.acc[q.side], "side"); } // start baking every unit type now (and sample its card), and a carrier's fighter wing
   bindBattleCam(w.querySelector("#bcv"));
@@ -13141,6 +13319,7 @@ function drawBattle(t) {
       if (p.fl & 1) { ctx.font = `700 ${9.5 * dS}px Oxanium, sans-serif`; ctx.fillStyle = "#ffc76a"; ctx.strokeText(q.side === "a" ? "WITHDRAWING" : "FALLING BACK", lx, by0 - 4 * dS); ctx.fillText(q.side === "a" ? "WITHDRAWING" : "FALLING BACK", lx, by0 - 4 * dS); } }]);
   };
   // far planes first, then a veil of haze, then the near planes on top: real layered depth
+  drawBattleFlags(ctx, b, scr, pos, W, H, t, real, T, lo, d); // v250 the faction flagships fly under their squadrons
   { let hazed = false; for (const i of b.ord) { if (!hazed && b.z[i] >= .5) { hazed = true; if (!lo) { ctx.globalAlpha = 1; ctx.fillStyle = "rgba(9,20,38,.2)"; ctx.fillRect(-30, -30, W + 60, H + 60); } } drawSq(Q[i], i); } }
   /* v201 carrier wings: every carrier formation keeps a wing of small fighters cycling out of its hangar, strafing the carrier's
      target with little darts and returning to land. Art only: the carrier's own volleys still carry its real damage */
