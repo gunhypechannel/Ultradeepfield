@@ -2137,7 +2137,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 244;
+const GAME_V = 245;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -14557,7 +14557,9 @@ const ACT = {
   bcat: d => { sub.bcat = d.v; sub.build = "bld"; view = "build"; render(true); },
   rcat: d => { sub.rcat = d.v || null; render(); $("#view").scrollTop = 0; },
   ffrom: d => { sub.ffrom = d.v === "all" ? null : d.v; render(); },
-  dtab: d => { if (sheet) { sheet.tab = +d.i; renderSheet(); } },
+  dtab: d => { if (!sheet) return; const i = +d.i; /* v245: the Research and Production tabs go straight to the research list and the shipyard */
+    if (sheet.type === "detail" && sheet.kind === "b" && i === 1 && !sheet.pid) { if (sheet.k === "lab" && S.b.lab) return openSheet({ type: "labs" }); if (sheet.k === "shipyard" && S.b.shipyard) return openSheet({ type: "yard", pid: null }); }
+    sheet.tab = i; renderSheet(); },
   prodRate: d => { if (!PROD_K.includes(d.k)) return; S.prod = S.prod || {}; const v = Math.round(pf(d.k) * 100); S.prod[d.k] = v <= 0 ? 100 : v - 10; dirty(); renderSheet(); render(); },
   labs: () => openSheet({ type: "labs" }),
   rankPick: d => { const st = sheet && sheet.type === "ranks" ? sheet : (sub.rk = sub.rk || {}); st.pick = st.pick === d.u ? null : d.u; sheet && sheet.type === "ranks" ? renderSheet() : render(true); },
