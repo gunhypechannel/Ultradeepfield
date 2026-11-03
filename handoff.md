@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-03 (America/Phoenix). Current game version: **v266** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v74**.
+Last updated: 2026-11-03 (America/Phoenix). Current game version: **v267** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v75**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -114,3 +114,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v264:** faction flagships from commander level 15 (`FLAG_LV`, `flagOK` gates `fleetFlag`, `mapClash`, the `mv` clash, `battleFlags`); map flagship 62% size (`FLAG_K`, escorts close in) and no zoom swell (`fz` = 1); planet battles' lines further apart; crowded worlds shrink to fit their nearest neighbour (`o.nn`, `o.k`, `o.rad0`; det/shield follow); Efficient fight button in `picker` (`effTarget`, `effPick`: binary search on a share of each warship type, must win 20/20 forecasts, +10%); a monster stays visible and stops swimming during its map battle (`inClash`, `o.cl`), beast fx centre on its body.
 - **v265:** the Battlecruiser (key `bastion`) is renamed Dreadnought (the Reaper keeps key `dreadnought`); in battle replays the Dreadnought fires a salvo of three purple beams (`dn` in `spawnVolley`, beams with `tri` offsets; one hidden fx carries the hits), and the Reaper launches missile swarms from both broadsides (`rp`, fx `bs` = ±1, cubic flank arc in the fx draw loop).
 - **v266:** the Reaper has two batteries in replays: orange broadside swarm guns (the `bs` fx, `col` override, faster) and red flak shells from mid-hull (`fk` fx, not `last`) that burst into a cloud of small red/orange blasts (`b.booms` with `col`).
+- **v267:** Reaper reworked: one hidden fx carries the hits; 30 (16 in big fights, 10 low FX) `sm` swarm rounds per volley fan out of both broadsides on their own curves (glow + streak), and 3 glowing red `fk` flak shells burst into `b.flak` fields (red star, shock ring, sparks, haze).
