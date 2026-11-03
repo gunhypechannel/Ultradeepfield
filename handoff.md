@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-02 (America/Phoenix). Current game version: **v253** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v62**.
+Last updated: 2026-11-02 (America/Phoenix). Current game version: **v254** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v63**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -101,3 +101,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v251:** battle effects cleaned up. The grain came from the bloom jumping straight to 1/40 size (it skipped pixels, so thin shots sparkled); it now shrinks and regrows in steps. Fireballs are baked flipbooks (`FB`, `fbFrame`, `fbBake`: 16 frames per seed, time-sliced, the intro waits for them), with `puffSprite`, `starSprite`, `boltSprite`/`drawBolt`, and ribbon trails (`drawTrails`, `b.trails`) replacing the old enlarged 64 px glow and dot trails. Sparks and embers are tapered streaks. Destroyer missiles fly the Sidewinder path (`f.sw`: launch kick, then an S-weave, salvos in opposite phases; arrival time unchanged). The map's clash explosions are not changed yet. The quest guide (`#coach .cbox`, `.cpill`, `.dirmini`) is about 50% see-through. **Effects tested in a browser without WebGL only; check frame rate on real devices.**
 - **v252:** battle replays no longer draw rocks: the battlefield asteroids, the small backdrop asteroids and the big foreground rocks are gone. `rocks` stays in the simulation (`battleSim`, its random numbers and steering), so replays still match their reports; squadrons may still curve around an unseen rock.
 - **v253:** battle flagships fire machine-gun tracers, visual only. `FLAG_GUNS`: 5 turret positions, each firing bursts of 5-7 rounds at its own enemy squadron (`e.guns`). Every 2.1-2.6 s the guns move to the next 5 in a shuffled list of all enemies (`e.ord`, `e.pi`); a dead target is replaced at once. `drawFlagShots` draws them on the HDR light layer over the ships, one batched path per colour. Slower fire in big fights and low effects.
+- **v254:** the pointing hand's label (`#tutguide .tg-tip`) is see-through amber with white text, and its text and ✕ sit on one line.

@@ -1322,6 +1322,9 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
 #coach .cbox{background:linear-gradient(180deg,rgba(18,44,62,.5),rgba(6,16,26,.56))!important;box-shadow:0 6px 18px rgba(0,0,0,.28)}#coach .cbox.done{box-shadow:0 6px 18px rgba(0,0,0,.28),0 0 16px rgba(113,223,144,.28)}
 #coach .cpill{background:rgba(6,18,25,.5)!important}#coach .cbox p,#coach .cbox .cti,#coach .cbox .clv,#coach .cpt{text-shadow:0 1px 3px rgba(0,0,0,.95)}#coach .cbar{background:rgba(255,255,255,.16)}
 .dirmini{background:rgba(9,24,36,.5)!important}.dirmini .dmtx{text-shadow:0 1px 3px rgba(0,0,0,.95)}
+/* v254 the pointing hand's label is see-through too, with its text and ✕ on one line so the box stays small */
+#tutguide .tg-tip{display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,rgba(255,206,105,.42),rgba(226,142,38,.42))!important;border:1px solid rgba(255,221,145,.7);color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 2px rgba(0,0,0,.8);box-shadow:0 4px 12px rgba(0,0,0,.28)}
+#tutguide .tg-tip .tgl{flex:1 1 auto;min-width:0}#tutguide .tgx{flex:none;margin-left:0;background:rgba(7,16,25,.35);border-color:rgba(255,255,255,.55);color:#fff}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
@@ -2233,7 +2236,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 253;
+const GAME_V = 254;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
