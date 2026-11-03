@@ -2237,7 +2237,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 261;
+const GAME_V = 262;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6453,7 +6453,66 @@ function clashPush(c) { const tn = performance.now(); G.clashes = G.clashes.filt
      the same ships drawn through each other flickered, most of all at the Cube where a stress test's clashes follow each other) */
   for (const x of G.clashes) if (x.loc === c.loc && tn - x.t0 < x.dur * .92) x.dur = Math.max(1, (tn - x.t0) / .92 + 1000); while (G.clashes.length >= 6) { const x = G.clashes.shift(); if (G3 && x.o) clashDispose(G3, x); }
   G.clashes.push(Object.assign(c, { t0: tn - Math.max(0, c.age || 0), dur: 26000, nA: clashCnt(c.a) || 1, nD: clashCnt(c.d) || 1, seed: hash(c.key) })); }
-function clashDispose(W, c) { const o = c.o; if (!o) return; for (const g of [o.ga, o.gd]) if (g) { W.scene.remove(g); disposeFleet(g); } W.scene.remove(o.bolts); o.bolts.geometry.dispose(); o.bolts.material.dispose(); for (const s of o.booms) { W.scene.remove(s.sp); s.sp.material.dispose(); } c.o = null; }
+function clashDispose(W, c) { const o = c.o; if (!o) return; for (const g of [o.ga, o.gd]) if (g) { W.scene.remove(g); disposeFleet(g); } W.scene.remove(o.bolts); o.bolts.geometry.dispose(); o.bolts.material.dispose(); for (const s of o.booms) { W.scene.remove(s.sp); s.sp.material.dispose(); }
+  if (o.bx) { W.scene.remove(o.bx.g); o.bx.g.traverse(m => { if (m.geometry) m.geometry.dispose(); if (m.material) m.material.dispose(); }); } c.o = null; }
+/* v262 Cube bosses and space monsters fight in their own way on the map. There is no stand-in defending fleet: the creature or the
+   boss itself is the target, the attackers' fire lands on its hull, and it answers with its own weapons, made once per clash and
+   cleaned up with it:
+   Cube:      a hex shield that flares where shots land, green disruptor bolts from its faces, and a charged disintegrator beam.
+   Void Shark: paired bursts from its twin laser turrets and a sonic shockwave ring as it strikes.
+   Star Leviathan: a cone of fire breath rolling over the attacking line.
+   Nebula Squid: whipping tentacles that lash out at the ships and clouds of venom ink.
+   If it loses, it goes down in a chain of blasts across its hull. */
+const BEAST_FX = { cube: [93, 255, 106], swhale: [127, 212, 255], slevi: [255, 138, 74], ssquid: [213, 140, 255] };
+const beastKind = L => !L || !PB[L.id] ? null : L.boss ? "cube" : L.mon && BEAST_FX[L.mon] ? L.mon : null;
+function beastCenter(L, q, out) { const m = G3 && G3.pirates && G3.pirates.get(L.id); if (m && m.grp && m.grp.visible) { m.grp.getWorldPosition(out); return out; } return out.set(q.x, q.y, q.z); }
+function beastInit(W, c) { const kind = beastKind(c.loc), rgb = BEAST_FX[kind], col = new TH.Color(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255), rs = rgb.join(","), g = new TH.Group(); W.scene.add(g);
+  const add = (m, ro) => { m.frustumCulled = false; m.renderOrder = ro || 14; g.add(m); return m; }, mat = (o2) => new TH.MeshBasicMaterial(Object.assign({ color: col, transparent: true, opacity: 0, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false }, o2 || {}));
+  const bx = { kind, col, rgb, g, r: Math.max(1.6, (xStand(c.loc) - 2.5) / 1.25) * .8, glob: [], hit: -1e9, nx: 0, cyc: -1, tgt: null };
+  if (kind === "cube") bx.shield = add(new TH.Mesh(new TH.IcosahedronGeometry(1, 2), mat({ wireframe: true })), 13);
+  bx.beam = add(new TH.Mesh(new TH.CylinderGeometry(.5, .5, 1, 10, 1, true), mat({ side: TH.DoubleSide })), 15); bx.core = add(new TH.Mesh(new TH.CylinderGeometry(.5, .5, 1, 8, 1, true), mat({ color: 0xffffff, side: TH.DoubleSide })), 16);
+  bx.ring = add(new TH.Mesh(new TH.RingGeometry(.82, 1, 64), mat({ side: TH.DoubleSide })), 13);
+  const gt = glowTex(rs, 1); bx.charge = add(new TH.Sprite(W.additive(gt, 0xffffff, 0)), 16);
+  for (let i = 0; i < 28; i++) bx.glob.push({ sp: add(new TH.Sprite(W.additive(gt, col.getHex(), 0)), 15), t0: -1e9, life: 1 });
+  if (kind === "ssquid") { const lg = new TH.BufferGeometry(); lg.setAttribute("position", new TH.BufferAttribute(new Float32Array(5 * 14 * 6), 3).setUsage(TH.DynamicDrawUsage)); bx.lash = add(new TH.LineSegments(lg, new TH.LineBasicMaterial({ color: col, transparent: true, opacity: .9, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })), 15); }
+  return bx; }
+let _bA, _bB, _bD, _bY; // made on first use (three.js may still be loading when this script runs)
+function beamSet(m, a, b, w) { _bD.subVectors(b, a); const L = _bD.length() || 1e-3; m.position.addVectors(a, b).multiplyScalar(.5); m.quaternion.setFromUnitVectors(_bY, _bD.multiplyScalar(1 / L)); m.scale.set(w, L, w); }
+/* a point on the hull, on the side facing the attackers (dir), a little scattered */
+function beastPt(bx, cen, dir, out, spread) { out.set(Math.random() - .5, Math.random() - .5, Math.random() - .5).multiplyScalar(spread == null ? 1.4 : spread).add(dir).normalize(); return out.multiplyScalar(bx.r * .85).add(cen); }
+function beastFx(W, c, o, q, e, k, tn, fsC, live, ships) { if (!_bA) { _bA = new TH.Vector3(); _bB = new TH.Vector3(); _bD = new TH.Vector3(); _bY = new TH.Vector3(0, 1, 0); } const bx = o.bx, cen = beastCenter(c.loc, q, bx.cen || (bx.cen = new TH.Vector3())), dir = _bD.subVectors(o.ga.position, cen).normalize().clone(), kind = bx.kind, r = bx.r, sp = ships();
+  const pick = () => sp.length ? sp[(Math.random() * sp.length) | 0] : null, glob = (p, v, life, s0, s1, op) => { const gl = bx.glob.find(x => tn - x.t0 > x.life) || bx.glob[(bx.nx++) % bx.glob.length]; gl.t0 = tn; gl.p = p.clone(); gl.v = v.clone(); gl.life = life; gl.s0 = s0; gl.s1 = s1; gl.op = op; };
+  const dying = c.winner === "a" && k > .8, gone = c.winner === "a" && k > .9;
+  for (const m of [bx.beam, bx.core]) m.material.opacity = 0; bx.charge.material.opacity = 0; if (bx.lash) bx.lash.visible = false;
+  if (bx.shield) { bx.shield.position.copy(cen); bx.shield.scale.setScalar(r * 1.22); bx.shield.rotation.y = e * .00025; bx.shield.rotation.x = e * .00013; bx.shield.material.opacity = gone ? 0 : (.05 + .55 * Math.exp(-(tn - bx.hit) / 260)) * (dying ? Math.max(0, 1 - (k - .8) * 10) : 1); }
+  const rk = (tn - (bx.ring.t0 || -1e9)) / 900; if (rk >= 0 && rk < 1) { bx.ring.position.copy(bx.ring.p || cen); bx.ring.lookAt(W.camera.position); bx.ring.scale.setScalar(r * (1 + rk * (kind === "swhale" ? 2.2 : 3))); bx.ring.material.opacity = (1 - rk) * .85; } else bx.ring.material.opacity = 0;
+  const ring = p => { bx.ring.t0 = tn; bx.ring.p = p.clone(); };
+  if (live && !dying) {
+    if (kind === "cube") { const P = 2600, cy = Math.floor(e / P), u = (e % P) / P, src = _bA.copy(dir).multiplyScalar(r * .9).add(cen);
+      if (cy !== bx.cyc) { bx.cyc = cy; bx.tgt = pick(); bx.fired = 0; }
+      if (u < .35) { const a = u / .35; bx.charge.position.copy(src); bx.charge.scale.setScalar(fsC * (.6 + a * 2.6) * (1 + .15 * Math.sin(tn * .05))); bx.charge.material.opacity = .35 + a * .65; bx.charge.material.color.copy(bx.col); }
+      else if (u < .55 && bx.tgt) { const a = (u - .35) / .2, w = fsC * .42 * (1 - a * .6) * (1 + .2 * Math.sin(tn * .09)); bx.tgt(_bB); beamSet(bx.beam, src, _bB, w); beamSet(bx.core, src, _bB, w * .32); bx.beam.material.opacity = .9 * (1 - a * .5); bx.core.material.opacity = 1 - a * .4;
+        bx.charge.position.copy(src); bx.charge.scale.setScalar(fsC * 2.2); bx.charge.material.opacity = .9 * (1 - a);
+        if (!bx.fired) { bx.fired = 1; o.boom(_bB.clone(), 1); ring(src); } }
+      if (Math.random() < .35) { const tg = pick(); if (tg) { tg(_bB); o.bl.push({ a: beastPt(bx, cen, dir, new TH.Vector3(), 1.1), b: _bB.clone(), t0: tn, col: bx.col.toArray() }); } } }
+    else if (kind === "swhale") { if (tn - (bx.lt || 0) > 340) { bx.lt = tn; const tg = pick(); if (tg) { tg(_bB); const snout = _bA.copy(dir).multiplyScalar(r * .95).add(cen), side = new TH.Vector3().crossVectors(dir, _bY).normalize().multiplyScalar(r * .18);
+        for (const s of [-1, 1]) o.bl.push({ a: snout.clone().addScaledVector(side, s), b: _bB.clone().addScaledVector(side, s * .3), t0: tn, col: [.55, .95, 1] }); } }
+      if (Math.floor(e / 3500) !== bx.cyc) { bx.cyc = Math.floor(e / 3500); ring(_bA.copy(dir).multiplyScalar(r * .9).add(cen)); } }
+    else if (kind === "slevi") { const u = (e % 3200) / 3200; if (u < .55) { const mouth = _bA.copy(dir).multiplyScalar(r * .95).add(cen), reach = Math.max(4, o.ga.position.distanceTo(cen) - r * .5);
+        for (let i = 0; i < 2; i++) { const v = new TH.Vector3(Math.random() - .5, (Math.random() - .5) * .6, Math.random() - .5).multiplyScalar(.45).add(dir).normalize().multiplyScalar(reach / 650); glob(mouth, v, 650, fsC * .5, fsC * (2.4 + Math.random()), .85); } }
+      if (u > .2 && u < .55 && Math.random() < .08) { const tg = pick(); if (tg) { tg(_bB); o.boom(_bB.clone(), 0); } } }
+    else if (kind === "ssquid") { const pos = bx.lash.geometry.attributes.position.array; let n = 0; bx.lash.visible = true; bx.tp = bx.tp || [];
+      for (let j = 0; j < 5; j++) { const ph = ((e / 1800) + j * .21) % 1, ext = Math.sin(Math.min(1, ph / .6) * Math.PI), seed = j * 1.7;
+        if (!bx.tp[j] || ph < bx.tp[j].ph) { const tg = pick(); bx.tp[j] = { ph, tgt: tg ? tg(new TH.Vector3()) : _bA.copy(dir).multiplyScalar(r * 4).add(cen).clone(), hit: 0 }; } bx.tp[j].ph = ph;
+        const base = beastPt(bx, cen, dir, new TH.Vector3(), .9), tip = bx.tp[j].tgt, side = new TH.Vector3().crossVectors(dir, _bY).normalize(); let px = base.x, py = base.y, pz = base.z;
+        for (let s = 1; s <= 14; s++) { const f = s / 14 * ext, wig = Math.sin(f * 7 + tn * .006 + seed) * r * .25 * (1 - f * .5), x = base.x + (tip.x - base.x) * f + side.x * wig, y = base.y + (tip.y - base.y) * f + Math.cos(f * 5 + seed) * r * .15, z = base.z + (tip.z - base.z) * f + side.z * wig;
+          pos.set([px, py, pz, x, y, z], n * 6); n++; px = x; py = y; pz = z; }
+        if (ext > .97 && !bx.tp[j].hit) { bx.tp[j].hit = 1; o.boom(tip.clone(), 0); } }
+      bx.lash.geometry.setDrawRange(0, n * 2); bx.lash.geometry.attributes.position.needsUpdate = true;
+      if (Math.floor(e / 2500) !== bx.cyc) { bx.cyc = Math.floor(e / 2500); for (let i = 0; i < 6; i++) { const v = new TH.Vector3(Math.random() - .5, (Math.random() - .5) * .5, Math.random() - .5).multiplyScalar(.9).add(dir).normalize().multiplyScalar(r / 900); glob(beastPt(bx, cen, dir, new TH.Vector3(), 1.6), v, 1800, fsC * 1.2, fsC * 4.2, .5); } } } }
+  if (dying && !gone && tn - (bx.dt || 0) > 140) { bx.dt = tn; o.boom(beastPt(bx, cen, new TH.Vector3(Math.random() - .5, Math.random() - .5, Math.random() - .5).normalize(), new TH.Vector3(), 2), 1); if (Math.random() < .25) ring(cen); }
+  for (const gl of bx.glob) { const a = (tn - gl.t0) / gl.life; if (a < 0 || a > 1) { gl.sp.material.opacity = 0; continue; } gl.sp.position.copy(gl.p).addScaledVector(gl.v, tn - gl.t0); gl.sp.scale.setScalar(gl.s0 + (gl.s1 - gl.s0) * a); gl.sp.material.opacity = gl.op * (a < .15 ? a / .15 : 1 - (a - .15) / .85); }
+  const fade = k > .92 ? Math.max(0, 1 - (k - .92) / .08) : 1; bx.g.visible = fade > 0; return { cen, dir }; }
 function drawClashes(W, t, T) {
   const tn = performance.now(), cd = W.cam.dist, fs = clamp(cd * .0075, .7, 8) * .88, V = new TH.Vector3(), V2 = new TH.Vector3();
   { const busy = new Set(G.clashes.filter(c => c.you === "a" && tn - c.t0 < c.dur * .95).map(c => c.loc)); // our ships fighting there are drawn by the battle, not twice
@@ -6466,7 +6525,7 @@ function drawClashes(W, t, T) {
       const boomT = W.glow.boom || (W.glow.boom = glowTex("255,170,80", 1)), booms = [];
       for (let i = 0; i < 14; i++) { const sp = new TH.Sprite(W.additive(boomT, 0xffffff, 0)); sp.renderOrder = 15; W.scene.add(sp); booms.push({ sp, t0: -1e9 }); }
       const mk = (n, col, hostile, fg) => { const g = fleet3D(W, clashShips(n) || genComp(clashCnt(n)), col, hostile, false, false, fg); g.userData.size = (.75 + Math.min(1.1, Math.log10(clashCnt(n) + 1) * .3)) * .5; W.scene.add(g); return g; };
-      c.o = { ga: mk(c.a, c.aCol, c.you !== "a", c.aF || (c.aCmd === false ? null : DEMO_FAC[hash(String(c.key) + "a") % 4])), gd: mk(c.d, c.dCol, c.you === "a", c.dF || (c.dCmd === false ? null : DEMO_FAC[hash(String(c.key) + "d") % 4])), /* v258: every commander's side leads with a flagship (v261: not Cube bosses, monsters, pirates or the Hive) */ bolts, booms, bl: [], la: -1, ld: -1, ended: 0 }; }
+      c.o = { ga: mk(c.a, c.aCol, c.you !== "a", c.aF || (c.aCmd === false ? null : DEMO_FAC[hash(String(c.key) + "a") % 4])), gd: mk(c.d, c.dCol, c.you === "a", c.dF || (c.dCmd === false ? null : DEMO_FAC[hash(String(c.key) + "d") % 4])), /* v258: every commander's side leads with a flagship (v261: not Cube bosses, monsters, pirates or the Hive) */ bolts, booms, bl: [], la: -1, ld: -1, ended: 0 }; if (beastKind(c.loc)) { c.o.bx = beastInit(W, c); c.o.gd.visible = false; } }
     const atCube = c.loc === NEXUS, angN = ang + (atCube ? e * .00007 : 0), o = c.o, dx = Math.cos(angN), dz = Math.sin(angN), wob = Math.sin(e * .0011) * (atCube ? 7 : .6); /* v194 strafing runs round the Cube */
     // attackers sweep in during the first 2 s, then hold a firing line; defenders hold in front of the target
     // v178 at the Cube the defenders hold a line just outside its hull (they used to hold 11 units from its centre: inside it)
@@ -6479,15 +6538,16 @@ function drawClashes(W, t, T) {
     // losses follow the report round by round over the first 85% of the clip
     const rs = c.rounds, ri = rs.length ? Math.min(rs.length - 1, Math.floor(clamp(k / .85, 0, .999) * rs.length)) : -1;
     const fa = ri >= 0 ? clashCnt(rs[ri].a) / c.nA : c.winner === "d" && k > .8 ? 0 : 1, fd = ri >= 0 ? clashCnt(rs[ri].d) / c.nD : c.winner === "a" && k > .8 ? 0 : 1; c.fa = fa; c.fd = fd; c.ri = ri;
-    const boom = (p, big) => { const b = o.booms.find(x => tn - x.t0 > 700) || o.booms[0]; b.t0 = tn; b.sp.position.copy(p); b.big = big; };
+    const boom = (p, big) => { const b = o.booms.find(x => tn - x.t0 > 700) || o.booms[0]; b.t0 = tn; b.sp.position.copy(p); b.big = big; }; o.boom = boom;
+    const BX = o.bx ? beastFx(W, c, o, q, e, k, tn, fsC, k < .86 && !reduced, () => alive(o.ga).map(s => out => wpos(o.ga, s, out))) : null; // v262 the boss or creature fights for itself
     for (const [g, f, key] of [[o.ga, fa, "la"], [o.gd, fd, "ld"]]) { const sh = g.userData.slots || []; const keep = f <= 0 ? 0 : Math.max(1, Math.ceil(sh.length * f));
-      if (o[key] !== keep) { sh.forEach((s, i) => { const dead = i >= keep; if (!s.dead && dead && o[key] >= 0) boom(wpos(g, s, V).clone(), 1); s.dead = dead; }); o[key] = keep; } } // the rear ships go first, each in a fireball
+      if (o[key] !== keep) { if (BX && g === o.gd) { if (o[key] > keep && o[key] >= 0) boom(beastPt(o.bx, BX.cen, BX.dir, V.clone(), 1.2), 1); o[key] = keep; continue; } sh.forEach((s, i) => { const dead = i >= keep; if (!s.dead && dead && o[key] >= 0) boom(wpos(g, s, V).clone(), 1); s.dead = dead; }); o[key] = keep; } } // (a boss or creature takes its losses as blasts on its hull) // the rear ships go first, each in a fireball
     for (const b of o.booms) { const a = (tn - b.t0) / 650; if (a < 0 || a > 1) { b.sp.material.opacity = 0; continue; } b.sp.material.opacity = (1 - a) * (b.big ? 1 : .7); b.sp.scale.setScalar(fsC * (b.big ? 1.6 : .6) * (.4 + a * 1.6)); }
     // bolts: short streaks racing between random ships of the two lines, with sparks where they land
     const P = o.bolts.geometry.attributes.position.array, C = o.bolts.geometry.attributes.color.array, live = k < .86 && !reduced;
     const aliveA = live ? alive(o.ga) : [], aliveD = live ? alive(o.gd) : [], nShots = atCube ? clamp(Math.ceil((aliveA.length + aliveD.length) / 10), 3, 14) : 3;
-    if (live) for (let s = 0; s < nShots; s++) { const fromA = Math.random() < .5 + (fa - fd) * .3, src = fromA ? o.ga : o.gd, dst = fromA ? o.gd : o.ga, ss = fromA ? aliveA : aliveD, ds = fromA ? aliveD : aliveA;
-      if (!ss.length) continue; const turn = fromA ? (o.ia = (o.ia || 0) + 1) : (o.id = (o.id || 0) + 1); wpos(src, ss[turn % ss.length], V); if (ds.length) wpos(dst, ds[(Math.random() * ds.length) | 0], V2); else V2.set(q.x, q.y, q.z);
+    if (live) for (let s = 0; s < nShots; s++) { const fromA = BX ? true : Math.random() < .5 + (fa - fd) * .3, src = fromA ? o.ga : o.gd, dst = fromA ? o.gd : o.ga, ss = fromA ? aliveA : aliveD, ds = fromA ? aliveD : aliveA;
+      if (!ss.length) continue; const turn = fromA ? (o.ia = (o.ia || 0) + 1) : (o.id = (o.id || 0) + 1); wpos(src, ss[turn % ss.length], V); if (BX) { beastPt(o.bx, BX.cen, BX.dir, V2, 1); o.bx.hit = tn; } else if (ds.length) wpos(dst, ds[(Math.random() * ds.length) | 0], V2); else V2.set(q.x, q.y, q.z);
       o.bl.push({ a: V.clone(), b: V2.clone(), t0: tn, col: fromA ? (c.you === "a" ? [.4, 1, 1] : [1, .35, .3]) : (c.you === "a" ? [1, .45, .2] : [.4, 1, 1]) }); }
     /* v194 in a demo battle every commander's fleet in the rings fights too: fleets take turns firing at the nearest enemy fleet */
     if (live && atCube && G.cubeDemo && W.fleets) { if (!W.dmT || tn - W.dmT > 500) { W.dmT = tn; W.dmA = []; W.dmD = []; for (const [fid, fo] of W.fleets) if (/^dm[AD]/.test(fid) && fo.grp && fo.grp.visible && fo.grp.userData.slots) (fid[2] === "A" ? W.dmA : W.dmD).push(fo.grp); }
