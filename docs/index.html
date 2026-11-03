@@ -917,6 +917,52 @@ main.full{padding:0;overflow:hidden;gap:0}
 .actov{position:absolute;left:72px;right:72px;top:8px;z-index:3;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;pointer-events:none}
 .actov span{pointer-events:auto;padding:3px 8px;border-radius:10px;background:rgba(7,24,38,.85);border:1px solid #2a6f8f;font-size:10.5px;color:#c9f6fc;font-family:var(--f-display);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .actov span b{color:var(--amber)}
+/* v248 rune wheels */
+.runes{position:relative;width:100%;aspect-ratio:.8;margin:6px 0 4px;border-radius:14px;overflow:hidden;border:1.5px solid rgba(90,180,255,.7);box-shadow:0 0 14px rgba(70,160,255,.45),inset 0 0 22px rgba(70,160,255,.25);
+  background:radial-gradient(1.2px 1.2px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 78% 12%,#cfe,transparent),radial-gradient(1.4px 1.4px at 40% 62%,#fff,transparent),radial-gradient(1px 1px at 88% 48%,#fff,transparent),radial-gradient(1px 1px at 22% 84%,#dff,transparent),radial-gradient(1.2px 1.2px at 64% 90%,#fff,transparent),radial-gradient(1px 1px at 55% 30%,#fff,transparent),radial-gradient(1px 1px at 6% 52%,#fff,transparent),
+  radial-gradient(ellipse 60% 40% at 30% 30%,rgba(60,90,200,.28),transparent 70%),radial-gradient(ellipse 50% 40% at 80% 70%,rgba(120,60,200,.22),transparent 70%),radial-gradient(ellipse 70% 30% at 50% 100%,rgba(40,110,220,.35),transparent 70%),linear-gradient(180deg,#040818,#070c22 50%,#050a1c)}
+.runes .rpl{position:absolute;border-radius:50%;background:radial-gradient(circle at 35% 30%,#4a5a70,#141a26 55%,#05070c);box-shadow:0 0 14px rgba(120,170,255,.25)}
+.runes .rpl.p1{width:15%;aspect-ratio:1;left:-4%;top:23%}.runes .rpl.p2{width:18%;aspect-ratio:1;right:-8%;top:41%}.runes .rpl.p3{width:9%;aspect-ratio:1;left:9%;top:44%;opacity:.8}
+.rw{position:absolute;width:44%;aspect-ratio:1;padding:0;border:0;background:none;cursor:pointer;color:#fff;-webkit-tap-highlight-color:transparent}
+.rw.fire{left:4%;top:3%}.rw.water{left:52%;top:3%}.rw.spirit{left:28%;top:31%;z-index:2}.rw.earth{left:4%;top:59%}.rw.air{left:52%;top:59%}
+.rw svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 6px var(--rc))}
+.rw .ra{position:absolute;inset:-13%;border-radius:50%;pointer-events:none;-webkit-mask:radial-gradient(circle,transparent 50%,#000 58%,rgba(0,0,0,.6) 68%,transparent 78%);mask:radial-gradient(circle,transparent 50%,#000 58%,rgba(0,0,0,.6) 68%,transparent 78%);filter:blur(4px);mix-blend-mode:screen}
+.rw::before{content:"";position:absolute;inset:-4%;border-radius:50%;box-shadow:0 0 18px 4px var(--rc),0 0 40px 8px color-mix(in srgb,var(--rc) 45%,transparent);opacity:.75;pointer-events:none}
+.rw .ra.a1{background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--rc) 30%,transparent) 0 3deg,var(--rc) 7deg,var(--rh) 9deg,color-mix(in srgb,var(--rc) 30%,transparent) 13deg);animation:raspin 9s linear infinite,raflick 1.3s ease-in-out infinite alternate}
+.rw .ra.a2{inset:-18%;background:repeating-conic-gradient(from 12deg,transparent 0 6deg,var(--rc) 11deg,transparent 19deg);opacity:.55;animation:raspin 14s linear infinite reverse,raflick 1.9s ease-in-out infinite alternate-reverse}
+.rw.fire .ra.a1{animation-duration:6s,.45s}.rw.fire .ra.a2{animation-duration:8s,.7s}
+.rw.water .ra{filter:blur(1.5px)}.rw.water .ra.a1{background:repeating-conic-gradient(from 0deg,transparent 0 3deg,var(--rh) 4deg,transparent 7deg,transparent 11deg)}
+.rw.spirit .ra{inset:-16%;filter:blur(5px)}.rw.spirit .ra.a1{animation-duration:16s,2.6s}.rw.spirit .ra.a2{animation-duration:22s,3s}
+.rw.earth .ra{opacity:.75}.rw.air .ra.a1{background:repeating-conic-gradient(from 0deg,transparent 0 14deg,var(--rc) 22deg,transparent 30deg);animation-duration:4s,1.4s}.rw.air .ra.a2{animation-duration:6s,1.6s}
+@keyframes raspin{to{transform:rotate(360deg)}}@keyframes raflick{from{opacity:.65}to{opacity:1}}
+.rw .rtx{position:absolute;inset:27%;white-space:nowrap;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--f-display);line-height:1.15;text-shadow:0 0 8px #000,0 0 3px #000;pointer-events:none}
+.rw .rtx b{font-size:clamp(13px,4.1vw,21px);color:#fff}.rw .rtx span{font-size:clamp(10px,3.2vw,16px);color:#f4f4f4}
+.rw .rg{transform-box:fill-box;transform-origin:center}.rw .rg.f path{animation:rgpulse 2.4s ease-in-out infinite}
+@keyframes rgpulse{50%{stroke-opacity:.7}}
+.rw .rg.pop{animation:rgpop 1.1s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes rgpop{0%{opacity:0;transform:var(--t,none) scale(2.6)}35%{opacity:1}100%{opacity:1}}
+.rw.burst svg{animation:rwburst 1.2s ease-out}@keyframes rwburst{0%{filter:drop-shadow(0 0 6px var(--rc))}25%{filter:drop-shadow(0 0 22px var(--rh)) brightness(1.5)}100%{filter:drop-shadow(0 0 6px var(--rc))}}
+.rw .rshock{position:absolute;inset:20%;border-radius:50%;border:3px solid var(--rh);box-shadow:0 0 18px var(--rc),inset 0 0 18px var(--rc);pointer-events:none;animation:rshock 1s ease-out forwards}
+@keyframes rshock{0%{transform:scale(.4);opacity:1}100%{transform:scale(1.55);opacity:0}}
+.rw.full .rres{animation:rres 2s ease-in-out infinite}@keyframes rres{50%{stroke-opacity:.3}}
+.rw:active svg{transform:scale(.97)}
+.rw i{position:absolute;pointer-events:none;display:block}
+.rw .rk{background:linear-gradient(135deg,#7a6a52,#2a2218);clip-path:polygon(20% 0,85% 12%,100% 60%,62% 100%,8% 78%,0 30%);box-shadow:0 0 6px #000}
+.rw .rk.k1{width:13%;height:11%;left:-8%;top:58%;animation:rkf 7s ease-in-out infinite}.rw .rk.k2{width:8%;height:7%;left:-4%;top:28%;animation:rkf 6s ease-in-out infinite reverse}.rw .rk.k3{width:18%;height:16%;left:-10%;top:84%}
+.rw .rk.k4{width:6%;height:5%;left:30%;top:-4%;animation:rkf 5s ease-in-out infinite}.rw .rk.k5{width:7%;height:6%;right:-2%;top:6%;animation:rkf 8s ease-in-out infinite}
+@keyframes rkf{50%{transform:translate(3px,-4px) rotate(18deg)}}
+.rw .lf{width:7%;height:4%;background:linear-gradient(90deg,#3a9a1a,#9aff6a);border-radius:0 100% 0 100%;box-shadow:0 0 6px #6dff4a;animation:lff 4s linear infinite}
+.rw .lf.l1{right:-3%;top:6%}.rw .lf.l2{right:-6%;top:44%;animation-delay:-1s}.rw .lf.l3{left:30%;bottom:-4%;animation-delay:-2s}.rw .lf.l4{left:-4%;top:70%;animation-delay:-3s}
+@keyframes lff{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(-6px,5px) rotate(140deg)}100%{transform:translate(0,0) rotate(360deg)}}
+.rw .dp{width:3.5%;aspect-ratio:1;border-radius:50% 50% 50% 0;background:radial-gradient(circle at 35% 35%,#fff,#3fb8ff);box-shadow:0 0 6px #3fb8ff;animation:dpf 2.6s ease-in-out infinite}
+.rw .dp.d1{right:-2%;top:30%}.rw .dp.d2{right:6%;top:78%;animation-delay:-.8s}.rw .dp.d3{left:-1%;top:20%;animation-delay:-1.4s}.rw .dp.d4{left:50%;top:-3%;animation-delay:-2s}
+@keyframes dpf{50%{transform:translate(3px,-5px) scale(.7);opacity:.6}}
+.rw .em{width:2.4%;aspect-ratio:1;border-radius:50%;background:#ffd27a;box-shadow:0 0 6px #ff8a3a,0 0 12px #ff5a1a;animation:emf 2.2s ease-in infinite}
+.rw .em.m1{left:12%;top:8%}.rw .em.m2{right:10%;top:12%;animation-delay:-.6s}.rw .em.m3{left:4%;top:60%;animation-delay:-1.2s}.rw .em.m4{right:2%;top:52%;animation-delay:-1.7s}
+@keyframes emf{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-22px);opacity:0}}
+.rw .ws{inset:-12%;border-radius:50%;border:2px solid transparent;border-top-color:var(--rh);border-left-color:var(--rc);filter:blur(2px);opacity:.6;animation:raspin 7s linear infinite}.rw .ws.w2{inset:-6%;animation-duration:11s;animation-direction:reverse;opacity:.45}
+.runes .rsum{position:absolute;left:5%;bottom:1.6%;padding:4px 22px 4px 12px;font-family:var(--f-display);font-size:clamp(16px,5vw,26px);color:#d8ecff;background:linear-gradient(90deg,rgba(40,110,200,.35),transparent);border:1px solid rgba(90,180,255,.55);border-right:0;border-radius:8px 0 0 8px;text-shadow:0 0 8px rgba(90,180,255,.8)}
+.rsumb{margin-top:6px}
 .elem{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative;padding:6px 0}
 .elem .er{position:relative;aspect-ratio:1;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid currentColor;background:radial-gradient(circle,rgba(0,0,0,.2) 40%,currentColor 220%);cursor:pointer;color:#fff;font-family:var(--f-display);max-width:150px;justify-self:center;width:100%}
 .elem .er.spirit{grid-column:1/-1;max-width:130px}
@@ -2139,7 +2185,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 247;
+const GAME_V = 248;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -11867,11 +11913,36 @@ const acc = (k, icon, title, value, body) => { const o = menu.open[k]; return `<
 const mrow = (l, v) => `<div class="mrow"><span>${l}</span><b>${v}</b></div>`;
 const restartBtn = () => menu.confirm ? `<div class="danger"><b style="color:var(--red);font-size:17px">Erase this empire?</b><p class="note">Every building, ship and report is deleted. Colonies you hold go back to the Hive. This can't be undone.</p><div style="display:flex;gap:8px"><button class="btn warn" data-act="resetYes">Erase and restart</button><button class="btn ghost" data-act="mresetNo">Keep playing</button></div></div>`
   : `<button class="restart" data-act="mreset"><span class="hex">${MI.cycle}</span><span class="tx"><small>Restart Game</small><b>Start over from Lv.1</b></span></button>`;
-/* elemental runes: five rings of sockets; filling a ring makes it resonate */
+/* v248 elemental runes: five carved rune wheels over deep space. Each socket is a stone tile with its own rune; a socketed rune glows in
+   its element's colour, an empty one is a dim carving. Fire burns, water splashes, spirit swirls, earth sheds rock and air whirls leaves. */
+const RUNE_G = ["M0 -9V9M0 -3L6 -9M0 -3L-6 -9", "M-4 -9V9M-4 -8L5 -3L-4 2", "M-5 -9V9M5 -9V9M-5 -3L5 3", "M-6 -6L6 6M6 -6L-6 6", "M0 -9L6 0L0 9L-6 0Z", "M-5 9V-9L5 -3L-5 3",
+  "M-6 -9L6 9M-6 9L6 -9M0 -9V9", "M-4 -9V9M-4 -8L4 -4M-4 -2L4 2", "M-6 -3L0 -9L6 -3M-6 3L0 9L6 3", "M-6 -9H6M0 -9V9M-6 9H6", "M0 -9V9M-6 -4L6 4", "M-6 9L0 -9L6 9M-3 2H3",
+  "M5 -9L-5 0L5 9", "M-6 0A6 6 0 1 0 6 0A6 6 0 1 0 -6 0M0 -9V9", "M-6 -9V9H6", "M-6 -9H6L-6 9H6", "M0 -9V9M-6 -9L0 -3L6 -9", "M-6 0H6M0 -9L-6 -3M0 9L6 3"];
+const RUNE_C = { fire: ["#ff8a3a", "#ffd27a", "#5a1a06"], water: ["#3fb8ff", "#bdf0ff", "#06244a"], spirit: ["#c66bff", "#f0c8ff", "#2a0848"], earth: ["#ffb53a", "#ffe6a0", "#4a2a06"], air: ["#6dff4a", "#d4ffb8", "#0c3a08"] };
+G.runeFx = G.runeFx || null;
+function runeWheel(e) {
+  const d = ELEM[e], [col, hi, dk] = RUNE_C[e], on = runeOn(e), sl = elemSlots(e), spare = (S.runes || {})[e] || 0, tier = ringT(e), fx = G.runeFx && G.runeFx.e === e && now() - G.runeFx.t < 1600 ? G.runeFx : null;
+  const R0 = 66, R1 = 90, gap = Math.min(2.2, 40 / sl), P = (r, a) => [(Math.cos(a) * r).toFixed(2), (Math.sin(a) * r).toFixed(2)], sc = Math.min(1, Math.pow(12 / sl, .55)) * .95;
+  let tiles = "";
+  for (let i = 0; i < sl; i++) { const a0 = (i / sl * 360 - 90 - 180 / sl + gap / 2) * Math.PI / 180, a1 = ((i + 1) / sl * 360 - 90 - 180 / sl - gap / 2) * Math.PI / 180, am = (i / sl * 360 - 90) * Math.PI / 180, lg = a1 - a0 > Math.PI ? 1 : 0;
+    const [x0, y0] = P(R1, a0), [x1, y1] = P(R1, a1), [x2, y2] = P(R0, a1), [x3, y3] = P(R0, a0), [gx, gy] = P(78, am), f = i < on, g = RUNE_G[hash(e + i) % RUNE_G.length], pop = fx && fx.i === i;
+    tiles += `<path class="rt${f ? " f" : ""}" d="M${x0} ${y0}A${R1} ${R1} 0 ${lg} 1 ${x1} ${y1}L${x2} ${y2}A${R0} ${R0} 0 ${lg} 0 ${x3} ${y3}Z" fill="url(#rs-${e})" stroke="${f ? col : "#7a6a58"}" stroke-opacity="${f ? .75 : .35}" stroke-width="1"/>`
+      + `<g class="rg${f ? " f" : ""}${pop ? " pop" : ""}" transform="translate(${gx} ${gy}) scale(${sc.toFixed(3)})"><rect x="-8" y="-10" width="16" height="20" rx="3" fill="${f ? col : "#000"}" fill-opacity="${f ? .22 : .25}"/><path d="${g}" fill="none" stroke="${f ? hi : "#9a8a76"}" stroke-opacity="${f ? 1 : .35}" stroke-width="${f ? 2.4 : 1.8}" stroke-linecap="round" stroke-linejoin="round"${f ? ` filter="url(#rgl-${e})"` : ""}/></g>`; }
+  const svg = `<svg viewBox="-100 -100 200 200" aria-hidden="true"><defs>
+    <radialGradient id="rd-${e}" cx="50%" cy="45%" r="55%"><stop offset="0" stop-color="${col}" stop-opacity=".42"/><stop offset=".55" stop-color="${dk}"/><stop offset="1" stop-color="#05060c"/></radialGradient>
+    <linearGradient id="rs-${e}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a3630"/><stop offset=".5" stop-color="#1a1714"/><stop offset="1" stop-color="#2c2620"/></linearGradient>
+    <linearGradient id="rm-${e}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e8dcc0"/><stop offset=".35" stop-color="#6a5c48"/><stop offset=".65" stop-color="#c8b48a"/><stop offset="1" stop-color="#3a2e20"/></linearGradient>
+    <filter id="rgl-${e}" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <circle r="95" fill="none" stroke="${col}" stroke-opacity=".55" stroke-width="3" filter="url(#rgl-${e})"/>
+    <circle r="92" fill="#0b0a09" stroke="url(#rm-${e})" stroke-width="3.5"/>${tiles}
+    <circle r="63.5" fill="url(#rd-${e})" stroke="url(#rm-${e})" stroke-width="3"/><circle r="58" fill="none" stroke="${col}" stroke-opacity=".35" stroke-width="1"/>
+    ${on >= sl ? `<circle class="rres" r="61" fill="none" stroke="${hi}" stroke-width="1.5" filter="url(#rgl-${e})"/>` : ""}</svg>`;
+  const deco = e === "earth" ? '<i class="rk k1"></i><i class="rk k2"></i><i class="rk k3"></i><i class="rk k4"></i><i class="rk k5"></i>' : e === "air" ? '<i class="lf l1"></i><i class="lf l2"></i><i class="lf l3"></i><i class="lf l4"></i>' : e === "water" ? '<i class="dp d1"></i><i class="dp d2"></i><i class="dp d3"></i><i class="dp d4"></i>' : e === "fire" ? '<i class="em m1"></i><i class="em m2"></i><i class="em m3"></i><i class="em m4"></i>' : '<i class="ws w1"></i><i class="ws w2"></i>';
+  return `<button class="rw ${e}${on >= sl ? " full" : ""}${fx ? " burst" : ""}" style="--rc:${col};--rh:${hi}" data-act="runeSlot" data-e="${e}" aria-label="${d.n} ring, tier ${tier}, ${on} of ${sl} socketed, ${spare} spare. Tap to socket a rune.">
+    <span class="ra a1"></span><span class="ra a2"></span>${deco}${svg}${fx ? '<span class="rshock"></span>' : ""}
+    <span class="rtx"><b>${d.n}${tier ? ` ${"★".repeat(Math.min(tier, 3))}` : ""}</b><span>[${on}/${sl}]</span><span>${spare ? `+${spare} ready` : on >= sl ? "Resonating" : "No runes"}</span></span></button>`;
+}
 function mElem() {
-  const ring = e => { const d = ELEM[e], on = runeOn(e), spare = (S.runes || {})[e] || 0, sl = elemSlots(e), tier = ringT(e);
-    const dots = Array.from({ length: sl }, (_, i) => { const a = -Math.PI / 2 + i / sl * TAU; return `<i class="${i < on ? "f" : ""}" style="left:${44 + Math.cos(a) * 38}%;top:${44 + Math.sin(a) * 38}%"></i>`; }).join("");
-    return `<button class="er ${e}${on >= sl ? " full" : ""}${tier ? " t" + tier : ""}" style="color:${d.col}" data-act="runeSlot" data-e="${e}" aria-label="${d.n} ring, tier ${tier}, ${on} of ${sl} socketed, ${spare} spare. Tap to socket a rune.">${dots}<b>${d.n}${tier ? ` ${"★".repeat(tier)}` : ""}</b><small>[${on}/${sl}]</small><small>${spare ? `+${spare} ready` : ""}</small></button>`; };
   const sum = Object.keys(ELEM).map(e => `<div class="mrow"><span style="color:${ELEM[e].col}">${ELEM[e].stat}</span><b>+${runePct(e)}%</b></div>`).join("");
   // ring workshop: expand for more sockets, upgrade the tier once a ring is full
   const shop = Object.keys(ELEM).map(e => { const d = ELEM[e], x = ringX(e), t = ringT(e), xc = ringXCost(e), tc = ringTCost(e), full = runeOn(e) >= elemSlots(e);
@@ -11879,8 +11950,8 @@ function mElem() {
       <div class="rwb"><button class="btn ghost sm" data-act="ringExpand" data-e="${e}" ${x >= RING_MAX ? "disabled" : ""}>${x >= RING_MAX ? "Fully expanded" : `Expand +${e === "spirit" ? 1 : 2} · ${fmt(xc.c)} crystal, ${fmt(xc.g)} gas, ◆${xc.shards}`}</button>
       <button class="btn amber sm" data-act="ringUpgrade" data-e="${e}" ${t >= RING_MAX || !full ? "disabled" : ""}>${t >= RING_MAX ? "Top tier" : !full ? "Upgrade (fill the ring first)" : `Upgrade to tier ${t + 1} · ${fmt(tc.m)} metal, ${fmt(tc.g)} gas, ◆${tc.shards}`}</button></div></div>`; }).join("");
   return `<div class="mcard"><p>Socket runes into the five elemental rings for permanent bonuses. Each Fire, Water, Earth or Air rune adds 1%, each Spirit rune adds 2%, and a full ring resonates for another +3%. Tap a ring to socket a rune. Expand a ring for more sockets, and upgrade a full ring to make every rune in it stronger.</p>
-    <div class="elem">${["fire", "water"].map(ring).join("")}${ring("spirit")}${["earth", "air"].map(ring).join("")}</div>
-    <h3 style="margin-top:6px">Summary</h3>${sum}
+    <div class="runes"><span class="rpl p1"></span><span class="rpl p2"></span><span class="rpl p3"></span>${["fire", "water", "spirit", "earth", "air"].map(runeWheel).join("")}<div class="rsum">Summary</div></div>
+    <div class="rsumb">${sum}</div>
     <h3 style="margin-top:8px">Ring workshop</h3>${shop}
     <p class="note">Elemental runes are rare: they are torn from the cores of Collective Cubes. A Cube drops ${cubeRunes(1)} at Lv.1, rising to ${cubeRunes(30)} at Lv.30, and a joint strike on a Lv.10+ Cube drops one more.</p></div>`;
 }
@@ -12269,6 +12340,11 @@ const SFX = {
   boom(big) { if (!SFX.ok()) return; if (SB.boom && SB.boom.length && SFX.pb(SB.boom, AU.ctx.currentTime, big ? 1 : .6, 0, big ? .55 : .8, .55)) return; const c = AU.ctx, t = c.currentTime, dur = big ? 1.5 : .7, n = noiseSrc(), f = c.createBiquadFilter();
     f.type = "lowpass"; f.frequency.setValueAtTime(big ? 1600 : 1000, t); f.frequency.exponentialRampToValueAtTime(70, t + dur); n.connect(f); SFX.env(f, t, big ? .55 : .3, dur); n.start(t); n.stop(t + dur);
     if (big) { const o = c.createOscillator(); o.type = "sine"; o.frequency.setValueAtTime(75, t); o.frequency.exponentialRampToValueAtTime(28, t + dur); SFX.env(o, t, .5, dur); o.start(t); o.stop(t + dur); } },
+  /* v248 a rune clicking into its socket: a stone knock, then a rising shimmer in the element's key (a full ring rings out in a chord) */
+  rune(e, full) { if (!SFX.ok()) return; const c = AU.ctx, t = c.currentTime, base = { fire: 392, water: 523.3, spirit: 466.2, earth: 329.6, air: 587.3 }[e] || 440;
+    { const o = c.createOscillator(); o.type = "triangle"; o.frequency.setValueAtTime(180, t); o.frequency.exponentialRampToValueAtTime(70, t + .12); SFX.env(o, t, .22, .16); o.start(t); o.stop(t + .2); }
+    const notes = full ? [1, 1.25, 1.5, 2, 2.5] : [1, 1.5, 2]; notes.forEach((m, i) => { const o = c.createOscillator(), tt = t + .05 + i * .07; o.type = i % 2 ? "triangle" : "sine"; o.frequency.value = base * m; SFX.env(o, tt, full ? .1 : .08, full ? 1.6 : .9); o.start(tt); o.stop(tt + (full ? 1.7 : 1)); });
+    if (full) SFX.gong(); },
   gong() { if (!SFX.ok()) return; const c = AU.ctx, t = c.currentTime; for (const [f, a] of [[146.8, .18], [220, .12], [293.7, .07]]) { const o = c.createOscillator(); o.type = "sine"; o.frequency.value = f; SFX.env(o, t, a, 2.2); o.start(t); o.stop(t + 2.3); } },
   fanfare(win) { if (!SFX.ok()) return; const c = AU.ctx, t = c.currentTime, ns = win ? [60, 64, 67, 72, 76] : [64, 60, 57, 53];
     ns.forEach((m, i) => { const o = c.createOscillator(); o.type = "triangle"; o.frequency.value = 440 * Math.pow(2, (m - 69) / 12); SFX.env(o, t + i * .16, .12, win ? .9 : 1.1); o.start(t + i * .16); o.stop(t + i * .16 + 1.2); }); },
@@ -14682,7 +14758,8 @@ const ACT = {
   runeSlot: d => act(() => { const e = d.e; S.runes = S.runes || {}; S.sock = S.sock || {};
     if (runeOn(e) >= elemSlots(e)) return toast(`${ELEM[e].n} ring is full. Expand it for more sockets, or upgrade its tier.`);
     if (!(S.runes[e] > 0)) return toast(`No ${ELEM[e].n} runes yet. Raid pirates, beat the Hive, finish daily tasks or buy one in the Supply Depot.`, "warn");
-    S.runes[e]--; S.sock[e] = (S.sock[e] || 0) + 1; toast(runeOn(e) >= elemSlots(e) ? `${ELEM[e].n} ring complete: resonance bonus active!` : `${ELEM[e].n} rune socketed.`, "win"); }),
+    S.runes[e]--; S.sock[e] = (S.sock[e] || 0) + 1; const full = runeOn(e) >= elemSlots(e); G.runeFx = { e, i: runeOn(e) - 1, t: now() }; SFX.rune(e, full); try { navigator.vibrate && navigator.vibrate(full ? [20, 40, 30] : 15); } catch (x) {}
+    setTimeout(() => { G.runeFx = null; render(true); }, 1700); toast(full ? `${ELEM[e].n} ring complete: resonance bonus active!` : `${ELEM[e].n} rune socketed.`, "win"); }),
   ringExpand: d => act(() => { const e = d.e; if (!ELEM[e]) return; if (ringX(e) >= RING_MAX) return toast(`${ELEM[e].n} ring is fully expanded.`); const c = ringXCost(e);
     if ((S.shards || 0) < c.shards || !can({ m: 0, c: c.c, g: c.g })) return toast(`Expanding needs ${fmt(c.c)} crystal, ${fmt(c.g)} gas and ◆${c.shards}.`, "warn");
     S.res.c -= c.c; S.res.g -= c.g; S.shards -= c.shards; S.ringX = S.ringX || {}; S.ringX[e] = ringX(e) + 1; toast(`${ELEM[e].n} ring expanded to ${elemSlots(e)} sockets.`, "win"); }),
