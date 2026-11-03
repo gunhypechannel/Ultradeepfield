@@ -101,6 +101,8 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 #coach .cpt small{font-size:9px;letter-spacing:.14em;color:#ffd36b}#coach .cpill.done .cpt small{color:var(--green)}
 /* v81: the guide: spotlight ring, bouncing hand and label on the next thing to tap */
 #tutguide{position:fixed;inset:0;z-index:70;pointer-events:none;display:none}
+#tutguide .tgx{pointer-events:auto;margin-left:8px;width:24px;height:24px;border-radius:50%;border:1px solid rgba(7,16,25,.35);background:rgba(7,16,25,.18);color:inherit;font:700 12px/1 sans-serif;cursor:pointer;vertical-align:middle}
+#coach .cpx{position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(6,18,25,.9);color:#cfe;font:700 11px/1 sans-serif;z-index:2;padding:0;pointer-events:auto}
 #tutguide .tg-ring{position:fixed;border-radius:14px;border:3px solid #ffd36b;box-shadow:0 0 0 4px rgba(255,211,107,.25),0 0 26px rgba(255,211,107,.8);animation:tutp .8s ease-in-out infinite alternate;transition:left .18s,top .18s,width .18s,height .18s}
 #tutguide.spot .tg-ring{box-shadow:0 0 0 4px rgba(255,211,107,.25),0 0 26px rgba(255,211,107,.8),0 0 0 200vmax rgba(2,6,12,.42)}
 #tutguide .tg-hand{position:fixed;font-size:38px;line-height:1;filter:drop-shadow(0 3px 6px rgba(0,0,0,.6));animation:tghand .7s ease-in-out infinite alternate;transition:left .18s,top .18s}
@@ -2137,7 +2139,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 245;
+const GAME_V = 246;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -10042,7 +10044,7 @@ function vBase() {
   const tl = (act, icon, label, extra) => `<button class="tool" data-act="${act}" ${extra || ""} aria-label="${label}">${icon}<span>${label}</span></button>`;
   const alarm = vis.length || S.raid ? `<button class="radmini" data-act="nav" data-v="fleets">⚠ ${vis.length + (S.raid ? 1 : 0)} inbound · <span data-end="${Math.min(...vis.map(x => x.arrive).concat(S.raid ? [S.raid.at] : []))}">${ftime(Math.min(...vis.map(x => x.arrive).concat(S.raid ? [S.raid.at] : [])) - T)}</span></button>` : "";
   return `<div class="basewrap"><div id="colslot"></div>
-        ${planetSlider()}${alarm}${actOverview()}
+        ${alarm}${actOverview()} <!-- v246: no planet slider here; switch planets with the arrows or by tapping the planet name -->
     <button class="dirmini${questsReady() ? " ok" : ""}" data-act="nav" data-v="quests"><img class="dmav" src="${ADV_BUST}" alt=""><span class="dmtx"><span class="k">Quests${questsReady() ? ` · ${questsReady()} ready` : ""}</span><span class="t">${esc(q.t)}</span></span><span class="b">Open</span></button> <!-- v123: opens the Quests tab -->
     <div class="selbar" id="selbar" hidden></div>
     <div class="ticker" aria-live="polite">${last.map(l => `<div class="${l.kind}"><time>${ago(l.t)}</time> ${esc(l.msg)}</div>`).join("") || "<div>Welcome, Commander. Tap a building to upgrade it.</div>"}</div></div>`;
@@ -12552,7 +12554,8 @@ function guidePick() {
   return null;
 }
 function guideFrame() {
-  let g = $("#tutguide"); if (!g) { g = document.createElement("div"); g.id = "tutguide"; g.innerHTML = '<div class="tg-ring"></div><div class="tg-hand">👆</div><div class="tg-tip"></div>'; document.body.appendChild(g); }
+  let g = $("#tutguide"); if (!g) { g = document.createElement("div"); g.id = "tutguide"; g.innerHTML = '<div class="tg-ring"></div><div class="tg-hand">👆</div><div class="tg-tip"><span class="tgl"></span><button class="tgx" aria-label="Hide the guide for 5 minutes">✕</button></div>'; document.body.appendChild(g);
+    g.querySelector(".tgx").addEventListener("click", e => { e.stopPropagation(); e.preventDefault(); const T = now(); if (S.tut) { S.tut.open = 0; S.tut.snz = T + TUT_SNOOZE; } S.pathSnz = T + TUT_SNOOZE; dirty(); coachRender(true); g.style.display = "none"; toast("Guide hidden for 5 minutes. Open it any time from the Quests tab."); }, true); }
   const tn = performance.now(); if (tn - GD.t > 140) { GD.t = tn; const p = guidePick(); GD.el = p && p.el; GD.label = p ? p.label : "";
     if (p && p.v === 2 && GD.scrolled !== p.el) { GD.scrolled = p.el; p.el.scrollIntoView({ block: "center", behavior: "smooth" }); }
     if (p && p.v === 3 && S.tut.open) { S.tut.open = 0; dirty(); coachRender(true); } }
@@ -12563,7 +12566,7 @@ function guideFrame() {
   Object.assign(ring.style, { left: r.left - pad + "px", top: r.top - pad + "px", width: r.width + pad * 2 + "px", height: r.height + pad * 2 + "px" });
   hand.textContent = low ? "👇" : "👆"; hand.classList.toggle("down", low);
   Object.assign(hand.style, { left: clamp(r.left + r.width / 2 - 18, 4, innerWidth - 44) + "px", top: (low ? r.top - 50 : r.bottom + 4) + "px" });
-  if (tip.textContent !== GD.label) tip.textContent = GD.label;
+  { const tl = tip.querySelector(".tgl"); if (tl && tl.textContent !== GD.label) tl.textContent = GD.label; }
   const tw = tip.offsetWidth || 160, th = tip.offsetHeight || 34;
   Object.assign(tip.style, { left: clamp(r.left + r.width / 2 - tw / 2, 8, innerWidth - tw - 8) + "px", top: (low ? r.top - 58 - th : r.bottom + 50) + "px" });
   requestAnimationFrame(guideFrame);
@@ -12603,7 +12606,7 @@ function coachRender(force) {
       <p>${done ? "Fine ships, Commander. Claim it and I'll show you the next hull." : esc(sp.say)}</p>${!done && sp.need ? `<div class="cneed">Next step: <b>${esc(sp.need.n)} Lv.${sp.need.l}</b> <small>(you have Lv.${sp.need.cur})</small></div>` : ""}
       <div class="cbar"><i style="width:${sp.i / SHIP_PATH.length * 100}%"></i></div><div class="clv">Reward ${fmt(rwt)} res · ◆${sp.rw.shards}</div>
       <div class="cbt">${done ? `<button class="btn amber" data-act="shipClaim">Claim reward</button>` : `<button class="btn" data-act="shipShow">Show me</button>`}${hop}<button class="btn ghost sm" data-act="pathFold">Later</button></div></div>`
-      : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "shipClaim" : "pathOpen"}" aria-label="${done ? "Claim the fleet path reward" : "Open the Advisor"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : "⛭"}</span><b class="cpt"><small>${done ? "HULL READY" : "FLEET PATH"}</small>${done ? "Claim reward ▸" : esc(sp.need ? `${sp.need.n} Lv.${sp.need.l} → ${sp.d.n}` : sp.t)}</b></button>`;
+      : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "shipClaim" : "pathOpen"}" aria-label="${done ? "Claim the fleet path reward" : "Open the Advisor"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : "⛭"}</span><b class="cpt"><small>${done ? "HULL READY" : "FLEET PATH"}</small>${done ? "Claim reward ▸" : esc(sp.need ? `${sp.need.n} Lv.${sp.need.l} → ${sp.d.n}` : sp.t)}</b></button><button class="cpx" data-act="pathMin" aria-label="Hide the Advisor for 5 minutes">✕</button>`;
     if (!w) { w = document.createElement("div"); w.id = "coach"; $("#app").appendChild(w); force = true; } w.style.display = sheet || view === "quests" ? "none" : "";
     if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
     return; }
@@ -12612,7 +12615,7 @@ function coachRender(force) {
       <p>${done ? "Directive complete, Commander. Claim it and I'll brief you on the next one." : esc(pathHint(q))}</p>
       <div class="clv">Reward ${fmt(rwt)} res${q.rw.boost ? ` · ⚡${q.rw.boost}` : ""} · ◆1</div>
       <div class="cbt">${done ? `<button class="btn amber" data-act="claim">Claim reward</button>` : `<button class="btn" data-act="go">Take me there</button>`}${hop}<button class="btn ghost sm" data-act="pathFold">Later</button></div></div>`
-      : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "claim" : "pathOpen"}" aria-label="${done ? "Claim the directive reward" : "Open the Advisor"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : S.quest + 1}</span><b class="cpt"><small>${done ? "DIRECTIVE DONE" : "NEXT ON YOUR PATH"}</small>${done ? "Claim reward ▸" : esc(q.t)}</b></button>`;
+      : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "claim" : "pathOpen"}" aria-label="${done ? "Claim the directive reward" : "Open the Advisor"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : S.quest + 1}</span><b class="cpt"><small>${done ? "DIRECTIVE DONE" : "NEXT ON YOUR PATH"}</small>${done ? "Claim reward ▸" : esc(q.t)}</b></button><button class="cpx" data-act="pathMin" aria-label="Hide the Advisor for 5 minutes">✕</button>`;
     if (!w) { w = document.createElement("div"); w.id = "coach"; $("#app").appendChild(w); force = true; } w.style.display = sheet || view === "quests" ? "none" : "";
     if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
     return; }
@@ -12620,8 +12623,8 @@ function coachRender(force) {
   const html = open ? `<div class="cbox${done ? " done" : ""}"><div class="chd"><img class="cav" src="${ADV_BUST}" alt="${ADV}"><div class="cti"><small>ADVISOR · FLIGHT ACADEMY · STEP ${S.tut.i + 1} OF ${TUT.length}</small><b>${esc(st.t)}</b></div><button class="cx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button></div>
       <p>${done ? "Done! Collect your reward." : esc(st.say)}</p>
       <div class="cbar"><i style="width:${Math.min(100, S.tut.i / TUT.length * 100)}%"></i></div><div class="clv">Commander Lv.${lv} → <b>Lv.5</b> · reward ${fmt((st.rw.m || 0) + (st.rw.c || 0) + (st.rw.g || 0))} res${st.rw.shards ? ` · ◆${st.rw.shards}` : ""}</div>
-      <div class="cbt">${done ? `<button class="btn amber" data-act="tutClaim">Collect reward</button>` : `<button class="btn" data-act="tutShow">Show me</button>`}${hop}<button class="btn ghost sm" data-act="tutSkip">Skip tutorial</button></div></div>`
-    : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "tutClaim" : "tutOpen"}" aria-label="${done ? "Collect the Academy reward" : "Open the Flight Academy"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : `${S.tut.i + 1}/${TUT.length}`}</span><b class="cpt"><small>${done ? "STEP DONE" : "NEXT TASK"}</small>${done ? "Collect reward ▸" : esc(st.t)}</b></button>`;
+      <div class="cbt">${done ? `<button class="btn amber" data-act="tutClaim">Collect reward</button>` : `<button class="btn" data-act="tutShow">Show me</button>`}${hop}<button class="btn ghost sm" data-act="tutMin">Hide 5 min</button><button class="btn ghost sm" data-act="tutSkip">Skip tutorial</button></div></div>`
+    : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "tutClaim" : "tutOpen"}" aria-label="${done ? "Collect the Academy reward" : "Open the Flight Academy"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : `${S.tut.i + 1}/${TUT.length}`}</span><b class="cpt"><small>${done ? "STEP DONE" : "NEXT TASK"}</small>${done ? "Collect reward ▸" : esc(st.t)}</b></button><button class="cpx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button>`;
   if (!w) { w = document.createElement("div"); w.id = "coach"; $("#app").appendChild(w); force = true; } w.style.display = sheet || view === "quests" ? "none" : ""; /* v123: the Quests tab shows the same step in full */
   if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
 }
