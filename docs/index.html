@@ -2237,7 +2237,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 259;
+const GAME_V = 260;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4870,9 +4870,18 @@ const BOSSK = { cube: 1.7, sphere: 1.35, swhale: 1.8, slevi: 1.8, ssquid: 1.6, l
    < Citadel Supercarrier < Reaper (king of the fleet) < Discovery Class < Cube Destroyer (about twice the Reaper) */
 const bLen = k => k === "worldbreaker" ? 2 * (SIDE_LEN.dreadnought || 1.25) * 1.08 : Math.pow(SIDE_LEN[k] || .5, 1.15) * (BOSSK[k] || 1);
 const SIDE_LEN = { spyProbe: .3, cube: 1.2, sphere: .8, cdrone: .4, tender: .6, guardian: .82, escortCarrier: .9, supercarrier: 1.42, eclipse: 1.75, fighter: .38, heavyFighter: .46, hauler: .5, heavyCargo: .7, recycler: .72, lancer: .55, ark: .6, corvette: .66, battleship: .96, bastion: 1.04, bomber: .78, destroyer: 1.14, dreadnought: 1.6, worldbreaker: 1.5, drone: .38, spitter: .42, brute: .6, lord: .8, leviathan: 1.2, swhale: 1.5, slevi: 1.5, ssquid: 1.05 };
+/* v260 battle sprite mip levels: a ship drawn small used to be squeezed out of its full-size render every frame. That resample scales with the
+   source, not the screen: a 10 vs 10 replay spent most of each frame on it (about 2.6 ms per hull in software) and it was the main load in the
+   frames that hitched on phones. Each render now keeps half, quarter, eighth and sixteenth size copies, made once (stepwise, high quality) when
+   first needed, and a hull draws from the smallest copy still larger than it is on screen, so it looks the same (smoother if anything) for far less work. */
+function sprMip(art, dw) { if (!(dw > 0) || art.width < 96) return art; let f = 1; while (f < 16 && art.width / (f * 2) >= dw * 1.2) f *= 2; if (f === 1) return art;
+  if (art._mipW !== art.width || art._mipG !== !!art._cg) { art._mip = {}; art._mipW = art.width; art._mipG = !!art._cg; } // re-made after a resize or the card grade
+  let c = art._mip[f]; if (c) return c;
+  try { let src = art, s = 1; while (s < f) { s *= 2; const n = document.createElement("canvas"); n.width = Math.max(1, Math.round(art.width / s)); n.height = Math.max(1, Math.round(art.height / s)); const x = n.getContext("2d"); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; x.drawImage(src, 0, 0, n.width, n.height); if (src !== art && !Object.values(art._mip).includes(src)) { src.width = src.height = 0; } src = n; }
+    return (art._mip[f] = src); } catch (e) { return art; } }
 function drawSide(ctx, k, x, y, L, accent, face, glow) {
   // realistic baked render when WebGL is available; the vector drawing below is the fallback
-  if (SH[k] || AL[k]) { const art = shipArtSoon(k, accent, "side"); accent = String(accent).split("@")[0]; if (art) { const w = L * (DRAWK[k] || (AL[k] ? 2 : 1.8)), h = w / 2; ctx.save(); ctx.translate(x, y); ctx.scale(face, 1); ctx.drawImage(art, -w / 2, -h / 2, w, h); ctx.restore(); return; } }
+  if (SH[k] || AL[k]) { let art = shipArtSoon(k, accent, "side"); accent = String(accent).split("@")[0]; if (art) { const w = L * (DRAWK[k] || (AL[k] ? 2 : 1.8)), h = w / 2; let sc = 1; try { const m = ctx.getTransform(); sc = Math.hypot(m.a, m.b); } catch (e) {} art = sprMip(art, w * sc); ctx.save(); ctx.translate(x, y); ctx.scale(face, 1); ctx.drawImage(art, -w / 2, -h / 2, w, h); ctx.restore(); return; } }
   ctx.save(); ctx.translate(x, y); ctx.scale(face * L / 100, L / 100);
   const P = (pts, fill) => { ctx.beginPath(); ctx.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]); ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); };
   const alien = isAlien(k);
@@ -5286,7 +5295,11 @@ CRUMBS = { open: true, t0: Date.now(), ev: [] };
 function crumbSave() { try { localStorage.setItem(CRUMB_K, JSON.stringify(CRUMBS)); } catch (e) {} }
 function crumb(msg) { CRUMBS.open = true; CRUMBS.ev.push([Date.now(), String(msg).slice(0, 160)]); /* v178: 160, room for an error's stack line or a stress-test result */ if (CRUMBS.ev.length > 24) CRUMBS.ev.splice(0, CRUMBS.ev.length - 24); crumbSave(); }
 function crumbBeat() { const W = typeof G3 !== "undefined" ? G3 : null, mem = performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1e6) + " MB" : "";
-  CRUMBS.beat = { v: typeof GAME_V !== "undefined" ? GAME_V : 0, t: Date.now(), view, battle: !!battle, demo: !!G.cubeDemo, dist: W && W.cam ? Math.round(W.cam.dist) : null, fps: frame.ema ? Math.round(1000 / frame.ema) : null, pr: W && W.renderer ? +W.renderer.getPixelRatio().toFixed(2) : null, mem, gl: G.glLost || 0, calls: W && W.renderer ? W.renderer.info.render.calls : null, tex: W && W.renderer ? W.renderer.info.memory.textures : null, geo: W && W.renderer ? W.renderer.info.memory.geometries : null, art: (() => { try { return STU && STU.cache ? Object.keys(STU.cache).length : null; } catch (e) { return null; } })(), sheet: (() => { try { return sheet ? sheet.type : null; } catch (e) { return null; } })(), dpr: +(devicePixelRatio || 1).toFixed(2), w: innerWidth, h: innerHeight }; CRUMBS.open = true; crumbSave(); }
+  CRUMBS.beat = { v: typeof GAME_V !== "undefined" ? GAME_V : 0, t: Date.now(), view, battle: !!battle, demo: !!G.cubeDemo, dist: W && W.cam ? Math.round(W.cam.dist) : null, fps: frame.ema ? Math.round(1000 / frame.ema) : null, pr: W && W.renderer ? +W.renderer.getPixelRatio().toFixed(2) : null, mem, gl: G.glLost || 0, calls: W && W.renderer ? W.renderer.info.render.calls : null, tex: W && W.renderer ? W.renderer.info.memory.textures : null, geo: W && W.renderer ? W.renderer.info.memory.geometries : null, art: (() => { try { return STU && STU.cache ? Object.keys(STU.cache).length : null; } catch (e) { return null; } })(), sheet: (() => { try { return sheet ? sheet.type : null; } catch (e) { return null; } })(), dpr: +(devicePixelRatio || 1).toFixed(2), w: innerWidth, h: innerHeight, bt: (() => { try { const b = battle; if (!b) return null; const S0 = studio(); return { n: (b.Q || []).length, sp: b.paused ? 0 : b.speed, t: +(b.simT || 0).toFixed(1), end: b.end, qs: b.qs, tier: b.tier, lo: b.lowFx ? 1 : 0, fx: (b.fire || []).length + (b.fx || []).length + (b.parts || []).length + (b.debris || []).length + (b.pend || []).length, err: b.errs || 0, art: S0 && S0.orderSide ? S0.orderSide.length : null, live: ART_LIVE.size, q: ART_Q.length, cv: (() => { const c = $("#bcv"); return c ? c.width + "x" + c.height : null; })() }; } catch (e) { return null; } })() }; CRUMBS.open = true; crumbSave(); } /* v260: the battle's own state (squadrons, speed, quality, effects, hull pictures) goes with every heartbeat */
+/* v260 errors after start-up are recorded too (the first few distinct ones a session), so a crash report says what failed, not only what the player tapped */
+const ERR_SEEN = new Set(); function errCrumb(m) { try { m = String(m || "error").slice(0, 140); if (ERR_SEEN.has(m) || ERR_SEEN.size >= 8) return; ERR_SEEN.add(m); crumb("error: " + m); } catch (e) {} }
+addEventListener("error", e => { if (window.__booted) errCrumb((e.message || "script error") + (e.lineno ? " @" + e.lineno : "")); });
+addEventListener("unhandledrejection", e => { if (window.__booted) { const r = e.reason; errCrumb("promise: " + (r && (r.message || r.code) || r)); } });
 setInterval(() => { try { if (!document.hidden) crumbBeat(); } catch (e) {} }, 4000);
 document.addEventListener("visibilitychange", () => { if (document.hidden) { CRUMBS.open = false; crumbSave(); } else { CRUMBS.open = true; crumbSave(); } });
 addEventListener("pagehide", () => { CRUMBS.open = false; crumbSave(); });
@@ -8000,7 +8013,11 @@ function studio() {
 function cachePut(S, key, val) {
   S.cache[key] = val; if (!val || !val.getContext) return val;
   const side = key.endsWith("|side"), ord = side ? (S.orderSide || (S.orderSide = [])) : (S.order || (S.order = [])); ord.push(key); // v66: battle sprites keep their own 96 slots, so card art never evicts them mid-fight
-  while (ord.length > (side ? (IOS ? 40 : MOBILE ? 56 : 96) : IOS ? 32 : 48)) /* v229: iOS keeps fewer cached ship pictures */ { /* v83: phones keep fewer large battle sprites (memory pressure was crashing them) */ const old = ord.shift(), c = S.cache[old]; if (c && c.getContext && c !== val) { c.width = c.height = 0; } delete S.cache[old]; }
+  /* v260 a battle never evicts its own hulls. The simulator's 10 vs 10 (72 squadrons, 44+ hull pictures) overflowed the iPhone's 40 slots, so every
+     frame a hull was thrown away and baked again (WebGL render, GPU readback and a new canvas, 2 to 3 a second, without end): the stutter and the
+     crash after "battle speed 2x · 72 stacks". Hulls drawn in the open battle are pinned; only pictures it is not using are evicted, and if it uses
+     more than the slots the cache grows for that battle and shrinks back once it closes. A battle hull picture is 448×224 (0.4 MB). */
+  while (ord.length > (side ? (IOS ? 48 : MOBILE ? 64 : 96) : IOS ? 32 : 48)) /* v229: iOS keeps fewer cached ship pictures */ { /* v83: phones keep fewer large battle sprites (memory pressure was crashing them) */ const i = side && ART_LIVE.size ? ord.findIndex(k2 => !ART_LIVE.has(k2) && k2 !== key) : 0; if (i < 0) break; const old = ord.splice(i, 1)[0], c = S.cache[old]; if (c && c.getContext && c !== val) { c.width = c.height = 0; c._mip = null; } delete S.cache[old]; }
   return val;
 }
 function shipMats(accent) {
@@ -8986,8 +9003,9 @@ function researchArt(k, L) {
 /* bake portraits one per frame so opening a tab never stalls; each canvas fills in as its render is ready */
 const ART_Q = []; let artBusy = false, ART_PEND = new Set();
 /* ship art without stalls: returns the baked image if ready, otherwise queues it (one bake per frame) and the caller draws the vector ship meanwhile */
+const ART_LIVE = new Set(); // v260 the hull pictures the open battle draws (pinned in the cache until it closes)
 function shipArtSoon(k, accent, view) {
-  const S = studio(); if (!S) return null; const key = k + "|" + accent + "|" + view;
+  const S = studio(); if (!S) return null; const key = k + "|" + accent + "|" + view; if (battle && view === "side") ART_LIVE.add(key);
   if (S.cache[key] !== undefined) return S.cache[key];
   if (!ART_PEND.has(key)) { ART_PEND.add(key); queueArt({ isConnected: true }, () => shipArt(k, accent, view), () => {}); }
   return null;
@@ -13772,7 +13790,7 @@ function finishBattle() {
     <div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost wide" data-act="breplay">Watch again</button><button class="btn wide" data-act="bdetail" data-id="${r.id}">Full report</button><button class="btn ghost wide" data-act="bclose">Close</button></div></div>`;
   battleCtl();
 }
-function closeBattle() { if (battle) crumb("battle closed"); gpuNap(false); battle = null; try { SFX.stopAll(); } catch (e) {} const w = $("#battle"); if (w) { if (reduced) w.remove(); else { w.id = ""; w.querySelectorAll("[id]").forEach(e => e.removeAttribute("id")); w.classList.add("closing"); setTimeout(() => w.remove(), 230); } } flushSay(); }
+function closeBattle() { if (battle) crumb("battle closed"); ART_LIVE.clear(); gpuNap(false); battle = null; try { SFX.stopAll(); } catch (e) {} const w = $("#battle"); if (w) { if (reduced) w.remove(); else { w.id = ""; w.querySelectorAll("[id]").forEach(e => e.removeAttribute("id")); w.classList.add("closing"); setTimeout(() => w.remove(), 230); } } flushSay(); }
 
 /* ---------- animation loop ---------- */
 /* phones and tablets: when nobody has touched the screen for 4 seconds (and no battle is playing) the 3D views drop to 30 fps,
@@ -13783,7 +13801,7 @@ function idleSkip(t) { if (!MOBILE || battle || gfxTarget() > 60 || (view !== "g
 /* v83: if a battle frame throws, the canvases are reset (a half-drawn frame can leave transforms and save states behind), the
    effects step down a tier, and the replay carries on; after many errors in a row it switches to low effects */
 function battleErr(e) {
-  const b = battle; if (!b) return; b.errs = (b.errs || 0) + 1; if (!battleErr.seen) { battleErr.seen = 1; console.warn("battle frame error", e); }
+  const b = battle; if (!b) return; b.errs = (b.errs || 0) + 1; if (!battleErr.seen) { battleErr.seen = 1; console.warn("battle frame error", e); } errCrumb("battle frame: " + (e && e.message) + " " + String((e && e.stack) || "").split("\n")[1]); // v260: recorded for the crash report, not only skipped
   for (const c of [$("#bcv"), b.fxc]) { if (!c) continue; const x = c.getContext("2d"); if (x.reset) x.reset(); else { x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = "source-over"; } }
   b.tier = Math.min(2, (b.tier || 0) + 1); if (b.errs > 20 && !b.lowFx) { b.lowFx = true; battleCtl(); }
 }
