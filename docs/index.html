@@ -707,8 +707,52 @@ canvas.dthumb{display:block}
 .chatbar .cbt{animation:cbIn .45s ease}@keyframes cbIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .tray-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:12px}.tray-grid .ti{padding:10px 4px;background:rgba(85,214,232,.06);border:1px solid rgba(85,214,232,.18);font-size:11px}.tray-grid .ti .tic{height:28px}
 /* factions */
-.facs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fac{display:flex;flex-direction:column;gap:4px;padding:8px;border-radius:12px;border:1px solid color-mix(in srgb,var(--fc) 45%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--fc) 12%,#07131e),#07131e);color:var(--text);text-align:left;cursor:pointer}
-.fac canvas{width:100%;height:78px;border-radius:8px;background:#03070d}.fac b{font-family:var(--f-display);color:var(--fc);font-size:13px}.fac small{font-size:11px;color:var(--muted);line-height:1.35}.fac.on{box-shadow:0 0 0 2px var(--fc)}
+/* v249 faction screen: a neon-framed hangar panel with painted faction cards (art/faction/). Shapes are cut with clip-path; the glow is a separate blurred layer so nothing is re-filtered while the art animates */
+#sheetwrap .sheet.facsh{padding:14px 10px calc(14px + env(safe-area-inset-bottom,0px));gap:8px;border-top:0;background:radial-gradient(90% 40% at 50% 0,#0f3a6e 0,transparent 70%),linear-gradient(180deg,#071a33,#020713)!important}
+.facf{--fl:#37b6ff;position:relative;padding:2px;background:linear-gradient(180deg,#7fdcff,#1865b8 22%,#10407f 70%,#39a6ff);clip-path:polygon(18px 0,calc(100% - 18px) 0,100% 18px,100% calc(100% - 18px),calc(100% - 18px) 100%,18px 100%,0 calc(100% - 18px),0 18px)}
+.facin{position:relative;overflow:hidden;padding:0 12px 14px;clip-path:polygon(17px 0,calc(100% - 17px) 0,100% 17px,100% calc(100% - 17px),calc(100% - 17px) 100%,17px 100%,0 calc(100% - 17px),0 17px);background:radial-gradient(70% 45% at 85% 12%,rgba(45,110,210,.34),transparent 72%),radial-gradient(60% 40% at 10% 60%,rgba(30,60,150,.26),transparent 72%),linear-gradient(180deg,#061429,#030a18)}
+.facstars{position:absolute;inset:0;pointer-events:none;opacity:.8;background-image:radial-gradient(1px 1px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 34% 7%,#bfe6ff,transparent),radial-gradient(1.4px 1.4px at 62% 14%,#fff,transparent),radial-gradient(1px 1px at 78% 26%,#d6f1ff,transparent),radial-gradient(1.2px 1.2px at 91% 9%,#fff,transparent),radial-gradient(1px 1px at 48% 21%,#9fd8ff,transparent),radial-gradient(1px 1px at 22% 30%,#fff,transparent),radial-gradient(1px 1px at 96% 62%,#bfe6ff,transparent),radial-gradient(1px 1px at 3% 74%,#fff,transparent);animation:facTw 4.5s ease-in-out infinite alternate}
+@keyframes facTw{from{opacity:.45}to{opacity:1}}
+.factop{position:relative;display:flex;align-items:flex-start;justify-content:space-between;min-height:44px;margin:0 -12px}
+.factab{display:inline-block;padding:8px 32px 8px 22px;background:linear-gradient(180deg,#14427c,#071f43);clip-path:polygon(0 0,100% 0,calc(100% - 20px) 100%,0 100%);box-shadow:inset 0 -2px 0 #4cc3ff}.factab span{display:block;font:800 clamp(15px,3.2vw,21px)/1.1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:#e8f2fa;background:linear-gradient(180deg,#fff 12%,#c8d7e6 48%,#8499b0 54%,#eef6fc 92%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sheet .facx{position:absolute;right:0;top:0;width:52px;height:46px;border:0;padding:0;display:grid;place-items:center;color:#f2fbff;font-size:23px;line-height:1;cursor:pointer;background:linear-gradient(180deg,#1a5ca8,#08234a);clip-path:polygon(16px 0,100% 0,100% 100%,0 100%,0 16px);box-shadow:inset 0 0 0 2px #45c0ff,inset 0 0 18px rgba(70,190,255,.7);text-shadow:0 0 10px #8fdcff}
+.sheet .facx:active{filter:brightness(1.4)}
+.fachd{position:relative;padding:8px 2px 12px;margin-bottom:12px}.fachd::after{content:"";position:absolute;left:-12px;right:-12px;bottom:0;height:1px;background:linear-gradient(90deg,transparent,#2f9fe8 18%,#b8ecff 50%,#2f9fe8 82%,transparent);box-shadow:0 0 8px #3fb8ff}
+.sheet .fachd h2{font:700 clamp(22px,4.4vw,31px)/1.12 var(--f-display);letter-spacing:.015em;color:#f2fbff;text-shadow:0 0 16px rgba(120,210,255,.55)}
+.fachd p{margin:5px 0 0;font-size:clamp(14px,2.2vw,16px);line-height:1.35;color:#dcecf8}.fachd .gem{color:#fff;font-weight:600;white-space:nowrap}.fachd .gem i{font-style:normal;color:#58c8ff;text-shadow:0 0 8px #58c8ff}
+.facs{position:relative;display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:560px){.facs{grid-template-columns:1fr 1fr}}
+.fpk{--cc:14px;position:relative;display:block;width:100%;padding:0;border:0;background:none;color:#eef6fb;text-align:left;cursor:pointer;-webkit-appearance:none;appearance:none;transition:transform .16s ease}
+.fpk[data-f=terran]{--fc:#20e4ff;--fd:#06294a}.fpk[data-f=solar]{--fc:#ffc23a;--fd:#352004}.fpk[data-f=nyx]{--fc:#ff2a3c;--fd:#4a0710}.fpk[data-f=verdant]{--fc:#4dff7a;--fd:#06361f}
+@media (color-gamut:p3){@supports (color:color(display-p3 1 1 1)){.fpk[data-f=terran]{--fc:color(display-p3 .1 .9 1)}.fpk[data-f=solar]{--fc:color(display-p3 1 .76 .12)}.fpk[data-f=nyx]{--fc:color(display-p3 1 .1 .17)}.fpk[data-f=verdant]{--fc:color(display-p3 .25 1 .42)}}}
+.fpk:active{transform:scale(.975)}
+.fcglow{position:absolute;inset:-3px;opacity:.5;filter:blur(7px);pointer-events:none}.fcglow::before{content:"";position:absolute;inset:0;background:var(--fc);clip-path:polygon(var(--cc) 0,calc(100% - var(--cc)) 0,100% var(--cc),100% calc(100% - var(--cc)),calc(100% - var(--cc)) 100%,var(--cc) 100%,0 calc(100% - var(--cc)),0 var(--cc))}
+.fcedge{position:relative;display:block;padding:2px;background:var(--fc);clip-path:polygon(var(--cc) 0,calc(100% - var(--cc)) 0,100% var(--cc),100% calc(100% - var(--cc)),calc(100% - var(--cc)) 100%,var(--cc) 100%,0 calc(100% - var(--cc)),0 var(--cc))}
+.fcbody{position:relative;display:block;overflow:hidden;background:#020814;clip-path:polygon(13px 0,calc(100% - 13px) 0,100% 13px,100% calc(100% - 13px),calc(100% - 13px) 100%,13px 100%,0 calc(100% - 13px),0 13px)}
+.fcbody::after{content:"";position:absolute;inset:4px;border:1px solid color-mix(in srgb,var(--fc) 65%,transparent);pointer-events:none;clip-path:polygon(12px 0,calc(100% - 12px) 0,100% 12px,100% calc(100% - 12px),calc(100% - 12px) 100%,12px 100%,0 calc(100% - 12px),0 12px)}
+.fcscene{position:relative;display:block;aspect-ratio:3.1;overflow:hidden;background:var(--fd)}
+.fcscene img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;transform:scale(1.01);animation:facFloat 9s ease-in-out infinite alternate;animation-delay:calc(var(--i)*-2.3s)}
+@keyframes facFloat{from{transform:scale(1.01) translate3d(-.4%,.5%,0)}to{transform:scale(1.035) translate3d(.4%,-.6%,0)}}
+.fcscene::after{content:"";position:absolute;left:0;right:0;bottom:0;height:22%;background:linear-gradient(180deg,transparent,#020814);pointer-events:none}
+.fcsheen{position:absolute;top:-10%;bottom:-10%;left:0;width:34%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.2) 45%,color-mix(in srgb,var(--fc) 40%,#fff) 50%,rgba(255,255,255,.14) 56%,transparent);opacity:.75;mix-blend-mode:screen;transform:translate3d(-130%,0,0) skewX(-14deg);animation:facSheen 7.5s ease-in-out infinite;animation-delay:calc(var(--i)*1.7s);pointer-events:none}
+@keyframes facSheen{0%,62%{transform:translate3d(-130%,0,0) skewX(-14deg)}100%{transform:translate3d(330%,0,0) skewX(-14deg)}}
+.fcinfo{position:relative;display:grid;grid-template-columns:clamp(68px,12vw,82px) 1fr;gap:10px;align-items:center;min-height:104px;padding:6px 14px 13px 11px;background:radial-gradient(70% 90% at 12% 50%,color-mix(in srgb,var(--fc) 26%,transparent),transparent 72%),linear-gradient(180deg,#020814,color-mix(in srgb,var(--fd) 62%,#020814))}
+.fccrest{display:block;width:100%;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 0 7px color-mix(in srgb,var(--fc) 75%,transparent));pointer-events:none}
+.fctxt{display:block;min-width:0;align-self:start;padding-top:3px}.fctxt b{display:block;font:700 clamp(18px,3vw,21px)/1.15 var(--f-display);color:var(--fc);text-shadow:0 0 12px color-mix(in srgb,var(--fc) 72%,transparent)}
+.fctxt small{display:block;margin-top:4px;font-size:clamp(13.5px,2vw,15px);line-height:1.3;color:#e8f1f7}
+.fcsel{position:absolute;left:0;top:0;z-index:3;display:flex;align-items:center;gap:6px;padding:8px 30px 8px 16px;font:800 14px/1 var(--f-display);letter-spacing:.09em;color:#fff;background:linear-gradient(180deg,color-mix(in srgb,var(--fc) 92%,#fff),color-mix(in srgb,var(--fc) 72%,#000));clip-path:polygon(var(--cc) 0,100% 0,calc(100% - 18px) 100%,0 100%,0 var(--cc));text-shadow:0 1px 2px rgba(0,0,0,.65)}
+.fpk.on .fcglow{opacity:.85;filter:blur(10px);inset:-5px;animation:facPulse 2.2s ease-in-out infinite alternate}
+@keyframes facPulse{from{opacity:.55}to{opacity:1}}
+.fpk.on .fcedge{background:linear-gradient(180deg,color-mix(in srgb,var(--fc) 72%,#fff),var(--fc))}
+.fpk.on .fcinfo{background:radial-gradient(70% 100% at 14% 50%,color-mix(in srgb,var(--fc) 42%,transparent),transparent 74%),linear-gradient(180deg,#020814,color-mix(in srgb,var(--fd) 92%,var(--fc) 8%))}
+.fcflash{position:absolute;inset:0;z-index:4;opacity:0;background:radial-gradient(circle at 50% 38%,#fff,var(--fc) 34%,transparent 74%);pointer-events:none}
+.facs.picking .fpk:not(.pick){opacity:.35;transition:opacity .25s ease}.facs.picking{pointer-events:none}
+.fpk.pick{z-index:2;animation:facPop .52s cubic-bezier(.2,.9,.3,1) both}.fpk.pick .fcflash{animation:facFlash .52s ease-out both}.fpk.pick .fcglow{opacity:1;filter:blur(14px);animation:none}
+@keyframes facPop{0%{transform:scale(.97)}40%{transform:scale(1.04)}100%{transform:scale(1.015)}}
+@keyframes facFlash{0%{opacity:0}22%{opacity:.95}100%{opacity:0}}
+.sheet.facsh .sbk{margin:0 -10px calc(-14px - env(safe-area-inset-bottom,0px));bottom:calc(-14px - env(safe-area-inset-bottom,0px));padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,transparent,#020713 34%)}
+.sheet.facsh .sbkb{flex:0 0 auto;min-width:clamp(170px,32%,250px);padding:0 28px;min-height:50px;border:0;font-weight:700;font-size:19px;color:#fff;background:linear-gradient(180deg,#1b74c9,#0a2f66);box-shadow:inset 0 0 0 2px #4cc6ff,inset 0 0 18px rgba(80,190,255,.65);clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 14px,100% calc(100% - 14px),calc(100% - 14px) 100%,14px 100%,0 calc(100% - 14px),0 14px)}
+@media (prefers-reduced-motion:reduce){.facstars,.fcscene img,.fcsheen,.fpk.on .fcglow,.fpk.pick,.fpk.pick .fcflash{animation:none}.fcsheen{display:none}}
 /* ranks, profiles, friends */
 .tier{display:inline-block;padding:1px 7px;border-radius:9px;border:1px solid var(--tc);color:var(--tc);font-family:var(--f-display);font-size:10px;letter-spacing:.05em;vertical-align:middle}
 .lbs{display:flex;flex-direction:column;gap:4px}.lb{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);color:var(--text);text-align:left;font:inherit;cursor:pointer}
@@ -2185,7 +2229,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 248;
+const GAME_V = 249;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -11460,6 +11504,7 @@ function renderSheet() {
   // details pages open full screen; buildings and technologies with a painting use it as the backdrop behind glass panels
   const shEl = w.querySelector(".sheet"), det = sheet.type === "detail", pkey = det ? sheet.kind + "|" + sheet.k + "|" + facOf() : "", pic = det && (ART[sheet.k] || POSTER[pkey]);
   w.classList.toggle("glass", sheet.type === "planets"); /* v239 */
+  if (shEl) shEl.classList.toggle("facsh", sheet.type === "faction"); /* v249 */
   if (shEl) { shEl.classList.toggle("full", det); shEl.classList.toggle("pic", !!pic); shEl.classList.toggle("uart", det && (sheet.kind === "s" || sheet.kind === "d")); shEl.style.setProperty("--dart", pic ? `url("${pic}")` : "none");
     // no painting yet: bake the tall studio poster after the sheet has slid in, then fade it in behind the glass
     if (det && !pic && POSTER[pkey] === undefined) { const want = pkey; setTimeout(() => { if (!sheet || sheet.type !== "detail" || sheet.kind + "|" + sheet.k + "|" + facOf() !== want) return; if (posterOf(sheet.kind, sheet.k)) renderSheet(); }, 380); } }
@@ -13692,10 +13737,14 @@ function factionKit(g, k, M) {
   else if (f === "verdant") { g.scale.z *= 1.12; g.scale.y *= 1.06;
     if (fus) { const { len, r } = fus.userData.fus; for (const s of [1, -1]) { const sail = wingMesh([[len * .1, 0], [-len * .3, 0], [-len * .36, r * 1.5], [-len * .05, r * .8]], .01, M.accent); sail.rotation.x = s > 0 ? -Math.PI / 2 + .5 : Math.PI / 2 - .5; sail.position.set(fus.position.x, 0, s * r * fus.scale.z * .6); g.add(sail); } } }
 }
+/* v249: painted faction cards. The text stays live; the ship scenes and crests are art/faction/<id>.webp and <id>-crest.webp */
 function shFaction() {
   const first = !S.faction, cur = facOf();
-  return `<div class="hd"><div><div class="chapter">${first ? "Choose your people" : "Faction"}</div><h2>${first ? "Which faction do you lead?" : "Change faction"}</h2><p class="note">Your faction sets the look of your ships and buildings. It does not change their stats.${first ? " You can change it later for ◆10." : " Changing costs ◆10."}</p></div>${first ? "" : `<button class="x" data-act="close" aria-label="Close">✕</button>`}</div>
-    <div class="facs">${Object.entries(FACTIONS).map(([k, F]) => `<button class="fac${k === cur && !first ? " on" : ""}" data-act="facPick" data-f="${k}" style="--fc:${F.acc}"><canvas data-ship="battleship" data-fac="${k}" role="img" aria-label="${F.n} battleship"></canvas><b>${F.n}</b><small>${F.d}</small></button>`).join("")}</div>`;
+  return `<div class="facf"><div class="facin"><i class="facstars" aria-hidden="true"></i>
+    <div class="factop"><div class="factab"><span>${first ? "Choose your people" : "Faction"}</span></div>${first ? "" : `<button class="facx" data-act="close" aria-label="Close">✕</button>`}</div>
+    <div class="fachd"><h2>${first ? "Which faction do you lead?" : "Change Faction"}</h2><p>Your faction sets the look of your ships and buildings. It does not change their stats.${first ? ` You can change it later for <span class="gem"><i>◆</i>10</span>.` : ` Changing costs <span class="gem"><i>◆</i>10</span>.`}</p></div>
+    <div class="facs">${Object.entries(FACTIONS).map(([k, F], i) => { const on = k === cur && !first; return `<button class="fpk${on ? " on" : ""}" data-act="facPick" data-f="${k}" style="--i:${i}"${on ? ' aria-current="true"' : ""}><span class="fcglow"></span><span class="fcedge"><span class="fcbody"><span class="fcscene"><img src="art/faction/${k}.webp" alt="${F.n} battleship" decoding="async"><i class="fcsheen"></i></span><span class="fcinfo"><img class="fccrest" src="art/faction/${k}-crest.webp" alt="" decoding="async"><span class="fctxt"><b>${F.n}</b><small>${F.d}</small></span></span><span class="fcflash"></span></span></span>${on ? `<span class="fcsel">✓ SELECTED</span>` : ""}</button>`; }).join("")}</div>
+  </div></div>`;
 }
 
 /* ---------- records, PvP score and ranks ---------- */
@@ -14604,9 +14653,15 @@ const ACT = {
       advance(now()); if (!pay(c)) return toast("Not enough resources.", "warn"); paid = true; await ref.update({ station: L + 1 }); a.station = L + 1; dirty(); SFX.build(); toast(`Space Station Lv.${L + 1}: room for ${allyCap(a)} members.`, "win"); render(true);
     } catch (e) { if (paid) refundRes(c); toast("Couldn't upgrade the station.", "warn"); render(true); } },
   faction: () => openSheet({ type: "faction" }),
-  facPick: d => { const f = d.f; if (!FACTIONS[f]) return; const first = !S.faction;
-    if (!first) { if (f === S.faction) return closeSheet(); if ((S.shards || 0) < 10) return toast("Changing faction costs ◆10.", "warn"); S.shards -= 10; }
-    S.faction = f; dirty(); store.lastPlayer = ""; syncPlayer(); closeSheet(); if (C3) C3.fac = null; toast(`You lead the ${FACTIONS[f].n}.`, "win"); render(true); setTimeout(flushSay, 80); },
+  facPick: d => { const f = d.f; if (!FACTIONS[f] || G.facBusy) return; const first = !S.faction;
+    if (!first) { if (f === S.faction) return closeSheet(); if ((S.shards || 0) < 10) return toast("Changing faction costs ◆10.", "warn"); }
+    const commit = () => { G.facBusy = 0; if (!sheet || sheet.type !== "faction") return; /* closed during the flare: nothing is chosen or charged */
+      if (!first) { if ((S.shards || 0) < 10) return toast("Changing faction costs ◆10.", "warn"); S.shards -= 10; }
+      S.faction = f; dirty(); store.lastPlayer = ""; syncPlayer(); closeSheet(); if (C3) C3.fac = null; toast(`You lead the ${FACTIONS[f].n}.`, "win"); render(true); saveSoon(); setTimeout(flushSay, 80); };
+    /* v249: the chosen card flares with a chord before the sheet closes */
+    SFX.rune({ terran: "water", solar: "fire", nyx: "spirit", verdant: "earth" }[f], true); try { navigator.vibrate && navigator.vibrate([20, 40, 30]); } catch (x) {}
+    const c = $(`#sheetwrap .fpk[data-f="${f}"]`); if (reduced || !c) return commit();
+    G.facBusy = 1; c.classList.add("pick"); c.parentElement.classList.add("picking"); setTimeout(commit, 540); },
   labsAll: d => { sheet.all = d.v === "1"; renderSheet(); },
   musicTrack: d => { const v = d.v === "file" ? "file" : "space"; if (AU.track === v) return; AU.track = v; saveAudioPrefs(); unlockAudio();
     if (AU.ctx) { if (v === "file") startFileTrack(); else genSpace(); applyAudio(); } render(true); },

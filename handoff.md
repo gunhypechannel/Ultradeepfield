@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-02 (America/Phoenix). Current game version: **v248** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v57**.
+Last updated: 2026-11-02 (America/Phoenix). Current game version: **v249** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v58**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -96,3 +96,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v246:** the base view no longer shows the planet slider (switch with the title arrows or the planet list). The Academy and Advisor are easy to put away for 5 minutes: a "Hide 5 min" button in the panel, a ✕ on the minimised pill (`.cpx`), and a ✕ on the pointing hand's label (`.tgx`, hides the guide and the Academy); all come back on their own after 5 minutes.
 - **v247:** Research Center card → Research tab opens the research category cards (Build › Research); Menu → Research opens the long list sheet (`labs`).
 - **v248:** Elements page remastered (`runeWheel`): five carved rune wheels (stone tiles with rune glyphs `RUNE_G`, lit when socketed) in a 2-1-2 layout over a space panel, each with an animated aura (fire flicker, water splash drops, spirit swirl, earth rocks, air leaves). Socketing plays a pop-in, a shockwave and `SFX.rune` (stone knock plus a shimmer in the element's key; a chord and gong for a full ring) and a short vibration.
+- **v249:** faction screen remastered (`shFaction`, CSS `.facf`/`.fpk`; `.fcard` is taken by the Fleets tab). Ship scenes and crests in `docs/art/faction/<id>.webp` and `<id>-crest.webp` were cut from the user's reference picture, upscaled 4x with Real-ESRGAN x4plus (run through onnxruntime) and colour-graded. Text stays live. Two columns from 560 px wide, one below. Wide-gamut neon on P3 screens; floating art, a light sweep and a pulsing glow on the selected card. Picking a card flares for 0.54 s with `SFX.rune` before it commits and charges (`G.facBusy` blocks double taps; closing during the flare charges nothing). Added `saveSoon()` so the choice saves at once.
