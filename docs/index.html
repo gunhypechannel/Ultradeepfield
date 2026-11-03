@@ -2236,7 +2236,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 254;
+const GAME_V = 255;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13016,12 +13016,13 @@ function drawBattleFlags(ctx, b, scr, pos, W, H, t, real, T, lo, d) {
     if (sw) { const tx = sx / sw, ty = sy / sw; e.dead = null; if (e.x == null) { e.x = tx; e.y = ty; } const f = reduced ? 1 : Math.min(1, real / 1300); e.x += (tx - e.x) * f; e.y += (ty - e.y) * f; }
     else { if (e.x == null) continue; if (e.dead == null) { e.dead = t; if (!gone) { for (const [ox, oy, big] of [[0, 0, 1], [-.5, .06, 0], [.45, -.05, 0], [-.2, -.08, 0]]) b.booms.push({ x: e.x + ox * L0, y: e.y + oy * L0, t: t + Math.abs(ox) * 260, big }); b.shake = Math.max(b.shake, 8 * d); } } }
     const fade = e.dead == null ? 1 : clamp(1 - (t - e.dead) / (gone ? 500 : 950), 0, 1); if (fade <= 0) continue;
-    const tf = foeW ? (foeX / foeW >= e.x ? 1 : -1) : (e.fa != null && e.fa < 0 ? -1 : sd === "a" ? 1 : -1); e.fa = e.fa == null ? tf : e.fa + (tf - e.fa) * Math.min(1, real / 1500); const fsc = Math.abs(e.fa) < .12 ? (e.fa < 0 ? -.12 : .12) : e.fa, face = fsc >= 0 ? 1 : -1;
+    if (e.fa == null) e.fa = foeW ? (foeX / foeW >= e.x ? 1 : -1) : sd === "a" ? 1 : -1; const face = e.fa, fsc = face, ppx = e.px == null ? e.x : e.px; e.px = e.x; /* v255 it holds its heading and backs up on retros instead of flipping */ e.vx = (e.vx || 0) + ((e.x - ppx) / Math.max(1, real) - (e.vx || 0)) * Math.min(1, real / 300); e.rv = (e.rv || 0) + ((e.vx * face < -.0025 * L0 / 100 ? 1 : 0) - (e.rv || 0)) * Math.min(1, real / 420); const frv = e.rv;
     const x = e.x - face * L0 * .1, y = e.y + Math.sin(t * .0011 + e.col) * L0 * .018 - L0 * .06, pul = .5 + .5 * Math.sin(t * .0028 + e.col);
     ctx.save(); ctx.globalAlpha = fade;
     if (!lo) { ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = (.3 + .14 * pul) * fade; ctx.drawImage(glowSprite(e.rgba), x - L0 * 1.25, y - L0 * .62, L0 * 2.5, L0 * 1.24); ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = fade; }
     ctx.translate(x, y); ctx.scale(fsc, 1); ctx.rotate(Math.sin(t * .0007 + e.col) * .012); ctx.drawImage(art, -L0, -L0 / 2, L0 * 2, L0);
-    ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = (.75 + .25 * Math.sin(t * .03 + e.col)) * fade; for (const oy of [-.045, .03, .075]) { ctx.drawImage(glowSprite(e.rgba), -L0 * 1.42, L0 * oy - L0 * .05, L0 * .6, L0 * .1); ctx.drawImage(glowSprite("rgba(255,255,255,1)"), -L0 * 1.02, L0 * oy - L0 * .022, L0 * .14, L0 * .044); }
+    ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = (.75 + .25 * Math.sin(t * .03 + e.col)) * fade; const plK = 1 - frv * .72; for (const oy of [-.045, .03, .075]) { const pL = L0 * .6 * plK; ctx.drawImage(glowSprite(e.rgba), -L0 * .82 - pL, L0 * oy - L0 * .05, pL, L0 * .1); ctx.drawImage(glowSprite("rgba(255,255,255,1)"), -L0 * 1.02, L0 * oy - L0 * .022, L0 * .14, L0 * .044); }
+    if (frv > .03) for (const oy of [-.035, .035]) { ctx.globalAlpha = .95 * frv * fade; const rL = L0 * .26 * frv; ctx.drawImage(glowSprite(e.rgba), L0 * .72, L0 * oy - L0 * .022, rL * 2, L0 * .044); ctx.drawImage(glowSprite("rgba(255,255,255,1)"), L0 * .72, L0 * oy - L0 * .01, rL * .7, L0 * .02); }
     ctx.restore();
     if (e.dead == null) { const fz = Math.max(11 * d, L0 * .1); ctx.save(); ctx.font = `700 ${fz}px ${getComputedStyle(document.documentElement).getPropertyValue("--f-display") || "sans-serif"}`; ctx.textAlign = "center"; ctx.fillStyle = e.rgba; ctx.shadowColor = e.rgba; ctx.shadowBlur = 8 * d; ctx.globalAlpha = .9; ctx.fillText(FACTIONS[e.f].n, x, y + L0 * .34); ctx.restore(); }
     /* v253 the flagship's guns, visual only (no damage, no effect on the result): 5 turrets each hammer one enemy squadron with short bursts. Every couple of
@@ -13296,13 +13297,14 @@ function drawBattle(t) {
       else if (q.role === "turret") drawUnit(ctx, q.k, cx, cy, W * .032, col.main, -1); else drawFortress(ctx, cx, cy, W * .085, t, col.main); }
     else {
       if (dying && b.wreckd && b.wreckd[i]) return; // a capital ship that broke apart is drawn as its wreck
-      const nx = bPos(b, i, T + .5); if (Math.abs(nx.x - p.x) > .35) b.face[i] = nx.x > p.x ? 1 : -1; const face = b.face[i];
+      /* v255 a hull never turns on screen: it used to squash flat and flip through edge-on, which looked like folding in on itself. Each squadron takes its heading from its first advance and keeps it; to go the other way it fires its retro thrusters and backs up */
+      const nx = bPos(b, i, T + .5), lk = b.lk || (b.lk = []); if (!lk[i]) { lk[i] = 1; const n3 = bPos(b, i, T + 3); if (Math.abs(n3.x - p.x) > .2) b.face[i] = n3.x > p.x ? 1 : -1; } const face = b.face[i];
       const L = Math.max(8 * d, clamp(W * .1 * bLen(q.k), 11 * d, W * (BOSSK[q.k] || q.k === "worldbreaker" ? .55 : .3)) * zs), vc = Math.min(busy ? 3 : 6, Math.max(1, visN(q.role, Math.max(n, 1)))), moving = Math.hypot(nx.x - p.x, nx.y - p.y) > .2;
       /* v78 inertia: hulls swing round through edge-on instead of flipping, and bank into climbs and dives along their real flight
          path; heavy hulls turn and bank slowly, so a dreadnought feels massive and a fighter nimble */
-      const heavyT = BIG_R.has(q.role) || bLen(q.k) > .8, fa = b.fa || (b.fa = Q.map((q2, k2) => b.face[k2])), bk = b.bk || (b.bk = Q.map(() => 0));
-      fa[i] += (face - fa[i]) * Math.min(1, real / (heavyT ? 1500 : 360)); bk[i] += (clamp((nx.y - p.y) * (heavyT ? .05 : .12), -.32, .32) * (heavyT ? .4 : 1) - bk[i]) * Math.min(1, real / (heavyT ? 1000 : 280));
-      const fs2 = Math.abs(fa[i]) < .1 ? (fa[i] < 0 ? -.1 : .1) : fa[i], bang = bk[i] * (fa[i] >= 0 ? 1 : -1);
+      const heavyT = BIG_R.has(q.role) || bLen(q.k) > .8, bk = b.bk || (b.bk = Q.map(() => 0)), rvA = b.rv || (b.rv = Q.map(() => 0));
+      bk[i] += (clamp((nx.y - p.y) * (heavyT ? .05 : .12), -.32, .32) * (heavyT ? .4 : 1) - bk[i]) * Math.min(1, real / (heavyT ? 1000 : 280));
+      const fs2 = face, bang = bk[i] * face; rvA[i] += ((moving && (nx.x - p.x) * face < -.12 ? 1 : 0) - rvA[i]) * Math.min(1, real / (heavyT ? 420 : 200)); const rv = rvA[i]; // rv: how hard the retros are firing
       /* v87: fighters and other small craft weave on evasive attack runs (each hull its own rhythm); the hull layout is recorded so shots
          leave from a hull and land on one */
       const small = !heavyT && bLen(q.k) < .55 && !dying, wv = j => small ? Math.sin(t * .0024 + i * 1.7 + j * 2.3) * L * .14 : 0;
@@ -13315,10 +13317,12 @@ function drawBattle(t) {
       if (!lo && BOSSK[q.k] && !dying) { const gc = BOSS_GLOW[q.k] || "120,255,150", pr = .78 + .22 * Math.sin(t * .0021 + i); ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .42 * pr; ctx.drawImage(glowSprite(`rgba(${gc},1)`), cx - L * 1.35, cy - L * .85, L * 2.7, L * 1.7); ctx.globalAlpha = .18 * pr; ctx.drawImage(glowSprite("#ffffff"), cx - L * .5, cy - L * .3, L, L * .6); ctx.restore(); } /* v86: a boss looms in a pulsing aura of its own colour */
       for (let j = vc - 1; j >= 0; j--) { const o = OFFS[j], sz = L * (j ? .8 : 1), sx = cx - face * o[0] * L * .62 + (dying ? (j - 1) * dk * L * .35 : 0), sy = cy + o[1] * L * .5 + wv(j) + (dying ? dk * L * (.12 + j * .08) : 0);
         if (dying) { ctx.save(); ctx.translate(sx, sy); ctx.rotate(dk * (j % 2 ? .9 : -.7)); ctx.translate(-sx, -sy); }
-        ctx.save(); { const ba = bang + (small ? Math.cos(t * .0024 + i * 1.7 + j * 2.3) * .2 * (fa[i] >= 0 ? 1 : -1) : 0); if (ba) { ctx.translate(sx, sy); ctx.rotate(ba); ctx.translate(-sx, -sy); } }
-        if (!lo && !(busy && j > 1)) { /* v83: big fights give plumes to the front two hulls only. v75 engines: a tapered plume with a white-hot core that flickers, longer under thrust */ const ex0 = sx - face * sz * .48, fl = 1 + .22 * Math.sin(t * .031 + i * 2.1 + j), pl = sz * (moving ? .7 : .32) * fl, pw = sz * (moving ? .09 : .07);
+        ctx.save(); { const ba = bang + (small ? Math.cos(t * .0024 + i * 1.7 + j * 2.3) * .2 * face : 0); if (ba) { ctx.translate(sx, sy); ctx.rotate(ba); ctx.translate(-sx, -sy); } }
+        if (!lo && !(busy && j > 1)) { /* v83: big fights give plumes to the front two hulls only. v75 engines: a tapered plume with a white-hot core that flickers, longer under thrust */ const ex0 = sx - face * sz * .48, fl = 1 + .22 * Math.sin(t * .031 + i * 2.1 + j), pl = sz * (moving ? .7 : .32) * fl * (1 - rv * .78), pw = sz * (moving ? .09 : .07) * (1 - rv * .35);
           ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha *= .9; ctx.drawImage(glowSprite(col.gk || (col.gk = `rgba(${col.glow},1)`)), face > 0 ? ex0 - pl * 1.6 : ex0 - pl * .4, sy - pw * 1.6, pl * 2, pw * 3.2);
-          ctx.drawImage(glowSprite("#ffffff"), ex0 - pw * 1.3, sy - pw * 1.3, pw * 2.6, pw * 2.6); ctx.globalAlpha = dying ? 1 - dk : 1; ctx.globalCompositeOperation = "source-over"; }
+          ctx.drawImage(glowSprite("#ffffff"), ex0 - pw * 1.3, sy - pw * 1.3, pw * 2.6, pw * 2.6);
+          if (rv > .03 && !dying) { /* v255 retro thrust: the main drive drops to a glow and paired jets fire forward from the bow, angled a little outward */ const rx = sx + face * sz * .34, rl = sz * .34 * rv * fl, rw = sz * .05; for (const oy of [-.055, .055]) { const ry = sy + oy * sz; ctx.save(); ctx.translate(rx, ry); ctx.rotate(oy * 1.9 * face); ctx.globalAlpha = .95 * rv; ctx.drawImage(glowSprite(col.gk), face > 0 ? -rl * .08 : -rl * 1.92, -rw, rl * 2, rw * 2); ctx.globalAlpha = rv; ctx.drawImage(glowSprite("#ffffff"), face > 0 ? 0 : -rl * .7, -rw * .4, rl * .7, rw * .8); ctx.restore(); } }
+          ctx.globalAlpha = dying ? 1 - dk : 1; ctx.globalCompositeOperation = "source-over"; }
         drawSide(ctx, q.k, sx, sy, sz, b.acc[q.side], fs2, true);
         /* v78 dynamic light: explosions, beams and muzzle flashes light up nearby hulls in their own colour */
         if (!lo && b.tier < 2 && !dying && j === 0 && lights.length) { let I = 0, lr = 0, lg = 0, lb2 = 0; for (const Lt of lights) { const dd = Math.hypot(Lt.x - sx, Lt.y - sy), f2 = Lt.I * Math.max(0, 1 - dd / Lt.r); if (f2 > 0) { I += f2; lr += Lt.c[0] * f2; lg += Lt.c[1] * f2; lb2 += Lt.c[2] * f2; } }
@@ -13408,7 +13412,7 @@ function drawBattle(t) {
           ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .35 * grow; ctx.strokeStyle = col.shot; ctx.lineWidth = Math.max(1, sz * .09); ctx.lineCap = "round";
           ctx.beginPath(); ctx.moveTo(tx + tox, ty + toy); ctx.lineTo(x - cx * sz * .4, y - (vy / vl) * sz * .4); ctx.stroke();
           ctx.globalAlpha = .7 * grow; const gr = sz * .22; ctx.drawImage(glowSprite(col.gk || (col.gk = `rgba(${col.glow},1)`)), x - cx * sz * .45 - gr, y - (vy / vl) * sz * .45 - gr, gr * 2, gr * 2); ctx.restore(); }
-        ctx.save(); ctx.globalAlpha = grow; ctx.translate(x, y); ctx.rotate(ang); ctx.scale(Math.max(.16, Math.abs(cx)) * fc, 1); drawSide(ctx, wk, 0, 0, sz, acc, 1, true); ctx.restore();
+        ctx.save(); ctx.globalAlpha = grow; ctx.translate(x, y); ctx.rotate(Math.atan2(vy, vx)); ctx.scale(1, fc); /* v255 fighters swing round their loop nose-first, never squashed flat */ drawSide(ctx, wk, 0, 0, sz, acc, 1, true); ctx.restore();
         // guns only on the inbound half of each pass, nose toward the target
         const v = (u - .2) / .6, inb = E && u > .2 && u < .8 && !lo && ((v < .42 && v / .42 < .55) || (v >= .58 && (v - .58) / .42 < .55));
         if (inb) { const fp2 = (b.wclk / 170 + k * .29) % 1; if (fp2 < .6) { const dx = ex - x, dy = ey - y, l2 = Math.hypot(dx, dy) || 1, pr2 = fp2 / .6, bx = x + dx * pr2 * .95, by = y + dy * pr2 * .95, ln2 = 7 * d;
