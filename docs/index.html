@@ -2237,7 +2237,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 260;
+const GAME_V = 261;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6440,8 +6440,13 @@ const genComp = n => { n = Math.max(3, n || 6); return { fighter: Math.ceil(n * 
 function mapClash(loc, rep, def) {
   if (!loc || !rep || !rep.start || typeof TH === "undefined") return; const age = now() - (rep.at || now()); if (age > 40000 || age < -5000) return; // only battles happening now
   const youA = !def && (rep.aUids || []).includes(G.me);
+  /* v261 flagships only lead commanders' fleets (players and bots). Cube bosses, space monsters, pirates and the Hive fight without one */
+  const cmd = u => typeof u === "string" && u !== "pirates" && u !== "cube" && u !== "hive" && (u === G.me || !!G.players[u] || isBot(u));
+  const sideCmd = sd => { if (sd === "d" && loc && PB[loc.id]) return null; const ids = sd === "a" ? (rep.aUids || []) : [rep.dUid], L = rep.sim && rep.sim[sd === "a" ? "A" : "D"];
+    return ids.find(cmd) || (Array.isArray(L) ? (L.find(x => cmd(x[5])) || [])[5] : null) || null; };
+  const aC = youA ? G.me : sideCmd("a"), dC = def ? G.me : sideCmd("d"), cFac = u => u === G.me ? facOf() : G.players[u] && FACTIONS[G.players[u].fac] ? G.players[u].fac : isBot(u) ? DEMO_FAC[hash(u) % 4] : playerFac(u); // bots fly a faction of their own
   const ff = loc && PB[loc.id] && S.fleets.find(f => f.xid === loc.id && f.ox != null); /* v259: the battle opens on the side the fleet came from */
-  clashPush({ key: rep.id, loc, age, ang: ff ? (q0 => Math.atan2(ff.oy - q0.z, ff.ox - q0.x))(P3(loc, now())) : null, a: rep.start.a || {}, d: rep.start.d || {}, rounds: (rep.rounds || []).filter(r => r && r.a && r.d), winner: rep.winner, aCol: youA ? 0x55d6e8 : 0xff5a5a, dCol: youA ? 0xff7a3a : 0x55d6e8, rep: rep.id, you: youA ? "a" : "d", aF: youA ? facOf() : rep.aUids && rep.aUids[0] ? playerFac(rep.aUids[0]) : null, dF: youA ? (rep.dUid ? playerFac(rep.dUid) : null) : facOf() });
+  clashPush({ key: rep.id, loc, age, ang: ff ? (q0 => Math.atan2(ff.oy - q0.z, ff.ox - q0.x))(P3(loc, now())) : null, a: rep.start.a || {}, d: rep.start.d || {}, rounds: (rep.rounds || []).filter(r => r && r.a && r.d), winner: rep.winner, aCol: youA ? 0x55d6e8 : 0xff5a5a, dCol: youA ? 0xff7a3a : 0x55d6e8, rep: rep.id, you: youA ? "a" : "d", aF: aC ? cFac(aC) : null, dF: dC ? cFac(dC) : null, aCmd: !!aC, dCmd: !!dC });
 }
 function clashPush(c) { const tn = performance.now(); G.clashes = G.clashes.filter(x => tn - x.t0 < x.dur || x.o); if (G.clashes.some(x => x.key === c.key)) return;
   /* v195: a new clash at the same place takes over: the older one fades out in a second instead of fighting on inside it (two sets of
@@ -6461,7 +6466,7 @@ function drawClashes(W, t, T) {
       const boomT = W.glow.boom || (W.glow.boom = glowTex("255,170,80", 1)), booms = [];
       for (let i = 0; i < 14; i++) { const sp = new TH.Sprite(W.additive(boomT, 0xffffff, 0)); sp.renderOrder = 15; W.scene.add(sp); booms.push({ sp, t0: -1e9 }); }
       const mk = (n, col, hostile, fg) => { const g = fleet3D(W, clashShips(n) || genComp(clashCnt(n)), col, hostile, false, false, fg); g.userData.size = (.75 + Math.min(1.1, Math.log10(clashCnt(n) + 1) * .3)) * .5; W.scene.add(g); return g; };
-      c.o = { ga: mk(c.a, c.aCol, c.you !== "a", c.aF || DEMO_FAC[hash(String(c.key) + "a") % 4]), gd: mk(c.d, c.dCol, c.you === "a", c.dF || DEMO_FAC[hash(String(c.key) + "d") % 4]), /* v258: defenders (Hive, pirates, bots) lead with a flagship too */ bolts, booms, bl: [], la: -1, ld: -1, ended: 0 }; }
+      c.o = { ga: mk(c.a, c.aCol, c.you !== "a", c.aF || (c.aCmd === false ? null : DEMO_FAC[hash(String(c.key) + "a") % 4])), gd: mk(c.d, c.dCol, c.you === "a", c.dF || (c.dCmd === false ? null : DEMO_FAC[hash(String(c.key) + "d") % 4])), /* v258: every commander's side leads with a flagship (v261: not Cube bosses, monsters, pirates or the Hive) */ bolts, booms, bl: [], la: -1, ld: -1, ended: 0 }; }
     const atCube = c.loc === NEXUS, angN = ang + (atCube ? e * .00007 : 0), o = c.o, dx = Math.cos(angN), dz = Math.sin(angN), wob = Math.sin(e * .0011) * (atCube ? 7 : .6); /* v194 strafing runs round the Cube */
     // attackers sweep in during the first 2 s, then hold a firing line; defenders hold in front of the target
     // v178 at the Cube the defenders hold a line just outside its hull (they used to hold 11 units from its centre: inside it)
@@ -7234,7 +7239,7 @@ function synthRounds(a, d, winner) { const out = []; for (let i = 1; i <= 4; i++
 function otherClashes(W, T) {
   for (const v of W.mvL || []) { const m = v.m; if (!["a", "w", "j", "r"].includes(m.m) || T < m.arrive || T - m.arrive > 22000) continue; const loc = tgtById(m.t); if (!loc) continue;
     const a = genComp(m.n), d = genComp(Math.round((m.n || 6) * .8)), winner = m.m === "w" ? (m.win ? "a" : "d") : "a";
-    clashPush({ key: "mv" + v.uid + m.out, loc, age: T - m.arrive, a, d, rounds: synthRounds(a, d, winner), winner, aCol: v.ally ? 0x7be39a : 0xff9a6a, dCol: 0xf0a945, you: null, aF: playerFac(v.uid), dF: null }); } }
+    clashPush({ key: "mv" + v.uid + m.out, loc, age: T - m.arrive, a, d, rounds: synthRounds(a, d, winner), winner, aCol: v.ally ? 0x7be39a : 0xff9a6a, dCol: 0xf0a945, you: null, aF: playerFac(v.uid), dF: null, dCmd: !(loc && PB[loc.id]) }); } }
 /* ---------- v94 outposts on the map: a beacon on every held open orbit, raised with a deploy animation ---------- */
 function outpostsNear(W, T) { const out = [], seen = new Set();
   for (const f of S.fleets) if (f.phase === "gather" && typeof f.nid === "string" && f.nid[0] === "e" && f.gend > T) { out.push({ id: f.nid, uid: G.me, at: f.arrive, until: f.gend, n: sumShips(f.n) }); seen.add(f.nid); }
