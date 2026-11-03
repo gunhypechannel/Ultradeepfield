@@ -2238,7 +2238,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 265;
+const GAME_V = 266;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13315,11 +13315,12 @@ function spawnVolley(b, v) {
      both broadsides that arc out from its flanks and curl in on the target */
   const dn = q.k === "bastion" && !v.bounce, rp = q.k === "dreadnought" && !v.bounce; if (dn) cnt = 1; if (rp) cnt = clamp(Math.round((6 + Math.log2(1 + many) * 1.4) * cap), 6, lo ? 4 : b.Q.length > 60 ? 8 : 16);
   if (heavy || q.role === "capital" || q.role === "titan" || q.role === "cruiser" || q.role === "station") { (b.muz = b.muz || []).push({ s: v.s, t: v.t, big: q.role !== "cruiser", col: shotCol(q.k, side) }); if (b.muz.length > 40) b.muz.shift(); }
-  const icN = v.ic > 0 ? Math.round(cnt * v.ic / (v.ic + v.n + 1e-9)) : 0, tr = rp ? TRAVEL.missile * .95 : dn ? .3 : TRAVEL[wk] || .3, gap = rp ? .03 : mis ? .045 : .07;
-  for (let j = 0; j < cnt; j++) b.fx.push({ t0: v.t + j * gap, t1: v.t + j * gap + tr * (mis || rp ? 1 + (j % 3) * .14 : 1), v, last: j === cnt - 1, first: j === 0, n: cnt, mis: mis || rp, ic: j < icN && j !== cnt - 1, side, off: ((hash(v.t + "|" + j) % 100) / 100 - .5), hv: heavy && !dn ? 1 : 0, sz, j, sw: q.k === "destroyer" && mis && !lo, bs: rp ? (j % 2 ? 1 : -1) : 0, hide: dn ? 1 : 0 }); // v251 sw: a destroyer's Sidewinder
+  const icN = v.ic > 0 ? Math.round(cnt * v.ic / (v.ic + v.n + 1e-9)) : 0, tr = rp ? TRAVEL.missile * .7 : dn ? .3 : TRAVEL[wk] || .3, gap = rp ? .03 : mis ? .045 : .07;
+  for (let j = 0; j < cnt; j++) b.fx.push({ t0: v.t + j * gap, t1: v.t + j * gap + tr * (mis || rp ? 1 + (j % 3) * .14 : 1), v, last: j === cnt - 1, first: j === 0, n: cnt, mis: mis || rp, ic: j < icN && j !== cnt - 1, side, off: ((hash(v.t + "|" + j) % 100) / 100 - .5), hv: heavy && !dn ? 1 : 0, sz, j, sw: q.k === "destroyer" && mis && !lo, bs: rp ? (j % 2 ? 1 : -1) : 0, hide: dn ? 1 : 0, col: rp ? "#ff9a2a" : null }); // v251 sw: a destroyer's Sidewinder
   if (dn) { for (let i = 0; i < 3; i++) b.beams.push({ t0: v.t + i * .06, s: v.s, e: v.e, side, w: clamp(2.3 + Math.log10(1 + many * (q.pow || 1)) * .6, 2.3, 4.6), charge: .2, life: .36, tri: i - 1, dn: 1 });
     const dl = b.beams.filter(m => m.dn); if (dl.length > (b.Q.length > 60 ? 6 : 15)) for (const m of dl.slice(0, dl.length - (b.Q.length > 60 ? 6 : 15))) b.beams.splice(b.beams.indexOf(m), 1); return; }
-  if (rp) return;
+  /* v266 the Reaper's second battery: red flak shells from the middle of its hull that burst in a cloud of blasts around the target */
+  if (rp) { for (let i = 0; i < (lo ? 1 : 2); i++) b.fx.push({ t0: v.t + .06 + i * .14, t1: v.t + .06 + i * .14 + TRAVEL.plasma * 1.05, v, last: false, first: false, n: 1, mis: false, ic: false, side, off: 0, hv: 1, sz, j: 100 + i, fk: 1, col: "#ff3b30" }); return; }
   if (lo || v.bounce) return;
   if (q.k === "worldbreaker") { b.beams = b.beams.filter(m => m.s !== v.s); b.beams.push({ t0: v.t, s: v.s, e: v.e, side, w: 12, charge: .32, life: .55, wb: 1 }); return; } // the Cube Destroyer always fires its red beam, never dropped by the beam limit
   if (wk === "beam" || q.role === "station" || q.role === "titan") { if (b.beams.filter(m => !m.wb && !m.lance).length < 3) b.beams.push({ t0: v.t, s: v.s, e: v.e, side, w: clamp(3 + Math.log10(1 + many * (q.pow || 1)) * 1.4, 3, 12), charge: .3, life: .45 }); }
@@ -13697,7 +13698,7 @@ function drawBattle(t) {
   if (!lo) drawTrails(ctx, b, t, d, busy); // v251
   drawFlagShots(ctx, b, scr, t, d, lo); // v253
   for (const f of b.fx) {
-    if (T < f.t0) continue; const v = f.v, s = scr[v.s], e = scr[v.e], p = clamp((T - f.t0) / (f.t1 - f.t0), 0, 1), col = shotCol((Q[v.s] || {}).k, f.side), ks = f.sz === 0 ? .5 : f.sz === 2 ? 1.45 : 1; // v201: shot size follows hull size
+    if (T < f.t0) continue; const v = f.v, s = scr[v.s], e = scr[v.e], p = clamp((T - f.t0) / (f.t1 - f.t0), 0, 1), col = f.col || shotCol((Q[v.s] || {}).k, f.side), ks = f.sz === 0 ? .5 : f.sz === 2 ? 1.45 : 1; // v201: shot size follows hull size
     const [sx, sy] = hp(v.s, f.off + f.t0 * .13, 1), [ex, ey] = hp(v.e, f.off * 1.7 + .5, 0), stop = f.ic ? .6 : 1, q = Math.min(p, stop) / 1;
     if (f.first && !f.snd) { f.snd = 1; if (f.mis) SFX.swarm(f.n, sp(sx, sy)); }
     const curve = v.wk === "missile" || v.wk === "torpedo" || !!f.bs, mx = (sx + ex) / 2 + f.off * W * .25, my = (sy + ey) / 2 - Math.abs(f.off) * H * .08;
@@ -13713,7 +13714,7 @@ function drawBattle(t) {
     else if (v.wk === "mass") { const tx = ex - sx, ty = ey - sy, L2 = Math.hypot(tx, ty) || 1, ln = 34 * d * (f.sz === 0 ? .6 : ks); ctx.lineCap = "round"; ctx.strokeStyle = "#e8f4ff"; ctx.beginPath(); ctx.moveTo(px - tx / L2 * ln, py - ty / L2 * ln); ctx.lineTo(px, py); ctx.globalAlpha = .3; ctx.lineWidth = 6 * d * ks; ctx.stroke(); ctx.globalAlpha = 1; ctx.lineWidth = 2.2 * d * Math.max(.6, ks); ctx.stroke();
       if (!lo) { ctx.globalAlpha = .16 * (1 - p); ctx.lineWidth = 1 * d; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(px, py); ctx.stroke(); ctx.globalAlpha = 1; const hr = 7 * d; ctx.drawImage(starSprite("#cfe8ff"), px - hr, py - hr, hr * 2, hr * 2); } } // v78 railgun: a hypervelocity slug leaves an ionised wake
     else if (v.wk === "laser" || v.wk === "flak") { const ln = (v.wk === "flak" ? 13 : 34) * d * (f.sz === 0 ? .62 : ks), wd = (v.wk === "flak" ? 5 : 7.5) * d * Math.max(.62, ks); drawBolt(ctx, col, px, py, ang, ln, wd); } // v251 a tapered tracer with a white-hot core
-    else { const c2 = v.wk === "acid" ? "#a6ff6a" : SHOT_COL[(Q[v.s] || {}).k] ? col : v.wk === "ion" ? "#b9a6ff" : v.wk === "torpedo" ? "#ff9ad6" : col;
+    else { const c2 = f.col ? f.col : v.wk === "acid" ? "#a6ff6a" : SHOT_COL[(Q[v.s] || {}).k] ? col : v.wk === "ion" ? "#b9a6ff" : v.wk === "torpedo" ? "#ff9ad6" : col;
       if (curve) { // v251 a missile: a slim hot dart, a flickering drive star and a ribbon behind it
         const big = f.sw || v.wk === "torpedo", lit = !f.sw || q > .07, len = (big ? 25 : 15) * d * (f.sz === 2 ? 1.25 : 1) * swz, wid = (big ? 8 : 5.5) * d * swz;
         if (!lo && lit) { let tr = f.tr; if (!tr) { tr = f.tr = { pts: [], col: c2, w: big ? 1.15 : .72, life: f.sw ? 620 : 300, last: t }; if ((b.trails = b.trails || []).length < (busy ? 26 : 90)) b.trails.push(tr); else tr.pts = null; } if (tr.pts) { tr.pts.push(px, py, t); tr.last = t; if (tr.pts.length > 150) tr.pts.splice(0, 3); } }
@@ -13722,6 +13723,7 @@ function drawBattle(t) {
       else { const rr = (v.wk === "plasma" ? 8 : v.wk === "ion" ? 7 : v.wk === "acid" ? 7 : 4) * ks * d; drawBolt(ctx, c2, px, py, ang, rr * 5.2, rr * 1.8); } }
     if (f.ic && p >= stop && !f.hit) { f.hit = true; b.booms.push({ x: px, y: py, t, small: 1 }); if (!lo) { (b.pdt = b.pdt || []).push({ x0: e.x, y0: e.y, x1: px, y1: py, t, life: 240 }); if (b.pdt.length > 30) b.pdt.shift(); } continue; } // shot down by point defense: v78 tracer bursts from the defender
     if (p >= 1 && !f.hit) { f.hit = true; const big = BIG_R.has(Q[v.e].role);
+      if (f.fk) { for (let i = 0; i < (lo ? 3 : 7); i++) b.booms.push({ x: ex + (Math.random() - .5) * 30 * d * Math.max(.6, e.s), y: ey + (Math.random() - .5) * 20 * d * Math.max(.6, e.s), t: t + i * 45, small: 1, col: i % 2 ? "rgba(255,70,50,1)" : "rgba(255,150,80,1)" }); continue; } // v266 the flak shell bursts
       if (v.bounce || v.sh > 0) { b.shHit[v.e] = T; (b.shDir = b.shDir || [])[v.e] = Math.atan2(sy - ey, sx - ex); if (b.rings.length < (b.Q.length > 60 ? 18 : 90)) b.rings.push({ x: ex, y: ey, t, col: "110,210,255", r0: 4 * d, r1: 18 * d, life: 320 });
         // shots splashing on a shield light up a cluster of white hexagon cells
         if (!lo && (f.last || Math.random() < .35) && (!busy || Math.random() < .3)) { const nc = 2 + Math.floor(Math.random() * 4), cells = [HEX_N[0]].concat(HEX_N.slice(1).sort(() => Math.random() - .5).slice(0, nc)); b.hexes.push({ x: ex, y: ey, t, r: (5.5 + Math.min(5, Math.log10(1 + v.sh) * 1.3)) * d, cells }); if (b.hexes.length > (b.Q.length > 60 ? 8 : 60)) b.hexes.shift(); }
@@ -13753,7 +13755,7 @@ function drawBattle(t) {
   for (const o of b.pdt) { const k = (t - o.t) / o.life, dx = o.x1 - o.x0, dy = o.y1 - o.y0; ctx.globalAlpha = 1 - k; for (let m = 0; m < 3; m++) { const u0 = clamp(k * 1.6 - m * .18, 0, 1), u1 = clamp(u0 + .12, 0, 1); ctx.beginPath(); ctx.moveTo(o.x0 + dx * u0, o.y0 + dy * u0); ctx.lineTo(o.x0 + dx * u1, o.y0 + dy * u1); ctx.stroke(); } }
   ctx.globalAlpha = 1;
   b.booms = b.booms.filter(o => t - o.t < (o.small ? 260 : o.big ? 1100 : 800));
-  for (const o of b.booms) { if (t < o.t) continue; const life = o.small ? 260 : o.big ? 1100 : 800, p = (t - o.t) / life; if (o.small) { const R0 = 13 * d * (.5 + p); ctx.globalAlpha = (1 - p) * (1 - p); ctx.drawImage(starSprite("rgba(255,180,90,1)"), o.x - R0, o.y - R0, R0 * 2, R0 * 2); continue; }
+  for (const o of b.booms) { if (t < o.t) continue; const life = o.small ? 260 : o.big ? 1100 : 800, p = (t - o.t) / life; if (o.small) { const R0 = 13 * d * (.5 + p); ctx.globalAlpha = (1 - p) * (1 - p); ctx.drawImage(starSprite(o.col || "rgba(255,180,90,1)"), o.x - R0, o.y - R0, R0 * 2, R0 * 2); continue; }
     if (!o.fxd) { o.fxd = 1; bExplode(b, o.x, o.y, o.big ? 2.6 : 1.1, t, d); } } /* v251 a boom is a real blast now */
   b.rings = b.rings.filter(o => t - o.t < o.life);
   for (const o of b.rings) { if (t < o.t) continue; const p = (t - o.t) / o.life; const rr0 = o.r0 + (o.r1 - o.r0) * (1 - Math.pow(1 - p, 2)), fd = (1 - p) * (1 - p); ctx.globalAlpha = 1; ctx.strokeStyle = `rgba(${o.col},${.34 * fd})`; ctx.lineWidth = (7 - p * 4) * d; ctx.beginPath(); ctx.arc(o.x, o.y, rr0, 0, TAU); ctx.stroke(); ctx.strokeStyle = `rgba(255,255,255,${.85 * fd})`; ctx.lineWidth = (1.5 - p * .8) * d; ctx.stroke(); } /* v251 a thin white shock front inside a coloured band */
