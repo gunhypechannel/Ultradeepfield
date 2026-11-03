@@ -2139,7 +2139,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 246;
+const GAME_V = 247;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -14033,7 +14033,7 @@ function trayRender() {
       ${gi("openShop", '<span class="shard" style="font-size:20px">◆</span>', "Shop", 0, "")}${gi("mtab", ic2(MI.tag), "Depot", 0, 'data-k="depot"')}${gi("events", '<span style="color:var(--amber);font-size:21px;line-height:1">★</span>', "Events", eventsBadge(), "")}${gi("chat", ic2(TRAY_I.chat), "Chat", un, "")}</div>
     <div class="gm-where">${esc(P ? P.name : S.homeName)} <small>${P ? "colony" : "homeworld"}</small></div>
     <div class="gm-list">${gl("nav", ic2(NAVI.base), "Overview", 'data-v="base"')}${gl("nav", ic2(NAVI.galaxy), "Galaxy", 'data-v="galaxy"')}</div>
-    <div class="gm-list">${gl("nav", ic2(NAVI.lab), "Research", 'data-v="build" data-s="research"')}${gl("bcat", ic2(NAVI.build), "Resource", 'data-v="res"')}${gl("bcat", ic2(MI.box), "Facility", 'data-v="fac"')}</div>
+    <div class="gm-list">${gl("labs", ic2(NAVI.lab), "Research", "")}${gl("bcat", ic2(NAVI.build), "Resource", 'data-v="res"')}${gl("bcat", ic2(MI.box), "Facility", 'data-v="fac"')}</div>
     <div class="gm-list">${gl("nav", ic2(NAVI.fleet), "Shipyard", 'data-v="build" data-s="ships"')}${gl("planets", ic2(MI.orbit), "Control Center")}${gl("nav", ic2(NAVI.fleets), "Fleet", 'data-v="fleets"')}</div>
     <div class="gm-list">${gl("nav", ic2(MI.shield), "Defense", 'data-v="build" data-s="def"')}${gl("nav", ic2(MI.alert), "Missile", 'data-v="build" data-s="mis"')}</div>
     <div class="gm-list">${gl("mtab", ic2(MI.shield).replace("<svg", '<svg style="color:#e06bd8"'), "Element", 'data-k="elements"')}${gl("mastery", ic2(TRAY_I.path), "Mastery", "", mastN)}${gl("allyOpen", ic2(MI.wings), "Alliance", "", helpN)}${gl("ranks", ic2(TRAY_I.trophy), "Ranking")}${gl("friends", ic2(TRAY_I.friends), "Friends")}${gl("faction", ic2(TRAY_I.flag), "Faction")}</div>
@@ -14561,7 +14561,7 @@ const ACT = {
   rcat: d => { sub.rcat = d.v || null; render(); $("#view").scrollTop = 0; },
   ffrom: d => { sub.ffrom = d.v === "all" ? null : d.v; render(); },
   dtab: d => { if (!sheet) return; const i = +d.i; /* v245: the Research and Production tabs go straight to the research list and the shipyard */
-    if (sheet.type === "detail" && sheet.kind === "b" && i === 1 && !sheet.pid) { if (sheet.k === "lab" && S.b.lab) return openSheet({ type: "labs" }); if (sheet.k === "shipyard" && S.b.shipyard) return openSheet({ type: "yard", pid: null }); }
+    if (sheet.type === "detail" && sheet.kind === "b" && i === 1 && !sheet.pid) { if (sheet.k === "lab" && S.b.lab) { closeSheet(); return ACT.nav({ v: "build", s: "research" }); } /* v247: the research categories */ if (sheet.k === "shipyard" && S.b.shipyard) return openSheet({ type: "yard", pid: null }); }
     sheet.tab = i; renderSheet(); },
   prodRate: d => { if (!PROD_K.includes(d.k)) return; S.prod = S.prod || {}; const v = Math.round(pf(d.k) * 100); S.prod[d.k] = v <= 0 ? 100 : v - 10; dirty(); renderSheet(); render(); },
   labs: () => openSheet({ type: "labs" }),
