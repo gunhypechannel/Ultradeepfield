@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-02 (America/Phoenix). Current game version: **v255** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v64**.
+Last updated: 2026-11-02 (America/Phoenix). Current game version: **v256** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v65**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -103,3 +103,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v253:** battle flagships fire machine-gun tracers, visual only. `FLAG_GUNS`: 5 turret positions, each firing bursts of 5-7 rounds at its own enemy squadron (`e.guns`). Every 2.1-2.6 s the guns move to the next 5 in a shuffled list of all enemies (`e.ord`, `e.pi`); a dead target is replaced at once. `drawFlagShots` draws them on the HDR light layer over the ships, one batched path per colour. Slower fire in big fights and low effects.
 - **v254:** the pointing hand's label (`#tutguide .tg-tip`) is see-through amber with white text, and its text and ✕ sit on one line.
 - **v255:** battle hulls never squash or flip. Each squadron locks its heading from its first advance (`b.lk`, `b.face`); moving the other way eases `b.rv` up, which dims the main plume and fires paired retro jets from the bow. Flagships do the same (`e.fa`, `e.rv`). Carrier fighters rotate round their loop instead of being squashed. Replay positions and results are unchanged; this is drawing only.
+- **v256:** flagship remaster. `flagMetal` bakes a plated metal texture and roughness map per faction; `flagMats` shares metal, faction-lit windows (`fwin`) and nozzles (`feng`) between the map model and the battle portrait. Five real spine turrets (`gun` in `flagshipModel`, muzzles in `g.userData.guns`). The portrait bakes at 1024 px (768 iOS, 640 weak) from a three-quarter camera with faction rim light and HDR bloom, and records `out.guns`, `out.thr`, `out.bow`, `out.ang` so tracers and plumes leave the real muzzles and nozzles. Flagships now draw over the squadrons. Not checked on real phones.
