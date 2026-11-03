@@ -2238,7 +2238,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 263;
+const GAME_V = 264;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6322,6 +6322,7 @@ const CUBE_FORM = {
     const x = u / .45, e = Math.sin(Math.PI * x) ** 2, g = Math.sin(Math.PI * Math.pow(x, .45)) ** 2, out = Math.max(0, Math.sin(TAU * x)) * Math.sin(Math.PI * x); // e: out and back, g: forward surge; no jolt at either end
     return [s.side * e * sp * 1.5 * A, bob + e * sp * .45 * A * (s.i % 2 ? 1 : -1), g * sp * .7 * A, -e * .14 * A, s.side * out * .35 * A, -s.side * e * .6 * A]; } };
 /* v250 each formation built around the faction flagship (hull 0, at the origin). F is the flagship's geometry; escorts clear its hull. */
+const FLAG_K = .62; // v264 the flagship on the map at 62% of its old size: it still leads, but no longer dwarfs its fleet
 const FLAG_SLOT = {
   wedge: (i, N, sp, F) => { const row = Math.ceil(i / 2), side = i % 2 ? 1 : -1; return [side * (F.wid * .5 + sp * .55 + (row - 1) * sp * .8), (i % 3 - 1) * .3, -F.len * .22 - (row - 1) * sp * .75]; },
   column: (i, N, sp, F) => [(i % 2 ? .22 : -.22) * sp, 0, -F.len * .56 - sp * .3 - (i - 1) * sp * .62],
@@ -6329,8 +6330,11 @@ const FLAG_SLOT = {
   swarm: (i, N, sp) => { const p = swarmAt(i, sp, 0); return [p[0], p[1], p[2]]; } };
 /* v250 which faction a commander flies: their published choice (bots and pirates have none, so bots fly the Terran look) */
 const playerFac = uid => uid === G.me ? facOf() : (G.players[uid] && FACTIONS[G.players[uid].fac] ? G.players[uid].fac : "terran");
+/* v264 a commander earns their faction's flagship at commander level 15: until then their fleets fly without one, on the map and in battle replays */
+const FLAG_LV = 15;
+const flagOK = u => { try { if (!u) return false; const s = u === G.me || u === "local" ? score() : G.players[u] && G.players[u].score != null ? G.players[u].score : BOT_BY[u] ? botScore(BOT_BY[u]) : null; return s != null && cmdLevel(s) >= FLAG_LV; } catch (e) { return false; } };
 function fleet3D(W, n, col, hostile, big, cube, flag) { // big: a joint strike armada, more hulls in the formation; cube: v174 the Cube event's flagship formation; flag: v250 the faction whose flagship leads
-  if (cube && !flag) flag = facOf(); if (flag && !FACTIONS[flag]) flag = null;
+  if (cube && !flag && flagOK(G.me)) flag = facOf(); if (flag && !FACTIONS[flag]) flag = null;
   const K = fleetKit(W, flag || (hostile ? "terran" : facOf())); if (!K) return miniFleet(W, n, col, hostile);
   const grp = new TH.Group(), comp = Object.entries(n || {}).filter(([k, v]) => v > 0 && MINI_CLS[k]);
   if (!comp.length) comp.push(...(hostile ? [["destroyer", 2], ["corvette", 4], ["heavyFighter", 8]] : [["fighter", 6]]));
@@ -6339,7 +6343,7 @@ function fleet3D(W, n, col, hostile, big, cube, flag) { // big: a joint strike a
   for (const [k, v] of comp) { const cap = { s: 4, m: 3, l: 2, x: 1 }[MINI_CLS[k]] * (big ? 3 : 1); for (let i = 0; i < clamp(Math.ceil(Math.log2(v + 1)) * (big ? 2 : 1), 1, cap) && ships.length < (big ? (MOBILE ? 12 : 18) : MOBILE ? 6 : 9) + (flag ? 1 : 0); i++) ships.push(k); } // phones: up to 6 hulls per squadron
   // wedge: the biggest hull leads, the rest fan out behind it in staggered rows
   const geos = ships.map(k => shipGeo(K, k)), esc = flag && geos.length > 1 ? geos.slice(1) : geos, sp = Math.max(...esc.map(g => Math.max(g.len * .55, g.wid))) * .9 + .5; // the escorts set the spacing, not the flagship
-  const form = typeof big === "string" && FORMS[big] ? big : "wedge", N = ships.length, FM = cube ? CUBE_FORM : FORMS[form], tc = {}, F0 = flag ? geos[0] : null;
+  const form = typeof big === "string" && FORMS[big] ? big : "wedge", N = ships.length, FM = cube ? CUBE_FORM : FORMS[form], tc = {}, F0 = flag ? { len: geos[0].len * FLAG_K, wid: geos[0].wid * FLAG_K } : null;
   const spM = flag && !cube && form === "swarm" ? Math.max(sp, (F0.len * .5 + sp * .6) / 1.08, (F0.wid * .5 + sp * .6) / 1.35) : sp; // the swarm's rings open wide enough to circle the flagship
   const slots = ships.map((k, i) => { const tier = k === "flagship" || /[lxq]/.test(MINI_CLS[k]) ? "b" : "s", j = tc[tier] = (tc[tier] || 0) + 1; const s = cube ? FM.slot(i, N, sp, k, F0, j) : flag ? (i ? FLAG_SLOT[form](i, N, spM, F0) : [0, 0, 0]) : FM.slot(i, N, sp, k, null, j); return { k, x: s[0], y: s[1], z: s[2], ph: i * 1.3, i, side: s[3] || 0, big: tier === "b" }; });
   const move = FM.move; // v106: each joint strike formation has its own motion
@@ -6363,10 +6367,10 @@ function fleet3D(W, n, col, hostile, big, cube, flag) { // big: a joint strike a
   const pose = (t, all) => {
     for (const s of slots) { const m = move(s, t, N, spM); s.px = s.x + m[0]; s.py = s.y + m[1]; s.pz = s.z + m[2]; s.rx = m[3]; s.ry = m[4]; s.rz = m[5]; }
     for (const e of groups) { const full = all || e.meshes.some(m => m.visible);
-      e.ss.forEach((s, i) => { DM.position.set(s.px, s.py, s.pz); DM.rotation.set(s.rx, s.ry, s.rz); DM.scale.setScalar(s.dead ? 1e-4 : e.flag ? grp.userData.fz || 1 : 1); DM.updateMatrix(); if (full) for (const m of e.meshes) m.setMatrixAt(i, DM.matrix); e.lod.setMatrixAt(i, DM.matrix); });
+      e.ss.forEach((s, i) => { DM.position.set(s.px, s.py, s.pz); DM.rotation.set(s.rx, s.ry, s.rz); DM.scale.setScalar(s.dead ? 1e-4 : e.flag ? (grp.userData.fz || 1) * FLAG_K : 1); DM.updateMatrix(); if (full) for (const m of e.meshes) m.setMatrixAt(i, DM.matrix); e.lod.setMatrixAt(i, DM.matrix); });
       if (full) for (const m of e.meshes) m.instanceMatrix.needsUpdate = true; if (all || e.lod.visible) e.lod.instanceMatrix.needsUpdate = true; }
     if (!all && !eng.visible) return;
-    const ea = eng.geometry.attributes; pts.forEach(([s, x, y, z, sz, a, pc, slow], i) => { const fl = slow ? .82 + .18 * Math.sin(t * .0026 + i * .9) : .85 + .15 * Math.sin(t * .03 + i), c = Math.cos(s.ry), sn = Math.sin(s.ry), C1 = pc || ec, fk = s.k === "flagship" ? grp.userData.fz || 1 : 1, x1 = x * fk, z1 = z * fk; ea.position.setXYZ(i, s.px + x1 * c + z1 * sn, s.py + y * fk, s.pz - x1 * sn + z1 * c); ea.aCol.setXYZW(i, C1.r, C1.g, C1.b, s.dead ? 0 : a); ea.aSize.setX(i, sz * fl * fk); });
+    const ea = eng.geometry.attributes; pts.forEach(([s, x, y, z, sz, a, pc, slow], i) => { const fl = slow ? .82 + .18 * Math.sin(t * .0026 + i * .9) : .85 + .15 * Math.sin(t * .03 + i), c = Math.cos(s.ry), sn = Math.sin(s.ry), C1 = pc || ec, fk = s.k === "flagship" ? (grp.userData.fz || 1) * FLAG_K : 1, x1 = x * fk, z1 = z * fk; ea.position.setXYZ(i, s.px + x1 * c + z1 * sn, s.py + y * fk, s.pz - x1 * sn + z1 * c); ea.aCol.setXYZW(i, C1.r, C1.g, C1.b, s.dead ? 0 : a); ea.aSize.setX(i, sz * fl * fk); });
     ea.position.needsUpdate = ea.aCol.needsUpdate = ea.aSize.needsUpdate = true; eng.geometry.setDrawRange(0, pts.length); };
   pose(0, true); grp.traverse(c => { if (c !== grp) { c.matrixAutoUpdate = false; c.updateMatrix(); } }); // the parts never move inside their group: fixed local transforms
   grp.userData.anim = pose; grp.userData.eng = eng; grp.userData.detailed = true; grp.userData.slots = slots;
@@ -6447,7 +6451,7 @@ function mapClash(loc, rep, def) {
     return ids.find(cmd) || (Array.isArray(L) ? (L.find(x => cmd(x[5])) || [])[5] : null) || null; };
   const aC = youA ? G.me : sideCmd("a"), dC = def ? G.me : sideCmd("d"), cFac = u => u === G.me ? facOf() : G.players[u] && FACTIONS[G.players[u].fac] ? G.players[u].fac : isBot(u) ? DEMO_FAC[hash(u) % 4] : playerFac(u); // bots fly a faction of their own
   const ff = loc && PB[loc.id] && S.fleets.find(f => f.xid === loc.id && f.ox != null); /* v259: the battle opens on the side the fleet came from */
-  clashPush({ key: rep.id, loc, age, ang: ff ? (q0 => Math.atan2(ff.oy - q0.z, ff.ox - q0.x))(P3(loc, now())) : null, a: rep.start.a || {}, d: rep.start.d || {}, rounds: (rep.rounds || []).filter(r => r && r.a && r.d), winner: rep.winner, aCol: youA ? 0x55d6e8 : 0xff5a5a, dCol: youA ? 0xff7a3a : 0x55d6e8, rep: rep.id, you: youA ? "a" : "d", aF: aC ? cFac(aC) : null, dF: dC ? cFac(dC) : null, aCmd: !!aC, dCmd: !!dC });
+  clashPush({ key: rep.id, loc, age, ang: ff ? (q0 => Math.atan2(ff.oy - q0.z, ff.ox - q0.x))(P3(loc, now())) : null, a: rep.start.a || {}, d: rep.start.d || {}, rounds: (rep.rounds || []).filter(r => r && r.a && r.d), winner: rep.winner, aCol: youA ? 0x55d6e8 : 0xff5a5a, dCol: youA ? 0xff7a3a : 0x55d6e8, rep: rep.id, you: youA ? "a" : "d", aF: aC && flagOK(aC) ? cFac(aC) : null, dF: dC && flagOK(dC) ? cFac(dC) : null, aCmd: !!aC && flagOK(aC), dCmd: !!dC && flagOK(dC) });
 }
 function clashPush(c) { const tn = performance.now(); G.clashes = G.clashes.filter(x => tn - x.t0 < x.dur || x.o); if (G.clashes.some(x => x.key === c.key)) return;
   /* v195: a new clash at the same place takes over: the older one fades out in a second instead of fighting on inside it (two sets of
@@ -6466,7 +6470,7 @@ function clashDispose(W, c) { const o = c.o; if (!o) return; for (const g of [o.
    If it loses, it goes down in a chain of blasts across its hull. */
 const BEAST_FX = { cube: [93, 255, 106], swhale: [127, 212, 255], slevi: [255, 138, 74], ssquid: [213, 140, 255] };
 const beastKind = L => !L || !PB[L.id] ? null : L.boss ? "cube" : L.mon && BEAST_FX[L.mon] ? L.mon : null;
-function beastCenter(L, q, out) { const m = G3 && G3.pirates && G3.pirates.get(L.id); if (m && m.grp && m.grp.visible) { m.grp.getWorldPosition(out); return out; } return out.set(q.x, q.y, q.z); }
+function beastCenter(L, q, out) { const m = G3 && G3.pirates && G3.pirates.get(L.id); if (m && m.grp && m.grp.visible) { (m.mon && m.body ? m.body : m.grp).getWorldPosition(out); return out; } return out.set(q.x, q.y, q.z); } // v264: a monster's own body, wherever it swims
 function beastInit(W, c) { const kind = beastKind(c.loc), rgb = BEAST_FX[kind], col = new TH.Color(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255), rs = rgb.join(","), g = new TH.Group(); W.scene.add(g);
   const add = (m, ro) => { m.frustumCulled = false; m.renderOrder = ro || 14; g.add(m); return m; }, mat = (o2) => new TH.MeshBasicMaterial(Object.assign({ color: col, transparent: true, opacity: 0, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false }, o2 || {}));
   const bx = { kind, col, rgb, g, r: Math.max(1.6, (xStand(c.loc) - 2.5) / 1.25) * .8, glob: [], hit: -1e9, nx: 0, cyc: -1, tgt: null };
@@ -6530,7 +6534,7 @@ function drawClashes(W, t, T) {
     const atCube = c.loc === NEXUS, angN = ang + (atCube ? e * .00007 : 0), o = c.o, dx = Math.cos(angN), dz = Math.sin(angN), wob = Math.sin(e * .0011) * (atCube ? 7 : .6); /* v194 strafing runs round the Cube */
     // attackers sweep in during the first 2 s, then hold a firing line; defenders hold in front of the target
     // v178 at the Cube the defenders hold a line just outside its hull (they used to hold 11 units from its centre: inside it)
-    const inK = clamp(e / 2000, 0, 1), cube = c.loc === NEXUS, aR = R * ((cube ? 1.9 - .45 * Math.max(0, Math.sin(e * .0009)) : 1.5) + (1 - inK) * (c.ang != null ? 0 : 3)), dR = R * (cube ? 1.05 : .35); /* v259: a fleet that stopped at stand-off range fights from there */
+    const inK = clamp(e / 2000, 0, 1), cube = c.loc === NEXUS, aR = R * ((cube ? 1.9 - .45 * Math.max(0, Math.sin(e * .0009)) : PB[c.loc.id] ? 1.5 : 2.5) + (1 - inK) * (c.ang != null ? 0 : 3)), dR = R * (cube ? 1.05 : PB[c.loc.id] ? .35 : .55); /* v264: planet battles pulled back (the lines were almost touching) */ /* v259: a fleet that stopped at stand-off range fights from there */
     o.ga.position.set(q.x + dx * aR - dz * wob, q.y + 1 + Math.sin(e * .0017) * .4, q.z + dz * aR + dx * wob); o.gd.position.set(q.x + dx * dR + dz * wob * .6, q.y + .6, q.z + dz * dR - dx * wob * .6);
     o.ga.lookAt(o.gd.position); o.gd.lookAt(o.ga.position);
     const pxS = (W.size[1] / 2) / Math.tan(W.camera.fov * Math.PI / 360) * W.renderer.getPixelRatio(), fsT = cube ? 1.55 : fs; c.fs = c.fs ? c.fs + (fsT - c.fs) * .1 : fsT; const fsC = c.fs;
@@ -7300,7 +7304,7 @@ function synthRounds(a, d, winner) { const out = []; for (let i = 1; i <= 4; i++
 function otherClashes(W, T) {
   for (const v of W.mvL || []) { const m = v.m; if (!["a", "w", "j", "r"].includes(m.m) || T < m.arrive || T - m.arrive > 22000) continue; const loc = tgtById(m.t); if (!loc) continue;
     const a = genComp(m.n), d = genComp(Math.round((m.n || 6) * .8)), winner = m.m === "w" ? (m.win ? "a" : "d") : "a";
-    clashPush({ key: "mv" + v.uid + m.out, loc, age: T - m.arrive, a, d, rounds: synthRounds(a, d, winner), winner, aCol: v.ally ? 0x7be39a : 0xff9a6a, dCol: 0xf0a945, you: null, aF: playerFac(v.uid), dF: null, dCmd: !(loc && PB[loc.id]) }); } }
+    clashPush({ key: "mv" + v.uid + m.out, loc, age: T - m.arrive, a, d, rounds: synthRounds(a, d, winner), winner, aCol: v.ally ? 0x7be39a : 0xff9a6a, dCol: 0xf0a945, you: null, aF: flagOK(v.uid) ? playerFac(v.uid) : null, aCmd: flagOK(v.uid), dF: loc && !PB[loc.id] && loc.owner && flagOK(loc.owner) ? playerFac(loc.owner) : null, dCmd: !!(loc && !PB[loc.id] && loc.owner && flagOK(loc.owner)) }); } }
 /* ---------- v94 outposts on the map: a beacon on every held open orbit, raised with a deploy animation ---------- */
 function outpostsNear(W, T) { const out = [], seen = new Set();
   for (const f of S.fleets) if (f.phase === "gather" && typeof f.nid === "string" && f.nid[0] === "e" && f.gend > T) { out.push({ id: f.nid, uid: G.me, at: f.arrive, until: f.gend, n: sumShips(f.n) }); seen.add(f.nid); }
@@ -7338,9 +7342,8 @@ function lineDist(ln) {
 const DEMO_FAC = ["terran", "solar", "nyx", "verdant"];
 function fleetFlag(f, hostile) {
   if (f.raid) return null; if (f.demo) return DEMO_FAC[hash(String(f.id)) % 4];
-  if (hostile) return f.from ? playerFac(f.from) : null;
-  if (f.u) return playerFac(f.u); if (f.js) { const a = G.assaults && G.assaults[f.js]; return playerFac(a && a.leader || G.me); }
-  return facOf(); }
+  const u = hostile ? f.from : f.u ? f.u : f.js ? ((G.assaults && G.assaults[f.js] && G.assaults[f.js].leader) || G.me) : G.me;
+  if (!u || !flagOK(u)) return null; return u === G.me ? facOf() : playerFac(u); }
 const fformOf = f => FORMS[f.form] ? f.form : FORMS[S && S.fform] ? S.fform : "wedge"; /* v258: your fleets fly the formation you pick */
 function fleetObj(W, f, hostile, cube) {
   const col = hostile ? 0xff6262 : f.js ? (f.jsK === "in" ? 0x8affc0 : 0x5dff9a) : f.nid ? 0x9af0c8 : f.xid ? 0xffc06a : f.mission === "attack" ? 0xffb08a : f.mission === "transfer" ? 0xb8a6ff : 0x9fe9f7;
@@ -7443,10 +7446,16 @@ function draw3D(t) {
   const used = new Map(); let gasN = 0; for (const [k, c] of counts) if (k.startsWith("gas")) gasN += c;
   for (const [k, c] of counts) { const [ty, v, px] = info.get(k), mat = k.startsWith("px:") ? pxMat(W, px) : planetMat(W, ty, v); instFor(W, k + "|h", W.sph, mat, c); instFor(W, k + "|l", W.sphLo, mat, c); instFor(W, k + "|u", W.sphU, mat, Math.min(c, 4)); used.set(k + "|h", 0); used.set(k + "|l", 0); used.set(k + "|u", 0); }
   const rings = instFor(W, "rings", W.ringGeo, W.ringMat, near.length + 33); let ringI = 0;
+  /* v264 worlds in a tight cluster drew into each other like soap bubbles (each is drawn larger than life so it reads on the map). Every
+     few frames each world near the camera finds its nearest neighbour, and a crowded one eases down to fit: no world is wider than about
+     a third of the gap to its neighbour (never below 42% of its size). Worlds with room to spare are untouched. */
+  if (!W.fitT || t - W.fitT > 450 || (W.fitN !== near.length && t - W.fitT > 120)) { W.fitT = t; W.fitN = near.length; const L = []; for (const id of near) { const p2 = G.byId[id]; if (p2) L.push([id, P3(p2, T)]); }
+    for (let a = 0; a < L.length; a++) { let nn = 1e9; const qa = L[a][1]; for (let b2 = 0; b2 < L.length; b2++) { if (a === b2) continue; const qb = L[b2][1], d2 = (qa.x - qb.x) ** 2 + (qa.y - qb.y) ** 2 + (qa.z - qb.z) ** 2; if (d2 < nn) nn = d2; } const o2 = W.planets.get(L[a][0]); if (o2) o2.nn = Math.sqrt(nn); else (W.nnPend || (W.nnPend = {}))[L[a][0]] = Math.sqrt(nn); } }
   for (const id of near) {
     const p = G.byId[id]; if (!p) continue; seen.add(id); let o = W.planets.get(id);
-    if (!o) { o = planetObj(W, p); W.planets.set(id, o); }
+    if (!o) { o = planetObj(W, p); W.planets.set(id, o); if (W.nnPend && W.nnPend[id]) { o.nn = W.nnPend[id]; delete W.nnPend[id]; } }
     o.key = pxOf(p) ? "px:" + p.px : p.type + p.v;
+    { if (o.rad0 == null) o.rad0 = o.rad; const kT = o.nn ? clamp(o.nn * .34 / o.rad0, .42, 1) : 1; o.k = o.k == null ? kT : o.k + (kT - o.k) * .08; o.rad = o.rad0 * o.k; }
     const q = P3(p, T, PQ); o.grp.position.set(q.x, q.y, q.z);
     const dc = cpos.distanceTo(o.grp.position), px = o.rad / dc * pxK, fg = p.owner !== G.me && !fogSeen(q.x, q.z); o.dc = dc; o.fog = fg;
     if (px > 1.6) { // big enough on screen to draw as a sphere; detailed mesh up close, light mesh further out
@@ -7460,8 +7469,8 @@ function draw3D(t) {
         const close = px > 16; o.bill.visible = !close; if (!close) { const rEff = Math.max(o.rad, 6 * dc / pxK); o.bill.scale.setScalar(rEff / pxF(p.px)); } } /* v114: skinned worlds no longer balloon from afar (was a 16 px minimum) */
       else if (o.bill) { o.grp.remove(o.bill); o.bill.material.map.dispose(); o.bill.material.dispose(); o.bill = null; o.billPx = null; } }
     if (o.det && (dc > 150 || o.detPx !== (p.px || null) || o.detMoon !== (p.moon ? p.moon.lvl : 0))) { o.grp.remove(o.det); /* v68: a new skin or moon rebuilds the close-up layer at once */ o.det.traverse(x => { if (x.material) x.material.dispose(); if (x.isPoints) x.geometry.dispose(); }); o.det = null; }
-    if (dc < 60 && !o.det && !fg && W.detN < PERF.details && W.detMade < 1) { W.detMade++; o.det = planetDetail(W, p, o); /* v124: at most one new close-up a frame, no stalls when zooming in */ o.detPx = p.px || null; o.detMoon = p.moon ? p.moon.lvl : 0; }
-    if (o.det) { W.detN++; const on = dc < 85; o.det.visible = on; if (on) W.dets.push(o); }
+    if (dc < 60 && !o.det && !fg && W.detN < PERF.details && W.detMade < 1) { W.detMade++; o.det = planetDetail(W, p, o); o.detK = o.k || 1; /* v124: at most one new close-up a frame, no stalls when zooming in */ o.detPx = p.px || null; o.detMoon = p.moon ? p.moon.lvl : 0; }
+    if (o.det) { W.detN++; const on = dc < 85; o.det.visible = on; if (on) W.dets.push(o); o.det.scale.setScalar((o.k || 1) / (o.detK || 1)); } // made at one size, follows the fit
     // v133 close-up surface: a planet you zoom in on gets a high-resolution surface (1024 px, 2048 on Ultra) with relief, turning with the
     // world, laid just over its shared 256 px map; it is made off the main thread and dropped again as you pull away
     { const want = !fg && !pxOf(p) && dc < 55 && px > 40;
@@ -7482,7 +7491,7 @@ function draw3D(t) {
     { const on = p.shieldUntil > T && !fg && dc < 480;
       if (on && !o.sh) { o.sh = new TH.Mesh(W.sph, shieldMat(W)); o.sh.scale.setScalar(o.rad * 1.55); o.sh.renderOrder = 9; o.grp.add(o.sh); }
       else if (!on && o.sh) { o.grp.remove(o.sh); o.sh = null; }
-      if (o.sh) { o.sh.rotation.y = t * .00015; W.shieldList.push([p, o]); } }
+      if (o.sh) { o.sh.scale.setScalar(o.rad * 1.55); o.sh.rotation.y = t * .00015; W.shieldList.push([p, o]); } }
     if (o.grp.children.length) { if (!o.grp.parent) W.scene.add(o.grp); } else if (o.grp.parent) W.scene.remove(o.grp);
   }
   for (const [k, e] of W.inst) { if (k === "rings") { e.mesh.count = ringI; } else e.mesh.count = used.get(k) || 0; e.mesh.instanceMatrix.needsUpdate = true; if (e.mesh.instanceColor) e.mesh.instanceColor.needsUpdate = true; }
@@ -7521,7 +7530,11 @@ function draw3D(t) {
         const dx = ca * RX, dz = Math.cos(2 * a) * RZ, ddx = -sa * RX, ddz = -2 * Math.sin(2 * a) * RZ, curv = (dx * ddz - dz * ddx) / Math.pow(dx * dx + dz * dz + 1e-3, 1.5);
         W.monU.value = t * .001; o.body.position.set(sa * RX, Math.sin(t * .0007 + it.a0) * .5, sa * ca * RZ); o.body.rotation.set(clamp(curv * 1.6, -.4, .4), Math.atan2(-dz, dx), 0);
         if (it.mon === "ssquid") { const p = 1 + .07 * Math.sin(t * .006 + it.a0); o.body.scale.set(o.body.scale.y * p, o.body.scale.y, o.body.scale.y / Math.sqrt(p)); }
-        o.body.visible = !down; o.beacon.position.copy(o.body.position); o.beacon.material.opacity = down ? 0 : .4; o.grp.scale.setScalar(MK_K * (hl && !down ? 1.25 : 1)); }
+        /* v264 a monster in a battle stays on screen until the fight is over (it was marked slain, and hidden, the moment the result was known),
+           and stops swimming to face the fleet where it stands */
+        const inClash = G.clashes.some(c => c.loc === it && performance.now() - c.t0 < c.dur * .93); if (inClash) { o.cl = Math.min(1, (o.cl || 0) + .02); } else if (o.cl) o.cl = Math.max(0, o.cl - .01);
+        if (o.cl) o.body.position.multiplyScalar(1 - o.cl);
+        o.body.visible = !down || inClash; o.beacon.position.copy(o.body.position); o.beacon.material.opacity = down ? 0 : .4; o.grp.scale.setScalar(MK_K * (hl && !down ? 1.25 : 1)); }
       else { const hl = findHit(it), down = pirDown(it) > T; o.grp.rotation.y = t * (it.boss ? .00008 : .0002) + it.a0; o.ring.rotation.z = t * .0006;
         o.beacon.material.opacity = down ? .15 : it.boss ? .32 : .55; if (it.boss) { o.grp.rotation.x = Math.sin(t * 1.5e-4 + it.a0) * .12; o.grp.position.y = q.y + Math.sin(t * .00035 + it.a0 * 7) * .4; } o.grp.scale.setScalar(MK_K * (hl && !down ? 1.3 : 1)); } } /* v109: Cubes turn slowly and tilt as they hover; no swelling */
     // models that left the near set are hidden, then freed
@@ -7605,7 +7618,7 @@ function draw3D(t) {
     const wk = path.park || path.k >= 1 ? 1 : Math.min(clamp(path.k / .03, 0, 1), id === "raid" ? 1 : clamp((1 - path.k) / .03, 0, 1)), ws = fsF * (o.grp.userData.size || 1) * (.25 + .75 * wk);
     o.grp.scale.setScalar(ws);
     if (o.warp) { const fl = 1 - wk; o.warp.visible = fl > .02; o.warp.material.opacity = fl * .9; o.warp.position.set(pt.x, pt.y, pt.z); o.warp.scale.setScalar(fs * 9 * (.4 + fl)); }
-    { const ud = o.grp.userData; if (ud.flagship) ud.fz = clamp(cd / 26, 1, 2.2); /* v250 the flagship swells as you zoom out, so it still commands the formation from system view */ if (ud.anim && !reduced) ud.anim(t); if (ud.eng) ud.eng.material.uniforms.uScale.value = pxS * ws; }
+    { const ud = o.grp.userData; if (ud.flagship) ud.fz = 1; /* v264 the flagship keeps its true size at every zoom (it used to swell as you zoomed out) */ if (ud.anim && !reduced) ud.anim(t); if (ud.eng) ud.eng.material.uniforms.uScale.value = pxS * ws; }
     if (!reduced && o.grp.userData.ships) for (const s of o.grp.userData.ships) { if (s.userData.y0 == null) s.userData.y0 = s.position.y; s.position.y = s.userData.y0 + Math.sin(t * .002 + s.userData.bob) * .12; }
     { const rc = ROUTE[routeKind(f)]; if (o.rc !== rc) { o.rc = rc; o.line.material.color.setHex(rc); o.trail.material.color.setHex(rc); o.line.material.opacity = rc === ROUTE.back ? .8 : .95; } } // v187: bolder (was .5 and .7)
     // v172 a parked fleet (stationed at the Cube, a world or a field) has no course and no trail: both collapse to a point, so they are
@@ -11835,10 +11848,28 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) { co
 /* v95: the Cube clip (H.264, steady 30 fps) is fetched quietly a few seconds after load, so the event card starts it at once */
 setTimeout(() => { try { const v = document.createElement("video"); v.muted = true; v.preload = "auto"; v.src = "art/cube-event.mp4"; v.load(); window.__cubeWarm = v; } catch (e) {} }, 4000);
 function unitGrid(n) { const e = Object.entries(n).filter(([, v]) => v > 0); return e.length ? `<div class="units">${e.map(([k, v]) => `<div class="unit"><canvas data-u="${k}"></canvas><span>${unitName(k)}<br><b>×${fmt(v)}</b></span></div>`).join("")}</div>` : '<p class="note">None</p>'; }
+/* v264 Efficient fight: on an attack (a player's or the Hive's world, a pirate crew, a space monster or a Cube boss) one tap picks just enough
+   of your warships to win: the fewest, in the same mix as what you have, that win every one of 20 simulated battles against what's there
+   now (with your doctrine and any bot allies you added), plus a 10% margin. You can still change any number by hand afterwards. */
+function effTarget() { try { if (!sheet) return null;
+  if (sheet.type === "pirate") { const x = PB[sheet.id]; return x && !(pirDown(x) > now()) ? { D: xStacks(x), lvl: x.lvl } : null; }
+  if (sheet.type === "planet") { const p = G.byId[sheet.id]; if (!p) return null; const st = pStatus(p, now()); if (st === "mine" || st === "myhome" || st === "shielded" || st === "razed" || p.owner === G.me) return null; const D = defenders(p); return D && D.stacks && D.stacks.length ? { D: D.stacks, lvl: p.lvl } : null; }
+  } catch (e) {} return null; }
+function effPick() { const T = effTarget(); if (!T) return; const avail = originAvail(), cmb = Object.keys(avail).filter(k => avail[k] > 0 && SH[k] && (SH[k].atk || 0) > 0 && k !== "spyProbe");
+  if (!cmb.length) return toast("No warships here to send.", "warn"); toast("Working out the smallest fleet that wins…");
+  setTimeout(() => { const keep = {}; if (pick.ark) keep.ark = pick.ark; // a Colony Ship you picked stays picked
+    const mk = f => { const o = Object.assign({}, keep); for (const k of cmb) { const v = Math.min(avail[k], Math.ceil(avail[k] * f)); if (v > 0) o[k] = v; } return o; };
+    const win = (f, n) => forecast(stacksOf(mk(f), techOf(null), G.me).concat(allyStacks(sheet.bots, T.lvl)), T.D, { doc: S.doctrine }, n).win;
+    const all = win(1, 12); if (all < 1) { pick = mk(1); sheet.oddsKey = null; renderSheet(); return toast(`Even every warship here can't make it certain (${Math.round(all * 100)}% odds), so all of them are selected. Add allies or more ships.`, "warn"); }
+    let lo = 0, hi = 1; for (let i = 0; i < 9; i++) { const m = (lo + hi) / 2; if (win(m, 10) >= 1) hi = m; else lo = m; }
+    let f = Math.min(1, hi * 1.1); for (let i = 0; i < 6 && f < 1 && win(f, 20) < 1; i++) f = Math.min(1, f * 1.15);
+    pick = mk(f); sheet.oddsKey = null; renderSheet(); const n = Object.entries(pick).filter(([k]) => k !== "ark").reduce((a, [, v]) => a + v, 0);
+    toast(`Efficient fight: ${fmt(n)} warships (${Math.max(1, Math.round(f * 100))}% of what's here) won every test battle. Adjust any number by hand if you like.`, "win"); }, 40); }
 function picker(avail) {
   for (const k of Object.keys(pick)) if (!avail[k]) delete pick[k];
   for (const k of Object.keys(pick)) pick[k] = Math.min(pick[k], avail[k]);
-  return `<div>${Object.keys(avail).filter(k => avail[k] > 0).map(k => `<div class="pick"><canvas data-u="${k}"></canvas><div class="nm">${SH[k].n}<small>${fmt(avail[k])} available</small></div><div style="display:flex;gap:6px;align-items:center"><div class="stepper"><button data-act="pk" data-k="${k}" data-d="-1" aria-label="Fewer">−</button><input value="${pick[k] || 0}" id="pk-${k}" data-pk="${k}" type="number" min="0" max="${avail[k]}" inputmode="numeric" aria-label="Ships to send"><button data-act="pk" data-k="${k}" data-d="1" aria-label="More">+</button></div><button class="btn ghost sm" data-act="pkmax" data-k="${k}">All</button><button class="btn ghost sm pknone" data-act="pknone" data-k="${k}" ${pick[k] ? "" : "disabled"}>None</button></div></div>`).join("")}${Object.keys(avail).filter(k => avail[k] > 0).length > 1 ? `<div class="pkall"><button class="btn ghost sm" data-act="pkevery">Select all ships</button><button class="btn ghost sm" data-act="pkclear" ${Object.values(pick).some(v => v > 0) ? "" : "disabled"}>Clear all</button></div>` : ""}</div>`;
+  const eff = effTarget() ? `<button class="btn amber wide" style="margin:4px 0 8px" data-act="pkeff">⚡ Efficient fight · just enough ships to win</button>` : "";
+  return `<div>${eff}${Object.keys(avail).filter(k => avail[k] > 0).map(k => `<div class="pick"><canvas data-u="${k}"></canvas><div class="nm">${SH[k].n}<small>${fmt(avail[k])} available</small></div><div style="display:flex;gap:6px;align-items:center"><div class="stepper"><button data-act="pk" data-k="${k}" data-d="-1" aria-label="Fewer">−</button><input value="${pick[k] || 0}" id="pk-${k}" data-pk="${k}" type="number" min="0" max="${avail[k]}" inputmode="numeric" aria-label="Ships to send"><button data-act="pk" data-k="${k}" data-d="1" aria-label="More">+</button></div><button class="btn ghost sm" data-act="pkmax" data-k="${k}">All</button><button class="btn ghost sm pknone" data-act="pknone" data-k="${k}" ${pick[k] ? "" : "disabled"}>None</button></div></div>`).join("")}${Object.keys(avail).filter(k => avail[k] > 0).length > 1 ? `<div class="pkall"><button class="btn ghost sm" data-act="pkevery">Select all ships</button><button class="btn ghost sm" data-act="pkclear" ${Object.values(pick).some(v => v > 0) ? "" : "disabled"}>Clear all</button></div>` : ""}</div>`;
 }
 /* "From" switch: launch from the homeworld or any colony that has ships */
 function originBar(exclude) {
@@ -13169,11 +13200,11 @@ function battleAcc(r) { const mine = r.kind === "defense" || r.kind === "raid" ?
 /* v250 flagships in the battle replay: a picture only, the simulation and its result are untouched. Each commander in the fight gets their faction's
    flagship (up to 3 a side), which flies at the heart of their squadrons, fires its own tracers, and goes down when the last of them falls. Pirates, Hives and the Cube have none. */
 function battleFlags(r, Q) { const mineS = r.kind === "defense" || r.kind === "raid" ? "d" : "a", out = { a: [], d: [] }, lab = r.id === LAB_ID || r.id === DUEL_ID;
-  const pf = u => typeof u === "string" && u !== "pirates" && u !== "cube" && (u === G.me || G.players[u] || isBot(u)) ? playerFac(u) : null;
+  const pf = u => typeof u === "string" && u !== "pirates" && u !== "cube" && (u === G.me || G.players[u] || isBot(u)) && flagOK(u) ? playerFac(u) : null;
   for (const sd of ["a", "d"]) { const groups = new Map(); let any = 0;
     Q.forEach((q, i) => { if (q.side !== sd) return; any = 1; const f = pf(q.own); if (!f) return; const g = groups.get(q.own) || { f, idx: [], w: 0 }; g.idx.push(i); g.w += Math.sqrt(Math.max(1, q.n0 * (q.pow || 1))); groups.set(q.own, g); });
     if (!any) continue; let L = [...groups.values()].sort((x, y) => y.w - x.w).slice(0, 3);
-    if (!L.length && !(r.kind === "raid" && sd === "a")) { const u = sd === "a" ? (r.aUids || [])[0] : r.dUid, f = lab ? (sd === mineS ? facOf() : DEMO_FAC.find(x => x !== facOf())) : pf(u) || (sd === mineS && !u ? facOf() : null); if (f) L = [{ f, idx: Q.map((q, i) => q.side === sd ? i : -1).filter(i => i >= 0) }]; }
+    if (!L.length && !(r.kind === "raid" && sd === "a")) { const u = sd === "a" ? (r.aUids || [])[0] : r.dUid, f = lab ? (sd === mineS ? facOf() : DEMO_FAC.find(x => x !== facOf())) : pf(u) || (sd === mineS && !u && flagOK(G.me) ? facOf() : null); if (f) L = [{ f, idx: Q.map((q, i) => q.side === sd ? i : -1).filter(i => i >= 0) }]; }
     out[sd] = L.map(e => ({ f: e.f, idx: e.idx, acc: facAcc(e.f), col: FLAG_GLOW[e.f], rgba: `rgba(${FLAG_GLOW[e.f] >> 16},${FLAG_GLOW[e.f] >> 8 & 255},${FLAG_GLOW[e.f] & 255},1)` })); }
   return out; }
 function drawBattleFlags(ctx, b, scr, pos, W, H, t, real, T, lo, d) {
@@ -15255,7 +15286,7 @@ const ACT = {
   pk: d => { pick[d.k] = clamp((pick[d.k] || 0) + +d.d, 0, originAvail()[d.k] || 0); renderSheet(); },
   pkmax: d => { pick[d.k] = originAvail()[d.k] || 0; renderSheet(); },
   pknone: d => { pick[d.k] = 0; renderSheet(); }, // v95: deselect a whole ship type, like All selects it
-  pkevery: () => { pick = Object.assign({}, originAvail()); renderSheet(); },
+  pkevery: () => { pick = Object.assign({}, originAvail()); renderSheet(); }, pkeff: () => effPick(),
   pkclear: () => { for (const k in pick) pick[k] = 0; renderSheet(); },
   setFrom: d => { sheet.from = d.id; pick = Object.assign({}, originAvail()); sheet.oddsKey = null; renderSheet(); },
   jointToggle: () => { sheet.joint = !sheet.joint; renderSheet(); },
