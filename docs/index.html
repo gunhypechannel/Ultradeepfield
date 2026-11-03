@@ -804,6 +804,7 @@ canvas.dthumb{display:block}
 .pwt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pwt .nm{font-weight:800;font-size:15px}
 .pws{font-size:12px;color:var(--pc);font-weight:700}.pwt .sub{font-size:11px;color:var(--muted)}
 .pwr{display:flex!important;gap:8px;flex-wrap:wrap;font-size:12px;margin-top:2px}.pwr small{color:var(--muted);margin-left:2px}
+.fform{margin-top:6px}.fform button{font-size:12px;padding:6px 4px}
 .qjoin{border-color:rgba(240,169,69,.55)!important;background:linear-gradient(160deg,rgba(240,169,69,.12),transparent 60%)}
 /* chat */
 .chatlog{display:flex;flex-direction:column;gap:6px;max-height:46vh;min-height:160px;overflow-y:auto;padding:6px 2px;overscroll-behavior:contain}
@@ -2236,7 +2237,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 257;
+const GAME_V = 259;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -2647,13 +2648,14 @@ function pxGrid(mode) {
 /* v72: each skin's decorations as two camera-facing layers for planet view: "back" (far half of rings and disks, coronas, beams,
    flames) hidden by the 3D world where it passes in front, and "front" (near half of rings, spikes, shards, faces, cannons) on top */
 function pxLayers(id) { const C = PXC[id]; if (!C || !C.art) return null; if (C.lay) return C.lay;
-  if (C.pic) { const Z = MOBILE ? 768 : 1024, b = document.createElement("canvas"), f = document.createElement("canvas"); b.width = b.height = 4; f.width = f.height = Z; f.getContext("2d").drawImage(C.pic, 0, 0, Z, Z); return (C.lay = { back: b, front: f }); } /* v235: a painted skin shows its painting in planet view */ const f = PXS[id].v2 ? pxPortrait2 : pxPortrait;
+  if (C.pic) { if (!C.layL) { C.layL = 1; pxPic(id + ".webp", im => { const Z = MOBILE ? 768 : 1024, b = document.createElement("canvas"), f = document.createElement("canvas"); b.width = b.height = 4; f.width = f.height = Z; f.getContext("2d").drawImage(im, 0, 0, Z, Z); C.lay = { back: b, front: f }; C.layL = 0;
+      PXLAY.push(id); while (PXLAY.length > 2) { const o = PXLAY.shift(), D = PXC[o]; if (D && o !== id) { if (D.lay) D.lay.front.width = 0; D.lay = null; } } if (G3) for (const o of G3.planets.values()) if (o.detPx === id) o.detPx = "~"; }, () => { C.layL = 0; }); } return null; } /* v258: loaded on demand, at most two kept */ /* v235: a painted skin shows its painting in planet view */ const f = PXS[id].v2 ? pxPortrait2 : pxPortrait;
   try { const Z = MOBILE ? 512 : 1024; C.lay = { back: f(id, Z, "back"), front: f(id, Z, "front") }; /* v77 ultra HD layers; v82: 512 px on phones */ } catch (e) { C.lay = null; } return C.lay; }
-const PXQ = []; let pxBusy = false;
+const PXQ = [], PXLAY = []; let pxBusy = false;
 function pxReady(id) { return PXC[id] && PXC[id].art ? PXC[id] : null; }
 function pxNeed(id) { if (!PXS[id] || PXC[id] || PXQ.includes(id)) return; PXQ.push(id); if (!pxBusy) pxStep(); }
 function pxStep() { const id = PXQ.shift(); if (!id) { pxBusy = false; return; } pxBusy = true;
-  if (PXS[id].img && !PXS[id].imgBad) { pxPic(id + ".webp", im => { const c = document.createElement("canvas"); c.width = c.height = 320; c.getContext("2d").drawImage(im, 0, 0, 320, 320); PXC[id] = { art: c, pic: im };
+  if (PXS[id].img && !PXS[id].imgBad) { pxPic(id + ".webp", im => { const c = document.createElement("canvas"); c.width = c.height = 320; c.getContext("2d").drawImage(im, 0, 0, 320, 320); PXC[id] = { art: c, pic: 1 }; /* v258: the 1024 px painting is not kept (55 of them were 250 MB, enough for iPhone Safari to kill the page) */
       try { thumbs(document); } catch (e) {} pxStep(); }, () => { PXS[id].imgBad = 1; PXQ.unshift(id); pxStep(); }); return; }
   const run = () => { try { PXC[id] = PXS[id].v2 ? pxGen(id, 320) : pxSurface(id, 320); const art = PXS[id].v2 ? pxPortrait2(id, 288) : pxPortrait(id, 288); PXC[id] = { art }; /* only the portrait stays in memory (phones cap canvas memory); the map texture is rebuilt for skins in use */ } catch (e) { PXC[id] = { art: null }; }
     try { thumbs(document); } catch (e) {} pxStep(); };
@@ -5562,7 +5564,7 @@ function shieldMat(W) {
 /* a premium skin on the 3D map: its surface map with the glowing parts as an emissive map (a flat tone until it is generated) */
 function pxMat(W, id) {
   const key = "px:" + id; let mat = W.mats[key]; const C = pxReady(id);
-  if (C && C.pic && !C.surf) { if (!C.mapLoading) { C.mapLoading = 1; pxPic(id + "-map.webp", im => { const s = document.createElement("canvas"), e = document.createElement("canvas"); s.width = e.width = im.width; s.height = e.height = im.height; s.getContext("2d").drawImage(im, 0, 0); const ex = e.getContext("2d"); ex.globalAlpha = .1; ex.drawImage(im, 0, 0); C.surf = s; C.emi = e; C.hd = 1; try { pxMat(W, id); } catch (er) {} }, () => {}); }
+  if (C && C.pic && !C.surf) { if (!C.mapLoading) { C.mapLoading = 1; pxPic(id + "-map.webp", im => { const s = document.createElement("canvas"), e = document.createElement("canvas"); s.width = im.width; s.height = im.height; e.width = im.width >> 2; e.height = im.height >> 2; s.getContext("2d").drawImage(im, 0, 0); const ex = e.getContext("2d"); ex.globalAlpha = .1; ex.drawImage(im, 0, 0, e.width, e.height); /* v258: a quarter-size glow map */ C.surf = s; C.emi = e; C.hd = 1; try { pxMat(W, id); } catch (er) {} }, () => {}); }
     return mat || (W.mats[key] = new TH.MeshStandardMaterial({ color: new TH.Color(PXS[id].glow), roughness: .9 })); } /* v235: painted skins bring their own sphere map */
   if (C && !C.surf && !(mat && mat.userData.ok)) { const g0 = PXS[id].v2 ? pxGen(id, 1024) : pxSurface(id, 1024); C.surf = g0.surf; C.emi = g0.emi; // v65: a 1024 px map texture, with a relief (bump) map from the height field
     if (g0.HT) { const bc = document.createElement("canvas"); bc.width = g0.W; bc.height = g0.H; const bx = bc.getContext("2d"), im = bx.createImageData(g0.W, g0.H); for (let i = 0; i < g0.HT.length; i++) { const v = clamp(g0.HT[i], 0, 1) * 255; im.data[i * 4] = im.data[i * 4 + 1] = im.data[i * 4 + 2] = v; im.data[i * 4 + 3] = 255; } bx.putImageData(im, 0, 0); C.bump = bc; } }
@@ -6053,6 +6055,12 @@ function nodeObj(W, n) {
   return o;
 }
 const ARC = (a, b, k) => { const d = Math.hypot(b.x - a.x, b.z - a.z); return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k + Math.sin(Math.PI * k) * d * .16, z: a.z + (b.z - a.z) * k }; };
+/* v259 a fleet bound for a pirate crew, a space monster or a Cube boss stops at stand-off range on its side, and the battle opens there
+   (it used to fly into the model's centre, out the far side, and turn back for the battle) */
+function xStand(x) { if (!x || !PB[x.id]) return 0; if (x._st) return x._st; let r = x.boss ? 14 : x.mon ? 5 : 3; const o = G3 && G3.pirates && G3.pirates.get(x.id);
+  if (o && o.grp && o.grp.visible) { if (o.sr == null) { try { const sp = new TH.Box3().setFromObject(o.mon && o.body ? o.body : o.grp).getBoundingSphere(new TH.Sphere()); o.sr = sp.radius > 0 ? sp.radius : 0; } catch (e) { o.sr = 0; } } if (o.sr) r = o.sr; }
+  return (x._st = r * 1.25 + 2.5); } /* fixed once worked out, so the fleet stops and the battle opens at the same range */
+function standOff(a, b, d) { const dx = a.x - b.x, dz = a.z - b.z, L = Math.hypot(dx, dz) || 1, k = Math.min(d, L * .9) / L; return { x: b.x + dx * k, y: b.y, z: b.z + dz * k }; }
 function fleetPath(f, T) { if (f.parkAt === "nexus") { const q = G3 ? G3.nexus.position : { x: 0, y: 0, z: 0 }; return { a: q, b: q, k: 1, park: true, cube: !!G3 }; } /* v117: fleets holding station around the Cube */
   if (f.phase === "muster") { const r = G.byId[f.rp]; if (!r) return null; const q = P3(r, T); return { a: q, b: q, k: 1, park: true }; } // waiting at the muster point
   const tg = fleetTarget(f), h = fleetHome(f); if (!tg) return null;
@@ -6060,8 +6068,9 @@ function fleetPath(f, T) { if (f.parkAt === "nexus") { const q = G3 ? G3.nexus.p
   // v174 the Cube is solid: a fleet flying to it stops at its near side instead of its centre, and one leaving it (home, or routed
   // from the battle) starts from outside its hull
   const cp = G3 && G3.nexus.position, near = q => cp && Math.hypot(q.x - cp.x, q.z - cp.z) < CUBE_STAND && Math.abs((q.y || 0) - cp.y) < CUBE_STAND;
-  if (f.phase === "out") { let a = { x: f.ox || hp.x, y: 0, z: f.oy || hp.z }, b = tp; if (tg === NEXUS && cp) b = cubeStand(cp, a); else if (near(a)) a = cubeStand(cp, b); return { a, b, k: clamp((T - f.out) / Math.max(1, f.arrive - f.out), 0, 1) }; }
-  if (f.phase === "back") { const tt = f.tt || (f.back - f.arrive) || 1; return { a: tg === NEXUS && cp ? cubeStand(cp, hp) : tp, b: hp, k: clamp((T - (f.back - tt)) / tt, 0, 1) }; }
+  if (f.phase === "out") { let a = { x: f.ox || hp.x, y: 0, z: f.oy || hp.z }, b = tp; if (tg === NEXUS && cp) b = cubeStand(cp, a); else if (PB[tg.id]) b = standOff(a, b, xStand(tg)); else if (near(a)) a = cubeStand(cp, b); return { a, b, k: clamp((T - f.out) / Math.max(1, f.arrive - f.out), 0, 1) }; }
+  if (f.phase === "back") { const tt = f.tt || (f.back - f.arrive) || 1; return { a: tg === NEXUS && cp ? cubeStand(cp, hp) : PB[tg.id] ? standOff({ x: f.ox || hp.x, y: 0, z: f.oy || hp.z }, tp, xStand(tg)) : tp, b: hp, k: clamp((T - (f.back - tt)) / tt, 0, 1) }; }
+  if (PB[tg.id]) { const sb = standOff({ x: f.ox || hp.x, y: 0, z: f.oy || hp.z }, tp, xStand(tg)); return { a: sb, b: sb, k: 1, park: true, hold: true }; } /* v259: in the fight it holds its stand-off point */
   return { a: tp, b: tp, k: 1, park: true, cube: tg === NEXUS && !!cp };
 }
 /* v174 a fleet holding station at the Cube: an inclined attack orbit (fleets spread over every face, above and below), breathing in
@@ -6418,7 +6427,8 @@ const genComp = n => { n = Math.max(3, n || 6); return { fighter: Math.ceil(n * 
 function mapClash(loc, rep, def) {
   if (!loc || !rep || !rep.start || typeof TH === "undefined") return; const age = now() - (rep.at || now()); if (age > 40000 || age < -5000) return; // only battles happening now
   const youA = !def && (rep.aUids || []).includes(G.me);
-  clashPush({ key: rep.id, loc, age, a: rep.start.a || {}, d: rep.start.d || {}, rounds: (rep.rounds || []).filter(r => r && r.a && r.d), winner: rep.winner, aCol: youA ? 0x55d6e8 : 0xff5a5a, dCol: youA ? 0xff7a3a : 0x55d6e8, rep: rep.id, you: youA ? "a" : "d", aF: youA ? facOf() : rep.aUids && rep.aUids[0] ? playerFac(rep.aUids[0]) : null, dF: youA ? (rep.dUid ? playerFac(rep.dUid) : null) : facOf() });
+  const ff = loc && PB[loc.id] && S.fleets.find(f => f.xid === loc.id && f.ox != null); /* v259: the battle opens on the side the fleet came from */
+  clashPush({ key: rep.id, loc, age, ang: ff ? (q0 => Math.atan2(ff.oy - q0.z, ff.ox - q0.x))(P3(loc, now())) : null, a: rep.start.a || {}, d: rep.start.d || {}, rounds: (rep.rounds || []).filter(r => r && r.a && r.d), winner: rep.winner, aCol: youA ? 0x55d6e8 : 0xff5a5a, dCol: youA ? 0xff7a3a : 0x55d6e8, rep: rep.id, you: youA ? "a" : "d", aF: youA ? facOf() : rep.aUids && rep.aUids[0] ? playerFac(rep.aUids[0]) : null, dF: youA ? (rep.dUid ? playerFac(rep.dUid) : null) : facOf() });
 }
 function clashPush(c) { const tn = performance.now(); G.clashes = G.clashes.filter(x => tn - x.t0 < x.dur || x.o); if (G.clashes.some(x => x.key === c.key)) return;
   /* v195: a new clash at the same place takes over: the older one fades out in a second instead of fighting on inside it (two sets of
@@ -6432,17 +6442,17 @@ function drawClashes(W, t, T) {
     for (const [, o] of W.fleets) if (o.f && !o.f.enemy) o.grp.visible = !(o.f.phase === "back" && busy.has(fleetTarget(o.f))); }
   for (const c of G.clashes.slice()) { const e = tn - c.t0, k = e / c.dur;
     if (k >= 1 || !c.loc) { clashDispose(W, c); G.clashes = G.clashes.filter(x => x !== c); continue; }
-    const q = c.loc === NEXUS ? W.nexus.position : P3(c.loc, T), R = (c.loc.kind === "planet" || G.byId[c.loc.id] ? plRad(c.loc) * 2.6 : c.loc === NEXUS ? 30 : 2.2) + 2.4, ang = (c.seed % 628) / 100;
+    const q = c.loc === NEXUS ? W.nexus.position : P3(c.loc, T), R = PB[c.loc.id] ? xStand(c.loc) / 1.5 : (c.loc.kind === "planet" || G.byId[c.loc.id] ? plRad(c.loc) * 2.6 : c.loc === NEXUS ? 30 : 2.2) + 2.4, ang = c.ang != null ? c.ang : (c.seed % 628) / 100;
     if (!c.o) { const boltsG = new TH.BufferGeometry(); boltsG.setAttribute("position", new TH.BufferAttribute(new Float32Array(240 * 6), 3).setUsage(TH.DynamicDrawUsage)); boltsG.setAttribute("color", new TH.BufferAttribute(new Float32Array(240 * 6), 3).setUsage(TH.DynamicDrawUsage));
       const bolts = new TH.LineSegments(boltsG, new TH.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 1, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); bolts.frustumCulled = false; bolts.renderOrder = 14; W.scene.add(bolts);
       const boomT = W.glow.boom || (W.glow.boom = glowTex("255,170,80", 1)), booms = [];
       for (let i = 0; i < 14; i++) { const sp = new TH.Sprite(W.additive(boomT, 0xffffff, 0)); sp.renderOrder = 15; W.scene.add(sp); booms.push({ sp, t0: -1e9 }); }
       const mk = (n, col, hostile, fg) => { const g = fleet3D(W, clashShips(n) || genComp(clashCnt(n)), col, hostile, false, false, fg); g.userData.size = (.75 + Math.min(1.1, Math.log10(clashCnt(n) + 1) * .3)) * .5; W.scene.add(g); return g; };
-      c.o = { ga: mk(c.a, c.aCol, c.you !== "a", c.aF), gd: mk(c.d, c.dCol, c.you === "a", c.dF), bolts, booms, bl: [], la: -1, ld: -1, ended: 0 }; }
+      c.o = { ga: mk(c.a, c.aCol, c.you !== "a", c.aF || DEMO_FAC[hash(String(c.key) + "a") % 4]), gd: mk(c.d, c.dCol, c.you === "a", c.dF || DEMO_FAC[hash(String(c.key) + "d") % 4]), /* v258: defenders (Hive, pirates, bots) lead with a flagship too */ bolts, booms, bl: [], la: -1, ld: -1, ended: 0 }; }
     const atCube = c.loc === NEXUS, angN = ang + (atCube ? e * .00007 : 0), o = c.o, dx = Math.cos(angN), dz = Math.sin(angN), wob = Math.sin(e * .0011) * (atCube ? 7 : .6); /* v194 strafing runs round the Cube */
     // attackers sweep in during the first 2 s, then hold a firing line; defenders hold in front of the target
     // v178 at the Cube the defenders hold a line just outside its hull (they used to hold 11 units from its centre: inside it)
-    const inK = clamp(e / 2000, 0, 1), cube = c.loc === NEXUS, aR = R * ((cube ? 1.9 - .45 * Math.max(0, Math.sin(e * .0009)) : 1.5) + (1 - inK) * 3), dR = R * (cube ? 1.05 : .35);
+    const inK = clamp(e / 2000, 0, 1), cube = c.loc === NEXUS, aR = R * ((cube ? 1.9 - .45 * Math.max(0, Math.sin(e * .0009)) : 1.5) + (1 - inK) * (c.ang != null ? 0 : 3)), dR = R * (cube ? 1.05 : .35); /* v259: a fleet that stopped at stand-off range fights from there */
     o.ga.position.set(q.x + dx * aR - dz * wob, q.y + 1 + Math.sin(e * .0017) * .4, q.z + dz * aR + dx * wob); o.gd.position.set(q.x + dx * dR + dz * wob * .6, q.y + .6, q.z + dz * dR - dx * wob * .6);
     o.ga.lookAt(o.gd.position); o.gd.lookAt(o.ga.position);
     const pxS = (W.size[1] / 2) / Math.tan(W.camera.fov * Math.PI / 360) * W.renderer.getPixelRatio(), fsT = cube ? 1.55 : fs; c.fs = c.fs ? c.fs + (fsT - c.fs) * .1 : fsT; const fsC = c.fs;
@@ -7252,9 +7262,10 @@ function fleetFlag(f, hostile) {
   if (hostile) return f.from ? playerFac(f.from) : null;
   if (f.u) return playerFac(f.u); if (f.js) { const a = G.assaults && G.assaults[f.js]; return playerFac(a && a.leader || G.me); }
   return facOf(); }
+const fformOf = f => FORMS[f.form] ? f.form : FORMS[S && S.fform] ? S.fform : "wedge"; /* v258: your fleets fly the formation you pick */
 function fleetObj(W, f, hostile, cube) {
   const col = hostile ? 0xff6262 : f.js ? (f.jsK === "in" ? 0x8affc0 : 0x5dff9a) : f.nid ? 0x9af0c8 : f.xid ? 0xffc06a : f.mission === "attack" ? 0xffb08a : f.mission === "transfer" ? 0xb8a6ff : 0x9fe9f7;
-  const flag = fleetFlag(f, hostile), grp = fleet3D(W, hostile && !f.n ? null : f.n, col, hostile, f.js && f.jsK !== "in" ? (f.form || "wedge") : false, !!cube, flag), tot = Object.values(f.n || {}).reduce((a, b) => a + b, 0) || 6;
+  const flag = fleetFlag(f, hostile), grp = fleet3D(W, hostile && !f.n ? null : f.n, col, hostile, f.js ? (f.jsK !== "in" ? (f.form || "wedge") : false) : hostile ? false : fformOf(f), !!cube, flag), tot = Object.values(f.n || {}).reduce((a, b) => a + b, 0) || 6;
   grp.userData.size = (.75 + Math.min(1.1, Math.log10(tot + 1) * .3)) * .5; // grows with fleet size
   grp.userData.flagKeep = !!flag && !f.demo; // v250 (a demo's 140 fleets drop their glow from afar, to stay smooth)
   if (f.js && f.jsK !== "in") grp.userData.size *= 1.15 + Math.min(.5, (f.cnt || 1) * .05); // a joint strike army is one big formation, bigger with every commander
@@ -7498,13 +7509,13 @@ function draw3D(t) {
     // v178 a rebuild (the army grew, or the Cube formation switched on or off) shares the 3-models-a-frame budget with new fleets, and the
     // old model keeps flying until its replacement is made: 60 routed fleets switching formation at the same instant used to be rebuilt
     // in one frame, a long freeze and a burst of GPU uploads right as the battle ended
-    let o = W.fleets.get(id); if (o && ((f.js && o.nk !== sumShips(f.n) + f.jsK + f.form) || !!o.cf !== cf || o.fg !== (fleetFlag(f, hostile) || "")) && (W.fleetMade = (W.fleetMade || 0) + 1) <= 3) { const h0 = o.hist; disposeObj(W, o); o = fleetObj(W, f, hostile, cf); o.hist = h0; W.fleets.set(id, o); } // the army grows as members arrive
-    if (!o) { if ((W.fleetMade = (W.fleetMade || 0) + 1) > 3) continue; o = fleetObj(W, f, hostile, cf); W.fleets.set(id, o); } if (f.js && o.nk == null) o.nk = sumShips(f.n) + f.jsK + f.form; if (o.cf == null) o.cf = cf; // v124: at most 3 new fleet models a frame (v178: the keys are set by fleetObj, so a deferred rebuild is retried next frame)
+    let o = W.fleets.get(id); if (o && ((f.js && o.nk !== sumShips(f.n) + f.jsK + f.form) || !!o.cf !== cf || o.fg !== (fleetFlag(f, hostile) || "") || (!f.js && !hostile && o.fm != null && o.fm !== fformOf(f))) && (W.fleetMade = (W.fleetMade || 0) + 1) <= 3) { const h0 = o.hist; disposeObj(W, o); o = fleetObj(W, f, hostile, cf); o.hist = h0; W.fleets.set(id, o); } // the army grows as members arrive
+    if (!o) { if ((W.fleetMade = (W.fleetMade || 0) + 1) > 3) continue; o = fleetObj(W, f, hostile, cf); W.fleets.set(id, o); } if (f.js && o.nk == null) o.nk = sumShips(f.n) + f.jsK + f.form; if (o.cf == null) o.cf = cf; if (o.fm == null && !f.js && !hostile) o.fm = fformOf(f); // v124: at most 3 new fleet models a frame (v178: the keys are set by fleetObj, so a deferred rebuild is retried next frame)
     const fsT = path.cube ? 1.55 : fs; o.fsC = o.fsC ? o.fsC + (fsT - o.fsC) * .06 : fsT; const fsF = o.fsC; /* v194: fleets at the Cube keep one size (they rescaled, and re-orbited, with every zoom) */
     let pt, nx;
     if (path.cube) { const ws0 = fsF * (o.grp.userData.size || 1), rad = (o.grp.userData.R || 4) * ws0 * .7, r = cubeOrbit(path.b, id, T, rad, f); pt = r.pt; nx = r.nx;
       V3.set(pt.x, pt.y, pt.z); cubeSweep(W, o.lastC, V3, rad + 2); pt = { x: V3.x, y: V3.y, z: V3.z }; (o.lastC || (o.lastC = new TH.Vector3())).copy(V3); }
-    else if (path.park) { const gat = f.phase === "gather", R = gat ? 2.6 : f.jsK === "mass" ? 6.5 : f.parkR || 4, a = t * (gat ? .00035 : f.phase === "muster" ? .00009 : f.parkR ? .00011 : .0008) + (hash(id) % 10); /* v106: a strike waiting at the muster point holds a slow, stately orbit */ // v96: gatherers hold a slow, tight mining orbit
+    else if (path.park) { const gat = f.phase === "gather", R = path.hold ? .5 : gat ? 2.6 : f.jsK === "mass" ? 6.5 : f.parkR || 4, a = t * (gat ? .00035 : f.phase === "muster" ? .00009 : f.parkR ? .00011 : .0008) + (hash(id) % 10); /* v106: a strike waiting at the muster point holds a slow, stately orbit */ // v96: gatherers hold a slow, tight mining orbit
       pt = { x: path.b.x + Math.cos(a) * R, y: path.b.y + (gat ? .7 + .25 * Math.sin(t * .0011) : 1), z: path.b.z + Math.sin(a) * R }; nx = { x: path.b.x + Math.cos(a + .1) * R, y: pt.y, z: path.b.z + Math.sin(a + .1) * R }; }
     else { pt = ARC(path.a, path.b, path.k); nx = ARC(path.a, path.b, Math.min(1, path.k + .01)); if (path.k >= 1) nx = { x: pt.x + (path.b.x - path.a.x) * .01, y: pt.y, z: pt.z + (path.b.z - path.a.z) * .01 };
       // v174 any course that passes close to the Cube (crossing the map over the Void) is lifted round its hull, never through it
@@ -10913,7 +10924,7 @@ function vFleets() {
     const rem = bnd ? Math.max(0, bnd[1] - T) : 0;
     return `<div class="fcard"><div class="top"><b>${fleetLabel(f)} · ${esc(tg ? tg.name : "—")}</b><span class="pill ${f.mission === "attack" && f.phase === "out" ? "bad" : f.phase === "back" ? "ok" : "go"}">${bnd ? `<span data-end="${bnd[1]}">${ftime(rem)}</span>` : "…"}</span></div>
       <div class="route">${esc(o ? o.name : S.homeName)} → ${esc(tg ? tg.name : "—")}${f.phase === "back" || f.phase === "gather" ? ` → ${esc(fleetHome(f) ? fleetHome(f).name : S.homeName)}` : ""} · ${fmt(tot)} ships${cargo}</div>
-      <div class="route">${ships}</div>${fleetResRow(f)}
+      <div class="route">${ships}</div>${fleetResRow(f)}${f.n && sumShips(f.n) ? `<div class="segc fform">${Object.entries(FORMS).map(([k, F]) => `<button class="${fformOf(f) === k ? "on" : ""}" data-act="fleetForm" data-id="${f.id}" data-v="${k}" title="${esc(F.d)}">${F.ic} ${F.n}</button>`).join("")}</div>` : ""}
       ${bnd ? `<div class="bar" style="grid-column:auto"><i data-s="${bnd[0]}" data-e="${bnd[1]}"></i></div>` : ""}
       <div class="tl ftl"><span>Flight<b>${ftime(f.tt || 0)}</b><small>one way</small></span><span>${bnd ? bnd[2] : "Status"}<b>${bnd ? `<span data-end="${bnd[1]}">${ftime(rem)}</span>` : "in battle"}</b>${bnd ? `<small>at ${atClock(bnd[1])}</small>` : ""}</span><span>Speed<b>${f.spd || 100}%</b><small class="fg">⛽ ${fmt(f.fuel || 0)} gas</small></span></div>
       <div class="acts"><button class="btn ghost sm" data-act="fleetMap" data-id="${f.id}">Show on map</button>${f.mission === "attack" && f.phase === "out" && !f.assault && G.mode === "online" && rem > 20000 ? `<button class="btn sm" data-act="callJoint" data-id="${f.id}">Call allies to join</button>` : f.assault && G.assaults[f.assault] ? `<span class="pill go">Joint · ${memberCount(G.assaults[f.assault])}/${G.assaults[f.assault].max}</span>${!f.launched && now() < G.assaults[f.assault].launch ? `<button class="btn sm" data-act="assault" data-id="${f.assault}">＋ Add participants</button>` : ""}` : ""}${canRecall ? `<button class="btn ghost sm" data-act="recallF" data-id="${f.id}">Recall</button>` : ""}${canHurry && rem > 0 ? `<button class="btn amber sm" data-act="hurry" data-id="${f.id}" ${S.shards >= shardCost(rem) ? "" : "disabled"}>Hurry <span class="shard">◆${shardCost(rem)}</span></button>` : ""}${!f.assault && f.phase !== "resolving" && rem > 20000 ? `<button class="btn ghost sm" data-act="fBoost" data-id="${f.id}" ${S.shards >= boostCost(f) ? "" : "disabled"}>⚡ Afterburners <span class="shard">◆${boostCost(f)}</span></button>${S.boosts > 0 ? `<button class="btn ghost sm" data-act="fBoostItem" data-id="${f.id}">Use boost −5 min · ${S.boosts}</button>` : ""}` : ""}</div></div>`;
@@ -10929,7 +10940,8 @@ function vFleets() {
   const label = "In flight";
   return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 class="sec" style="flex:1">Fleet command · ${fleetsUsed()} / ${maxFleets()} slots</h2><span class="shard" title="Void Shards">◆ ${fmt(S.shards)}</span></div>
     ${radarCard()}${raid ? `<div class="radar"><b class="h">⚠ HIVE RAID</b><div class="row"><span>${esc(S.homeName)}<small>Lv.${raid.lvl} raiders</small></span><b style="font-family:var(--f-display);color:var(--red)" data-end="${raid.at}">${ftime(raid.at - T)}</b></div></div>` : ""}
-    ${orders}<h2 class="sec">${label} · ${sorted.length}</h2>${cards || `<div class="empty">${fsel === "all" ? "No fleets in flight. Send one with Fleet orders above." : "No fleets from this planet in flight."}</div>`}
+    ${orders}<div class="fcard"><div class="top"><b>Default formation</b><span class="note">${esc(FORMS[S.fform] ? FORMS[S.fform].d : FORMS.wedge.d)}</span></div><div class="segc fform">${Object.entries(FORMS).map(([k, F]) => `<button class="${(FORMS[S.fform] ? S.fform : "wedge") === k ? "on" : ""}" data-act="fleetForm" data-v="${k}">${F.ic} ${F.n}</button>`).join("")}</div></div>
+    <h2 class="sec">${label} · ${sorted.length}</h2>${cards || `<div class="empty">${fsel === "all" ? "No fleets in flight. Send one with Fleet orders above." : "No fleets from this planet in flight."}</div>`}
     ${jsFleetSection()}
     ${(S.strikes || []).length ? `<h2 class="sec">Missiles in flight</h2><div class="queue">${S.strikes.map(s => { const p = G.byId[s.pid]; return `<div class="qrow"><div><div class="lbl">Ballistic ×${s.n}</div><div class="what">→ ${esc(p ? p.name : "target")}</div></div><div class="acts"><span class="t" data-end="${s.at}">${ftime(s.at - T)}</span></div><div class="bar"><i data-s="${s.out}" data-e="${s.at}"></i></div></div>`; }).join("")}</div>` : ""}`; /* v232: no ledger here; each fleet shows its own cargo */
 }
@@ -14730,6 +14742,7 @@ const ACT = {
   allyMem: d => openSheet({ type: "allymem", id: d.id, u: d.u }),
   allyToolsOpen: () => openSheet({ type: "altools" }),
   yardOpen: d => openSheet({ type: "yard", pid: d.id || null }),
+  fleetForm: d => { if (!FORMS[d.v]) return; if (d.id) { const f = S.fleets.find(x => x.id === d.id); if (!f) return; f.form = d.v; toast(`${fleetLabel(f)} flies in ${FORMS[d.v].n} formation.`, "win"); } else { S.fform = d.v; toast(`New fleets fly in ${FORMS[d.v].n} formation.`, "win"); } dirty(); render(true); },
   allyBioSave: () => { const a = myAlly(), el = $("#albio"); if (!a || allyRank(a, G.me) !== "lead" || !el) return; const v = el.value.trim().slice(0, 300); el.blur(); allyMutate(a.id, x => { x.bio = v; }, "Alliance bio saved."); },
   allyTitleSet: () => { const a = sheet && G.alliances[sheet.id], u = sheet && sheet.u, el = $("#altitle"); if (!a || !u || !el || !(allyRank(a, G.me) === "lead" || allyCan(a, "rank", u))) return; const v = el.value.trim().slice(0, 24); el.blur();
     allyMutate(a.id, x => { x.titles = Object.assign({}, x.titles || {}); if (v) x.titles[u] = v; else delete x.titles[u]; }, v ? `${nameOf(u)} is now “${v}”.` : `${nameOf(u)}'s title was cleared.`); },
