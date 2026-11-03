@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-03 (America/Phoenix). Current game version: **v268** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v76**.
+Last updated: 2026-11-03 (America/Phoenix). Current game version: **v269** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v77**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -116,3 +116,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v266:** the Reaper has two batteries in replays: orange broadside swarm guns (the `bs` fx, `col` override, faster) and red flak shells from mid-hull (`fk` fx, not `last`) that burst into a cloud of small red/orange blasts (`b.booms` with `col`).
 - **v267:** Reaper reworked: one hidden fx carries the hits; 30 (16 in big fights, 10 low FX) `sm` swarm rounds per volley fan out of both broadsides on their own curves (glow + streak), and 3 glowing red `fk` flak shells burst into `b.flak` fields (red star, shock ring, sparks, haze).
 - **v268:** iPhone crash reports (v264, v265) both died seconds after "battle closed". `battleFree` empties every battle canvas (frame, fxc, bloomC, bg, dustL, fgL.grade) and effect array on close; iOS removes the battle screen at once (no fade); `gpuNap(false)` waits 400 ms; the daily-login Events popup waits 15 s after a battle (`G.btClosedAt`); no cube-video prewarm on iOS. Crumb "events opened (daily login)" added.
+- **v269:** the v267 Reaper effects cost ~10% frame rate in the duel: swarm rounds now 16 a volley (8 big fights, 6 low FX) with at most ~70 in the air (`b.swN`), drawn with one baked `swarmSprite` each and all streaks in a single stroke; flak 4 bursts a shell (cap 36) drawn from a baked `flakSprite`. `folkFoot` re-checks building footprints once a second, not per walker per frame.
