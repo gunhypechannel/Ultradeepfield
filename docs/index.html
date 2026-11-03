@@ -2238,7 +2238,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 267;
+const GAME_V = 268;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -11846,7 +11846,7 @@ function renderSheet() {
 function playVids(w) { for (const v of w.querySelectorAll("video[data-auto]")) { v.muted = true; v.defaultMuted = true; v.playsInline = true; v.loop = true; if (v.paused) { const p = v.play(); if (p && p.catch) p.catch(() => setTimeout(() => v.isConnected && v.paused && v.play().catch(() => {}), 400)); } } }
 document.addEventListener("visibilitychange", () => { if (!document.hidden) { const w = $("#sheetwrap"); if (w) playVids(w); } });
 /* v95: the Cube clip (H.264, steady 30 fps) is fetched quietly a few seconds after load, so the event card starts it at once */
-setTimeout(() => { try { const v = document.createElement("video"); v.muted = true; v.preload = "auto"; v.src = "art/cube-event.mp4"; v.load(); window.__cubeWarm = v; } catch (e) {} }, 4000);
+if (!IOS) setTimeout(() => { try { const v = document.createElement("video"); v.muted = true; v.preload = "auto"; v.src = "art/cube-event.mp4"; v.load(); window.__cubeWarm = v; } catch (e) {} }, 4000); // v268: iPhones and iPads don't keep a decoded video in memory just in case
 function unitGrid(n) { const e = Object.entries(n).filter(([, v]) => v > 0); return e.length ? `<div class="units">${e.map(([k, v]) => `<div class="unit"><canvas data-u="${k}"></canvas><span>${unitName(k)}<br><b>×${fmt(v)}</b></span></div>`).join("")}</div>` : '<p class="note">None</p>'; }
 /* v264 Efficient fight: on an attack (a player's or the Hive's world, a pirate crew, a space monster or a Cube boss) one tap picks just enough
    of your warships to win: the fewest, in the same mix as what you have, that win every one of 20 simulated battles against what's there
@@ -13965,7 +13965,14 @@ function finishBattle() {
     <div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost wide" data-act="breplay">Watch again</button><button class="btn wide" data-act="bdetail" data-id="${r.id}">Full report</button><button class="btn ghost wide" data-act="bclose">Close</button></div></div>`;
   battleCtl();
 }
-function closeBattle() { if (battle) crumb("battle closed"); ART_LIVE.clear(); gpuNap(false); battle = null; try { SFX.stopAll(); } catch (e) {} const w = $("#battle"); if (w) { if (reduced) w.remove(); else { w.id = ""; w.querySelectorAll("[id]").forEach(e => e.removeAttribute("id")); w.classList.add("closing"); setTimeout(() => w.remove(), 230); } } flushSay(); }
+/* v268 closing a battle hands its memory back at once. Both iPhone crash reports from v264 and v265 came seconds after "battle closed": the
+   battle's screen-sized canvases (frame, light layer, bloom chain, backdrop, dust, grade) stayed allocated until the browser got round to
+   collecting them, while the map and base renderers grew back to full size and the next screen opened on top. Now the canvases are emptied
+   on close (Safari frees a canvas the moment its size is zero), the battle screen goes at once on iPhones and iPads instead of fading, the
+   3D views grow back a moment later, and nothing pops up for a few seconds. */
+function battleFree(b) { try { const cs = [$("#bcv"), b.fxc, b.bg, b.dustL, b.fgL && b.fgL.grade].concat(b.bloomC || []); for (const c of cs) if (c && c.getContext) { c.width = c.height = 0; }
+  b.fxc = b.bg = b.dustL = b.fgL = b.bloomC = null; for (const k of ["fx", "fire", "smoke", "sparks", "flashes", "embers", "debris", "parts", "trails", "booms", "flak", "beams", "salvos", "wrecks", "rings", "nums"]) if (Array.isArray(b[k])) b[k].length = 0; } catch (e) {} }
+function closeBattle() { if (battle) { crumb("battle closed"); battleFree(battle); G.btClosedAt = performance.now(); } ART_LIVE.clear(); battle = null; setTimeout(() => { if (!battle) { gpuNap(false); } }, 400); try { SFX.stopAll(); } catch (e) {} const w = $("#battle"); if (w) { if (reduced || IOS) w.remove(); else { w.id = ""; w.querySelectorAll("[id]").forEach(e => e.removeAttribute("id")); w.classList.add("closing"); setTimeout(() => w.remove(), 230); } } flushSay(); }
 
 /* ---------- animation loop ---------- */
 /* phones and tablets: when nobody has touched the screen for 4 seconds (and no battle is playing) the 3D views drop to 30 fps,
@@ -15562,7 +15569,7 @@ function start(data) {
     try {
       if (++slow % 20 === 0) { radarSweep(); nexusFinalize(); chatInit(); phalanxSweep(); botWarTick(); vipTrial(); }
       // Astrophysics arrived after some commanders already held several worlds: credit them the levels their empire needs, once
-      if (slow % 20 === 9 && S.intro && S.faction && !sheet && !battle && S.loginNag !== utcDay() && !loginState().claimed) { S.loginNag = utcDay(); openSheet({ type: "events" }); }
+      if (slow % 20 === 9 && S.intro && S.faction && !sheet && !battle && performance.now() - (G.btClosedAt || -1e9) > 15000 && S.loginNag !== utcDay() && !loginState().claimed) { S.loginNag = utcDay(); crumb("events opened (daily login)"); openSheet({ type: "events" }); } // v268: not straight after a battle
       if (!S.resG && slow > 4) { S.resG = 1; const r0 = S.r; r0.computer = Math.max(r0.computer || 0, (r0.command || 0) + 1); if (r0.hyper > 0) r0.hyperT = Math.max(r0.hyperT || 0, Math.min(8, Math.max(3, r0.hyper))); if (r0.astro > 0) r0.espionage = Math.max(r0.espionage || 0, 4); if (own("worldbreaker") > 0) r0.graviton = Math.max(r0.graviton || 0, 1); dirty(); }
       if (G.ready && !S.astroG && slow > 6) { S.astroG = 1; const need = Math.min(R.astro.max, 2 * (myPlanets().length - 1)); if ((S.r.astro || 0) < need) { S.r.astro = need; note(`New research: Astrophysics. Your ${myPlanets().length} worlds earned you Lv.${need} for free.`, "win"); } dirty(); }
       if (slow % 2 === 0) fogTick();
