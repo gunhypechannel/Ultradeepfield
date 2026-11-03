@@ -2233,7 +2233,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 252;
+const GAME_V = 253;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13005,7 +13005,7 @@ function battleFlags(r, Q) { const mineS = r.kind === "defense" || r.kind === "r
     out[sd] = L.map(e => ({ f: e.f, idx: e.idx, acc: facAcc(e.f), col: FLAG_GLOW[e.f], rgba: `rgba(${FLAG_GLOW[e.f] >> 16},${FLAG_GLOW[e.f] >> 8 & 255},${FLAG_GLOW[e.f] & 255},1)` })); }
   return out; }
 function drawBattleFlags(ctx, b, scr, pos, W, H, t, real, T, lo, d) {
-  if (!b.flags) return; const Q = b.Q, L0 = Math.min(W, H) * .24; let shots = b.fgS || (b.fgS = []);
+  if (!b.flags) return; const Q = b.Q, L0 = Math.min(W, H) * .24, shots = b.fgS || (b.fgS = []), busy1 = Q.length > 60;
   for (const sd of ["d", "a"]) for (const e of b.flags[sd]) { const art = shipArtSoon("flagship", e.acc, "side"); if (!art) continue;
     let sx = 0, sy = 0, sw = 0, gone = false, foeX = 0, foeW = 0;
     for (const i of e.idx) { const n = b.n[i], p = pos[i], s = scr[i]; if (n > 0 && p && p.fl & 6) gone = true; if (n <= 0 || !p || p.fl & 6 || !s) continue; const w = Math.sqrt(Math.max(1, n * (Q[i].pow || 1))); sx += s.x * w; sy += s.y * w; sw += w; }
@@ -13021,13 +13021,27 @@ function drawBattleFlags(ctx, b, scr, pos, W, H, t, real, T, lo, d) {
     ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = (.75 + .25 * Math.sin(t * .03 + e.col)) * fade; for (const oy of [-.045, .03, .075]) { ctx.drawImage(glowSprite(e.rgba), -L0 * 1.42, L0 * oy - L0 * .05, L0 * .6, L0 * .1); ctx.drawImage(glowSprite("rgba(255,255,255,1)"), -L0 * 1.02, L0 * oy - L0 * .022, L0 * .14, L0 * .044); }
     ctx.restore();
     if (e.dead == null) { const fz = Math.max(11 * d, L0 * .1); ctx.save(); ctx.font = `700 ${fz}px ${getComputedStyle(document.documentElement).getPropertyValue("--f-display") || "sans-serif"}`; ctx.textAlign = "center"; ctx.fillStyle = e.rgba; ctx.shadowColor = e.rgba; ctx.shadowBlur = 8 * d; ctx.globalAlpha = .9; ctx.fillText(FACTIONS[e.f].n, x, y + L0 * .34); ctx.restore(); }
-    if (e.dead == null && !b.paused && !b.done && b.intro <= 0 && foes.length && T >= (e.nt || 0)) { e.nt = T + .28 + Math.random() * .5; const i = foes[(Math.random() * foes.length) | 0]; shots.push({ x: x + face * L0 * (-.45 + Math.random() * 1), y: y - L0 * .06 + Math.random() * L0 * .1, i, t, rgba: e.rgba, hit: 0 }); if (shots.length > 24) shots.shift(); } }
-  // the flagships' guns: bright tracers in their faction's colour
-  b.fgS = shots = shots.filter(o => t - o.t < 200); if (!shots.length) return; ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
-  for (const o of shots) { const s = scr[o.i]; if (!s) continue; const k = (t - o.t) / 200, h0 = clamp(k * 1.5 - .25, 0, 1), h1 = clamp(k * 1.5 + .1, 0, 1), ax = o.x + (s.x - o.x) * h0, ay = o.y + (s.y - o.y) * h0, bx = o.x + (s.x - o.x) * h1, by = o.y + (s.y - o.y) * h1;
-    ctx.globalAlpha = .9; ctx.strokeStyle = o.rgba; ctx.lineWidth = 3.2 * d; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.1 * d; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
-    if (k > .55 && !o.hit) { o.hit = 1; b.booms.push({ x: s.x, y: s.y, t, small: 1 }); } }
-  ctx.restore(); }
+    /* v253 the flagship's guns, visual only (no damage, no effect on the result): 5 turrets each hammer one enemy squadron with short bursts. Every couple of
+       seconds the guns swing to the next 5, working through a shuffled list of every enemy, so in time the whole enemy fleet comes under fire. */
+    if (e.dead == null && !b.paused && !b.done && b.intro <= 0 && foes.length) { const slow = busy1 || b.tier >= 2 || lo, gap = slow ? 105 : 62;
+      if (!e.guns || t >= e.swap || e.guns.some(g => !(b.n[g.i] > 0 && pos[g.i] && !(pos[g.i].fl & 6) && scr[g.i]))) { const full = !e.guns || t >= e.swap;
+        if (!e.ord || (e.pi || 0) >= e.ord.length) { e.ord = Q.map((q, i) => q.side !== sd ? i : -1).filter(i => i >= 0); for (let i = e.ord.length - 1; i > 0; i--) { const j2 = Math.random() * (i + 1) | 0, tm = e.ord[i]; e.ord[i] = e.ord[j2]; e.ord[j2] = tm; } e.pi = 0; }
+        const next = () => { for (let n2 = 0; n2 < e.ord.length; n2++) { if ((e.pi || 0) >= e.ord.length) e.pi = 0; const i = e.ord[e.pi++]; if (foes.includes(i) && !(e.guns || []).some(g => g.i === i)) return i; } return foes[Math.random() * foes.length | 0]; };
+        if (full) { e.guns = FLAG_GUNS.map(g0 => ({ i: -1, gx: g0[0], gy: g0[1], nb: t + Math.random() * 180, left: 0 })); for (const g of e.guns) g.i = next(); e.swap = t + 2100 + Math.random() * 500; e.sets = (e.sets || 0) + 1; }
+        else for (const g of e.guns) if (!(b.n[g.i] > 0 && pos[g.i] && !(pos[g.i].fl & 6) && scr[g.i])) g.i = next(); }
+      for (const g of e.guns) { if (g.nb < t - 120) g.nb = t - 120; let n3 = 0; while (g.nb <= t && n3++ < 2) { if (g.left <= 0) { g.left = 5 + (Math.random() * 3 | 0); } const gx = x + face * L0 * g.gx, gy = y + L0 * g.gy, S0 = scr[g.i]; if (!S0) break;
+          const ox = (Math.random() - .5) * L0 * .34, oy = (Math.random() - .5) * L0 * .1; shots.push({ x: gx, y: gy, i: g.i, ox, oy, t: g.nb, life: clamp(Math.hypot(S0.x - gx, S0.y - gy) / (W * 2.4) * 1000, 90, 300), rgba: e.rgba, hit: 0 }); (e.mz = e.mz || []).push({ x: gx, y: gy, t: g.nb }); if (e.mz.length > 10) e.mz.shift(); e.fired = (e.fired || 0) + 1;
+          if (--g.left <= 0) g.nb += 170 + Math.random() * 170; else g.nb += gap; } } if (shots.length > 150) shots.splice(0, shots.length - 150); } }
+  b.fgS = shots; }
+const FLAG_GUNS = [[.56, -.075], [.26, -.11], [-.04, -.135], [-.3, -.125], [-.56, -.09]]; // where its five turrets sit along the hull, as a fraction of its size
+/* the tracers go on the HDR light layer, over the ships: thin white-hot dashes in the faction's colour, a blink at each gun, and a spark on some of the hits */
+function drawFlagShots(ctx, b, scr, t, d, lo) { const shots = b.fgS; if (!shots) return; b.fgS = shots.filter(o => t - o.t < o.life); if (!b.fgS.length && !b.flags) return; const by = new Map();
+  ctx.save(); ctx.lineCap = "round"; const dash = 15 * d;
+  for (const o of b.fgS) { const s = scr[o.i]; if (!s || t < o.t) continue; const k = (t - o.t) / o.life, tx = s.x + o.ox, ty = s.y + o.oy, dx = tx - o.x, dy = ty - o.y, L = Math.hypot(dx, dy) || 1, hd = k * L, tl = Math.max(0, hd - dash); let P = by.get(o.rgba); if (!P) by.set(o.rgba, P = []); P.push(o.x + dx / L * tl, o.y + dy / L * tl, o.x + dx / L * hd, o.y + dy / L * hd);
+    if (k > .86 && !o.hit) { o.hit = 1; if (!lo && Math.random() < .3) { (b.hits = b.hits || []).push({ x: tx, y: ty, t, r: 7 * d, col: o.rgba, rot: Math.random() * .8 }); if (b.hits.length > 40) b.hits.shift(); } } }
+  for (const [c, P] of by) { ctx.beginPath(); for (let i = 0; i < P.length; i += 4) { ctx.moveTo(P[i], P[i + 1]); ctx.lineTo(P[i + 2], P[i + 3]); } ctx.strokeStyle = c; ctx.globalAlpha = .55; ctx.lineWidth = 2.6 * d; ctx.stroke(); ctx.strokeStyle = "#ffffff"; ctx.globalAlpha = .95; ctx.lineWidth = .95 * d; ctx.stroke(); }
+  if (!lo) for (const sd of ["a", "d"]) for (const e of b.flags[sd]) { if (e.dead != null || !e.mz) continue; const mr = 6.5 * d; for (const m of e.mz) { const k = (t - m.t) / 70; if (k < 0 || k >= 1) continue; ctx.globalAlpha = 1 - k; ctx.drawImage(starSprite(e.rgba), m.x - mr, m.y - mr, mr * 2, mr * 2); } }
+  ctx.restore(); ctx.globalAlpha = 1; }
 /* v66: start baking a battle's ship sprites the moment its report opens, so the replay starts with every ship in 3D */
 function battlePrebake(r) { if (!r || !r.start || battlePrebake[r.id]) return; battlePrebake[r.id] = 1; fbBake(); const acc = battleAcc(r);
   for (const sd of ["a", "d"]) { const ks = new Set(Object.keys(r.start[sd] || {})); if (r.sim && Array.isArray(r.sim[sd === "a" ? "A" : "D"])) for (const x of r.sim[sd === "a" ? "A" : "D"]) ks.add(x[0]); for (const k of ks) { cardPal(k); shipArtSoon(k, acc[sd], "side"); } } }
@@ -13467,6 +13481,7 @@ function drawBattle(t) {
     ctx.globalAlpha = (1 - k) * .55; ctx.drawImage(glowSprite(m.col), fx2 - r * .7, fy2 - r * .7, r * 1.4, r * 1.4); ctx.globalAlpha = 1 - k; ctx.drawImage(starSprite(m.col), fx2 - r, fy2 - r, r * 2, r * 2); }
   ctx.globalAlpha = 1;
   if (!lo) drawTrails(ctx, b, t, d, busy); // v251
+  drawFlagShots(ctx, b, scr, t, d, lo); // v253
   for (const f of b.fx) {
     if (T < f.t0) continue; const v = f.v, s = scr[v.s], e = scr[v.e], p = clamp((T - f.t0) / (f.t1 - f.t0), 0, 1), col = shotCol((Q[v.s] || {}).k, f.side), ks = f.sz === 0 ? .5 : f.sz === 2 ? 1.45 : 1; // v201: shot size follows hull size
     const [sx, sy] = hp(v.s, f.off + f.t0 * .13, 1), [ex, ey] = hp(v.e, f.off * 1.7 + .5, 0), stop = f.ic ? .6 : 1, q = Math.min(p, stop) / 1;
