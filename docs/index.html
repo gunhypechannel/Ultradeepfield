@@ -2258,7 +2258,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 277;
+const GAME_V = 278;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5361,7 +5361,7 @@ function glWatch(W) {
 /* v172 every hull type's map model (and its far stand-in) is built in idle moments after the map opens, for your faction and the
    hostile one, so a 60 vs 60 battle never has to build a dozen hull types in the same frame (the 0.3 s hitches when one began) */
 const FLEET_FS = .616; // v274: one fleet size at every zoom (was clamp(dist * .0075, .7, 8) * .88)
-function mapWarm(W) {
+function mapShaderWarm(W) {
   if (!W || W.warm || !W.renderer || !W.renderer.compile) return; W.warm = { anchors: [] };
   const idle = f => window.requestIdleCallback ? requestIdleCallback(f, { timeout: 3000 }) : setTimeout(f, 90), A = W.warm.anchors;
   const ws = new TH.Scene(); ws.fog = W.scene.fog || null; ws.environment = W.scene.environment || null;
@@ -7675,9 +7675,10 @@ function draw3D(t) {
     else { pt = ARC(path.a, path.b, path.k); nx = ARC(path.a, path.b, Math.min(1, path.k + .01)); if (path.k >= 1) nx = { x: pt.x + (path.b.x - path.a.x) * .01, y: pt.y, z: pt.z + (path.b.z - path.a.z) * .01 };
       // v174 any course that passes close to the Cube (crossing the map over the Void) is lifted round its hull, never through it
       const np = W.nexus.position; if (Math.hypot(pt.x - np.x, pt.y - np.y, pt.z - np.z) < CUBE_CORNER + 30) { const rad = (o.grp.userData.R || 4) * fsF * (o.grp.userData.size || 1) * .7 + 2; V3.set(pt.x, pt.y, pt.z); cubeSweep(W, o.lastC, V3, rad); pt = { x: V3.x, y: V3.y, z: V3.z }; (o.lastC || (o.lastC = new TH.Vector3())).copy(V3); V3.set(nx.x, nx.y, nx.z); cubeClear(W, V3, rad); nx = { x: V3.x, y: V3.y, z: V3.z }; } else if (o.lastC) o.lastC = null; }
+    if (!Number.isFinite(pt.x + pt.y + pt.z)) { o.lastC = null; continue; } // v278: never draw (or follow) a fleet at a NaN position
     o.grp.position.set(pt.x, pt.y, pt.z); o.grp.lookAt(nx.x, nx.y, nx.z);
     // bank into turns, and drop in and out of warp with a flare at each end of the trip
-    const yaw = Math.atan2(nx.x - pt.x, nx.z - pt.z); if (o.yaw != null) { let dy = yaw - o.yaw; if (dy > Math.PI) dy -= TAU; if (dy < -Math.PI) dy += TAU; o.bank += (clamp(-dy * 30, -.55, .55) - o.bank) * .08; } o.yaw = yaw; o.grp.rotateZ(o.bank);
+    const yaw = Math.atan2(nx.x - pt.x, nx.z - pt.z); if (o.yaw != null) { let dy = yaw - o.yaw; if (dy > Math.PI) dy -= TAU; if (dy < -Math.PI) dy += TAU; o.bank += (clamp(-dy * 30, -.55, .55) - o.bank) * .08; } o.yaw = yaw; if (!Number.isFinite(o.bank)) o.bank = 0; if (!Number.isFinite(o.yaw)) o.yaw = null; o.grp.rotateZ(o.bank || 0);
     const wk = path.park || path.k >= 1 ? 1 : Math.min(clamp(path.k / .03, 0, 1), id === "raid" ? 1 : clamp((1 - path.k) / .03, 0, 1)), ws = fsF * (o.grp.userData.size || 1) * (.25 + .75 * wk);
     o.grp.scale.setScalar(ws);
     if (o.warp) { const fl = 1 - wk; o.warp.visible = fl > .02; o.warp.material.opacity = fl * .9; o.warp.position.set(pt.x, pt.y, pt.z); o.warp.scale.setScalar(fs * 9 * (.4 + fl)); }
@@ -10323,7 +10324,7 @@ function render(keepScroll) {
         mapHost.dataset.init = "1";
         if (TH && !G3fail) { G3 = init3D(mapHost); if (G3) { bind3D($("#galaxyfx")); hoverBind($("#galaxyfx")); }
           // v108 mobile: three.js restores a lost WebGL context itself; we re-measure after a restore, a resume or a turn of the phone
-          if (G3) { const re = () => { if (G3) G3.size = [0, 0]; }; glWatch(G3); shipPrewarm(G3); mapWarm(G3); if (!map3DInit.once) { map3DInit.once = 1; document.addEventListener("visibilitychange", () => { if (!document.hidden) re(); }); addEventListener("orientationchange", () => setTimeout(re, 300)); } } }
+          if (G3) { const re = () => { if (G3) G3.size = [0, 0]; }; glWatch(G3); shipPrewarm(G3); mapShaderWarm(G3); if (!map3DInit.once) { map3DInit.once = 1; document.addEventListener("visibilitychange", () => { if (!document.hidden) re(); }); addEventListener("orientationchange", () => setTimeout(re, 300)); } } }
         if (!G3) { const tmp = document.createElement("div"); tmp.innerHTML = mapShell(false); m.innerHTML = ""; mapHost = tmp.firstElementChild; mapHost.dataset.init = "1"; m.appendChild(mapHost); bindMap($("#galaxy")); }
       }
     }
@@ -14213,7 +14214,7 @@ function gfxApply() {
   perfFps(); }
 /* first time the map opens: render the close-up and mid views once, off-screen in the same task (only the last render is shown),
    so the GPU compiles planet-detail, fleet and effect shaders now instead of stalling 200 ms the first time you zoom in */
-function mapWarm(t) { const W = G3, c = W.cam, h = homePlanet(); if (!W || !h) return; const keep = { tx: c.tx, ty: c.ty, tz: c.tz, dist: c.dist, th: c.th, ph: c.ph, goal: c.goal, follow: c.follow, followFleet: c.followFleet }, q = P3(h, now());
+function mapWarm(t) { const W = G3, c = W && W.cam, h = homePlanet(); if (!W || !h || !Number.isFinite(t)) return; const keep = { tx: c.tx, ty: c.ty, tz: c.tz, dist: c.dist, th: c.th, ph: c.ph, goal: c.goal, follow: c.follow, followFleet: c.followFleet }, q = P3(h, now());
   c.goal = null; c.follow = null; c.followFleet = null; for (const d of [14, 70, 300]) { c.tx = q.x; c.ty = q.y; c.tz = q.z; c.dist = d; try { draw3D(t); } catch (e) {} } Object.assign(c, keep);
   // one of every model type the map can show (monsters, Cubes, hideouts, fields, stations, every planet surface), compiled together
   // and removed again: each first-time shader compile was a 100-1300 ms stall the first time you met that kind of object
