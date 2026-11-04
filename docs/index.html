@@ -2258,7 +2258,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 275;
+const GAME_V = 276;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -7651,6 +7651,7 @@ function draw3D(t) {
   if (cam.followFleet && !list.some(x => x[0] === cam.followFleet)) { const mf = S.fleets.find(x => x.id === cam.followFleet); if (mf && jsMerged(mf)) cam.followFleet = "js-" + mf.assault; } // following your ships? follow the whole strike
   if (S.raid) list.push(["raid", { phase: "out", raid: true }, true]);
   for (const x of visibleInbound(T)) list.push(["in-" + x.id, { phase: "out", pid: x.pid, ox: x.ox, oy: x.oy, out: x.out, arrive: x.arrive, n: x.n, enemy: true, src: x.src, from: x.from }, true]);
+  if (W.fmFr !== W.fr) { W.fmFr = W.fr; W.fleetMade = 0; } // v276: the budget starts fresh every frame
   for (const [id, f, hostile] of list) {
     let path;
     if (id === "raid") { const hp = homePlanet(); if (!hp) continue; const b = P3(hp, T), ang = (hash(G.me || "x") % 360) / 57.3; path = { a: { x: b.x + Math.cos(ang) * 160, y: 30, z: b.z + Math.sin(ang) * 160 }, b, k: 1 - clamp((S.raid.at - T) / 120000, 0, 1) }; }
