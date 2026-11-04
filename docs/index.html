@@ -1911,21 +1911,28 @@ function missileHit(s) {
 
 /* ---------- elemental runes: socket them for permanent bonuses ---------- */
 const ELEM = {
-  fire:   { n: "Fire",   col: "#ff7a45", slots: 8, stat: "Fleet attack", per: 1 },
-  water:  { n: "Water",  col: "#4fc3ff", slots: 8, stat: "Fleet shields", per: 1 },
-  earth:  { n: "Earth",  col: "#f0b840", slots: 8, stat: "Fleet armor", per: 1 },
-  air:    { n: "Air",    col: "#b8e04a", slots: 8, stat: "Fleet speed", per: 1 },
-  spirit: { n: "Spirit", col: "#e06bd8", slots: 3, stat: "Resource output", per: 2 }
+  fire:   { n: "Fire",   col: "#ff7a45", slots: 4, stat: "Fleet attack", per: 1 },
+  water:  { n: "Water",  col: "#4fc3ff", slots: 4, stat: "Fleet shields", per: 1 },
+  earth:  { n: "Earth",  col: "#f0b840", slots: 4, stat: "Fleet armor", per: 1 },
+  air:    { n: "Air",    col: "#b8e04a", slots: 4, stat: "Fleet speed", per: 1 },
+  spirit: { n: "Spirit", col: "#e06bd8", slots: 2, stat: "Resource output", per: 1 }
 };
 /* rings grow: Expand adds sockets (+2, or +1 for Spirit, up to 5 times); Upgrade raises the ring's tier (each socketed rune +25%
    stronger and +1% more resonance per tier, up to tier 5) and needs a full ring */
 const RING_MAX = 5;
 const ringX = e => Math.min(RING_MAX, ((S && S.ringX) || {})[e] || 0), ringT = e => Math.min(RING_MAX, ((S && S.ringT) || {})[e] || 0);
-const elemSlots = e => ELEM[e].slots + ringX(e) * (e === "spirit" ? 1 : 2);
-const ringXCost = e => { const x = ringX(e) + 1; return { c: Math.round(18000 * x * x), g: Math.round(4000 * x * x), shards: 8 * x }; };
-const ringTCost = e => { const t = ringT(e) + 1; return { m: Math.round(30000 * t * t), g: Math.round(12000 * t * t), shards: 12 * t }; };
+/* v272 balance: 4 sockets a ring (Spirit 2), +1 per expansion (max 9, Spirit 7), 1% a rune, +20% per tier (tier 5 doubles every rune),
+   and a full ring resonates for +2% (+1% per tier). A maxed Fire ring is +25% attack (was +48%); it takes 43 runes to fill every ring.
+   Level lock: rings open at commander Lv.5, and each ring can take one step (an expansion or a tier) per 5 commander levels */
+const ELEM_LV = 5, RING_TK = .2;
+const elemSlots = e => ELEM[e].slots + ringX(e);
+const myCmdLv = () => { try { return cmdLevel(score()); } catch (e) { return 1; } };
+const ringSteps = () => Math.floor(myCmdLv() / ELEM_LV); // steps allowed per ring right now
+const ringUsed = e => ringX(e) + ringT(e), ringNextLv = e => (ringUsed(e) + 1) * ELEM_LV;
+const ringXCost = e => { const x = ringX(e) + 1; return { c: Math.round(60000 * x * x), g: Math.round(20000 * x * x), shards: 8 * x }; };
+const ringTCost = e => { const t = ringT(e) + 1; return { m: Math.round(100000 * t * t), g: Math.round(40000 * t * t), shards: 12 * t }; };
 const runeOn = e => Math.min(elemSlots(e), ((S && S.sock) || {})[e] || 0);
-const runePct = e => S ? Math.round((runeOn(e) * ELEM[e].per * (1 + .25 * ringT(e)) + (runeOn(e) >= elemSlots(e) ? 3 + ringT(e) : 0)) * 10) / 10 : 0; // a full ring resonates for +3% (+1% per tier)
+const runePct = e => S ? Math.round((runeOn(e) * ELEM[e].per * (1 + RING_TK * ringT(e)) + (runeOn(e) >= elemSlots(e) ? 2 + ringT(e) : 0)) * 10) / 10 : 0; // a full ring resonates for +3% (+1% per tier)
 /* v270: runes are much rarer. A Cube core only sometimes holds one: a 15% chance at Lv.1, +1.5% per level up to 50%,
    +10% on a joint strike against a Lv.10+ Cube. A Lv.25+ core that holds runes holds 2 */
 const runeChance = (lvl, rally) => Math.min(.5, .15 + .015 * ((lvl || 1) - 1)) + (rally && lvl >= 10 ? .1 : 0);
@@ -2251,7 +2258,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 271;
+const GAME_V = 272;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -2866,6 +2873,8 @@ function migrate(st) {
     return false;
   });
   st.v = 3;
+  if (!st.elem272) { st.elem272 = 1; st.sock = st.sock || {}; st.runes = st.runes || {}; // v272: smaller rings, spare runes come back
+    for (const e in ELEM) { const sl = ELEM[e].slots + Math.min(RING_MAX, (st.ringX || {})[e] || 0), on = st.sock[e] || 0; if (on > sl) { st.runes[e] = (st.runes[e] || 0) + on - sl; st.sock[e] = sl; } } }
   return st;
 }
 
@@ -2898,6 +2907,11 @@ function rates() {
 }
 const lvlOf = k => k === "moon" ? (homePlanet() && homePlanet().moon ? 1 : 0) : (k in B ? S.b[k] : S.r[k]) || 0;
 const missing = req => Object.entries(req || {}).filter(([k, l]) => lvlOf(k) < l);
+/* v272: research can be started from any planet. The "Research Center Lv.N" a technology needs is met by your best Research Center
+   on any world (OGame: research starts at a planet whose lab is high enough), and all labs still add up for speed */
+const labTop = () => { let L = (S && S.b.lab) || 0; try { for (const p of myPlanets()) if (p.kind !== "home") L = Math.max(L, (p.b || {}).lab || 0); } catch (e) {} return L; };
+const lvlR = k => k === "lab" ? labTop() : lvlOf(k);
+const missingR = req => Object.entries(req || {}).filter(([k, l]) => lvlR(k) < l);
 const reqText = req => missing(req).map(([k, l]) => `${ANY[k].n} Lv.${l}`).join(", ");
 /* build time on a planet: a colony uses its own Drone Works and Nanite Assembly, the homeworld its own */
 /* v79 balance: costs still double by level (the resource sink is unchanged), but job times past 1 hour grow more gently, so a
@@ -2923,7 +2937,7 @@ const rNext = k => S.r[k] + 1 + (S.rq && S.rq.k === k ? 1 : 0) + rqList().filter
 const refundRes = c => { for (const r of ["m", "c", "g"]) S.res[r] += c[r] || 0; S.spent -= total(c); };
 function startNextB(t0) { const q = bqList(); while (q.length) { const it = q.shift(); if (missing(B[it.k].req).length) { refundRes(it.c); note(`${B[it.k].n} left the construction queue (requirements not met). Refunded.`, "warn"); continue; }
     const lvl = S.b[it.k] + 1; S.bq = { k: it.k, lvl, s: t0, e: t0 + bTimeL(it.k, lvl) * QFAST, c: it.c }; return; } }
-function startNextR(t0) { const q = rqList(); while (q.length) { const it = q.shift(); if (missing(R[it.k].req).length) { refundRes(it.c); note(`${R[it.k].n} left the research queue (requirements not met). Refunded.`, "warn"); continue; }
+function startNextR(t0) { const q = rqList(); while (q.length) { const it = q.shift(); if (missingR(R[it.k].req).length) { refundRes(it.c); note(`${R[it.k].n} left the research queue (requirements not met). Refunded.`, "warn"); continue; }
     const lvl = S.r[it.k] + 1; S.rq = { k: it.k, lvl, s: t0, e: t0 + rTimeL(it.k, lvl) * QFAST, c: it.c }; return; } }
 /* colonies keep their own queues; the jobs are paid from the colony's stockpile when queued */
 const cqList = p => { S.cqq = S.cqq || {}; return S.cqq[p.id] || (S.cqq[p.id] = []); }, csList = p => { S.csq = S.csq || {}; return S.csq[p.id] || (S.csq[p.id] = []); };
@@ -10592,7 +10606,7 @@ function vBaseOld() {
     <h2 class="sec">Work queues</h2>
     <div class="queue">
       ${qRow("Construction", S.bq && { what: `${B[S.bq.k].n} → Lv.${S.bq.lvl}`, s: S.bq.s, e: S.bq.e, boost: "b", cancel: "b", finish: "b" }, "No construction running", ["build"])}
-      ${qRow("Research", S.rq && { what: `${R[S.rq.k].n} → Lv.${S.rq.lvl}`, s: S.rq.s, e: S.rq.e, boost: "r", cancel: "r", finish: "r" }, S.b.lab ? "No research running" : "Build a Research Center to unlock", [S.b.lab ? "lab" : "build", S.b.lab ? "" : "fac"])}
+      ${qRow("Research", S.rq && { what: `${R[S.rq.k].n} → Lv.${S.rq.lvl}`, s: S.rq.s, e: S.rq.e, boost: "r", cancel: "r", finish: "r" }, labTop() ? "No research running" : "Build a Research Center to unlock", [labTop() ? "lab" : "build", labTop() ? "" : "fac"])}
       ${qRow("Shipyard", sqItem, S.b.shipyard ? "Shipyard is idle" : "Build a Shipyard to make ships", [S.b.shipyard ? "fleet" : "build", S.b.shipyard ? "ships" : "fac"])}
       ${cq.map(p => qRow(`Colony · ${esc(p.name)}`, { what: `${B[p.cq.k].n} → Lv.${p.cq.lvl}`, s: p.cq.s, e: p.cq.e })).join("")}
     </div>
@@ -10678,7 +10692,7 @@ function cbCard(p, k) { // a colony's building, priced from and built with that 
   return bnCard({ kind: "b", k, pid: p.id, name: B[k].n, lv: L, art: `data-bld="${k}|${L}|${busy ? 1 : 0}"`, right, busy, locked: miss.length > 0, bar: busy ? [p.cq.s, p.cq.e] : null });
 }
 function rCardN(k) {
-  const L = S.r[k], miss = missing(R[k].req), busy = S.rq && S.rq.k === k, queued = rqList().filter(x => x.k === k).length, T = now();
+  const L = S.r[k], miss = missingR(R[k].req), busy = S.rq && S.rq.k === k, queued = rqList().filter(x => x.k === k).length, T = now();
   const right = busy ? `<span class="bnt" data-end="${S.rq.e}">${ftime(S.rq.e - T)}</span>` : queued ? `+${queued} queued` : rMaxed(k, rNext(k)) ? '<i class="bnok">Max</i>' : miss.length ? lockTxt(miss) : can(cost(R[k], rNext(k))) ? '<i class="bnok">● Ready</i>' : "";
   return bnCard({ kind: "r", k, name: R[k].n, lv: L, art: `data-rs="${k}|${L}"`, right, busy, locked: miss.length > 0, bar: busy ? [S.rq.s, S.rq.e] : null });
 }
@@ -10732,14 +10746,14 @@ function vBuild() {
 }
 function vResearch(P) {
   if (sub.lab === "tree") return vLab();
-  if (!S.b.lab) return `<div class="card hi"><h3 style="font-size:17px">No Research Center yet</h3><p class="note" style="margin:6px 0 10px">Research unlocks heavier ships, stronger weapons and faster fleets. Build a Research Center under Structures → Facility first.</p><button class="btn" data-act="bcat" data-v="fac">Open Facility</button></div>`;
+  if (!labTop()) return `<div class="card hi"><h3 style="font-size:17px">No Research Center yet</h3><p class="note" style="margin:6px 0 10px">Research unlocks heavier ships, stronger weapons and faster fleets. Build a Research Center under Structures → Facility first.</p><button class="btn" data-act="bcat" data-v="fac">Open Facility</button></div>`;
   const labs = [[S.homeName, S.b.lab || 0]].concat(myPlanets().filter(p => p.kind !== "home").map(p => [p.name, (p.b || {}).lab || 0]));
   const net = `<div class="card netc"><div class="nh"><b>Research network</b><span>×${1 + labPower()} speed</span></div><div class="nl">${labs.map(([n, l]) => `<span class="${l ? "" : "off"}">${esc(n)} <b>Lv.${l}</b></span>`).join("")}</div>
     <p class="note">Every Research Center you own works on the same project, so their levels add up${myPlanets().length > 1 ? "" : ". Build labs on your colonies to research faster"}.${S.r.irn ? ` Intergalactic Research Network Lv.${S.r.irn} adds another ${10 * S.r.irn}%.` : ""}</p></div>`;
-  const note = net + (P ? `<p class="note">Research is shared by your whole empire, so it's the same on every planet.</p>` : "");
+  const note = net + (P ? `<p class="note">Research is shared by your whole empire: start it from any planet. A technology's Research Center requirement is met by your best lab on any world (Lv.${labTop()}).</p>` : "");
   const cat = RCAT.find(c => c[0] === sub.rcat);
   if (!cat) {
-    const tile = ([c, keys], wide) => { const ready = keys.filter(k => R[k] && !missing(R[k].req).length && !rMaxed(k, rNext(k))).length, busy = S.rq && keys.includes(S.rq.k);
+    const tile = ([c, keys], wide) => { const ready = keys.filter(k => R[k] && !missingR(R[k].req).length && !rMaxed(k, rNext(k))).length, busy = S.rq && keys.includes(S.rq.k);
       return `<button class="rtile${wide ? " wide" : ""}${busy ? " busy" : ""}" data-act="rcat" data-v="${c}"><img src="${ART[RCAT_ART[c]] || ""}" alt="" loading="lazy"><span>${c === "Drive" ? "Engine" : c} Research</span><small>${keys.length} technologies${ready ? ` · ${ready} ready` : ""}${busy ? " · in progress" : ""}</small></button>`; };
     return `${queuePanel("r")}${note}<div class="rtiles">${RCAT.slice(0, 3).map(c => tile(c)).join("")}${RCAT.slice(3).map(c => tile(c, true)).join("")}</div>
       <button class="btn ghost wide" data-act="sub" data-g="lab" data-v="tree">Tech tree</button>`;
@@ -10777,7 +10791,7 @@ function vLab() {
   const t = sub.lab;
   const tabs = `<div class="tabs"><button class="${t === "list" ? "on" : ""}" data-act="sub" data-g="lab" data-v="list">Research</button><button class="${t === "tree" ? "on" : ""}" data-act="sub" data-g="lab" data-v="tree">Tech tree</button></div>`;
   if (t === "tree") {
-    const node = (k, kind) => { const d = kind === "b" ? B[k] : kind === "r" ? R[k] : UDEF(k); const met = !missing(d.req).length;
+    const node = (k, kind) => { const d = kind === "b" ? B[k] : kind === "r" ? R[k] : UDEF(k); const met = !(kind === "r" ? missingR : missing)(d.req).length;
       const ic = kind === "s" || kind === "d" ? `<canvas data-u="${k}"></canvas>` : `<span class="ti">${bicon(k)}</span>`;
       return `<div class="node${met ? " ok" : ""}">${ic}<span class="nm">${d.n}${met ? ' <span class="pill ok" style="margin-left:6px">Ready</span>' : ""}</span><span class="rq">${reqChips(d.req) || '<span class="chipq met">No requirements</span>'}</span></div>`; };
     return tabs + `<p class="note">What each ship, defense and technology needs. Green requirements are met.</p>
@@ -10785,11 +10799,11 @@ function vLab() {
       <h2 class="sec">Defenses</h2><div class="tree">${Object.keys(DF).map(k => node(k, "d")).join("")}${node("fortress", "b")}</div>
       <h2 class="sec">Technologies</h2><div class="tree">${Object.keys(R).map(k => node(k, "r")).join("")}</div>`;
   }
-  if (!S.b.lab) return tabs + `<div class="card hi"><h3 style="font-size:17px">No Research Center yet</h3><p class="note" style="margin:6px 0 10px">Research unlocks heavier ships, stronger weapons and faster fleets. Build a Research Center under Facilities first.</p><button class="btn" data-act="nav" data-v="build" data-s="fac">Open Facilities</button></div>`;
+  if (!labTop()) return tabs + `<div class="card hi"><h3 style="font-size:17px">No Research Center yet</h3><p class="note" style="margin:6px 0 10px">Research unlocks heavier ships, stronger weapons and faster fleets. Build a Research Center under Facilities first.</p><button class="btn" data-act="nav" data-v="build" data-s="fac">Open Facilities</button></div>`;
   const unlocks = k => Object.entries(Object.assign({}, SH, DF)).filter(([, u]) => u.req[k]).map(([, u]) => u.n);
   return tabs + `${queuePanel("r")}
-    ${RCAT.map(([cat, keys]) => { const ks = keys.filter(k => R[k] && (!sub.labAvail || !missing(R[k].req).length)); return ks.length ? `<h2 class="sec">${cat} research</h2>` + ks.map(k => {
-      const d = R[k], L = S.r[k], lvl = rNext(k), c = cost(d, lvl), miss = missing(d.req), busy = S.rq && S.rq.k === k, ul = unlocks(k), queued = rqList().filter(x => x.k === k).length;
+    ${RCAT.map(([cat, keys]) => { const ks = keys.filter(k => R[k] && (!sub.labAvail || !missingR(R[k].req).length)); return ks.length ? `<h2 class="sec">${cat} research</h2>` + ks.map(k => {
+      const d = R[k], L = S.r[k], lvl = rNext(k), c = cost(d, lvl), miss = missingR(d.req), busy = S.rq && S.rq.k === k, ul = unlocks(k), queued = rqList().filter(x => x.k === k).length;
       let btn;
       if (miss.length) btn = `<span class="req">Requires ${reqText(d.req)}</span>`;
       else if (rMaxed(k, lvl)) btn = `<span class="req" style="color:var(--green)">Maximum level</span>`;
@@ -12403,10 +12417,11 @@ function mElem() {
   const sum = Object.keys(ELEM).map(e => `<div class="mrow"><span style="color:${ELEM[e].col}">${ELEM[e].stat}</span><b>+${runePct(e)}%</b></div>`).join("");
   // ring workshop: expand for more sockets, upgrade the tier once a ring is full
   const shop = Object.keys(ELEM).map(e => { const d = ELEM[e], x = ringX(e), t = ringT(e), xc = ringXCost(e), tc = ringTCost(e), full = runeOn(e) >= elemSlots(e);
-    return `<div class="ringw" style="border-color:${d.col}55"><div class="rwh"><b style="color:${d.col}">${d.n} ring</b><small>${elemSlots(e)} sockets · tier ${t}/${RING_MAX} · each rune +${(d.per * (1 + .25 * t)).toFixed(2).replace(/\.?0+$/, "")}%</small></div>
-      <div class="rwb"><button class="btn ghost sm" data-act="ringExpand" data-e="${e}" ${x >= RING_MAX ? "disabled" : ""}>${x >= RING_MAX ? "Fully expanded" : `Expand +${e === "spirit" ? 1 : 2} · ${fmt(xc.c)} crystal, ${fmt(xc.g)} gas, ◆${xc.shards}`}</button>
-      <button class="btn amber sm" data-act="ringUpgrade" data-e="${e}" ${t >= RING_MAX || !full ? "disabled" : ""}>${t >= RING_MAX ? "Top tier" : !full ? "Upgrade (fill the ring first)" : `Upgrade to tier ${t + 1} · ${fmt(tc.m)} metal, ${fmt(tc.g)} gas, ◆${tc.shards}`}</button></div></div>`; }).join("");
-  return `<div class="mcard"><p>Socket runes into the five elemental rings for permanent bonuses. Each Fire, Water, Earth or Air rune adds 1%, each Spirit rune adds 2%, and a full ring resonates for another +3%. Tap a ring to socket a rune. Expand a ring for more sockets, and upgrade a full ring to make every rune in it stronger.</p>
+    return `<div class="ringw" style="border-color:${d.col}55"><div class="rwh"><b style="color:${d.col}">${d.n} ring</b><small>${elemSlots(e)} sockets · tier ${t}/${RING_MAX} · each rune +${(d.per * (1 + RING_TK * t)).toFixed(2).replace(/\.?0+$/, "")}% · ${ringUsed(e) >= ringSteps() && ringUsed(e) < RING_MAX * 2 ? `next step at commander Lv.${ringNextLv(e)}` : `${Math.max(0, ringSteps() - ringUsed(e))} step${ringSteps() - ringUsed(e) === 1 ? "" : "s"} open`}</small></div>
+      <div class="rwb"><button class="btn ghost sm" data-act="ringExpand" data-e="${e}" ${x >= RING_MAX || ringUsed(e) >= ringSteps() ? "disabled" : ""}>${x >= RING_MAX ? "Fully expanded" : ringUsed(e) >= ringSteps() ? `🔒 Expand at Lv.${ringNextLv(e)}` : `Expand +1 · ${fmt(xc.c)} crystal, ${fmt(xc.g)} gas, ◆${xc.shards}`}</button>
+      <button class="btn amber sm" data-act="ringUpgrade" data-e="${e}" ${t >= RING_MAX || !full || ringUsed(e) >= ringSteps() ? "disabled" : ""}>${t >= RING_MAX ? "Top tier" : ringUsed(e) >= ringSteps() ? `🔒 Upgrade at Lv.${ringNextLv(e)}` : !full ? "Upgrade (fill the ring first)" : `Upgrade to tier ${t + 1} · ${fmt(tc.m)} metal, ${fmt(tc.g)} gas, ◆${tc.shards}`}</button></div></div>`; }).join("");
+  return `<div class="mcard"><p>Socket runes into the five elemental rings for permanent bonuses. Every rune adds 1% and a full ring resonates for another +2%. Tap a ring to socket a rune. Expand a ring for one more socket, and upgrade a full ring to make every rune in it 20% stronger.</p>
+    <p class="note">${myCmdLv() < ELEM_LV ? `<b style="color:var(--amber)">🔒 The rings open at commander Lv.${ELEM_LV}</b> (you are Lv.${myCmdLv()}).` : `Level lock: each ring can be expanded or upgraded once for every ${ELEM_LV} commander levels. You are Lv.${myCmdLv()}: ${ringSteps()} step${ringSteps() === 1 ? "" : "s"} per ring.`}</p>
     <div class="runes"><span class="rpl p1"></span><span class="rpl p2"></span><span class="rpl p3"></span>${["fire", "water", "spirit", "earth", "air"].map(runeWheel).join("")}<div class="rsum">Summary</div></div>
     <div class="rsumb">${sum}</div>
     <h3 style="margin-top:8px">Ring workshop</h3>${shop}
@@ -12926,7 +12941,7 @@ function remind(kind, head, title, subHTML, idle, pid) {
 function awaySummary() {
   const n = AWAY.b.length + AWAY.r.length + AWAY.s.length; if (!n || !remindOn()) return;
   const part = (a, one, many) => a.length ? `${a.length} ${a.length > 1 ? many : one}` : "", parts = [part(AWAY.b, "building", "buildings"), part(AWAY.r, "research", "research projects"), part(AWAY.s, "ship batch", "ship batches")].filter(Boolean);
-  const idle = [["b", !S.bq], ["r", !S.rq && S.b.lab > 0], ["s", !S.sq.length && S.b.shipyard > 0]].filter(x => x[1]).map(x => ({ b: "construction", r: "research", s: "shipyard" })[x[0]]);
+  const idle = [["b", !S.bq], ["r", !S.rq && labTop() > 0], ["s", !S.sq.length && S.b.shipyard > 0]].filter(x => x[1]).map(x => ({ b: "construction", r: "research", s: "shipyard" })[x[0]]);
   const first = idle.length ? ({ construction: "b", research: "r", shipyard: "s" })[idle[0]] : "b";
   setTimeout(() => remind(first, "While you were away", `${parts.join(", ")} finished`, idle.length ? `Idle now: ${idle.join(", ")}. Queue the next jobs.` : "Every queue is still busy.", !!idle.length), 1200);
   AWAY.b = []; AWAY.r = []; AWAY.s = [];
@@ -14669,7 +14684,7 @@ function shYard() {
 }
 function shLabs() {
   const sv = sub.lab, sa = sub.labAvail; sub.lab = "list"; sub.labAvail = sheet.all ? false : true; let h = vLab(); sub.lab = sv; sub.labAvail = sa; h = h.replace(/^<div class="tabs">[\s\S]*?<\/div>/, "");
-  return `<div class="hd"><div><div class="chapter">Research Center Lv.${S.b.lab}</div><h2>Research</h2><p class="note">${sheet.all ? "Every technology, including ones you can't start yet." : "Technologies whose requirements you already meet."}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
+  return `<div class="hd"><div><div class="chapter">Research Center Lv.${labTop()}${labPower() > labTop() ? ` · network Lv.${labPower()}` : ""}</div><h2>Research</h2><p class="note">${sheet.all ? "Every technology, including ones you can't start yet." : "Technologies whose requirements you already meet."}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
     <div class="segc"><button class="${sheet.all ? "" : "on"}" data-act="labsAll" data-v="0">Available</button><button class="${sheet.all ? "on" : ""}" data-act="labsAll" data-v="1">All</button></div>${h}`;
 }
 
@@ -15073,7 +15088,7 @@ const ACT = {
     putPlanet(p); doneCard(); }),
   cqcancel: d => act(() => { const p = G.byId[d.id]; if (!p) return; const list = d.s ? csList(p) : cqList(p), it = list[+d.i]; if (!it) return; list.splice(+d.i, 1);
     const c = d.s ? mul(SH[it.k].c, it.n) : it.c; settle(p); for (const r of ["m", "c", "g"]) p.st[r] += c[r] || 0; S.spent -= total(c); putPlanet(p); toast(`Removed from ${p.name}'s queue. Refunded to its stockpile.`); }),
-  research: d => act(() => { const k = d.k; if (missing(R[k].req).length || rMaxed(k, rNext(k))) return; if (rqN() >= Q_MAX) return toast(`The research queue is full (${Q_MAX} jobs).`, "warn");
+  research: d => act(() => { const k = d.k; if (missingR(R[k].req).length || rMaxed(k, rNext(k))) return; if (rqN() >= Q_MAX) return toast(`The research queue is full (${Q_MAX} jobs).`, "warn");
     const lvl = rNext(k), c = cost(R[k], lvl); if (!pay(c)) return toast("Not enough resources.", "warn"); const t = now();
     if (!S.rq) S.rq = { k, lvl, s: t, e: t + rTimeL(k, lvl), c }; else { rqList().push({ k, lvl, c }); toast(`${R[k].n} Lv.${lvl} queued · ${rqN()}/${Q_MAX}`); } doneCard(); }),
   step: d => { const el = $("#q-" + d.k); el.value = Math.max(1, (+el.value || 1) + +d.d); tickUI(); },
@@ -15250,7 +15265,7 @@ const ACT = {
   rcat: d => { sub.rcat = d.v || null; render(); $("#view").scrollTop = 0; },
   ffrom: d => { sub.ffrom = d.v === "all" ? null : d.v; render(); },
   dtab: d => { if (!sheet) return; const i = +d.i; /* v245: the Research and Production tabs go straight to the research list and the shipyard */
-    if (sheet.type === "detail" && sheet.kind === "b" && i === 1 && !sheet.pid) { if (sheet.k === "lab" && S.b.lab) { closeSheet(); return ACT.nav({ v: "build", s: "research" }); } /* v247: the research categories */ if (sheet.k === "shipyard" && S.b.shipyard) return openSheet({ type: "yard", pid: null }); }
+    if (sheet.type === "detail" && sheet.kind === "b" && i === 1 && !sheet.pid) { if (sheet.k === "lab" && labTop()) { closeSheet(); return ACT.nav({ v: "build", s: "research" }); } /* v247: the research categories */ if (sheet.k === "shipyard" && S.b.shipyard) return openSheet({ type: "yard", pid: null }); }
     sheet.tab = i; renderSheet(); },
   prodRate: d => { if (!PROD_K.includes(d.k)) return; S.prod = S.prod || {}; const v = Math.round(pf(d.k) * 100); S.prod[d.k] = v <= 0 ? 100 : v - 10; dirty(); renderSheet(); render(); },
   labs: () => openSheet({ type: "labs" }),
@@ -15368,17 +15383,17 @@ const ACT = {
     const each = uTime(def.c), item = { k: d.k, kind: "mis", n, left: n, each, next: 0 }; if (!S.sq.length) item.next = now() + each; S.sq.push(item); toast(`${def.n} ×${n} queued`);
   }),
   scls: d => { sub.scls = d.v; render(true); },
-  runeSlot: d => act(() => { const e = d.e; S.runes = S.runes || {}; S.sock = S.sock || {};
+  runeSlot: d => act(() => { const e = d.e; if (myCmdLv() < ELEM_LV) return toast(`The elemental rings open at commander Lv.${ELEM_LV}.`, "warn"); S.runes = S.runes || {}; S.sock = S.sock || {};
     if (runeOn(e) >= elemSlots(e)) return toast(`${ELEM[e].n} ring is full. Expand it for more sockets, or upgrade its tier.`);
     if (!(S.runes[e] > 0)) return toast(`No ${ELEM[e].n} runes yet. Raid pirates, beat the Hive, finish daily tasks or buy one in the Supply Depot.`, "warn");
     S.runes[e]--; S.sock[e] = (S.sock[e] || 0) + 1; const full = runeOn(e) >= elemSlots(e); G.runeFx = { e, i: runeOn(e) - 1, t: now() }; SFX.rune(e, full); try { navigator.vibrate && navigator.vibrate(full ? [20, 40, 30] : 15); } catch (x) {}
     setTimeout(() => { G.runeFx = null; render(true); }, 1700); toast(full ? `${ELEM[e].n} ring complete: resonance bonus active!` : `${ELEM[e].n} rune socketed.`, "win"); }),
-  ringExpand: d => act(() => { const e = d.e; if (!ELEM[e]) return; if (ringX(e) >= RING_MAX) return toast(`${ELEM[e].n} ring is fully expanded.`); const c = ringXCost(e);
+  ringExpand: d => act(() => { const e = d.e; if (!ELEM[e]) return; if (ringX(e) >= RING_MAX) return toast(`${ELEM[e].n} ring is fully expanded.`); if (ringUsed(e) >= ringSteps()) return toast(`Reach commander Lv.${ringNextLv(e)} to work on the ${ELEM[e].n} ring again.`, "warn"); const c = ringXCost(e);
     if ((S.shards || 0) < c.shards || !can({ m: 0, c: c.c, g: c.g })) return toast(`Expanding needs ${fmt(c.c)} crystal, ${fmt(c.g)} gas and ◆${c.shards}.`, "warn");
     S.res.c -= c.c; S.res.g -= c.g; S.shards -= c.shards; S.ringX = S.ringX || {}; S.ringX[e] = ringX(e) + 1; toast(`${ELEM[e].n} ring expanded to ${elemSlots(e)} sockets.`, "win"); }),
-  ringUpgrade: d => act(() => { const e = d.e; if (!ELEM[e]) return; if (ringT(e) >= RING_MAX) return toast(`${ELEM[e].n} ring is at its top tier.`); if (runeOn(e) < elemSlots(e)) return toast(`Fill every socket of the ${ELEM[e].n} ring before upgrading it.`, "warn"); const c = ringTCost(e);
+  ringUpgrade: d => act(() => { const e = d.e; if (!ELEM[e]) return; if (ringT(e) >= RING_MAX) return toast(`${ELEM[e].n} ring is at its top tier.`); if (ringUsed(e) >= ringSteps()) return toast(`Reach commander Lv.${ringNextLv(e)} to work on the ${ELEM[e].n} ring again.`, "warn"); if (runeOn(e) < elemSlots(e)) return toast(`Fill every socket of the ${ELEM[e].n} ring before upgrading it.`, "warn"); const c = ringTCost(e);
     if ((S.shards || 0) < c.shards || !can({ m: c.m, c: 0, g: c.g })) return toast(`Upgrading needs ${fmt(c.m)} metal, ${fmt(c.g)} gas and ◆${c.shards}.`, "warn");
-    S.res.m -= c.m; S.res.g -= c.g; S.shards -= c.shards; S.ringT = S.ringT || {}; S.ringT[e] = ringT(e) + 1; toast(`${ELEM[e].n} ring upgraded to tier ${ringT(e)}: every rune in it is ${25 * ringT(e)}% stronger.`, "win"); }),
+    S.res.m -= c.m; S.res.g -= c.g; S.shards -= c.shards; S.ringT = S.ringT || {}; S.ringT[e] = ringT(e) + 1; toast(`${ELEM[e].n} ring upgraded to tier ${ringT(e)}: every rune in it is ${Math.round(RING_TK * 100 * ringT(e))}% stronger.`, "win"); }),
   runeBuy: () => toast("Elemental runes now only come from destroying Collective Cubes.", "warn"),
   donate: d => {
     const a = myAlly(); if (!a || !G.db) return; advance(now()); const r = d.r, amt = Math.floor(S.res[r] * .1);
