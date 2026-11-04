@@ -2264,7 +2264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 281;
+const GAME_V = 282;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -11070,7 +11070,7 @@ function shFind() {
   }
   if (r === "d") { // v135: every known debris field, biggest and nearest first
     const list = G.list.filter(p => p.debris && (p.debris.m || 0) + (p.debris.c || 0) > 0 && !isFogged(p, T)).map(p => ({ p, v: (p.debris.m || 0) + (p.debris.c || 0) })).sort((a, b) => b.v / Math.max(30, dist(b.p)) - a.v / Math.max(30, dist(a.p))).slice(0, 14);
-    return `<div class="hd"><div><div class="chapter" style="color:#9fe8d8">Locator</div><h2>♻ Debris fields</h2><p class="note">Wreckage left by battles, waiting to be recovered. Recyclers salvage it at full efficiency; other cargo ships manage half. On the map each field has a dashed salvage ring and a ♻ tag.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
+    return `<div class="hd"><div><div class="chapter" style="color:#9fe8d8">Locator</div><h2>♻ Debris fields</h2><p class="note">Wreckage left by battles, waiting to be recovered. Recyclers collect it. On the map each field has a dashed salvage ring and a ♻ tag.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
       <div class="list">${list.map(x => `<button class="tgt" data-act="planet" data-id="${x.p.id}"><span class="lvl" style="color:#9fe8d8;border-color:#9fe8d8">♻</span><span><span class="nm">${esc(x.p.name)}</span><br><span class="sub">${fmt(x.p.debris.m || 0)} metal · ${fmt(x.p.debris.c || 0)} crystal${h ? ` · ${ftime(travelMs(h, x.p, { recycler: 1 }))} by Recycler` : ""}</span></span><span class="pill ok">Recycle</span></button>`).join("") || '<p class="note">No debris fields charted. They form wherever battles are fought.</p>'}</div>
       <button class="btn ghost wide" data-act="findClear">Clear highlight</button>`; }
   if (r === "s") { // v135: Void Shard Mines
@@ -11963,9 +11963,19 @@ function cubeSalvage(f) {
   d.m -= got.m; d.c -= got.c; if (d.m + d.c < 50) delete S.xdeb[x.id]; f.loot = got; bump("recycled"); S.stats.rcRes = (S.stats.rcRes || 0) + Math.floor(got.m + got.c);
   note(`Recyclers recovered ${fmt(got.m)} metal and ${fmt(got.c)} crystal from the wreckage at ${x.name}.${xDeb(x) ? ` ${fmt(d.m + d.c)} is still out there.` : ""}`, "win");
 }
+/* v282 recycling sends Recyclers only, and only as many as the field needs: what is left after any already on their way, divided by one Recycler's hold.
+   It launches from the nearest world that has enough, or else the one with the most. */
+const recCap = n => cargoOf(n.recycler ? { recycler: n.recycler } : {}) + cargoOf(Object.fromEntries(Object.entries(n).filter(([k]) => k !== "recycler"))) * .5;
+function recPlan(tg, deb) { const T = now(), q = pos(tg, T), one = Math.max(1, cargoOf({ recycler: 1 })), coming = S.fleets.filter(f => f.mission === "recycle" && f.phase === "out" && f.pid === tg.id).reduce((a, f) => a + recCap(f.n), 0), left = Math.max(0, (deb.m || 0) + (deb.c || 0) - coming), need = Math.ceil(left / one);
+  const worlds = myPlanets().map(p => ({ id: p.kind === "home" ? "home" : p.id, p, have: p.kind === "home" ? S.ships.recycler || 0 : (p.garrison || {}).recycler || 0 })).filter(w => w.have > 0 && w.p.id !== tg.id).map(w => { const a = pos(w.p, T); return Object.assign(w, { d: Math.hypot(a.x - q.x, a.y - q.y) }); });
+  const enough = worlds.filter(w => w.have >= need).sort((a, b) => a.d - b.d)[0], best = enough || worlds.sort((a, b) => b.have - a.have)[0]; return { need, coming, from: best || null, n: best ? Math.min(best.have, need) : 0 }; }
+const recBtn = (act, id, tg, deb) => { const r = recPlan(tg, deb); return r.coming && !r.need ? `<button class="btn wide" disabled>Recyclers on the way</button>` : !r.n ? `<button class="btn wide" disabled>No Recyclers · need ${fmt(r.need)}</button><p class="note">Recyclers are built at the Shipyard (Shipyard Lv.4, Combustion Drive Lv.6, Shields Lv.2).</p>` : `<button class="btn wide" data-act="${act}" data-id="${id}" ${canPlay() ? "" : "disabled"}>Send ${fmt(r.n)} Recycler${r.n > 1 ? "s" : ""}${r.n < r.need ? ` of ${fmt(r.need)} needed` : ""} · from ${esc(r.from.p.name)}</button>`; };
+function recycleGo(tg, deb, extra) { if (!canPlay() || slotsFull()) return; const r = recPlan(tg, deb); if (r.coming && !r.need) return toast("Recyclers with enough room are already on the way.");
+  if (!r.n) return toast(`No Recyclers on your other worlds. This field needs ${fmt(r.need)}.`, "warn"); sheet.from = r.from.id; sheet.speed = 100; const n = { recycler: r.n }, f = sendFleet(tg, n, "recycle", extra); if (!f) return; closeSheet();
+  toast(`${fmt(r.n)} Recycler${r.n > 1 ? "s" : ""} launched from ${r.from.p.name}, arriving in ${ftime(f.tt)}.${r.n < r.need ? ` ${fmt(r.need - r.n)} more would clear the field.` : ""}`); }
 const debXCard = x => { const d = x && x.boss && xDeb(x); if (!d) return "";
-  return `<div class="card"><b style="font-family:var(--f-display);letter-spacing:.08em">⚙ WRECKAGE FIELD</b><p class="note" style="margin:4px 0">Hulls from the battles here, Collective and ours. It drifts apart in <b data-end="${d.until}">${ftime(d.until - now())}</b>. Recyclers recover it at full efficiency, other cargo holds at half.</p>
-    <dl class="kv"><dt>Recyclable</dt><dd>${costHTML({ m: d.m, c: d.c })}</dd></dl><button class="btn wide" data-act="recycleX" data-id="${x.id}" ${canPlay() ? "" : "disabled"}>Send recyclers</button></div>`; };
+  return `<div class="card"><b style="font-family:var(--f-display);letter-spacing:.08em">⚙ WRECKAGE FIELD</b><p class="note" style="margin:4px 0">Hulls from the battles here, Collective and ours. It drifts apart in <b data-end="${d.until}">${ftime(d.until - now())}</b>. Send Recyclers to recover it.</p>
+    <dl class="kv"><dt>Recyclable</dt><dd>${costHTML({ m: d.m, c: d.c })}</dd></dl>${recBtn("recycleX", x.id, x, d)}</div>`; };
 function rallyBossRewards(x, rep) {
   if (x && x.boss) cubeDebris(x, rep);
   S.pir = S.pir || {}; S.pir[x.id] = now() + xRegroup(x); S.wins++; bump(x.mon ? "monsters" : x.boss ? "cubes" : "pirates"); evPts("hunt", x.lvl * (x.boss ? 120 : x.mon ? 60 : 20));
@@ -12177,8 +12187,8 @@ function planetExtras(p, st) {
     out.push(`<div class="card"><b style="font-family:var(--f-display);letter-spacing:.08em">☾ MOON · LV.${L}</b><p class="note" style="margin:4px 0">Adds <b>${moonFields(p)}</b> building fields to ${esc(p.name)}. Each level adds 8 more.</p>
       ${mine && c ? `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">${costHTML(c)}<button class="btn sm" data-act="moonUp" data-id="${p.id}" ${can(c) ? "" : "disabled"}>Upgrade to Lv.${L + 1}</button></div>` : mine ? '<p class="note">Fully developed.</p>' : ""}</div>`); }
   else if (mine && (S.items || {}).moonSeed > 0) out.push(`<button class="btn wide" data-act="moonSeed" data-id="${p.id}">☾ Plant a Moon Seed here (${S.items.moonSeed} left)</button>`);
-  if (p.debris) out.push(`<div class="card"><b style="font-family:var(--f-display);letter-spacing:.08em">DEBRIS FIELD</b><p class="note" style="margin:4px 0">Wreckage from battles here. Send cargo ships to recycle it. Big battles can also form a moon (20% at 1,000,000 resources of debris).</p>
-    <dl class="kv"><dt>Recyclable</dt><dd>${costHTML(p.debris)}</dd></dl><button class="btn wide" data-act="recycle" data-id="${p.id}" ${canPlay() ? "" : "disabled"}>Send recyclers</button></div>`);
+  if (p.debris) out.push(`<div class="card"><b style="font-family:var(--f-display);letter-spacing:.08em">DEBRIS FIELD</b><p class="note" style="margin:4px 0">Wreckage from battles here. Send Recyclers to collect it. Big battles can also form a moon (20% at 1,000,000 resources of debris).</p>
+    <dl class="kv"><dt>Recyclable</dt><dd>${costHTML(p.debris)}</dd></dl>${recBtn("recycle", p.id, p, p.debris)}</div>`);
   if (mine) { const cd = (S.tpCd || {})[p.id] || 0; out.push(`<button class="btn ghost wide tpbtn" data-act="find" data-r="o">⊕ Teleport ${esc(p.name)}: show open orbits${cd > T ? ` · drives ready in ${ftime(cd - T)}` : ""}</button>`); }
   return out.join("");
 }
@@ -15341,17 +15351,8 @@ const ACT = {
   moonUp: d => act(() => { const p = G.byId[d.id]; if (!p || !p.moon || p.owner !== G.me || p.moon.lvl >= MOON_MAX) return; const c = moonCost(p.moon.lvl + 1);
     if (!pay(c)) return toast("Not enough resources at your homeworld.", "warn"); p.moon = { lvl: p.moon.lvl + 1 }; putPlanet(p); toast(`Moon raised to Lv.${p.moon.lvl}: ${p.name} now has ${moonFields(p)} extra fields.`, "win"); }),
   moonSeed: d => act(() => { const p = G.byId[d.id]; if (!p || p.owner !== G.me || p.moon || !((S.items || {}).moonSeed > 0)) return; S.items.moonSeed--; p.moon = { lvl: 1 }; putPlanet(p); toast(`A moon now orbits ${p.name}: +${moonFields(p)} fields.`, "win"); }),
-  recycleX: d => act(() => {
-    const x = PB[d.id]; if (!x || !xDeb(x) || !canPlay() || slotsFull()) return; const av = originAvail(), n = {};
-    for (const k of ["recycler", "heavyCargo", "hauler"]) if (av[k]) n[k] = av[k]; if (!Object.keys(n).length) for (const k in av) if (SH[k] && SH[k].cargo > 0) n[k] = av[k];
-    if (!Object.keys(n).length) return toast("No cargo ships at the launch planet. Recyclers recover wreckage best.", "warn");
-    const f = sendFleet(x, n, "recycle", { cx: x.id }); if (!f) return; closeSheet(); toast(`Recyclers launched to ${x.name}: ${fmt(cargoOf(n))} cargo space, arriving in ${ftime(f.tt)}.`); }),
-  recycle: d => act(() => {
-    const p = G.byId[d.id]; if (!p || !p.debris || !canPlay() || slotsFull()) return; const av = originAvail(), n = {};
-    for (const k of ["recycler", "heavyCargo", "hauler"]) if (av[k]) n[k] = av[k]; if (!Object.keys(n).length) for (const k in av) if (SH[k] && SH[k].cargo > 0) n[k] = av[k];
-    if (!Object.keys(n).length) return toast("No cargo ships at the launch planet. Small Cargos and Large Cargos recycle best.", "warn");
-    const f = sendFleet(p, n, "recycle"); if (!f) return; closeSheet(); toast(`Recyclers launched: ${fmt(cargoOf(n))} cargo space, arriving in ${ftime(f.tt)}.`);
-  }),
+  recycleX: d => act(() => { const x = PB[d.id], o = x && xDeb(x); if (o) recycleGo(x, o, { cx: x.id }); }),
+  recycle: d => act(() => { const p = G.byId[d.id]; if (p && p.debris) recycleGo(p, p.debris); }),
   probe: d => act(() => { const tg = G.byId[d.id] || PB[d.id] || NB[d.id] || EB[d.id]; if (!tg || !canPlay()) return; const pr = probeTo(tg); if (!pr) return; closeSheet(); toast(`Probe launched. It reaches the target in ${ftime(pr.at - pr.out)}.`); }),
   coordGo: () => { const el = $("#coordin"); if (!sheet || !el) return; sheet.coord = el.value.trim(); renderSheet(); },
   coordShow: d => { closeSheet(); G.find = "o"; if (view !== "galaxy") { view = "galaxy"; render(); } openSheet({ type: "find", coord: d.v }); }, // open the Coordinates finder on an address (e.g. where an attack came from)
