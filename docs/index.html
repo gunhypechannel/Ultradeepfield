@@ -2234,7 +2234,7 @@ function haulPlan(n, ships) { const cap = cargoOf(ships), rate = gatherRate(n);
   if (n.res === "s") return { amt: shardRest(n) ? 0 : Math.min(shardYield(n), shardLeft()), ms: SHARD_DIG_MS }; // v135: a shard dig takes the same time whatever the cargo
   if (n.kind === "empty") return { amt: Math.floor(Math.min(cap, rate * OUTPOST_MS / 60000)), ms: OUTPOST_MS };
   const amt = Math.floor(Math.min(cap, rate * 20)); return { amt, ms: Math.max(10000, amt / rate * 60000) }; }
-const fleetTarget = f => f.nid ? NB[f.nid] : f.xid ? PB[f.xid] : f.yid ? YB[f.yid] : f.pid === "nexus" ? NEXUS : G.byId[f.pid];
+const fleetTarget = f => f.nid ? NB[f.nid] : f.xid ? PB[f.xid] : f.cx ? PB[f.cx] : f.yid ? YB[f.yid] : f.pid === "nexus" ? NEXUS : G.byId[f.pid];
 /* 10,000 commander seats: fixed homeworld spots on a spiral through the Rim and the Far Reach (layers 1-2). A new commander
    takes the free seat farthest from everyone else, so every homeworld sits on a location with fixed coordinates. */
 const SEAT_R = new Float32Array(MAX_PLAYERS), SEAT_A = new Float32Array(MAX_PLAYERS);
@@ -2258,7 +2258,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 276;
+const GAME_V = 277;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -3490,6 +3490,7 @@ function pirateArrive(f) {
   const rep = mkRep({ at: f.arrive, kind: "attack", title: x.mon ? `Hunt: ${x.name} (${MON[x.mon].n} Lv.${x.lvl})` : x.boss ? `Assault on ${x.name} (Cube Lv.${x.lvl})` : `Raid on ${x.name} (Pirates Lv.${x.lvl})`, aUids: [G.me].concat(f.allies || []), aName: S.homeName + " Fleet", dName: x.boss || x.mon ? x.name : `${x.name} Pirates`, boss: !!x.boss, mon: x.mon || null, lvl: x.lvl, ptype: "desert", fortL: 0, alien: !!x.mon, pirate: true,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
   f.n = Object.assign({}, f.allies ? (res.aByOwn[G.me] || {}) : res.aLeft); fieldRepair(f, mine0, rep); repairDocks(rep, lossesOf(mine0, f.n));
+  if (x.boss) cubeDebris(x, rep); // v277: win or lose, the wrecks stay at the Cube
   if (res.winner === "a") {
     const L = xLoot(x), cap = cargoOf(f.n), ratio = Math.min(1, cap / total(L));
     rep.loot = { m: Math.floor(L.m * ratio), c: Math.floor(L.c * ratio), g: Math.floor(L.g * ratio) }; f.loot = rep.loot;
@@ -3531,6 +3532,7 @@ function pyramidArrive(f) {
 }
 function arrive(f) {
   const p = G.byId[f.pid], tt = f.tt || (f.arrive - f.out); f.phase = "back"; f.back = f.arrive + tt;
+  if (f.cx) return cubeSalvage(f); // v277: recyclers at a Cube's wreckage
   if (!p) { note("The target is gone. Fleet returning.", "warn"); if (f.cargo) { f.loot = f.cargo; f.cargo = null; } return; }
   const st = pStatus(p, f.arrive);
   if (f.mission === "transfer") return transferArrive(f, p, st);
@@ -11048,6 +11050,7 @@ function fleetLabel(f) {
   if (f.nid) return "To gather";
   if (f.xid) return "Pirate raid";
   if (f.mission === "transfer") return "Transfer";
+  if (f.mission === "recycle") return "Recycling";
   if (f.pid === "nexus") return "To the Cube";
   return f.mission === "reinforce" ? "Reinforcing" : f.assault ? "Joint strike" : f.n.ark ? "Invading" : "Attacking";
 }
@@ -11536,7 +11539,7 @@ function shPirate() {
   }
   const fav = !!(S.fav || {})[x.id];
   const grid = `<div class="agrid"><button data-act="jump" data-to="strike" ${down > T ? "disabled" : ""}>${AI.atk}<span>Raid</span></button><button data-act="fav" data-id="${x.id}" class="${fav ? "on" : ""}" aria-pressed="${fav}">${AI.fav}<span>${fav ? "Favorited" : "Favorite"}</span></button><button data-act="viewMode" data-m="planet" data-id="${x.id}">${VICON.planet}<span>Close view</span></button></div>`;
-  return head + grid + info + scan + body;
+  return head + grid + info + debXCard(x) + scan + body;
 }
 /* the follow bar: while the camera follows one of your fleets, a slim bar under the HUD shows where it is going and when, with
    the main controls one tap away (boost, recall, full controls, stop following). Tapping a fleet on the map starts this. */
@@ -11888,7 +11891,26 @@ function callBand() {
 }
 function connNote() { return `Connecting to the galaxy…${performance.now() > 12000 ? ' Taking too long? <button class="btn sm" data-act="reconnect">Reconnect</button>' : ""}`; }
 /* boss and monster rallies: each commander's own rewards (shards, runes, item or accelerators, and the per-commander cooldown) */
+/* v277 Cube wreckage */
+const XDEB_MS = 24 * 3600e3;
+const xDeb = x => { const d = x && (S.xdeb || {})[x.id]; return d && d.until > now() && d.m + d.c >= 50 ? d : null; };
+function cubeDebris(x, rep) {
+  if (!x || !x.boss || !rep) return; let v = 0; for (const side of [rep.lossA || {}, rep.lossD || {}]) for (const k in side) v += unitVal(k) * side[k];
+  const deb = Math.floor(v * .3); if (deb < 500) return; S.xdeb = S.xdeb || {}; for (const k in S.xdeb) if (!(S.xdeb[k].until > now())) delete S.xdeb[k];
+  const d = Object.assign({ m: 0, c: 0 }, xDeb(x) || {}); d.m += Math.floor(deb * .6); d.c += Math.floor(deb * .4); d.until = now() + XDEB_MS; S.xdeb[x.id] = d; rep.debris = deb;
+  note(`A wreckage field of ${fmt(d.m)} metal and ${fmt(d.c)} crystal drifts at ${x.name}. Send cargo ships from its card to recover it within 24 hours.`, "win");
+}
+function cubeSalvage(f) {
+  const x = PB[f.cx], d = xDeb(x); if (!x || !d) { note(`The wreckage at ${x ? x.name : "the Cube"} has drifted apart. Fleet returning.`, "warn"); return; }
+  const rc = f.n.recycler || 0, othN = Object.assign({}, f.n); delete othN.recycler; const cap = cargoOf(rc ? { recycler: rc } : {}) + cargoOf(othN) * .5, tot = d.m + d.c, k = tot ? Math.min(1, cap / tot) : 0, got = { m: Math.floor(d.m * k), c: Math.floor(d.c * k), g: 0 };
+  d.m -= got.m; d.c -= got.c; if (d.m + d.c < 50) delete S.xdeb[x.id]; f.loot = got; bump("recycled"); S.stats.rcRes = (S.stats.rcRes || 0) + Math.floor(got.m + got.c);
+  note(`Recyclers recovered ${fmt(got.m)} metal and ${fmt(got.c)} crystal from the wreckage at ${x.name}.${xDeb(x) ? ` ${fmt(d.m + d.c)} is still out there.` : ""}`, "win");
+}
+const debXCard = x => { const d = x && x.boss && xDeb(x); if (!d) return "";
+  return `<div class="card"><b style="font-family:var(--f-display);letter-spacing:.08em">⚙ WRECKAGE FIELD</b><p class="note" style="margin:4px 0">Hulls from the battles here, Collective and ours. It drifts apart in <b data-end="${d.until}">${ftime(d.until - now())}</b>. Recyclers recover it at full efficiency, other cargo holds at half.</p>
+    <dl class="kv"><dt>Recyclable</dt><dd>${costHTML({ m: d.m, c: d.c })}</dd></dl><button class="btn wide" data-act="recycleX" data-id="${x.id}" ${canPlay() ? "" : "disabled"}>Send recyclers</button></div>`; };
 function rallyBossRewards(x, rep) {
+  if (x && x.boss) cubeDebris(x, rep);
   S.pir = S.pir || {}; S.pir[x.id] = now() + xRegroup(x); S.wins++; bump(x.mon ? "monsters" : x.boss ? "cubes" : "pirates"); evPts("hunt", x.lvl * (x.boss ? 120 : x.mon ? 60 : 20));
   const sh = x.boss ? 1 + Math.floor(x.lvl / 5) : x.mon ? Math.floor(x.lvl / 6) : x.lvl >= 10 ? 1 : 0; /* v80: shards are scarce (Game of War gold, OGame Dark Matter) */ S.shards = (S.shards || 0) + sh; rep.shards = sh;
   if (x.mon) { const A = monAccel(x.lvl); for (let i = 0; i < A.n; i++) { const it = `x${"bsr"[(Math.random() * 3) | 0]}_${A.tier}`; giveItem(it); rep.item = it; } }
@@ -15217,6 +15239,11 @@ const ACT = {
   moonUp: d => act(() => { const p = G.byId[d.id]; if (!p || !p.moon || p.owner !== G.me || p.moon.lvl >= MOON_MAX) return; const c = moonCost(p.moon.lvl + 1);
     if (!pay(c)) return toast("Not enough resources at your homeworld.", "warn"); p.moon = { lvl: p.moon.lvl + 1 }; putPlanet(p); toast(`Moon raised to Lv.${p.moon.lvl}: ${p.name} now has ${moonFields(p)} extra fields.`, "win"); }),
   moonSeed: d => act(() => { const p = G.byId[d.id]; if (!p || p.owner !== G.me || p.moon || !((S.items || {}).moonSeed > 0)) return; S.items.moonSeed--; p.moon = { lvl: 1 }; putPlanet(p); toast(`A moon now orbits ${p.name}: +${moonFields(p)} fields.`, "win"); }),
+  recycleX: d => act(() => {
+    const x = PB[d.id]; if (!x || !xDeb(x) || !canPlay() || slotsFull()) return; const av = originAvail(), n = {};
+    for (const k of ["recycler", "heavyCargo", "hauler"]) if (av[k]) n[k] = av[k]; if (!Object.keys(n).length) for (const k in av) if (SH[k] && SH[k].cargo > 0) n[k] = av[k];
+    if (!Object.keys(n).length) return toast("No cargo ships at the launch planet. Recyclers recover wreckage best.", "warn");
+    const f = sendFleet(x, n, "recycle", { cx: x.id }); if (!f) return; closeSheet(); toast(`Recyclers launched to ${x.name}: ${fmt(cargoOf(n))} cargo space, arriving in ${ftime(f.tt)}.`); }),
   recycle: d => act(() => {
     const p = G.byId[d.id]; if (!p || !p.debris || !canPlay() || slotsFull()) return; const av = originAvail(), n = {};
     for (const k of ["recycler", "heavyCargo", "hauler"]) if (av[k]) n[k] = av[k]; if (!Object.keys(n).length) for (const k in av) if (SH[k] && SH[k].cargo > 0) n[k] = av[k];
