@@ -1841,7 +1841,8 @@ function pirateForce(lvl, boss) {
 const pirTech = lvl => ({ weapons: Math.floor(lvl / 2), shields: Math.floor(lvl / 2), armor: Math.floor(lvl / 2) });
 /* v235: the Academy's first pirate raid meets a small training crew (a Lv.5 hideout holds 40 fighters, far beyond a new fleet) */
 const trainingPir = x => !!(x && !x.mon && !x.boss && S && S.tut && typeof TUT !== "undefined" && TUT[S.tut.i] && TUT[S.tut.i].find === "x" && !((S.stats || {}).pirates >= 1));
-const xTech = x => trainingPir(x) ? { weapons: 0, shields: 0, armor: 0 } : x.mon ? { mon: x.lvl } : x.boss ? { cube: x.lvl, weapons: 0, shields: 0, armor: 0 } : pirTech(x.lvl);
+const CUBE_BOSS_K = 2;
+const xTech = x => trainingPir(x) ? { weapons: 0, shields: 0, armor: 0 } : x.mon ? { mon: x.lvl } : x.boss ? { cube: x.lvl, bk: CUBE_BOSS_K, weapons: 0, shields: 0, armor: 0 } : pirTech(x.lvl);
 const xStacks = x => stacksOf(xForce(x), xTech(x), x.mon ? "monster" : x.boss ? "cube" : "pirates");
 /* pirate spoils, scaled like OGame raids (the crew's fleet is worth several times less than what it guards); Cubes hoard far more */
 const PIR_LOOT = { 5: { m: 40000, c: 25000, g: 10000 }, 10: { m: 220000, c: 140000, g: 60000 }, 15: { m: 700000, c: 450000, g: 200000 } };
@@ -1916,8 +1917,10 @@ const ringXCost = e => { const x = ringX(e) + 1; return { c: Math.round(18000 * 
 const ringTCost = e => { const t = ringT(e) + 1; return { m: Math.round(30000 * t * t), g: Math.round(12000 * t * t), shards: 12 * t }; };
 const runeOn = e => Math.min(elemSlots(e), ((S && S.sock) || {})[e] || 0);
 const runePct = e => S ? Math.round((runeOn(e) * ELEM[e].per * (1 + .25 * ringT(e)) + (runeOn(e) >= elemSlots(e) ? 3 + ringT(e) : 0)) * 10) / 10 : 0; // a full ring resonates for +3% (+1% per tier)
-/* v79: runes are a Cube boss reward only: 1 from a Lv.1-7 Cube, then +1 every 8 levels, and +1 more from a joint strike on a Lv.10+ Cube */
-const cubeRunes = (lvl, rally) => 1 + Math.floor((lvl || 1) / 8) + (rally && lvl >= 10 ? 1 : 0);
+/* v270: runes are much rarer. A Cube core only sometimes holds one: a 15% chance at Lv.1, +1.5% per level up to 50%,
+   +10% on a joint strike against a Lv.10+ Cube. A Lv.25+ core that holds runes holds 2 */
+const runeChance = (lvl, rally) => Math.min(.5, .15 + .015 * ((lvl || 1) - 1)) + (rally && lvl >= 10 ? .1 : 0);
+const cubeRunes = (lvl, rally) => Math.random() < runeChance(lvl, rally) ? (lvl >= 25 ? 2 : 1) : 0;
 function grantRunes(n, why) {
   if (n <= 0) return; S.runes = S.runes || {}; const ks = Object.keys(ELEM), got = [];
   for (let i = 0; i < n; i++) { const e = ks[(Math.random() * ks.length) | 0]; S.runes[e] = (S.runes[e] || 0) + 1; got.push(ELEM[e].n); }
@@ -1927,8 +1930,9 @@ function grantRunes(n, why) {
 /* ---------- alliance fund, level and passives ---------- */
 const fundVal = f => (f.m || 0) + (f.c || 0) * 1.5 + (f.g || 0) * 3;
 const allyFund = a => Object.values((a && a.fund) || {}).reduce((s, f) => s + fundVal(f), 0);
-const allyLevel = a => a ? clamp(1 + Math.floor(Math.log2(1 + allyFund(a) / 25000)), 1, 10) : 0;
-const allyNeed = L => 25000 * (2 ** L - 1); // fund value that reaches level L+1
+const ALLY_STEP = 100000; // v270: was 25000, every alliance level now takes 4x the resources
+const allyLevel = a => a ? clamp(1 + Math.floor(Math.log2(1 + allyFund(a) / ALLY_STEP)), 1, 10) : 0;
+const allyNeed = L => ALLY_STEP * (2 ** L - 1); // fund value that reaches level L+1
 const ALLY_PASS = [[2, "Fleet Booster", "+5% fleet speed"], [3, "Shared Industry", "+3% resource output"], [4, "War Banners", "+3% fleet attack"], [5, "Fleet Booster II", "+10% fleet speed"], [6, "Shared Industry II", "+6% resource output"], [8, "War Banners II", "+6% fleet attack"]];
 function allyPass() { const L = S ? allyLevel(myAlly()) : 0; return { spd: L >= 5 ? 10 : L >= 2 ? 5 : 0, prod: L >= 6 ? 6 : L >= 3 ? 3 : 0, atk: L >= 8 ? 6 : L >= 4 ? 3 : 0 }; }
 const prodBonus = () => 1 + (runePct("spirit") + allyPass().prod) / 100;
@@ -2238,7 +2242,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 269;
+const GAME_V = 270;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -2897,7 +2901,8 @@ const colLabs = () => { let n = 0; try { for (const p of myPlanets()) if (p.kind
 const labPower = () => (S.b.lab || 0) + colLabs();
 const rTime = k => rTimeL(k, S.r[k] + 1);
 const uTime = c => Math.max(1, ((c.m || 0) + (c.c || 0)) * 1.44 / (UNI * (1 + S.b.shipyard)) / Math.pow(2, S.b.nanite || 0)) * 1000; // OGame: (m+c) / (2500 (1+shipyard) 2^nanite) hours
-const rTimeL = (k, lvl) => { const c = cost(R[k], lvl); return Math.max(3, ((c.m || 0) + (c.c || 0)) * 3.6 / (UNI * (1 + labPower()))) * 1000 * rTimeMul(); }; // OGame: (m+c) / (1000 (1+lab)) hours
+const RES_SLOW = 3; // v270: research takes 3x as long
+const rTimeL = (k, lvl) => { const c = cost(R[k], lvl); return Math.max(3, ((c.m || 0) + (c.c || 0)) * 3.6 * RES_SLOW / (UNI * (1 + labPower()))) * 1000 * rTimeMul(); }; // OGame: (m+c) / (1000 (1+lab)) hours
 /* production queues: up to 5 jobs per line, paid when queued. The next job starts the moment one finishes,
    and queued jobs run 10% faster because the crews are already on site. */
 const Q_MAX = 5, QFAST = .9;
@@ -2934,7 +2939,7 @@ const techOf = uid => (uid === G.me || !uid) ? { weapons: S.r.weapons + (runePct
 function unitStat(k, t, fortL) {
   const m = { a: 1 + .1 * (t.weapons || 0), s: 1 + .1 * (t.shields || 0), h: 1 + .1 * (t.armor || 0) };
   if (k === "fortress") return { atk: 400 * fortL * m.a, sh: 1500 * fortL * m.s, hull: 6000 * fortL * m.h };
-  if (k === "cube" || k === "sphere" || k === "cdrone") { const s = .5 + .25 * (t.cube || 1); /* v240: was .3 + .12 per level */ return { atk: AL[k].atk * s, sh: AL[k].sh * s, hull: AL[k].hull * s }; }
+  if (k === "cube" || k === "sphere" || k === "cdrone") { const s = (.5 + .25 * (t.cube || 1)) * (t.bk || 1); /* v240: was .3 + .12 per level; v270: map Cube bosses x2 */ return { atk: AL[k].atk * s, sh: AL[k].sh * s, hull: AL[k].hull * s }; }
   if (MON[k]) { const s = .25 + .15 * (t.mon || 1); return { atk: AL[k].atk * s, sh: AL[k].sh * s, hull: AL[k].hull * s }; }
   if (AL[k]) { const q = 1 + .08 * Math.floor((t.hive || 1) / 3); return { atk: AL[k].atk * q, sh: AL[k].sh * q, hull: AL[k].hull * q }; }
   const d = SH[k] || DF[k]; return { atk: d.atk * m.a, sh: d.sh * m.s, hull: d.hull * m.h };
@@ -3472,9 +3477,9 @@ function pirateArrive(f) {
       rep.accel = got; note(`Harvested from ${x.name}: ${got.map(n => `${n} (${A.tier})`).join(", ")}. They're in your Void Shop inventory.`, "win"); }
     else if (x.boss || Math.random() < (x.lvl >= 15 ? .5 : .3)) { const it = DROPS[(Math.random() * DROPS.length) | 0]; giveItem(it); rep.item = it; note(`Found in the hideout: ${SHOP[it].n}. It's in your Void Shop inventory.`, "win"); }
     if (x.lvl >= 15 && Math.random() < .1) { giveItem("teleport"); note("Found a Teleport Ticket in the pirate vault!", "win"); }
-    logReward(`${x.mon ? "Monster slain" : x.boss ? "Cube destroyed" : "Pirates beaten"} · ${x.name}`, null, { shards: rep.shards, item: rep.item || null, runes: x.boss ? cubeRunes(x.lvl) : 0, kind: "battle" });
+    logReward(`${x.mon ? "Monster slain" : x.boss ? "Cube destroyed" : "Pirates beaten"} · ${x.name}`, null, { shards: rep.shards, item: rep.item || null, runes: x.boss ? (rep.runes = cubeRunes(x.lvl)) : 0, kind: "battle" });
     note(`${x.name} ${x.mon ? "slain" : x.boss ? "destroyed" : "raided"}. ${ratio < 1 ? "Holds full: " : ""}${fmt(rep.loot.m)} metal, ${fmt(rep.loot.c)} crystal, ${fmt(rep.loot.g)} gas on the way home${rep.shards ? `, plus ◆${rep.shards}` : ""}.`, "win");
-    if (x.boss) grantRunes(cubeRunes(x.lvl), `${x.name} core`); // v79: elemental runes come only from Cube bosses
+    if (x.boss) { if (rep.runes) grantRunes(rep.runes, `${x.name} core`); else note(`${x.name}'s core held no runes this time.`); } // v79: elemental runes come only from Cube bosses
   } else note(res.winner === "d" ? (x.mon ? `${x.name} shrugged off our hunters and drove them away.` : `Our raid on ${x.name} was beaten off.`) : `Stalemate at ${x.name}. Survivors are pulling back.`, "loss");
   addReport(rep); mapClash(x, rep); addBurn({ xid: x.id, at: f.arrive, n: mine0, win: res.winner === "a", debris: 1 });
   if (!Object.values(f.n).some(v => v > 0)) S.fleets = S.fleets.filter(y => y !== f);
@@ -11453,7 +11458,7 @@ function shPirate() {
   const head = x.mon ? `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:${MON[x.mon].col}">Space monster · ${MON[x.mon].n} · Lv.${x.lvl}</div><h2>${MON[x.mon].ic} ${esc(x.name)}</h2><p class="note">${MON[x.mon].d} Slay it for a hoard of resources, Void Shards and ${monAccel(x.lvl).n} ${monAccel(x.lvl).tier} time accelerator${monAccel(x.lvl).n > 1 ? "s" : ""}.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`
     : x.boss ? `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#5dff6a">Boss · Assimilation Cube · Lv.${x.lvl}</div><h2>■ ${esc(x.name)}</h2><p class="note">A city-sized cube of the Collective, laced with green fire. It adapts, it repairs, it does not negotiate. Destroy it for a vault of resources, Void Shards and a guaranteed item.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`
     : `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#ff6b5a">Pirate hideout · Lv.${x.lvl}</div><h2>☠ ${esc(x.name)}</h2><p class="note">Outlaw crews hiding in the dust lanes. Beat them and your holds fill with their stolen cargo.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
-  const info = `<dl class="kv"><dt>Loot on a win</dt><dd>${costHTML(L)} + ◆${x.mon ? 2 + Math.floor(x.lvl / 4) : x.boss ? 3 + Math.floor(x.lvl / 3) : 1 + Math.floor(x.lvl / 6)}${x.boss ? " + an item" : x.mon ? ` + ${monAccel(x.lvl).n}× ${monAccel(x.lvl).tier} accelerator` : ""}</dd>${x.mon ? `<dt>Monster strength</dt><dd>×${(.25 + .15 * x.lvl).toFixed(2)} · ${xForce(x)[x.mon]} in the ${x.mon === "ssquid" ? "pack" : "pod"}</dd>` : x.boss ? `<dt>Cube strength</dt><dd>×${(.5 + .25 * x.lvl).toFixed(2)} on every unit</dd>` : `<dt>Pirate tech</dt><dd>Weapons, shields and armour ${pirTech(x.lvl).weapons}</dd>`}<dt>Orbit</dt><dd>${Math.round(x.r)} · ${zoneOf(x.r)}</dd>
+  const info = `<dl class="kv"><dt>Loot on a win</dt><dd>${costHTML(L)} + ◆${x.mon ? 2 + Math.floor(x.lvl / 4) : x.boss ? 3 + Math.floor(x.lvl / 3) : 1 + Math.floor(x.lvl / 6)}${x.boss ? " + an item" : x.mon ? ` + ${monAccel(x.lvl).n}× ${monAccel(x.lvl).tier} accelerator` : ""}</dd>${x.mon ? `<dt>Monster strength</dt><dd>×${(.25 + .15 * x.lvl).toFixed(2)} · ${xForce(x)[x.mon]} in the ${x.mon === "ssquid" ? "pack" : "pod"}</dd>` : x.boss ? `<dt>Cube strength</dt><dd>×${((.5 + .25 * x.lvl) * CUBE_BOSS_K).toFixed(2)} on every unit</dd>` : `<dt>Pirate tech</dt><dd>Weapons, shields and armour ${pirTech(x.lvl).weapons}</dd>`}<dt>Orbit</dt><dd>${Math.round(x.r)} · ${zoneOf(x.r)}</dd>
     ${h ? `<dt>Flight from ${esc(h.name)}</dt><dd>${ftime(travelMs(h, x, { fighter: 1 }))}</dd>` : ""}<dt>${x.mon ? "Another surfaces after" : x.boss ? "Rebuilds after defeat" : "Regroups after a raid"}</dt><dd>${ftime(xRegroup(x))}</dd></dl>${x.mon || x.boss ? cineBtn(x.id) : ""}`;
   const scan = `<h2 class="sec">${x.mon ? "The beast" : x.boss ? "Collective forces" : "Crews"}</h2>${down > T ? `<p class="note">${x.mon ? "Slain. Another of its kind drifts in within" : x.boss ? "The Cube is wrecked. It rebuilds in" : "You cleaned this hideout out. The pirates regroup in"} <b data-end="${down}">${ftime(down - T)}</b>.</p>` : unitGrid(force)}`;
   let body;
@@ -11752,7 +11757,7 @@ function rallyBossRewards(x, rep) {
   const sh = x.boss ? 1 + Math.floor(x.lvl / 5) : x.mon ? Math.floor(x.lvl / 6) : x.lvl >= 10 ? 1 : 0; /* v80: shards are scarce (Game of War gold, OGame Dark Matter) */ S.shards = (S.shards || 0) + sh; rep.shards = sh;
   if (x.mon) { const A = monAccel(x.lvl); for (let i = 0; i < A.n; i++) { const it = `x${"bsr"[(Math.random() * 3) | 0]}_${A.tier}`; giveItem(it); rep.item = it; } }
   else if (x.boss) { const it = DROPS[(Math.random() * DROPS.length) | 0]; giveItem(it); rep.item = it; }
-  if (x.boss) grantRunes(cubeRunes(x.lvl, true), `${x.name} core (joint strike)`);
+  if (x.boss) { const n = cubeRunes(x.lvl, true); if (n) grantRunes(n, `${x.name} core (joint strike)`); else note(`${x.name}'s core held no runes this time.`); }
 }
 function vGalaxyBelow() {
   const T = now(), h = homePlanet();
@@ -12348,7 +12353,7 @@ function mElem() {
     <div class="runes"><span class="rpl p1"></span><span class="rpl p2"></span><span class="rpl p3"></span>${["fire", "water", "spirit", "earth", "air"].map(runeWheel).join("")}<div class="rsum">Summary</div></div>
     <div class="rsumb">${sum}</div>
     <h3 style="margin-top:8px">Ring workshop</h3>${shop}
-    <p class="note">Elemental runes are rare: they are torn from the cores of Collective Cubes. A Cube drops ${cubeRunes(1)} at Lv.1, rising to ${cubeRunes(30)} at Lv.30, and a joint strike on a Lv.10+ Cube drops one more.</p></div>`;
+    <p class="note">Elemental runes are rare: they are torn from the cores of Collective Cubes. Only some Cube cores hold one: a ${Math.round(runeChance(1) * 100)}% chance at Lv.1, rising to ${Math.round(runeChance(30) * 100)}% at Lv.25+, where a lucky core holds 2. A joint strike on a Lv.10+ Cube adds +10%.</p></div>`;
 }
 function mQuest() {
   ensureDaily();
@@ -14566,7 +14571,7 @@ function mMastery() {
 
 /* ---------- alliances: 30 members to start, a space station that grows that to 100, and help with construction ---------- */
 const STATION_MAX = 7, allyCap = a => ALLY_MAX + Math.min(STATION_MAX, (a && a.station) || 0) * 5; // 50 members, more as the alliance station grows
-const stationCost = L => ({ m: Math.round(150000 * 2 ** L), c: Math.round(100000 * 2 ** L), g: Math.round(40000 * 2 ** L) });
+const stationCost = L => ({ m: Math.round(600000 * 2 ** L), c: Math.round(400000 * 2 ** L), g: Math.round(160000 * 2 ** L) }); /* v270: 4x */
 const HELP_MAX = 10, HELP_DAY = 30;
 function myJob() {
   if (S.bq) return { id: "b" + Math.round(S.bq.s), lbl: `${B[S.bq.k].n} Lv.${S.bq.lvl}`, e: S.bq.e };
