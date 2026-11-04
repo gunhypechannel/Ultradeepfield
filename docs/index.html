@@ -117,6 +117,12 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 .ringw{border:1px solid;border-radius:12px;padding:8px 10px;margin:6px 0;display:flex;flex-direction:column;gap:6px;background:rgba(10,28,42,.4)}.ringw .rwh{display:flex;flex-direction:column}.ringw small{color:#9fc3d4;font-size:11.5px}.ringw .rwb{display:flex;flex-direction:column;gap:6px}.ringw .btn{white-space:normal;text-align:left}
 .er.t1,.er.t2{filter:drop-shadow(0 0 6px currentColor)}.er.t3,.er.t4,.er.t5{filter:drop-shadow(0 0 12px currentColor)}
 .redalert{position:fixed;inset:0;z-index:80;pointer-events:none;background:radial-gradient(ellipse at center,rgba(255,0,0,.08) 30%,rgba(255,0,0,.55) 100%);animation:redp 1s ease-in-out infinite;display:flex;align-items:flex-start;justify-content:center;padding-top:calc(env(safe-area-inset-top,0px) + 120px)}
+/* v279: being probed: the whole screen flashes red */
+.spyflash{position:fixed;inset:0;z-index:85;pointer-events:none;background:radial-gradient(ellipse at center,rgba(255,0,0,.22) 20%,rgba(255,0,0,.72) 100%);animation:spyfl .6s ease-in-out 6 alternate both;display:flex;align-items:flex-start;justify-content:center;padding-top:calc(env(safe-area-inset-top,0px) + 120px)}
+.spyflash b{font-family:var(--f-display);letter-spacing:.14em;color:#fff;background:rgba(160,0,0,.9);border:1px solid #ff6a6a;border-radius:12px;padding:10px 16px;text-align:center;font-size:14px;max-width:86vw}.spyflash small{display:block;letter-spacing:.05em;margin-top:3px;font-size:12px}
+@keyframes spyfl{from{opacity:.1}to{opacity:1}}@media (prefers-reduced-motion:reduce){.spyflash{animation:none;opacity:.6}}
+.spyinfo{display:grid;gap:4px;margin:8px 0}.spyinfo span{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.04)}.spyinfo .on{color:#8df0b4}.spyinfo .off{color:var(--muted)}
+.spybar{display:flex;gap:8px;align-items:center;margin:8px 0}.spybar .stepper{flex:1}
 .redalert b{pointer-events:auto;font-family:var(--f-display);letter-spacing:.14em;color:#fff;background:rgba(160,0,0,.85);border:1px solid #ff6a6a;border-radius:12px;padding:10px 16px;text-align:center;box-shadow:0 0 30px rgba(255,40,40,.8);font-size:14px}
 @keyframes redp{0%,100%{opacity:.55}50%{opacity:1}}
 #fleethud{position:absolute;left:50%;transform:translateX(-50%);top:calc(var(--hudH,150px) + 6px);z-index:23;width:min(420px,calc(100% - 20px));background:rgba(6,18,30,.86);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--rc,#7fe6f3);border-radius:14px;padding:6px 8px 7px;box-shadow:0 6px 20px rgba(0,0,0,.45)}
@@ -629,7 +635,7 @@ canvas.dthumb{display:block}
 .btab th:first-child,.btab td:first-child{text-align:left}.btab td{text-align:right;padding:5px 3px;border-bottom:1px solid rgba(255,255,255,.05)}.btab td small{display:block;color:var(--muted);font-size:10px}.btab .lo{color:var(--red)}
 .pw2{display:grid;grid-template-columns:100px 1fr auto;align-items:center;gap:8px;font-size:12px;margin:4px 0}.pw2b{height:7px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}.pw2b i{display:block;height:100%}.pw2b.a i{background:#5fd0ff}.pw2b.d i{background:#ff8a5c}.pw2 b{font-family:var(--f-display);font-size:11px}
 .btl{list-style:none;padding:0;margin:0 0 6px;font-size:12px}.btl li{padding:4px 0 4px 10px;border-left:3px solid #9fb6c4;margin-bottom:3px}.btl li.a{border-color:#5fd0ff}.btl li.d{border-color:#ff8a5c}.btl time{color:var(--muted);margin-right:8px;font-family:var(--f-display)}
-.segc.doc{flex-wrap:wrap}.segc.doc button{flex:1 1 40%}.fcst small{color:var(--muted)}
+.fcst small{color:var(--muted)}
 .qhd{display:flex;justify-content:space-between;align-items:center;font-family:var(--f-display);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:2px 2px 6px}.qhd b{color:var(--cyan);font-weight:600;letter-spacing:.04em;text-transform:none}
 .qrow.qn{opacity:.88;border-style:dashed}.qrow.qn .acts{display:flex;gap:6px;align-items:center}
 .logi{display:flex;flex-direction:column;gap:8px}.logi .lrow{display:flex;align-items:center;gap:8px;min-width:0}.logi .lk{flex:none;width:38px;font-family:var(--f-display);font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
@@ -1518,7 +1524,7 @@ const R = {
   drive:    { n: "Combustion Drive", c: { m: 400, g: 600 }, f: 2, req: { lab: 1, energyT: 1 }, d: "Combustion engines: +10% speed per level for Light Fighters, Small Cargos, Large Cargos and Recyclers." },
   impulse:  { n: "Impulse Drive", c: { m: 2000, c: 4000, g: 600 }, f: 2, req: { lab: 2, energyT: 1 }, d: "Impulse engines: +20% speed per level for Heavy Fighters, Cruisers, Bombers and Colony Ships. Small Cargos refit to impulse at Lv.5." },
   hyper:    { n: "Hyperspace Drive", c: { m: 10000, c: 20000, g: 6000 }, f: 2, req: { lab: 7, hyperT: 3 }, d: "Hyperspace engines: +30% speed per level for Pathfinders, Battleships, Dreadnoughts, Destroyers, Reapers and Cube Destroyers." },
-  espionage:{ n: "Espionage Technology", c: { m: 200, c: 1000, g: 200 }, f: 2, req: { lab: 3 }, d: "Better probes. Each level above the target's reveals more of a spy report: fleet, then defenses, buildings and research." },
+  espionage:{ n: "Espionage Technology", c: { m: 200, c: 1000, g: 200 }, f: 2, req: { lab: 3 }, d: "Decides how much your espionage probes see, and how well your own worlds resist theirs. Your level against the target's adds to (or takes from) the probes you send: more information unlocks fleet, then defenses, buildings and research." },
   computer: { n: "Computer Technology", c: { c: 400, g: 600 }, f: 2, req: { lab: 1 }, d: "+1 fleet slot per level." },
   astro:    { n: "Astrophysics", c: { m: 4000, c: 8000, g: 4000 }, f: 1.75, max: 18, req: { lab: 3, espionage: 4, impulse: 3 }, d: "Charts stable orbits for settlers. Every 2 levels lets you hold 1 more planet, up to 10 worlds at Lv.18." },
   irn:      { n: "Intergalactic Research Network", c: { m: 240000, c: 400000, g: 160000 }, f: 2, req: { lab: 10, computer: 8, hyperT: 8 }, d: "Links research labs across your empire: research runs 10% faster per level." },
@@ -1598,7 +1604,7 @@ const RF = {
 /* new hulls that fill out the class line-up (our own designs; no OGame equivalent, balanced against the OGame ships by cost) */
 Object.assign(SH, {
   // OGame's Espionage Probe: no guns, paper hull, absurd speed. A probe in the hangar is spent instead of gas on a probe launch and adds +1 to your espionage level for that report
-  spyProbe:     { n: "Espionage Probe", cls: "Espionage Probe", c: { c: 1000 }, atk: 0, sh: 0, hull: 100, cargo: 5, bs: 100000000, fu: 1, dt: "drive", sz: .3, req: { shipyard: 3, espionage: 2 }, d: "Gathers information about other planets and their defenses. Launching a probe uses one of these instead of gas, and its report sees one espionage level deeper." },
+  spyProbe:     { n: "Espionage Probe", cls: "Espionage Probe", c: { c: 1000 }, atk: 0, sh: 0, hull: 100, cargo: 5, bs: 100000000, fu: 1, dt: "drive", sz: .3, req: { shipyard: 3, espionage: 2 }, d: "Flies to another planet and sends back an espionage report. The more probes you send, and the higher your Espionage Technology against the target's, the more the report shows. The target sees them coming, and its ships may shoot them down." },
   tender:      { n: "Mender Repair Ship", c: { m: 12000, c: 8000, g: 3000 }, atk: 10, sh: 80, hull: 1800, cargo: 2000, bs: 6000, fu: 150, dt: "impulse", sz: .7, req: { shipyard: 5, impulse: 3, armor: 3 }, d: "A fleet repair unit. After every battle its drones patch up part of the fleet's losses on the spot, and tenders parked at home speed up the Repair Yard." },
   guardian:     { n: "Guardian Heavy Cruiser", c: { m: 24000, c: 14000, g: 4000 }, atk: 280, sh: 250, hull: 5200, cargo: 1200, bs: 9000, fu: 320, dt: "impulse", sz: .8, req: { shipyard: 7, impulse: 4, shields: 6, armor: 4 }, d: "A flying shield wall. Draws enemy fire away from the smaller ships it escorts." },
   escortCarrier:{ n: "Halo Escort Carrier", c: { m: 32000, c: 24000, g: 9000 }, atk: 320, sh: 300, hull: 6500, cargo: 3500, bs: 8000, fu: 400, dt: "impulse", sz: .9, req: { shipyard: 8, impulse: 6, shields: 6 }, d: "A versatile support carrier that deploys fighter wings and provides fleet protection. Rapid fire against fighters." },
@@ -1996,7 +2002,7 @@ function fogTick() {
 /* probes: cheap, fast scouts that reveal a wide area where they arrive */
 const PROBE_GAS = 150, PROBE_R = 55;
 function probeTo(target) {
-  const h = homePlanet(); if (!h || !target) return null; const T = now(), tt = Math.max(20000, travelMs(h, target, { fighter: 1 }) / 3);
+  const h = homePlanet(); if (!h || !target) return null; const T = now(), tt = travelMs(h, target, { spyProbe: 1 });
   if ((S.items || {}).probe5 > 0) { S.items.probe5--; } else if ((S.ships.spyProbe || 0) > 0) { S.ships.spyProbe--; } else { if (S.res.g < PROBE_GAS) return toast(`A probe needs ${PROBE_GAS} gas.`, "warn"), null; S.res.g -= PROBE_GAS; }
   const pr = { id: "pr" + (S.seq++), tid: target.id, kind: target.kind || "", out: T, at: T + tt }; (S.probes = S.probes || []).push(pr); return pr;
 }
@@ -2234,7 +2240,7 @@ function haulPlan(n, ships) { const cap = cargoOf(ships), rate = gatherRate(n);
   if (n.res === "s") return { amt: shardRest(n) ? 0 : Math.min(shardYield(n), shardLeft()), ms: SHARD_DIG_MS }; // v135: a shard dig takes the same time whatever the cargo
   if (n.kind === "empty") return { amt: Math.floor(Math.min(cap, rate * OUTPOST_MS / 60000)), ms: OUTPOST_MS };
   const amt = Math.floor(Math.min(cap, rate * 20)); return { amt, ms: Math.max(10000, amt / rate * 60000) }; }
-const fleetTarget = f => f.nid ? NB[f.nid] : f.xid ? PB[f.xid] : f.cx ? PB[f.cx] : f.yid ? YB[f.yid] : f.pid === "nexus" ? NEXUS : G.byId[f.pid];
+const fleetTarget = f => f.tgObj ? f.tgObj : f.nid ? NB[f.nid] : f.xid ? PB[f.xid] : f.cx ? PB[f.cx] : f.yid ? YB[f.yid] : f.pid === "nexus" ? NEXUS : G.byId[f.pid];
 /* 10,000 commander seats: fixed homeworld spots on a spiral through the Rim and the Far Reach (layers 1-2). A new commander
    takes the free seat farthest from everyone else, so every homeworld sits on a location with fixed coordinates. */
 const SEAT_R = new Float32Array(MAX_PLAYERS), SEAT_A = new Float32Array(MAX_PLAYERS);
@@ -2258,7 +2264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 278;
+const GAME_V = 279;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -2873,6 +2879,7 @@ function migrate(st) {
     return false;
   });
   st.v = 3;
+  delete st.doctrine; // v279: fleet doctrines are gone
   if (!st.elem272) { st.elem272 = 1; st.sock = st.sock || {}; st.runes = st.runes || {}; // v272: smaller rings, spare runes come back
     for (const e in ELEM) { const sl = ELEM[e].slots + Math.min(RING_MAX, (st.ringX || {})[e] || 0), on = st.sock[e] || 0; if (on > sl) { st.runes[e] = (st.runes[e] || 0) + on - sl; st.sock[e] = sl; } } }
   return st;
@@ -3038,7 +3045,7 @@ const cprof = k => CPROF[k] || ["fighter", "laser", 0, .1, 4, 0];
 const szOf = q => BIG_R.has(q.role) || bLen(q.k) >= .9 ? 2 : SMALL_R.has(q.role) || (q.role !== "frigate" && bLen(q.k) < .55) ? 0 : 1;
 const unitCost = k => SH[k] ? total(SH[k].c) : DF[k] ? total(DF[k].c) : AL[k] ? AL[k].val : k === "fortress" ? 60000 : 1000;
 const unitPow = s => (s.atk + (s.sh * SHM + s.hull) / 6) / 10;
-/* fleet doctrines: the player picks one per attack; the AI sides use their own */
+/* v279: players no longer pick a doctrine (every commander fights as Combined arms). The table stays because the simulator, the AI sides and old battle replays use it */
 const DOCTRINES = {
   assault:  { n: "Assault", d: "Alpha strike on contact (+40% first volley) and focus fire on the most valuable targets. Hits hardest, fights to the end." },
   balanced: { n: "Combined arms", d: "+6% accuracy. Every squadron picks its most efficient target. Badly damaged squadrons withdraw." },
@@ -3267,7 +3274,7 @@ function forecast(A, D, o = {}, runs = 12) {
 function odds(n, p, runs = 14, allies, doc) {
   if (!Object.values(n).some(v => v > 0)) return 0;
   const D = defenders(p), A = stacksOf(n, techOf(null), G.me).concat(allyStacks(allies, p.lvl));
-  return forecast(A, D.stacks, { doc: doc || S.doctrine }, runs).win;
+  return forecast(A, D.stacks, {}, runs).win;
 }
 /* untrusted battle data from another commander's report: keep only well-formed fleets so it can be replayed safely */
 function cleanSim(x) {
@@ -3341,9 +3348,13 @@ function wellFrac(a, b) {
   const Bq = 2 * (a.x * dx + a.y * dy), C = a.x * a.x + a.y * a.y - WELL_R * WELL_R, disc = Bq * Bq - 4 * A * C; if (disc <= 0) return 0;
   const s = Math.sqrt(disc); return Math.max(0, clamp((-Bq + s) / (2 * A), 0, 1) - clamp((-Bq - s) / (2 * A), 0, 1));
 }
+/* v279: a probe's 100,000,000 speed would cross the galaxy in under a second on the linear scale ships use. OGame's own flight time goes
+   with the square root of speed, so probes do too here: seconds for a neighbour, about a minute across the map, and never too fast to see. */
+const PROBE_K = .42, PROBE_MIN = 12000;
 function travelMs(from, to, n, r = S.r, pct = 100) {
   const ks = Object.keys(n).filter(k => n[k] > 0 && SH[k]); if (!ks.length || !from || !to) return 0;
   const spd = Math.min(...ks.map(k => spdOf(k, r))), T = now(), a = pos(from, T), b = pos(to, T);
+  if (ks.length === 1 && ks[0] === "spyProbe") return Math.max(PROBE_MIN, (60 + Math.hypot(a.x - b.x, a.y - b.y) * 4.8) * 1000 * (1 + WELL_SLOW * wellFrac(a, b)) / (Math.sqrt(spd) * PROBE_K * clamp(pct, 1, 100) / 100));
   return (60 + Math.hypot(a.x - b.x, a.y - b.y) * 4.8) * 1000 * (1 + WELL_SLOW * wellFrac(a, b)) / (spd * clamp(pct, 1, 100) / 100);
 }
 /* gas burned per ship, scaled by distance and by speed squared: slow flights are cheap */
@@ -3486,7 +3497,7 @@ function pirateArrive(f) {
   const x = PB[f.xid], tt = f.tt || (f.arrive - f.out); f.phase = "back"; f.back = f.arrive + tt;
   if (!x) return;
   if (pirDown(x) > f.arrive) { note(`${x.name} was already empty. Fleet returning.`, "warn"); return; }
-  const mine0 = Object.assign({}, f.n), res = simulate(stacksOf(f.n, techOf(null), G.me).concat(allyStacks(f.allies, x.lvl)), xStacks(x), { doc: f.doc });
+  const mine0 = Object.assign({}, f.n), res = simulate(stacksOf(f.n, techOf(null), G.me).concat(allyStacks(f.allies, x.lvl)), xStacks(x));
   const rep = mkRep({ at: f.arrive, kind: "attack", title: x.mon ? `Hunt: ${x.name} (${MON[x.mon].n} Lv.${x.lvl})` : x.boss ? `Assault on ${x.name} (Cube Lv.${x.lvl})` : `Raid on ${x.name} (Pirates Lv.${x.lvl})`, aUids: [G.me].concat(f.allies || []), aName: S.homeName + " Fleet", dName: x.boss || x.mon ? x.name : `${x.name} Pirates`, boss: !!x.boss, mon: x.mon || null, lvl: x.lvl, ptype: "desert", fortL: 0, alien: !!x.mon, pirate: true,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
   f.n = Object.assign({}, f.allies ? (res.aByOwn[G.me] || {}) : res.aLeft); fieldRepair(f, mine0, rep); repairDocks(rep, lossesOf(mine0, f.n));
@@ -3514,7 +3525,7 @@ function pyramidArrive(f) {
   if (pyrDown(y) > f.arrive) { note(`${y.name} has already been emptied. Its vault refills in ${ftime(pyrDown(y) - f.arrive)}. Fleet returning.`, "warn"); return; }
   const g = pyrGuards(y.lvl), mine0 = Object.assign({}, f.n);
   if (Object.keys(g).length) {
-    const res = simulate(stacksOf(f.n, techOf(null), G.me), stacksOf(g, { hive: y.lvl * 2 }, "hive"), { doc: f.doc });
+    const res = simulate(stacksOf(f.n, techOf(null), G.me), stacksOf(g, { hive: y.lvl * 2 }, "hive"));
     const rep = mkRep({ at: f.arrive, kind: "attack", title: `Guardians of ${y.name} (Lv.${y.lvl})`, aUids: [G.me], aName: S.homeName + " Expedition", dName: `${y.name} Guardians`, lvl: y.lvl * 2, ptype: "desert", fortL: 0, alien: true,
       start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
     f.n = Object.assign({}, res.aLeft); addReport(rep); mapClash(y, rep);
@@ -3535,6 +3546,7 @@ function arrive(f) {
   if (f.cx) return cubeSalvage(f); // v277: recyclers at a Cube's wreckage
   if (!p) { note("The target is gone. Fleet returning.", "warn"); if (f.cargo) { f.loot = f.cargo; f.cargo = null; } return; }
   const st = pStatus(p, f.arrive);
+  if (f.mission === "spy") return spyArrive(f, p);
   if (f.mission === "transfer") return transferArrive(f, p, st);
   if (f.mission === "station") return stationArrive(f, p);
   if (f.mission === "recycle") { // collect the debris field: metal and crystal up to the fleet's cargo space
@@ -3552,7 +3564,7 @@ function arrive(f) {
   if (p.owner && isAlly(p.owner)) { note(`${p.name} now belongs to an ally. Fleet returning.`, "warn"); return; }
   if (st === "shielded") { note(`${p.name} is under an occupation shield. Fleet returning.`, "warn"); return; }
   const D = defenders(p), defUid = p.owner, hadDef = D.stacks.length > 0, mine0 = Object.assign({}, f.n);
-  const res = simulate(stacksOf(f.n, techOf(null), G.me).concat(allyStacks(f.allies, p.lvl)), D.stacks, { doc: f.doc });
+  const res = simulate(stacksOf(f.n, techOf(null), G.me).concat(allyStacks(f.allies, p.lvl)), D.stacks);
   const rep = mkRep({ at: f.arrive, kind: "attack", title: `Attack on ${p.name} (Lv.${p.lvl})`, src: launchSrc(f), aUids: [G.me].concat(f.allies || []), aName: S.homeName + " Fleet", dName: p.name, dUid: defUid || null, lvl: p.lvl, ptype: p.type, fortL: D.fortL, alien: D.alien,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
   f.n = Object.assign({}, f.allies ? (res.aByOwn[G.me] || {}) : res.aLeft); fieldRepair(f, mine0, rep);
@@ -3640,7 +3652,7 @@ function cleanOcc(v) { if (!v || typeof v.uid !== "string" || !(+v.until > 0)) r
   return { uid: v.uid, n: cleanShips(v.n), tech: { weapons: okInt((v.tech || {}).weapons), shields: okInt((v.tech || {}).shields), armor: okInt((v.tech || {}).armor) }, at: +v.at || 0, until: +v.until, fid: typeof v.fid === "string" ? v.fid.slice(0, 40) : "" }; }
 /* the field battle itself, fought by the arriving fleet's client */
 function tileBattle(f, n, oc) {
-  const op = n.kind === "empty", mine0 = Object.assign({}, f.n), res = simulate(stacksOf(f.n, techOf(null), G.me), stacksOf(oc.n, oc.tech || techOf(oc.uid), oc.uid), { doc: f.doc });
+  const op = n.kind === "empty", mine0 = Object.assign({}, f.n), res = simulate(stacksOf(f.n, techOf(null), G.me), stacksOf(oc.n, oc.tech || techOf(oc.uid), oc.uid));
   const rep = mkRep({ at: f.arrive, kind: "attack", title: `${op ? "Outpost" : "Field"} battle at ${n.name} (Lv.${n.lvl})`, aUids: [G.me], aName: S.homeName + " Fleet", dName: `${fieldName(oc.uid)} ${op ? "outpost" : "gatherers"}`, dUid: oc.uid, lvl: n.lvl, ptype: "desert", fortL: 0, alien: false,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
   f.n = Object.assign({}, res.aLeft); fieldRepair(f, mine0, rep); repairDocks(rep, lossesOf(mine0, f.n));
@@ -3697,7 +3709,7 @@ function homecoming(f) {
   }
   S.fleets = S.fleets.filter(x => x !== f);
   if (f.shardHaul > 0) { S.shards = (S.shards || 0) + f.shardHaul; logReward(`Void Shard Mine · ${NB[f.nid] ? NB[f.nid].name : "a mine"}`, null, { shards: f.shardHaul, kind: "plunder" }); bump("shardsMined", f.shardHaul); } // v135
-  note(f.mission === "convoy" ? `Supply convoy delivered ${fmt(total(f.loot || {}))} resources to ${S.homeName}.` : f.shardHaul > 0 ? `Fleet returned to ${o ? o.name : S.homeName} with ◆${f.shardHaul} Void Shard${f.shardHaul > 1 ? "s" : ""}.` : `Fleet returned to ${o ? o.name : S.homeName}${f.loot && total(f.loot) ? " with cargo" : ""}.`, f.shardHaul > 0 ? "win" : undefined);
+  note(f.mission === "spy" ? `${fmt(sumShips(f.n))} espionage probe${sumShips(f.n) > 1 ? "s" : ""} back at ${o ? o.name : S.homeName}.` : f.mission === "convoy" ? `Supply convoy delivered ${fmt(total(f.loot || {}))} resources to ${S.homeName}.` : f.shardHaul > 0 ? `Fleet returned to ${o ? o.name : S.homeName} with ◆${f.shardHaul} Void Shard${f.shardHaul > 1 ? "s" : ""}.` : `Fleet returned to ${o ? o.name : S.homeName}${f.loot && total(f.loot) ? " with cargo" : ""}.`, f.shardHaul > 0 ? "win" : undefined);
 }
 const HIVE_RAID_MS = 8 * 3600e3;
 function raidHits() {
@@ -3910,7 +3922,7 @@ function visibleInbound(T = now()) {
 }
 function cleanInbound(x) {
   if (!x || typeof x !== "object" || typeof x.pid !== "string") return null;
-  return { id: String(x.id || Math.random()).slice(0, 40), from: typeof x.from === "string" ? x.from : null, pid: x.pid, out: +x.out || 0, arrive: +x.arrive || 0, ox: +x.ox || 0, oy: +x.oy || 0, n: cleanShips(x.n), src: cleanSrc(x.src) };
+  return { id: String(x.id || Math.random()).slice(0, 40), from: typeof x.from === "string" ? x.from : null, pid: x.pid, out: +x.out || 0, arrive: +x.arrive || 0, ox: +x.ox || 0, oy: +x.oy || 0, n: cleanShips(x.n), src: cleanSrc(x.src), spy: !!x.spy };
 }
 function radarSweep() {
   for (const x of visibleInbound()) if (!G.seenIn.has(x.id)) { G.seenIn.add(x.id); const p = G.byId[x.pid];
@@ -4335,7 +4347,7 @@ async function resolveNexus(f) {
       const g = Object.assign({}, cur.garrison[G.me] || {}); for (const k in f.n) g[k] = (g[k] || 0) + f.n[k]; cur.garrison[G.me] = g;
       await ref.set(cur); S.fleets = S.fleets.filter(x => x !== f); note(`Ships stationed at the Cube for ${allyTag(S.ally)}. They come home when the battle ends.`, "win"); return;
     }
-    const D = nexusDefense(cur), res = simulate(stacksOf(f.n, techOf(null), G.me), D.stacks, { doc: f.doc });
+    const D = nexusDefense(cur), res = simulate(stacksOf(f.n, techOf(null), G.me), D.stacks);
     const rep = mkRep({ at, kind: "attack", title: "Assault on the Cube", aUids: [G.me], aName: S.homeName + " Fleet", dName: cur.holder ? `Cube · ${allyTag(cur.holder)}` : "Collective Warden", lvl: 16, ptype: "gas", fortL: 0, alien: D.alien,
       start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
     repairDocks(rep, rep.lossA);
@@ -4510,11 +4522,16 @@ async function srvBackup(json, sig) {
   try { if (store.bk.h !== hs || T - (store.bk.hT || 0) > 600000) { store.bk.h = hs; store.bk.hT = T; await store.db.doc(col + hk).set(doc); }
     if (store.bk.d !== ds || T - (store.bk.dT || 0) > 3600000) { store.bk.d = ds; store.bk.dT = T; await store.db.doc(col + dk).set(doc); } } catch (e) {}
 }
+/* v279: homeworld stockpile, ships, defenses, buildings and research, refreshed every 5 minutes for espionage reports */
+function myIntel() { const T = now(), b = Math.floor(T / 3e5); if (G.ivB === b && G.iv) return G.iv; G.ivB = b; const nz = o => Object.fromEntries(Object.entries(o || {}).filter(([, v]) => v > 0));
+  G.iv = { t: T, res: { m: Math.floor(S.res.m), c: Math.floor(S.res.c), g: Math.floor(S.res.g) }, s: nz(S.ships), d: nz(S.def), b: nz(S.b), r: nz(S.r) }; return G.iv; }
+function cleanIv(v) { if (!v || typeof v !== "object") return null; const m = (o, K) => { const r = {}; for (const k in o || {}) if (K[k] && okInt(o[k]) > 0) r[k] = okInt(o[k]); return r; }, e = v.res || {};
+  return { t: +v.t || 0, res: { m: okInt(e.m), c: okInt(e.c), g: okInt(e.g) }, s: m(v.s, SH), d: m(v.d, DF), b: m(v.b, B), r: m(v.r, R) }; }
 function syncPlayer() {
   if (S && S.cname) G.myName = S.cname;
   if (G.mode !== "online" || !G.db || !G.me || !G.myHome) return;
   const d = { joined: G.joinedAt, last: Math.floor(now() / 600000) * 600000, score: score(), wins: S.wins, planets: myPlanets().length, home: G.myHome, ally: S.ally || null,
-    tech: { weapons: S.r.weapons, shields: S.r.shields, armor: S.r.armor, esp: S.r.espionage || 0 }, pvp: (S.pvp || {}).pts || 0, rec: S.rec || { w: 0, l: 0, d: 0 }, bio: (S.bio || "").slice(0, 160), nm: S.cname || "", fac: facOf(), lvl: cmdLevel(score()), ast: S.r.astro || 0, av: S.avatar || null, mv: myMoves(), cf: secFlag(), sh: hash(G.me) % SHARDS, gw: S.gw && S.gw.i === gwIdx(now()) ? { i: S.gw.i, p: S.gw.pts } : null };
+    tech: { weapons: S.r.weapons, shields: S.r.shields, armor: S.r.armor, esp: S.r.espionage || 0 }, pvp: (S.pvp || {}).pts || 0, rec: S.rec || { w: 0, l: 0, d: 0 }, bio: (S.bio || "").slice(0, 160), nm: S.cname || "", fac: facOf(), lvl: cmdLevel(score()), ast: S.r.astro || 0, av: S.avatar || null, mv: myMoves(), iv: myIntel(), cf: secFlag(), sh: hash(G.me) % SHARDS, gw: S.gw && S.gw.i === gwIdx(now()) ? { i: S.gw.i, p: S.gw.pts } : null };
   const j = JSON.stringify(d); if (j === store.lastPlayer) return; store.lastPlayer = j;
   serial("me", () => G.db.doc("players/" + G.me).set(d).catch(() => { store.lastPlayer = ""; }));
 }
@@ -4717,7 +4734,7 @@ async function connectCloud() {
       for (let k = 0; k < SHARDS; k++) db.collection(coll).where("sh", "==", k).limit(1000).onSnapshot(s => { parts[k] = s; took(s); merge(); }, () => {}); };
     shardSub("players", snaps => {
       const o = {}; for (const snap of snaps) for (const d of snap.docs) { if (o[d.id]) continue; const v = d.data(); if (v && typeof v === "object") o[d.id] = { score: okInt(v.score), wins: okInt(v.wins), planets: okInt(v.planets), last: +v.last || 0, joined: +v.joined || 0, home: typeof v.home === "string" ? v.home : null, ally: typeof v.ally === "string" ? v.ally : null, tech: { weapons: okInt((v.tech || {}).weapons), shields: okInt((v.tech || {}).shields), armor: okInt((v.tech || {}).armor), esp: okInt((v.tech || {}).esp) },
-        pvp: okInt(v.pvp), rec: { w: okInt((v.rec || {}).w), l: okInt((v.rec || {}).l), d: okInt((v.rec || {}).d) }, bio: typeof v.bio === "string" ? v.bio.slice(0, 160) : "", nm: typeof v.nm === "string" ? v.nm.replace(/[\u0000-\u001f<>]/g, "").slice(0, 20) : "", fac: FACTIONS[v.fac] ? v.fac : "terran", lvl: okInt(v.lvl), ast: v.ast == null ? 18 : okInt(v.ast), av: typeof v.av === "string" && (v.av === "photo" || AV_IDS.includes(v.av) || /^[fmac][0-3]$/.test(v.av)) ? v.av : null, mv: cleanMv(v.mv), gw: v.gw && Number.isInteger(v.gw.i) ? { i: v.gw.i, p: okInt(v.gw.p) } : null }; }
+        pvp: okInt(v.pvp), rec: { w: okInt((v.rec || {}).w), l: okInt((v.rec || {}).l), d: okInt((v.rec || {}).d) }, bio: typeof v.bio === "string" ? v.bio.slice(0, 160) : "", nm: typeof v.nm === "string" ? v.nm.replace(/[\u0000-\u001f<>]/g, "").slice(0, 20) : "", fac: FACTIONS[v.fac] ? v.fac : "terran", lvl: okInt(v.lvl), ast: v.ast == null ? 18 : okInt(v.ast), av: typeof v.av === "string" && (v.av === "photo" || AV_IDS.includes(v.av) || /^[fmac][0-3]$/.test(v.av)) ? v.av : null, mv: cleanMv(v.mv), iv: cleanIv(v.iv), gw: v.gw && Number.isInteger(v.gw.i) ? { i: v.gw.i, p: okInt(v.gw.p) } : null }; }
       G.players = o; gotP = true; if (gotPl) maybeJoin(); refreshNames(); softRender();
     });
     shardSub("planets", (snaps, chg) => {
@@ -4748,7 +4765,7 @@ async function connectCloud() {
       G.occ = o; softRender();
     }, () => {});
     db.doc("inbox/" + uid).onSnapshot(snap => { if (snap.exists) readInbox(snap.data()); }, () => {});
-    db.doc("inbound/" + uid).onSnapshot(snap => { G.inbound = snap.exists && Array.isArray(snap.data().items) ? snap.data().items.map(cleanInbound).filter(Boolean) : []; radarSweep(); softRender(); redAlert(); }, () => {});
+    db.doc("inbound/" + uid).onSnapshot(snap => { const all = snap.exists && Array.isArray(snap.data().items) ? snap.data().items.map(cleanInbound).filter(Boolean) : []; G.inbound = all.filter(x => !x.spy); G.spyIn = all.filter(x => x.spy); spyWatch(); radarSweep(); softRender(); redAlert(); }, () => {});
     db.collection("alliances").limit(300).onSnapshot(snap => {
       const o = {}; for (const d of snap.docs) { const a = cleanAlly(d.id, d.data()); if (a) o[d.id] = a; } G.alliances = o;
       /* v205: the alliance's member list is the truth. If it lists you, you are in it, whatever an older save on some device says */
@@ -4799,6 +4816,21 @@ function redAlert() {
   document.body.appendChild(el); try { SFX.alarm ? SFX.alarm() : SFX.blast && SFX.blast(1, 0); } catch (e) {} if (navigator.vibrate && navigator.userActivation && navigator.userActivation.hasBeenActive) try { navigator.vibrate([200, 100, 200]); } catch (e) {}
   clearTimeout(redAlert.t); redAlert.t = setTimeout(() => { const e2 = $("#redalert"); if (e2) e2.remove(); }, 20000);
 }
+/* v279: being probed. The whole screen flashes red when probes are spotted and again when they arrive; the visit goes in your log once */
+function spyFlash(x, here) {
+  const p = G.byId[x.pid], T = now(), who = x.from ? nameOf(x.from) : "A rival";
+  let el = $("#spyflash"); if (el) el.remove(); el = document.createElement("div"); el.id = "spyflash"; el.className = "spyflash";
+  el.innerHTML = `<b>⚠ ESPIONAGE PROBES<small>${esc(who)}${x.src ? ` from [${esc(x.src.c)}]` : ""} ${here ? "is scanning" : "→"} ${esc(p ? p.name : "your world")}${here ? "" : ` · ${ftime(x.arrive - T)}`}</small></b>`;
+  document.body.appendChild(el); try { SFX.alarm ? SFX.alarm() : SFX.blast && SFX.blast(1, 0); } catch (e) {} if (navigator.vibrate && navigator.userActivation && navigator.userActivation.hasBeenActive) try { navigator.vibrate([120, 80, 120]); } catch (e) {}
+  clearTimeout(spyFlash.t); spyFlash.t = setTimeout(() => { const e2 = $("#spyflash"); if (e2) e2.remove(); }, 3700);
+}
+function spyWatch() {
+  const L = G.spyIn || []; if (!L.length || !S || !G.ready) return; const T = now(); G.spyFl = G.spyFl || new Set();
+  for (const x of L) { const p = G.byId[x.pid]; if (!p || p.owner !== G.me || x.from === G.me || (S.spySeen || []).includes(x.id)) continue;
+    if (T < x.arrive) { if (!G.spyFl.has(x.id)) { G.spyFl.add(x.id); spyFlash(x, false); } continue; }
+    S.spySeen = [x.id].concat(S.spySeen || []).slice(0, 60); dirty(); if (T - x.arrive < 120000) spyFlash(x, true);
+    note(`Espionage: ${x.from ? nameOf(x.from) : "a rival"}${x.src ? ` from [${x.src.c}]` : ""} scanned ${p.name} with ${fmt(sumShips(x.n))} probe${sumShips(x.n) > 1 ? "s" : ""}.`, "loss"); }
+}
 function finishJoin(fresh) {
   G.ready = true; rebuild(); changed = true; setTimeout(chatInit, 500); setTimeout(redAlert, 1500); // incoming attacks light the screen red on log-on
   if (fresh) S.say.push(`Fleet Command has registered us in the shared galaxy. Our homeworld is ${S.homeName}.`, `Up to ${MAX_PLAYERS} commanders orbit the Void. Any colony can change hands, so guard yours.`);
@@ -4808,6 +4840,7 @@ function readInbox(d) {
   const items = Array.isArray(d.items) ? d.items : [];
   const fresh = items.filter(x => x && +x.at > (S.inboxSeen || 0)).sort((a, b) => a.at - b.at);
   for (const it of fresh) {
+    if (it.kind === "spy") { S.inboxSeen = Math.max(S.inboxSeen || 0, +it.at); const p0 = G.byId[it.pid]; note(`Counter-espionage: ships over ${p0 ? p0.name : "your world"} shot down ${okInt(it.n)} probe${okInt(it.n) > 1 ? "s" : ""}${typeof it.by === "string" ? ` from ${nameOf(it.by)}` : ""}.`, "win"); continue; } // v279
     const rep = mkRep({ at: +it.at, kind: "defense", title: String(it.title || "Attack").slice(0, 80), aUids: Array.isArray(it.aUids) ? it.aUids.filter(x => typeof x === "string").slice(0, 20) : [], dName: String(it.dName || "").slice(0, 40),
       lvl: okInt(it.lvl), ptype: TYPES.includes(it.ptype) ? it.ptype : "terran", fortL: okInt(it.fortL),
       start: { a: cleanUnits((it.start || {}).a), d: cleanUnits((it.start || {}).d) }, sim: cleanSim(it.sim), rounds: (Array.isArray(it.rounds) ? it.rounds.slice(0, MAX_ROUNDS) : []).map(r => ({ a: cleanUnits(r && r.a), d: cleanUnits(r && r.d) })),
@@ -6173,8 +6206,8 @@ function cubeOrbit(c, id, T, rad, f) { const h = hash(id); let inc = .1 + (h % 3
    Every commander publishes a short summary of their fleets in flight with their player record. You see a movement only where
    your fog is lifted (or anywhere if it belongs to your alliance), so scouting still matters. Bot war fleets show too: each
    one flies the last 50 minutes before its strike and limps home afterwards. */
-const MV_LBL = { o: "holding an outpost", a: "attack", g: "gathering", r: "pirate raid", y: "station expedition", t: "transfer", f: "reinforcing", c: "recycling", w: "bot war strike", j: "joint strike", s: "stationed with an ally" };
-const mvCode = f => f.nid ? (f.nid[0] === "e" ? "o" : "g") : f.xid ? "r" : f.yid ? "y" : f.assault ? "j" : f.mission === "station" ? "s" : f.mission === "transfer" ? "t" : f.mission === "reinforce" ? "f" : f.mission === "recycle" ? "c" : "a";
+const MV_LBL = { o: "holding an outpost", p: "espionage", a: "attack", g: "gathering", r: "pirate raid", y: "station expedition", t: "transfer", f: "reinforcing", c: "recycling", w: "bot war strike", j: "joint strike", s: "stationed with an ally" };
+const mvCode = f => f.nid ? (f.nid[0] === "e" ? "o" : "g") : f.xid ? "r" : f.yid ? "y" : f.assault ? "j" : f.mission === "spy" ? "p" : f.mission === "station" ? "s" : f.mission === "transfer" ? "t" : f.mission === "reinforce" ? "f" : f.mission === "recycle" ? "c" : "a";
 const tgtById = id => G.byId[id] || NB[id] || PB[id] || YB[id] || (id === "nexus" ? NEXUS : null);
 function myMoves() {
   const out = [];
@@ -6229,7 +6262,7 @@ function mvVisible(T) {
   out.sort((a, b) => a.d - b.d); return out.slice(0, MOBILE ? 60 : 120);
 }
 /* fleets on the map: a small formation of real hull shapes; more ships and bigger hulls as the fleet grows */
-const MINI_CLS = { tender: "m", guardian: "m", escortCarrier: "l", supercarrier: "l", eclipse: "x", fighter: "s", heavyFighter: "s", lancer: "s", hauler: "s", heavyCargo: "m", recycler: "m", ark: "m", corvette: "m", bomber: "m", battleship: "l", bastion: "l", destroyer: "l", dreadnought: "l", worldbreaker: "q" }; // q: the Cube Destroyer flies as a small red-lit battle sphere
+const MINI_CLS = { spyProbe: "s", tender: "m", guardian: "m", escortCarrier: "l", supercarrier: "l", eclipse: "x", fighter: "s", heavyFighter: "s", lancer: "s", hauler: "s", heavyCargo: "m", recycler: "m", ark: "m", corvette: "m", bomber: "m", battleship: "l", bastion: "l", destroyer: "l", dreadnought: "l", worldbreaker: "q" }; // q: the Cube Destroyer flies as a small red-lit battle sphere
 function miniKit(W) {
   if (W.mini) return W.mini;
   const lathe = (len, r, prof) => { const g = new TH.LatheGeometry(prof.map(([t, k]) => new TH.Vector2(Math.max(.002, k * r), (t - .5) * len)), 10); g.rotateZ(-Math.PI / 2); g.rotateY(-Math.PI / 2); g.scale(1, .7, 1); return g; };
@@ -6490,10 +6523,10 @@ function fxKit(W) {
     rim: texCanvas(256, 256, (x) => { const g = x.createRadialGradient(128, 128, 70, 128, 128, 128); g.addColorStop(0, "rgba(255,140,50,0)"); g.addColorStop(.62, "rgba(255,140,50,.0)"); g.addColorStop(.74, "rgba(255,120,40,.55)"); g.addColorStop(1, "rgba(255,80,20,0)"); x.fillStyle = g; x.fillRect(0, 0, 256, 256); }) });
 }/* route colours, the same everywhere on the map: red = attack (raids, hunts and strikes too), white = returning home,
    blue = gathering or exploring, green = joint strike or stationing / reinforcing / transfers */
-const ROUTE = { atk: 0xff4a4a, back: 0xffffff, gather: 0x4aa8ff, joint: 0x5dff8a };
-const routeKind = f => f.phase === "back" || f.retreat ? "back" : f.enemy || f.raid ? "atk" : f.nid || f.yid ? "gather" : f.assault || f.js || f.station || ["reinforce", "transfer", "station", "convoy"].includes(f.mission) ? "joint" : "atk";
-const ROUTE_CSS = { atk: "#ff4a4a", back: "#ffffff", gather: "#4aa8ff", joint: "#5dff8a" };
-const MV_ROUTE = m => m === "g" || m === "y" || m === "o" ? "gather" : m === "f" || m === "t" || m === "j" || m === "s" ? "joint" : "atk";
+const ROUTE = { atk: 0xff4a4a, back: 0xffffff, gather: 0x4aa8ff, joint: 0x5dff8a, spy: 0xff6af0 };
+const routeKind = f => f.phase === "back" || f.retreat ? "back" : f.enemy || f.raid ? "atk" : f.mission === "spy" ? "spy" : f.nid || f.yid ? "gather" : f.assault || f.js || f.station || ["reinforce", "transfer", "station", "convoy"].includes(f.mission) ? "joint" : "atk";
+const ROUTE_CSS = { atk: "#ff4a4a", back: "#ffffff", gather: "#4aa8ff", joint: "#5dff8a", spy: "#ff6af0" };
+const MV_ROUTE = m => m === "p" ? "spy" : m === "g" || m === "y" || m === "o" ? "gather" : m === "f" || m === "t" || m === "j" || m === "s" ? "joint" : "atk";
 /* ---------- v94 live map battles ----------
    Every battle that happens while you play (your attacks, raids on you, outpost fights, other commanders' and bots' strikes
    in charted space) is fought out on the map for ~26 s: two squadrons face off over the target, bolts cross between them,
@@ -7401,12 +7434,13 @@ function lineDist(ln) {
 /* v250 whose flagship leads a fleet on the map. Your own fleets fly yours; strikes their leader's or member's; enemies their commander's. Pirate raids have none. */
 const DEMO_FAC = ["terran", "solar", "nyx", "verdant"];
 function fleetFlag(f, hostile) {
+  if (f.mission === "spy") return null; // v279: probes fly alone
   if (f.raid) return null; if (f.demo) return DEMO_FAC[hash(String(f.id)) % 4];
   const u = hostile ? f.from : f.u ? f.u : f.js ? ((G.assaults && G.assaults[f.js] && G.assaults[f.js].leader) || G.me) : G.me;
   if (!u || !flagOK(u)) return null; return u === G.me ? facOf() : playerFac(u); }
 const fformOf = f => FORMS[f.form] ? f.form : FORMS[S && S.fform] ? S.fform : "wedge"; /* v258: your fleets fly the formation you pick */
 function fleetObj(W, f, hostile, cube) {
-  const col = hostile ? 0xff6262 : f.js ? (f.jsK === "in" ? 0x8affc0 : 0x5dff9a) : f.nid ? 0x9af0c8 : f.xid ? 0xffc06a : f.mission === "attack" ? 0xffb08a : f.mission === "transfer" ? 0xb8a6ff : 0x9fe9f7;
+  const col = hostile ? 0xff6262 : f.js ? (f.jsK === "in" ? 0x8affc0 : 0x5dff9a) : f.nid ? 0x9af0c8 : f.xid ? 0xffc06a : f.mission === "spy" ? 0xff6af0 : f.mission === "attack" ? 0xffb08a : f.mission === "transfer" ? 0xb8a6ff : 0x9fe9f7;
   const flag = fleetFlag(f, hostile), grp = fleet3D(W, hostile && !f.n ? null : f.n, col, hostile, f.js ? (f.jsK !== "in" ? (f.form || "wedge") : false) : hostile ? false : fformOf(f), !!cube, flag), tot = Object.values(f.n || {}).reduce((a, b) => a + b, 0) || 6;
   grp.userData.size = (.75 + Math.min(1.1, Math.log10(tot + 1) * .3)) * .5; // grows with fleet size
   grp.userData.flagKeep = !!flag && !f.demo; // v250 (a demo's 140 fleets drop their glow from afar, to stay smooth)
@@ -7653,6 +7687,8 @@ function draw3D(t) {
   if (cam.followFleet && !list.some(x => x[0] === cam.followFleet)) { const mf = S.fleets.find(x => x.id === cam.followFleet); if (mf && jsMerged(mf)) cam.followFleet = "js-" + mf.assault; } // following your ships? follow the whole strike
   if (S.raid) list.push(["raid", { phase: "out", raid: true }, true]);
   for (const x of visibleInbound(T)) list.push(["in-" + x.id, { phase: "out", pid: x.pid, ox: x.ox, oy: x.oy, out: x.out, arrive: x.arrive, n: x.n, enemy: true, src: x.src, from: x.from }, true]);
+  for (const x of G.spyIn || []) if (x.arrive > T && x.out <= T && G.byId[x.pid] && G.byId[x.pid].owner === G.me) list.push(["sp-" + x.id, { phase: "out", pid: x.pid, ox: x.ox, oy: x.oy, out: x.out, arrive: x.arrive, n: x.n, enemy: true, src: x.src, from: x.from, mission: "spy" }, true]); // v279: probes coming at your world, whether or not you have radar
+  for (const pr of S.probes || []) { const tg = G.byId[pr.tid] || PB[pr.tid] || NB[pr.tid] || EB[pr.tid]; if (tg) list.push(["pr-" + pr.id, { id: "pr-" + pr.id, phase: "out", tgObj: tg, mission: "spy", chart: 1, out: pr.out, arrive: pr.at, n: { spyProbe: 1 } }, false]); } // v279: charting probes fly on the map too
   if (W.fmFr !== W.fr) { W.fmFr = W.fr; W.fleetMade = 0; } // v276: the budget starts fresh every frame
   for (const [id, f, hostile] of list) {
     let path;
@@ -7894,11 +7930,11 @@ function overlay3D(W, fx, w, h, dpr, t, T) {
     if (!o.pt) continue; V3.set(o.pt.x, o.pt.y, o.pt.z).project(W.camera); if (V3.z >= 1) continue;
     const x = (V3.x * .5 + .5) * w, y = (-V3.y * .5 + .5) * h;
     if (id === "raid") { label(`HIVE RAID ${ftime(S.raid.at - T)}`, x, y - 14, "#ff7b7b", 11); continue; }
-    if (o.f && o.f.enemy) { const tp = G.byId[o.f.pid]; hits.push({ fleet: id, enemy: 1, x, y, sr: 26 }); label(`ENEMY${o.f.src ? ` from [${o.f.src.c}]` : ""} → ${tp ? tp.name : ""} ${ftime(o.f.arrive - T)}`, x, y - 14, "#ff7b7b", 11); continue; }
+    if (o.f && o.f.enemy) { const tp = G.byId[o.f.pid]; hits.push({ fleet: id, enemy: 1, x, y, sr: 26 }); label(`${o.f.mission === "spy" ? "PROBES" : "ENEMY"}${o.f.src ? ` from [${o.f.src.c}]` : ""} → ${tp ? tp.name : ""} ${ftime(o.f.arrive - T)}`, x, y - 14, "#ff7b7b", 11); continue; }
     if (o.f && o.f.js) { const f = o.f, a = G.assaults[f.js], tg = f.jsK === "in" ? G.byId[f.pid] : a && rallyTgt(a), e = f.jsK === "mass" ? a && a.launch : f.arrive; hits.push({ fleet: id, x, y, sr: f.jsK === "in" ? 22 : 34 });
       ctx.strokeStyle = "#5dff8a"; ctx.lineWidth = f.jsK === "in" ? 1.2 : 2.2; ctx.globalAlpha = .8; ctx.beginPath(); ctx.arc(x, y, (f.jsK === "in" ? 9 : 16) + Math.sin(t * .006) * 1.5, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1;
       label(f.jsK === "in" ? `${BOT_BY[f.u] ? BOT_BY[f.u].name : nameOf(f.u)} → muster ${ftime(Math.max(0, f.arrive - T))}` : `⚔ JOINT STRIKE · ${f.cnt} cmdr · ${fmt(sumShips(f.n))} ships ${f.jsK === "mass" ? "· launch" : "→ " + (tg ? tg.name : "")} ${e ? ftime(Math.max(0, e - T)) : ""}`, x, y - (f.jsK === "in" ? 14 : 22), "#7dffa8", f.jsK === "in" ? 10 : 12); continue; }
-    if (o.f && o.f.demo) continue; // v117: the demo armies fly unlabelled
+    if (o.f && (o.f.demo || o.f.chart)) continue; // v117: the demo armies fly unlabelled (v279: so do charting probes)
     const f = o.f, tg = fleetTarget(f), e = f.phase === "out" ? f.arrive : f.phase === "gather" ? f.gend : f.phase === "back" ? f.back : null;
     hits.push({ fleet: id, x, y, sr: 26 }); const rc = ROUTE_CSS[routeKind(f)]; // a generous tap target: fleets are small and always moving
     ctx.strokeStyle = rc; ctx.lineWidth = 1.5; ctx.globalAlpha = .7; ctx.beginPath(); ctx.arc(x, y, 11 + Math.sin(t * .006) * 1.5, 0, TAU); ctx.stroke(); ctx.globalAlpha = 1;
@@ -8049,7 +8085,7 @@ function pick3(el, e, light) { // light (mouse hover): skips the open-slot scan
   const k = (r.height / 2) / Math.tan(G3.camera.fov * Math.PI / 360), cp = G3.camera.position, ph = [];
   const Tt = now(); // every world can be tapped, near or far: positions are worked out only now, on tap
   for (const p of G.list) { const q = P3(p, Tt, PQ); V3.set(q.x, q.y, q.z); const dcam = cp.distanceTo(V3); V3.project(G3.camera); if (V3.z >= 1) continue;
-    const sx = (V3.x * .5 + .5) * r.width, sy = (-V3.y * .5 + .5) * r.height; if (Math.abs(sx - x) > 60 || Math.abs(sy - y) > 60) continue; ph.push({ id: p.id, x: sx, y: sy, sr: plRad(p) / dcam * k }); }
+    const sx = (V3.x * .5 + .5) * r.width, sy = (-V3.y * .5 + .5) * r.height, sr = plRad(p) / dcam * k; if (Math.abs(sx - x) > 60 + sr || Math.abs(sy - y) > 60 + sr) continue; ph.push({ id: p.id, x: sx, y: sy, sr, pl: p.owner ? (isBot(p.owner) ? 1 : 2) : 0 }); } // v279: the reach grows with the globe, so a big world's edge can be tapped
   { const ud = !light && G3.tiles ? G3.tiles.geometry.attributes : null; // v105: every charted, free slot that is drawn on screen can be tapped
     if (ud) { const arr = ud.aV.array, aY = ud.aY.array, aB = ud.aB.array, far = G3.tiles.material.uniforms.uFar.value, f2 = far * far;
       for (let i = 0; i < EMPTY_N; i++) { if (!arr[i]) continue; const a = EA[i] + Tt * EW[i], ox = Math.cos(a) * ER[i], oz = Math.sin(a) * ER[i], dx = ox - cp.x, dz = oz - cp.z; if (dx * dx + dz * dz > f2) continue;
@@ -8062,6 +8098,11 @@ function pick3(el, e, light) { // light (mouse hover): skips the open-slot scan
   for (const m of G3.moves || []) { const dd = Math.hypot(m.sx - x, m.sy - y); if (dd < 48) ph.push({ mv: m, x: m.sx, y: m.sy, sr: 20 }); } // v93: other fleets get a fingertip-sized target
   for (const h of G3.hits.concat(ph)) { const dd = Math.hypot(h.x - x, h.y - y) - h.sr; if (dd < 16 && dd < bd) { bd = dd; best = h; } }
   { const fl = G3.hits.filter(h => h.fleet).concat(ph.filter(h => h.mv)).map(h => [h, Math.hypot(h.x - x, h.y - y) - (h.fleet && !h.enemy ? 8 : 0)]).sort((a, b) => a[1] - b[1])[0]; if (fl && fl[1] < 46) best = fl[0]; } // v93: any fleet (yours first) wins close calls against planets and markers
+  /* v279: commanders' worlds are easy to tap: a fingertip's reach (34 px past the globe), and they win close calls against open orbits, far markers and passing fleets
+     unless you tapped right on one of those. The finder keeps its own targets first. */
+  if (!G.find) { const pl = ph.filter(h => h.pl).map(h => [h, Math.hypot(h.x - x, h.y - y)]).sort((a, b) => (a[1] - a[0].sr - (a[0].pl > 1 ? 14 : 0)) - (b[1] - b[0].sr - (b[0].pl > 1 ? 14 : 0)))[0]; // real commanders get 14 px of grace over bots
+    if (pl && pl[1] - pl[0].sr < (pl[0].pl > 1 ? 44 : 34)) { const on = pl[1] <= pl[0].sr, bdist = best ? Math.hypot(best.x - x, best.y - y) : Infinity, isFl = best && (best.fleet || best.mv);
+      const keep = best && (isFl ? bdist < 20 && bdist < pl[1] : !best.pl && bdist <= Math.max(best.sr || 0, 8) && !on); if (!keep) best = pl[0]; } }
   { const cl = G3.hits.filter(h => h.prio && Math.hypot(h.x - x, h.y - y) < h.sr).sort((a, b) => Math.hypot(a.x - x, a.y - y) - Math.hypot(b.x - x, b.y - y))[0]; if (cl) best = cl; } // v188: a live fight wins over everything near it
   return { best, x, y, r };
 }
@@ -10947,7 +10988,7 @@ function mapOverlay() {
   morph(tl, `<button class="glass stat ostat${G.find === "o" ? " on" : ""}" data-act="find" data-r="o" aria-label="Coordinates: find any location and teleport">⌖ Coordinates</button>${S.raid ? `<span class="glass stat hot">Hive raid · <b data-end="${S.raid.at}">${ftime(S.raid.at - T)}</b></span>` : ""}${(() => { const v = visibleInbound(T); return v.length ? `<span class="glass stat hot">Radar · ${v.length} inbound · <b data-end="${Math.min(...v.map(x => x.arrive))}">${ftime(Math.min(...v.map(x => x.arrive)) - T)}</b></span>` : ""; })()}`);
   morph(fc, S.fleets.map(f => {
     const tg = f.phase === "muster" ? (f.rx ? PB[f.rx] : asTgt(f.rt || f.pid)) : fleetTarget(f), e = f.phase === "out" ? f.arrive : f.phase === "muster" ? f.launch : f.phase === "gather" ? f.gend : f.phase === "back" ? f.back : null;
-    const lbl = f.phase === "muster" || f.rj || f.launched ? fleetLabel(f) : f.mission === "convoy" ? "Supply convoy" : f.phase === "gather" ? "Gathering" : f.phase === "back" ? "Returning" : f.phase === "resolving" ? "Fighting" : f.nid ? "To gather" : f.xid ? "Pirate raid" : f.mission === "transfer" ? "Transfer" : f.mission === "reinforce" ? "Reinforcing" : f.n.ark ? "Invading" : "Attacking";
+    const lbl = f.mission === "spy" && f.phase === "out" ? "Espionage" : f.phase === "muster" || f.rj || f.launched ? fleetLabel(f) : f.mission === "convoy" ? "Supply convoy" : f.phase === "gather" ? "Gathering" : f.phase === "back" ? "Returning" : f.phase === "resolving" ? "Fighting" : f.nid ? "To gather" : f.xid ? "Pirate raid" : f.mission === "transfer" ? "Transfer" : f.mission === "reinforce" ? "Reinforcing" : f.n.ark ? "Invading" : "Attacking";
     return `<button class="glass fchip${f.mission === "attack" && f.phase === "out" ? " atk" : ""}" data-act="fleetFocus" data-id="${f.id}"><span>${lbl} · ${tg ? esc(tg.name) : "fleet"}</span><b ${e ? `data-end="${e}"` : ""}>${e ? ftime(e - T) : "…"}</b></button>`;
   }).join("") + (S.strikes || []).map(s => { const p = G.byId[s.pid]; return `<button class="glass fchip atk" data-act="viewMode" data-m="system" data-id="${s.pid}"><span>Missiles ×${s.n} · ${p ? esc(p.name) : ""}</span><b data-end="${s.at}">${ftime(s.at - T)}</b></button>`; }).join(""));
   updateVbtn();
@@ -11024,12 +11065,12 @@ function shFind() {
       <button class="btn ghost wide" data-act="findClear">Clear highlight</button>`; }
   const fields = NODES.filter(n => n.res === r && !isFogged(n, T) && !occOf(n.id, T)).sort((a, b) => dist(a) - dist(b)).slice(0, 8); /* v235: only free fields: a held one means a fight (the Academy sent new players into bot crews) */
   const hive = G.list.filter(p => pStatus(p, T) === "hive" && !isFogged(p, T)).map(p => ({ p, v: stock(p.lvl)[r] / 2, s: stock(p.lvl)[r] / 2 / Math.max(30, dist(p)) })).sort((a, b) => b.s - a.s).slice(0, 5);
-  const rival = G.list.filter(p => pStatus(p, T) === "player" && !isAlly(p.owner) && !isFogged(p, T)).map(p => ({ p, v: colStock(p)[r] / 2 })).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 5);
+  const rival = G.list.filter(p => pStatus(p, T) === "player" && !isAlly(p.owner) && !isFogged(p, T)).map(p => ({ p })).sort((a, b) => dist(a.p) - dist(b.p)).slice(0, 5); // v279: what a rival holds only shows in an espionage report
   const row = (act, id, lvl, col, name, sub, pill) => `<button class="tgt" data-act="${act}" data-id="${id}"><span class="lvl" style="color:${col};border-color:${col}">${lvl}</span><span><span class="nm">${esc(name)}</span><br><span class="sub">${sub}</span></span>${pill}</button>`;
   return `<div class="hd"><div><div class="chapter" style="color:${NODE_T[r].col}">Resource finder</div><h2>${RES_N[r]}</h2><p class="note">Distances from ${esc(h ? h.name : S.homeName)}. Matching fields glow on the map.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
     <h2 class="sec">Neutral fields · safe to gather</h2><div class="list">${fields.map(n => row("node", n.id, n.lvl, NODE_T[n.res].col, n.name, `${fmt(gatherRate(n))}/min · ${h ? ftime(travelMs(h, n, { hauler: 1 })) : "–"} by Small Cargo`, '<span class="pill ok">Gather</span>')).join("")}</div>
-    <h2 class="sec">Hive worlds to raid</h2><div class="list">${hive.map(x => row("planet", x.p.id, x.p.lvl, "#f0a945", x.p.name, `~${fmt(x.v)} ${RES_N[r].toLowerCase()} lootable · ${h ? ftime(travelMs(h, x.p, { fighter: 1 })) : "–"}`, '<span class="pill amb">Hive</span>')).join("") || '<p class="note">None nearby.</p>'}</div>
-    <h2 class="sec">Rival colonies to plunder</h2><div class="list">${rival.map(x => row("planet", x.p.id, x.p.lvl, "#ff7aa8", x.p.name, `~${fmt(x.v)} ${RES_N[r].toLowerCase()} lootable · ${esc(nameOf(x.p.owner))}`, '<span class="pill rose">Rival</span>')).join("") || '<p class="note">No unshielded rival colonies with this resource.</p>'}</div>
+    <h2 class="sec">Hive worlds to raid</h2><div class="list">${hive.map(x => row("planet", x.p.id, x.p.lvl, "#f0a945", x.p.name, `Lv.${x.p.lvl} · ${h ? ftime(travelMs(h, x.p, { fighter: 1 })) : "–"} by Light Fighter`, '<span class="pill amb">Hive</span>')).join("") || '<p class="note">None nearby.</p>'}</div>
+    <h2 class="sec">Rival colonies to plunder</h2><div class="list">${rival.map(x => row("planet", x.p.id, x.p.lvl, "#ff7aa8", x.p.name, `Lv.${x.p.lvl} · ${esc(nameOf(x.p.owner))}`, '<span class="pill rose">Rival</span>')).join("") || '<p class="note">No rival colonies in charted space.</p>'}</div>
     <button class="btn ghost wide" data-act="findClear">Clear highlight</button>`;
 }
 /* Void Shards: earned in play, spent on instant speed-ups */
@@ -11048,6 +11089,7 @@ function fleetLabel(f) {
   if (f.launched && f.phase === "out") return "⚔ Joint strike marching";
   if (f.phase === "gather") return "Gathering";
   if (f.phase === "back") return f.recalled ? "Recalled" : "Returning";
+  if (f.mission === "spy") return "Espionage";
   if (f.nid) return "To gather";
   if (f.xid) return "Pirate raid";
   if (f.mission === "transfer") return "Transfer";
@@ -11158,11 +11200,11 @@ function vFleets() {
     ${jsFleetSection()}
     ${(S.strikes || []).length ? `<h2 class="sec">Missiles in flight</h2><div class="queue">${S.strikes.map(s => { const p = G.byId[s.pid]; return `<div class="qrow"><div><div class="lbl">Ballistic ×${s.n}</div><div class="what">→ ${esc(p ? p.name : "target")}</div></div><div class="acts"><span class="t" data-end="${s.at}">${ftime(s.at - T)}</span></div><div class="bar"><i data-s="${s.out}" data-e="${s.at}"></i></div></div>`; }).join("")}</div>` : ""}`; /* v232: no ledger here; each fleet shows its own cargo */
 }
-/* attack screens: pick a doctrine, then see the odds and the projected outcome from a dozen simulated runs */
-function oddsBlock(o) {
-  const oc = o >= .75 ? "var(--green)" : o >= .4 ? "var(--amber)" : "var(--red)", dc = DOCTRINES[S.doctrine] ? S.doctrine : "balanced", fc = sheet && sheet.fc;
-  return `<h2 class="sec">Doctrine</h2><div class="segc doc">${Object.entries(DOCTRINES).map(([k, v]) => `<button class="${k === dc ? "on" : ""}" data-act="doctrine" data-k="${k}" aria-pressed="${k === dc}">${v.n}</button>`).join("")}</div><p class="note">${DOCTRINES[dc].d}</p>
-    <div class="odds"><span style="font-size:12px;letter-spacing:.12em;color:var(--muted)">WIN ODDS</span><div class="meter"><i style="width:${o * 100}%;background:${oc}"></i></div><b style="color:${oc}">${Math.round(o * 100)}%</b></div>
+/* attack screens: the odds and the projected outcome from a dozen simulated runs. v279: on planets they need an espionage report */
+function oddsBlock(o, unknown) {
+  if (unknown) return `<div class="callout">Win odds unknown. Send espionage probes to see what defends this world.</div>`;
+  const oc = o >= .75 ? "var(--green)" : o >= .4 ? "var(--amber)" : "var(--red)", fc = sheet && sheet.fc;
+  return `<div class="odds"><span style="font-size:12px;letter-spacing:.12em;color:var(--muted)">WIN ODDS</span><div class="meter"><i style="width:${o * 100}%;background:${oc}"></i></div><b style="color:${oc}">${Math.round(o * 100)}%</b></div>
     ${fc && fc.a0 ? `<dl class="kv fcst"><dt>Your fleet power</dt><dd>${fmt(fc.a0)} → ~${fmt(fc.a1)} <small>(${Math.round(fc.a1 / fc.a0 * 100)}% left)</small></dd><dt>Enemy power</dt><dd>${fmt(fc.d0)} → ~${fmt(fc.d1)}</dd><dt>Expected ship losses</dt><dd>~${fmt(fc.aLossV)} resources</dd></dl>` : ""}`;
 }
 function shNexus() {
@@ -11176,7 +11218,7 @@ function shNexus() {
   else if (!Object.keys(avail).length) body = `${originBar()}<p class="note">No ships at ${esc(originPlanet() ? originPlanet().name : S.homeName)}.</p>`;
   else {
     const hold = cur.holder === S.ally; let o = 0;
-    if (!hold && Object.keys(sel).length) { const key = JSON.stringify(sel) + JSON.stringify(D.n); if (sheet.oddsKey !== key + S.doctrine) { sheet.oddsKey = key + S.doctrine; sheet.fc = forecast(stacksOf(sel, techOf(null), G.me), D.stacks, { doc: S.doctrine }, 10); sheet.odds = sheet.fc.win; } o = sheet.odds; }
+    if (!hold && Object.keys(sel).length) { const key = JSON.stringify(sel) + JSON.stringify(D.n); if (sheet.oddsKey !== key) { sheet.oddsKey = key; sheet.fc = forecast(stacksOf(sel, techOf(null), G.me), D.stacks, {}, 10); sheet.odds = sheet.fc.win; } o = sheet.odds; }
     const oc = o >= .75 ? "var(--green)" : o >= .4 ? "var(--amber)" : "var(--red)";
     // v99: alone, as a joint strike (allies gather at your world, then march as one army) or as a joint strike (everyone lands together)
     const md = sheet.nxMode === "rally" || sheet.nxMode === "joint" ? "rally" : "solo", h = originPlanet(), mins = RALLY_T.includes(sheet.jt) ? sheet.jt : 10;
@@ -11471,7 +11513,7 @@ function shNode() {
   const head = `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:${NODE_T[n.res].col}">${RES_N[n.res]} field · Lv.${n.lvl} · [${coordStr(n)}]</div><h2>${esc(n.name)}</h2><p class="note">${n.res === "s" ? "A rare vein of crystallised void. Any fleet can dig it, but it gives up its shards slowly: a dig takes " + ftime(SHARD_DIG_MS) + ", the mine rests a day after your dig, and your mines pay at most " + SHARD_MINE_DAY + " shards a day. " : ""}One gatherer at a time. A rival fleet that arrives while the field is held fights the holder for it: the winner gathers, the loser goes home.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
   let occ = "";
   if (oc) { const me = oc.uid === G.me, col = me ? "#7fe6f3" : fieldAlly(oc.uid) ? "#7be39a" : colorOf(oc.uid);
-    let odds = ""; if (!me && !fieldAlly(oc.uid) && Object.keys(sel).length) { const key = JSON.stringify(sel) + JSON.stringify(oc.n); if (sheet.occKey !== key) { sheet.occKey = key; sheet.occFc = forecast(stacksOf(sel, techOf(null), G.me), stacksOf(oc.n, oc.tech || techOf(oc.uid), oc.uid), { doc: S.doctrine }, 10); } odds = `<dt>Your odds</dt><dd style="color:${sheet.occFc.win >= .6 ? "var(--green)" : sheet.occFc.win >= .35 ? "var(--amber)" : "var(--red)"}">${Math.round(sheet.occFc.win * 100)}% to take the field</dd>`; }
+    let odds = ""; if (!me && !fieldAlly(oc.uid) && Object.keys(sel).length) { const key = JSON.stringify(sel) + JSON.stringify(oc.n); if (sheet.occKey !== key) { sheet.occKey = key; sheet.occFc = forecast(stacksOf(sel, techOf(null), G.me), stacksOf(oc.n, oc.tech || techOf(oc.uid), oc.uid), {}, 10); } odds = `<dt>Your odds</dt><dd style="color:${sheet.occFc.win >= .6 ? "var(--green)" : sheet.occFc.win >= .35 ? "var(--amber)" : "var(--red)"}">${Math.round(sheet.occFc.win * 100)}% to take the field</dd>`; }
     occ = `<div class="card" style="border-color:${col};border-left-width:4px"><b style="font-family:var(--f-display);color:${col}">⚑ HELD BY ${esc(me ? "YOUR FLEET" : fieldName(oc.uid).toUpperCase())}</b>
       <dl class="kv"><dt>Gathering until</dt><dd><span data-end="${oc.until}">${ftime(oc.until - T)}</span></dd><dt>Gatherers</dt><dd>${fmt(sumShips(oc.n))} ships${me ? "" : ` · est. power ${fmt(Math.round(stacksOf(oc.n, oc.tech || {}, oc.uid).reduce((s, x) => s + x.n * (x.atk + x.sh / 4 + x.hull / 10), 0)))}`}</dd>${odds}</dl>
       <p class="note">${me ? "Your fleet holds this field." : fieldAlly(oc.uid) ? "An ally holds this field. Allies never fight over fields." : "Send a stronger fleet to fight them for it. If you win you also seize half of what they've gathered."}</p></div>`; }
@@ -11529,8 +11571,8 @@ function shPirate() {
   else if (!Object.keys(avail).length) body = `${originBar()}<p class="note">No ships at ${esc(h ? h.name : S.homeName)}.</p>`;
   else {
     const key = "x" + JSON.stringify(sel) + x.id + S.r.weapons + S.r.shields + S.r.armor + JSON.stringify(sheet.bots || []);
-    if (sheet.oddsKey !== key + S.doctrine) { sheet.oddsKey = key + S.doctrine; const A = stacksOf(sel, techOf(null), G.me).concat(allyStacks(sheet.bots, x.lvl)), D = xStacks(x);
-      sheet.fc = Object.keys(sel).length ? forecast(A, D, { doc: S.doctrine }, 12) : null; sheet.odds = sheet.fc ? sheet.fc.win : 0; }
+    if (sheet.oddsKey !== key) { sheet.oddsKey = key; const A = stacksOf(sel, techOf(null), G.me).concat(allyStacks(sheet.bots, x.lvl)), D = xStacks(x);
+      sheet.fc = Object.keys(sel).length ? forecast(A, D, {}, 12) : null; sheet.odds = sheet.fc ? sheet.fc.win : 0; }
     const o = sheet.odds, oc = o >= .75 ? "var(--green)" : o >= .4 ? "var(--amber)" : "var(--red)", cap = cargoOf(sel);
     body = `<h2 class="sec" id="strike">${x.mon ? "Hunting fleet" : "Raiding fleet"}</h2>${originBar()}${picker(avail)}${strikeReqSection(x, x.lvl)}${speedBar(x, sel)}
       <dl class="kv"><dt>Cargo space</dt><dd style="color:${cap >= total(L) ? "var(--green)" : ""}">${fmt(cap)} / ${fmt(total(L))}</dd></dl>
@@ -11588,7 +11630,7 @@ function fleetHud(force) {
   if (!f && view === "galaxy" && G3 && G3.cam && !G3.cam.cine && (G3.cam.followMv || (fid && G3.fleets.get(fid) && G3.fleets.get(fid).f && (G3.fleets.get(fid).f.enemy || G3.fleets.get(fid).f.js)))) { otherHud(force); return; }
   if (!f || (G3 && G3.cam.cine)) { if (el) el.remove(); return; }
   if (!el) { el = document.createElement("div"); el.id = "fleethud"; $("#app").appendChild(el); force = true; }
-  const T = now(), b = fleetBounds(f), tg = fleetTarget(f), rk = routeKind(f), rc = ROUTE_CSS[rk], end = b ? b[1] : T, canRecall = (f.phase === "out" && !f.assault) || f.phase === "gather";
+  const T = now(), b = fleetBounds(f), tg = fleetTarget(f), rk = routeKind(f), rc = ROUTE_CSS[rk], end = b ? b[1] : T, canRecall = (f.phase === "out" && !f.assault && f.mission !== "spy") || f.phase === "gather";
   const what = f.phase === "back" ? "↩ Home" : f.phase === "gather" ? `⛏ ${tg ? tg.name : ""}` : `→ ${tg ? tg.name : ""}`, key = f.id + f.phase + rk + (S.shards >= boostCost(f)) + fformOf(f);
   if (!force && el.dataset.k === key) { const t = el.querySelector(".fh-t"); if (t) t.textContent = ftime(end - T); const bar = el.querySelector(".fh-bar i"); if (bar && b) bar.style.width = clamp((T - b[0]) / Math.max(1, b[1] - b[0]), 0, 1) * 100 + "%"; return; }
   el.dataset.k = key; el.style.setProperty("--rc", rc);
@@ -11615,13 +11657,13 @@ setInterval(() => { const c = $("#coach"), d = $(".dirmini"); if (!c) return; c.
 setInterval(() => { const a = $("#app"); if (!a) return; const idle = view === "galaxy" && !sheet && !battle && performance.now() - G.hudT > 15000; G.hudIdle = idle; a.classList.toggle("hudidle", idle); }, 1000); // v109: the map HUD fades after 15 s idle
 /* fleet control, opened by tapping one of your fleets on the map: where it is going, a speed boost, recall, its battle
    manoeuvre, and a follow camera */
-const ROUTE_N = { atk: "Attack", back: "Returning home", gather: "Gathering / exploring", joint: "Joint strike / stationing" };
+const ROUTE_N = { atk: "Attack", back: "Returning home", gather: "Gathering / exploring", joint: "Joint strike / stationing", spy: "Espionage" };
 const boostCost = f => { const b = fleetBounds(f); return b ? Math.max(1, Math.ceil((b[1] - now()) / 600000)) : 0; };
 function shFctl() {
   const f = S.fleets.find(x => x.id === sheet.id); if (!f) return `<div class="hd"><div><h2>Fleet</h2><p class="note">This fleet has landed.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
   const T = now(), tg = fleetTarget(f), b = fleetBounds(f), rk = routeKind(f), rc = ROUTE_CSS[rk], end = b ? b[1] : T, home = fleetHome(f);
-  const what = f.phase === "back" ? `Returning to ${esc(home ? home.name : S.homeName)}` : f.phase === "gather" ? `Gathering at ${esc(tg ? tg.name : "")}` : `${f.nid ? "Flying to gather at" : f.yid ? "Exploring" : f.xid ? "Hunting" : f.assault ? "Joint strike on" : f.mission === "transfer" ? "Transferring to" : f.mission === "reinforce" || f.mission === "station" ? "Stationing at" : "Attacking"} ${esc(tg ? tg.name : "")}`;
-  const canRecall = (f.phase === "out" && !f.assault) || f.phase === "gather", canDoc = f.phase === "out" && !f.nid && !f.yid && f.mission !== "transfer";
+  const what = f.mission === "spy" && f.phase === "out" ? `Probing ${esc(tg ? tg.name : "")}` : f.phase === "back" ? `Returning to ${esc(home ? home.name : S.homeName)}` : f.phase === "gather" ? `Gathering at ${esc(tg ? tg.name : "")}` : `${f.nid ? "Flying to gather at" : f.yid ? "Exploring" : f.xid ? "Hunting" : f.assault ? "Joint strike on" : f.mission === "transfer" ? "Transferring to" : f.mission === "reinforce" || f.mission === "station" ? "Stationing at" : "Attacking"} ${esc(tg ? tg.name : "")}`;
+  const canRecall = (f.phase === "out" && !f.assault && f.mission !== "spy") || f.phase === "gather";
   const bc = boostCost(f), hc = b ? shardCost(Math.max(0, end - T)) : 0;
   return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:${rc}">Fleet control · ${ROUTE_N[rk]}</div><h2>${what}</h2><p class="note">${fmt(sumShips(f.n))} ships${f.phase === "gather" && f.haul ? ` · loading ${fmt(f.haul.amt)} ${RES_N[f.haul.res].toLowerCase()}` : ""}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
     ${b ? `<div class="bar"><i data-s="${b[0]}" data-e="${b[1]}" style="background:${rc}"></i></div><dl class="kv"><dt>${f.phase === "gather" ? "Holds full in" : f.phase === "back" ? "Home in" : "Arrives in"}</dt><dd><b data-end="${end}">${ftime(end - T)}</b></dd><dt>Route colour</dt><dd style="color:${rc}">● ${ROUTE_N[rk]}</dd></dl>` : ""}
@@ -11630,7 +11672,6 @@ function shFctl() {
       <button class="btn" data-act="fBoost" data-id="${f.id}" ${b && !f.assault && S.shards >= bc ? "" : "disabled"}>⚡ Afterburners +50% · ◆${bc}</button>
       <button class="btn ghost" data-act="fBoostItem" data-id="${f.id}" ${b && !f.assault && S.boosts > 0 ? "" : "disabled"}>Use a boost (−5 min) · ${S.boosts || 0} left</button>
       <button class="btn amber" data-act="hurry" data-id="${f.id}" ${b && !f.assault && S.shards >= hc ? "" : "disabled"}>Arrive now · ◆${hc}</button></div>
-    ${canDoc ? `<h2 class="sec">Battle manoeuvre</h2><p class="note">How this fleet fights when it arrives.</p><div class="segc" style="flex-wrap:wrap">${Object.entries(DOCTRINES).map(([k, d]) => `<button class="${(f.doc || "balanced") === k ? "on" : ""}" data-act="fDoc" data-id="${f.id}" data-v="${k}" title="${esc(d.d)}">${d.n}</button>`).join("")}</div><p class="note">${esc(DOCTRINES[f.doc || "balanced"].d)}</p>` : ""}
     <div style="display:flex;gap:8px;margin-top:6px"><button class="btn ghost" style="flex:1" data-act="fleetFocus" data-id="${f.id}">◎ Follow</button>${canRecall ? `<button class="btn red" style="flex:1" data-act="${f.phase === "gather" ? "recallG" : "recallF"}" data-id="${f.id}">↩ Recall</button>` : ""}</div>
     ${f.assault ? `<p class="note">Joint strike fleets fly in formation: they can't be boosted or recalled on their own.</p>${G.assaults[f.assault] && !f.launched && (f.phase === "muster" || f.rj) ? `<div style="display:flex;gap:8px"><button class="btn ghost" style="flex:1" data-act="assault" data-id="${f.assault}">⚔ Open joint strike</button>${G.assaults[f.assault].leader === G.me ? `<button class="btn red" style="flex:1" data-act="strikeDisbandQ" data-id="${f.assault}">✕ Disband</button>` : `<button class="btn ghost" style="flex:1" data-act="strikeLeave" data-id="${f.assault}">↩ Leave</button>`}</div>` : ""}` : ""}`;
 }
@@ -11829,7 +11870,7 @@ function joinable() {
 function allyInSub() {
   try { if (!G.db || G.mode !== "online") return; const a = myAlly(), want = new Set(a ? Object.keys(a.members || {}).filter(u => u !== G.me && !isBot(u)) : []); G.allyInU = G.allyInU || {}; G.allyIn = G.allyIn || {};
     for (const u in G.allyInU) if (!want.has(u)) { try { typeof G.allyInU[u] === "function" && G.allyInU[u](); } catch (e) {} delete G.allyInU[u]; delete G.allyIn[u]; }
-    for (const u of want) if (!G.allyInU[u]) G.allyInU[u] = G.db.doc("inbound/" + u).onSnapshot(s => { G.allyIn[u] = s && s.exists && Array.isArray((s.data() || {}).items) ? s.data().items.map(cleanInbound).filter(Boolean) : []; trayRender(); }, () => {}) || 1;
+    for (const u of want) if (!G.allyInU[u]) G.allyInU[u] = G.db.doc("inbound/" + u).onSnapshot(s => { G.allyIn[u] = s && s.exists && Array.isArray((s.data() || {}).items) ? s.data().items.map(cleanInbound).filter(x => x && !x.spy) : []; trayRender(); }, () => {}) || 1;
   } catch (e) {}
 }
 function allyThreats() {
@@ -11921,7 +11962,7 @@ function rallyBossRewards(x, rep) {
 function vGalaxyBelow() {
   const T = now(), h = homePlanet();
   const fl = S.fleets.map(f => { const p = f.phase === "muster" ? (f.rx ? PB[f.rx] : asTgt(f.rt || f.pid)) : fleetTarget(f); const e = f.phase === "out" ? f.arrive : f.phase === "muster" ? f.launch : f.phase === "gather" ? f.gend : f.phase === "back" ? f.back : null;
-    const lbl = f.phase === "muster" || f.rj || f.launched ? fleetLabel(f) : f.phase === "resolving" ? "Joint strike · fighting" : f.phase === "gather" ? "Gathering" : f.phase === "out" ? (f.nid ? "To gather" : f.xid ? "Pirate raid" : f.mission === "transfer" ? "Transfer" : f.mission === "reinforce" ? "Reinforcing" : f.assault ? "Joint strike" : f.n.ark ? "Invading" : "Attacking") : "Returning";
+    const lbl = f.mission === "spy" && f.phase === "out" ? "Espionage" : f.phase === "muster" || f.rj || f.launched ? fleetLabel(f) : f.phase === "resolving" ? "Joint strike · fighting" : f.phase === "gather" ? "Gathering" : f.phase === "out" ? (f.nid ? "To gather" : f.xid ? "Pirate raid" : f.mission === "transfer" ? "Transfer" : f.mission === "reinforce" ? "Reinforcing" : f.assault ? "Joint strike" : f.n.ark ? "Invading" : "Attacking") : "Returning";
     return `<div class="qrow"><div><div class="lbl">${lbl}</div><div class="what">${p ? esc(p.name) : "Fleet"} · ${Object.entries(f.n).filter(([, v]) => v).map(([k, v]) => `${fmt(v)} ${SH[k].n}`).join(", ")}</div></div><div class="acts">${e ? `<span class="t" data-end="${e}">${ftime(e - T)}</span>` : ""}</div></div>`; }).join("");
   let banner = "";
   if (G.mode === "connecting") banner = `<div class="callout cy">Connecting to the shared galaxy…</div>`;
@@ -11963,7 +12004,7 @@ function vGalaxyBelow() {
 /* ---------- sheets ---------- */
 /* menus remember where you came from: opening one menu from another stacks it, and Back returns to the previous one */
 let sheetStack = [];
-const SHEET_NAME = { planet: "planet", report: "report", settings: "settings", void: "the Void", assault: "attack", targets: "targets", node: "node", bld: "building", nexus: "Cube", skin: "planet looks", find: "search", pirate: "pirates", layers: "layers", tile: "tile", basedet: "base", planets: "planets", yard: "shipyard", labs: "labs", faction: "factions", profile: "profile", ranks: "rankings", friends: "friends", chat: "chat", mastery: "mastery", sound: "sound", shop: "shop", spyrep: "spy report", events: "events", detail: "details" };
+const SHEET_NAME = { spysend: "probes", howto: "how to play", planet: "planet", report: "report", settings: "settings", void: "the Void", assault: "attack", targets: "targets", node: "node", bld: "building", nexus: "Cube", skin: "planet looks", find: "search", pirate: "pirates", layers: "layers", tile: "tile", basedet: "base", planets: "planets", yard: "shipyard", labs: "labs", faction: "factions", profile: "profile", ranks: "rankings", friends: "friends", chat: "chat", mastery: "mastery", sound: "sound", shop: "shop", spyrep: "spy report", events: "events", detail: "details" };
 function openSheet(s) { { const cp = document.getElementById("cubepanel"); if (cp) cp.remove(); } /* v111: never cover a panel's buttons */ if (s && s.from === undefined && ["planet", "pirate", "node", "assault", "targets"].includes(s.type)) { const ap = actPlanet(); if (ap && garrisonCount(ap)) s.from = ap.id; } // fleets launch from the planet you're using
   G.sheetDir = sheet && sheet !== s ? 1 : 0; if (sheet && sheet !== s && (sheet.type !== s.type || (sheet.id || "") !== (s.id || "") || sheet.k !== s.k)) { sheetStack.push(sheet); if (sheetStack.length > 12) sheetStack.shift(); } sheet = s; renderSheet(); }
 function sheetBack() { if (sheetStack.length) { G.sheetDir = -1; sheet = sheetStack.pop(); G.sel = null; G.selNode = null; renderSheet(); } else closeSheet(); }
@@ -11983,7 +12024,7 @@ function renderSheet() {
   if (G.rangeHeld && sheet) { G.rangeLate = 1; return; }
   let w = $("#sheetwrap");
   let html = ({ planet: shPlanet, report: shReport, settings: shSettings, void: shVoid, assault: shAssault, targets: shTargets, node: shNode, bld: shBld, nexus: shNexus, skin: shSkin, find: shFind, pirate: shPirate, pyramid: shPyramid, fctl: shFctl, station: shStation, ally: shAlly, layers: shLayers, tile: shTile, graphics: shGfx, cuberes: shCubeRes, basedet: shBaseDet, planets: shPlanets, fo: shFo, allymem: shAllyMem, altools: () => { const a = myAlly(); return a ? `<div class="hd"><div><div class="chapter">[${esc(a.tag)}] ${esc(a.name)}</div><h2>${allyRank(a, G.me) === "lead" ? "Leader" : "Captain"} tools</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${allyTools(a) || '<p class="note">Only the leader and captains have these tools.</p>'}` : ""; },
-    yard: shYard, labs: shLabs, sound: shSound, shop: shShop, vip: shVip, spyrep: shSpyRep, events: shEvents, ach: shAch, avatars: shAvatars, detail: () => { const h = shDetail(), P = sheet.pid ? G.byId[sheet.pid] : null; return h && sheet.kind === "b" && P && sheet.k === "shipyard" && (P.b || {}).shipyard ? h + `<div class="dp"><button class="btn wide" data-act="yardOpen" data-id="${P.id}">Open shipyard</button></div>` : h; }, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
+    yard: shYard, labs: shLabs, sound: shSound, shop: shShop, vip: shVip, spyrep: shSpyRep, spysend: shSpySend, howto: shHowTo, events: shEvents, ach: shAch, avatars: shAvatars, detail: () => { const h = shDetail(), P = sheet.pid ? G.byId[sheet.pid] : null; return h && sheet.kind === "b" && P && sheet.k === "shipyard" && (P.b || {}).shipyard ? h + `<div class="dp"><button class="btn wide" data-act="yardOpen" data-id="${P.id}">Open shipyard</button></div>` : h; }, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
     mastery: () => `<div class="hd"><div><div class="chapter">Progression</div><h2>Path to Mastery</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${mMastery()}` })[sheet.type]();
   if (!html) { closeSheet(); return; }
   html += sheet.type === "faction" && !S.faction ? "" : backBar(); html = `<div class="grab" aria-hidden="true"></div>` + html;
@@ -12014,16 +12055,16 @@ if (!IOS) setTimeout(() => { try { const v = document.createElement("video"); v.
 function unitGrid(n) { const e = Object.entries(n).filter(([, v]) => v > 0); return e.length ? `<div class="units">${e.map(([k, v]) => `<div class="unit"><canvas data-u="${k}"></canvas><span>${unitName(k)}<br><b>×${fmt(v)}</b></span></div>`).join("")}</div>` : '<p class="note">None</p>'; }
 /* v264 Efficient fight: on an attack (a player's or the Hive's world, a pirate crew, a space monster or a Cube boss) one tap picks just enough
    of your warships to win: the fewest, in the same mix as what you have, that win every one of 20 simulated battles against what's there
-   now (with your doctrine and any bot allies you added), plus a 10% margin. You can still change any number by hand afterwards. */
+   now (with any bot allies you added), plus a 10% margin. You can still change any number by hand afterwards. */
 function effTarget() { try { if (!sheet) return null;
   if (sheet.type === "pirate") { const x = PB[sheet.id]; return x && !(pirDown(x) > now()) ? { D: xStacks(x), lvl: x.lvl } : null; }
-  if (sheet.type === "planet") { const p = G.byId[sheet.id]; if (!p) return null; const st = pStatus(p, now()); if (st === "mine" || st === "myhome" || st === "shielded" || st === "razed" || p.owner === G.me) return null; const D = defenders(p); return D && D.stacks && D.stacks.length ? { D: D.stacks, lvl: p.lvl } : null; }
+  if (sheet.type === "planet") { const p = G.byId[sheet.id]; if (!p) return null; const st = pStatus(p, now()); if (st === "mine" || st === "myhome" || st === "shielded" || st === "razed" || p.owner === G.me) return null; const kn = spyKnown(p); return kn && kn.stacks.length ? { D: kn.stacks, lvl: p.lvl } : null; }
   } catch (e) {} return null; }
 function effPick() { const T = effTarget(); if (!T) return; const avail = originAvail(), cmb = Object.keys(avail).filter(k => avail[k] > 0 && SH[k] && (SH[k].atk || 0) > 0 && k !== "spyProbe");
   if (!cmb.length) return toast("No warships here to send.", "warn"); toast("Working out the smallest fleet that wins…");
   setTimeout(() => { const keep = {}; if (pick.ark) keep.ark = pick.ark; // a Colony Ship you picked stays picked
     const mk = f => { const o = Object.assign({}, keep); for (const k of cmb) { const v = Math.min(avail[k], Math.ceil(avail[k] * f)); if (v > 0) o[k] = v; } return o; };
-    const win = (f, n) => forecast(stacksOf(mk(f), techOf(null), G.me).concat(allyStacks(sheet.bots, T.lvl)), T.D, { doc: S.doctrine }, n).win;
+    const win = (f, n) => forecast(stacksOf(mk(f), techOf(null), G.me).concat(allyStacks(sheet.bots, T.lvl)), T.D, {}, n).win;
     const all = win(1, 12); if (all < 1) { pick = mk(1); sheet.oddsKey = null; renderSheet(); return toast(`Even every warship here can't make it certain (${Math.round(all * 100)}% odds), so all of them are selected. Add allies or more ships.`, "warn"); }
     let lo = 0, hi = 1; for (let i = 0; i < 9; i++) { const m = (lo + hi) / 2; if (win(m, 10) >= 1) hi = m; else lo = m; }
     let f = Math.min(1, hi * 1.1); for (let i = 0; i < 6 && f < 1 && win(f, 20) < 1; i++) f = Math.min(1, f * 1.15);
@@ -12091,7 +12132,8 @@ function actionGrid(p, st) {
 }
 /* planet card: a rendered portrait that reflects the planet's development, plus its development summary */
 function planetCard(p, st) {
-  const dv = devOf(p), b = dv.b, hive = st === "hive", razed = st === "razed";
+  const dv = devOf(p), b = dv.b, hive = st === "hive", razed = st === "razed", mine = st === "mine" || st === "myhome";
+  if (!mine && !hive && !razed) return `<div class="pcard"><canvas data-pc="${p.id}" role="img" aria-label="Render of ${esc(p.name)}"></canvas><div class="pcinfo"><b style="color:${PAL[p.type][4]}">Commander's world</b><span>Send espionage probes to learn more</span></div></div>`; // v279: what's built here only comes from espionage reports
   const title = hive ? "Hive nest" : razed ? "Scorched world" : DEV_T[dv.tier];
   const chips = [b.fortress ? `Fortress ${b.fortress}` : "", b.shipyard ? `Shipyard ${b.shipyard}` : "", b.radar ? `Radar ${b.radar}` : "", b.missileSilo ? `Silo ${b.missileSilo}` : "",
     (b.metalMine || 0) + (b.crystalMine || 0) + (b.gasSynth || 0) ? `Mines ${(b.metalMine || 0) + (b.crystalMine || 0) + (b.gasSynth || 0)}` : ""].filter(Boolean);
@@ -12117,7 +12159,7 @@ function planetExtras(p, st) {
 }
 /* unexplored space: greyed out until a planet, fleet or probe reveals it */
 function shUnexplored(tg) {
-  const h = homePlanet(), tt = h ? Math.max(20000, travelMs(h, tg, { fighter: 1 }) / 3) : 0, free = (S.items || {}).probe5 || 0;
+  const h = homePlanet(), tt = h ? travelMs(h, tg, { spyProbe: 1 }) : 0, free = (S.items || {}).probe5 || 0;
   return `<div class="hd"><div><div class="chapter" style="color:#93a3b0">Unexplored region</div><h2>Uncharted space</h2><p class="note">Something orbits here, but your sensors can't make it out. Send a probe to chart the area, or fly a fleet nearby: fleets reveal space as they travel.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
     <dl class="kv"><dt>Probe flight</dt><dd>${ftime(tt)}</dd><dt>Charts</dt><dd>Everything within ${PROBE_R} of the target</dd><dt>Cost</dt><dd>${free ? `Free (${free} probes in stock)` : `${PROBE_GAS} gas`}</dd><dt>Explored</dt><dd>${Math.round(fogPct() * 100)}% of the galaxy</dd><dt>Fog season</dt><dd>${fogSeason(now()).name} · sectors fade after ${FOG_FADE} days unseen</dd></dl>
     <button class="btn wide" data-act="probe" data-id="${tg.id}" ${canPlay() ? "" : "disabled"}>Launch probe</button>`;
@@ -12139,7 +12181,7 @@ function outpostSection(e) {
   const me = oc && oc.uid === G.me, ally = oc && fieldAlly(oc.uid), hostile = oc && !me && !ally && oc.until > T + tt;
   let card;
   if (oc) { const col = me ? "#7fe6f3" : ally ? "#7be39a" : oc.bot ? "#ff9a6a" : colorOf(oc.uid); let odds = "";
-    if (hostile && Object.keys(sel).length) { const key = JSON.stringify(sel) + JSON.stringify(oc.n); if (sheet.occKey !== key) { sheet.occKey = key; sheet.occFc = forecast(stacksOf(sel, techOf(null), G.me), stacksOf(oc.n, oc.tech || techOf(oc.uid), oc.uid), { doc: S.doctrine }, 10); }
+    if (hostile && Object.keys(sel).length) { const key = JSON.stringify(sel) + JSON.stringify(oc.n); if (sheet.occKey !== key) { sheet.occKey = key; sheet.occFc = forecast(stacksOf(sel, techOf(null), G.me), stacksOf(oc.n, oc.tech || techOf(oc.uid), oc.uid), {}, 10); }
       odds = `<dt>Your odds</dt><dd style="color:${sheet.occFc.win >= .6 ? "var(--green)" : sheet.occFc.win >= .35 ? "var(--amber)" : "var(--red)"}">${Math.round(sheet.occFc.win * 100)}% to take the outpost</dd>`; }
     card = `<div class="card" style="border-color:${col};border-left-width:4px"><b style="font-family:var(--f-display);color:${col}">⚑ OUTPOST OF ${esc(me ? "YOUR FLEET" : fieldName(oc.uid).toUpperCase())}</b>
       <dl class="kv"><dt>Held until</dt><dd><span data-end="${oc.until}">${ftime(oc.until - T)}</span></dd><dt>Garrison</dt><dd>${fmt(sumShips(oc.n))} ships</dd>${odds}</dl>
@@ -12178,50 +12220,86 @@ function strikeReqSection(target, lvl) { return ""; /* v218: no pact bots to cal
     <div class="list">${list.map(b => { const until = (S.botReq || {})[b.id] || 0, busy = until > T, on = sel.includes(b.id), tot = sumN(botStrike(b, lvl));
       return `<button class="tgt req${on ? " on" : ""}" data-act="reqToggle" data-id="${b.id}" ${busy ? "disabled" : ""} aria-pressed="${on}"><span class="lvl" style="color:#5fe0c0;border-color:#5fe0c0">${b.tier}</span><span><span class="nm">${esc(b.name)}</span><br><span class="sub">${busy ? `Rearming · <span data-end="${until}">${ftime(until - T)}</span>` : `${fmt(tot)} ships · strength ${b.tier} · ${zoneOf(b.rad)}`}</span></span><span class="pill ${on ? "ok" : busy ? "wait" : "go"}">${on ? "✓ Joining" : busy ? "Busy" : "Request"}</span></button>`; }).join("")}</div>`;
 }
-/* espionage: a probe report with the owner's tech, the exact stockpile and the buildings */
-const SPY_GAS = 50;
-function spyReport(p) {
-  const r = (S.spy || {})[p.id]; if (!r) return "";
-  const T = now(), st = pStatus(p, T), t = p.owner ? techOf(p.owner) : { weapons: Math.floor(p.lvl / 3), shields: Math.floor(p.lvl / 3), armor: Math.floor(p.lvl / 3) };
-  const stockS = p.owner && p.kind !== "home" ? colStock(p) : st === "hive" ? stock(p.lvl) : null, b = p.b || {}, pl = p.owner && !isBot(p.owner) ? G.players[p.owner] : null;
-  return `<div class="card" style="border-color:#7fe6f3"><b style="font-family:var(--f-display);color:#7fe6f3;letter-spacing:.1em">INTEL REPORT · ${ago(r)} ago</b>
-    <dl class="kv"><dt>Weapons · shields · armor</dt><dd>${Math.round(t.weapons)} · ${Math.round(t.shields)} · ${Math.round(t.armor)}</dd>
-    ${stockS ? `<dt>Stockpile</dt><dd>${costHTML(Object.fromEntries(Object.entries(stockS).map(([k, v]) => [k, Math.floor(v)])))}</dd>` : ""}
-    <dt>Defenders</dt><dd>${fmt(sumN(defenders(p).n))} units${b.fortress ? ` · Fortress Lv.${b.fortress}` : ""}</dd>
-    <dt>Radar</dt><dd>${b.radar ? "Lv." + b.radar : "None"}</dd>
-    ${pl ? `<dt>Commander</dt><dd>${fmt(pl.score || 0)} score · ${pl.planets || 1} worlds</dd>` : isBot(p.owner) ? `<dt>Commander</dt><dd>Bot · strength tier ${BOT_BY[p.owner].tier}</dd>` : ""}
-    ${p.shieldUntil > T ? `<dt>Shield</dt><dd data-end="${p.shieldUntil}">${ftime(p.shieldUntil - T)}</dd>` : ""}</dl>
-    ${Object.keys(b).length ? `<p class="note">Buildings: ${Object.entries(b).map(([k, v]) => `${B[k] ? B[k].n : k} ${v}`).join(", ")}</p>` : ""}
-    ${(() => { const sr = (S.spyReps || []).find(x => x.pid === p.id); return sr ? `<button class="btn ghost sm" data-act="spyOpen" data-id="${sr.id}">Open full report</button>` : ""; })()}</div>`;
+/* v279 OGame-style espionage. Probes are a real fleet mission (fleetPath, the map, the Fleets tab). On arrival they send a report, then any ships at
+   the target may shoot them down; survivors fly home. Information level = probes sent, plus the Espionage Technology difference squared when you
+   are ahead, minus it when you are behind. Resources always show; fleet needs 2, defenses 3, buildings 5, research 7. */
+const SPY_T = { fleet: 2, def: 3, b: 5, rs: 7 };
+const spyDiffK = d => Math.sign(d) * d * d;
+const spyTheirE = p => p.owner ? (isBot(p.owner) ? Math.floor(BOT_BY[p.owner].tier / 2) : okInt(((G.players[p.owner] || {}).tech || {}).esp)) : Math.floor((p.lvl || 0) / 3);
+const spyNeed = (thr, d) => Math.max(1, thr - spyDiffK(d));
+const spySum = s => `${s.res ? fmt(total(s.res)) + " resources · " : ""}${s.v === 2 ? (s.fleet ? fmt(sumN(s.fleet)) + (s.alien ? " Hive" : " ships") : "fleet hidden") : s.units ? fmt(sumN(s.units)) + " units" : "fleet hidden"}${s.lost ? " · probes lost" : ""}`;
+/* what you know about a world's defenders: your newest report that saw both its fleet and defenses (the Academy's training Hive is known) */
+function repStacks(r) { const n = Object.assign({}, r.fleet, r.def); if (r.fortL) n.fortress = 1; return { n, stacks: r.alien ? stacksOf(n, { hive: r.lvl }, null) : stacksOf(n, r.tech || { weapons: 0, shields: 0, armor: 0 }, r.owner, r.fortL || 0) }; }
+function spyKnown(p) {
+  if (pStatus(p) === "hive" && trainingHive()) { const D = defenders(p); return { stacks: D.stacks, n: D.n, key: "train" }; }
+  const r = (S.spyReps || []).find(x => x.pid === p.id && x.v === 2 && x.L >= SPY_T.def); if (!r) return null; return Object.assign(repStacks(r), { rep: r, key: r.id });
 }
-/* full espionage reports: a snapshot of the target taken when the probe reports, kept in Messages (last 20) */
-function makeSpyRep(p, bonus = 0) {
-  const T = now(), st = pStatus(p, T), t = p.owner ? techOf(p.owner) : { weapons: Math.floor(p.lvl / 3), shields: Math.floor(p.lvl / 3), armor: Math.floor(p.lvl / 3) }, D = defenders(p);
-  const res = p.owner && p.kind !== "home" ? colStock(p) : st === "hive" ? stock(p.lvl) : null, units = Object.assign({}, D.n); delete units.fortress;
-  let sim = null; try { const mine = Object.fromEntries(Object.entries(S.ships).filter(([k, v]) => v > 0 && SH[k])); if (Object.keys(mine).length && D.stacks.length) { const x = simulate(stacksOf(mine, techOf(null), G.me), D.stacks, { quick: true, seed: hash(p.id) % 997 }); sim = { w: x.winner, la: lossesOf(x.start.a, x.aLeft), ld: lossesOf(x.start.d, x.dLeft) }; } } catch (e) {}
-  const pl = p.owner && !isBot(p.owner) ? G.players[p.owner] : null;
-  // OGame-style espionage: your Espionage Technology against theirs decides how much the probe sees
-  const theirE = p.owner ? (isBot(p.owner) ? Math.floor(BOT_BY[p.owner].tier / 2) : okInt(((G.players[p.owner] || {}).tech || {}).esp)) : Math.floor(p.lvl / 3), L = (S.r.espionage || 0) + bonus - theirE + 1;
-  return { id: "sp" + (S.seq++), at: T, pid: p.id, name: p.name, owner: p.owner || null, lvl: p.lvl, type: p.type, st, theirE, L, res: res ? Object.fromEntries(Object.entries(res).map(([k, v]) => [k, Math.floor(v)])) : null,
-    units: L >= 1 ? units : null, fortL: L >= 2 ? D.fortL || 0 : null, b: L >= 3 ? Object.assign({}, p.b || {}) : null, tech: L >= 5 ? { weapons: Math.round(t.weapons || 0), shields: Math.round(t.shields || 0), armor: Math.round(t.armor || 0) } : null, shield: p.shieldUntil > T ? p.shieldUntil : 0,
-    cmd: pl ? { score: pl.score || 0, planets: pl.planets || 1, lvl: pl.lvl || 1 } : isBot(p.owner) ? { bot: BOT_BY[p.owner].tier } : null, alien: !!D.alien, sim: L >= 1 ? sim : null };
+const defKnownGrid = t => { if (t === NEXUS) return unitGrid(tgtDefN(t)); const kn = spyKnown(t); return kn ? unitGrid(kn.n) : `<p class="note">Unknown. Send espionage probes from the planet's card.</p>`; };
+/* the planet card only links to your latest report */
+function spyReport(p) {
+  const sr = (S.spyReps || []).find(x => x.pid === p.id); if (!sr) return "";
+  return `<button class="btn ghost wide" style="margin:6px 0" data-act="spyOpen" data-id="${sr.id}">Latest espionage report · ${ago(sr.at) === "now" ? "just now" : ago(sr.at) + " ago"}</button>`;
+}
+function spyPreview(p, n) {
+  const d = (S.r.espionage || 0) - spyTheirE(p), L = n + spyDiffK(d), row = (l, thr) => { const ok = !thr || L >= thr; return `<span class="${ok ? "on" : "off"}"><b>${l}</b><i style="font-style:normal">${ok ? "✓ visible" : `🔒 ${spyNeed(thr, d)} probes`}</i></span>`; };
+  return row("Resources", 0) + row("Fleet", SPY_T.fleet) + row("Defenses", SPY_T.def) + row("Buildings", SPY_T.b) + row("Research", SPY_T.rs);
+}
+function shSpySend() {
+  const p = G.byId[sheet.id]; if (!p) return ""; const h = originPlanet(), have = originAvail().spyProbe || 0, near = sheet.pn = clamp(sheet.pn || S.spyN || 1, 1, Math.max(1, have));
+  const head = `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#ff6af0">Espionage · Your tech Lv.${S.r.espionage || 0}</div><h2>${esc(p.name)}</h2><p class="note">${p.owner ? `Held by ${esc(nameOf(p.owner))}` : pStatus(p) === "hive" ? "Held by the Hive" : "No owner"} · Lv.${p.lvl || 1}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
+  const opts = (S.ships.spyProbe > 0 ? [["home", S.homeName, S.ships.spyProbe]] : []).concat(myPlanets().filter(q => q.kind !== "home" && (q.garrison || {}).spyProbe > 0 && q.id !== p.id).map(q => [q.id, q.name, q.garrison.spyProbe]));
+  if (!opts.length) return head + `<div class="callout">You have no Espionage Probes${S.fleets.some(f => f.mission === "spy") ? " at home right now. Yours are still flying" : ""}. They're built at the Shipyard (Shipyard Lv.3, Espionage Technology Lv.2).</div><button class="btn wide" data-act="nav" data-v="fleet" data-s="ships">Open Shipyard</button>`;
+  const cur = (sheet.from && opts.some(o => o[0] === sheet.from)) ? sheet.from : opts[0][0]; if (cur !== (sheet.from || "home")) sheet.from = cur;
+  const tt = h && have ? travelMs(h, p, { spyProbe: 1 }) : 0, fuel = h && have ? fuelFor(h, p, { spyProbe: near }) : 0;
+  return head + (opts.length > 1 ? `<div class="note">Launch from</div><div class="segc" style="overflow-x:auto">${opts.map(([id, n, c]) => `<button style="flex:none;padding:8px 12px" class="${cur === id ? "on" : ""}" data-act="setFrom" data-id="${id}">${esc(n)} · ${fmt(c)}</button>`).join("")}</div>` : "") +
+    `<div class="spybar"><div class="stepper"><button data-act="spyN" data-d="-1" aria-label="Fewer">−</button><input id="spyn" type="number" min="1" max="${have}" value="${near}" inputmode="numeric" aria-label="Probes to send"><button data-act="spyN" data-d="1" aria-label="More">+</button></div><button class="btn ghost sm" data-act="spyN" data-max="1">All ${fmt(have)}</button></div>
+    <div class="spyinfo" id="spyinfo">${spyPreview(p, near)}</div>
+    <dl class="kv"><dt>Flight</dt><dd>${ftime(tt)} each way</dd><dt>Gas</dt><dd>${fmt(fuel)}</dd><dt>Risk</dt><dd>Ships at the target may shoot probes down after they report</dd></dl>
+    <button class="btn wide" data-act="spyGo" data-id="${p.id}" ${canPlay() && have ? "" : "disabled"}>Send probes</button>`;
+}
+/* the report: a snapshot taken as the probes arrive, kept in Mail (last 20) */
+function makeSpyRep(p, probes, at) {
+  const st = pStatus(p), pl = p.owner && !isBot(p.owner) ? G.players[p.owner] : null, iv = pl && pl.iv, bot = p.owner && isBot(p.owner) ? BOT_BY[p.owner] : null, split = n => { const a = {}, b = {}; for (const k in n) if (k !== "fortress" && n[k] > 0) (DF[k] ? b : a)[k] = n[k]; return [a, b]; }, flr = o => o ? { m: Math.floor(o.m || 0), c: Math.floor(o.c || 0), g: Math.floor(o.g || 0) } : null;
+  let fleet = {}, def = {}, res = null, b = p.b || {}, fortL = (p.b || {}).fortress || 0, noData = false, alien = false;
+  if (p.kind === "home" && pl) { if (iv) { res = iv.res; fleet = iv.s; def = iv.d; b = iv.b; fortL = iv.b.fortress || 0; } else noData = true; }
+  else if (p.kind === "home" && bot) { [fleet, def] = split(botStrike(bot, p.lvl || bot.tier)); res = flr(stock(p.lvl || 1)); }
+  else { const D = defenders(p); [fleet, def] = split(D.n); fortL = D.fortL || 0; alien = !!D.alien; res = st === "hive" ? flr(stock(p.lvl)) : p.owner ? flr(colStock(p)) : null; }
+  const mineE = S.r.espionage || 0, theirE = spyTheirE(p), L = probes + spyDiffK(mineE - theirE);
+  const t = p.owner ? techOf(p.owner) : { weapons: Math.floor(p.lvl / 3), shields: Math.floor(p.lvl / 3), armor: Math.floor(p.lvl / 3) };
+  const ships = sumN(fleet), chance = clamp(Math.round(.25 * Math.pow(2, theirE - mineE) * ships / Math.max(1, probes)), 0, 100), lost = Math.random() * 100 < chance;
+  const rep = { v: 2, id: "sp" + (S.seq++), at, pid: p.id, name: p.name, owner: p.owner || null, lvl: p.lvl, type: p.type, st, mineE, theirE, probes, L, chance, lost, home: p.kind === "home", noData, asOf: p.kind === "home" && iv ? iv.t : 0, res, alien,
+    fleet: L >= SPY_T.fleet ? fleet : null, def: L >= SPY_T.def ? def : null, fortL: L >= SPY_T.def ? fortL : null, b: L >= SPY_T.b ? Object.assign({}, b) : null,
+    tech: L >= SPY_T.rs ? { weapons: Math.round(t.weapons || 0), shields: Math.round(t.shields || 0), armor: Math.round(t.armor || 0) } : null, rs: L >= SPY_T.rs && iv ? iv.r : null, shield: p.shieldUntil > at ? p.shieldUntil : 0,
+    cmd: L >= SPY_T.rs ? (pl ? { score: pl.score || 0, planets: pl.planets || 1, lvl: pl.lvl || 1 } : bot ? { bot: bot.tier } : null) : null, sim: null };
+  if (L >= SPY_T.def) try { const mine = Object.fromEntries(Object.entries(S.ships).filter(([k, v]) => v > 0 && SH[k] && k !== "spyProbe")), D = repStacks(rep); if (Object.keys(mine).length && D.stacks.length) { const x = simulate(stacksOf(mine, techOf(null), G.me), D.stacks, { quick: true, seed: hash(p.id) % 997 }); rep.sim = { w: x.winner, la: lossesOf(x.start.a, x.aLeft), ld: lossesOf(x.start.d, x.dLeft) }; } } catch (e) {}
+  return rep;
+}
+function spyArrive(f, p) {
+  if (p.owner === G.me) return note(`${p.name} is ours now. Probes turning back.`);
+  const rep = makeSpyRep(p, sumShips(f.n), f.arrive); S.spyReps = [rep].concat(S.spyReps || []).slice(0, 20);
+  if (rep.lost) { const n = sumShips(f.n); f.n = {}; S.fleets = S.fleets.filter(x => x !== f); if (p.owner) sendInbox(p.owner, { at: now(), kind: "spy", by: G.me, pid: p.id, n }); }
+  note(`Espionage report ready: ${p.name}. It's in Mail.${rep.lost ? " Our probes were shot down after sending it." : ""}`, rep.lost ? "loss" : "win"); try { SFX.research(); } catch (e) {}
+  if (typeof sheet !== "undefined" && sheet && sheet.type === "planet" && sheet.id === p.id) try { renderSheet(); } catch (e) {}
 }
 function shSpyRep() {
   const r = (S.spyReps || []).find(x => x.id === sheet.id); if (!r) return `<div class="hd"><h2>Espionage report</h2><button class="x" data-act="close" aria-label="Close">✕</button></div><p class="note">This report has expired.</p>`;
-  const p = G.byId[r.pid], T = now(), who = r.owner ? (isBot(r.owner) ? esc(nameOf(r.owner)) + " (bot)" : esc(nameOf(r.owner))) : r.alien ? "The Hive" : "Unclaimed";
-  const sec = (title, body) => `<section class="spys"><h3>${title}</h3>${body}</section>`, plunder = r.res ? Object.fromEntries(Object.entries(r.res).map(([k, v]) => [k, Math.floor(v / 2)])) : null;
-  const bl = Object.entries(r.b || {}).filter(([k, v]) => v > 0 && B[k]), lock = need => `<p class="note lock">🔒 Needs Espionage Technology Lv.${(r.theirE || 0) + need - 1} to see this.</p>`;
+  const p = G.byId[r.pid], T = now(), v2 = r.v === 2, who = r.owner ? (isBot(r.owner) ? esc(nameOf(r.owner)) + " (bot)" : esc(nameOf(r.owner))) : r.alien ? "The Hive" : "Unclaimed";
+  const sec = (title, body) => `<section class="spys"><h3>${title}</h3>${body}</section>`, plunder = r.res && !r.home ? Object.fromEntries(Object.entries(r.res).map(([k, v]) => [k, Math.floor(v / 2)])) : null;
+  const d = (r.mineE || 0) - (r.theirE || 0), fleet = v2 ? r.fleet : r.units, def = v2 ? r.def : r.units ? {} : null, lock = thr => `<p class="note lock">🔒 Hidden. Send ${v2 ? `${spyNeed(thr, d)} probes` : "more probes"} or raise Espionage Technology to see this.</p>`;
+  const bl = Object.entries(r.b || {}).filter(([k, v]) => v > 0 && B[k]), rl = Object.entries(r.rs || {}).filter(([k, v]) => v > 0 && R[k]);
   const out = r.sim ? (r.sim.w === "a" ? `<b style="color:var(--green)">Your home fleet would win</b>` : r.sim.w === "draw" ? `<b style="color:var(--amber)">Likely a draw</b>` : `<b style="color:var(--red)">Your home fleet would lose</b>`) : "";
-  return `<div class="hd">${p ? `<canvas class="pv" data-p="${p.id}"></canvas>` : ""}<div style="flex:1;min-width:0"><div class="chapter">Espionage report · ${ago(r.at) === "now" ? "just now" : ago(r.at) + " ago"} · Espionage ${r.L == null ? "" : r.L >= 5 ? "full" : "partial"}</div><h2>${esc(r.name)}</h2><p class="note">${who} · Lv.${r.lvl}${p ? ` · ${layerOf(p.r).name}` : ""}${r.shield > T ? ` · shielded <b data-end="${r.shield}">${ftime(r.shield - T)}</b>` : ""}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
+  const none = r.noData ? `<p class="note">This commander hasn't been online since espionage began. No data yet.</p>` : "";
+  return `<div class="hd">${p ? `<canvas class="pv" data-p="${p.id}"></canvas>` : ""}<div style="flex:1;min-width:0"><div class="chapter">Espionage report · ${ago(r.at) === "now" ? "just now" : ago(r.at) + " ago"}</div><h2>${esc(r.name)}</h2><p class="note">${who} · Lv.${r.lvl}${p ? ` · ${layerOf(p.r).name}` : ""}${r.shield > T ? ` · shielded <b data-end="${r.shield}">${ftime(r.shield - T)}</b>` : ""}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
+    ${v2 ? `<dl class="kv"><dt>Probes sent</dt><dd>${fmt(r.probes)}</dd><dt>Espionage Technology</dt><dd>You ${r.mineE} · Them ${r.theirE}</dd><dt>Information level</dt><dd>${r.L}</dd><dt>Counter-espionage</dt><dd>${r.chance}% chance${r.lost ? ` · <b style="color:var(--red)">probes shot down</b>` : " · probes got away"}</dd>${r.asOf ? `<dt>Figures from</dt><dd>${ago(r.asOf) === "now" ? "just now" : ago(r.asOf) + " ago"}</dd>` : ""}</dl>` : ""}
     <div class="spyrep">
-    ${sec("Resources", r.res ? `<div class="spyres">${["m", "c", "g"].map(k => `<span class="r-${k}">${RI[k]}<b>${fmt(r.res[k] || 0)}</b><small>${RES_N[k]}</small></span>`).join("")}</div>${plunder ? `<p class="note">Plunder if you win: up to ${fmt(total(plunder))}, limited by your cargo space.</p>` : ""}` : `<p class="note">Homeworld vaults are shielded from probes.</p>`)}
-    ${sec(r.alien ? "Hive swarm" : "Fleet and defenders", !r.units ? lock(1) : Object.keys(r.units).length ? unitGrid(r.units) : `<p class="note">No ships or defenses detected.</p>`)}
-    ${r.fortL ? sec("Orbital Fortress", `<p class="note">Lv.${r.fortL} · attack ${fmt(unitStat("fortress", r.tech, r.fortL).atk)} · hull ${fmt(unitStat("fortress", r.tech, r.fortL).hull)}</p>`) : ""}
-    ${r.fortL == null ? sec("Orbital Fortress", lock(2)) : ""}${sec("Buildings", !r.b ? lock(3) : bl.length ? `<div class="spyb">${bl.map(([k, v]) => `<span><i>${bicon(k)}</i>${B[k].n}<b>${v}</b></span>`).join("")}</div>` : `<p class="note">No structures.</p>`)}
-    ${sec("Research", !r.tech ? lock(5) : `<div class="spyb">${[["weapons", "Weapons"], ["shields", "Shields"], ["armor", "Armour"]].map(([k, l]) => `<span><i>${bicon(k)}</i>${l}<b>${r.tech[k]}</b></span>`).join("")}</div>${r.cmd ? `<p class="note">${r.cmd.bot ? `Bot commander · strength tier ${r.cmd.bot}` : `Commander Lv.${r.cmd.lvl} · ${fmt(r.cmd.score)} score · ${r.cmd.planets} worlds`}</p>` : ""}`)}
+    ${sec("Resources", r.res ? `<div class="spyres">${["m", "c", "g"].map(k => `<span class="r-${k}">${RI[k]}<b>${fmt(r.res[k] || 0)}</b><small>${RES_N[k]}</small></span>`).join("")}</div>${plunder ? `<p class="note">Plunder if you win: up to ${fmt(total(plunder))}, limited by your cargo space.</p>` : ""}` : none || `<p class="note">Nothing stored here.</p>`)}
+    ${sec(r.alien ? "Hive swarm" : "Fleet", !fleet ? lock(SPY_T.fleet) : Object.keys(fleet).length ? unitGrid(fleet) : none || `<p class="note">No ships detected.</p>`)}
+    ${sec("Defenses", !def ? lock(SPY_T.def) : Object.keys(def).length || r.fortL ? (Object.keys(def).length ? unitGrid(def) : "") + (r.fortL ? `<p class="note">Orbital Fortress Lv.${r.fortL} · attack ${fmt(unitStat("fortress", r.tech || { weapons: 0, shields: 0, armor: 0 }, r.fortL).atk)} · hull ${fmt(unitStat("fortress", r.tech || { weapons: 0, shields: 0, armor: 0 }, r.fortL).hull)}</p>` : "") : none || `<p class="note">No defenses detected.</p>`)}
+    ${sec("Buildings", !r.b ? lock(SPY_T.b) : bl.length ? `<div class="spyb">${bl.map(([k, v]) => `<span><i>${bicon(k)}</i>${B[k].n}<b>${v}</b></span>`).join("")}</div>` : none || `<p class="note">No structures.</p>`)}
+    ${sec("Research", !r.tech ? lock(SPY_T.rs) : `<div class="spyb">${rl.length ? rl.map(([k, v]) => `<span><i>${bicon(k)}</i>${R[k].n}<b>${v}</b></span>`).join("") : [["weapons", "Weapons"], ["shields", "Shields"], ["armor", "Armour"]].map(([k, l]) => `<span><i>${bicon(k)}</i>${l}<b>${r.tech[k]}</b></span>`).join("")}</div>${r.cmd ? `<p class="note">${r.cmd.bot ? `Bot commander · strength tier ${r.cmd.bot}` : `Commander Lv.${r.cmd.lvl} · ${fmt(r.cmd.score)} score · ${r.cmd.planets} worlds`}</p>` : ""}`)}
     ${r.sim ? sec("Battle forecast", `<p>${out} <span class="note">(one simulated run against everything at your homeworld)</span></p><dl class="kv"><dt>You would lose</dt><dd>${fmt(sumN(r.sim.la))} ships</dd><dt>They would lose</dt><dd>${fmt(sumN(r.sim.ld))} units</dd></dl>`) : ""}
     </div>
-    <div class="spyact">${p ? `<button class="btn wide" data-act="planet" data-id="${p.id}">Open target</button><button class="btn ghost wide" data-act="spy" data-id="${p.id}">Spy again · ${SPY_GAS} gas</button>` : ""}</div>`;
+    <div class="spyact">${p ? `<button class="btn wide" data-act="planet" data-id="${p.id}">Open target</button><button class="btn ghost wide" data-act="spy" data-id="${p.id}">Spy again</button>` : ""}</div>`;
 }
 function missileSection(p) {
   const have = (S.mis || {}).ballistic || 0, h = homePlanet(), n = clamp(sheet.misn || 1, 1, Math.max(1, have));
@@ -12248,12 +12326,11 @@ function transferSection(p) {
 function shPlanet() {
   const p = G.byId[sheet.id]; if (!p) return ""; if (isFogged(p)) return shUnexplored(p);
   G.sel = p.id;
-  const T = now(), st = pStatus(p, T), h = originPlanet(), sentOut = S.fleets.some(f => f.pid === p.id && f.phase === "out");
+  const T = now(), st = pStatus(p, T), h = originPlanet(), sentOut = S.fleets.some(f => f.pid === p.id && f.phase === "out" && f.mission !== "spy");
   const ownerLine = st === "myhome" ? "Your homeworld" : st === "mine" ? "Your colony" : (st === "home") ? `Homeworld of ${esc(nameOf(p.owner))}` : (st === "player" || st === "shielded") ? `Held by ${esc(nameOf(p.owner))}` : st === "hive" ? "Held by the Hive" : "Razed. No garrison.";
   const head = `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">${TYPE_N[p.type]} · Lv.${p.lvl}</div><h2>${esc(p.name)}</h2><p class="note">${ownerLine}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${planetCard(p, st)}`;
-  const info = `<dl class="kv"><dt>Size</dt><dd>${fieldsOf(p)} fields${p.kind !== "home" && Object.keys(p.b || {}).length ? ` · ${usedOf(p)} built` : ""}</dd><dt>Orbit</dt><dd>${Math.round(p.r)} · <button class="btn ghost sm" style="padding:2px 8px;color:${layerOf(p.r).col};border-color:${layerOf(p.r).col}" data-act="layers">${zoneOf(p.r)}</button></dd><dt>One orbit of the Void</dt><dd>${ftime(period(p.r))}</dd>
-    ${h && p.id !== h.id ? `<dt>Flight from ${esc(h.name)}</dt><dd>${ftime(travelMs(h, p, { fighter: 1 }))}</dd>` : ""}
-    ${p.owner && p.kind !== "home" && st !== "mine" ? `<dt>Stockpile (half can be plundered)</dt><dd>${costHTML(Object.fromEntries(Object.entries(colStock(p)).map(([k, v]) => [k, Math.floor(v)])))}</dd>` : ""}</dl>`;
+  const info = `<dl class="kv"><dt>Size</dt><dd>${fieldsOf(p)} fields${st === "mine" && Object.keys(p.b || {}).length ? ` · ${usedOf(p)} built` : ""}</dd><dt>Orbit</dt><dd>${Math.round(p.r)} · <button class="btn ghost sm" style="padding:2px 8px;color:${layerOf(p.r).col};border-color:${layerOf(p.r).col}" data-act="layers">${zoneOf(p.r)}</button></dd><dt>One orbit of the Void</dt><dd>${ftime(period(p.r))}</dd>
+    ${h && p.id !== h.id ? `<dt>Flight from ${esc(h.name)}</dt><dd>${ftime(travelMs(h, p, { fighter: 1 }))}</dd>` : ""}</dl>`;
   const ag = actionGrid(p, st) + spyReport(p) + planetExtras(p, st);
   if (st === "myhome") {
     const src = myPlanets().filter(q => q.kind !== "home" && garrisonCount(q) > 0);
@@ -12273,19 +12350,15 @@ function shPlanet() {
       <div style="display:flex;gap:8px">${garrisonCount(p) ? `<button class="btn ghost wide" data-act="recall" data-id="${p.id}">Recall garrison</button>` : ""}<button class="btn warn wide" data-act="abandon" data-id="${p.id}">Abandon</button></div>
       ${sheet.confirm ? `<div class="danger"><b style="color:var(--red)">Abandon ${esc(p.name)}?</b><p class="note">The garrison flies home and the planet goes back to the Hive. Its buildings stay for whoever takes it next.</p><div style="display:flex;gap:8px"><button class="btn warn" data-act="abandonYes" data-id="${p.id}">Abandon planet</button><button class="btn ghost" data-act="abandonNo">Keep it</button></div></div>` : ""}`;
   }
-  const D = defenders(p), avail = originAvail(), sel = selected();
-  const key = JSON.stringify(sel) + p.id + st + JSON.stringify(D.n) + S.r.weapons + S.r.shields + S.r.armor + JSON.stringify(sheet.bots || []);
-  if (sheet.oddsKey !== key + S.doctrine) { sheet.oddsKey = key + S.doctrine;
-    sheet.fc = Object.values(sel).some(v => v > 0) ? forecast(stacksOf(sel, techOf(null), G.me).concat(allyStacks(sheet.bots, p.lvl)), D.stacks, { doc: S.doctrine }, 14) : null; sheet.odds = sheet.fc ? sheet.fc.win : 0; }
-  const o = sheet.odds, oc = o >= .75 ? "var(--green)" : o >= .4 ? "var(--amber)" : "var(--red)";
-  const count = myPlanets().length, arks = sel.ark || 0;
-  let scan = `<h2 class="sec">Scan</h2>`;
+  const kn = spyKnown(p), avail = originAvail(), sel = selected(); // v279: odds come from your latest espionage report, never from the planet itself
+  const key = JSON.stringify(sel) + p.id + st + (kn ? kn.key : "-") + S.r.weapons + S.r.shields + S.r.armor + JSON.stringify(sheet.bots || []);
+  if (sheet.oddsKey !== key) { sheet.oddsKey = key;
+    sheet.fc = kn && Object.values(sel).some(v => v > 0) ? forecast(stacksOf(sel, techOf(null), G.me).concat(allyStacks(sheet.bots, p.lvl)), kn.stacks, {}, 14) : null; sheet.odds = sheet.fc ? sheet.fc.win : 0; }
+  const o = sheet.odds, count = myPlanets().length, arks = sel.ark || 0;
+  let scan = "";
   if (st === "razed") scan += `<p class="note">No defenders. The Hive regrows here in <b data-end="${p.hiveDown}">${ftime(p.hiveDown - T)}</b>. A Colony Ship can land unopposed.</p>`;
-  else if (st === "shielded") scan += `<p class="note">Shield up for <b data-end="${p.shieldUntil}">${ftime(p.shieldUntil - T)}</b>.</p>${unitGrid(D.n)}`;
-  else scan += unitGrid(D.n) + (D.fortL ? `<p class="note">Orbital Fortress Lv.${D.fortL} defends this planet.</p>` : "");
+  else if (st === "shielded") scan += `<p class="note">Shield up for <b data-end="${p.shieldUntil}">${ftime(p.shieldUntil - T)}</b>.</p>`;
   if (p.owner && p.occUntil > T && st !== "mine") scan += `<p class="note">Occupation protection for <b data-end="${p.occUntil}">${ftime(p.occUntil - T)}</b>: its commander lost a world recently. You can raid it, but a Colony Ship can't take it.</p>`;
-  if (st === "hive") scan += `<dl class="kv"><dt>Stockpile (half can be taken)</dt><dd>${costHTML(stock(p.lvl))}</dd></dl>`;
-  if (Object.keys(p.b || {}).length) scan += `<p class="note">Built here: ${Object.entries(p.b).map(([k, v]) => `${B[k].n} ${v}`).join(", ")}. Buildings stay when the planet changes hands.</p>`;
   let body;
   if (!canPlay()) body = `<p class="note">${G.mode === "connecting" ? connNote() : G.mode === "full" ? "The galaxy is full, so you can only watch." : "You can watch this galaxy but not send fleets."}</p>`;
   else if (!Object.keys(avail).length) body = `${originBar()}<p class="note">${own("fighter") ? `No ships at ${esc(h ? h.name : S.homeName)}. Pick another planet or wait for fleets to return.` : "You have no ships yet. Build Light Fighters at the Shipyard."}</p>${S.b.shipyard ? `<button class="btn wide" data-act="nav" data-v="fleet" data-s="ships">Open Shipyard</button>` : `<button class="btn wide" data-act="nav" data-v="build" data-s="fac">Build a Shipyard</button>`}`;
@@ -12296,8 +12369,8 @@ function shPlanet() {
     ${jointOK ? `<button class="toggle${sheet.joint ? " on" : ""}" data-act="jointToggle"><span><b style="font-family:var(--f-display)">⚔ Start a joint strike</b><br><span class="note">Your ships wait at ${esc(h.name)} while bot allies, alliance members and friends send theirs there. When the timer ends the whole joint strike marches as one fleet. Holds ${fmt(rallyCap(S.r.command, empB("allyDepot")))} ships from up to ${rallySlots(S.r.command)} commanders.</span></span><span class="sw"></span></button>${sheet.joint ? rallyTimerUI(h, p, sel) : ""}` : ""}
     ${st !== "shielded" ? strikeReqSection(p, p.lvl) : ""}
     ${speedBar(p, sel)}
-    <dl class="kv"><dt>Cargo space</dt><dd>${fmt(cargoOf(sel))}${st === "hive" ? ` / ${fmt(total(stock(p.lvl)) / 2)}` : ""}</dd></dl>
-    ${oddsBlock(o)}
+    <dl class="kv"><dt>Cargo space</dt><dd>${fmt(cargoOf(sel))}</dd></dl>
+    ${oddsBlock(o, !kn)}${kn && kn.rep ? `<p class="note">From your espionage report ${ago(kn.rep.at) === "now" ? "just now" : ago(kn.rep.at) + " ago"}${kn.rep.tech ? "" : ". Their research is hidden, so these odds assume none"}.</p>` : ""}
     <button class="btn wide" data-act="launch" data-id="${p.id}" ${Object.keys(sel).length && !sentOut && st !== "shielded" ? "" : "disabled"}>${sentOut ? "Fleet already en route" : st === "shielded" ? "Shielded" : sheet.joint && jointOK ? `Launch joint strike · ${sheet.jt || 10} min muster` : arks && count < worldCap() ? "Launch invasion" : "Launch attack"}</button>`;
   }
   return head + info + ag + cineBtn(p.id) + scan + (st === "player" && !isAlly(p.owner) ? missileSection(p) : "") + body;
@@ -12318,7 +12391,7 @@ function shRally(a) {
     ${boss ? `<p class="note">Teamwork: <b style="color:var(--amber)">+${teamBonus(Object.keys(a.members || {}).filter(u => !isBot(u) && !(a.members[u] || {}).bot).length) * 10}%</b> attack and shields for the whole strike (+10% for every commander after the first, up to +30%). Strike bonus: the vault is ${Math.round((rallyBonus(memberCount(a)) - 1) * 100)}% bigger with ${memberCount(a)} commander${memberCount(a) > 1 ? "s" : ""}, up to +150%.</p>` : ""}
     ${strikeBoostUI(a)}${formPicker(a, leader && !launched)}<h2 class="sec">Strike members</h2><div class="rmems">${rows}</div>
     ${!launched && mine ? strikeInviteUI(a, full, left) : ""}
-    ${tgt && !boss ? `<h2 class="sec">Defenders</h2>${unitGrid(tgtDefN(tgt))}` : tgt ? `<h2 class="sec">${tgt.mon ? "The beast" : "Collective forces"}</h2>${unitGrid(xForce(tgt))}` : ""}
+    ${tgt && !boss ? `<h2 class="sec">Defenders</h2>${defKnownGrid(tgt)}` : tgt ? `<h2 class="sec">${tgt.mon ? "The beast" : "Collective forces"}</h2>${unitGrid(xForce(tgt))}` : ""}
     ${join}${!launched && leader ? (sheet.dconf ? `<div class="callout">Disband this joint strike? Every member's ships stand down and fly home.</div><div style="display:flex;gap:8px"><button class="btn ghost" style="flex:1" data-act="strikeDisbandNo">Keep it</button><button class="btn red" style="flex:1" data-act="strikeDisband" data-id="${a.id}">✕ Yes, disband</button></div>` : `<button class="btn red wide" data-act="strikeDisbandAsk">✕ Disband joint strike</button>`) : !launched && mine ? `<button class="btn ghost wide" data-act="strikeLeave" data-id="${a.id}">↩ Leave the joint strike</button>` : ""}`;
 }
 function shAssault() {
@@ -12328,7 +12401,7 @@ function shAssault() {
   const tt = Object.keys(sel).length && p ? travelMs(h, p, sel, S.r, spdPct()) : 0, lt = jointLate(a, tt, T), full = memberCount(a) >= strikeMax(a);
   return `<div class="hd">${p && p !== NEXUS ? `<canvas class="pv" data-p="${p.id}"></canvas>` : ""}<div style="flex:1;min-width:0"><div class="chapter">Joint strike</div><h2>${p ? esc(p.name) : "Target"}</h2><p class="note">Led by ${esc(nameOf(a.leader))}. Strikes in <b data-end="${a.arrive}">${ftime(a.arrive - T)}</b>.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
     <dl class="kv"><dt>Commanders</dt><dd>${memberCount(a)} / ${strikeMax(a)}</dd>${Object.keys(a.members).map(u => `<dt>${esc(nameOf(u))}</dt><dd>${fmt(Object.values(cleanShips(a.members[u].n)).reduce((x, y) => x + y, 0))} ships</dd>`).join("")}</dl>
-    ${p ? `<h2 class="sec">Defenders</h2>${unitGrid(tgtDefN(p))}` : ""}
+    ${p ? `<h2 class="sec">Defenders</h2>${defKnownGrid(p)}` : ""}
     ${!canPlay() ? '<p class="note">You can only watch this galaxy.</p>' : full ? '<p class="note">This assault is full.</p>' : !Object.keys(avail).length ? '<p class="note">You have no ships at home to send.</p>' :
       `<h2 class="sec">Your contribution</h2>${originBar()}${picker(avail)}${p ? speedBar(p, sel) : ""}
       <p class="note">${Object.keys(sel).length ? (lt.no ? `Too slow: your fleet needs ${ftime(tt)} and would arrive ${ftime(lt.delay)} after the strike launches. Raise the speed or leave out slower ships.` : `Your fleet needs ${ftime(tt)} at ${spdPct()}% speed. It reaches the muster point in time and strikes with everyone else. Lower the speed to save fuel.`) : "Pick ships and set your speed. Only fleets that arrive before the muster timer runs out join the strike."}</p>
@@ -12470,7 +12543,6 @@ function vCmd() {
     ${acc("elements", ic(MI.shield, "#e06bd8"), "Elements (Runes)", `${Object.values(S.runes || {}).reduce((a, b) => a + b, 0) ? `<span class="pill amb">${Object.values(S.runes || {}).reduce((a, b) => a + b, 0)} to socket</span>` : ""}`, mElem())}
     ${acc("vshop", ic(MI.tag, "#c9a6ff"), "Void Shop", `<span class="shard">◆ ${fmt(S.shards || 0)}</span>`, mShopVoid())}
     ${acc("depot", ic(MI.tag), "Supply Depot", "", mShop())}
-    ${acc("help", ic(MI.dots), "How to play", "", mEtc())}
     ${acc("settings", ic(MI.grid), "Settings", "", mSave() + mGame())}</div>`;
 }
 const acc = (k, icon, title, value, body) => { const o = menu.open[k]; return `<section class="acc${o ? " open" : ""}"><button class="acch" data-act="acc" data-k="${k}" aria-expanded="${!!o}"><span class="ai">${icon}</span><span class="at">${title}</span><span class="av">${value}</span><i class="notch"></i></button>${o ? `<div class="accb">${body}</div>` : ""}</section>`; };
@@ -12689,7 +12761,7 @@ function vMail() {
   const list = f === "saved" ? (duelOwner() && S.duelMail && S.duelSaved !== 0 ? [{ t: S.duelMail.t, f: "battle", duel: 1 }] : []).concat(S.labSaved ? [{ t: S.labMail ? S.labMail.t : now(), f: "battle", lab: 1 }] : []).concat((S.savedReps || []).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))) : all.filter(x => f === "all" || x.f === f).slice(0, 80);
   const tabs = `<div class="segc mailtabs">${MAIL_F.map(([k, l]) => { const n = k === "all" ? 0 : cnt(k); return `<button class="${f === k ? "on" : ""}" data-act="sub" data-g="mail" data-v="${k}">${l}${n ? ` <i class="cbadge">${n}</i>` : ""}</button>`; }).join("")}</div>`;
   const row = x => { const nw = x.f === "dm" ? x.un > 0 : x.t > prev, tag = nw ? '<i class="mnew">NEW</i>' : "", when = `${ago(x.t)} ago`;
-    if (x.spy) { const s = x.spy; return `<button class="mrowc spy${nw ? " unread" : ""}" data-act="spyOpen" data-id="${s.id}"><span class="mi">${AI.spy}</span><span class="mt"><b>Espionage report · ${esc(s.name)}</b><small>${s.res ? fmt(total(s.res)) + " resources · " : ""}${s.units ? fmt(sumN(s.units)) + (s.alien ? " Hive" : " defending") + " units" : "fleet hidden"}</small></span><span class="mw">${tag}<time>${when}</time></span></button>`; }
+    if (x.spy) { const s = x.spy; return `<button class="mrowc spy${nw ? " unread" : ""}" data-act="spyOpen" data-id="${s.id}"><span class="mi">${AI.spy}</span><span class="mt"><b>Espionage report · ${esc(s.name)}</b><small>${s.res ? fmt(total(s.res)) + " resources · " : ""}${spySum(s)}</small></span><span class="mw">${tag}<time>${when}</time></span></button>`; }
     if (x.rep) { const r = x.rep, win = repWin(r); return `<button class="mrowc ${win ? "good" : "bad"}${nw ? " unread" : ""}" data-act="mreport" data-id="${r.id}"><span class="mi">${MI.swords}</span><span class="mt"><b>${esc(r.title)}</b><small>${r.captured ? (r.kind === "defense" ? "Planet lost" : "Planet captured") : win ? "Victory" : r.winner === "draw" ? "Draw" : "Defeat"}${r.loot && total(r.loot) ? ` · plunder ${fmt(total(r.loot))}` : ""}</small></span><span class="mw">${tag}<time>${when}</time></span></button>`; }
     if (x.duel) return `<button class="mrowc good lab" data-act="duelBattle"><span class="mi">👑</span><span class="mt"><b>Duel · 1 vs 1 · 3 million of every warship a side</b><small>${DUEL_ALL ? "The big stress test:" : "Your private stress test:"} two commanders, every class from Light Fighters to Cube Destroyers, plus 12 million escort carriers and 9 million Citadel Supercarriers each. Tap to build it and watch (it takes a moment).</small></span><span class="mw"><time>${ago(x.t)} ago</time></span></button>`;
     if (x.lab) return `<button class="mrowc good lab${nw ? " unread" : ""}" data-act="labBattle"><span class="mi">📽</span><span class="mt"><b>Simulator test · 10 vs 10 commanders · 20,658,867 units</b><small>The stress-test battle. Tap to rebuild it on this device and watch the full replay (a few seconds to load).</small></span><span class="mw">${tag}<time>${when}</time></span></button><button class="btn ${S.labSaved ? "amber" : "ghost"} sm labsv" data-act="labSave">${S.labSaved ? "★ Saved" : "☆ Save to favourites"}</button>`;
@@ -12703,7 +12775,7 @@ function mMsg() {
   const items = S.reports.map(r => ({ t: r.at, rep: r })).concat((S.spyReps || []).map(s => ({ t: s.at, spy: s })), S.log.slice(0, 20).map(l => ({ t: l.t, log: l }))).sort((a, b) => b.t - a.t).slice(0, 40);
   return `<div class="mcard"><h3>${MI.mail.replace("<svg", '<svg style="width:24px;height:24px"')}Messages</h3><p>Battle reports and alerts from Fleet Command. Tap a report to open it.</p></div>
     <div class="feed">${items.length ? items.map(x => {
-      if (x.spy) { const s = x.spy; return `<button class="it spyit" data-act="spyOpen" data-id="${s.id}"><span class="ico">${AI.spy}</span><span><b>Espionage report: ${esc(s.name)}</b><small>${ago(s.at)} ago · ${s.res ? fmt(total(s.res)) + " resources · " : ""}${s.units ? fmt(sumN(s.units)) + (s.alien ? " Hive" : " defending") + " units" : "fleet hidden"}</small></span></button>`; }
+      if (x.spy) { const s = x.spy; return `<button class="it spyit" data-act="spyOpen" data-id="${s.id}"><span class="ico">${AI.spy}</span><span><b>Espionage report: ${esc(s.name)}</b><small>${ago(s.at)} ago · ${s.res ? fmt(total(s.res)) + " resources · " : ""}${spySum(s)}</small></span></button>`; }
       if (x.rep) { const r = x.rep, win = repWin(r); return `<button class="it ${win ? "good" : "bad"}" data-act="mreport" data-id="${r.id}"><span class="ico">${MI.swords}</span><span><b>${esc(r.title)}</b><small>${ago(r.t || r.at)} ago · ${r.captured ? (r.kind === "defense" ? "planet lost" : "planet captured") : win ? "victory" : r.winner === "draw" ? "draw" : "defeat"}</small></span></button>`; }
       const l = x.log; return `<div class="it ${l.kind === "win" ? "good" : l.kind === "loss" ? "bad" : ""}" style="cursor:default"><span class="ico">${l.kind === "warn" || l.kind === "loss" ? MI.alert : MI.mail}</span><span><b>${esc(l.msg)}</b><small>${ago(l.t)} ago</small></span></div>`;
     }).join("") : '<p class="note">No messages yet.</p>'}</div>`;
@@ -12726,10 +12798,12 @@ function mGame() {
     <div class="mcard"><h3>${MI.rank.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Records</h3>${mrow("Battles won", S.wins)}${mrow("Won against commanders", S.pvpWins)}${mrow("Planets occupied", S.captures)}${mrow("Ships recovered by repair docks", fmt((S.stats || {}).repaired || 0))}${mrow("Strongest Hive garrison", S.maxWin ? "Lv." + S.maxWin : "–")}</div>
     ${restartBtn()}`;
 }
+function shHowTo() { return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">Etc.</div><h2>How to play</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div><div class="howto">${mEtc()}</div>`; }
 function mEtc() {
   const tip = (h, p) => `<div class="mcard"><h3>${h}</h3><p>${p}</p></div>`;
   return `<div class="mcard"><h3>${MI.orbit.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Neighbourhood tour</h3><p>A guided flight over the map: your homeworld, the worlds around you, your layer and the galaxy beyond.</p><button class="btn wide" data-act="mapTour">▶ Start the tour</button></div>` + tip(`${MI.box.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}How to play`, "Build extractors and solar power, research technology, then raise a fleet. The Advisor and your quests on the Quests tab walk you through each system in order.") +
     tip(`${MI.swords.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Counters`, "Every ship has a target it's best against, and rapid fire lets it hit that target several times per round. Bring the right counter:" + `<span class="ctrl">${[["Cruiser", "Light Fighters"], ["Dreadnought", "Battleships"], ["Bomber", "Turrets and defenses"], ["Destroyer", "Dreadnoughts"], ["Reaper", "Capital ships"]].map(([a, b]) => `<span><b>${a}</b><i>best against</i><em>${b}</em></span>`).join("")}</span>Each ship card lists its class and what it's best against.`) +
+    tip(`${AI.spy.replace("<svg", '<svg style="width:24px;height:24px;color:#ff6af0"')}Espionage`, "Planet cards don't show what's on a world. Tap Espionage on the card and send probes (built at the Shipyard, level 3, with Espionage Technology 2). They fly out on the map, send a report to Mail, and come home. The report always shows resources; each extra probe reveals more: fleet at 2, defenses at 3, buildings at 5, research at 7. Being ahead of the target in Espionage Technology adds the difference squared, and being behind takes it away. Ships at the target may shoot your probes down after they report, and the owner's screen flashes red when they're spotted.") +
     tip(`${MI.shield.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Losses and repairs`, "Repair docks recover 30% of the ships you lose in any battle, and 70% of destroyed defenses are rebuilt. A bad fight hurts, but it won't end your empire.") +
     tip(`${MI.orbit.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Planets`, `Each planet has 169 to 255 fields, and every building level uses one. Capture planets with a Colony Ship. Astrophysics research decides how many you can hold: 1 extra world every 2 levels, up to ${MAX_PLANETS}. A newly captured planet is shielded for 7 days.`) +
     tip(`${MI.wings.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}New commander protection`, "For your first 3 days, or until you reach 300 score, other commanders can't attack your colonies. Use the time to learn against the Hive.");
@@ -13108,7 +13182,7 @@ const TUT = [
   { lv: 3, t: "Defeat a Hive garrison", say: "The amber worlds belong to the Hive. I've marked a weak one near us: send the fighters.", ok: s => s.wins >= 1, hive: 1, path: () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : [['.sheet [data-act="launch"]', "Send your fighters"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME], /* v235: the hive world's card opens first; the guide used to say "close this" there, and closing it looped back */ rw: { m: 1200, c: 700, g: 300, shards: 3 } },
   { lv: 3, t: "Gather from a resource field", say: "Resource fields pay out to whoever holds them. Fields already held by a rival must be fought for, so pick a free one.", ok: s => (s.stats || {}).gathers >= 1 || s.fleets.some(f => f.nid), find: "m", path: () => tutWaitShips() || mapPath('.sheet [data-act="gather"], .sheet [data-act="launch"]', '.sheet [data-act="node"]')(), rw: { m: 1000, c: 600, g: 300 } },
   { lv: 3, t: "Explore a pyramid space station", say: "Derelict pyramid stations drift all over the map. Low-level vaults are unguarded: free shards and relics.", ok: s => (s.stats || {}).pyramids >= 1 || s.fleets.some(f => f.yid), find: "y", path: () => tutWaitShips() || mapPath('.sheet [data-act="pyrGo"]', '.sheet [data-act="pyramid"]')(), rw: { m: 800, c: 800, g: 400, shards: 1 } },
-  { lv: 4, t: "Read your reports in Mail", say: "Every battle, scan and message lands in Mail. Replays show you exactly why you won or lost.", ok: s => !!s.tutMail, go: { v: "mail" }, path: () => [DOCKT("mail", "Open Mail")], rw: { m: 500, c: 500, g: 500 } },
+  { lv: 4, t: "Read your reports in Mail", say: "Every battle, espionage report and message lands in Mail. Replays show you exactly why you won or lost.", ok: s => !!s.tutMail, go: { v: "mail" }, path: () => [DOCKT("mail", "Open Mail")], rw: { m: 500, c: 500, g: 500 } },
   { lv: 5, t: "Raid a Lv.5 pirate hideout", say: "Pirates hoard loot and drop rare items. This first crew is a small one: send every fighter you have.", ok: s => (s.stats || {}).pirates >= 1, find: "x", pirLvl: "5", path: () => tutWaitShips() || mapPath('.sheet [data-act="raid"]', '.sheet .tgt[data-act="pirate"], .sheet [data-act="pirate"]')(), rw: { m: 1500, c: 1000, g: 500, shards: 2 } },
   { lv: 4, t: "Reach Commander Level 3", say: "Keep upgrading your mines and winning fights. Every resource you spend earns experience.", ok: () => cmdLevel(score()) >= 3, /* v236: Lv.4 took a new player many hours of waiting here */ go: { v: "build", s: "res" }, path: () => { const k = growPick(); return bPath(k, B[k].cat === "fac" ? "fac" : "res")(); }, rw: { m: 3000, c: 2000, g: 1000, shards: 5 } },
   /* v200: the road to a second world. Astrophysics decides how many planets you may hold (one more every 2 levels) and it needs
@@ -14121,7 +14195,7 @@ function battleAnalysis(r, sim) {
   const bar = (lbl, a, b2, cls) => `<div class="pw2"><span>${lbl}</span><div class="pw2b ${cls}"><i style="width:${b2 > 0 ? Math.round(a / b2 * 100) : 0}%"></i></div><b>${fmt(a)} / ${fmt(b2)}</b></div>`;
   return `${bar("Attacker power", pw.a1 || 0, pw.a0 || 0, "a")}${bar("Defender power", pw.d1 || 0, pw.d0 || 0, "d")}
     <dl class="kv">${mvp && mvp[2].dealt ? `<dt>Most damage</dt><dd>${esc(unitName(mvp[1]))} (${who(mvp[0])}) · ${fmt(mvp[2].dealt)}</dd>` : ""}${kil && kil[2].killV ? `<dt>Most destructive</dt><dd>${esc(unitName(kil[1]))} (${who(kil[0])}) · ${fmt(kil[2].kills)} kills worth ${fmt(kil[2].killV)}</dd>` : ""}${wp[0] ? `<dt>Top weapon</dt><dd>${WPN[wp[0][1]].n} (${who(wp[0][0])}) · ${fmt(wp[0][2])}</dd>` : ""}
-    <dt>Doctrines</dt><dd>${esc((DOCTRINES[sim.docA] || {}).n || DOC_AI[sim.docA] || "–")} vs ${esc((DOCTRINES[sim.docD] || {}).n || DOC_AI[sim.docD] || "–")}</dd><dt>Duration</dt><dd>${Math.round(sim.dur)} s · ${r.rounds.length} round${r.rounds.length === 1 ? "" : "s"}${sim.quick ? " · large-fleet mode" : ""}</dd></dl>`;
+    <dt>Duration</dt><dd>${Math.round(sim.dur)} s · ${r.rounds.length} round${r.rounds.length === 1 ? "" : "s"}${sim.quick ? " · large-fleet mode" : ""}</dd></dl>`;
 }
 function finishBattle() {
   const b = battle; if (!b || b.done) return; b.done = true; const r = b.r, win = repWin(r), sim = (r.sim && r.sim.stats) ? r.sim : b.res.sim; if (!b.ending) SFX.fanfare(win);
@@ -14365,6 +14439,7 @@ function tickUI() {
   const T = now();
   document.querySelectorAll("[data-end]").forEach(el => { el.textContent = ftime(+el.dataset.end - T); });
   if (!tickUI.ai || T - tickUI.ai > 30000) { tickUI.ai = T; allyInSub(); }
+  if (!tickUI.sw || T - tickUI.sw > 1000) { tickUI.sw = T; try { spyWatch(); } catch (e) {} } // v279: probes on their way to your worlds
   if (!tickUI.dw || T - tickUI.dw > 3000) { tickUI.dw = T; try { defWatch(); } catch (e) {} } // v273: joint defense watch // v271: watch alliance members' incoming attacks
   { const ck = callKey(); if (ck !== tickUI.ck) { tickUI.ck = ck; trayRender(); } } // v271: the call-to-arms band comes and goes on its own
   if (G.mode === "connecting" && performance.now() > 12000 && !tickUI.cn && sheet) { tickUI.cn = 1; renderSheet(); } // show the Reconnect button
@@ -14820,7 +14895,7 @@ function trayRender() {
   const gl = (act, icon, label, attrs, badge) => `<button class="ti gl" data-act="${act}" ${attrs || ""}><span class="tic">${icon}</span><span class="tl">${label}</span>${badge ? `<i class="tb">${badge > 9 ? "9+" : badge}</i>` : ""}</button>`;
   const ic2 = s => String(s).replace("<svg", '<svg width="24" height="24"'), P = actPlanet(), un = chatUnread(), mastN = masteryReady(), a = myAlly();
   const helpN = a ? Object.entries(a.help || {}).filter(([u, r]) => u !== G.me && r && a.members[u] && r.e > now() && !(r.by || {})[G.me] && Object.keys(r.by || {}).length < HELP_MAX).length : 0;
-  const drawer = `<div class="gm-top">${gi("profile", ic2(MI.user), "My Info", 0, `data-u="${G.me}"`)}${gi("nav", ic2(MI.q), "Quest", questsReady(), 'data-v="quests"') /* v195: to the Quests tab, where the daily tasks now are (it opened a Quest page that no longer exists) */}${gi("nav", ic2(NAVI.mail), "Message", (() => { try { return mailUnread(); } catch (e) { return 0; } })(), 'data-v="mail"')}${gi("nav", ic2(MI.user), "Commander", 0, 'data-v="cmd"')}${gi("mtab", ic2(MI.dots), "Etc.", 0, 'data-k="game"')}
+  const drawer = `<div class="gm-top">${gi("profile", ic2(MI.user), "My Info", 0, `data-u="${G.me}"`)}${gi("nav", ic2(MI.q), "Quest", questsReady(), 'data-v="quests"') /* v195: to the Quests tab, where the daily tasks now are (it opened a Quest page that no longer exists) */}${gi("nav", ic2(NAVI.mail), "Message", (() => { try { return mailUnread(); } catch (e) { return 0; } })(), 'data-v="mail"')}${gi("nav", ic2(MI.user), "Commander", 0, 'data-v="cmd"')}${gi("howto", ic2(MI.dots), "Etc.", 0, "")}
       ${gi("openShop", '<span class="shard" style="font-size:20px">◆</span>', "Shop", 0, "")}${gi("mtab", ic2(MI.tag), "Depot", 0, 'data-k="depot"')}${gi("events", '<span style="color:var(--amber);font-size:21px;line-height:1">★</span>', "Events", eventsBadge(), "")}${gi("chat", ic2(TRAY_I.chat), "Chat", un, "")}</div>
     <div class="gm-where">${esc(P ? P.name : S.homeName)} <small>${P ? "colony" : "homeworld"}</small></div>
     <div class="gm-list">${gl("nav", ic2(NAVI.base), "Overview", 'data-v="base"')}${gl("nav", ic2(NAVI.galaxy), "Galaxy", 'data-v="galaxy"')}</div>
@@ -14861,11 +14936,12 @@ function sendFleet(p, n, mission, extra) {
     S.res.g -= fuel; for (const k in n) S.ships[k] -= n[k];
   }
   const T = now(), tt = travelMs(h, p, n, S.r, pct), hp = pos(h, T);
-  const f = Object.assign({ id: "f" + (S.seq++), pid: p.id, mission, n, out: T, arrive: T + tt, tt, back: null, loot: null, phase: "out", ox: hp.x, oy: hp.y, from: h.kind !== "home" ? h.id : null, spd: pct, fuel, doc: DOCTRINES[S.doctrine] ? S.doctrine : "balanced" }, extra || {});
+  const f = Object.assign({ id: "f" + (S.seq++), pid: p.id, mission, n, out: T, arrive: T + tt, tt, back: null, loot: null, phase: "out", ox: hp.x, oy: hp.y, from: h.kind !== "home" ? h.id : null, spd: pct, fuel }, extra || {});
   if (!f.form && sheet && FORMS[sheet.form]) f.form = sheet.form; // v274: the formation picked on the launch screen
   S.fleets.push(f);
   if (Object.keys(n).some(k => CLASS_OF[k] === "frigate" && n[k] > 0) && typeof reveal === "function") { const q = pos(p, T); reveal(q.x, q.y, 12); } // frigates scout ahead
   if (mission === "attack" && p.owner && p.owner !== G.me && p.kind !== "home") publishInbound(p.owner, f);
+  if (mission === "spy" && p.owner && p.owner !== G.me) publishInbound(p.owner, f); // v279: the target's screen flashes red
   return f;
 }
 /* tell the defender's radar that a fleet is coming */
@@ -14873,8 +14949,8 @@ function publishInbound(uid, f) {
   if (!G.db || G.mode !== "online" || isBot(uid)) return;
   serial("in" + uid, async () => {
     try { const ref = G.db.doc("inbound/" + uid), snap = await ref.get(), T = now();
-      const items = (snap.exists && Array.isArray(snap.data().items) ? snap.data().items : []).filter(x => x && +x.arrive > T).slice(0, 39);
-      items.push({ id: f.id + "-" + (hash(G.me || "x") % 1e6), from: G.me, pid: f.pid, out: f.out, arrive: f.arrive, ox: f.ox, oy: f.oy, n: f.n, src: launchSrc(f) }); // the defender learns where the strike was launched from
+      const items = (snap.exists && Array.isArray(snap.data().items) ? snap.data().items : []).filter(x => x && (+x.arrive > T || (x.spy && +x.arrive > T - 7 * 864e5))).slice(-39); // v279: probe visits wait a week for a target who is away
+      items.push({ id: f.id + "-" + (hash(G.me || "x") % 1e6), from: G.me, pid: f.pid, out: f.out, arrive: f.arrive, ox: f.ox, oy: f.oy, n: f.n, src: launchSrc(f), spy: f.mission === "spy" ? 1 : 0 }); // the defender learns where the strike was launched from
       await ref.set({ items }); } catch (e) {}
   });
 }
@@ -14882,7 +14958,8 @@ const slotsFull = () => { if (fleetsUsed() >= maxFleets()) { toast(`All ${maxFle
 const ACT = {
   menu: () => ACT.nav({ v: "cmd" }),
   menuClose: () => {},
-  mtab: d => { if (d.k === "msg") return ACT.nav({ v: "mail" }); closeSheet(); const map = { alliance: "alliance", shop: "depot", inv: "inv", msg: "messages", quest: "quests", etc: "help", game: "settings", save: "settings" }; menu.open[map[d.k] || d.k] = true; view = "cmd"; render(true); },
+  howto: () => openSheet({ type: "howto" }), // v279: the Etc. tile
+  mtab: d => { if (d.k === "msg") return ACT.nav({ v: "mail" }); if (d.k === "etc") return ACT.howto(); closeSheet(); const map = { alliance: "alliance", shop: "depot", inv: "inv", msg: "messages", quest: "quests", game: "settings", save: "settings" }; menu.open[map[d.k] || d.k] = true; view = "cmd"; render(true); },
   acc: d => { menu.open[d.k] = !menu.open[d.k]; if (d.k === "messages" && menu.open[d.k]) { S.unread = 0; dirty(); } render(true); },
   targets: () => { sub.gal = sub.gal || "targets"; openSheet({ type: "targets" }); },
   node: d => { const n = NB[d.id]; if (!n) return; pick = {}; if (S.ships.hauler) pick.hauler = S.ships.hauler; else for (const k in S.ships) if (S.ships[k] && SH[k]) pick[k] = S.ships[k]; G.selNode = n.id; openSheet({ type: "node", id: n.id }); },
@@ -15040,7 +15117,6 @@ const ACT = {
     cineBar(); } },
   fBoost: d => act(() => { const f = S.fleets.find(x => x.id === d.id); if (!f || f.assault) return; const c = boostCost(f); if (S.shards < c) return toast(`Afterburners need ◆${c}.`, "warn"); if (fleetSpeedUp(f)) { S.shards -= c; toast(`Afterburners lit: the rest of the trip is 50% faster.`, "win"); } }),
   fBoostItem: d => act(() => { const f = S.fleets.find(x => x.id === d.id); if (!f || f.assault || !(S.boosts > 0)) return; if (fleetSpeedUp(f, 5 * 60000)) { S.boosts--; spdAdd(300000); toast("Boost used: 5 minutes cut."); } }),
-  fDoc: d => act(() => { const f = S.fleets.find(x => x.id === d.id); if (f && DOCTRINES[d.v]) { f.doc = d.v; toast(`Manoeuvre set: ${DOCTRINES[d.v].n}.`); } }),
   recallG: d => act(() => { // stop gathering early: fly home with what is loaded so far
     const f = S.fleets.find(x => x.id === d.id); if (!f || f.phase !== "gather") return; const T = now(), h = f.haul || { res: "m", amt: 0 }, fr = clamp((T - f.arrive) / Math.max(1, f.gend - f.arrive), 0, 1);
     occClear(f.nid, f.id); f.phase = "back"; f.back = T + (f.tt || 60000); const got = Math.floor(h.amt * fr); setHaulLoot(f, h.res, got); f.gend = T; toast(`Gatherers recalled with ${fmt(got)} ${RES_N[h.res].toLowerCase()}.`); }),
@@ -15340,7 +15416,6 @@ const ACT = {
   labsAll: d => { sheet.all = d.v === "1"; renderSheet(); },
   musicTrack: d => { const v = d.v === "file" ? "file" : "space"; if (AU.track === v) return; AU.track = v; saveAudioPrefs(); unlockAudio();
     if (AU.ctx) { if (v === "file") startFileTrack(); else genSpace(); applyAudio(); } render(true); },
-  doctrine: d => { if (!DOCTRINES[d.k]) return; S.doctrine = d.k; dirty(); renderSheet(); },
   grabCache: d => act(() => { const c = (S.caches || []).find(x => x.id === d.id); if (!c || !canPlay()) return; const got = cacheGrab(d.id); if (!got) return;
     toast(`${CACHE_T[c.kind][0]} recovered: ${got}.`, "win"); if (G3) (G3.bursts = G3.bursts || []).push({ p: new TH.Vector3(c.x, 1.4, c.y), t: performance.now(), col: CACHE_T[c.kind][1], txt: "+" + got }); }),
   /* v65 random jump: any free open orbit in the galaxy, picked at random, then the normal teleport rules apply */
@@ -15464,13 +15539,10 @@ const ACT = {
     const f = G.list.filter(p => layerOf(p.r).n === L.n).sort((a, b) => Math.abs(a.r - (L.r0 + L.r1) / 2) - Math.abs(b.r - (L.r0 + L.r1) / 2))[0]; if (f) ACT.viewMode({ m: "layer", id: f.id }); },
   jump: d => { const el = document.getElementById(d.to); if (el) el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); },
   fav: d => { S.fav = S.fav || {}; if (S.fav[d.id]) delete S.fav[d.id]; else S.fav[d.id] = now(); dirty(); toast(S.fav[d.id] ? "Added to Favorites. Find it under Targets → Favorites." : "Removed from Favorites."); if (sheet) renderSheet(); },
-  spy: d => act(() => {
-    const p = G.byId[d.id]; if (!p) return; advance(now());
-    const ship = (S.ships.spyProbe || 0) > 0;
-    if (ship) S.ships.spyProbe--; else { if (S.res.g < SPY_GAS) return toast(`A probe needs ${SPY_GAS} gas, or an Espionage Probe from the shipyard.`, "warn"); S.res.g -= SPY_GAS; }
-    S.spy = S.spy || {}; S.spy[p.id] = now(); bump("spies");
-    const rep = makeSpyRep(p, ship ? 1 : 0); S.spyReps = [rep].concat(S.spyReps || []).slice(0, 20); SFX.research(); openSheet({ type: "spyrep", id: rep.id });
-  }),
+  spy: d => { const p = G.byId[d.id]; if (!p || p.owner === G.me) return; const hm = (S.ships.spyProbe || 0) > 0, c = hm ? null : myPlanets().find(q => q.kind !== "home" && (q.garrison || {}).spyProbe > 0); openSheet({ type: "spysend", id: p.id, from: c ? c.id : "home" }); },
+  spyN: d => { const have = originAvail().spyProbe || 0; sheet.pn = d.max ? have : clamp((sheet.pn || 1) + (+d.d || 0), 1, Math.max(1, have)); renderSheet(); },
+  spyGo: d => act(() => { const p = G.byId[d.id]; if (!p || !canPlay() || p.owner === G.me) return; advance(now()); const have = originAvail().spyProbe || 0, n = clamp(Math.floor(+(($("#spyn") || {}).value) || sheet.pn || 1), 1, have);
+    if (!have) return toast("No Espionage Probes here.", "warn"); if (slotsFull()) return; sheet.speed = 100; const f = sendFleet(p, { spyProbe: n }, "spy"); if (!f) return; S.spyN = n; bump("spies"); try { syncPlayer(); } catch (e) {} closeSheet(); toast(`${n} probe${n > 1 ? "s" : ""} launched at ${p.name}. Arriving in ${ftime(f.arrive - f.out)}.`); }),
   missile: d => act(() => {
     const p = G.byId[d.id], h = homePlanet(); if (!p || !h || !canPlay() || pStatus(p) !== "player" || isAlly(p.owner)) return;
     const have = (S.mis || {}).ballistic || 0, n = clamp(Math.floor(+(($("#misn") || {}).value) || 1), 1, have); if (!have) return;
@@ -15689,7 +15761,7 @@ addEventListener("pointermove", e => { if (!sheetDrag) return; const dy = e.clie
 addEventListener("pointerup", () => { if (!sheetDrag) return; const { sh, dy } = sheetDrag; sheetDrag = null; sh.classList.remove("dragging"); sh.classList.add("snap"); sh.style.transform = "";
   setTimeout(() => sh.classList.remove("snap"), 300); if (dy > 110) closeSheet(); else if (dy < -50) sh.classList.add("tall"); else if (dy > 40 && sh.classList.contains("tall")) sh.classList.remove("tall"); }, { passive: true });
 /* actions that switch tabs, filters or menu sections: these crossfade between the old and new screen */
-const VT_ACTS = new Set(["scls", "shopCat", "musicTrack", "doctrine", "jgSel", "setFrom", "pirLvl", "trFrom", "trTo"]); // views with their own slide (planet hops, sheets, accordions) keep it
+const VT_ACTS = new Set(["scls", "shopCat", "musicTrack", "jgSel", "setFrom", "pirLvl", "trFrom", "trTo"]); // views with their own slide (planet hops, sheets, accordions) keep it
 document.addEventListener("click", e => {
   const el = e.target.closest("[data-act]"); if (!el || el.disabled) return;
   // v121 touchscreens (Windows tablets like the ASUS Z13): a map tap opens a card on finger-up, then the browser's follow-up click
@@ -15725,6 +15797,7 @@ document.addEventListener("input", e => {
     if (go) { go.disabled = !Object.keys(selected()).length || used > cap; go.textContent = used > cap ? "Not enough cargo space" : sheet.stay ? "Send and station" : "Send transfer"; }
     return;
   }
+  if (e.target.matches("#spyn") && sheet && sheet.type === "spysend") { sheet.pn = clamp(Math.floor(+e.target.value || 1), 1, Math.max(1, originAvail().spyProbe || 0)); const pv = $("#spyinfo"); if (pv) pv.innerHTML = spyPreview(G.byId[sheet.id], sheet.pn); }
   if (e.target.matches("[data-pk]")) { const k = e.target.dataset.pk; pick[k] = clamp(Math.floor(+e.target.value || 0), 0, originAvail()[k] || 0); clearTimeout(ACT._pt); ACT._pt = setTimeout(() => { renderSheet(); const el = $("#pk-" + k); if (el) el.focus(); }, 500); }
   else tickUI();
 });
