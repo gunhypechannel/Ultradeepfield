@@ -2258,7 +2258,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 274;
+const GAME_V = 275;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5778,15 +5778,17 @@ function mkBuild(W) {
   W.MK = { L, all, NN, NX, N, cur: 0, cand: [], near: new Set() };
   do mkSweep(W, now(), 1e9); while (W.MK.cur !== 0);
 }
+const clashAt = it => (G.clashes || []).some(c => c.loc === it);
 function mkSweep(W, T, CH) {
   const M = W.MK, s = M.cur, e = Math.min(M.N, s + CH), A = M.L.A, cp = W.camera.position, grey = colObj("#8a7a78"), cube = colObj("#5dff6a"), red = colObj("#ff6b5a"), gold = colObj("#ffcf6a"), dull = colObj("#8f7a52");
   if (s === 0) M.cand = [];
   for (let i = s; i < e; i++) { const it = M.all[i], kind = i < M.NN ? 0 : i < M.NX ? 1 : 2, j = i * 4, a = it.a0 + T * TAU / period(it.r), x = Math.cos(a) * it.r, z = Math.sin(a) * it.r, nf = fogSeen(x, z);
     const col = kind === 0 ? colObj(NODE_T[it.res].col) : kind === 1 ? (pirDown(it) > T ? grey : it.mon ? colObj(MON[it.mon].col) : it.boss ? cube : red) : pyrDown(it) > T ? dull : gold; A.aCol[j] = col.r; A.aCol[j + 1] = col.g; A.aCol[j + 2] = col.b;
     A.aCol[j + 3] = !nf || M.near.has(it.id) ? 0 : kind === 0 ? .34 : kind === 1 ? .45 : .5;
-    if (nf) { const dc = Math.hypot(x - cp.x, cp.y, z - cp.z), hl = kind === 0 ? !!G.find && it.res === G.find : kind === 1 ? findHit(it) : G.find === "y"; if (dc < (kind === 0 ? 240 : 280) && (!G.find || hl)) M.cand.push([dc, it.id, kind]); } }
+    if (nf) { const dc = Math.hypot(x - cp.x, cp.y, z - cp.z), hl = kind === 0 ? !!G.find && it.res === G.find : kind === 1 ? findHit(it) : G.find === "y"; if (dc < (kind === 0 ? 240 : 280) && (!G.find || G.find === "o" || hl || (kind === 1 && clashAt(it)))) M.cand.push([dc, it.id, kind]); } }
   orbRange(M.L, ["aCol"], s, e - s);
-  if (e >= M.N) { M.cur = 0; M.cand.sort((x, y) => x[0] - y[0]); const pick = k => M.cand.filter(c => c[2] === k).slice(0, k === 2 ? 14 : k === 1 ? 30 : MOBILE ? 28 : 40); M.near = new Set(pick(0).concat(pick(1), pick(2)).map(c => c[1])); } else M.cur = e;
+  if (e >= M.N) { M.cur = 0; M.cand.sort((x, y) => x[0] - y[0]); const pick = k => M.cand.filter(c => c[2] === k).slice(0, k === 2 ? 14 : k === 1 ? 30 : MOBILE ? 28 : 40); M.near = new Set(pick(0).concat(pick(1), pick(2)).map(c => c[1]));
+    for (const c of G.clashes || []) if (c.loc && PB[c.loc.id]) M.near.add(c.loc.id); } else M.cur = e; // v275: the target of a battle is always drawn
 }
 /* an abandoned pyramid up close: a stepped sandstone pyramid with a glowing capstone and a slow ring of runes */
 /* a pyramid space station: a gold-and-graphite bipyramid hull of panelled plating with thousands of lit ports, glowing edge
@@ -6499,7 +6501,7 @@ const clashCnt = o => Object.values(o || {}).reduce((s, v) => s + (+v || 0), 0);
 const clashShips = o => { const r = {}; for (const k in o || {}) if (SH[k] && o[k] > 0) r[k] = o[k]; return Object.keys(r).length ? r : null; };
 const genComp = n => { n = Math.max(3, n || 6); return { fighter: Math.ceil(n * .55), cruiser: Math.ceil(n * .3), battleship: Math.ceil(n * .15) }; };
 function mapClash(loc, rep, def) {
-  if (!loc || !rep || !rep.start || typeof TH === "undefined") return; const age = now() - (rep.at || now()); if (age > 40000 || age < -5000) return; // only battles happening now
+  if (!loc || !rep || !rep.start || typeof TH === "undefined") return; if (G3 && G3.MK && G3.MK.near && PB[loc.id]) G3.MK.near.add(loc.id); const age = now() - (rep.at || now()); if (age > 40000 || age < -5000) return; // only battles happening now
   const youA = !def && (rep.aUids || []).includes(G.me);
   /* v261 flagships only lead commanders' fleets (players and bots). Cube bosses, space monsters, pirates and the Hive fight without one */
   const cmd = u => typeof u === "string" && u !== "pirates" && u !== "cube" && u !== "hive" && (u === G.me || !!G.players[u] || isBot(u));
@@ -12017,6 +12019,8 @@ function originBar(exclude) {
   return `<div class="note">Launch from</div><div class="segc" style="overflow-x:auto">${opts.map(([id, n, c]) => `<button style="flex:none;padding:8px 12px" class="${cur === id ? "on" : ""}" data-act="setFrom" data-id="${id}">${esc(n)} · ${fmt(c)}</button>`).join("")}</div>`;
 }
 /* speed slider with live flight time and fuel */
+/* v275: after a formation change the camera follows that fleet up close: zoomed out, a fleet is drawn as a single arrow, so the change was invisible */
+function formShow(f) { if (!G3 || !G3.cam || view !== "galaxy" || !f || f.phase === "gather") return; const c = G3.cam; c.follow = null; c.followFleet = f.id; c.goal = Object.assign({}, c.goal || {}, { dist: Math.min(c.dist || 30, 16) }); }
 const launchForm = () => sheet && FORMS[sheet.form] ? sheet.form : FORMS[S && S.fform] ? S.fform : "wedge"; // v274: each fleet flies its own formation
 function speedBar(to, sel) {
   const h = originPlanet(), pct = spdPct(), has = Object.keys(sel).length > 0;
@@ -15095,8 +15099,8 @@ const ACT = {
   allyToolsOpen: () => openSheet({ type: "altools" }),
   yardOpen: d => openSheet({ type: "yard", pid: d.id || null }),
   launchForm: d => { if (!FORMS[d.v] || !sheet) return; sheet.form = d.v; renderSheet(); },
-  fFormNext: d => { const f = S.fleets.find(x => x.id === d.id); if (!f) return; const ks = Object.keys(FORMS), k = ks[(ks.indexOf(fformOf(f)) + 1) % ks.length]; f.form = k; dirty(); toast(`${fleetLabel(f)} flies in ${FORMS[k].n} formation.`, "win"); fleetHud(true); },
-  fleetForm: d => { if (!FORMS[d.v]) return; if (d.id) { const f = S.fleets.find(x => x.id === d.id); if (!f) return; f.form = d.v; toast(`${fleetLabel(f)} flies in ${FORMS[d.v].n} formation.`, "win"); } else { S.fform = d.v; toast(`New fleets fly in ${FORMS[d.v].n} formation.`, "win"); } dirty(); render(true); },
+  fFormNext: d => { const f = S.fleets.find(x => x.id === d.id); if (!f) return; const ks = Object.keys(FORMS), k = ks[(ks.indexOf(fformOf(f)) + 1) % ks.length]; f.form = k; dirty(); toast(`${fleetLabel(f)} flies in ${FORMS[k].n} formation.`, "win"); formShow(f); fleetHud(true); },
+  fleetForm: d => { if (!FORMS[d.v]) return; if (d.id) { const f = S.fleets.find(x => x.id === d.id); if (!f) return; f.form = d.v; toast(`${fleetLabel(f)} flies in ${FORMS[d.v].n} formation.`, "win"); formShow(f); } else { S.fform = d.v; toast(`New fleets fly in ${FORMS[d.v].n} formation.`, "win"); } dirty(); render(true); },
   allyBioSave: () => { const a = myAlly(), el = $("#albio"); if (!a || allyRank(a, G.me) !== "lead" || !el) return; const v = el.value.trim().slice(0, 300); el.blur(); allyMutate(a.id, x => { x.bio = v; }, "Alliance bio saved."); },
   allyTitleSet: () => { const a = sheet && G.alliances[sheet.id], u = sheet && sheet.u, el = $("#altitle"); if (!a || !u || !el || !(allyRank(a, G.me) === "lead" || allyCan(a, "rank", u))) return; const v = el.value.trim().slice(0, 24); el.blur();
     allyMutate(a.id, x => { x.titles = Object.assign({}, x.titles || {}); if (v) x.titles[u] = v; else delete x.titles[u]; }, v ? `${nameOf(u)} is now “${v}”.` : `${nameOf(u)}'s title was cleared.`); },
