@@ -2258,7 +2258,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 272;
+const GAME_V = 273;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -2995,7 +2995,7 @@ function defenders(p) {
   if (st === "player" || st === "shielded" || st === "mine") {
     const t = techOf(p.owner), fortL = (p.b || {}).fortress || 0, n = Object.assign({}, p.garrison || {});
     if (fortL) n.fortress = 1;
-    const gn = {}; for (const u in p.ag || {}) for (const k in p.ag[u].n) gn[k] = (gn[k] || 0) + p.ag[u].n[k]; // allied ships stationed here through the alliance depot fight too
+    const gn = {}; for (const u in p.ag || {}) { if (p.ag[u].until && p.ag[u].until < now()) continue; for (const k in p.ag[u].n) gn[k] = (gn[k] || 0) + p.ag[u].n[k]; } // allied ships stationed here through the alliance depot fight too
     const nAll = Object.assign({}, n); for (const k in gn) nAll[k] = (nAll[k] || 0) + gn[k];
     return { stacks: stacksOf(n, t, p.owner, fortL).concat(guardStacks(p)), alien: false, fortL, n: nAll, guards: Object.keys(p.ag || {}).length };
   }
@@ -3893,7 +3893,9 @@ function cleanAlly(id, d) {
   const help = {}; if (d.help && typeof d.help === "object") for (const u in d.help) { const h = d.help[u]; if (!members[u] || !h || typeof h !== "object" || typeof h.id !== "string") continue;
     const by = {}; if (h.by && typeof h.by === "object") for (const b in h.by) if (members[b] && b !== u) by[b] = +h.by[b] || 1;
     help[u] = { id: h.id.slice(0, 80), k: String(h.k || "").slice(0, 60), e: +h.e || 0, t: +h.t || 0, by }; }
-  return { id, name: String(d.name || "Alliance").slice(0, 24), tag: String(d.tag || "?").slice(0, 5).toUpperCase(), leader: typeof d.leader === "string" ? d.leader : null, members, created: +d.created || 0, fund, help, crest: clamp(okInt(d.crest), 0, 15 /* v194: was 11, which turned picks of the new emblems 12-15 back into 11 (keep equal to CREST_N) */), station: clamp(okInt(d.station), 0, STATION_MAX), open: d.open !== false, bio: String(d.bio || "").slice(0, 300), titles: (() => { const o = {}; if (d.titles && typeof d.titles === "object") for (const u in d.titles) if (members[u] && typeof d.titles[u] === "string" && d.titles[u].trim()) o[u] = d.titles[u].trim().slice(0, 24); return o; })(), wars: (() => { const o = {}; if (d.wars && typeof d.wars === "object") for (const k in d.wars) if (typeof k === "string" && k !== id && Object.keys(o).length < 8) o[k] = +d.wars[k] || 1; return o; })(), ranks: (() => { const o = {}; if (d.ranks && typeof d.ranks === "object") for (const u in d.ranks) if (members[u] && (d.ranks[u] === "cap" || d.ranks[u] === "rec")) o[u] = d.ranks[u]; return o; })(), gifts: (() => { const o = {}; if (d.gifts && typeof d.gifts === "object") for (const k in d.gifts) { const g = d.gifts[k]; if (g && typeof g === "object" && typeof g.by === "string") o[k] = { by: g.by, at: +g.at || 0, t: clamp(okInt(g.t), 0, 2), w: typeof g.w === "string" ? g.w.slice(0, 40) : "" }; } return o; })() };
+  const sos = {}; if (d.sos && typeof d.sos === "object") for (const u in d.sos) { const s = d.sos[u]; if (!members[u] || !s || typeof s !== "object" || typeof s.pid !== "string") continue; // v273: "I'm under attack"
+    sos[u] = { pid: s.pid.slice(0, 40), pn: String(s.pn || "").slice(0, 40), arrive: +s.arrive || 0, from: typeof s.from === "string" ? s.from.slice(0, 60) : "", id: String(s.id || "").slice(0, 60) }; }
+  return { id, name: String(d.name || "Alliance").slice(0, 24), tag: String(d.tag || "?").slice(0, 5).toUpperCase(), leader: typeof d.leader === "string" ? d.leader : null, members, created: +d.created || 0, fund, help, sos, crest: clamp(okInt(d.crest), 0, 15 /* v194: was 11, which turned picks of the new emblems 12-15 back into 11 (keep equal to CREST_N) */), station: clamp(okInt(d.station), 0, STATION_MAX), open: d.open !== false, bio: String(d.bio || "").slice(0, 300), titles: (() => { const o = {}; if (d.titles && typeof d.titles === "object") for (const u in d.titles) if (members[u] && typeof d.titles[u] === "string" && d.titles[u].trim()) o[u] = d.titles[u].trim().slice(0, 24); return o; })(), wars: (() => { const o = {}; if (d.wars && typeof d.wars === "object") for (const k in d.wars) if (typeof k === "string" && k !== id && Object.keys(o).length < 8) o[k] = +d.wars[k] || 1; return o; })(), ranks: (() => { const o = {}; if (d.ranks && typeof d.ranks === "object") for (const u in d.ranks) if (members[u] && (d.ranks[u] === "cap" || d.ranks[u] === "rec")) o[u] = d.ranks[u]; return o; })(), gifts: (() => { const o = {}; if (d.gifts && typeof d.gifts === "object") for (const k in d.gifts) { const g = d.gifts[k]; if (g && typeof g === "object" && typeof g.by === "string") o[k] = { by: g.by, at: +g.at || 0, t: clamp(okInt(g.t), 0, 2), w: typeof g.w === "string" ? g.w.slice(0, 40) : "" }; } return o; })() };
 }
 
 /* ---------- radar ---------- */
@@ -11219,13 +11221,15 @@ function allySection() {
    every battle and can recall them at any time. The guards live on the planet's own record (field `ag`). */
 function cleanAg(o) { if (!o || typeof o !== "object") return null; const r = {};
   for (const u of Object.keys(o).slice(0, 12)) { const v = o[u]; if (!v || typeof v !== "object") continue; const n = cleanShips(v.n); if (!Object.keys(n).length) continue;
-    r[u] = { n, t: { weapons: okInt((v.t || {}).weapons), shields: okInt((v.t || {}).shields), armor: okInt((v.t || {}).armor) }, at: +v.at || 0 }; }
+    if (+v.until && +v.until < now()) continue; // v273: a bot defender whose watch is over has gone home
+    r[u] = { n, t: { weapons: okInt((v.t || {}).weapons), shields: okInt((v.t || {}).shields), armor: okInt((v.t || {}).armor) }, at: +v.at || 0, until: +v.until || 0 }; }
   return Object.keys(r).length ? r : null; }
-const guardStacks = p => { const out = []; for (const u in p.ag || {}) out.push(...stacksOf(p.ag[u].n, p.ag[u].t || techOf(u), u)); return out; };
+const guardStacks = p => { const out = []; for (const u in p.ag || {}) { const g = p.ag[u]; if (g.until && g.until < now()) continue; out.push(...stacksOf(g.n, g.t || techOf(u), u)); } return out; };
 function guardsAfter(p, res, rep, captured) {
   if (!p.ag) return;
   for (const u of Object.keys(p.ag)) { const left = captured ? {} : cleanShips((res.dByOwn || {})[u] || {}), lost = lossesOf(p.ag[u].n, left);
     if (u === G.me) { if (sumShips(lost)) note(`Our guards on ${p.name} fought in its defense: ${fmt(sumShips(lost))} ships lost.`, "warn"); }
+    else if (isBot(u)) { if (sumShips(lost)) note(`${BOT_BY[u] ? BOT_BY[u].name : "A bot ally"} fought beside us at ${p.name}: ${fmt(sumShips(lost))} of their ships lost.`, "info"); }
     else if (sumShips(lost) || captured) sendInbox(u, Object.assign(defenseItem(rep, p, captured), { guard: true, title: `Guarding ${p.name}` }));
     if (Object.keys(left).length) p.ag[u].n = left; else delete p.ag[u]; }
   if (!Object.keys(p.ag).length) p.ag = null;
@@ -11796,6 +11800,7 @@ function allyInSub() {
 }
 function allyThreats() {
   const T = now(), out = [], seen = new Set();
+  { const a = myAlly(); for (const u in (a && a.sos) || {}) { const s = a.sos[u], p = G.byId[s.pid]; if (u === G.me || !p || p.owner !== u || s.arrive <= T || seen.has(p.id)) continue; seen.add(p.id); out.push({ u, p, arrive: s.arrive, from: s.from }); } }
   for (const u in G.allyIn || {}) for (const x of G.allyIn[u] || []) { const p = G.byId[x.pid]; if (!p || p.owner !== u || x.arrive <= T || seen.has(p.id) || x.from === G.me || (x.from && isAlly(x.from))) continue; seen.add(p.id); out.push({ u, p, arrive: x.arrive, from: x.from }); }
   return out.sort((a, b) => a.arrive - b.arrive);
 }
@@ -11812,6 +11817,36 @@ function callNew() {
     for (const a of joinable()) { if (G.seenJ.has(a.id)) continue; G.seenJ.add(a.id); if (first || a.leader === G.me) continue; const t = a.rally ? rallyTgt(a) : asTgt(a.pid);
       toast(`⚔ ${nameOf(a.leader)} opened a joint strike on ${t ? t.name : "a target"}. Tap JOIN at the bottom to send your fleet.`, "win"); }
     trayRender(); } catch (e) {}
+}
+/* v273: joint defense. An attack on one of your worlds (a player's or a bot's) brings friendly bots that can get there in time
+   (up to 2 + Command Technology, each then rests 3 hours), raises an SOS on the alliance record and posts it in alliance chat */
+const BOT_DEF_K = .4; // each bot defender brings 40% of its garrison for a world of that level
+function botDefend(p, x) {
+  const T = now(), lv = Math.max(3, p.lvl || 8), te = { drive: 2, impulse: 2, hyper: 1 }; S.botReq = S.botReq || {};
+  const cand = friendBots().filter(b => b.id !== x.from && !(S.botReq[b.id] > T) && !(p.ag && p.ag[b.id])).map(b => { const n = botGarrison(b, lv); for (const k in n) n[k] = Math.max(1, Math.round(n[k] * BOT_DEF_K)); return { b, n, tt: travelMs(botHome(b), p, n, te, 100) }; })
+    .filter(c => T + c.tt <= x.arrive - 5000).sort((a, b) => a.tt - b.tt).slice(0, Math.max(0, Math.min(maxReq(), 12 - Object.keys(p.ag || {}).length)));
+  if (!cand.length) return [];
+  p.ag = Object.assign({}, p.ag || {}); for (const c of cand) { const bt = botTech(c.b); p.ag[c.b.id] = { n: c.n, t: { weapons: bt.weapons || 0, shields: bt.shields || 0, armor: bt.armor || 0 }, at: T + c.tt, until: x.arrive + 3600e3 }; S.botReq[c.b.id] = T + BOT_REARM; }
+  putPlanet(p); const names = cand.map(c => c.b.name);
+  note(`Joint defense: ${names.join(", ")} ${names.length > 1 ? "are" : "is"} sending ships to defend ${p.name}. They'll fight beside your garrison.`, "win"); return names;
+}
+function sosPost(p, x, bots) {
+  const a = myAlly(); if (!a || !G.db || G.mode !== "online") return;
+  G.db.doc("alliances/" + a.id).update({ sos: { [G.me]: { pid: p.id, pn: p.name, arrive: x.arrive, from: x.from || "", id: x.id } } }).catch(() => {});
+  try { chatInit(); if (!CHAT.aKey) return; const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6), who = x.from ? nameOf(x.from) : "Raiders";
+    const msg = { u: G.me, x: `🛡 SOS: ${who} is attacking my world ${p.name}. It lands in ${ftime(x.arrive - now())}.${bots && bots.length ? ` ${bots.join(", ")} already on the way.` : ""} Tap DEFEND at the bottom to send guards!`.slice(0, 240), t: now() };
+    G.db.doc("chat/" + CHAT.aKey).update({ m: { [id]: msg } }).catch(() => {}); } catch (e) {}
+}
+function defWatch() {
+  if (!S || !canPlay()) return; const T = now(); S.defSeen = S.defSeen || {};
+  const list = (G.inbound || []).filter(x => x.arrive > T && x.from !== G.me && G.byId[x.pid] && G.byId[x.pid].owner === G.me).map(x => ({ id: x.id, pid: x.pid, arrive: x.arrive, from: x.from }));
+  if (S.botRaid && S.botRaid.arrive > T) list.push({ id: S.botRaid.id, pid: S.botRaid.pid, arrive: S.botRaid.arrive, from: S.botRaid.bot });
+  for (const x of list) { if (S.defSeen[x.id]) continue; S.defSeen[x.id] = x.arrive; const p = G.byId[x.pid]; if (!p || p.owner !== G.me) continue;
+    const bots = botDefend(p, x); sosPost(p, x, bots); dirty(); }
+  for (const k in S.defSeen) if (S.defSeen[k] < T - 864e5) delete S.defSeen[k];
+  // the band tells alliance members the moment a member is hit
+  G.thSeen = G.thSeen || new Set(); for (const th of allyThreats()) { const k = th.p.id + "|" + th.arrive; if (G.thSeen.has(k)) continue; const first = !defWatch.ran; G.thSeen.add(k); if (!first) { toast(`🛡 ${nameOf(th.u)}'s world ${th.p.name} is under attack! Tap DEFEND at the bottom to send guards.`, "warn"); try { SFX.alarm && SFX.alarm(); } catch (e) {} } }
+  defWatch.ran = 1;
 }
 const callKey = () => { try { return joinable().map(a => a.id).join() + "|" + allyThreats().map(x => x.p.id).join(); } catch (e) { return ""; } };
 function callBand() {
@@ -14271,7 +14306,8 @@ addEventListener("resize", () => { if (battle) battle.lay = null; startAnim(); c
 function tickUI() {
   const T = now();
   document.querySelectorAll("[data-end]").forEach(el => { el.textContent = ftime(+el.dataset.end - T); });
-  if (!tickUI.ai || T - tickUI.ai > 30000) { tickUI.ai = T; allyInSub(); } // v271: watch alliance members' incoming attacks
+  if (!tickUI.ai || T - tickUI.ai > 30000) { tickUI.ai = T; allyInSub(); }
+  if (!tickUI.dw || T - tickUI.dw > 3000) { tickUI.dw = T; try { defWatch(); } catch (e) {} } // v273: joint defense watch // v271: watch alliance members' incoming attacks
   { const ck = callKey(); if (ck !== tickUI.ck) { tickUI.ck = ck; trayRender(); } } // v271: the call-to-arms band comes and goes on its own
   if (G.mode === "connecting" && performance.now() > 12000 && !tickUI.cn && sheet) { tickUI.cn = 1; renderSheet(); } // show the Reconnect button
   // a paid finish button turns into a free one the moment its job crosses the free-finish window
