@@ -2264,7 +2264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 282;
+const GAME_V = 283;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -3436,7 +3436,7 @@ function events() {
   if (S.sq.length) { const h = S.sq[0]; ev.push({ at: h.next, run: () => {
     // every production line delivers one unit per cycle
     const grp = h.kind === "def" ? S.def : h.kind === "mis" ? S.mis : S.ships, made = Math.min(h.left, shipLines()); grp[h.k] = (grp[h.k] || 0) + made; h.left -= made; evPts("train", total(UDEF(h.k).c) * made / 1000); if (SH[h.k]) (S.mastSeen = S.mastSeen || {})[h.k] = 1;
-    S.stats = S.stats || {}; S.stats.shipsBuilt = (S.stats.shipsBuilt || 0) + made; if (freshAt(h.next)) SFX.ship();
+    S.stats = S.stats || {}; S.stats.shipsBuilt = (S.stats.shipsBuilt || 0) + made; if (freshAt(h.next)) { if (h.left > 0) SFX.ship(); else SFX.shipDone(); }
     if (h.left > 0) h.next += h.each; else { S.sq.shift(); noteJob(`${UDEF(h.k).n} ×${h.n} finished`, h.next); if (S.sq[0]) S.sq[0].next = h.next + S.sq[0].each; jobDone("s", `${UDEF(h.k).n} ×${h.n}`, h.next); }
     changed = true; } }); }
   if (G.ready) {
@@ -3447,7 +3447,7 @@ function events() {
       else if (f.phase === "back") ev.push({ at: f.back, run: () => homecoming(f) });
     }
     for (const p of myPlanets()) if (p.cq && p.kind !== "home") ev.push({ at: p.cq.e, run: () => { const { k, lvl, e } = p.cq; settle(p, e); p.b = Object.assign({}, p.b, { [k]: lvl }); p.cq = null; colStartNextB(p, e); putPlanet(p); bump("built"); evPts("build", lvl * 10); bump("colonyBuilt"); noteJob(`${p.name}: ${B[k].n} reached Lv.${lvl}`, e); if (freshAt(e)) SFX.build(); jobDone("b", `${B[k].n} Lv.${lvl}`, e, p.id); } });
-    for (const p of myPlanets()) if (p.sq && p.kind !== "home") ev.push({ at: colSqEnd(p), run: () => { const q = p.sq, e = colSqEnd(p); p.garrison = Object.assign({}, p.garrison, { [q.k]: ((p.garrison || {})[q.k] || 0) + q.n }); p.sq = null; colStartNextS(p, e); putPlanet(p); S.stats = S.stats || {}; S.stats.shipsBuilt = (S.stats.shipsBuilt || 0) + q.n; noteJob(`${p.name}: ${SH[q.k].n} ×${q.n} joined the garrison`, e); if (freshAt(e)) SFX.ship(); jobDone("s", `${SH[q.k].n} ×${q.n}`, e, p.id); } });
+    for (const p of myPlanets()) if (p.sq && p.kind !== "home") ev.push({ at: colSqEnd(p), run: () => { const q = p.sq, e = colSqEnd(p); p.garrison = Object.assign({}, p.garrison, { [q.k]: ((p.garrison || {})[q.k] || 0) + q.n }); p.sq = null; colStartNextS(p, e); putPlanet(p); S.stats = S.stats || {}; S.stats.shipsBuilt = (S.stats.shipsBuilt || 0) + q.n; noteJob(`${p.name}: ${SH[q.k].n} ×${q.n} joined the garrison`, e); if (freshAt(e)) SFX.shipDone(); jobDone("s", `${SH[q.k].n} ×${q.n}`, e, p.id); } });
   }
   if (S.nextRaid) ev.push({ at: S.nextRaid, run: () => { S.raid = { at: S.nextRaid + 120000, lvl: Math.max(1, S.maxWin - 1) }; S.nextRaid = null; note("Hostile Hive fleet detected. Impact in 2:00.", "warn"); } });
   if (S.raid) ev.push({ at: S.raid.at, run: raidHits });
@@ -10228,7 +10228,7 @@ function colTap(el, e) {
   if (C3 && C3.upFx && Object.keys(C3.upFx).length) { for (const k in C3.upFx) upFinish(C3, k); return; } // a tap skips the upgrade cinematic
   const r = el.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; let best = null, bd = 40;
   for (const h of C3.hits) { const d = Math.min(Math.hypot(h.x - x, h.y - y), Math.hypot(h.tx - x, h.ty - y)); if (d < bd) { bd = d; best = h; } }
-  C3.sel = best ? best.k : null; selBar(); SFX.click();
+  C3.sel = best ? best.k : null; selBar(); if (best && B[best.k]) SFX.tapB(best.k); else SFX.click();
   // v244 tapping a building opens its card (upgrade, cost, requirements); the shipyard and research center cards lead on to ships and research
   if (best && B[best.k]) { const bt = baseTarget(); openSheet({ type: "detail", kind: "b", k: best.k, qty: 1, tab: 0, pid: bt.key === "home" ? null : bt.key }); }
 }
@@ -13023,13 +13023,23 @@ const SFX = {
   fanfare(win) { if (!SFX.ok()) return; const c = AU.ctx, t = c.currentTime, ns = win ? [60, 64, 67, 72, 76] : [64, 60, 57, 53];
     ns.forEach((m, i) => { const o = c.createOscillator(); o.type = "triangle"; o.frequency.value = 440 * Math.pow(2, (m - 69) / 12); SFX.env(o, t + i * .16, .12, win ? .9 : 1.1); o.start(t + i * .16); o.stop(t + i * .16 + 1.2); }); },
   click() { if (!SFX.ok()) return; const c = AU.ctx, t = c.currentTime, o = c.createOscillator(); o.type = "sine"; o.frequency.setValueAtTime(1800, t); o.frequency.exponentialRampToValueAtTime(900, t + .04); SFX.env(o, t, .035, .05); o.start(t); o.stop(t + .06); },
+  /* v283 tapping a building: a solid switch thunk, a tick and a short rising chirp, pitched per building, loud enough to hear over the music (the old tick peaked at .035) */
+  tapB(k) { if (!SFX.ok() || SFX.busy("tapB", .08)) return; const c = AU.ctx, t = c.currentTime, f0 = [196, 220, 247, 262, 294, 330][hash(String(k)) % 6];
+    { const o = c.createOscillator(); o.type = "triangle"; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * .5, t + .09); SFX.env(o, t, .3, .11); o.start(t); o.stop(t + .13); }
+    { const n = noiseSrc(), f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 2600; f.Q.value = 2; n.connect(f); SFX.env(f, t, .16, .04); n.start(t); n.stop(t + .06); }
+    { const o = c.createOscillator(), tt = t + .035; o.type = "sine"; o.frequency.setValueAtTime(f0 * 4, tt); o.frequency.exponentialRampToValueAtTime(f0 * 6, tt + .08); SFX.env(o, tt, .11, .12); o.start(tt); o.stop(tt + .14); } },
+  /* v283 a whole ship or defense order finished: engines swell, a two-note horn, then a bright major chord */
+  shipDone() { if (!SFX.ok() || SFX.busy("shipDone", 1.2)) return; const c = AU.ctx, t = c.currentTime, mt = m => 440 * Math.pow(2, (m - 69) / 12);
+    { const n = noiseSrc(), f = c.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 1.2; f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(2800, t + .55); n.connect(f); SFX.env(f, t, .24, .7); n.start(t); n.stop(t + .75); }
+    [[55, .05], [62, .24]].forEach(([m, d]) => { const o = c.createOscillator(), l = c.createBiquadFilter(); o.type = "sawtooth"; o.frequency.value = mt(m); l.type = "lowpass"; l.frequency.value = 1100; o.connect(l); SFX.env(l, t + d, .17, .34); o.start(t + d); o.stop(t + d + .38); });
+    [67, 71, 74, 79].forEach((m, i) => { const o = c.createOscillator(), tt = t + .5 + i * .03; o.type = "triangle"; o.frequency.value = mt(m); SFX.env(o, tt, .13, .95); o.start(tt); o.stop(tt + 1); }); },
   // construction finished: a heavy metal clank, a quick run of rivet hits, then a bright two-note "done" chime
   build() { if (!SFX.ok() || SFX.busy("build", 1.2)) return; const c = AU.ctx, t = c.currentTime;
-    const n = noiseSrc(), f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 900; f.Q.value = 3; n.connect(f); SFX.env(f, t, .22, .18); n.start(t); n.stop(t + .2);
-    const k = c.createOscillator(); k.type = "square"; k.frequency.setValueAtTime(140, t); k.frequency.exponentialRampToValueAtTime(60, t + .14); SFX.env(k, t, .1, .16); k.start(t); k.stop(t + .18);
-    for (let i = 0; i < 3; i++) { const tt = t + .16 + i * .07, r = c.createOscillator(); r.type = "triangle"; r.frequency.value = 2400 - i * 300; SFX.env(r, tt, .045, .05); r.start(tt); r.stop(tt + .06); }
+    const n = noiseSrc(), f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 900; f.Q.value = 3; n.connect(f); SFX.env(f, t, .34, .18); n.start(t); n.stop(t + .2);
+    const k = c.createOscillator(); k.type = "square"; k.frequency.setValueAtTime(140, t); k.frequency.exponentialRampToValueAtTime(60, t + .14); SFX.env(k, t, .17, .16); k.start(t); k.stop(t + .18);
+    for (let i = 0; i < 3; i++) { const tt = t + .16 + i * .07, r = c.createOscillator(); r.type = "triangle"; r.frequency.value = 2400 - i * 300; SFX.env(r, tt, .08, .05); r.start(tt); r.stop(tt + .06); }
     [[72, .42], [79, .56]].forEach(([m, d]) => { const o = c.createOscillator(), o2 = c.createOscillator(); o.type = "triangle"; o2.type = "sine"; o.frequency.value = 440 * Math.pow(2, (m - 69) / 12); o2.frequency.value = o.frequency.value * 2.01;
-      SFX.env(o, t + d, .12, .9); SFX.env(o2, t + d, .04, .6); o.start(t + d); o2.start(t + d); o.stop(t + d + 1); o2.stop(t + d + .7); }); },
+      SFX.env(o, t + d, .21, .9); SFX.env(o2, t + d, .07, .6); o.start(t + d); o2.start(t + d); o.stop(t + d + 1); o2.stop(t + d + .7); }); },
   // ship launched from the shipyard: engines spool up into a rising whoosh, with a low thrust rumble and a short launch horn
   ship() { if (!SFX.ok() || SFX.busy("ship", 1.4)) return; const c = AU.ctx, t = c.currentTime;
     const n = noiseSrc(), f = c.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 1.4; f.frequency.setValueAtTime(260, t); f.frequency.exponentialRampToValueAtTime(3200, t + .9); n.connect(f); SFX.env(f, t, .16, 1.05); n.start(t); n.stop(t + 1.1);
@@ -13038,8 +13048,8 @@ const SFX = {
   // research complete: a sparkling ascending arpeggio of bell tones over a soft chord, like a discovery
   research() { if (!SFX.ok() || SFX.busy("research", 1.5)) return; const c = AU.ctx, t = c.currentTime, mt = m => 440 * Math.pow(2, (m - 69) / 12);
     [76, 79, 83, 86, 88, 91].forEach((m, i) => { const tt = t + i * .085, o = c.createOscillator(), o2 = c.createOscillator(); o.type = "sine"; o2.type = "sine"; o.frequency.value = mt(m); o2.frequency.value = mt(m) * 2.76;
-      SFX.env(o, tt, .07, 1.1); SFX.env(o2, tt, .018, .4); o.start(tt); o2.start(tt); o.stop(tt + 1.2); o2.stop(tt + .5); });
-    [64, 67, 71].forEach(m => { const o = c.createOscillator(); o.type = "triangle"; o.frequency.value = mt(m); SFX.env(o, t + .05, .045, 1.6); o.start(t + .05); o.stop(t + 1.7); }); },
+      SFX.env(o, tt, .17, 1.1); SFX.env(o2, tt, .045, .4); o.start(tt); o2.start(tt); o.stop(tt + 1.2); o2.stop(tt + .5); });
+    [64, 67, 71].forEach(m => { const o = c.createOscillator(); o.type = "triangle"; o.frequency.value = mt(m); SFX.env(o, t + .05, .1, 1.6); o.start(t + .05); o.stop(t + 1.7); }); },
   busy(k, gap) { const t = AU.ctx.currentTime; SFX.last = SFX.last || {}; if (t - (SFX.last[k] || -9) < gap) return true; SFX.last[k] = t; return false; },
   /* ---------- battle sound engine (v54): a compressed battle bus with a generated reverb tail, stereo placement from the screen
      position, and layered synth voices for laser rails, the mega beam, missile swarms, explosions and shield hits ---------- */
@@ -15076,7 +15086,7 @@ const ACT = {
   basedet: () => openSheet({ type: "basedet" }),
   selClear: () => { if (C3) C3.sel = null; selBar(); },
   bldPreview: d => bldPreview(d.k), // v101
-  bldInfo: d => { const bt = baseTarget(); openSheet({ type: "bld", k: d.k, pid: bt.key === "home" ? null : bt.key }); },
+  bldInfo: d => { SFX.tapB(d.k); const bt = baseTarget(); openSheet({ type: "bld", k: d.k, pid: bt.key === "home" ? null : bt.key }); },
   sound: () => { if (!AU.started) audioStart(); AU.muted = !AU.muted; applyAudio(); saveAudioPrefs(); hud(); if (sheet) renderSheet(); },
   musicToggle: () => { if (!AU.started) audioStart(); AU.musicOn = !AU.musicOn; applyAudio(); saveAudioPrefs(); render(true); },
   sfxToggle: () => { if (!AU.started) audioStart(); AU.sfxOn = !AU.sfxOn; applyAudio(); saveAudioPrefs(); render(true); },
@@ -15174,7 +15184,7 @@ const ACT = {
     const T = now(), q = d.q; let rem = 0, apply = null;
     if (q === "b" && S.bq) { rem = S.bq.e - T; apply = () => { S.bq.e = T; }; }
     else if (q === "r" && S.rq) { rem = S.rq.e - T; apply = () => { S.rq.e = T; }; }
-    else if (q === "s" && S.sq[0]) { const h = S.sq[0]; rem = sqEnd(h) - T; apply = () => { const grp = h.kind === "def" ? S.def : h.kind === "mis" ? S.mis : S.ships; grp[h.k] = (grp[h.k] || 0) + h.left; bump("shipsBuilt"); S.sq.shift(); if (S.sq[0]) S.sq[0].next = T + S.sq[0].each; note(`${UDEF(h.k).n} ×${h.n} finished`); }; }
+    else if (q === "s" && S.sq[0]) { const h = S.sq[0]; rem = sqEnd(h) - T; apply = () => { const grp = h.kind === "def" ? S.def : h.kind === "mis" ? S.mis : S.ships; grp[h.k] = (grp[h.k] || 0) + h.left; bump("shipsBuilt"); S.sq.shift(); if (S.sq[0]) S.sq[0].next = T + S.sq[0].each; note(`${UDEF(h.k).n} ×${h.n} finished`); SFX.shipDone(); }; }
     else if (q.startsWith("cb:")) { const p = G.byId[q.slice(3)]; if (p && p.cq) { rem = p.cq.e - T; apply = () => { p.cq.e = T; }; } }
     else if (q.startsWith("cs:")) { const p = G.byId[q.slice(3)]; if (p && p.sq) { rem = colSqEnd(p) - T; apply = () => { p.sq.start = T - Math.ceil(p.sq.n / colLines(p)) * p.sq.each; }; } }
     if (!apply || rem <= 0) return;
@@ -15463,7 +15473,7 @@ const ACT = {
   openShop: () => openSheet({ type: "shop", cat: "boost" }),
   openShop2: d => openSheet({ type: "shop", cat: d.v || "boost" }),
   spyOpen: d => openSheet({ type: "spyrep", id: d.id }),
-  detail: d => openSheet({ type: "detail", kind: d.kind, k: d.k, qty: 1, tab: 0, pid: d.pid || null }),
+  detail: d => { if (d.kind === "b") SFX.tapB(d.k); openSheet({ type: "detail", kind: d.kind, k: d.k, qty: 1, tab: 0, pid: d.pid || null }); },
   bcat: d => { sub.bcat = d.v; sub.build = "bld"; view = "build"; render(true); },
   rcat: d => { sub.rcat = d.v || null; render(); $("#view").scrollTop = 0; },
   ffrom: d => { sub.ffrom = d.v === "all" ? null : d.v; render(); },
