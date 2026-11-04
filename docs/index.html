@@ -2264,7 +2264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 279;
+const GAME_V = 280;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -2324,17 +2324,32 @@ const BOT_TERR = (() => {
   }
   return out;
 })();
-/* bots grow over time: more colonies every few days, stronger garrisons, better tech */
-function botColonyIds(b) { const n = clamp(2 + Math.floor(b.tier / 3) + Math.floor(botDays() / 3), 2, 6); return BOT_TERR[b.id].slice(0, n); }
-function botTech(b) { const d = botDays(), t = Math.min(16, Math.floor(b.tier / 2 + d / 4)); return { weapons: t, shields: Math.max(0, t - 1), armor: t }; }
-function botGarrison(b, lvl) {
-  const s = (1 + botDays() * .06) * (.6 + b.tier * .25) * (1 + lvl * .1), o = { fighter: Math.round(20 * s), hauler: Math.round(3 * s) };
-  if (b.tier >= 2) o.lancer = Math.round(6 * s); if (b.tier >= 3) o.heavyFighter = Math.round(5 * s); if (b.tier >= 4) o.corvette = Math.round(2 * s); if (b.tier >= 7) o.battleship = Math.round(.6 * s); if (b.tier >= 8) o.destroyer = Math.round(.25 * s); if (b.tier >= 9) o.bastion = Math.round(.3 * s);
-  for (const k in o) if (!o[k]) delete o[k]; return o;
-}
+/* v280 bots play like people. Each bot is a simulated commander with its own pace, start date and off days; all of it comes from its id and the clock, so every
+   device agrees. Score follows a real player's curve: cubic while the economy compounds (calibrated on an active human: about 300,000 at day 17), then gentler
+   after day 30. Everything else follows from score the way it does for a player: spending = score x 1,000, about 30% of it in ships, research doubling in cost
+   per level. Stronger layers hold more serious players; the Rim holds casuals, recent arrivals and a few who stopped playing. */
+const BOT_C = 300000 / Math.pow(16.7, 3), BOT_PF = {};
+const botCurve = e => 20 + (e <= 30 ? BOT_C * e * e * e : BOT_C * 27000 * Math.pow(e / 30, 2.2));
+function botProf(b) { let p = BOT_PF[b.id]; if (p) return p; const h = hash(b.id + ":prof"), u = n => ((Math.imul(h ^ Math.imul(n, 2654435761), 2246822519) >>> 0) % 10000) / 10000, t = b.tier, r = u(1);
+  const serious = t >= 8 ? .85 : t >= 5 ? .6 : .45, quits = t >= 8 ? 0 : t >= 5 ? .12 : .2, late = t <= 2 ? .35 : t <= 4 ? .2 : t <= 6 ? .08 : 0;
+  return (BOT_PF[b.id] = p = { h, m: (.25 + .075 * t) * (.8 + .32 * u(2)) * (r < serious ? 1 : .55), quit: r >= 1 - quits ? 2 + u(3) * 14 : Infinity, join: u(4) < late ? Math.floor(u(5) * 90) : 0, eD: null, e: 0, k: -1, pw: null }); }
+function botDayW(p, d) { const x = (Math.imul(p.h ^ Math.imul(d + 1, 40503), 2654435761) >>> 0) % 1000 / 1000; return x < .12 ? 0 : .55 + x; } // about one day in eight off; busy days and slow days
+function botAge(b, T) { const p = botProf(b), days = Math.max(0, (T - BOT_EPOCH) / 864e5), D = Math.floor(days); if (p.eD == null) p.eD = p.join;
+  for (; p.eD < D; p.eD++) p.e += botDayW(p, p.eD); return Math.min(p.quit, (p.e + (D >= p.join ? (days - D) * botDayW(p, D) : 0)) * p.m); }
+function botPow(b) { const p = botProf(b), T = Date.now(), k = Math.floor(T / 60000); if (p.k === k && p.pw) return p.pw; const s = botCurve(botAge(b, T)); p.k = k; return (p.pw = { s, L: clamp(Math.log2(s / 180), 0, 20) }); }
+function botColonyIds(b) { return BOT_TERR[b.id].slice(0, clamp(2 + Math.floor(botPow(b).L / 2.5), 2, 6)); }
+function botTech(b) { const t = Math.floor(botPow(b).L); return { weapons: t, shields: Math.max(0, t - 1), armor: t }; }
+const botEsp = b => Math.floor(botPow(b).L * .55);
+const BOT_MIX = [[0, "fighter", 20], [0, "hauler", 6], [3, "heavyFighter", 16], [4, "lancer", 10], [5, "corvette", 16], [7, "battleship", 16], [9, "bomber", 6], [10, "bastion", 14], [11, "destroyer", 8], [13, "dreadnought", 6]];
+function botFleet(b, V) { const L = botPow(b).L, use = BOT_MIX.filter(x => L >= x[0]), W = use.reduce((a, x) => a + x[2], 0), o = {}; for (const [, k, w] of use) { const n = Math.round(V * w / W / total(SH[k].c)); if (n > 0) o[k] = n; } if (!sumN(o)) o.fighter = 1; return o; }
+/* 30% of spending is ships: 45% of them at home, the rest shared over the colonies, more on higher-level worlds */
+const botGarrison = (b, lvl) => botFleet(b, Math.max(120000, botPow(b).s * 300 * .55 / botColonyIds(b).length * (1 + lvl * .1) / 1.5));
+const botHomeFleet = b => botFleet(b, Math.max(120000, botPow(b).s * 300 * .45));
+function botBase(b, home) { const L = botPow(b).L + (home ? 2 : 0), m = Math.max(2, Math.round(L * 2)); return { metalMine: m, crystalMine: Math.max(1, m - 1), gasSynth: Math.max(1, Math.round(m * .6)), solar: m + 1, metalStore: Math.max(1, Math.round(L / 2)), crystalStore: Math.max(1, Math.round(L / 2)), gasTank: Math.max(1, Math.round(L / 3)), shipyard: Math.max(1, Math.round(L / 2)), radar: Math.max(1, Math.round(L / 3)), fortress: L >= 6 ? Math.round(L / 4) : 0 }; }
 /* allied strikes: call pact bots into an attack; their ships fight beside yours, then they need time to rearm */
 const BOT_REARM = 3 * 3600e3;
-const botStrike = (b, lvl) => { const n = botGarrison(b, Math.max(1, lvl)); for (const k in n) n[k] = Math.max(1, Math.round(n[k] * .6)); return n; };
+const BOT_STRIKE_K = .25; // v280: what a bot sends to someone else's fight, now that garrisons follow a player's curve
+const botStrike = (b, lvl) => { const n = botGarrison(b, Math.max(1, lvl)); for (const k in n) n[k] = Math.max(1, Math.round(n[k] * BOT_STRIKE_K)); return n; };
 const maxReq = () => 2 + ((S && S.r.command) || 0);
 function allyStacks(ids, lvl) { const out = []; for (const id of ids || []) { const b = BOT_BY[id]; if (b) out.push(...stacksOf(botStrike(b, lvl), botTech(b), b.id)); } return out; }
 function nearAllies(target) { const T = now(), q = pos(target, T); return friendBots().map(b => { const h = pos(botHome(b), T); return [b, Math.hypot(h.x - q.x, h.y - q.y)]; }).sort((a, b) => a[1] - b[1]).slice(0, 6).map(x => x[0]); }
@@ -2365,7 +2380,7 @@ function botRecords(T) { const k = Math.floor(T / 60000); if (BOTREC.k === k) re
   for (let ee = e - 7; ee <= e; ee++) for (const x of botWars(ee)) { if (x.at > T) continue; const A = m[x.a] || (m[x.a] = { w: 0, l: 0 }), D = m[x.d] || (m[x.d] = { w: 0, l: 0 }); if (x.win) { A.w++; D.l++; } else { A.l++; D.w++; } }
   BOTREC = { k, m }; return m; }
 const botRecord = b => botRecords(now())[b.id] || { w: 0, l: 0 };
-function botScore(b) { const r = botRecord(b); return Math.round((200 + b.tier * 180) * (1 + botDays() * .12) * clamp(1 + .05 * (r.w - r.l), .6, 1.8)); }
+function botScore(b) { const r = botRecord(b); return Math.round(botPow(b).s * clamp(1 + .02 * (r.w - r.l), .85, 1.2)); }
 function allCommanders() { return Object.entries(G.players).concat(BOTS.map(b => [b.id, { score: botScore(b), planets: botColonyIds(b).length + 1, bot: true }])); }
 const BOT_HOMES = {};
 /* bot homeworlds sit evenly on two rings; same-ring worlds share an orbital period, so the spacing never drifts */
@@ -2740,12 +2755,12 @@ function botDocs() {
       const d = G.docs[id];
       if (d && d.owner && d.owner !== b.id) continue;          // a commander took it
       if (d && T - (d.w || 0) < BOT_REGROW) continue;           // recently fought over: real state stands
-      const lvl = GENB[id].lvl, k = (.5 + b.tier * .1) * (1 + lvl * .3), cap = caps.get(id), holder = cap && BOT_BY[cap] ? BOT_BY[cap] : b;
+      const lvl = GENB[id].lvl, k = (.5 + b.tier * .1) * (1 + lvl * .3), stk = botPow(b).s * 10 /* 1% of what it has spent */, cap = caps.get(id), holder = cap && BOT_BY[cap] ? BOT_BY[cap] : b;
       // a world taken in a bot war flies its captor's flag, with a battered occupation garrison
       const gar = botGarrison(holder, lvl); if (holder !== b) for (const u in gar) gar[u] = Math.max(1, Math.round(gar[u] * .55));
       out[id] = { id, owner: holder.id, bot: true, garrison: gar, cq: null, sq: null, hiveDown: 0, shieldUntil: 0, capturedAt: BOT_EPOCH, w: 0,
-        b: { metalMine: 3 + b.tier, crystalMine: 2 + b.tier, gasSynth: 1 + (b.tier >> 1), solar: 4 + b.tier, metalStore: 2, crystalStore: 1, gasTank: 1, shipyard: 1 + ((b.tier / 3) | 0), radar: 1, fortress: b.tier >= 6 ? (b.tier / 3) | 0 : 0 },
-        st: { m: 4000 * k, c: 2500 * k, g: 900 * k, t: T } };
+        b: botBase(b),
+        st: { m: Math.max(4000 * k, stk * .55), c: Math.max(2500 * k, stk * .3), g: Math.max(900 * k, stk * .15), t: T } };
     }
   }
   return out;
@@ -6258,7 +6273,7 @@ function mvVisible(T) {
   for (const uid in G.players) { if (uid === G.me) continue; const mv = G.players[uid].mv; if (mv && mv.length) for (const m of mv) add(uid, m); }
   const e = botWarEpoch(T);
   for (const ee of [e - 1, e]) for (const w of botWars(ee)) { if (w.at - 50 * 60000 > T || w.at + 40 * 60000 < T) continue; const b = BOT_BY[w.a], hb = b ? botHome(b) : null; if (!hb) continue; const hq = P3(hb, w.at - 50 * 60000);
-    add(w.a, { t: w.tgt, h: hb.id, ox: hq.x, oy: hq.z, out: w.at - 50 * 60000, arrive: w.at, gend: 0, back: w.at + 40 * 60000, n: Math.round(30 + b.tier * 45), m: "w", win: w.win }); }
+    add(w.a, { t: w.tgt, h: hb.id, ox: hq.x, oy: hq.z, out: w.at - 50 * 60000, arrive: w.at, gend: 0, back: w.at + 40 * 60000, n: Math.max(10, sumN(botStrike(b, 5))), m: "w", win: w.win }); }
   out.sort((a, b) => a.d - b.d); return out.slice(0, MOBILE ? 60 : 120);
 }
 /* fleets on the map: a small formation of real hull shapes; more ships and bigger hulls as the fleet grows */
@@ -11259,10 +11274,10 @@ function nexusRules() {
 /* the bot pact: every bot commander is allied with you */
 function pactCard() { return ""; /* v218: the Void Concord pact is disbanded */
   if (BOT_HOSTILE) return ""; const T = now(), FB = friendBots(), nH = BOTS.length - FB.length, ready = FB.filter(b => !(((S.botReq || {})[b.id] || 0) > T)).length;
-  const top = FB.slice().sort((a, b) => b.tier - a.tier || botScore(b) - botScore(a)).slice(0, 6);
+  const top = FB.slice().sort((a, b) => botScore(b) - botScore(a)).slice(0, 6);
   return `<div class="mcard"><h3><span style="color:#5fe0c0">◆</span>Void Concord · bot pact</h3><p>Your ${FB.length} nearest bot commanders are your allies. They never raid you, their worlds show teal on the map, and you can call them into any strike from the attack screen.</p><p style="color:#ff8a7a">The other ${fmt(nH)} bots are hostile to everyone: they raid your colonies, their worlds show red on the map, and you can attack them.</p>
     ${mrow("Allies ready for a strike", `${ready} / ${FB.length}`)}${mrow("Hostile bots", `<span style="color:#ff8a7a">${fmt(nH)}</span>`)}${mrow("Allies per strike", maxReq())}${mrow("Pact age", ftime(Math.max(0, T - BOT_EPOCH)))}
-    <div class="board">${top.map((b, i) => `<span class="rk">${i + 1}</span><span class="nm"><i class="sw" style="background:#5fe0c0"></i>${esc(b.name)}</span><span class="v">str ${b.tier}</span><span class="v">${fmt(botScore(b))}</span>`).join("")}</div></div>`;
+    <div class="board">${top.map((b, i) => `<span class="rk">${i + 1}</span><span class="nm"><i class="sw" style="background:#5fe0c0"></i>${esc(b.name)}</span><span class="v">Lv.${cmdLevel(botScore(b))}</span><span class="v">${fmt(botScore(b))}</span>`).join("")}</div></div>`;
 }
 function allySection() {
   if (!canPlay()) return `<p class="note" style="font-size:15px">Alliances need a galaxy you can play in.</p>`;
@@ -11895,7 +11910,7 @@ function callNew() {
 }
 /* v273: joint defense. An attack on one of your worlds (a player's or a bot's) brings friendly bots that can get there in time
    (up to 2 + Command Technology, each then rests 3 hours), raises an SOS on the alliance record and posts it in alliance chat */
-const BOT_DEF_K = .4; // each bot defender brings 40% of its garrison for a world of that level
+const BOT_DEF_K = .15; // v280: each bot defender brings 15% of its garrison (it was 40% when garrisons were far smaller) for a world of that level
 function botDefend(p, x) {
   const T = now(), lv = Math.max(3, p.lvl || 8), te = { drive: 2, impulse: 2, hyper: 1 }; S.botReq = S.botReq || {};
   const cand = friendBots().filter(b => b.id !== x.from && !(S.botReq[b.id] > T) && !(p.ag && p.ag[b.id])).map(b => { const n = botGarrison(b, lv); for (const k in n) n[k] = Math.max(1, Math.round(n[k] * BOT_DEF_K)); return { b, n, tt: travelMs(botHome(b), p, n, te, 100) }; })
@@ -12225,7 +12240,7 @@ function strikeReqSection(target, lvl) { return ""; /* v218: no pact bots to cal
    are ahead, minus it when you are behind. Resources always show; fleet needs 2, defenses 3, buildings 5, research 7. */
 const SPY_T = { fleet: 2, def: 3, b: 5, rs: 7 };
 const spyDiffK = d => Math.sign(d) * d * d;
-const spyTheirE = p => p.owner ? (isBot(p.owner) ? Math.floor(BOT_BY[p.owner].tier / 2) : okInt(((G.players[p.owner] || {}).tech || {}).esp)) : Math.floor((p.lvl || 0) / 3);
+const spyTheirE = p => p.owner ? (isBot(p.owner) ? botEsp(BOT_BY[p.owner]) : okInt(((G.players[p.owner] || {}).tech || {}).esp)) : Math.floor((p.lvl || 0) / 3);
 const spyNeed = (thr, d) => Math.max(1, thr - spyDiffK(d));
 const spySum = s => `${s.res ? fmt(total(s.res)) + " resources · " : ""}${s.v === 2 ? (s.fleet ? fmt(sumN(s.fleet)) + (s.alien ? " Hive" : " ships") : "fleet hidden") : s.units ? fmt(sumN(s.units)) + " units" : "fleet hidden"}${s.lost ? " · probes lost" : ""}`;
 /* what you know about a world's defenders: your newest report that saw both its fleet and defenses (the Academy's training Hive is known) */
@@ -12262,7 +12277,7 @@ function makeSpyRep(p, probes, at) {
   const st = pStatus(p), pl = p.owner && !isBot(p.owner) ? G.players[p.owner] : null, iv = pl && pl.iv, bot = p.owner && isBot(p.owner) ? BOT_BY[p.owner] : null, split = n => { const a = {}, b = {}; for (const k in n) if (k !== "fortress" && n[k] > 0) (DF[k] ? b : a)[k] = n[k]; return [a, b]; }, flr = o => o ? { m: Math.floor(o.m || 0), c: Math.floor(o.c || 0), g: Math.floor(o.g || 0) } : null;
   let fleet = {}, def = {}, res = null, b = p.b || {}, fortL = (p.b || {}).fortress || 0, noData = false, alien = false;
   if (p.kind === "home" && pl) { if (iv) { res = iv.res; fleet = iv.s; def = iv.d; b = iv.b; fortL = iv.b.fortress || 0; } else noData = true; }
-  else if (p.kind === "home" && bot) { [fleet, def] = split(botStrike(bot, p.lvl || bot.tier)); res = flr(stock(p.lvl || 1)); }
+  else if (p.kind === "home" && bot) { [fleet, def] = split(botHomeFleet(bot)); b = botBase(bot, true); fortL = b.fortress || 0; const st0 = botPow(bot).s * 30; res = flr({ m: st0 * .55, c: st0 * .3, g: st0 * .15 }); }
   else { const D = defenders(p); [fleet, def] = split(D.n); fortL = D.fortL || 0; alien = !!D.alien; res = st === "hive" ? flr(stock(p.lvl)) : p.owner ? flr(colStock(p)) : null; }
   const mineE = S.r.espionage || 0, theirE = spyTheirE(p), L = probes + spyDiffK(mineE - theirE);
   const t = p.owner ? techOf(p.owner) : { weapons: Math.floor(p.lvl / 3), shields: Math.floor(p.lvl / 3), armor: Math.floor(p.lvl / 3) };
@@ -12270,7 +12285,7 @@ function makeSpyRep(p, probes, at) {
   const rep = { v: 2, id: "sp" + (S.seq++), at, pid: p.id, name: p.name, owner: p.owner || null, lvl: p.lvl, type: p.type, st, mineE, theirE, probes, L, chance, lost, home: p.kind === "home", noData, asOf: p.kind === "home" && iv ? iv.t : 0, res, alien,
     fleet: L >= SPY_T.fleet ? fleet : null, def: L >= SPY_T.def ? def : null, fortL: L >= SPY_T.def ? fortL : null, b: L >= SPY_T.b ? Object.assign({}, b) : null,
     tech: L >= SPY_T.rs ? { weapons: Math.round(t.weapons || 0), shields: Math.round(t.shields || 0), armor: Math.round(t.armor || 0) } : null, rs: L >= SPY_T.rs && iv ? iv.r : null, shield: p.shieldUntil > at ? p.shieldUntil : 0,
-    cmd: L >= SPY_T.rs ? (pl ? { score: pl.score || 0, planets: pl.planets || 1, lvl: pl.lvl || 1 } : bot ? { bot: bot.tier } : null) : null, sim: null };
+    cmd: L >= SPY_T.rs ? (pl ? { score: pl.score || 0, planets: pl.planets || 1, lvl: pl.lvl || 1 } : bot ? { score: botScore(bot), planets: botColonyIds(bot).length + 1, lvl: cmdLevel(botScore(bot)) } : null) : null, sim: null };
   if (L >= SPY_T.def) try { const mine = Object.fromEntries(Object.entries(S.ships).filter(([k, v]) => v > 0 && SH[k] && k !== "spyProbe")), D = repStacks(rep); if (Object.keys(mine).length && D.stacks.length) { const x = simulate(stacksOf(mine, techOf(null), G.me), D.stacks, { quick: true, seed: hash(p.id) % 997 }); rep.sim = { w: x.winner, la: lossesOf(x.start.a, x.aLeft), ld: lossesOf(x.start.d, x.dLeft) }; } } catch (e) {}
   return rep;
 }
@@ -14688,7 +14703,7 @@ function avPhotoPick() {
   inp.click();
 }
 function shProfile() {
-  const uid = sheet.u || G.me, me = uid === G.me, bot = isBot(uid) && BOT_BY[uid], P = me ? myPub() : bot ? { score: botScore(bot), planets: botColonyIds(bot).length + 1, lvl: cmdLevel(botScore(bot)), fac: "terran", bio: `${botFriend(uid) ? "A bot commander in your alliance" : BOT_RAIDS ? "A hostile bot commander" : "A rival bot commander, at war with the other bots"}, strength tier ${bot.tier}.`, rec: { w: 0, l: 0, d: 0 }, last: now() } : G.players[uid];
+  const uid = sheet.u || G.me, me = uid === G.me, bot = isBot(uid) && BOT_BY[uid], P = me ? myPub() : bot ? { score: botScore(bot), planets: botColonyIds(bot).length + 1, lvl: cmdLevel(botScore(bot)), fac: "terran", bio: `${botFriend(uid) ? "A bot commander in your alliance" : BOT_RAIDS ? "A hostile bot commander" : "A rival bot commander, at war with the other bots"}.`, rec: { w: 0, l: 0, d: 0 }, last: now() } : G.players[uid];
   if (!P) return `<div class="hd"><div><h2>Unknown commander</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
   const nm = me ? G.myName || "You" : nameOf(uid), lvl = P.lvl || cmdLevel(P.score || 0), rec = P.rec || { w: 0, l: 0, d: 0 }, F = FACTIONS[P.fac] || FACTIONS.terran, friend = (S.friends || []).includes(uid), blocked = (S.blocked || []).includes(uid);
   const rk = boardRows("players").findIndex(r => r.id === uid) + 1, rp = boardRows("pvp").findIndex(r => r.id === uid) + 1, tot = rec.w + rec.l + rec.d;
