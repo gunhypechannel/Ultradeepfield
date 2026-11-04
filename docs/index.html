@@ -669,6 +669,15 @@ canvas.dthumb{display:block}
 /* global chat banner, right above the bottom menu */
 .cubeband{display:flex;align-items:center;gap:8px;width:100%;padding:5px 12px;border:0;border-top:1px solid #1f6a2a;background:linear-gradient(90deg,rgba(93,255,106,.16),rgba(6,20,10,.92) 55%);color:#c8ffd0;font-size:12px;text-align:left;cursor:pointer}
 .cubeband b{font-family:var(--f-display);letter-spacing:.1em;color:#7dff86;font-size:11.5px}.cubeband span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;color:#a8e8b0}.cubeband i{font-style:normal;color:#fff}.cubeband .cbq{flex:none;color:#5dff6a;text-shadow:0 0 8px #5dff6a;text-align:left}
+.callband{display:flex;align-items:center;gap:8px;width:100%;padding:5px 6px 5px 12px;border-top:1px solid #6a4a1f;background:linear-gradient(90deg,rgba(255,170,60,.22),rgba(24,14,4,.92) 60%);color:#ffe2b8;font-size:12px}
+.callband.def{border-top-color:#1f4f6a;background:linear-gradient(90deg,rgba(80,180,255,.24),rgba(4,14,24,.92) 60%);color:#cfe9ff}
+.callband .cbt{flex:1;min-width:0;border:0;background:none;color:inherit;font:inherit;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;padding:0}
+.callband .cbt b{font-family:var(--f-display);letter-spacing:.06em;color:#ffb347}.callband.def .cbt b{color:#7cc8ff}.callband i{font-style:normal;color:#fff}
+.callband .cbgo{flex:none;border:0;border-radius:6px;padding:6px 12px;font-family:var(--f-display);font-weight:700;letter-spacing:.06em;font-size:12px;background:linear-gradient(#ffb347,#e07b1a);color:#1a0d00;cursor:pointer;animation:callPulse 1.6s ease-in-out infinite}
+@keyframes callPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,179,71,.0)}50%{box-shadow:0 0 12px 2px rgba(255,179,71,.65)}}
+.callband.def .cbgo{background:linear-gradient(#7cc8ff,#2a8ae0);color:#001426}
+.callband .cbn{flex:none;color:#fff;opacity:.7;font-size:11px}
+.callband .cbtm{flex:none;font-variant-numeric:tabular-nums;color:#fff;font-weight:600}
 .cubeband.live{animation:cubePulse 2.2s ease-in-out infinite}@keyframes cubePulse{50%{background:linear-gradient(90deg,rgba(93,255,106,.3),rgba(6,20,10,.92) 60%)}}
 #authw{position:fixed;inset:0;z-index:99990;display:grid;place-items:end center;padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 4vh);overflow:auto;background:linear-gradient(180deg,transparent 55%,rgba(2,6,12,.85)),url(art/login.webp) center top/cover,#02060c} /* v263 the title art behind the device login too */
 .authbox{width:100%;max-width:380px;display:grid;gap:10px;padding:18px;margin-top:38vh;border-radius:24px;background:linear-gradient(180deg,rgba(10,30,52,.55),rgba(3,12,24,.82));border:1px solid rgba(110,200,255,.42);box-shadow:0 0 34px rgba(40,140,255,.28),inset 0 1px 0 rgba(255,255,255,.12);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#eef3f6}
@@ -2242,7 +2251,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 270;
+const GAME_V = 271;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -3773,7 +3782,8 @@ async function resolveAssault(f) {
       const p = G.byId[a.pid], at = +a.arrive || now();
       // a joint strike fights with the ships that reached the muster point before it launched (v73)
       const uids = Object.keys(a.members).filter(u => !a.rally || ((a.members[u] || {}).at || 0) <= (+a.launch || 0) + 3000);
-      let A = []; for (const u of uids) { const m = a.members[u] || {}; A = A.concat(stacksOf(cleanShips(m.n), m.tech || {}, u)); }
+      let A = []; const tb = teamBonus(uids.filter(u => !isBot(u) && !(a.members[u] || {}).bot).length); /* v271: teamwork */
+      for (const u of uids) { const m = a.members[u] || {}, t0 = m.tech || {}; A = A.concat(stacksOf(cleanShips(m.n), tb ? Object.assign({}, t0, { weapons: (t0.weapons || 0) + tb, shields: (t0.shields || 0) + tb }) : t0, u)); }
       if (a.pid === "nexus" && G.db) { // v99: an alliance rally or joint strike on the Cube: every member's ships fight as one
         const aly = a.ally, nref = G.db.doc("event/nexus");
         for (let i = 0; i < 8; i++) { const r = await nref.acquire({ holder: G.me, ttlMs: 15000 }); if (r.acquired) break; await sleep(1500); }
@@ -4708,7 +4718,7 @@ async function connectCloud() {
     db.collection("assaults").where("status", "==", "open").limit(100).onSnapshot(snap => {
       const o = {}; for (const d of snap.docs) { const v = d.data(); if (v && (typeof v.pid === "string" || typeof v.xid === "string") && v.members && typeof v.leader === "string") o[d.id] = { id: d.id, pid: typeof v.pid === "string" ? v.pid : null, xid: typeof v.xid === "string" && PB[v.xid] ? v.xid : null, leader: v.leader, arrive: +v.arrive || 0, max: clamp(okInt(v.max), 2, 60), members: v.members, ally: typeof v.ally === "string" ? v.ally : null, inv: Array.isArray(v.inv) ? v.inv.filter(x => typeof x === "string").slice(0, 60) : [],
           rally: v.rally ? 1 : 0, lh: typeof v.lh === "string" ? v.lh : null, launch: +v.launch || 0, cap: clamp(okInt(v.cap), 1000, 1e9), disb: v.disb ? 1 : 0, form: FORMS[v.form] ? v.form : "wedge", mout: +v.mout || 0, boosts: v.boosts && typeof v.boosts === "object" ? v.boosts : {}, status: "open" }; }
-      G.assaults = o;
+      G.assaults = o; callNew();
       // a slower ally joined and pushed the strike back: every fleet in that attack holds position until the new time
       if (S) for (const f of S.fleets) { const a = f.assault && o[f.assault]; if (a && f.phase === "out" && !a.rally && a.arrive > f.arrive) { f.arrive = a.arrive; dirty(); } }
       softRender();
@@ -4731,7 +4741,7 @@ async function connectCloud() {
         if (!o[aid] && G.allyKeep && G.allyKeep.id === aid) G.alliances[aid] = G.allyKeep; /* keep showing it while the server is asked */ db.doc("alliances/" + aid).get().then(s2 => { const a2 = s2.exists ? cleanAlly(aid, s2.data()) : null;
           if (a2 && a2.members[G.me]) { G.alliances[aid] = a2; helpApply(); softRender(); } else if (S.ally === aid) { S.ally = null; dirty(); softRender(); } }).catch(() => {}); }
       if (S.ally && G.alliances[S.ally]) G.allyKeep = G.alliances[S.ally];
-      helpApply(); chatInit(); softRender();
+      helpApply(); chatInit(); allyInSub(); softRender();
     }, () => {});
     db.doc("event/nexus").onSnapshot(s => { G.nexus = s.exists ? cleanNexus(s.data()) : null; softRender(); }, () => {});
     db.doc("event/glory").onSnapshot(s => { G.glory = s.exists ? cleanGlory(s.data()) : null; gloryReturns(); softRender(); }, () => {});
@@ -11416,7 +11426,7 @@ function shNode() {
   else occ = `<div class="card" style="border-color:#5dffa8"><b style="font-family:var(--f-display);color:#5dffa8">● FREE</b><p class="note">Nobody is gathering here. Rivals that arrive later will have to fight you for it.</p></div>`;
   const info = `${occ}<dl class="kv">${n.res === "s" ? `<dt>Yield</dt><dd style="color:#c9a6ff">◆${shardYield(n)} per ${ftime(SHARD_DIG_MS)} dig</dd><dt>Mined today</dt><dd>◆${shardMine().got} / ${SHARD_MINE_DAY}${shardLeft() ? "" : " · back tomorrow (00:00 UTC)"}</dd>${shardRest(n) ? `<dt>Resting</dt><dd><span data-end="${shardMine().cd[n.id]}">${ftime(shardRest(n))}</span></dd>` : ""}` : `<dt>Gather rate</dt><dd><span class="r-${n.res}">${fmt(gatherRate(n))} ${RES_N[n.res].toLowerCase()}/min</span></dd>`}<dt>Layer</dt><dd style="color:${L.col}">L${L.n} ${L.name} · fields here are Lv.${L.node}${L.node < 7 ? "-" + (L.node + 1) : ""}</dd>${h ? `<dt>Flight from ${esc(h.name)}</dt><dd>${ftime(travelMs(h, n, { hauler: 1 }))} (Small Cargos)</dd>` : ""}</dl>`;
   let body;
-  if (!canPlay()) body = `<p class="note">${G.mode === "connecting" ? "Connecting to the galaxy…" : "You can only watch this galaxy."}</p>`;
+  if (!canPlay()) body = `<p class="note">${G.mode === "connecting" ? connNote() : "You can only watch this galaxy."}</p>`;
   else if (!Object.keys(avail).length) body = `${originBar()}<p class="note">No ships at ${esc(h ? h.name : S.homeName)}. Small Cargos carry the most cargo.</p>${S.b.shipyard ? `<button class="btn wide" data-act="nav" data-v="build" data-s="ships">Open Shipyard</button>` : ""}`;
   else body = `<h2 class="sec">Gathering fleet</h2>${originBar()}${picker(avail)}
     ${speedBar(n, sel)}
@@ -11442,7 +11452,7 @@ function shPyramid() {
   const T = now(), h = originPlanet(), avail = originAvail(), sel = selected(), down = pyrDown(y), g = pyrGuards(y.lvl), L = pyrLoot(y.lvl), sent = S.fleets.some(f => f.yid === y.id && f.phase === "out");
   let body = "";
   if (down > T) body = `<p class="note">You emptied this vault. It refills in <b data-end="${down}">${ftime(down - T)}</b>.</p>`;
-  else if (!canPlay()) body = `<p class="note">${G.mode === "connecting" ? "Connecting to the galaxy…" : "You can only watch this galaxy."}</p>`;
+  else if (!canPlay()) body = `<p class="note">${G.mode === "connecting" ? connNote() : "You can only watch this galaxy."}</p>`;
   else if (sent) body = `<p class="note">An expedition is already on its way.</p>`;
   else if (!Object.keys(avail).length) body = `${originBar()}<p class="note">No ships at ${esc(h ? h.name : S.homeName)}.</p>`;
   else { const cap = cargoOf(sel);
@@ -11458,12 +11468,12 @@ function shPirate() {
   const head = x.mon ? `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:${MON[x.mon].col}">Space monster · ${MON[x.mon].n} · Lv.${x.lvl}</div><h2>${MON[x.mon].ic} ${esc(x.name)}</h2><p class="note">${MON[x.mon].d} Slay it for a hoard of resources, Void Shards and ${monAccel(x.lvl).n} ${monAccel(x.lvl).tier} time accelerator${monAccel(x.lvl).n > 1 ? "s" : ""}.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`
     : x.boss ? `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#5dff6a">Boss · Assimilation Cube · Lv.${x.lvl}</div><h2>■ ${esc(x.name)}</h2><p class="note">A city-sized cube of the Collective, laced with green fire. It adapts, it repairs, it does not negotiate. Destroy it for a vault of resources, Void Shards and a guaranteed item.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`
     : `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#ff6b5a">Pirate hideout · Lv.${x.lvl}</div><h2>☠ ${esc(x.name)}</h2><p class="note">Outlaw crews hiding in the dust lanes. Beat them and your holds fill with their stolen cargo.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
-  const info = `<dl class="kv"><dt>Loot on a win</dt><dd>${costHTML(L)} + ◆${x.mon ? 2 + Math.floor(x.lvl / 4) : x.boss ? 3 + Math.floor(x.lvl / 3) : 1 + Math.floor(x.lvl / 6)}${x.boss ? " + an item" : x.mon ? ` + ${monAccel(x.lvl).n}× ${monAccel(x.lvl).tier} accelerator` : ""}</dd>${x.mon ? `<dt>Monster strength</dt><dd>×${(.25 + .15 * x.lvl).toFixed(2)} · ${xForce(x)[x.mon]} in the ${x.mon === "ssquid" ? "pack" : "pod"}</dd>` : x.boss ? `<dt>Cube strength</dt><dd>×${((.5 + .25 * x.lvl) * CUBE_BOSS_K).toFixed(2)} on every unit</dd>` : `<dt>Pirate tech</dt><dd>Weapons, shields and armour ${pirTech(x.lvl).weapons}</dd>`}<dt>Orbit</dt><dd>${Math.round(x.r)} · ${zoneOf(x.r)}</dd>
+  const info = `<dl class="kv"><dt>Loot on a win</dt><dd>${costHTML(L)} + ◆${x.mon ? 2 + Math.floor(x.lvl / 4) : x.boss ? 3 + Math.floor(x.lvl / 3) : 1 + Math.floor(x.lvl / 6)}${x.boss ? " + an item" : x.mon ? ` + ${monAccel(x.lvl).n}× ${monAccel(x.lvl).tier} accelerator` : ""}</dd>${x.mon ? `<dt>Monster strength</dt><dd>×${(.25 + .15 * x.lvl).toFixed(2)} · ${xForce(x)[x.mon]} in the ${x.mon === "ssquid" ? "pack" : "pod"}</dd>` : x.boss ? `<dt>Teamwork</dt><dd>Too strong alone? Start a joint strike: every commander who joins adds +10% attack and shields, up to +30%.</dd><dt>Cube strength</dt><dd>×${((.5 + .25 * x.lvl) * CUBE_BOSS_K).toFixed(2)} on every unit</dd>` : `<dt>Pirate tech</dt><dd>Weapons, shields and armour ${pirTech(x.lvl).weapons}</dd>`}<dt>Orbit</dt><dd>${Math.round(x.r)} · ${zoneOf(x.r)}</dd>
     ${h ? `<dt>Flight from ${esc(h.name)}</dt><dd>${ftime(travelMs(h, x, { fighter: 1 }))}</dd>` : ""}<dt>${x.mon ? "Another surfaces after" : x.boss ? "Rebuilds after defeat" : "Regroups after a raid"}</dt><dd>${ftime(xRegroup(x))}</dd></dl>${x.mon || x.boss ? cineBtn(x.id) : ""}`;
   const scan = `<h2 class="sec">${x.mon ? "The beast" : x.boss ? "Collective forces" : "Crews"}</h2>${down > T ? `<p class="note">${x.mon ? "Slain. Another of its kind drifts in within" : x.boss ? "The Cube is wrecked. It rebuilds in" : "You cleaned this hideout out. The pirates regroup in"} <b data-end="${down}">${ftime(down - T)}</b>.</p>` : unitGrid(force)}`;
   let body;
   if (down > T) body = "";
-  else if (!canPlay()) body = `<p class="note">${G.mode === "connecting" ? "Connecting to the galaxy…" : "You can only watch this galaxy."}</p>`;
+  else if (!canPlay()) body = `<p class="note">${G.mode === "connecting" ? connNote() : "You can only watch this galaxy."}</p>`;
   else if (!Object.keys(avail).length) body = `${originBar()}<p class="note">No ships at ${esc(h ? h.name : S.homeName)}.</p>`;
   else {
     const key = "x" + JSON.stringify(sel) + x.id + S.r.weapons + S.r.shields + S.r.armor + JSON.stringify(sheet.bots || []);
@@ -11751,6 +11761,53 @@ function rallyLaunch(f) {
   if (f.rx) f.xid = f.rx; else f.pid = tgt.id;
   dirty();
 }
+/* ---------- v271: call to arms. Open joint strikes you can join and allies under attack show in a band above the chat bar,
+   one tap sends every warship that can make it, and a joint strike fights harder with every commander who joins ---------- */
+const TEAM_MAX = 3; // up to +3 weapons and shields levels (+30%) for the whole joint strike
+const teamBonus = n => Math.min(TEAM_MAX, Math.max(0, (n || 0) - 1));
+const warK = k => SH[k] && (SH[k].atk || 0) >= 20 && k !== "ark" && k !== "spyProbe";
+function joinable() {
+  if (!S || G.mode !== "online" || !G.assaults) return []; const T = now();
+  return Object.values(G.assaults).filter(a => a && !a.disb && !(a.members || {})[G.me] && (a.rally ? T < a.launch - 5000 : a.arrive > T + 20000) && memberCount(a) < strikeMax(a)
+    && !(a.pid === "nexus" && (!S.ally || S.ally !== a.ally)) && !(strikeLeadOnly(a) && !(a.inv || []).includes(G.me))
+    && ((a.ally && a.ally === S.ally) || (a.inv || []).includes(G.me) || isAlly(a.leader)) && (a.rally ? !!G.byId[a.lh] : !!asTgt(a.pid)))
+    .sort((x, y) => (x.rally ? x.launch : x.arrive) - (y.rally ? y.launch : y.arrive));
+}
+/* allies' worlds with an attack on the way (each alliance member's incoming list is watched while you're in the alliance) */
+function allyInSub() {
+  try { if (!G.db || G.mode !== "online") return; const a = myAlly(), want = new Set(a ? Object.keys(a.members || {}).filter(u => u !== G.me && !isBot(u)) : []); G.allyInU = G.allyInU || {}; G.allyIn = G.allyIn || {};
+    for (const u in G.allyInU) if (!want.has(u)) { try { typeof G.allyInU[u] === "function" && G.allyInU[u](); } catch (e) {} delete G.allyInU[u]; delete G.allyIn[u]; }
+    for (const u of want) if (!G.allyInU[u]) G.allyInU[u] = G.db.doc("inbound/" + u).onSnapshot(s => { G.allyIn[u] = s && s.exists && Array.isArray((s.data() || {}).items) ? s.data().items.map(cleanInbound).filter(Boolean) : []; trayRender(); }, () => {}) || 1;
+  } catch (e) {}
+}
+function allyThreats() {
+  const T = now(), out = [], seen = new Set();
+  for (const u in G.allyIn || {}) for (const x of G.allyIn[u] || []) { const p = G.byId[x.pid]; if (!p || p.owner !== u || x.arrive <= T || seen.has(p.id) || x.from === G.me || (x.from && isAlly(x.from))) continue; seen.add(p.id); out.push({ u, p, arrive: x.arrive, from: x.from }); }
+  return out.sort((a, b) => a.arrive - b.arrive);
+}
+/* the ships a one-tap join sends: every warship type at the launch planet that reaches the muster point (or the target) in time */
+function quickPick(a) {
+  const T = now(), av = originAvail(), o = originPlanet(), dst = a.rally ? G.byId[a.lh] : asTgt(a.pid), by = a.rally ? a.launch : a.arrive; if (!dst || !o) return null;
+  const n = {}; for (const k in av) if (warK(k) && av[k] > 0 && T + travelMs(o, dst, { [k]: 1 }, S.r, 100) <= by) n[k] = av[k];
+  let tot = sumShips(n); if (!tot) return null;
+  if (a.rally) { const room = Math.max(0, a.cap - rallyLoad(a)); if (!room) return null; if (tot > room) { const f = room / tot; for (const k in n) { n[k] = Math.floor(n[k] * f); if (!n[k]) delete n[k]; } } }
+  return Object.keys(n).length ? n : null;
+}
+function callNew() {
+  try { G.seenJ = G.seenJ || new Set(); const first = !G.seenJ.size && !callNew.ran; callNew.ran = 1;
+    for (const a of joinable()) { if (G.seenJ.has(a.id)) continue; G.seenJ.add(a.id); if (first || a.leader === G.me) continue; const t = a.rally ? rallyTgt(a) : asTgt(a.pid);
+      toast(`⚔ ${nameOf(a.leader)} opened a joint strike on ${t ? t.name : "a target"}. Tap JOIN at the bottom to send your fleet.`, "win"); }
+    trayRender(); } catch (e) {}
+}
+const callKey = () => { try { return joinable().map(a => a.id).join() + "|" + allyThreats().map(x => x.p.id).join(); } catch (e) { return ""; } };
+function callBand() {
+  if (!S || G.mode !== "online") return ""; let J = [], D = []; try { J = joinable(); D = allyThreats(); } catch (e) { return ""; } const T = now();
+  if (D.length) { const x = D[0], more = D.length - 1 + J.length;
+    return `<div class="callband def"><button class="cbt" data-act="station" data-id="${x.p.id}">🛡 <b>ALLY ATTACKED</b> ${esc(x.p.name)} · ${esc(nameOf(x.u))} is under attack</button><span class="cbtm">⏱ <i data-end="${x.arrive}">${ftime(x.arrive - T)}</i></span>${more ? `<span class="cbn">+${more}</span>` : ""}<button class="cbgo" data-act="qDef" data-id="${x.p.id}">DEFEND</button></div>`; }
+  if (!J.length) return ""; const a = J[0], t = a.rally ? rallyTgt(a) : asTgt(a.pid), end = a.rally ? a.launch : a.arrive, tb = teamBonus(memberCount(a) + 1);
+  return `<div class="callband"><button class="cbt" data-act="assault" data-id="${a.id}">⚔ <b>JOINT STRIKE</b> ${t ? esc(t.name) : "target"}${t && t.lvl ? ` Lv.${t.lvl}` : ""}${tb ? ` · +${tb * 10}% team bonus` : ""} · ${memberCount(a)} in · led by ${esc(nameOf(a.leader))}</button><span class="cbtm">⏱ <i data-end="${end}">${ftime(end - T)}</i></span>${J.length > 1 ? `<span class="cbn">+${J.length - 1}</span>` : ""}<button class="cbgo" data-act="qJoin" data-id="${a.id}">JOIN</button></div>`;
+}
+function connNote() { return `Connecting to the galaxy…${performance.now() > 12000 ? ' Taking too long? <button class="btn sm" data-act="reconnect">Reconnect</button>' : ""}`; }
 /* boss and monster rallies: each commander's own rewards (shards, runes, item or accelerators, and the per-commander cooldown) */
 function rallyBossRewards(x, rep) {
   S.pir = S.pir || {}; S.pir[x.id] = now() + xRegroup(x); S.wins++; bump(x.mon ? "monsters" : x.boss ? "cubes" : "pirates"); evPts("hunt", x.lvl * (x.boss ? 120 : x.mon ? 60 : 20));
@@ -12123,7 +12180,7 @@ function shPlanet() {
   if (st === "hive") scan += `<dl class="kv"><dt>Stockpile (half can be taken)</dt><dd>${costHTML(stock(p.lvl))}</dd></dl>`;
   if (Object.keys(p.b || {}).length) scan += `<p class="note">Built here: ${Object.entries(p.b).map(([k, v]) => `${B[k].n} ${v}`).join(", ")}. Buildings stay when the planet changes hands.</p>`;
   let body;
-  if (!canPlay()) body = `<p class="note">${G.mode === "connecting" ? "Connecting to the galaxy…" : G.mode === "full" ? "The galaxy is full, so you can only watch." : "You can watch this galaxy but not send fleets."}</p>`;
+  if (!canPlay()) body = `<p class="note">${G.mode === "connecting" ? connNote() : G.mode === "full" ? "The galaxy is full, so you can only watch." : "You can watch this galaxy but not send fleets."}</p>`;
   else if (!Object.keys(avail).length) body = `${originBar()}<p class="note">${own("fighter") ? `No ships at ${esc(h ? h.name : S.homeName)}. Pick another planet or wait for fleets to return.` : "You have no ships yet. Build Light Fighters at the Shipyard."}</p>${S.b.shipyard ? `<button class="btn wide" data-act="nav" data-v="fleet" data-s="ships">Open Shipyard</button>` : `<button class="btn wide" data-act="nav" data-v="build" data-s="fac">Build a Shipyard</button>`}`;
   else {
     const jointOK = true;
@@ -12151,7 +12208,7 @@ function shRally(a) {
   return `<div class="hd">${tgt && !boss && tgt !== NEXUS ? `<canvas class="pv" data-p="${tgt.id}"></canvas>` : ""}<div style="flex:1;min-width:0"><div class="chapter">⚔ Joint strike${boss ? (tgt.boss ? " · Cube boss" : tgt.mon ? " · Space monster" : "") : ""}</div><h2>${tgt ? esc(tgt.name) : "Target"}${tgt && tgt.lvl ? ` · Lv.${tgt.lvl}` : ""}</h2><p class="note">Led by ${esc(nameOf(a.leader))} · muster point ${esc(lh ? lh.name : "?")}${lh ? ` [${coordStr(lh)}]` : ""}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
     <div class="rallyhd"><div><small>${launched ? "Marching · strikes in" : "Launches in"}</small><b data-end="${launched ? a.arrive : a.launch}">${ftime((launched ? a.arrive : a.launch) - T)}</b></div><div><small>Commanders</small><b>${memberCount(a)} / ${strikeMax(a)}</b></div><div><small>Ships</small><b>${fmt(load)}</b></div></div>
     <div class="rcap"><div class="rbar"><i style="width:${pc}%"></i></div><small>${fmt(load)} / ${fmt(a.cap)} ships · ${Math.round(pc)}% full</small></div>
-    ${boss ? `<p class="note">Strike bonus: the vault is ${Math.round((rallyBonus(memberCount(a)) - 1) * 100)}% bigger with ${memberCount(a)} commander${memberCount(a) > 1 ? "s" : ""}, up to +150%.</p>` : ""}
+    ${boss ? `<p class="note">Teamwork: <b style="color:var(--amber)">+${teamBonus(Object.keys(a.members || {}).filter(u => !isBot(u) && !(a.members[u] || {}).bot).length) * 10}%</b> attack and shields for the whole strike (+10% for every commander after the first, up to +30%). Strike bonus: the vault is ${Math.round((rallyBonus(memberCount(a)) - 1) * 100)}% bigger with ${memberCount(a)} commander${memberCount(a) > 1 ? "s" : ""}, up to +150%.</p>` : ""}
     ${strikeBoostUI(a)}${formPicker(a, leader && !launched)}<h2 class="sec">Strike members</h2><div class="rmems">${rows}</div>
     ${!launched && mine ? strikeInviteUI(a, full, left) : ""}
     ${tgt && !boss ? `<h2 class="sec">Defenders</h2>${unitGrid(tgtDefN(tgt))}` : tgt ? `<h2 class="sec">${tgt.mon ? "The beast" : "Collective forces"}</h2>${unitGrid(xForce(tgt))}` : ""}
@@ -14199,6 +14256,9 @@ addEventListener("resize", () => { if (battle) battle.lay = null; startAnim(); c
 function tickUI() {
   const T = now();
   document.querySelectorAll("[data-end]").forEach(el => { el.textContent = ftime(+el.dataset.end - T); });
+  if (!tickUI.ai || T - tickUI.ai > 30000) { tickUI.ai = T; allyInSub(); } // v271: watch alliance members' incoming attacks
+  { const ck = callKey(); if (ck !== tickUI.ck) { tickUI.ck = ck; trayRender(); } } // v271: the call-to-arms band comes and goes on its own
+  if (G.mode === "connecting" && performance.now() > 12000 && !tickUI.cn && sheet) { tickUI.cn = 1; renderSheet(); } // show the Reconnect button
   // a paid finish button turns into a free one the moment its job crosses the free-finish window
   document.querySelectorAll(".qc[data-freeat]").forEach(b => { if (T >= +b.dataset.freeat) { b.removeAttribute("data-freeat"); b.dataset.act = "finish"; b.dataset.q = b.dataset.fq; b.dataset.free = "1"; b.classList.add("free"); const qn = b.querySelector(".qn"); if (qn) qn.textContent = "⚡ Free · " + qn.textContent; } });
   { const nf = freeJobs().length; if (nf !== tickUI.nf) { tickUI.nf = nf; softRender(); } }
@@ -14662,7 +14722,7 @@ function trayRender() {
     ${window.udfAccount ? `<div class="gm-acct"><span class="ga-i">👤</span><span class="ga-t"><small>Signed in as</small><b>${esc(window.udfAccount.label())}</b></span><button class="btn ghost sm" data-act="udfSignOut">Sign out</button></div>` : ""}
     ${view === "galaxy" ? `<div class="gm-h">Finder</div><div class="tray-grid">${it.filter(x => x[0] === "find" || x[0] === "findClear").map(btn).join("")}</div>` : view === "base" ? `<div class="gm-list">${gl("basedet", ic2(MI.box), "Planet details")}</div>` : ""}`;
   el.classList.toggle("gmopen", open); // lift the whole bar above the floating top HUD while the drawer is out, so nothing covers it
-  morph(el, `<button class="gscrim${open ? " on" : ""}" data-act="trayToggle" aria-label="Close the menu" tabindex="${open ? 0 : -1}"></button><div class="tray-panel gmenu${open ? " open" : ""}" aria-hidden="${!open}" role="dialog" aria-label="Game menu"><div class="gm-hd"><b>Game Menu</b><button class="x" data-act="trayToggle" aria-label="Close the menu">✕</button></div>${drawer}</div>${cubeBand()}${banner}`);
+  morph(el, `<button class="gscrim${open ? " on" : ""}" data-act="trayToggle" aria-label="Close the menu" tabindex="${open ? 0 : -1}"></button><div class="tray-panel gmenu${open ? " open" : ""}" aria-hidden="${!open}" role="dialog" aria-label="Game menu"><div class="gm-hd"><b>Game Menu</b><button class="x" data-act="trayToggle" aria-label="Close the menu">✕</button></div>${drawer}</div>${callBand()}${cubeBand()}${banner}`);
   dock();
   if (!el.dataset.bound) { el.dataset.bound = "1";
     el.addEventListener("click", e => { if (e.target.closest(".tray-panel .ti") && !e.target.closest('[data-act="find"]')) { G.trayOpen = false; setTimeout(trayRender, 0); } });
@@ -15396,6 +15456,16 @@ const ACT = {
     closeSheet(); dirty(); render(true);
   },
   station: d => { const p = G.byId[d.id]; if (!p) return; pick = {}; openSheet({ type: "station", id: d.id }); },
+  /* v271: one tap from the call-to-arms band: every warship that can make it goes, no fleet screen needed */
+  qJoin: d => { const a = G.assaults[d.id]; if (!a || !canPlay()) return; if (sheet) closeSheet(); const q = quickPick(a);
+    if (!q) { pick = {}; for (const k in S.ships) if (S.ships[k] && SH[k]) pick[k] = S.ships[k]; openSheet({ type: "assault", id: a.id }); return toast("None of your warships can get there before it launches. Pick ships yourself, or join a later strike.", "warn"); }
+    pick = q; ACT.joinAssault({ id: a.id }); G.trayOpen = false; trayRender(); },
+  qDef: d => { const p = G.byId[d.id]; if (!p || !canPlay()) return; if (sheet) closeSheet(); const av = originAvail(), n = {}; for (const k in av) if (warK(k) && av[k] > 0) n[k] = av[k];
+    if (!Object.keys(n).length) return toast("You have no warships at home to send.", "warn");
+    const th = allyThreats().find(x => x.p.id === p.id), tt = travelMs(originPlanet(), p, n, S.r, 100);
+    pick = n; ACT.stationGo({ id: p.id });
+    if (th && now() + tt > th.arrive) toast(`Your guards need ${ftime(tt)} and the attack lands in ${ftime(th.arrive - now())}. They'll guard ${p.name} for the next attack.`, "warn"); },
+  reconnect: () => { try { location.reload(); } catch (e) {} },
   stationGo: d => act(() => { const p = G.byId[d.id]; if (!p || !p.owner || !isAlly(p.owner) || isBot(p.owner)) return toast("You can only guard an alliance member's world.", "warn"); if (slotsFull()) return;
     const n = takeShips(pick); if (!Object.keys(n).length) return; const f = sendFleet(p, n, "station"); if (!f) return; closeSheet(); toast(`Guards on their way to ${p.name}: ${ftime(f.tt)}.`); }),
   unstation: d => act(() => { const p = G.byId[d.id], h = homePlanet(); if (!p || !p.ag || !p.ag[G.me] || !h) return; const n = cleanShips(p.ag[G.me].n); delete p.ag[G.me]; if (!Object.keys(p.ag).length) p.ag = null; putPlanet(p);

@@ -61,6 +61,11 @@
     if (r.data === undefined || r.data === null || (p.errors && p.errors.length)) refetch(r.path); /* too big to arrive live: read it */
     else emit(r.path, r.data);
   }
+  /* back on the page, or back online: read everything again (throttled), in case live updates were missed while away */
+  var lastCatch = 0;
+  function catchUp() { var T = Date.now(); if (T - lastCatch < 5000) return; lastCatch = T; refreshers.slice().forEach(function (f) { try { f(); } catch (e) {} }); }
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) catchUp(); });
+  window.addEventListener("online", catchUp);
   function startLive() {
     if (chan) return;
     chan = sb.channel("udf-docs").on("postgres_changes", { event: "*", schema: "public", table: "docs" }, onChange)
@@ -109,17 +114,22 @@
       return null;
     }
     var off = addL(colL, q.col, function (path, data) { if (!ready) { early.push([path, data]); return; } var c = apply(path, data); if (c) send([c]); });
-    function load(first) {
+    var seq = 0;
+    function load(first, tries) {
+      tries = tries || 0; var tok = ++seq, settled = false;
+      var retry = function () { if (alive && !ready && tok === seq) load(true, tries + 1); };
+      var wd = first ? setTimeout(function () { if (!settled) retry(); }, 15000) : 0;
       return q._fetch().then(function (rows) {
-        if (!alive) return; var fresh = {}; rows.forEach(function (r) { fresh[r.path] = r.data; });
+        settled = true; clearTimeout(wd);
+        if (!alive || (first && ready)) return; var fresh = {}; rows.forEach(function (r) { fresh[r.path] = r.data; });
         var changes = [];
         if (first) { map = fresh; ready = true; early.forEach(function (e) { apply(e[0], e[1]); }); early = []; changes = Object.keys(map).map(function (p) { return { type: "added", doc: dsnap(p, map[p]) }; }); send(changes); return; }
         Object.keys(map).forEach(function (p) { if (!fresh.hasOwnProperty(p)) { var c = apply(p, null); if (c) changes.push(c); } });
         Object.keys(fresh).forEach(function (p) { var c = apply(p, fresh[p]); if (c) changes.push(c); });
         if (changes.length) send(changes);
-      }, function (e) { if (first && err) err(e); });
+      }, function (e) { settled = true; clearTimeout(wd); if (first) { if (err && !tries) err(e); setTimeout(retry, Math.min(30000, 1500 * Math.pow(2, tries))); } });
     }
-    var refresh = function () { if (ready) load(false); }; refreshers.push(refresh);
+    var refresh = function () { if (ready) load(false); else load(true, 1); }; refreshers.push(refresh);
     load(true);
     return function () { alive = false; off(); var i = refreshers.indexOf(refresh); if (i >= 0) refreshers.splice(i, 1); };
   };
@@ -141,7 +151,8 @@
     function deliver(data) { if (!alive) return; var j = JSON.stringify(data === undefined ? null : data); if (j === last) return; last = j; try { next(dsnap(p.path, data)); } catch (e) { console.error(e); } }
     var off = addL(docL, p.path, function (data) { heard = true; deliver(data); });
     var refresh = function () { p.get().then(function (s) { deliver(s.exists ? s.data() : null); }, function () {}); }; refreshers.push(refresh);
-    p.get().then(function (s) { if (!heard) deliver(s.exists ? s.data() : null); }, function (e) { if (err) err(e); });
+    var first = function (n) { p.get().then(function (s) { if (!heard) deliver(s.exists ? s.data() : null); }, function (e) { if (err && !n) err(e); if (alive && last === "\0") setTimeout(function () { if (alive && last === "\0") first((n || 0) + 1); }, Math.min(30000, 1500 * Math.pow(2, n || 0))); }); };
+    first(0);
     return function () { alive = false; off(); var i = refreshers.indexOf(refresh); if (i >= 0) refreshers.splice(i, 1); };
   };
   /* a short lease so only one player at a time edits a busy record (the Cube battle, joint strikes, joining the galaxy) */
