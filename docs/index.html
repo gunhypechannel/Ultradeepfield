@@ -2264,7 +2264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 292;
+const GAME_V = 293;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -2868,6 +2868,7 @@ function newState() {
 function migrate(st) {
   const base = newState();
   if (!st.created) st.created = st.savedAt || st.t || now();
+  if (st.repsSep) { if (!Array.isArray(st.reports) && S && Array.isArray(S.reports)) { st.reports = S.reports; st.savedReps = S.savedReps; } delete st.repsSep; } // v293: a save without its reports keeps the ones on this device
   for (const k in base) if (!(k in st)) st[k] = base[k];
   for (const grp of ["b", "r", "ships", "def"]) for (const k in base[grp]) if (!(k in st[grp])) st[grp][k] = 0;
   if (st.colonies) delete st.colonies;
@@ -4475,7 +4476,7 @@ async function adoptCloud(v) {
     if (v.sig && v.sig !== secSig(v.json)) { secLog("save", "the cloud save was edited outside the game.", "It was ignored.", 3); return sessTakeover(); }
     if (v.sess === SESS || (+v.seq || 0) <= (store.seq || 0) && store.seq) { store.seq = Math.max(store.seq || 0, +v.seq || 0); store.paused = false; store.follow = null; return; }
     const wasHidden = store.wasHidden, uid = S.uid, lp = S.lp; let st;
-    try { st = migrate(JSON.parse(v.json)); } catch (e) { return sessTakeover(); }
+    try { const raw = JSON.parse(v.json); if (raw.repsSep) await repsInto(raw, store.uid); st = migrate(raw); } catch (e) { return sessTakeover(); }
     st.uid = uid; if (lp !== undefined) st.lp = lp; st.cloudAt = +v.savedAt || 0;
     S = st; store.seq = +v.seq || 0; store.follow = null; store.dirty = false;
     secBoot(); FOG = null; live = false; advance(now()); live = true; if (typeof menu === "object" && menu) menu.rest = null;
@@ -4488,6 +4489,8 @@ async function adoptCloud(v) {
 }
 /* save within about a second of anything you do (launching an attack, stationing ships, starting a build), instead of waiting for
    the 6-second timer, so putting one phone down and picking up another never misses your last moves */
+async function repsInto(st, uid) { try { const s = await store.db.doc(`data/users/${uid}/reps`).get(), d = s && s.exists ? s.data() : null;
+    if (d && typeof d.json === "string") { const r = JSON.parse(d.json); if (Array.isArray(r.reports)) { st.reports = r.reports; st.savedReps = Array.isArray(r.savedReps) ? r.savedReps : []; store.repsJ = d.json; } } } catch (e) {} }
 function saveSoon() { clearTimeout(store.soonT); store.soonT = setTimeout(() => { if (store.dirty) flush(); }, 900); }
 async function flush() {
   syncPlayer();
@@ -4495,12 +4498,15 @@ async function flush() {
   if (!store.dirty || store.writing || store.adopting || store.checking) return;
   store.dirty = false; S.savedAt = now();
   const cloudOk = store.db && store.uid && store.ready; if (cloudOk) S.cloudAt = S.savedAt; // the cloud copy this device last wrote or read
-  const json = JSON.stringify(S), sig = secSig(json);
-  try { localStorage.setItem(KEY, json); localStorage.setItem(KEY + ".sig", sig); if (Date.now() - SEC.bakT > 300000 && !SEC.blocked) { SEC.bakT = Date.now(); localStorage.setItem(KEY + ".bak", json); localStorage.setItem(KEY + ".bak.sig", sig); } } catch (e) {}
+  const full = JSON.stringify(S), fsig = secSig(full); let json = full, sig = fsig, reps = null; /* v293: the cloud save leaves the reports out */
+  if (store.db && store.uid && store.ready) { const rj = JSON.stringify({ reports: S.reports || [], savedReps: S.savedReps || [] }); if (rj !== store.repsJ) reps = rj;
+    json = JSON.stringify(Object.assign({}, S, { reports: undefined, savedReps: undefined, repsSep: 1 })); sig = secSig(json); }
+  try { localStorage.setItem(KEY, full); localStorage.setItem(KEY + ".sig", fsig); if (Date.now() - SEC.bakT > 300000 && !SEC.blocked) { SEC.bakT = Date.now(); localStorage.setItem(KEY + ".bak", full); localStorage.setItem(KEY + ".bak.sig", fsig); } } catch (e) {}
   if (cloudOk) {
     store.writing = true;
     try { if (store.paused) { store.writing = false; return; } const seq = (store.seq || 0) + 1, z = empSize(S), shrink = !!store.shrinkOk; /* v205: seq = save order number, checked by the server */
-      await store.db.doc(`data/users/${store.uid}/save`).set({ v: 3, savedAt: S.savedAt, json, sig, sess: SESS, seq, lv: z.lv, ships: z.ships, shrink }); store.seq = seq; if (shrink) store.shrinkOk = false; store.mode = "cloud"; srvBackup(json, sig); }
+      if (reps) { await store.db.doc(`data/users/${store.uid}/reps`).set({ v: 1, at: S.savedAt, json: reps }); store.repsJ = reps; } // v293: reports first, so a device that loads this save finds them
+      await store.db.doc(`data/users/${store.uid}/save`).set({ v: 3, savedAt: S.savedAt, json, sig, sess: SESS, seq, lv: z.lv, ships: z.ships, shrink }); store.lastW = Date.now(); store.seq = seq; if (shrink) store.shrinkOk = false; store.mode = "cloud"; srvBackup(json, sig); }
     catch (e) { let why = null; /* v205: a refused save: find out whether another device saved first or this copy would have wiped progress */
       if (e && e.code === "not_granted") try { const s4 = await store.db.doc(`data/users/${store.uid}/save`).get(), v = s4.exists ? s4.data() : null;
         if (v) { if (v.sess && v.sess !== SESS && (+v.seq || 0) >= (store.seq || 0)) why = "other"; else if (v.sess === SESS && (+v.seq || 0) !== (store.seq || 0)) { store.seq = +v.seq || 0; why = "retry"; } else if ((+v.lv || 0) >= 10 && empSize(S).lv * 2 < (+v.lv || 0)) why = "shrink"; else if ((+v.seq || 0) !== (store.seq || 0)) { store.seq = +v.seq || 0; why = "retry"; } } } catch (e2) {}
@@ -4607,7 +4613,7 @@ function loadLocal() {
       if (bj && bs === secSig(bj)) { secLog("save", "the save on this device was edited outside the game.", "The last clean save was restored."); return migrate(JSON.parse(bj)); }
       secLog("save", "the save on this device was edited outside the game.", "No clean backup was found, so this commander is flagged.", 3); }
     return migrate(JSON.parse(j)); } catch (e) {} return null; }
-setInterval(flush, 6000);
+setInterval(() => { if (!(store.db && store.uid && store.ready) || Date.now() - (store.lastW || 0) >= 20000) flush(); }, 6000); // v293
 document.addEventListener("visibilitychange", () => { if (document.hidden) { dirty(); flush(); } });
 addEventListener("pagehide", () => { dirty(); flush(); });
 /* v207: back on this device (phone unlocked, app reopened, tab switched): ask the server first, and if the empire moved on elsewhere
@@ -4708,6 +4714,7 @@ async function connectCloud() {
       if (snap.exists) { const d = snap.data();
         if (typeof d.json === "string" && d.sig && d.sig !== secSig(d.json)) secLog("save", "the cloud save was edited outside the game.", "It was ignored.", 3);
         else if (typeof d.json === "string") { const cs = JSON.parse(d.json), cp = empScore(empSize(cs)), cAt = d.savedAt || 0, behind = lp > 5 && cp < lp * .5 && !foreign;
+          if (cs.repsSep) await repsInto(cs, uid); // v293: its reports come from their own record
           const take = foreign || (!behind && (S.uid === uid ? cAt > (S.cloudAt || 0) : true));
           if (take) { try { if (lp > 0) localStorage.setItem(KEY + ".device", JSON.stringify(S)); } catch (e) {}
             S = migrate(cs); S.cloudAt = cAt; secBoot(); FOG = null; live = false; advance(now()); live = true; render(true); toast(foreign ? "Signed in. Loaded this account's empire." : "Loaded your saved empire.", "win"); }

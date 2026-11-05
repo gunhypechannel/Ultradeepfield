@@ -68,7 +68,7 @@
   window.addEventListener("online", catchUp);
   function startLive() {
     if (chan) return;
-    chan = sb.channel("udf-docs").on("postgres_changes", { event: "*", schema: "public", table: "docs" }, onChange)
+    chan = sb.channel("udf-docs").on("postgres_changes", { event: "*", schema: "public", table: "docs", filter: "top=neq.data" }, onChange)
       .subscribe(function (status) {
         if (status === "SUBSCRIBED") { if (chanDown) { chanDown = false; refreshers.slice().forEach(function (f) { try { f(); } catch (e) {} }); } } /* back online: catch up */
         else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") chanDown = true;
@@ -146,7 +146,22 @@
   };
   Doc.prototype.delete = function () { var p = this.path; return run(sb.from("docs").delete().eq("path", p)).then(function () { emit(p, null); }); };
   Doc.prototype.collection = function (c) { return new Query(this.path + "/" + c); };
+  /* a private record (data/...) is not on the live channel: it is polled every 30 s while the page is on screen, and when you come back
+     to it. The account save is polled as just its order number, session and time (a few bytes, not the whole empire) */
+  function dataSnap(p, next, err) {
+    var alive = true, lastU = null, isSave = /^data\/users\/[^/]+\/save$/.test(p.path), tm = 0;
+    function poll() { if (!alive) return;
+      run(sb.from("docs").select(isSave ? "updated_at,seq:data->seq,sess:data->sess,savedAt:data->savedAt" : "updated_at").eq("path", p.path).maybeSingle()).then(function (r) { if (!alive) return;
+        var u = r ? r.updated_at : null; if (u === lastU) return; lastU = u;
+        if (!r) { try { next(dsnap(p.path, null)); } catch (e) { console.error(e); } return; }
+        if (isSave) { try { next(dsnap(p.path, { seq: r.seq, sess: r.sess, savedAt: r.savedAt, meta: 1 })); } catch (e) { console.error(e); } return; }
+        p.get().then(function (s) { if (alive) try { next(s); } catch (e) { console.error(e); } }, function () {}); }, function (e) { if (err && lastU === null) err(e); }); }
+    var loop = function () { clearTimeout(tm); tm = setTimeout(function () { if (!document.hidden) poll(); loop(); }, 30000); };
+    refreshers.push(poll); poll(); loop();
+    return function () { alive = false; clearTimeout(tm); var i = refreshers.indexOf(poll); if (i >= 0) refreshers.splice(i, 1); };
+  }
   Doc.prototype.onSnapshot = function (next, err) {
+    if (/^data\//.test(this.path)) return dataSnap(this, next, err);
     var p = this, last = "\0", alive = true, heard = false;
     function deliver(data) { if (!alive) return; var j = JSON.stringify(data === undefined ? null : data); if (j === last) return; last = j; try { next(dsnap(p.path, data)); } catch (e) { console.error(e); } }
     var off = addL(docL, p.path, function (data) { heard = true; deliver(data); });
