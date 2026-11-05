@@ -2317,7 +2317,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 300;
+const GAME_V = 301;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -12566,7 +12566,7 @@ function spyArrive(f, p) {
   if (typeof sheet !== "undefined" && sheet && sheet.type === "planet" && sheet.id === p.id) try { renderSheet(); } catch (e) {}
 }
 function shSpyRep() {
-  const r = (S.spyReps || []).find(x => x.id === sheet.id); if (!r) return `<div class="hd"><h2>Espionage report</h2><button class="x" data-act="close" aria-label="Close">✕</button></div><p class="note">This report has expired.</p>`;
+  const r = (S.spyReps || []).find(x => x.id === sheet.id); if (r && !S.tutSpyR) { S.tutSpyR = 1; dirty(); } // v301: the Academy's "read the report" step if (!r) return `<div class="hd"><h2>Espionage report</h2><button class="x" data-act="close" aria-label="Close">✕</button></div><p class="note">This report has expired.</p>`;
   const p = G.byId[r.pid], T = now(), v2 = r.v === 2, who = r.owner ? (isBot(r.owner) ? esc(nameOf(r.owner)) + " (bot)" : esc(nameOf(r.owner))) : r.alien ? "The Hive" : "Unclaimed";
   const sec = (title, body) => `<section class="spys"><h3>${title}</h3>${body}</section>`, plunder = r.res && !r.home ? Object.fromEntries(Object.entries(r.res).map(([k, v]) => [k, Math.floor(v / 2)])) : null;
   const d = (r.mineE || 0) - (r.theirE || 0), fleet = v2 ? r.fleet : r.units, def = v2 ? r.def : r.units ? {} : null, lock = thr => `<p class="note lock">🔒 Hidden. Send ${v2 ? `${spyNeed(thr, d)} probes` : "more probes"} or raise Espionage Technology to see this.</p>`;
@@ -13465,6 +13465,12 @@ const rPath = (k, cat) => () => S.rq && S.rq.k === k ? [['[data-act="finish"][da
 /* v235: a fleet step that needs ships while every ship is still out (the fighters flying home from the first fight) waits on the
    Fleets tab instead of sending you round in circles */
 const tutWaitShips = () => !Object.values(S.ships || {}).some(v => v > 0) && S.fleets.some(f => f.phase === "back" || f.phase === "out") ? [DOCKT("fleets", "Your fighters are flying home. They'll be ready in a moment")] : null;
+/* v301: build n of a ship, pointing at its first missing requirement until the Shipyard can make it */
+const tutUnit = (k, n) => () => { const need = reqStep(SH[k].req); if (need) return need.r ? rPath(need.k, RCAT_OF(need.k))() : bPath(need.k, B[need.k].cat === "fac" ? "fac" : "res")();
+  return S.sq.some(q => q.k === k) ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish them instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed them up"], [".qrow .t", `${SH[k].n}s in production`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard to watch them"], DOCKT("build", "Tap Build")]
+    : !canPayRes(SH[k].c || {}) ? [["#hud", `Not enough resources for a ${SH[k].n} yet. Your mines keep working: come back in a few minutes`]]
+    : [[`.sheet [data-act="make"][data-k="${k}"]`, `Set ${n}, then tap Build`], [`article.bn[data-kind="s"][data-k="${k}"]`, `Choose ${SH[k].n}`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")]; };
+const tutStrike = (what) => () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : [['.sheet [data-act="launch"]', what], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
 const mapPath = (final, pick) => () => [['.sheet [data-act="launch"]', "Send your fleet"], [final, "Choose this one"], pick ? [pick, "Pick a target"] : null, SHOWME].filter(Boolean);
 const TUT = [
   { lv: 1, t: "Choose your commander name", say: "First things first, Commander: what should the galaxy call you? Every commander sees this name. Type it and tap Save.", ok: s => !!s.tutNm, open: () => ACT.profile({ u: G.me }), path: () => [['.sheet [data-act="nameSave"]', "Type your name, then tap Save"], ['.sheet #cnin', "Type your commander name"], SHOWME], rw: { m: 200, c: 100 } }, /* v296 */
@@ -13494,6 +13500,13 @@ const TUT = [
   { lv: 5, t: "Research Espionage Technology to Lv.4", say: "Better probes, and the last thing Astrophysics needs. Take Espionage Technology to Lv.4 under Advanced Research.", ok: s => (s.r.espionage || 0) >= 4, go: { v: "lab" }, rcat: "Advanced", path: rPath("espionage", "Advanced"), rw: { m: 3000, c: 9000, g: 2000, shards: 2 } },
   { lv: 5, t: "Research Astrophysics Lv.1", say: "Everything is in place. Start Astrophysics under Advanced Research: it charts stable orbits for settlers.", ok: s => (s.r.astro || 0) >= 1, go: { v: "lab" }, rcat: "Advanced", path: rPath("astro", "Advanced"), rw: { m: 4000, c: 8000, g: 4000, shards: 3 } },
   { lv: 5, t: "Research Astrophysics Lv.2", say: "One more level and we can hold a second world. Every 2 levels of Astrophysics adds a planet, up to 10.", ok: s => (s.r.astro || 0) >= 2, go: { v: "lab" }, rcat: "Advanced", path: rPath("astro", "Advanced"), rw: { m: 8000, c: 12000, g: 6000, shards: 5 } },
+  /* v301: scout, read the report, attack what you scouted, then settle the second world Astrophysics Lv.2 allows */
+  { lv: 6, t: "Build 2 Espionage Probes", say: "Never attack blind. Espionage Probes fly in, count the defenders and come home with a report. They need Shipyard Lv.3 and Espionage Technology Lv.2.", ok: s => own("spyProbe") >= 2 || ((s.stats || {}).spies || 0) >= 1, go: { v: "build", s: "ships" }, path: tutUnit("spyProbe", 2), rw: { m: 3000, c: 4000, g: 1000, shards: 2 } },
+  { lv: 6, t: "Spy on a Hive world", say: "I've marked the weakest Hive world near us. Tap Espionage on its card and send your probes.", ok: s => ((s.stats || {}).spies || 0) >= 1, hive: 1, path: () => [['.sheet [data-act="spyGo"]:not([disabled])', "Tap Send probes"], ['.sheet [data-act="spy"]', "Tap Espionage"], SHOWME], rw: { m: 2000, c: 3000, g: 1000, shards: 2 } },
+  { lv: 6, t: "Read the espionage report", say: "The probes are back. Open the report in Mail: it shows the defenders, their ships and the resources you could take home.", ok: s => !!s.tutSpyR, go: { v: "mail" }, path: () => [['[data-act="spyOpen"]', "Open the espionage report"], DOCKT("mail", "Open Mail")], rw: { m: 2000, c: 2000, g: 1000, shards: 1 } },
+  { lv: 6, t: "Attack the world you scouted", say: "Now we know what's there. Send a fleet that outguns its garrison: the report shows exactly what you're up against.", ok: s => ((s.stats || {}).hiveWins || 0) >= 2, hive: 1, path: tutStrike("Send your fleet"), rw: { m: 6000, c: 4000, g: 2000, shards: 3 } },
+  { lv: 6, t: "Build a Colony Ship", say: "Astrophysics Lv.2 lets us hold a second world. A Colony Ship needs Shipyard Lv.4 and Impulse Drive Lv.3.", ok: s => own("ark") >= 1 || (s.captures || 0) >= 1 || myPlanets().length >= 2, go: { v: "build", s: "ships" }, path: tutUnit("ark", 1), rw: { m: 10000, c: 12000, g: 6000, shards: 3 } },
+  { lv: 6, t: "Settle your first colony", say: "Send the Colony Ship along with your warships to a Hive world you can beat. Win the battle and the world becomes ours: our second planet.", ok: s => (s.captures || 0) >= 1 || myPlanets().length >= 2, hive: 1, path: tutStrike("Send the Colony Ship with your warships"), rw: { m: 15000, c: 15000, g: 8000, shards: 5 } },
   /* v299: the Academy ends with your flagship. Its last three steps pay all the materials (and most of the resources) the Dock and the flagship need */
   { lv: 6, t: `Reach Commander Level ${FLAG_LV}`, say: `At commander Lv.${FLAG_LV} the Flagship Dock unlocks and our faction's flagship can take command. Keep growing: upgrade mines, raid pirates, gather from fields and grab salvage pods. They all drop flagship materials too.`, ok: () => cmdLevel(score()) >= FLAG_LV, go: { v: "build", s: "res" }, path: () => { const k = growPick(); return bPath(k, B[k].cat === "fac" ? "fac" : "res")(); }, rw: { m: 40000, c: 30000, g: 12000, shards: 5, fs: { alloy1: 6, circuit1: 4, crystal1: 3 } } },
   { lv: 6, t: "Build the Flagship Dock", say: "The Flagship Dock is where our flagship is commissioned and where its gear is forged. Find it under Structures → Facility.", ok: s => (s.b.flagDock || 0) >= 1, go: { v: "build", s: "fac" }, path: bPath("flagDock", "fac"), rw: { m: 20000, c: 15000, g: 8000, shards: 3, fs: { alloy1: 4, circuit1: 2, crystal1: 1 } } },
@@ -13604,7 +13617,7 @@ function tutClaim() {
   S.tut.i++; S.tut.open = 0; if (S.tut.i > TUT_BASICS) S.advHop = 1; dirty(); try { SFX.research(); } catch (e) {} // v81: straight on to the next task; the guide is already pointing at it
   const nx = TUT[S.tut.i];
   if (nx) toast(`Academy step done: +${fmt(rw.m || 0)} metal, +${fmt(rw.c || 0)} crystal${rw.g ? `, +${fmt(rw.g)} gas` : ""}${rw.shards ? `, ◆${rw.shards}` : ""}.`, "win");
-  else { S.say.push("That's the Academy done, Commander. Our flagship leads the fleet now: it earns experience in every fight, and the Flagship Dock forges its gear.", "Upgrade the Shipyard to Lv.4 and build a Colony Ship, then send it with escorts to a free planet. I'll keep pointing you at the next directive on your path."); S.pathOpen = 1; flushSay(); }
+  else { S.say.push("That's the Academy done, Commander. Our flagship leads the fleet now: it earns experience in every fight, and the Flagship Dock forges its gear.", "Every 2 Astrophysics levels lets us hold another world: build more Colony Ships and send them with escorts to Hive worlds we can beat. I'll keep pointing you at the next directive on your path."); S.pathOpen = 1; flushSay(); }
   coachRender(true);
 }
 /* v210: what the Advisor says about the next directive on the quest path */
@@ -13622,6 +13635,7 @@ function coachRender(force) {
   if (!S.tutN2) { S.tutN2 = 1; if (S.tut.i > 0) S.tut.i = Math.min(TUT.length, S.tut.i + 2); dirty(); } /* v296: two steps added at the start; anyone already past the first step keeps their place */
   if (!S.tutAstro) { S.tutAstro = 1; if (S.tut.i >= TUT_V1 && (S.r.astro || 0) >= 2) S.tut.i = TUT.length; else if (S.tut.i >= TUT_V1) S.tut.open = 1; dirty(); } /* v200: finished commanders without Astrophysics Lv.2 get the new steps */
   if (!S.tutFlag) { S.tutFlag = 1; if (S.tut.i >= TUT_V2) { if (fsBuilt() && (S.b.flagDock || 0) >= 1) S.tut.i = TUT.length; else S.tut.open = 1; } dirty(); } /* v299: finished commanders get the Dock and flagship steps */
+  if (!S.tutSC) { S.tutSC = 1; const i = S.tut.i; if (i >= TUT_V2 && i <= TUT_V2 + 3) { const vet = myPlanets().length >= 2 || (S.captures || 0) >= 1; S.tut.i = vet ? (fsBuilt() && (S.b.flagDock || 0) >= 1 ? TUT.length : TUT_V2 + 6) : TUT_V2; if (S.tut.i < TUT.length) S.tut.open = 1; } dirty(); } /* v301: six scouting and colony steps after Astrophysics; commanders who already hold a colony skip them */
   if (view === "mail" && !S.tutMail) { S.tutMail = 1; dirty(); }
   if (S.tut.snz && S.tut.snz <= now()) { S.tut.snz = 0; S.tut.open = 1; dirty(); force = true; } /* v191: back after a 5-minute break, opened up */
   let w = $("#coach"); const mode = !battle && G.ready && !G.cubeDemo && !tutSnoozed() && !(S.pathSnz > now()) ? advPick() : null; /* v194: not over a demo battle; v210: the Advisor hops between the Academy or quest path and the fleet path */

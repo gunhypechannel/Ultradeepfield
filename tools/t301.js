@@ -1,0 +1,15 @@
+const { chromium, devices } = require('playwright');
+(async () => { const b = await chromium.launch({ args: ['--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader'] }); const pg = await (await b.newContext({ ...devices['iPhone 15 Pro Max'], deviceScaleFactor: 2 })).newPage(); const errs = []; pg.on('pageerror', e => errs.push(e.message + ' | ' + (e.stack || '').split('\n')[1]));
+  await pg.route('**/three.min.js', r => r.fulfill({ path: 'threelib/three.min.js', contentType: 'application/javascript' })); await pg.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
+  pg.goto('file://' + process.cwd() + '/index.html', { waitUntil: 'commit' }).catch(() => {});
+  await pg.waitForFunction(() => window.__dbg && window.__dbg.S && window.__dbg.G.list, null, { timeout: 180000, polling: 1000 }); await pg.waitForTimeout(2500);
+  await pg.evaluate(() => { document.querySelectorAll('#authw,#adv').forEach(e => e.remove()); window.__dbg.closeAll(); });
+  const E = c => pg.evaluate(c => window.__dbg.ev(c), c);
+  console.log('steps:', await E(`JSON.stringify(TUT.slice(23).map((s, i) => (23 + i) + ' ' + s.t))`));
+  console.log('paths:', await E(`(() => { S.tut = { i: 24, open: 1 }; S.b.shipyard = 1; const a = TUT[24].path().map(x => x && x[1]).slice(0, 2); S.b.shipyard = 3; S.r.espionage = 4; S.res.c = 1e6; const b2 = TUT[24].path().map(x => x && x[1]).slice(0, 2); S.b.shipyard = 3; const c = TUT[28].path().map(x => x && x[1]).slice(0, 2); return JSON.stringify({ noYard: a, ready: b2, colony: c }); })()`));
+  console.log('walk:', await E(`(() => { const out = []; S.tut = { i: 24, open: 1 }; S.stats = S.stats || {}; const step = () => { const st = TUT[S.tut.i]; out.push(st.t + ':' + st.ok(S)); tutClaim(); };
+    S.ships.spyProbe = 2; step(); S.stats.spies = 1; step(); const sr = (S.spyReps || [])[0]; S.tutSpyR = 1; step(); S.stats.hiveWins = 2; step(); S.ships.ark = 1; step(); S.captures = 1; step(); out.push('now: ' + TUT[S.tut.i].t); return JSON.stringify(out); })()`));
+  console.log('migrate:', await E(`(() => { const r = []; for (const [i, cap] of [[24, 0], [26, 0], [27, 0], [27, 1], [10, 0]]) { S.tut = { i }; S.tutSC = 0; S.captures = cap; coachRender(true); r.push(i + '/' + cap + '->' + S.tut.i); } return JSON.stringify(r); })()`));
+  await E(`(() => { S.tut = { i: 25, open: 1 }; S.tutSC = 1; S.tutSnz = 0; coachRender(true); ACT.nav({ v: 'galaxy' }); })()`); await pg.waitForTimeout(5000);
+  await pg.evaluate(() => { const b = document.querySelector('#coach [data-act="tutShow"]'); if (b) b.click(); }); await pg.waitForTimeout(3500); await pg.screenshot({ path: '../t301_spy.png', timeout: 60000 });
+  console.log(errs.slice(0, 6).join('\n') || 'no errors'); await b.close(); })();
