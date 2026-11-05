@@ -2264,7 +2264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 293;
+const GAME_V = 294;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -12077,30 +12077,36 @@ function effTarget() { try { if (!sheet) return null;
   if (sheet.type === "pirate") { const x = PB[sheet.id]; return x && !(pirDown(x) > now()) ? { D: xStacks(x), lvl: x.lvl } : null; }
   if (sheet.type === "planet") { const p = G.byId[sheet.id]; if (!p) return null; const st = pStatus(p, now()); if (st === "mine" || st === "myhome" || st === "shielded" || st === "razed" || p.owner === G.me) return null; const kn = spyKnown(p); return kn && kn.stacks.length ? { D: kn.stacks, lvl: p.lvl, est: !!(kn.rep && !kn.rep.tech) } : null; }
   } catch (e) {} return null; }
-/* v281 Efficient fight. A draw is a fight that ran out of time, usually with Cube hulls still standing, and the old test could miss it: a few fixed test battles in the
-   faster large-fleet mode, scaling every ship at once, cargo ships included. Now only warships go: 2 of each big hull, as many Light and Heavy Fighters as it takes, and more
-   of the big hulls only when fighters alone can't finish in time (Discovery Class and Cube Destroyers last of all). Every test is a full battle against an enemy 10% stronger than the real one,
-   any draw or loss fails, and the final fleet (10% above the smallest that passed) must win 40 of 40 fresh battles of that kind. */
-const EFF_LIGHT = ["fighter", "heavyFighter"], EFF_LMIN = { fighter: 20, heavyFighter: 10 }, EFF_TITAN = ["eclipse", "worldbreaker"];
+/* v294 Efficient fight, remastered: warships only, in the same mix as the ones you have, scaled to the smallest share of each type that
+   wins every test battle against the defenders made 10% stronger (110%), then cargo ships for the loot. The search tests 6 battles per
+   size, the chosen fleet must then win 24 fresh ones (if not, it grows 10% at a time), and cargo is Large Cargos first, then Small Cargos,
+   enough for all the loot the warships can't carry themselves. You can still change any number by hand afterwards. */
+function effLoot() { try { if (!sheet) return 0;
+  if (sheet.type === "pirate") { const x = PB[sheet.id]; return x ? total(xLoot(x)) : 0; }
+  if (sheet.type === "planet") { const p = G.byId[sheet.id]; if (!p) return 0; if (pStatus(p, now()) === "hive") return Math.floor(total(stock(p.lvl)) / 2);
+    const r = (S.spyReps || []).find(x => x.pid === p.id && x.res); return r ? Math.floor(total(r.res) / 2) : 0; } } catch (e) {} return 0; }
 async function effPick() { const T = effTarget(); if (!T || G.effBusy) return; const avail = originAvail(), war = Object.keys(avail).filter(k => avail[k] > 0 && warK(k));
-  if (!war.length) return toast("No warships here to send.", "warn"); const sh0 = sheet; G.effBusy = 1; toast("Testing fleets against an enemy 10% stronger than this one…");
+  if (!war.length) return toast("No warships here to send.", "warn"); const sh0 = sheet; G.effBusy = 1; toast("Testing fleets against defenders 10% stronger than these…");
   try { const D = T.D.map(s => Object.assign({}, s, { atk: s.atk * 1.1, sh: s.sh * 1.1, hull: s.hull * 1.1 })), tech = techOf(null), ally = allyStacks(sheet.bots, T.lvl); let tick = performance.now();
     const fight = async (n, dd, seed) => { const r = simulate(stacksOf(n, tech, G.me).concat(ally), dd, { seed }); if (performance.now() - tick > 30) { await new Promise(ok => setTimeout(ok, 0)); tick = performance.now(); if (sheet !== sh0) throw 0; } return r.winner === "a"; };
-    const passes = async (n, runs, base = 104729) => { for (let i = 0; i < runs; i++) if (!await fight(n, D, base * (i + 1) + 13)) return false; return true; };
-    const mk = (f, g, titans) => { const o = {}; for (const k of war) { const v = avail[k]; o[k] = EFF_LIGHT.includes(k) ? Math.min(v, Math.max(EFF_LMIN[k], Math.ceil(v * f))) : EFF_TITAN.includes(k) ? (titans ? v : 0) : Math.min(v, Math.max(2, Math.ceil(v * g))); if (!o[k]) delete o[k]; } return o; };
-    const least = async fn => { if (!await passes(fn(1), 6)) return null; let lo = 0, hi = 1; for (let i = 0; i < 7; i++) { const m = (lo + hi) / 2; if (await passes(fn(m), 6)) hi = m; else lo = m; }
-      for (let x = Math.min(1, hi * 1.1), i = 0; i < 8; i++, x = Math.min(1, x * 1.15)) { if (await passes(fn(x), 40, 65537)) return x; if (x >= 1) break; } return null; }; // fresh battles for the final check, so the search can't fit itself to its own test seeds
-    let out = null, f = await least(x => mk(x, 0, false));
-    if (f != null) out = mk(f, 0, false);
-    else { const g = await least(x => mk(1, x, false)); if (g != null) out = mk(1, g, false); /* a fight this hard keeps every fighter: they soak the fire while the big hulls work */ else if (await passes(mk(1, 1, true), 40, 65537)) out = mk(1, 1, true); }
-    if (sheet !== sh0) return; const all = mk(1, 1, true); pick = out || all; sheet.oddsKey = null; renderSheet();
-    if (!out) { let w = 0; for (let i = 0; i < 12; i++) if (await fight(all, T.D, 7907 * (i + 1))) w++; if (sheet === sh0) toast(`Even every warship here wins only ${Math.round(w / 12 * 100)}% of test battles, so all of them are selected. Add allies or build more ships.`, "warn"); return; }
-    toast(`Efficient fight: ${fmt(sumShips(pick))} warships won every test against an enemy 10% stronger${T.est ? ". Their research is hidden, so that assumes none" : ""}. Add Small Cargos by hand if you want room for loot.`, "win");
+    const wins = async (n, runs, base) => { for (let i = 0; i < runs; i++) if (!await fight(n, D, base * (i + 1) + 13)) return false; return true; };
+    const mk = f => { const o = {}; for (const k of war) { const v = Math.min(avail[k], Math.round(avail[k] * f)); if (v > 0) o[k] = v; } if (!Object.keys(o).length) { const k = war.sort((a, b) => SH[b].atk - SH[a].atk)[0]; o[k] = 1; } return o; };
+    let warN = null;
+    if (await wins(mk(1), 6, 7919)) { let lo = 0, hi = 1; for (let i = 0; i < 9; i++) { const m = (lo + hi) / 2; if (await wins(mk(m), 6, 7919)) hi = m; else lo = m; }
+      for (let f = hi, k = 0; k < 8; k++, f = Math.min(1, f * 1.1)) { if (await wins(mk(f), 24, 104729)) { warN = mk(f); break; } if (f >= 1) break; } } // fresh battles for the final check, so the search can't fit itself to its own test seeds
+    if (sheet !== sh0) return;
+    const all = mk(1), wsel = warN || all, loot = effLoot(), need = Math.max(0, loot - cargoOf(wsel)), cargo = {};
+    let left = need; const cks = Object.keys(avail).filter(k => avail[k] > 0 && !warK(k) && SH[k] && (SH[k].cargo || 0) > 0 && k !== "ark" && k !== "spyProbe" && k !== "recycler").sort((a, b) => (b === "heavyCargo") - (a === "heavyCargo") || (b === "hauler") - (a === "hauler") || SH[b].cargo - SH[a].cargo);
+    for (const k of cks) { if (left <= 0) break; const per = cargoOf({ [k]: 1 }) || SH[k].cargo, n = Math.min(avail[k], Math.ceil(left / per)); if (n > 0) { cargo[k] = n; left -= n * per; } }
+    pick = Object.assign({}, wsel, cargo); sheet.oddsKey = null; renderSheet();
+    const cTxt = !loot ? "" : !need ? ` Their own holds carry all ${fmt(loot)} of the loot.` : left > 0 ? ` Cargo ships added: ${fmt(sumShips(cargo))}, room for ${fmt(loot - Math.max(0, left))} of ${fmt(loot)} loot (not enough cargo ships here for all of it).` : ` Plus ${fmt(sumShips(cargo))} cargo ship${sumShips(cargo) === 1 ? "" : "s"} for all ${fmt(loot)} of the loot.`;
+    if (!warN) { let w = 0; for (let i = 0; i < 12; i++) if (await fight(all, T.D, 7907 * (i + 1))) w++; if (sheet === sh0) toast(`Even every warship here wins only ${Math.round(w / 12 * 100)}% of test battles against these defenders, so all of them are selected.${cTxt} Add allies or build more ships.`, "warn"); return; }
+    toast(`Efficient fight: ${fmt(sumShips(wsel))} warships won all 24 test battles against defenders 10% stronger${T.est ? " (their research is hidden, so that assumes none)" : ""}.${cTxt}`, "win");
   } catch (e) { if (e !== 0) throw e; } finally { G.effBusy = 0; } }
 function picker(avail) {
   for (const k of Object.keys(pick)) if (!avail[k]) delete pick[k];
   for (const k of Object.keys(pick)) pick[k] = Math.min(pick[k], avail[k]);
-  const eff = effTarget() ? `<button class="btn amber wide" style="margin:4px 0 8px" data-act="pkeff">⚡ Efficient fight · warships only, built to win</button>` : "";
+  const eff = effTarget() ? `<button class="btn amber wide" style="margin:4px 0 8px" data-act="pkeff">⚡ Efficient fight · warships to win at 110%, cargo for the loot</button>` : "";
   return `<div>${eff}${Object.keys(avail).filter(k => avail[k] > 0).map(k => `<div class="pick"><canvas data-u="${k}"></canvas><div class="nm">${SH[k].n}<small>${fmt(avail[k])} available</small></div><div style="display:flex;gap:6px;align-items:center"><div class="stepper"><button data-act="pk" data-k="${k}" data-d="-1" aria-label="Fewer">−</button><input value="${pick[k] || 0}" id="pk-${k}" data-pk="${k}" type="number" min="0" max="${avail[k]}" inputmode="numeric" aria-label="Ships to send"><button data-act="pk" data-k="${k}" data-d="1" aria-label="More">+</button></div><button class="btn ghost sm" data-act="pkmax" data-k="${k}">All</button><button class="btn ghost sm pknone" data-act="pknone" data-k="${k}" ${pick[k] ? "" : "disabled"}>None</button></div></div>`).join("")}${Object.keys(avail).filter(k => avail[k] > 0).length > 1 ? `<div class="pkall"><button class="btn ghost sm" data-act="pkevery">Select all ships</button><button class="btn ghost sm" data-act="pkclear" ${Object.values(pick).some(v => v > 0) ? "" : "disabled"}>Clear all</button></div>` : ""}</div>`;
 }
 /* "From" switch: launch from the homeworld or any colony that has ships */
