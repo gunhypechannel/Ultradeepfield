@@ -2264,7 +2264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 294;
+const GAME_V = 295;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6446,7 +6446,7 @@ function fleet3D(W, n, col, hostile, big, cube, flag) { // big: a joint strike a
   const form = typeof big === "string" && FORMS[big] ? big : "wedge", N = ships.length, FM = cube ? CUBE_FORM : FORMS[form], tc = {}, F0 = flag ? { len: geos[0].len * FLAG_K, wid: geos[0].wid * FLAG_K } : null;
   const spM = flag && !cube && form === "swarm" ? Math.max(sp, (F0.len * .5 + sp * .6) / 1.08, (F0.wid * .5 + sp * .6) / 1.35) : sp; // the swarm's rings open wide enough to circle the flagship
   const slots = ships.map((k, i) => { const tier = k === "flagship" || /[lxq]/.test(MINI_CLS[k]) ? "b" : "s", j = tc[tier] = (tc[tier] || 0) + 1; const s = cube ? FM.slot(i, N, sp, k, F0, j) : flag ? (i ? FLAG_SLOT[form](i, N, spM, F0) : [0, 0, 0]) : FM.slot(i, N, sp, k, null, j); return { k, x: s[0], y: s[1], z: s[2], ph: i * 1.3, i, side: s[3] || 0, big: tier === "b" }; });
-  const move = FM.move; // v106: each joint strike formation has its own motion
+  const move0 = FM.move, mDamp = clamp(Math.max(...esc.map(g => g.len)) / 2.6, .35, 1), move = mDamp >= 1 || form === "swarm" || cube ? move0 : (s, t, N, sp) => { const m = move0(s, t, N, sp); return [m[0] * mDamp, m[1] * mDamp, m[2] * mDamp, m[3] * mDamp, m[4] * mDamp, m[5] * mDamp]; }; // v106: each formation has its own motion; v295: small hulls move less
   let acc = K.acc.get(col); if (!acc) { acc = K.mats.accent.clone(); acc.color.set(col); acc.emissive.set(col); acc.emissiveIntensity = 1.1; K.acc.set(col, acc); }
   const groups = [];
   for (const k of new Set(ships)) { const ss = slots.filter(s => s.k === k), meshes = [];
@@ -7770,7 +7770,7 @@ function draw3D(t) {
   if (cam.vel && W.pan) { if (Math.abs(cam.vel.x) + Math.abs(cam.vel.y) > .15) { const kk = W.dtk || 1; W.pan(cam.vel.x * kk, cam.vel.y * kk); const dmp = Math.pow(.92, kk); cam.vel.x *= dmp; cam.vel.y *= dmp; } else cam.vel = null; }
   let goal = cam.goal;
   if (cam.follow && G.byId[cam.follow]) { const q = P3(G.byId[cam.follow], T); goal = Object.assign({}, goal || {}, { tx: q.x, ty: q.y, tz: q.z }); }
-  if (cam.followFleet) { const o = W.fleets.get(cam.followFleet); if (o && o.pt) { goal = Object.assign({}, goal || {}, { tx: o.pt.x, ty: o.pt.y, tz: o.pt.z }); if (o.yaw != null) cam.head = o.yaw; if (o.f) cam.lastTgt = o.f.enemy ? G.byId[o.f.pid] : fleetTarget(o.f); }
+  if (cam.followFleet) { const o = W.fleets.get(cam.followFleet); if (o && o.pt) { goal = Object.assign({}, goal || {}, { tx: o.pt.x, ty: o.pt.y, tz: o.pt.z }); if (o.yaw != null) { if (cam.head == null || !cam.cine) cam.head = o.yaw; else { let dh = o.yaw - cam.head; while (dh > Math.PI) dh -= TAU; while (dh < -Math.PI) dh += TAU; cam.head += dh * (1 - Math.pow(.88, W.dtk || 1)); } } if (o.f) cam.lastTgt = o.f.enemy ? G.byId[o.f.pid] : fleetTarget(o.f); }
     else { const f = S.fleets.find(x => x.id === cam.followFleet), pa = f && fleetPath(f, T); // v98: its model isn't built yet (map just opened): track the fleet's course meanwhile
       if (pa) { const pt = pa.park ? pa.b : ARC(pa.a, pa.b, pa.k); goal = Object.assign({}, goal || {}, { tx: pt.x, ty: pt.y, tz: pt.z }); }
       else { cam.followFleet = null; if (!(cam.cine && G.clashes.some(c => c.loc === cam.lastTgt))) cineEnd(); else cam.cineHold = 1; } } } // a fleet wiped out in its battle: keep filming the battle
@@ -7804,6 +7804,7 @@ function draw3D(t) {
   const dtk = clamp((t - (W.lastT || t)) / 16.67, 0, 4); W.lastT = t; W.dtk = dtk; // v124: camera easing is frame-rate independent (same feel at 60 and 120 Hz)
   keyCam(W); // v124: held keys pan, rotate, tilt and zoom
   if (goal) { const e = 1 - Math.pow(.9, dtk || 1); if (goal.tx != null) { cam.tx += (goal.tx - cam.tx) * e; cam.ty += (goal.ty - cam.ty) * e; cam.tz += (goal.tz - cam.tz) * e; } if (goal.dist) { cam.dist += (goal.dist - cam.dist) * e; if (Math.abs(goal.dist - cam.dist) < .3 && cam.goal) cam.goal.dist = null; } }
+  if (cam.cine && cam.followFleet && !cam.cineBattle && !cam.cineGather) { const fo = W.fleets.get(cam.followFleet); if (fo && fo.pt) { cam.tx = fo.pt.x; cam.ty = fo.pt.y; cam.tz = fo.pt.z; } } // v295
   { const LIc = liveIntro(T); if (LIc) liveCam(W, LIc); else if (cam.siege) siegeCam(W, t); else if (cam.live) cam.live = 0; } // v98: the live event directs the camera
   const sp = Math.sin(cam.ph);
   W.camera.position.set(cam.tx + cam.dist * sp * Math.cos(cam.th), cam.ty + cam.dist * Math.cos(cam.ph), cam.tz + cam.dist * sp * Math.sin(cam.th));
