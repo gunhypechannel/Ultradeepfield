@@ -2264,7 +2264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 295;
+const GAME_V = 296;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13217,6 +13217,8 @@ const rPath = (k, cat) => () => S.rq && S.rq.k === k ? [['[data-act="finish"][da
 const tutWaitShips = () => !Object.values(S.ships || {}).some(v => v > 0) && S.fleets.some(f => f.phase === "back" || f.phase === "out") ? [DOCKT("fleets", "Your fighters are flying home. They'll be ready in a moment")] : null;
 const mapPath = (final, pick) => () => [['.sheet [data-act="launch"]', "Send your fleet"], [final, "Choose this one"], pick ? [pick, "Pick a target"] : null, SHOWME].filter(Boolean);
 const TUT = [
+  { lv: 1, t: "Choose your commander name", say: "First things first, Commander: what should the galaxy call you? Every commander sees this name. Type it and tap Save.", ok: s => !!s.tutNm, open: () => ACT.profile({ u: G.me }), path: () => [['.sheet [data-act="nameSave"]', "Type your name, then tap Save"], ['.sheet #cnin', "Type your commander name"], SHOWME], rw: { m: 200, c: 100 } }, /* v296 */
+  { lv: 1, t: "Name your homeworld", say: "This world is ours now. Give our capital a name worthy of an empire, then tap Save.", ok: s => !!s.tutHw, open: () => ACT.skin({}), path: () => [['.sheet [data-act="skinSave"]', "Type a name, then tap Save"], ['.sheet #pname', "Type your homeworld's name"], SHOWME], rw: { m: 200, c: 150 } }, /* v296 */
   { lv: 1, t: "Build a Metal Extractor", say: "Everything starts with metal. Open Structures and build your first Metal Extractor.", ok: s => s.b.metalMine >= 1, go: { v: "build", s: "res" }, path: bPath("metalMine", "res"), rw: { m: 300, c: 150 } },
   { lv: 1, t: "Build a Solar Array", say: "Extractors need power. A Solar Array keeps them running at full speed.", ok: s => s.b.solar >= 1, go: { v: "build", s: "res" }, path: bPath("solar", "res"), rw: { m: 300, c: 200 } },
   { lv: 1, t: "Build a Crystal Refinery", say: "Crystal pays for research and better hulls. Get a refinery going.", ok: s => s.b.crystalMine >= 1, go: { v: "build", s: "res" }, path: bPath("crystalMine", "res"), rw: { m: 400, c: 250 } },
@@ -13243,7 +13245,7 @@ const TUT = [
   { lv: 5, t: "Research Astrophysics Lv.1", say: "Everything is in place. Start Astrophysics under Advanced Research: it charts stable orbits for settlers.", ok: s => (s.r.astro || 0) >= 1, go: { v: "lab" }, rcat: "Advanced", path: rPath("astro", "Advanced"), rw: { m: 4000, c: 8000, g: 4000, shards: 3 } },
   { lv: 5, t: "Research Astrophysics Lv.2", say: "One more level and we can hold a second world. Every 2 levels of Astrophysics adds a planet, up to 10.", ok: s => (s.r.astro || 0) >= 2, go: { v: "lab" }, rcat: "Advanced", path: rPath("astro", "Advanced"), rw: { m: 8000, c: 12000, g: 6000, shards: 5 } }
 ];
-const TUT_V1 = 17; // the Academy's length before the Astrophysics steps were added
+const TUT_V1 = 19; // (v296: 17 + the two naming steps) // the Academy's length before the Astrophysics steps were added
 const tutOn = () => S && S.tut && !S.tut.off && S.tut.i < TUT.length;
 const TUT_SNOOZE = 5 * 60000, tutSnoozed = () => !!(S && S.tut && S.tut.snz > now());
 /* v210 fleet path: one hull class at a time in the order the tech tree opens them, so nobody is left wondering what to build next.
@@ -13256,7 +13258,7 @@ const SHIP_PATH = [["fighter", 5, "Light Fighters are the backbone of every earl
   ["destroyer", 1, "Destroyers are escort killers, best against Dreadnoughts and Laser Turrets. Bring one when the enemy fields Dreadnoughts."],
   ["bomber", 1, "Bombers crack defenses: best against turrets. Send them at fortified worlds once Plasma Technology is ready."],
   ["dreadnought", 1, "The Reaper is the king of the fleet, a towering flagship that hunts capital ships: best against Battleships, Bombers and Destroyers. The top of the fleet path."]];
-const TUT_BASICS = 12; // the Academy runs alone through its basics (first buildings, research, fighters, the first Hive win), then the Advisor hops
+const TUT_BASICS = 14; // (v296: 12 + the two naming steps) // the Academy runs alone through its basics (first buildings, research, fighters, the first Hive win), then the Advisor hops
 const RCAT_OF = k => (RCAT.find(([, ks]) => ks.includes(k)) || ["Basic"])[0];
 function reqStep(req, depth) { // the first requirement on the road to req that can be worked on right now
   for (const [k, l] of missing(req)) { const D = B[k] || R[k]; if (!D) continue; const inner = (depth || 0) < 6 && reqStep(D.req, (depth || 0) + 1); if (inner) return inner; return { k, l, n: D.n, cur: lvlOf(k), r: !B[k] }; }
@@ -13291,7 +13293,8 @@ function fleetPathCard() {
       <div class="rw"><span class="cost">${costHTML(sp.rw)} <span class="shard">◆${sp.rw.shards}</span></span>${sp.ok() ? `<button class="btn amber" data-act="shipClaim">Claim reward</button>` : `<button class="btn ghost" data-act="shipShow">Show me</button>`}</div></article>` : `<p class="note">Every hull on the fleet path is built. Your fleet is complete.</p>`}`;
 }function tutShow() {
   const st = TUT[S.tut.i]; if (!st) return;
-  if (st.go) { if (sheet) closeSheet(); ACT.nav(st.go); if (st.rcat) { sub.rcat = st.rcat; render(); } }
+  if (st.open) { if (sheet) closeSheet(); if (view !== "base") { view = "base"; render(); } st.open(); } // v296: steps that open a card (your profile, the homeworld's name)
+  else if (st.go) { if (sheet) closeSheet(); ACT.nav(st.go); if (st.rcat) { sub.rcat = st.rcat; render(); } }
   else if (st.find) { if (st.pirLvl) G.pirLvl = st.pirLvl; ACT.find({ r: st.find }); }
   else if (st.hive) { const h = homePlanet(), T = now(), hq = h ? pos(h, T) : { x: 0, y: 0 };
     const p = G.list.filter(p => pStatus(p, T) === "hive").map(p => { const q = pos(p, T); return [p, (q.x - hq.x) ** 2 + (q.y - hq.y) ** 2 + p.lvl * p.lvl * 900, p.lvl]; }).sort((a, b) => a[2] - b[2] || a[1] - b[1])[0]; /* v235: the lowest-level Hive world first, then the nearest */
@@ -13327,7 +13330,7 @@ function guideFrame() {
   const el = GD.el && GD.el.isConnected ? GD.el : null;
   if (!el) { g.style.display = "none"; return requestAnimationFrame(guideFrame); }
   const r = el.getBoundingClientRect(), pad = 6, ring = g.firstChild, hand = g.children[1], tip = g.children[2], low = r.top > innerHeight * .62;
-  g.style.display = "block"; g.classList.toggle("spot", S.tut.i < 7);
+  g.style.display = "block"; g.classList.toggle("spot", S.tut.i < 9);
   Object.assign(ring.style, { left: r.left - pad + "px", top: r.top - pad + "px", width: r.width + pad * 2 + "px", height: r.height + pad * 2 + "px" });
   hand.textContent = low ? "👇" : "👆"; hand.classList.toggle("down", low);
   Object.assign(hand.style, { left: clamp(r.left + r.width / 2 - 18, 4, innerWidth - 44) + "px", top: (low ? r.top - 50 : r.bottom + 4) + "px" });
@@ -13360,6 +13363,7 @@ function pathHint(q) {
 let coachHtml = "";
 function coachRender(force) {
   if (!S) return; if (!S.tut) S.tut = { i: S.intro && score() > 200 ? TUT.length : 0, open: 1 }; // veterans skip the Academy
+  if (!S.tutN2) { S.tutN2 = 1; if (S.tut.i > 0) S.tut.i = Math.min(TUT.length, S.tut.i + 2); dirty(); } /* v296: two steps added at the start; anyone already past the first step keeps their place */
   if (!S.tutAstro) { S.tutAstro = 1; if (S.tut.i >= TUT_V1 && (S.r.astro || 0) >= 2) S.tut.i = TUT.length; else if (S.tut.i >= TUT_V1) S.tut.open = 1; dirty(); } /* v200: finished commanders without Astrophysics Lv.2 get the new steps */
   if (view === "mail" && !S.tutMail) { S.tutMail = 1; dirty(); }
   if (S.tut.snz && S.tut.snz <= now()) { S.tut.snz = 0; S.tut.open = 1; dirty(); force = true; } /* v191: back after a 5-minute break, opened up */
@@ -15049,7 +15053,7 @@ const ACT = {
   renameSave: () => {
     const v = (($("#mrename") || {}).value || "").replace(/[^\p{L}\p{N} '\-]/gu, "").replace(/\s+/g, " ").trim().slice(0, 20);
     if (v.length < 2) return toast("Use at least 2 letters or numbers.", "warn");
-    S.homeName = v; const h = homePlanet(); if (h) { h.name = v; putPlanet(h); }
+    S.homeName = v; S.tutHw = 1; const h = homePlanet(); if (h) { h.name = v; putPlanet(h); }
     menu.rename = false; dirty(); toast(`Homeworld renamed to ${v}.`); render(true);
   },
   saveNow: () => { dirty(); flush().then(() => { toast(store.mode === "cloud" ? "Saved to your account." : "Saved in this browser.", "win"); renderMenu(); }); },
@@ -15139,7 +15143,7 @@ const ACT = {
     for (const o of ["at", "rg", "rc"]) if (sheet[o] != null) p[o] = sheet[o];
     if (sheet.px && PXS[sheet.px] && !pxOwned(sheet.px)) return toast(`${PXS[sheet.px].n} is locked, so it can't be saved. Unlock it first.`, "warn");
     if (sheet.px != null) p.px = sheet.px && PXS[sheet.px] ? sheet.px : null;
-    if (p.kind === "home") { p.name = name; p.type = sk; p.v = sv; p.sk = sk; p.tn = tn; S.homeName = name; }
+    if (p.kind === "home") { p.name = name; p.type = sk; p.v = sv; p.sk = sk; p.tn = tn; S.homeName = name; S.tutHw = 1; }
     else { p.nm = name; p.sk = sk; p.sv = sv; p.name = name; p.type = sk; p.v = sv; p.tn = tn; }
     putPlanet(p); closeSheet(); dirty(); toast(`${name} updated.`, "win"); render(true);
   },
@@ -15451,6 +15455,7 @@ const ACT = {
     if (!/^[\p{L}\p{N} ._'-]+$/u.test(v)) return toast("Use letters, numbers, spaces and . _ ' - only.", "warn");
     const low = v.toLowerCase(); if (["you", "hive", "unnamed commander", "commander", "admin", "advisor"].includes(low) || BOTS.some(b => b.name.toLowerCase() === low)) return toast("That name is reserved. Try another.", "warn");
     if (Object.entries(G.names).some(([id, n]) => id !== G.me && (n || "").toLowerCase() === low)) return toast("Another commander already uses that name.", "warn");
+    if (!S.tutNm) { S.tutNm = 1; dirty(); try { coachRender(true); } catch (e) {} } /* v296: the Academy's naming step (keeping your current name counts) */
     if (v === S.cname) return; S.cname = v; G.myName = v; dirty(); syncPlayer(); toast(`You are now Commander ${v}.`, "win"); render(true); },
   bioSave: () => { const v = (($("#bioin") || {}).value || "").replace(/[\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 160); S.bio = v; dirty(); syncPlayer(); toast("Bio saved.", "win"); render(true); },
   allyOpen: () => { closeSheet(); ACT.nav({ v: "ally" }); },
