@@ -2337,7 +2337,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 304;
+const GAME_V = 305;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -14904,10 +14904,10 @@ function tickUI() {
 
 /* ---------- factions: four peoples of the Void, each with its own look for ships and buildings ---------- */
 const FACTIONS = {
-  terran:  { n: "Terran Union", d: "Steel-grey warships with cyan running lights. Rugged, modular and battle-proven.", acc: "#55d6e8", hull: 0xb2bcc6, dark: 0x6c7680, plate: "#d3dbe2", plateD: "#59636d", bSteel: 0x9aa6b2, bLight: 0xc9d1d8, bDark: 0x8a949e, glow: 0x55d6e8 },
-  solar:   { n: "Solar Dominion", d: "Gleaming ivory-and-gold hulls with amber reactors, crowned with halo rings.", acc: "#ffb347", hull: 0xf2ead8, dark: 0xb8924a, plate: "#f6efe0", plateD: "#a8843e", bSteel: 0xe8dcc0, bLight: 0xfff6e2, bDark: 0xb8924a, glow: 0xffc860 },
+  terran:  { n: "Terran Union", d: "Gunmetal warships striped in white and blue, with deep blue drives. Rugged, modular and battle-proven.", acc: "#55d6e8", hull: 0xb2bcc6, dark: 0x6c7680, plate: "#d3dbe2", plateD: "#59636d", bSteel: 0x9aa6b2, bLight: 0xc9d1d8, bDark: 0x8a949e, glow: 0x55d6e8 },
+  solar:   { n: "Solar Dominion", d: "Gleaming ivory-and-gold hulls with amber reactors, crowned with a golden sun.", acc: "#ffb347", hull: 0xf2ead8, dark: 0xb8924a, plate: "#f6efe0", plateD: "#a8843e", bSteel: 0xe8dcc0, bLight: 0xfff6e2, bDark: 0xb8924a, glow: 0xffc860 },
   nyx:     { n: "Nyx Syndicate", d: "Black stealth hulls, knife-flat and angular, lit in blood red.", acc: "#ff3b4a", hull: 0x4a505a, dark: 0x1c1f25, plate: "#5a606a", plateD: "#1c1f25", bSteel: 0x7a828e, bLight: 0x9ea6b2, bDark: 0x4e555f, glow: 0xff3b4a, bTrim: 0xff3b4a },
-  verdant: { n: "Verdant Collective", d: "Living alloys in jade and teal, rounded and grown rather than built.", acc: "#6dffb0", hull: 0x8cc4aa, dark: 0x2f5a4a, plate: "#a8d8c0", plateD: "#2f5a4a", bSteel: 0x7fb8a0, bLight: 0xb8e6d0, bDark: 0x3f7060, glow: 0x6dffb0 }
+  verdant: { n: "Verdant Collective", d: "Living hulls of pale bone wound with vines and jade crystal, grown rather than built.", acc: "#6dffb0", hull: 0x8cc4aa, dark: 0x2f5a4a, plate: "#a8d8c0", plateD: "#2f5a4a", bSteel: 0x7fb8a0, bLight: 0xb8e6d0, bDark: 0x3f7060, glow: 0x6dffb0 }
 };
 const facOf = () => (S && FACTIONS[S.faction]) ? S.faction : "terran";
 const facAcc = f => (FACTIONS[f] || FACTIONS.terran).acc + "@" + (FACTIONS[f] ? f : "terran");
@@ -14928,7 +14928,7 @@ function shFaction() {
   return `<div class="facf"><div class="facin"><i class="facstars" aria-hidden="true"></i>
     <div class="factop"><div class="factab"><span>${first ? "Choose your people" : "Faction"}</span></div>${first ? "" : `<button class="facx" data-act="close" aria-label="Close">✕</button>`}</div>
     <div class="fachd"><h2>${first ? "Which faction do you lead?" : "Change Faction"}</h2><p>Your faction sets the look of your ships and buildings. It does not change their stats.${first ? ` You can change it later for <span class="gem"><i>◆</i>10</span>.` : ` Changing costs <span class="gem"><i>◆</i>10</span>.`}</p></div>
-    <div class="facs">${Object.entries(FACTIONS).map(([k, F], i) => { const on = k === cur && !first; return `<button class="fpk${on ? " on" : ""}" data-act="facPick" data-f="${k}" style="--i:${i}"${on ? ' aria-current="true"' : ""}><span class="fcglow"></span><span class="fcedge"><span class="fcbody"><span class="fcscene"><img src="art/faction/${k}.webp" alt="${F.n} battleship" decoding="async"><i class="fcsheen"></i></span><span class="fcinfo"><img class="fccrest" src="art/faction/${k}-crest.webp" alt="" decoding="async"><span class="fctxt"><b>${F.n}</b><small>${F.d}</small></span></span><span class="fcflash"></span></span></span>${on ? `<span class="fcsel">✓ SELECTED</span>` : ""}</button>`; }).join("")}</div>
+    <div class="facs">${Object.entries(FACTIONS).map(([k, F], i) => { const on = k === cur && !first; return `<button class="fpk${on ? " on" : ""}" data-act="facPick" data-f="${k}" style="--i:${i}"${on ? ' aria-current="true"' : ""}><span class="fcglow"></span><span class="fcedge"><span class="fcbody"><span class="fcscene"><img src="art/faction/${k}.webp" alt="${F.n} flagship" decoding="async"><i class="fcsheen"></i></span><span class="fcinfo"><img class="fccrest" src="art/faction/${k}-crest.webp" alt="" decoding="async"><span class="fctxt"><b>${F.n}</b><small>${F.d}</small></span></span><span class="fcflash"></span></span></span>${on ? `<span class="fcsel">✓ SELECTED</span>` : ""}</button>`; }).join("")}</div>
   </div></div>`;
 }
 
