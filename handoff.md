@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-04 (America/Phoenix). Current game version: **v297** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v105**.
+Last updated: 2026-11-05 (America/Phoenix). Current game version: **v297** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v105**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -28,18 +28,30 @@ A space empire strategy game ("the GitHub version"), played by friends and famil
 ## How saving works
 - The whole empire (`S`: resources, buildings, research, ships, **fleets in flight, stationed guards, timers**) is one JSON blob saved to `data/users/<uid>/save` with `seq`, `sess` (per-tab session id), `savedAt` and a signature.
 - Shared world data (planets, players, alliances, joint strikes) lives in separate docs and syncs live.
+- **Since v293** the cloud save leaves out `reports`/`savedReps` (`repsSep: 1`); they live in `data/users/<uid>/reps`, written only when they change (before the save). `repsInto` merges them on sign-in and in `adoptCloud`. localStorage still holds the full state.
+- **Since v293** private records (`data/...`) are not on the live channel (`filter: "top=neq.data"` in `udf-supabase.js`). The account save is polled every 30 s while visible (and on return to the tab) as just `updated_at, seq, sess, savedAt` (`dataSnap`), which is all the hand-off listener needs. Background saves reach the server at most every 20 s; actions, hiding and leaving still save at once.
 - Hourly/daily backups go to `data/users/<uid>/backups/`.
 - Device-only settings (audio, graphics, key bindings) stay in `localStorage` per device on purpose.
 
-## Changes this session
-1. **Tablet / unfolded Fold layout (v207 CSS).** On screens ≥700px, `.gstack` used `margin-inline:auto` inside the flex page column, which shrank Rankings, Quests, Fleets and Alliances to a narrow middle strip. Added `width:100%`.
-2. **Seamless device hand-off (v207).**
-   - When another device saves, this copy pauses and loads that save in place (`followCloud` → `adoptCloud`) instead of the "Playing on another device" wall + full reload. The wall (`sessTakeover`) now only shows for the "your saved empire is bigger" case.
-   - On returning to a backgrounded tab (`visibilitychange` → visible), it reads the server save first and adopts it if newer, before this copy writes anything.
-   - `saveSoon()` saves ~0.9 s after any tap / `act()` instead of waiting for the 6 s timer; a save requested mid-write now re-runs after it (`store.again`).
-3. **Fleets tab (v208).** Now shows only: fleets in flight (Recall, Hurry, Afterburners, Use boost), joint strikes you're in (add participants, invite, boost), missiles in flight, and ships at each planet with **Deploy** (`fDeploy`: sets launch planet, opens galaxy targets) and **Transport** (`fTransport`: opens the Planets sheet logistics panel with that planet as source). Radar/Hive-raid warnings still appear here only while an attack is inbound. The Plunder & Rewards log moved to the Quests tab; Repair Bay and Jump Gate are on their buildings.
+## Latest session (v260–v297, 2026-11-02 to 11-05)
+Per-version detail is in **Recent versions** below. The big themes:
+- **Battle replays:** 60 FPS work and crash fixes (v260, v268, v269); unique Cube and monster map animations (v262); Dreadnought three-beam salvo and Reaper swarm + flak (v265–v269); every capital ship has a second battery (v290); big replays (60+ squadrons) no longer go black (v291, a temporal-dead-zone bug from v265).
+- **Map:** walkers route round buildings (v263); smooth planet switching via `mapShaderWarm` and worker-made clouds (v274, fixed to actually run in v278); fleets keep one size at every zoom (v274); Cube model always drawn in battles even with a finder on (v275); formation rebuild budget (v276); invisible fleet NaN fix (v278); steadier cinematic for fast fleets (v295); HUD stays up for the neighbourhood tour (v292).
+- **Balance:** rarer runes, 4× alliance level and station costs, 3× research time, 2× Cube bosses (v270); research from any planet and level-locked, rebalanced element rings (v272); Cube wreckage to recycle (v277, v282).
+- **Co-op:** call-to-arms band with one-tap JOIN / DEFEND, teamwork bonus, connection retry (v271); bot allies defend your worlds and alliance SOS (v273).
+- **Fleets:** flagships from commander Lv.15 (v264); per-fleet formations (v274–v276); Efficient fight remastered: warships to win at 110% plus cargo for the loot (v294).
+- **Other:** login art (v263); tutorial starts with naming commander and homeworld (v296); cards and pages scroll vertically only (v297); Supabase bandwidth cut (v293).
+- Another session in parallel shipped v280–v289 (bot curve reverted in v285, recycling buttons, sounds, music loading, avatars, owner-only tests, feedback screenshots). Always `git fetch && git rebase origin/main` before patching.
 
 ## Testing
+**Quick offline harness (used for v260–v297):**
+- `python3 tools/dbg_build.py docs/index.html <dir>/index.html` builds an offline copy with `window.__dbg` (`S`, `G`, `ACT`, `G3`, `playBattle`, `duelBattle`, `closeAll`, and `ev(code)`, which runs code inside the game's scope, so top-level `let/const`/functions can be read or replaced).
+- Copy `docs/art`, `docs/avatars`, `docs/skins` next to it, route `**/three.min.js` to a local three.js r128 file and abort Google Fonts, open with Playwright (`file://`), wait for `__dbg.S`, remove `#authw,#adv`, then drive it with `__dbg.ev(...)`.
+- Headless Chromium uses SwiftShader: absolute FPS is meaningless (the map runs ~1–3 FPS), so compare before/after, count shader programs (`G3.renderer.info.programs`), long tasks and errors. `--disable-accelerated-2d-canvas` gives steadier battle numbers.
+- The duel and 10 vs 10 tests are owner-only since v288: set `__dbg.G.owner = true` first.
+- `tools/fixture_r708_cube_joint_strike.json` is a real 25-commander, 317-squadron saved report (the black-replay case): `__dbg.playBattle(JSON.parse(...))`.
+
+**Mock-server tests (older):**
 Playwright + Chrome are available in the cloud workspace. Pattern used this session:
 - Serve `docs/` with `python3 -m http.server`, route `cdn.jsdelivr.net/**` to `tools/mock-supabase.js`, abort other external requests, sign up through the in-game form, wait ~9 s.
 - Game variables are top-level `let/const` inside the page script, so they are **not** on `window`. `tools/test_supabase.py` and `tools/test_v205.py` reference a `window.__T` hook that no longer exists in `index.html`; to test, inject one when serving the page (e.g. replace `function saveSoon() {` with `window.__T={get S(){return S},store,…};function saveSoon() {` in the served HTML).
@@ -47,6 +59,11 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - Fold 6 unfolded viewport: 884 × 1030, `device_scale_factor` 2.1, `is_mobile`, `has_touch`.
 
 ## Not yet verified / open items
+- **v293 bandwidth fix on the real server:** confirm with Supabase edge logs (no `col=eq` gaps, save uploads ~70 KB, no echo) after the owner plays; watch Usage → Egress. Hand-off between devices now takes up to 30 s (poll) unless the tab is reopened.
+- **v271 call-to-arms / v273 SOS** were tested with fake data only; they need two real alliance accounts.
+- **iOS "closed unexpectedly after: battle closed"** crash reports keep appearing (v257–v290); v268 mitigations are unverified on device.
+- **Wording:** the "fleet slots full" toast says "Research Fleet Command", but slots come from Computer Technology (`maxFleets`: 2 + Computer Tech + colonies + Admiral + Warlord + VIP 6/14).
+- Only the owner is active (4 accounts; the other three are Lv.1–2).
 - **Transport button** wasn't tested end-to-end (test account had one planet). Check on a real account with 2+ planets.
 - **Simultaneous play on two devices:** a tap made in the ~1 s before the other device's save arrives can still be lost. Normal switching is covered.
 - Leaving a page relies on an async save on `visibilitychange`/`pagehide`; with `saveSoon()` the gap is ~1 s.
@@ -59,7 +76,7 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 2. Bump `CACHE` in `docs/sw.js`, **and bump `GAME_V` in `docs/index.html` and `docs/version.json` to the same new number.** Open games check `version.json` every 2 minutes and when the tab comes back, and show an "Update now" bar when it's newer than their `GAME_V` (v220).
 3. Run a Playwright check at phone (390 × 844) and Fold (884 × 1030) sizes.
 4. `git fetch origin main && git rebase origin/main`, commit, push to `main`.
-5. Publish the same game to the claude.ai artifact (https://claude.ai/artifact/YSphcWgn5cKuSSYNPhD8hP): `docs/index.html` without the website-only lines.
+5. Publish the same game to the claude.ai artifact (https://claude.ai/artifact/YSphcWgn5cKuSSYNPhD8hP): `python3 tools/to_artifact.py docs/index.html artifact.html`, then publish that file to the artifact URL. If the publish is refused because another session published, check the diff is only your change and publish again.
 
 ## Recent versions
 - **v215:** the Citadel Supercarrier launches twice as many, smaller fighters (16–28).
