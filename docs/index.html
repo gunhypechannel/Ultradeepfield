@@ -2264,7 +2264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 289;
+const GAME_V = 290;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13588,6 +13588,25 @@ const visN = (role, n) => n <= 0 ? 0 : Math.min(role === "titan" || role === "st
 /* a volley becomes a handful of visible shots; the last one carries its real effects */
 /* v54 battle effects: a big volley also becomes a laser-rail salvo (parallel beams sweeping across the field), a missile swarm
    (many missiles with smoke trails), or, for stations, titans and beam weapons, a charged mega beam */
+/* v290 capital ships' second battery (visual only: the main volley still carries every hit). Each is a different weapon from the
+   ship's main guns and fires a moment after them: [weapon look, shots, colour, delay s, extra flags] */
+const CAP2 = {
+  battleship:    ["flak", 6, "#ffd36b", .16, {}],                 // main: heavy plasma shells · second: broadside autocannon tracers
+  bastion:       ["missile", 6, "#c58bff", .22, { flank: 1 }],    // main: three purple beams · second: violet missile pods from both flanks
+  destroyer:     ["mass", 2, "#dff0ff", .18, {}],                 // main: Sidewinder missiles · second: twin railgun slugs
+  bomber:        ["flak", 5, "#ffe08a", .14, {}],                 // main: torpedoes · second: defensive tracer bursts
+  escortCarrier: ["missile", 4, "#7cf5ff", .2, {}],               // main: lasers (and its fighter wing) · second: cyan missile salvo
+  supercarrier:  ["missile", 6, "#7cf5ff", .2, { flank: 1 }],     // main: beam (and its fighter wing) · second: missile salvos from the flanks
+  eclipse:       ["plasma", 3, "#e6b3ff", .24, { hv: 1 }],        // main: beam · second: heavy violet plasma shells
+  worldbreaker:  ["flak", 3, "#ff3b30", .3, { fk: 1 }]            // main: the red beam · second: red flak shells that burst around the target
+};
+function capSecond(b, v, q, side, sz, lo) {
+  const c = CAP2[q.k]; if (!c || v.bounce) return; const [wk, n0, col, dl, fl] = c, crowd = b.Q.length > 60;
+  const n = lo ? 1 : crowd ? Math.max(1, Math.ceil(n0 / 2)) : n0; if (b.fx.length > (crowd ? 260 : 520)) return; // never in a field already full of shots
+  const v2 = Object.assign({}, v, { wk }), tr = (TRAVEL[wk] || .3) * (fl.fk ? 1.05 : 1);
+  for (let j = 0; j < n; j++) { const t0 = v.t + dl + j * (wk === "flak" ? .035 : .06);
+    b.fx.push({ t0, t1: t0 + tr * (wk === "missile" ? 1 + (j % 3) * .12 : 1), v: v2, last: false, first: j === 0, n, mis: wk === "missile", ic: false, side, off: ((hash(v.t + "|c2|" + j) % 100) / 100 - .5) * (fl.fk ? .4 : 1), hv: fl.hv ? 1 : 0, sz, j: 300 + j, col, bs: fl.flank ? (j % 2 ? 1 : -1) : 0, fk: fl.fk ? 1 : 0, c2: 1 }); }
+}
 function spawnVolley(b, v) {
   const lo = b.lowFx, cap = PERF.battleCap, wk = v.wk, many = v.n + v.ic, mis = wk === "missile" || wk === "torpedo", q = b.Q[v.s], side = q.side, sz = q.sz != null ? q.sz : (q.sz = szOf(q));
   if (q.role === "carrier") (b.ctgt = b.ctgt || [])[v.s] = v.e; // its fighter wing flies at whatever the carrier is shooting
@@ -13598,6 +13617,7 @@ function spawnVolley(b, v) {
   /* v265 the Dreadnought fires a salvo of three purple beams (one unseen shot carries the volley's hits); the Reaper looses missile swarms from
      both broadsides that arc out from its flanks and curl in on the target */
   const dn = q.k === "bastion" && !v.bounce, rp = q.k === "dreadnought" && !v.bounce; if (dn || rp) cnt = 1;
+  capSecond(b, v, q, side, sz, lo); // v290: the second battery
   if (heavy || q.role === "capital" || q.role === "titan" || q.role === "cruiser" || q.role === "station") { (b.muz = b.muz || []).push({ s: v.s, t: v.t, big: q.role !== "cruiser", col: shotCol(q.k, side) }); if (b.muz.length > 40) b.muz.shift(); }
   const icN = v.ic > 0 ? Math.round(cnt * v.ic / (v.ic + v.n + 1e-9)) : 0, tr = rp ? TRAVEL.missile * .7 : dn ? .3 : TRAVEL[wk] || .3, gap = rp ? .03 : mis ? .045 : .07;
   for (let j = 0; j < cnt; j++) b.fx.push({ t0: v.t + j * gap, t1: v.t + j * gap + tr * (mis || rp ? 1 + (j % 3) * .14 : 1), v, last: j === cnt - 1, first: j === 0, n: cnt, mis: mis || rp, ic: j < icN && j !== cnt - 1, side, off: ((hash(v.t + "|" + j) % 100) / 100 - .5), hv: heavy && !dn ? 1 : 0, sz, j, sw: q.k === "destroyer" && mis && !lo, bs: rp ? (j % 2 ? 1 : -1) : 0, hide: dn || rp ? 1 : 0 }); // v251 sw: a destroyer's Sidewinder
