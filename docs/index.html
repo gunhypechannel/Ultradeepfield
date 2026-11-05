@@ -2264,7 +2264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 288;
+const GAME_V = 289;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -12014,7 +12014,7 @@ function vGalaxyBelow() {
 /* ---------- sheets ---------- */
 /* menus remember where you came from: opening one menu from another stacks it, and Back returns to the previous one */
 let sheetStack = [];
-const SHEET_NAME = { spysend: "probes", howto: "how to play", planet: "planet", report: "report", settings: "settings", void: "the Void", assault: "attack", targets: "targets", node: "node", bld: "building", nexus: "Cube", skin: "planet looks", find: "search", pirate: "pirates", layers: "layers", tile: "tile", basedet: "base", planets: "planets", yard: "shipyard", labs: "labs", faction: "factions", profile: "profile", ranks: "rankings", friends: "friends", chat: "chat", mastery: "mastery", sound: "sound", shop: "shop", spyrep: "spy report", events: "events", detail: "details" };
+const SHEET_NAME = { fbinbox: "feedback", spysend: "probes", howto: "how to play", planet: "planet", report: "report", settings: "settings", void: "the Void", assault: "attack", targets: "targets", node: "node", bld: "building", nexus: "Cube", skin: "planet looks", find: "search", pirate: "pirates", layers: "layers", tile: "tile", basedet: "base", planets: "planets", yard: "shipyard", labs: "labs", faction: "factions", profile: "profile", ranks: "rankings", friends: "friends", chat: "chat", mastery: "mastery", sound: "sound", shop: "shop", spyrep: "spy report", events: "events", detail: "details" };
 function openSheet(s) { { const cp = document.getElementById("cubepanel"); if (cp) cp.remove(); } /* v111: never cover a panel's buttons */ if (s && s.from === undefined && ["planet", "pirate", "node", "assault", "targets"].includes(s.type)) { const ap = actPlanet(); if (ap && garrisonCount(ap)) s.from = ap.id; } // fleets launch from the planet you're using
   G.sheetDir = sheet && sheet !== s ? 1 : 0; if (sheet && sheet !== s && (sheet.type !== s.type || (sheet.id || "") !== (s.id || "") || sheet.k !== s.k)) { sheetStack.push(sheet); if (sheetStack.length > 12) sheetStack.shift(); } sheet = s; renderSheet(); }
 function sheetBack() { if (sheetStack.length) { G.sheetDir = -1; sheet = sheetStack.pop(); G.sel = null; G.selNode = null; renderSheet(); } else closeSheet(); }
@@ -12034,7 +12034,7 @@ function renderSheet() {
   if (G.rangeHeld && sheet) { G.rangeLate = 1; return; }
   let w = $("#sheetwrap");
   let html = ({ planet: shPlanet, report: shReport, settings: shSettings, void: shVoid, assault: shAssault, targets: shTargets, node: shNode, bld: shBld, nexus: shNexus, skin: shSkin, find: shFind, pirate: shPirate, pyramid: shPyramid, fctl: shFctl, station: shStation, ally: shAlly, layers: shLayers, tile: shTile, graphics: shGfx, cuberes: shCubeRes, basedet: shBaseDet, planets: shPlanets, fo: shFo, allymem: shAllyMem, altools: () => { const a = myAlly(); return a ? `<div class="hd"><div><div class="chapter">[${esc(a.tag)}] ${esc(a.name)}</div><h2>${allyRank(a, G.me) === "lead" ? "Leader" : "Captain"} tools</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${allyTools(a) || '<p class="note">Only the leader and captains have these tools.</p>'}` : ""; },
-    yard: shYard, labs: shLabs, sound: shSound, shop: shShop, vip: shVip, spyrep: shSpyRep, spysend: shSpySend, howto: shHowTo, events: shEvents, ach: shAch, avatars: shAvatars, detail: () => { const h = shDetail(), P = sheet.pid ? G.byId[sheet.pid] : null; return h && sheet.kind === "b" && P && sheet.k === "shipyard" && (P.b || {}).shipyard ? h + `<div class="dp"><button class="btn wide" data-act="yardOpen" data-id="${P.id}">Open shipyard</button></div>` : h; }, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
+    yard: shYard, labs: shLabs, sound: shSound, shop: shShop, vip: shVip, spyrep: shSpyRep, spysend: shSpySend, howto: shHowTo, fbinbox: shFbInbox, events: shEvents, ach: shAch, avatars: shAvatars, detail: () => { const h = shDetail(), P = sheet.pid ? G.byId[sheet.pid] : null; return h && sheet.kind === "b" && P && sheet.k === "shipyard" && (P.b || {}).shipyard ? h + `<div class="dp"><button class="btn wide" data-act="yardOpen" data-id="${P.id}">Open shipyard</button></div>` : h; }, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
     mastery: () => `<div class="hd"><div><div class="chapter">Progression</div><h2>Path to Mastery</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${mMastery()}` })[sheet.type]();
   if (!html) { closeSheet(); return; }
   html += sheet.type === "faction" && !S.faction ? "" : backBar(); html = `<div class="grab" aria-hidden="true"></div>` + html;
@@ -12563,6 +12563,7 @@ function vCmd() {
     ${acc("elements", ic(MI.shield, "#e06bd8"), "Elements (Runes)", `${Object.values(S.runes || {}).reduce((a, b) => a + b, 0) ? `<span class="pill amb">${Object.values(S.runes || {}).reduce((a, b) => a + b, 0)} to socket</span>` : ""}`, mElem())}
     ${acc("vshop", ic(MI.tag, "#c9a6ff"), "Void Shop", `<span class="shard">◆ ${fmt(S.shards || 0)}</span>`, mShopVoid())}
     ${acc("depot", ic(MI.tag), "Supply Depot", "", mShop())}
+    ${duelOwner() ? `<button class="btn ghost wide" data-act="fbInbox">💬 Feedback inbox</button>` : ""}
     ${acc("settings", ic(MI.grid), "Settings", "", mSave() + mGame())}</div>`;
 }
 const acc = (k, icon, title, value, body) => { const o = menu.open[k]; return `<section class="acc${o ? " open" : ""}"><button class="acch" data-act="acc" data-k="${k}" aria-expanded="${!!o}"><span class="ai">${icon}</span><span class="at">${title}</span><span class="av">${value}</span><i class="notch"></i></button>${o ? `<div class="accb">${body}</div>` : ""}</section>`; };
@@ -12818,6 +12819,12 @@ function mGame() {
     <div class="mcard"><h3>${MI.rank.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Records</h3>${mrow("Battles won", S.wins)}${mrow("Won against commanders", S.pvpWins)}${mrow("Planets occupied", S.captures)}${mrow("Ships recovered by repair docks", fmt((S.stats || {}).repaired || 0))}${mrow("Strongest Hive garrison", S.maxWin ? "Lv." + S.maxWin : "–")}</div>
     ${restartBtn()}`;
 }
+/* v289 the owner's feedback inbox: testers' reports with their screenshots (anything in a report is untrusted, so text is escaped and only JPEG data pictures are shown) */
+async function fbLoad() { try { const sn = await G.db.collection("feedback").limit(200).get(); G.fbList = sn.docs.map(d => Object.assign({ id: d.id }, d.data())).filter(r => r && r.kind !== "crash" && r.status !== "done").sort((a, b) => (+b.at || 0) - (+a.at || 0)); } catch (e) { G.fbList = null; G.fbErr = 1; } if (sheet && sheet.type === "fbinbox") renderSheet(); }
+function shFbInbox() { const L = G.fbList, head = `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">Owner</div><h2>Feedback inbox</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
+  if (!G.owner) return head + `<p class="note">The server doesn't list this account as the game's owner yet, so it won't hand over the reports here. Ask Claude to add it to the owners list.</p>`; if (!L) return head + `<p class="note">${G.fbErr ? "Couldn't load the reports." : "Loading…"}</p>`; if (!L.length) return head + `<p class="note">No open reports.</p>`;
+  const IC = { bug: "🐞", confusing: "❓", idea: "💡" };
+  return head + L.map(r => { const im = typeof r.img === "string" && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(r.img) ? r.img : ""; return `<div class="card" style="margin-bottom:8px"><b>${IC[r.kind] || "💬"} ${esc(String(r.name || "Unnamed commander"))}</b> <small style="color:var(--muted)">${r.at ? (ago(+r.at) === "now" ? "just now" : ago(+r.at) + " ago") : ""}${r.v ? " · v" + okInt(r.v) : ""}</small><p style="margin:6px 0;white-space:pre-wrap;overflow-wrap:anywhere;user-select:text">${esc(String(r.text || ""))}</p><p class="note" style="margin:0 0 6px">${esc(String(r.screen || ""))} · ${okInt(r.w)}×${okInt(r.h)}<br>${esc(String(r.device || "").slice(0, 110))}</p>${im ? `<img src="${im}" alt="Screenshot from this report" style="display:block;max-width:100%;max-height:70vh;margin:0 auto 8px;border-radius:8px;border:1px solid var(--line)">` : ""}<button class="btn ghost sm" data-act="fbDone" data-id="${esc(String(r.id))}">Mark done</button></div>`; }).join(""); }
 function shHowTo() { return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">Etc.</div><h2>How to play</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div><div class="howto">${mEtc()}</div>`; }
 function mEtc() {
   const tip = (h, p) => `<div class="mcard"><h3>${h}</h3><p>${p}</p></div>`;
@@ -14984,10 +14991,14 @@ function publishInbound(uid, f) {
   });
 }
 const slotsFull = () => { if (fleetsUsed() >= maxFleets()) { toast(`All ${maxFleets()} fleet slots are in use. Research Fleet Command for more.`, "warn"); return true; } return false; };
+/* v289: the feedback form is its own script, outside the game's scope: this is what it can see of the game (it could not read the commander's name, or find the 3D views, before) */
+window.UDF_FB = { gl: () => [G3, C3], get g() { return G; }, toast: (m, k) => toast(m, k), v: GAME_V };
 const ACT = {
   menu: () => ACT.nav({ v: "cmd" }),
   menuClose: () => {},
   howto: () => openSheet({ type: "howto" }), // v279: the Etc. tile
+  fbInbox: () => { if (!duelOwner()) return; G.fbList = null; G.fbErr = 0; openSheet({ type: "fbinbox" }); fbLoad(); },
+  fbDone: d => { if (!duelOwner() || !G.db) return; G.db.doc("feedback/" + d.id).update({ status: "done" }).then(() => { G.fbList = (G.fbList || []).filter(r => r.id !== d.id); if (sheet && sheet.type === "fbinbox") renderSheet(); }, () => toast("Couldn't update that report.", "warn")); },
   mtab: d => { if (d.k === "msg") return ACT.nav({ v: "mail" }); if (d.k === "etc") return ACT.howto(); closeSheet(); const map = { alliance: "alliance", shop: "depot", inv: "inv", msg: "messages", quest: "quests", game: "settings", save: "settings" }; menu.open[map[d.k] || d.k] = true; view = "cmd"; render(true); },
   acc: d => { menu.open[d.k] = !menu.open[d.k]; if (d.k === "messages" && menu.open[d.k]) { S.unread = 0; dirty(); } render(true); },
   targets: () => { sub.gal = sub.gal || "targets"; openSheet({ type: "targets" }); },
@@ -15904,6 +15915,11 @@ body:has(.sheet) #fbBtn,body:has(#adv) #fbBtn,body:has(#udfAuth) #fbBtn{display:
 #fbW .fbs{background:rgba(85,214,232,.18);border:1px solid #55d6e8;color:#55d6e8}
 #fbW .fbs:disabled{opacity:.5}
 #fbW .fbm{min-height:16px;font-size:13px}
+#fbW .fbp{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#fbW .fbp button,#fbW .fbp label{padding:9px 12px;border-radius:10px;border:1px solid #2c5468;background:rgba(85,214,232,.08);color:#cfe3ec;font:600 13px "Oxanium",sans-serif;cursor:pointer}
+#fbW .fbp input{position:absolute;width:1px;height:1px;opacity:0}
+#fbW .fbthumb{display:none;position:relative}#fbW .fbthumb.on{display:inline-block}#fbW .fbthumb img{display:block;height:84px;max-width:140px;object-fit:contain;border:1px solid #55d6e8;border-radius:8px;background:#05090f}
+#fbW .fbthumb button{position:absolute;top:-8px;right:-8px;width:26px;height:26px;padding:0;border-radius:50%;background:#0b1520;line-height:1}
 </style>
 <button id="fbBtn" type="button" aria-label="Send feedback">💬 Feedback</button>
 <div id="fbW" role="dialog" aria-modal="true" aria-labelledby="fbT"><form novalidate>
@@ -15914,7 +15930,8 @@ body:has(.sheet) #fbBtn,body:has(#adv) #fbBtn,body:has(#udfAuth) #fbBtn{display:
 <label><input type="radio" name="k" value="idea"><span>💡 Idea</span></label>
 </div>
 <textarea name="t" maxlength="2000" placeholder="What happened? What were you trying to do?"></textarea>
-<small>Your commander name, the screen you're on and your device type are sent with this, so it's easier to track down.</small>
+<div class="fbp"><button type="button" class="fbshot">📷 Take screenshot</button><label>🖼 Add a picture<input type="file" name="pic" accept="image/*"></label><span class="fbthumb"><img alt="Screenshot to send"><button type="button" class="fbrm" aria-label="Remove screenshot">✕</button></span></div>
+<small>Your commander name, the screen you're on and your device type are sent with this, so it's easier to track down. A screenshot shows only the game.</small>
 <div class="fbm" aria-live="polite"></div>
 <div class="fbr"><button type="button" class="fbx">Cancel</button><button type="submit" class="fbs">Send</button></div>
 </form></div>
@@ -15922,6 +15939,47 @@ body:has(.sheet) #fbBtn,body:has(#adv) #fbBtn,body:has(#udfAuth) #fbBtn{display:
 (() => {
   /* v-feedback: testers report bugs, confusion and ideas from inside the game; each report is one row in the shared "feedback" collection */
   const W = document.getElementById("fbW"), f = W.querySelector("form"), msg = W.querySelector(".fbm"), send = W.querySelector(".fbs");
+  /* v289 screenshots for feedback. Phones won't let a page photograph itself, so this repaints what's on screen onto a canvas: boxes, text, pictures, icons and the
+     game's canvases (the 3D view is redrawn first, because its picture is gone once a frame is shown). Close enough to see the problem; soft shadows and glow are skipped. */
+  const SHOT_MAX = 1100, shotKey = "data:image/jpeg;base64,";
+  const fitJpeg = (src, w, h) => { const k = Math.min(1, SHOT_MAX / Math.max(w, h)), c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k)); const x = c.getContext("2d"); x.fillStyle = "#05090f"; x.fillRect(0, 0, c.width, c.height); x.drawImage(src, 0, 0, c.width, c.height);
+    let q = .72, u = c.toDataURL("image/jpeg", q); while (u.length > 190000 && q > .3) { q -= .1; u = c.toDataURL("image/jpeg", q); } return u.startsWith(shotKey) ? u : null; };
+  async function paintScreen() {
+    const vw = innerWidth, vh = innerHeight, d = Math.min(window.devicePixelRatio || 1, 2), c = document.createElement("canvas"); c.width = Math.round(vw * d); c.height = Math.round(vh * d);
+    const x = c.getContext("2d"); x.scale(d, d); x.fillStyle = getComputedStyle(document.body).backgroundColor || "#05090f"; x.fillRect(0, 0, vw, vh); x.textBaseline = "alphabetic";
+    // 3D views first: redraw, then copy while the picture is still there
+    const gl = new Map(); for (const W of window.UDF_FB ? UDF_FB.gl() : []) { try { const cv = W && W.renderer && W.renderer.domElement; if (!cv || !cv.isConnected || !cv.clientWidth) continue; W.renderer.render(W.scene, W.camera); const o = document.createElement("canvas"); o.width = cv.width; o.height = cv.height; o.getContext("2d").drawImage(cv, 0, 0); gl.set(cv, o); } catch (e) {} }
+    const colorOf = s => { const bg = s.backgroundColor; if (bg && !/rgba\(0, 0, 0, 0\)|transparent/.test(bg)) return bg; const bi = s.backgroundImage === "none" ? "" : s.backgroundImage; if (!/gradient/.test(bi)) return null; const all = bi.match(/rgba?\([^)]*\)/g) || []; if (!all.length || all.some(c => { const v = c.match(/[\d.]+/g); return v.length > 3 && +v[3] < .6; })) return null; return all[0]; }; // a gradient that fades out is an overlay: a solid fill would hide what's under it
+    const rr = (r, s) => { const a = Math.min(parseFloat(s.borderTopLeftRadius) || 0, r.width / 2, r.height / 2); x.beginPath(); if (a > 0 && x.roundRect) x.roundRect(r.left, r.top, r.width, r.height, a); else x.rect(r.left, r.top, r.width, r.height); };
+    let nodes = 0;
+    const svgImg = async (el, col) => { const cl = el.cloneNode(true), r = el.getBoundingClientRect(); cl.setAttribute("xmlns", "http://www.w3.org/2000/svg"); cl.setAttribute("width", r.width); cl.setAttribute("height", r.height); const im = new Image(); im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(cl).replace(/currentColor/g, col)); await new Promise(ok => { im.onload = ok; im.onerror = ok; setTimeout(ok, 400); }); return im; };
+    const text = (node, s) => { const t = node.nodeValue; if (!t || !t.trim()) return; x.font = `${s.fontStyle} ${s.fontWeight} ${s.fontSize} ${s.fontFamily}`; x.fillStyle = s.webkitTextFillColor && !/rgba\(0, 0, 0, 0\)/.test(s.webkitTextFillColor) ? s.webkitTextFillColor : s.color; try { x.letterSpacing = s.letterSpacing === "normal" ? "0px" : s.letterSpacing; } catch (e) {}
+      const up = s.textTransform === "uppercase", R = document.createRange(), fs = parseFloat(s.fontSize) || 14, out = s => x.fillText(up ? s.toUpperCase() : s, lx, ly); let i = 0, cur = "", lx = 0, ly = null, top = null, n = t.length;
+      while (i < n) { let j = i; while (j < n && !/\s/.test(t[j])) j++; while (j < n && /\s/.test(t[j])) j++; R.setStart(node, i); R.setEnd(node, j); const q = R.getClientRects()[0]; const w = t.slice(i, j); if (q && q.width) { if (top == null || Math.abs(q.top - top) > fs * .5) { if (cur) out(cur); cur = ""; top = q.top; lx = q.left; ly = q.top + (q.height + fs * .7) / 2; } cur += w.replace(/\s+/g, " "); } i = j; }
+      if (cur) out(cur); };
+    // a wrapper with no z-index of its own (the sheet's) stacks by what's inside it
+    const ez = (n, q, dp) => { const z = parseInt(q.zIndex); if (!isNaN(z)) return z; if (dp > 2) return 0; let m = 0; for (const c of n.children) { const qc = getComputedStyle(c); if (qc.position !== "static") m = Math.max(m, ez(c, qc, dp + 1)); } return m; };
+    const paint = async (el, alpha) => { if (++nodes > 5000 || el.id === "fbW" || el.id === "fbBtn") return; const s = getComputedStyle(el); if (s.display === "none" || s.visibility === "hidden") return; const a = alpha * (parseFloat(s.opacity) || (s.opacity === "0" ? 0 : 1)); if (a < .02) return; const r = el.getBoundingClientRect();
+      if (s.display !== "contents" && (r.right < 0 || r.bottom < 0 || r.left > vw || r.top > vh) && s.position !== "fixed") { if (s.overflow !== "visible" || (!r.width && !r.height)) return; }
+      x.save(); x.globalAlpha = a; const col = colorOf(s); if (col && r.width && r.height) { rr(r, s); x.fillStyle = col; x.fill(); } const tag = el.tagName;
+      const bw = parseFloat(s.borderTopWidth) || 0; if (bw > 0 && s.borderTopStyle !== "none" && r.width && !/rgba\(0, 0, 0, 0\)/.test(s.borderTopColor)) { rr(r, s); x.lineWidth = bw; x.strokeStyle = s.borderTopColor; x.stroke(); }
+      if (tag === "CANVAS" || tag === "IMG" || tag === "VIDEO") { try { rr(r, s); x.clip(); const src = gl.get(el) || el; if (!(tag === "CANVAS" && !gl.has(el) && !el.getContext("2d"))) { const nw = el.naturalWidth || el.videoWidth || el.width, nh = el.naturalHeight || el.videoHeight || el.height; if (nw && nh) { if (s.objectFit === "cover") { const k = Math.max(r.width / nw, r.height / nh), w = nw * k, h = nh * k; x.drawImage(src, r.left + (r.width - w) / 2, r.top + (r.height - h) / 2, w, h); } else x.drawImage(src, r.left, r.top, r.width, r.height); } } } catch (e) {} x.restore(); return; }
+      if (tag === "svg" || tag === "SVG") { const im = await svgImg(el, s.color); try { if (im.naturalWidth) x.drawImage(im, r.left, r.top, r.width, r.height); } catch (e) {} x.restore(); return; }
+      if (tag === "INPUT" || tag === "TEXTAREA") { if (el.value && el.type !== "password" && el.type !== "range") { x.font = `${s.fontWeight} ${s.fontSize} ${s.fontFamily}`; x.fillStyle = s.color; x.textAlign = s.textAlign === "center" ? "center" : "left"; x.fillText(el.value.slice(0, 80), s.textAlign === "center" ? r.left + r.width / 2 : r.left + 6, r.top + r.height / 2 + (parseFloat(s.fontSize) || 14) * .35); x.textAlign = "left"; } x.restore(); return; }
+      if (s.overflow !== "visible" && s.overflow !== "" ) { rr(r, s); x.clip(); }
+      // children in painting order: plain ones first, then positioned ones by z-index
+      const kids = [...el.childNodes].map((n, i) => { if (n.nodeType !== 1) return { n, i, z: -1 }; const q = getComputedStyle(n); return { n, i, z: q.position === "static" ? -1 : ez(n, q, 0) }; }).sort((p, q) => p.z - q.z || p.i - q.i);
+      for (const k of kids) { if (k.n.nodeType === 3) { try { text(k.n, s); } catch (e) {} } else if (k.n.nodeType === 1) await paint(k.n, a); }
+      x.restore(); };
+    await paint(document.body, 1); return fitJpeg(c, c.width, c.height);
+  }
+  const thumb = W.querySelector(".fbthumb"), tImg = thumb.querySelector("img"), shotBtn = W.querySelector(".fbshot"); let shot = null;
+  const setShot = u => { shot = u || null; tImg.src = u || ""; thumb.classList.toggle("on", !!u); shotBtn.textContent = u ? "📷 Retake" : "📷 Take screenshot"; };
+  shotBtn.addEventListener("click", async e => { e.stopPropagation(); if (document.activeElement) document.activeElement.blur(); W.classList.remove("on"); shotBtn.disabled = true; msg.textContent = "";
+    await new Promise(ok => setTimeout(ok, 380)); // the keyboard and the panel get out of the way first
+    let u = null; try { u = await paintScreen(); } catch (err) {} W.classList.add("on"); shotBtn.disabled = false; if (u) setShot(u); else { msg.style.color = "#ff6262"; msg.textContent = "Couldn't take it here. Take one with your device, then use Add a picture."; } });
+  W.querySelector(".fbrm").addEventListener("click", e => { e.stopPropagation(); setShot(null); });
+  f.pic.addEventListener("change", () => { const fl = f.pic.files && f.pic.files[0]; f.pic.value = ""; if (!fl) return; const url = URL.createObjectURL(fl), im = new Image(); im.onload = () => { let u = null; try { u = fitJpeg(im, im.naturalWidth, im.naturalHeight); } catch (e) {} URL.revokeObjectURL(url); if (u) setShot(u); else { msg.style.color = "#ff6262"; msg.textContent = "That picture couldn't be read."; } }; im.onerror = () => { URL.revokeObjectURL(url); msg.style.color = "#ff6262"; msg.textContent = "That picture couldn't be read."; }; im.src = url; });
   const open = () => { msg.textContent = ""; msg.style.color = ""; W.classList.add("on"); setTimeout(() => f.t.focus(), 50); };
   const close = () => W.classList.remove("on");
   document.getElementById("fbBtn").addEventListener("click", e => { e.stopPropagation(); open(); });
@@ -15936,9 +15994,9 @@ body:has(.sheet) #fbBtn,body:has(#adv) #fbBtn,body:has(#udfAuth) #fbBtn{display:
     e.preventDefault(); e.stopPropagation();
     const text = f.t.value.trim(); if (text.length < 3) { msg.style.color = "#ff6262"; msg.textContent = "Add a few words first."; return; }
     send.disabled = true; msg.style.color = ""; msg.textContent = "Sending…";
-    const timer = setTimeout(() => { if (send.disabled) { send.disabled = false; msg.style.color = "#ff6262"; msg.textContent = "Couldn't reach the server. Try again in a moment."; } }, 10000);
+    const timer = setTimeout(() => { if (send.disabled) { send.disabled = false; msg.style.color = "#ff6262"; msg.textContent = "Couldn't reach the server. Try again in a moment."; } }, shot ? 25000 : 10000);
     try {
-      const g = typeof G !== "undefined" ? G : {};
+      const g = window.UDF_FB ? UDF_FB.g : {};
       const db = g.db || (window.claude && window.claude.use ? await window.claude.use("db") : null);
       const user = g.user || (window.claude && window.claude.use ? await window.claude.use("user") : null);
       if (!db) throw new Error("offline");
@@ -15946,10 +16004,10 @@ body:has(.sheet) #fbBtn,body:has(#adv) #fbBtn,body:has(#udfAuth) #fbBtn{display:
       const id = (uid || "anon").slice(0, 40) + "-" + Date.now().toString(36);
       await db.doc("feedback/" + id).set({
         kind: f.k.value, text: text.slice(0, 2000), by: uid || null, name: String(g.myName || "").slice(0, 60),
-        screen: screenName(), device: navigator.userAgent.slice(0, 200), w: innerWidth, h: innerHeight, at: Date.now(), status: "new"
+        screen: screenName(), device: navigator.userAgent.slice(0, 200), w: innerWidth, h: innerHeight, at: Date.now(), status: "new", v: window.UDF_FB ? UDF_FB.v : 0, ...(shot ? { img: shot } : {})
       });
-      clearTimeout(timer); f.t.value = ""; close();
-      try { toast("Thanks! Feedback sent.", "win"); } catch (e3) {}
+      clearTimeout(timer); f.t.value = ""; setShot(null); close();
+      try { UDF_FB.toast("Thanks! Feedback sent.", "win"); } catch (e3) {}
     } catch (err) {
       clearTimeout(timer); send.disabled = false; msg.style.color = "#ff6262";
       msg.textContent = String(err && err.message) === "offline" ? "Feedback needs you to be signed in. Text it to the developer instead." : "Couldn't send. Try again in a moment.";
