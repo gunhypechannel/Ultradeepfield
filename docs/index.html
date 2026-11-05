@@ -2264,7 +2264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 287;
+const GAME_V = 288;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4100,7 +4100,7 @@ function evBanner(k, T) {
       <div class="vbot"><div class="vst"><span>${live ? (cur.holder ? `Held by <b>${esc(allyTag(cur.holder))}</b>` : "<b>Unclaimed</b> · take it first") : "The Cube waits at the heart of the galaxy"}</span>${tail ? `<span class="vend">${tail}</span>` : ""}</div>
         </div></div>
       <div class="cubeacts"><button class="btn amber" data-act="nexus">${live ? "⚔ Join the battle" : "View the Cube"}</button><button class="btn ghost" data-act="liveReplay">▶ Watch the arrival</button>${live ? `<button class="btn ghost" data-act="siegeWatch">🎥 Watch the siege live</button>` : ""}
-        <button class="btn ghost" data-act="cubeDemo" data-n="60">▶ Stress test · 60 vs 60 · 20M units</button><button class="btn ghost" data-act="cubeDemo">▶ Demo · 20 vs 20 battle</button></div>${cubeResultCard(T)}`; } // v187: every option in a grid under the clip (inside it, the fourth button was cut off on phones), then the last result
+        ${duelOwner() ? `<button class="btn ghost" data-act="cubeDemo" data-n="60">▶ Stress test · 60 vs 60 · 20M units</button><button class="btn ghost" data-act="cubeDemo">▶ Demo · 20 vs 20 battle</button>` : ""}</div>${cubeResultCard(T)}`; } // v187: every option in a grid under the clip (inside it, the fourth button was cut off on phones), then the last result
   return `<div class="evban ev-${k}">${art ? `<img src="${art}" alt="" loading="lazy">` : ""}<span class="evt">${esc(title)}</span>${tail ? `<span class="evend">${tail}</span>` : ""}</div>`;
 }
 /* v187 the Battle for the Cube's result: the crowned alliance with its emblem, name and title, what the title gives, and the runners-up
@@ -5372,7 +5372,7 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) { CRU
 addEventListener("pagehide", () => { CRUMBS.open = false; crumbSave(); });
 setTimeout(() => { try { if (G.lastCrashFresh) { const L = G.lastCrash.ev[G.lastCrash.ev.length - 1]; toast(`The game closed unexpectedly last time${L ? ` (after: ${L[1]})` : ""}. Details are in Settings › Graphics.`, "warn"); } } catch (e) {} }, 7000);
 /* v181 the kingdom battle stress tests, always one tap away in Settings › Graphics (live event or not), with the last run's result */
-function stressCard() { let last = ""; try { last = localStorage.getItem("udf.stress") || ""; } catch (e) {}
+function stressCard() { if (!duelOwner()) return ""; let last = ""; try { last = localStorage.getItem("udf.stress") || ""; } catch (e) {}
   return `<h2 class="sec">Stress test</h2><div class="card"><p class="note">Plays a kingdom battle at the Cube on the map and measures this device while it runs (about 2 to 3 minutes for the stress test). 60 commanders a side, 8 million defenders against 12 million attackers, with reinforcements landing mid-battle and clash after clash until one side breaks. Nothing in your game changes.</p>
     <button class="btn wide" data-act="cubeDemo" data-n="60">▶ Stress test: 60 vs 60 · 20 million units with reinforcements</button><button class="btn ghost wide" data-act="cubeDemo">▶ Demo: 20 vs 20 kingdom battle</button>
     ${last ? `<p class="note" style="margin-top:8px">Last run: ${esc(last)}</p>` : ""}</div>`; }
@@ -7162,7 +7162,7 @@ function cubePanelHTML() {
       <div class="cprow"><span>Incoming</span><b>${cs && cs.p.owner === G.me && !cs.firing ? `<span style="color:var(--red)">⚠ Strike on your world</span> · ` : ""}${strikes.length} joint strike${strikes.length === 1 ? "" : "s"} · ${mine.length} of your fleets</b></div>
       <div class="cprow"><span>Objective</span><b>${ph.i === 6 ? (cur.holder ? `👑 ${esc(allyTag(cur.holder))} crowned` : "The Collective kept the Cube") : "Seize and hold the Cube for your alliance"}</b></div>
       ${st.length ? `<div class="cprow"><span>Standings</span><b>${st.map(([a, v], i) => `${i + 1}. ${esc((G.alliances[a] || {}).tag || "?")} ${ftime(v)}`).join(" · ")}</b></div>` : ""}
-      <div class="cpacts">${ph.i < 6 ? `<button class="btn sm" data-act="nexus">⚔ ${evActive(T) ? "Join battle" : "View"}</button>` : ""}<button class="btn ghost sm" data-act="cubeScan">◎ Inspect</button><button class="btn ghost sm" data-act="siegeWatch">🎥 Watch</button><button class="btn ghost sm" data-act="fxLite">${FX_LITE() ? "Effects: Lite" : "Effects: Full"}</button><button class="btn ghost sm" data-act="cubeDemo" data-n="60">▶ 60 vs 60 test</button></div></div>` : ""}`; /* v185: the stress test right in the panel tapping the Cube opens */
+      <div class="cpacts">${ph.i < 6 ? `<button class="btn sm" data-act="nexus">⚔ ${evActive(T) ? "Join battle" : "View"}</button>` : ""}<button class="btn ghost sm" data-act="cubeScan">◎ Inspect</button><button class="btn ghost sm" data-act="siegeWatch">🎥 Watch</button><button class="btn ghost sm" data-act="fxLite">${FX_LITE() ? "Effects: Lite" : "Effects: Full"}</button>${duelOwner() ? `<button class="btn ghost sm" data-act="cubeDemo" data-n="60">▶ 60 vs 60 test</button>` : ""}</div></div>` : ""}`; /* v185: the stress test right in the panel tapping the Cube opens */
 }
 setInterval(() => { try { const show = view === "galaxy" && G3 && !sheet && !battle && !(G3.cam.cine || G3.cam.live) && cubePhase(now()); /* v111: steps aside while a planet or other panel is open */ let el = $("#cubepanel"); if (!show) { if (el) el.remove(); return; }
   if (!el) { el = document.createElement("div"); el.id = "cubepanel"; $("#app").appendChild(el); } const h = cubePanelHTML(); if (el._h !== h) { el._h = h; el.innerHTML = h; } } catch (e) {} }, 1000);
@@ -12754,8 +12754,8 @@ function labBattle() {
    Carriers and 9 million Citadel Supercarriers a side). Shown only in the game owner's Mail > Saved; rebuilt from a fixed seed on each
    device and kept in memory, never in the save, so it adds nothing to the cloud save. */
 const DUEL_ID = "lab-duel-1v1", DUEL_K = ["fighter", "heavyFighter", "lancer", "corvette", "bomber", "guardian", "battleship", "bastion", "destroyer", "dreadnought", "eclipse", "worldbreaker"];
-/* v214: DUEL_ALL shows the duel to every player (Mail > All and Saved) until the owner turns it off; false = owner only */
-const DUEL_ALL = true;
+/* v214: DUEL_ALL shows the duel to every player (Mail > All and Saved) until the owner turns it off; false = owner only. v288: off, and duelOwner also gates the 10 vs 10, 20 vs 20 and 60 vs 60 tests */
+const DUEL_ALL = false;
 const duelOwner = () => !!(DUEL_ALL || G.owner || (S && S.ownerFree));
 function duelBattle() {
   if (G.duelRep) return G.duelRep;
@@ -12771,14 +12771,14 @@ function mailItems() {
   const blocked = new Set(S.blocked || []), seen = S.chatSeen || {};
   const dms = Object.values(CHAT.dms || {}).filter(c => !blocked.has(c.with) && c.m.length).map(c => { const lm = c.m[c.m.length - 1]; return { t: lm.t, f: "dm", dm: c, un: c.m.filter(m => m.u !== G.me && m.t > (seen["d:" + c.id] || 0)).length }; });
   if (duelOwner() && !S.duelMail) { S.duelMail = { t: now() }; dirty(); } // v212: the owner's duel
-  if (!S.labMail) { S.labMail = { t: now() }; dirty(); } // the 10 vs 10 simulator test battle, delivered once so it can be watched on any device
+  if (duelOwner() && !S.labMail) { S.labMail = { t: now() }; dirty(); } // the 10 vs 10 simulator test battle, delivered once so it can be watched on any device
   const inRecent = new Set(S.reports.map(r => r.id));
-  return S.reports.filter(r => r.id !== LAB_ID).map(r => ({ t: r.t || r.at, f: "battle", rep: r })).concat((S.savedReps || []).filter(r => !inRecent.has(r.id)).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))).concat([{ t: S.labMail.t, f: "battle", lab: 1 }], DUEL_ALL && S.duelMail ? [{ t: S.duelMail.t, f: "battle", duel: 1 }] : [], (S.spyReps || []).map(s => ({ t: s.at, f: "spy", spy: s })), dms, S.log.map(l => ({ t: l.t, f: "alert", log: l }))).sort((a, b) => b.t - a.t);
+  return S.reports.filter(r => r.id !== LAB_ID).map(r => ({ t: r.t || r.at, f: "battle", rep: r })).concat((S.savedReps || []).filter(r => !inRecent.has(r.id)).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))).concat(duelOwner() && S.labMail ? [{ t: S.labMail.t, f: "battle", lab: 1 }] : [], duelOwner() && S.duelMail ? [{ t: S.duelMail.t, f: "battle", duel: 1 }] : [], (S.spyReps || []).map(s => ({ t: s.at, f: "spy", spy: s })), dms, S.log.map(l => ({ t: l.t, f: "alert", log: l }))).sort((a, b) => b.t - a.t);
 }
 const mailUnread = () => { const t0 = S.mailSeen || 0; let n = 0; try { for (const x of mailItems()) n += x.f === "dm" ? x.un : x.t > t0 ? 1 : 0; } catch (e) {} return n; };
 function vMail() {
   const f = MAIL_F.some(x => x[0] === sub.mail) ? sub.mail : (sub.mail = "all"), all = mailItems(), prev = G.mailPrev || 0, cnt = k => all.filter(x => x.f === k && (x.f === "dm" ? x.un : x.t > prev)).length;
-  const list = f === "saved" ? (duelOwner() && S.duelMail && S.duelSaved !== 0 ? [{ t: S.duelMail.t, f: "battle", duel: 1 }] : []).concat(S.labSaved ? [{ t: S.labMail ? S.labMail.t : now(), f: "battle", lab: 1 }] : []).concat((S.savedReps || []).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))) : all.filter(x => f === "all" || x.f === f).slice(0, 80);
+  const list = f === "saved" ? (duelOwner() && S.duelMail && S.duelSaved !== 0 ? [{ t: S.duelMail.t, f: "battle", duel: 1 }] : []).concat(duelOwner() && S.labSaved ? [{ t: S.labMail ? S.labMail.t : now(), f: "battle", lab: 1 }] : []).concat((S.savedReps || []).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))) : all.filter(x => f === "all" || x.f === f).slice(0, 80);
   const tabs = `<div class="segc mailtabs">${MAIL_F.map(([k, l]) => { const n = k === "all" ? 0 : cnt(k); return `<button class="${f === k ? "on" : ""}" data-act="sub" data-g="mail" data-v="${k}">${l}${n ? ` <i class="cbadge">${n}</i>` : ""}</button>`; }).join("")}</div>`;
   const row = x => { const nw = x.f === "dm" ? x.un > 0 : x.t > prev, tag = nw ? '<i class="mnew">NEW</i>' : "", when = `${ago(x.t)} ago`;
     if (x.spy) { const s = x.spy; return `<button class="mrowc spy${nw ? " unread" : ""}" data-act="spyOpen" data-id="${s.id}"><span class="mi">${AI.spy}</span><span class="mt"><b>Espionage report · ${esc(s.name)}</b><small>${s.res ? fmt(total(s.res)) + " resources · " : ""}${spySum(s)}</small></span><span class="mw">${tag}<time>${when}</time></span></button>`; }
@@ -15137,7 +15137,7 @@ const ACT = {
   ctxCenter: () => { const c = G.ctx; ctxClose(); if (c && c.w && G3) { G3.cam.follow = null; G3.cam.followFleet = null; G3.cam.goal = Object.assign(G3.cam.goal || {}, { tx: c.w.x, ty: c.w.y || 0, tz: c.w.z }); } },
   ctxFav: () => { const c = G.ctx; ctxClose(); if (c && c.best && c.best.id) ACT.fav({ id: c.best.id }); },
   ctxCine: () => { const c = G.ctx; ctxClose(); if (c && c.best && c.best.fleet) { ACT.fleetFocus({ id: c.best.fleet }); setTimeout(() => cineStart("chase"), 200); } },
-  ctxHome: () => { ctxClose(); const h = homePlanet(); if (h) ACT.gotoMine({ id: h.id }); }, cubeDemo: d => +d.n === 60 ? cubeDemoBig() : cubeDemoStart(20), cubePanel: () => { G.cubeOpen = !G.cubeOpen; const el = $("#cubepanel"); if (el) { el._h = ""; el.innerHTML = cubePanelHTML(); } }, cubeScan: () => { if (!G3) return; const p = G3.nexus.position; G3.cam.follow = null; G3.cam.followFleet = null; G3.cam.goal = { tx: p.x, ty: p.y, tz: p.z, dist: 150 }; G.cubeScan = performance.now() + 9000; }, cubeTarget: d => ACT.planet({ id: d.id }), fxLite: () => { GFX.over = Object.assign({}, GFX.over, { fx: FX_LITE() ? 2 : 0 }); gfxSave(); toast(FX_LITE() ? "Cube effects: Lite (fewer ships, no nebula or pulses)." : "Cube effects: Full."); const el = $("#cubepanel"); if (el) el._h = ""; },
+  ctxHome: () => { ctxClose(); const h = homePlanet(); if (h) ACT.gotoMine({ id: h.id }); }, cubeDemo: d => { if (!duelOwner()) return; return +d.n === 60 ? cubeDemoBig() : cubeDemoStart(20); }, cubePanel: () => { G.cubeOpen = !G.cubeOpen; const el = $("#cubepanel"); if (el) { el._h = ""; el.innerHTML = cubePanelHTML(); } }, cubeScan: () => { if (!G3) return; const p = G3.nexus.position; G3.cam.follow = null; G3.cam.followFleet = null; G3.cam.goal = { tx: p.x, ty: p.y, tz: p.z, dist: 150 }; G.cubeScan = performance.now() + 9000; }, cubeTarget: d => ACT.planet({ id: d.id }), fxLite: () => { GFX.over = Object.assign({}, GFX.over, { fx: FX_LITE() ? 2 : 0 }); gfxSave(); toast(FX_LITE() ? "Cube effects: Lite (fewer ships, no nebula or pulses)." : "Cube effects: Full."); const el = $("#cubepanel"); if (el) el._h = ""; },
   liveReplay: () => { closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } G.liveRT0 = now(); G.liveReplay = performance.now(); },
   shotSave: () => shotSave(), shotShare: () => shotShare(), shotClose: () => shotClose(),
   cineObj: d => cineObjStart(d.id),
@@ -15473,7 +15473,7 @@ const ACT = {
   allySearch: () => { sub.allyQ = (($("#allyq") || {}).value || "").trim().slice(0, 24); sub.allyPg = 1; render(true); },
   allyPg: d => { sub.allyPg = Math.max(1, +d.v || 1); render(true); },
   allyOpen2: d => openSheet({ type: "ally", id: d.id }),
-  labBattle: () => { toast("Building the 10 vs 10 battle…"); setTimeout(() => { try { const rep = labBattle(); dirty(); playBattle(rep); } catch (e) { toast("Couldn't build the test battle on this device.", "warn"); } }, 60); },
+  labBattle: () => { if (!duelOwner()) return; toast("Building the 10 vs 10 battle…"); setTimeout(() => { try { const rep = labBattle(); dirty(); playBattle(rep); } catch (e) { toast("Couldn't build the test battle on this device.", "warn"); } }, 60); },
   evPick: d => { sheet.ev = d.v; renderSheet(); },
   evTab: d => { sheet.evTab = d.v; renderSheet(); },
   gwClaim: () => act(() => { const T = now(), g = gwState(T), cl = gwClaimable(T); let n = 0;

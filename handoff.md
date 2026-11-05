@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-04 (America/Phoenix). Current game version: **v287** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v95**.
+Last updated: 2026-11-04 (America/Phoenix). Current game version: **v288** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v96**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -135,3 +135,4 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v285:** v280 reverted at the user's request ("way too powerful"). Bots are back on the linear `botDays` formulas (`botScore`, `botTech`, `botGarrison`, `botColonyIds`, `botDocs`), `botStrike` .6, `BOT_DEF_K` .4. The v280 note above describes what was removed; its commit is af9419b if a gentler curve is wanted later.
 - **v286 avatars:** the eight `docs/avatars/*.webp` were rebuilt, not re-cropped from new art: each subject is found by edge detail, centred and scaled to about 50% of the frame (scale .75-.84) on a blurred, dimmed copy of its own painting, with a feathered edge. The originals are in git before this commit (5609555). Hair or shoulders that the original painting's hexagon cut off can't be restored without the user's source sheet, which isn't in the repo. `.hexb .avc` got `object-fit:cover`, because the 1:1 canvas was stretched to the hex's shape.
 - **v287 avatars:** all 8 re-cut from the user's original sheet (1199 x 1312, 10 hexagons), replacing v286's pull-back: each full hexagon just inside its glowing border, scaled to the frame height (512 px) on a blurred, dimmed copy of its own colours, so hats and shoulders show in every frame. Marine uses the big top hexagon (sharpest). Android uses the lower-right hexagon of the two (more shoulders). The small hexagons are about 1:1 at the largest display size, so no AI upscale was run.
+- **v288 owner-only tests:** `DUEL_ALL = false`; `duelOwner()` (`G.owner` or `S.ownerFree`, which is set on the owner's save) now gates the 1 vs 1 duel, the 10 vs 10 simulator test, and the 20 vs 20 and 60 vs 60 Cube tests: Mail entries, Saved, the Cube event card and panel, `stressCard`, and `ACT.cubeDemo`, `labBattle`, `duelBattle`. Tested as non-owner and with `S.ownerFree` set.
