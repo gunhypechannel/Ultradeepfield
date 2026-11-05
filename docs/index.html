@@ -362,7 +362,9 @@ button,[data-act]{touch-action:manipulation}
 button{transition:transform .12s ease,background-color .2s ease,border-color .2s ease,opacity .2s ease,box-shadow .2s ease}
 button:not(:disabled):active{transform:scale(.965)}
 #view{scroll-behavior:smooth;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-.sheet{overscroll-behavior:contain;scroll-behavior:smooth}
+.sheet{overscroll-behavior:contain;scroll-behavior:smooth;overflow-x:hidden!important;overscroll-behavior-x:none;overflow-wrap:break-word} /* v297: vertical only */
+main#view{overflow-x:hidden;overscroll-behavior-x:none}
+.sheet img,.sheet video{max-width:100%}
 .sheet.in{animation:sheetIn .32s cubic-bezier(.2,.85,.25,1)}
 .scrim.in{animation:fadeIn .25s ease}
 #view.fade > *{animation:viewIn .24s ease}
@@ -2264,7 +2266,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 296;
+const GAME_V = 297;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
