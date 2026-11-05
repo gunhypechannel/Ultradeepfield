@@ -686,6 +686,26 @@ canvas.dthumb{display:block}
 .callband.def .cbgo{background:linear-gradient(#7cc8ff,#2a8ae0);color:#001426}
 .callband .cbn{flex:none;color:#fff;opacity:.7;font-size:11px}
 .callband .cbtm{flex:none;font-variant-numeric:tabular-nums;color:#fff;font-weight:600}
+.fstabs{margin:6px 0 10px}.fstabs .tb{position:static;display:inline-block;margin-left:4px}
+.fshero{position:relative;height:190px;display:flex;align-items:center;justify-content:center;perspective:700px;border-radius:14px;background:radial-gradient(ellipse at 50% 60%,color-mix(in srgb,var(--tc) 22%,transparent),transparent 70%);overflow:hidden}
+.fshero img{max-width:100%;max-height:100%;animation:fsSway 9s ease-in-out infinite;filter:drop-shadow(0 0 18px color-mix(in srgb,var(--tc) 55%,transparent))}
+.fshero .fsglow{position:absolute;inset:auto 15% 8% 15%;height:18px;border-radius:50%;background:var(--tc);filter:blur(16px);opacity:.35}
+.fsload0{color:var(--dim,#8aa);font-size:13px}
+@keyframes fsSway{0%,100%{transform:rotateY(-14deg) rotateX(4deg) translateY(0)}50%{transform:rotateY(14deg) rotateX(-2deg) translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){.fshero img{animation:none}}
+.fsxp{margin:8px 0}.fsxp small{color:var(--dim,#9ab);font-size:12px}
+.fsslots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0}
+.fsslot{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:12px;border:1px solid var(--tc);background:rgba(10,24,34,.7);color:#dfefff;min-height:76px;cursor:pointer}
+.fsslot span{font-size:22px;color:var(--tc)}.fsslot small{font-size:10.5px;text-align:center;line-height:1.15;overflow-wrap:anywhere}.fsslot.on{box-shadow:0 0 12px color-mix(in srgb,var(--tc) 45%,transparent) inset}
+.fsrows{display:flex;flex-direction:column;gap:4px}.fsr{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:4px 0;border-bottom:1px solid rgba(120,170,200,.12)}.fsr b{text-align:right}
+.fsr i.up{color:#5dff8a;font-style:normal}.fsr i.dn{color:#ff6b6b;font-style:normal}.fsr i.off{color:#6f8796;font-style:normal}
+.fsload{display:flex;flex-direction:column;gap:6px}.fsload>div{display:flex;align-items:center;gap:8px}.fsload b{flex:1}
+.fstree{border:1px solid color-mix(in srgb,var(--tc,#38dfee) 45%,transparent);border-radius:12px;padding:8px 10px;margin:8px 0}.fstree h3{margin:0 0 6px;color:var(--tc,#9fe9f7)}
+.fsnode{display:flex;align-items:center;gap:8px;padding:5px 0}.fsnode>span:first-child{flex:1;min-width:0}.fsnode small{display:block;color:var(--dim,#9ab);font-size:11.5px}.fsrk{color:var(--tc,#38dfee);letter-spacing:1px}
+.fsil{display:flex;flex-direction:column;gap:6px}.fsi{display:flex;gap:10px;align-items:center;text-align:left;width:100%;padding:8px 10px;border-radius:12px;border:1px solid var(--tc);background:rgba(10,24,34,.7);color:#dfefff;cursor:pointer}
+.fsi.on{box-shadow:0 0 0 1px var(--tc) inset}.fsic{font-size:22px;color:var(--tc);width:28px;text-align:center}.fsin{display:flex;flex-direction:column;min-width:0}.fsin b{color:var(--tc)}.fsin small{color:var(--dim,#9ab);font-size:11.5px}
+.fsact{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.fsf{flex-wrap:wrap;margin:6px 0}.fsm{display:inline-flex;align-items:center;gap:4px;margin:2px 4px 2px 0;padding:2px 8px;border-radius:10px;border:1px solid var(--tc);color:var(--tc);font-size:12px}.fsm small{color:#9ab}.fsm.short{border-style:dashed;opacity:.8}
 .cubeband.live{animation:cubePulse 2.2s ease-in-out infinite}@keyframes cubePulse{50%{background:linear-gradient(90deg,rgba(93,255,106,.3),rgba(6,20,10,.92) 60%)}}
 #authw{position:fixed;inset:0;z-index:99990;display:grid;place-items:end center;padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 4vh);overflow:auto;background:linear-gradient(180deg,transparent 55%,rgba(2,6,12,.85)),url(art/login.webp) center top/cover,#02060c} /* v263 the title art behind the device login too */
 .authbox{width:100%;max-width:380px;display:grid;gap:10px;padding:18px;margin-top:38vh;border-radius:24px;background:linear-gradient(180deg,rgba(10,30,52,.55),rgba(3,12,24,.82));border:1px solid rgba(110,200,255,.42);box-shadow:0 0 34px rgba(40,140,255,.28),inset 0 1px 0 rgba(255,255,255,.12);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#eef3f6}
@@ -1959,7 +1979,7 @@ const allyLevel = a => a ? clamp(1 + Math.floor(Math.log2(1 + allyFund(a) / ALLY
 const allyNeed = L => ALLY_STEP * (2 ** L - 1); // fund value that reaches level L+1
 const ALLY_PASS = [[2, "Fleet Booster", "+5% fleet speed"], [3, "Shared Industry", "+3% resource output"], [4, "War Banners", "+3% fleet attack"], [5, "Fleet Booster II", "+10% fleet speed"], [6, "Shared Industry II", "+6% resource output"], [8, "War Banners II", "+6% fleet attack"]];
 function allyPass() { const L = S ? allyLevel(myAlly()) : 0; return { spd: L >= 5 ? 10 : L >= 2 ? 5 : 0, prod: L >= 6 ? 6 : L >= 3 ? 3 : 0, atk: L >= 8 ? 6 : L >= 4 ? 3 : 0 }; }
-const prodBonus = () => 1 + (runePct("spirit") + allyPass().prod) / 100;
+const prodBonus = () => 1 + (runePct("spirit") + allyPass().prod + fsB("prod")) / 100;
 const RCAT = [["Basic", ["energyT", "laserT", "ionT", "hyperT", "plasmaT"]], ["Drive", ["drive", "impulse", "hyper"]], ["Advanced", ["espionage", "computer", "astro", "irn", "graviton"]], ["Combat", ["weapons", "shields", "armor"]], ["Our own", ["logistics", "command", "terraform", "repairT"]]];
 /* ---------- fog of war: the map starts greyed out; your planets, fleets and probes reveal it ---------- */
 const FOG_N = 96, FOG_R = 170 * 2.5 + 25, FOG_CELL = FOG_R * 2 / FOG_N;
@@ -2118,8 +2138,8 @@ const cmdClass = () => (S && S.cls) || null; // "collector" (Industrialist), "ge
 /* modifiers the rest of the game reads */
 const resMul = r => 1 + vipEff().prod + ((S && S.r.plasmaT) || 0) * { m: .01, c: .0066, g: .0033 }[r] + buffPct("b" + r) / 100 + (officer("geologist") ? .1 : 0) + (cmdClass() === "collector" ? .25 : 0);
 const enMul = () => 1 + buffPct("be") / 100 + (officer("engineer") ? .1 : 0) + (cmdClass() === "collector" ? .1 : 0);
-const bTimeMul = () => (officer("commander") ? .85 : 1) * (1 - vipEff().build);
-const rTimeMul = () => (1 - vipEff().res) * (officer("technocrat") ? .75 : 1) * (cmdClass() === "discoverer" ? .75 : 1) / (1 + .1 * ((S && S.r.irn) || 0));
+const bTimeMul = () => (officer("commander") ? .85 : 1) * (1 - vipEff().build) * (1 - fsB("bld") / 100);
+const rTimeMul = () => (1 - vipEff().res) * (officer("technocrat") ? .75 : 1) * (cmdClass() === "discoverer" ? .75 : 1) * (1 - fsB("rsch") / 100) / (1 + .1 * ((S && S.r.irn) || 0));
 const xFields = id => ((S && S.xf) || {})[id] || 0;
 function activateBuff(k, val, dur) {
   S.buffs = S.buffs || {}; const cur = buffOn(k), t = now();
@@ -2238,7 +2258,7 @@ function cacheGrab(id) {
 const gatherRate = n => NODE_T[n.res].rate * n.lvl * (1 + .1 * ((S && S.r.logistics) || 0)) * (n.kind === "empty" ? .12 : 1); // per minute; outposts only salvage a trickle
 /* v94: an outpost is held for 6 hours (any ships can hold one); whatever cargo space the fleet has fills with salvage meanwhile */
 const OUTPOST_MS = 6 * 3600e3;
-function haulPlan(n, ships) { const cap = cargoOf(ships), rate = gatherRate(n);
+function haulPlan(n, ships) { const cap = cargoOf(ships), rate = gatherRate(n) * (1 + fsB("gath") / 100);
   if (n.res === "s") return { amt: shardRest(n) ? 0 : Math.min(shardYield(n), shardLeft()), ms: SHARD_DIG_MS }; // v135: a shard dig takes the same time whatever the cargo
   if (n.kind === "empty") return { amt: Math.floor(Math.min(cap, rate * OUTPOST_MS / 60000)), ms: OUTPOST_MS };
   const amt = Math.floor(Math.min(cap, rate * 20)); return { amt, ms: Math.max(10000, amt / rate * 60000) }; }
@@ -2266,7 +2286,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 297;
+const GAME_V = 298;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -2968,7 +2988,7 @@ const spdOf = (k, r = S.r) => { const v = drvOf(k, r); const cl = CLASS_OF[k], l
 const spdNum = k => Math.round(spdOf(k) * 12500); // speed in OGame units, as shown on ship cards
 
 /* ---------- combat: stack simulator ---------- */
-const techOf = uid => (uid === G.me || !uid) ? { weapons: S.r.weapons + (runePct("fire") + allyPass().atk) / 10 + (gloryBonus() >= .15 ? 1 : 0) + vipEff().atk * 10, shields: S.r.shields + runePct("water") / 10 + vipEff().def * 10, armor: S.r.armor + runePct("earth") / 10 + vipEff().def * 10 } : isBot(uid) ? botTech(BOT_BY[uid]) : Object.assign({ weapons: 0, shields: 0, armor: 0 }, (G.players[uid] || {}).tech || {});
+const techOf = uid => (uid === G.me || !uid) ? { weapons: S.r.weapons + (runePct("fire") + allyPass().atk + fsB("atk")) / 10 + (gloryBonus() >= .15 ? 1 : 0) + vipEff().atk * 10, shields: S.r.shields + (runePct("water") + fsB("shd")) / 10 + vipEff().def * 10, armor: S.r.armor + (runePct("earth") + fsB("hul")) / 10 + vipEff().def * 10 } : isBot(uid) ? botTech(BOT_BY[uid]) : (t0 => Object.assign({}, t0, { weapons: (+t0.weapons || 0) + (+t0.fsa || 0) / 10, shields: (+t0.shields || 0) + (+t0.fss || 0) / 10, armor: (+t0.armor || 0) + (+t0.fsh || 0) / 10 }))(Object.assign({ weapons: 0, shields: 0, armor: 0 }, (G.players[uid] || {}).tech || {}));
 function unitStat(k, t, fortL) {
   const m = { a: 1 + .1 * (t.weapons || 0), s: 1 + .1 * (t.shields || 0), h: 1 + .1 * (t.armor || 0) };
   if (k === "fortress") return { atk: 400 * fortL * m.a, sh: 1500 * fortL * m.s, hull: 6000 * fortL * m.h };
@@ -3356,7 +3376,7 @@ function wellFrac(a, b) {
 const PROBE_K = .42, PROBE_MIN = 12000;
 function travelMs(from, to, n, r = S.r, pct = 100) {
   const ks = Object.keys(n).filter(k => n[k] > 0 && SH[k]); if (!ks.length || !from || !to) return 0;
-  const spd = Math.min(...ks.map(k => spdOf(k, r))), T = now(), a = pos(from, T), b = pos(to, T);
+  const spd = Math.min(...ks.map(k => spdOf(k, r))) * (r === S.r ? 1 + fsB("spd") / 100 : 1), T = now(), a = pos(from, T), b = pos(to, T);
   if (ks.length === 1 && ks[0] === "spyProbe") return Math.max(PROBE_MIN, (60 + Math.hypot(a.x - b.x, a.y - b.y) * 4.8) * 1000 * (1 + WELL_SLOW * wellFrac(a, b)) / (Math.sqrt(spd) * PROBE_K * clamp(pct, 1, 100) / 100));
   return (60 + Math.hypot(a.x - b.x, a.y - b.y) * 4.8) * 1000 * (1 + WELL_SLOW * wellFrac(a, b)) / (spd * clamp(pct, 1, 100) / 100);
 }
@@ -3365,7 +3385,7 @@ function travelMs(from, to, n, r = S.r, pct = 100) {
 function fuelFor(from, to, n, pct = 100) {
   if (!from || !to) return 0; const T = now(), a = pos(from, T), b = pos(to, T), d = Math.hypot(a.x - b.x, a.y - b.y), f = clamp(pct, 1, 100) / 100;
   let base = 0; for (const k in n) if (SH[k]) base += Math.max(.1, drvOf(k).fu / 10 * (CLASS_OF[k] === "utility" ? .9 : 1)) * (n[k] || 0);
-  return Math.ceil(base * (1 + d / 100) * (.15 + .85 * f * f) * (cmdClass() === "general" ? .75 : 1) * (1 - Math.min(.3, .03 * empB("allyDepot"))));
+  return Math.ceil(base * (1 + d / 100) * (.15 + .85 * f * f) * (cmdClass() === "general" ? .75 : 1) * (1 - Math.min(.3, .03 * empB("allyDepot"))) * (1 - fsB("fuel") / 100));
 }
 const spdPct = () => clamp(Math.round((typeof sheet !== "undefined" && sheet && sheet.speed) || 100), 1, 100);
 /* weekly Battle for the Cube: Friday 18:00 to Sunday 18:00 UTC */
@@ -3374,7 +3394,7 @@ const NEXUS = { id: "nexus", kind: "nexus", get r() { return evActive(now()) ? .
 const EV_BASE = Date.UTC(2026, 0, 2, 18), WEEK = 7 * 864e5, EV_DUR = 48 * 3600e3;
 const evWeek = T => Math.floor((T - EV_BASE) / WEEK), evStart = w => EV_BASE + w * WEEK, evActive = T => T < evStart(evWeek(T)) + EV_DUR;
 const GLORY_T = { 15: "Sovereigns of the Cube", 10: "Wardens of the Cube", 5: "Cube Vanguard" };
-const cargoOf = (n, r = S.r) => Object.keys(n).reduce((a, k) => a + (SH[k] ? SH[k].cargo * (CLASS_OF[k] === "utility" ? 1.1 * (r === S.r && cmdClass() === "collector" ? 1.25 : 1) : 1) * (n[k] || 0) : 0), 0) * (1 + .15 * (r.logistics || 0) + .05 * (r.hyperT || 0));
+const cargoOf = (n, r = S.r) => Object.keys(n).reduce((a, k) => a + (SH[k] ? SH[k].cargo * (CLASS_OF[k] === "utility" ? 1.1 * (r === S.r && cmdClass() === "collector" ? 1.25 : 1) : 1) * (n[k] || 0) : 0), 0) * (1 + .15 * (r.logistics || 0) + .05 * (r.hyperT || 0)) * (r === S.r ? 1 + fsB("cargo") / 100 : 1);
 const stock = lvl => ({ m: Math.round(600 * lvl ** 1.5 + 400), c: Math.round(350 * lvl ** 1.5 + 200), g: Math.round(120 * lvl ** 1.5) });
 
 /* ---------- shared writes ---------- */
@@ -3500,12 +3520,13 @@ function pirateArrive(f) {
   const x = PB[f.xid], tt = f.tt || (f.arrive - f.out); f.phase = "back"; f.back = f.arrive + tt;
   if (!x) return;
   if (pirDown(x) > f.arrive) { note(`${x.name} was already empty. Fleet returning.`, "warn"); return; }
-  const mine0 = Object.assign({}, f.n), res = simulate(stacksOf(f.n, techOf(null), G.me).concat(allyStacks(f.allies, x.lvl)), xStacks(x));
+  const mine0 = Object.assign({}, f.n), res = simulate(stacksOf(f.n, techVs(x), G.me).concat(allyStacks(f.allies, x.lvl)), xStacks(x));
   const rep = mkRep({ at: f.arrive, kind: "attack", title: x.mon ? `Hunt: ${x.name} (${MON[x.mon].n} Lv.${x.lvl})` : x.boss ? `Assault on ${x.name} (Cube Lv.${x.lvl})` : `Raid on ${x.name} (Pirates Lv.${x.lvl})`, aUids: [G.me].concat(f.allies || []), aName: S.homeName + " Fleet", dName: x.boss || x.mon ? x.name : `${x.name} Pirates`, boss: !!x.boss, mon: x.mon || null, lvl: x.lvl, ptype: "desert", fortL: 0, alien: !!x.mon, pirate: true,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
   f.n = Object.assign({}, f.allies ? (res.aByOwn[G.me] || {}) : res.aLeft); fieldRepair(f, mine0, rep); repairDocks(rep, lossesOf(mine0, f.n));
   if (x.boss) cubeDebris(x, rep); // v277: win or lose, the wrecks stay at the Cube
   if (res.winner === "a") {
+    fsLootPB(x); // v298
     const L = xLoot(x), cap = cargoOf(f.n), ratio = Math.min(1, cap / total(L));
     rep.loot = { m: Math.floor(L.m * ratio), c: Math.floor(L.c * ratio), g: Math.floor(L.g * ratio) }; f.loot = rep.loot;
     S.pir = S.pir || {}; S.pir[x.id] = f.arrive + xRegroup(x); S.wins++; bump(x.mon ? "monsters" : x.boss ? "cubes" : "pirates"); evPts("hunt", x.lvl * (x.boss ? 120 : x.mon ? 60 : 20)); if (x.boss) sendGift(x.lvl >= 20 ? 2 : 1, "destroyed " + x.name);
@@ -3556,7 +3577,7 @@ function arrive(f) {
     // recyclers salvage at full efficiency; other cargo holds only manage half
     const rc = (f.n.recycler || 0), recN = rc ? { recycler: rc } : {}, othN = Object.assign({}, f.n); delete othN.recycler;
     const d = p.debris || { m: 0, c: 0 }, cap = cargoOf(recN) + cargoOf(othN) * .5, tot = d.m + d.c, k = tot ? Math.min(1, cap / tot) : 0, got = { m: Math.floor(d.m * k), c: Math.floor(d.c * k), g: 0 };
-    p.debris = { m: d.m - got.m, c: d.c - got.c }; if (p.debris.m + p.debris.c < 50) p.debris = null; putPlanet(p); f.loot = got; bump("recycled"); S.stats.rcRes = (S.stats.rcRes || 0) + Math.floor(got.m + got.c);
+    p.debris = { m: d.m - got.m, c: d.c - got.c }; if (p.debris.m + p.debris.c < 50) p.debris = null; putPlanet(p); f.loot = got; bump("recycled"); fsLootSalvage(got.m + got.c); S.stats.rcRes = (S.stats.rcRes || 0) + Math.floor(got.m + got.c);
     note(total(got) ? `Recyclers collected ${fmt(got.m)} metal and ${fmt(got.c)} crystal at ${p.name}.` : `The debris at ${p.name} was already gone.`, total(got) ? "win" : "warn"); return; }
   if (f.mission === "reinforce" || st === "mine") {
     if (st === "mine") { const g = Object.assign({}, p.garrison); for (const k in f.n) g[k] = (g[k] || 0) + f.n[k]; p.garrison = g; putPlanet(p); S.fleets = S.fleets.filter(x => x !== f); note(`Fleet landed on ${p.name} and joined its garrison.`); }
@@ -3574,9 +3595,9 @@ function arrive(f) {
   repairDocks(rep, lossesOf(mine0, f.n)); // only our own losses get towed home
   let captured = false; if (res.winner === "a") guardsAfter(p, res, rep, true);
   if (res.winner === "a") {
-    if (st === "hive") { rep.loot = hiveLoot(p.lvl, cargoOf(f.n), rep.lossD); S.wins++; bump("hiveWins"); S.maxWin = Math.max(S.maxWin, p.lvl); }
+    if (st === "hive") { rep.loot = hiveLoot(p.lvl, cargoOf(f.n), rep.lossD); S.wins++; bump("hiveWins"); S.maxWin = Math.max(S.maxWin, p.lvl); fsXP(8 * p.lvl, "Hive victory"); fsDrop([["alloy", clamp(1 + Math.floor(p.lvl / 6), 1, 4), 1], ["crystal", clamp(1 + Math.floor(p.lvl / 6), 1, 4), p.lvl >= 5 ? 1 : 0]], p.name); }
     else {
-      if (hadDef) { S.pvpWins++; S.wins++; }
+      if (hadDef) { S.pvpWins++; S.wins++; fsXP(300, "victory over a commander"); }
       // plunder this colony's own stockpile: up to half, limited by cargo
       settle(p, f.arrive); const s = p.st, half = { m: s.m / 2, c: s.c / 2, g: s.g / 2 }, tot = total(half), ratio = tot ? Math.min(1, cargoOf(f.n) / tot) : 0;
       rep.loot = { m: Math.floor(half.m * ratio), c: Math.floor(half.c * ratio), g: Math.floor(half.g * ratio) }; rep.plunder = true;
@@ -3689,7 +3710,7 @@ function gatherEnd(f) {
   const n = NB[f.nid], h = f.haul || { res: "m", amt: 0 }; occClear(f.nid, f.id);
   f.phase = "back"; f.back = f.gend + (f.tt || 60000); setHaulLoot(f, h.res, h.amt);
   if (n && n.kind === "empty") { note(`Our outpost at ${n.name} stands down after ${ftime(OUTPOST_MS)}${h.amt ? `: ${fmt(h.amt)} ${RES_N[h.res].toLowerCase()} salvaged` : ""}. Fleet heading home.`, "win"); return; }
-  bump("gathers"); evPts("gather", h.amt / 500); note(`Holds full at ${n ? n.name : "the field"}: ${fmt(h.amt)} ${RES_N[h.res].toLowerCase()} on the way home.`, "win");
+  bump("gathers"); evPts("gather", h.amt / 500); fsLootGather(n, h.amt); note(`Holds full at ${n ? n.name : "the field"}: ${fmt(h.amt)} ${RES_N[h.res].toLowerCase()} on the way home.`, "win");
 }
 /* rewards ledger: every plunder haul and every reward, kept for the Fleets screen (last 40 entries plus lifetime totals) */
 function logReward(src, res, extra) {
@@ -4539,7 +4560,7 @@ function syncPlayer() {
   if (S && S.cname) G.myName = S.cname;
   if (G.mode !== "online" || !G.db || !G.me || !G.myHome) return;
   const d = { joined: G.joinedAt, last: Math.floor(now() / 600000) * 600000, score: score(), wins: S.wins, planets: myPlanets().length, home: G.myHome, ally: S.ally || null,
-    tech: { weapons: S.r.weapons, shields: S.r.shields, armor: S.r.armor, esp: S.r.espionage || 0 }, pvp: (S.pvp || {}).pts || 0, rec: S.rec || { w: 0, l: 0, d: 0 }, bio: (S.bio || "").slice(0, 160), nm: S.cname || "", fac: facOf(), lvl: cmdLevel(score()), ast: S.r.astro || 0, av: S.avatar || null, mv: myMoves(), iv: myIntel(), cf: secFlag(), sh: hash(G.me) % SHARDS, gw: S.gw && S.gw.i === gwIdx(now()) ? { i: S.gw.i, p: S.gw.pts } : null };
+    tech: { weapons: S.r.weapons, shields: S.r.shields, armor: S.r.armor, esp: S.r.espionage || 0, fsa: Math.round(fsB("atk")), fss: Math.round(fsB("shd")), fsh: Math.round(fsB("hul")) }, pvp: (S.pvp || {}).pts || 0, rec: S.rec || { w: 0, l: 0, d: 0 }, bio: (S.bio || "").slice(0, 160), nm: S.cname || "", fac: facOf(), lvl: cmdLevel(score()), ast: S.r.astro || 0, av: S.avatar || null, mv: myMoves(), iv: myIntel(), cf: secFlag(), sh: hash(G.me) % SHARDS, gw: S.gw && S.gw.i === gwIdx(now()) ? { i: S.gw.i, p: S.gw.pts } : null };
   const j = JSON.stringify(d); if (j === store.lastPlayer) return; store.lastPlayer = j;
   serial("me", () => G.db.doc("players/" + G.me).set(d).catch(() => { store.lastPlayer = ""; }));
 }
@@ -4742,7 +4763,7 @@ async function connectCloud() {
       db.collection(coll).limit(1000).onSnapshot(s => { parts[SHARDS] = s; took(s); merge(); }, () => {});
       for (let k = 0; k < SHARDS; k++) db.collection(coll).where("sh", "==", k).limit(1000).onSnapshot(s => { parts[k] = s; took(s); merge(); }, () => {}); };
     shardSub("players", snaps => {
-      const o = {}; for (const snap of snaps) for (const d of snap.docs) { if (o[d.id]) continue; const v = d.data(); if (v && typeof v === "object") o[d.id] = { score: okInt(v.score), wins: okInt(v.wins), planets: okInt(v.planets), last: +v.last || 0, joined: +v.joined || 0, home: typeof v.home === "string" ? v.home : null, ally: typeof v.ally === "string" ? v.ally : null, tech: { weapons: okInt((v.tech || {}).weapons), shields: okInt((v.tech || {}).shields), armor: okInt((v.tech || {}).armor), esp: okInt((v.tech || {}).esp) },
+      const o = {}; for (const snap of snaps) for (const d of snap.docs) { if (o[d.id]) continue; const v = d.data(); if (v && typeof v === "object") o[d.id] = { score: okInt(v.score), wins: okInt(v.wins), planets: okInt(v.planets), last: +v.last || 0, joined: +v.joined || 0, home: typeof v.home === "string" ? v.home : null, ally: typeof v.ally === "string" ? v.ally : null, tech: { weapons: okInt((v.tech || {}).weapons), shields: okInt((v.tech || {}).shields), armor: okInt((v.tech || {}).armor), esp: okInt((v.tech || {}).esp), fsa: clamp(okInt((v.tech || {}).fsa), 0, FS_CAP.atk), fss: clamp(okInt((v.tech || {}).fss), 0, FS_CAP.shd), fsh: clamp(okInt((v.tech || {}).fsh), 0, FS_CAP.hul) },
         pvp: okInt(v.pvp), rec: { w: okInt((v.rec || {}).w), l: okInt((v.rec || {}).l), d: okInt((v.rec || {}).d) }, bio: typeof v.bio === "string" ? v.bio.slice(0, 160) : "", nm: typeof v.nm === "string" ? v.nm.replace(/[\u0000-\u001f<>]/g, "").slice(0, 20) : "", fac: FACTIONS[v.fac] ? v.fac : "terran", lvl: okInt(v.lvl), ast: v.ast == null ? 18 : okInt(v.ast), av: typeof v.av === "string" && (v.av === "photo" || AV_IDS.includes(v.av) || /^[fmac][0-3]$/.test(v.av)) ? v.av : null, mv: cleanMv(v.mv), iv: cleanIv(v.iv), gw: v.gw && Number.isInteger(v.gw.i) ? { i: v.gw.i, p: okInt(v.gw.p) } : null }; }
       G.players = o; gotP = true; if (gotPl) maybeJoin(); refreshNames(); softRender();
     });
@@ -11581,7 +11602,7 @@ function shPirate() {
   else if (!Object.keys(avail).length) body = `${originBar()}<p class="note">No ships at ${esc(h ? h.name : S.homeName)}.</p>`;
   else {
     const key = "x" + JSON.stringify(sel) + x.id + S.r.weapons + S.r.shields + S.r.armor + JSON.stringify(sheet.bots || []);
-    if (sheet.oddsKey !== key) { sheet.oddsKey = key; const A = stacksOf(sel, techOf(null), G.me).concat(allyStacks(sheet.bots, x.lvl)), D = xStacks(x);
+    if (sheet.oddsKey !== key) { sheet.oddsKey = key; const A = stacksOf(sel, techVs(x), G.me).concat(allyStacks(sheet.bots, x.lvl)), D = xStacks(x);
       sheet.fc = Object.keys(sel).length ? forecast(A, D, {}, 12) : null; sheet.odds = sheet.fc ? sheet.fc.win : 0; }
     const o = sheet.odds, oc = o >= .75 ? "var(--green)" : o >= .4 ? "var(--amber)" : "var(--red)", cap = cargoOf(sel);
     body = `<h2 class="sec" id="strike">${x.mon ? "Hunting fleet" : "Raiding fleet"}</h2>${originBar()}${picker(avail)}${strikeReqSection(x, x.lvl)}${speedBar(x, sel)}
@@ -11828,7 +11849,7 @@ function strikeInviteUI(a, full, left, lim) {
 /* one joint strike in a list: target, leader, members, a capacity bar and the time to launch */
 const rallyRow = a => { const T = now(), p = rallyTgt(a), boss = p && p.kind === "pirate", end = a.rally ? a.launch : a.arrive, mine = !!(a.members || {})[G.me];
   return `<button class="tgt rallyrow" data-act="assault" data-id="${a.id}">${p && !boss && p !== NEXUS ? `<canvas data-p="${p.id}"></canvas>` : p === NEXUS ? `<span class="lvl" style="color:#5dff6a;border-color:currentColor">■</span>` : `<span class="lvl" style="color:${boss ? (p.mon ? MON[p.mon].col : "#5dff6a") : "#5dff8a"};border-color:currentColor">${p ? p.lvl : "?"}</span>`}<span><span class="nm">⚑ ${p ? esc(p.name) : "Target"}${p && !boss ? ` · Lv.${p.lvl}` : ""}</span><br><span class="sub">Led by ${esc(nameOf(a.leader))} · ${memberCount(a)}/${strikeMax(a)} commanders${a.rally ? ` · ${fmt(rallyLoad(a))}/${fmt(a.cap)} ships` : ""}</span>${a.rally ? `<span class="rbar sm"><i style="width:${Math.min(100, rallyLoad(a) / Math.max(1, a.cap) * 100)}%"></i></span>` : ""}</span><span class="pill ${mine ? "ok" : "go"}">${mine ? "Joined · " : a.rally ? "Launch " : ""}<span data-end="${end}">${ftime(end - T)}</span></span></button>`; };
-const myTech = () => ({ weapons: S.r.weapons, shields: S.r.shields, armor: S.r.armor, logistics: S.r.logistics });
+const myTech = () => ({ weapons: S.r.weapons + fsB("atk") / 10, shields: S.r.shields + fsB("shd") / 10, armor: S.r.armor + fsB("hul") / 10, logistics: S.r.logistics }); // v298: your flagship joins your joint-strike ships
 const rallyBonus = n => 1 + Math.min(1.5, .15 * Math.max(0, n - 1));
 function startRally(tgt, n, mins) {
   const h = originPlanet(), T = now(); if (!h || !tgt) return null; if (tgt === NEXUS && (G.mode !== "online" || !G.db)) { toast("The Battle for the Cube needs the shared galaxy.", "warn"); return null; }
@@ -11955,7 +11976,7 @@ function cubeDebris(x, rep) {
 function cubeSalvage(f) {
   const x = PB[f.cx], d = xDeb(x); if (!x || !d) { note(`The wreckage at ${x ? x.name : "the Cube"} has drifted apart. Fleet returning.`, "warn"); return; }
   const rc = f.n.recycler || 0, othN = Object.assign({}, f.n); delete othN.recycler; const cap = cargoOf(rc ? { recycler: rc } : {}) + cargoOf(othN) * .5, tot = d.m + d.c, k = tot ? Math.min(1, cap / tot) : 0, got = { m: Math.floor(d.m * k), c: Math.floor(d.c * k), g: 0 };
-  d.m -= got.m; d.c -= got.c; if (d.m + d.c < 50) delete S.xdeb[x.id]; f.loot = got; bump("recycled"); S.stats.rcRes = (S.stats.rcRes || 0) + Math.floor(got.m + got.c);
+  d.m -= got.m; d.c -= got.c; if (d.m + d.c < 50) delete S.xdeb[x.id]; f.loot = got; bump("recycled"); fsLootSalvage(got.m + got.c); S.stats.rcRes = (S.stats.rcRes || 0) + Math.floor(got.m + got.c);
   note(`Recyclers recovered ${fmt(got.m)} metal and ${fmt(got.c)} crystal from the wreckage at ${x.name}.${xDeb(x) ? ` ${fmt(d.m + d.c)} is still out there.` : ""}`, "win");
 }
 /* v282 recycling sends Recyclers only, and only as many as the field needs: what is left after any already on their way, divided by one Recycler's hold.
@@ -11971,7 +11992,159 @@ function recycleGo(tg, deb, extra) { if (!canPlay() || slotsFull()) return; cons
 const debXCard = x => { const d = x && x.boss && xDeb(x); if (!d) return "";
   return `<div class="card"><b style="font-family:var(--f-display);letter-spacing:.08em">⚙ WRECKAGE FIELD</b><p class="note" style="margin:4px 0">Hulls from the battles here, Collective and ours. It drifts apart in <b data-end="${d.until}">${ftime(d.until - now())}</b>. Send Recyclers to recover it.</p>
     <dl class="kv"><dt>Recyclable</dt><dd>${costHTML({ m: d.m, c: d.c })}</dd></dl>${recBtn("recycleX", x.id, x, d)}</div>`; };
+/* ===================== v298 FLAGSHIP COMMAND: the faction flagship as a hero =====================
+   From commander Lv.15 your faction flagship (the one that already leads every fleet you send) earns experience, levels up to 60,
+   spends a skill point per level in five trees and wears eight pieces of crafted equipment. Its bonuses feed the real calculations:
+   battle tech (solo attacks, defense, PvP, pirates, monsters, Cubes, joint strikes, forecasts, Efficient fight), production,
+   build and research time, fleet speed, cargo, gathering and fuel.
+   Formula: every bonus of one stat (skills + gear + set bonuses + faction perk) is ADDED, then capped (FS_CAP); the total then joins the
+   game's existing bonuses the same way runes do: attack, shields and hull as tech levels (10% = 1 level, additive with research, runes,
+   VIP and alliance passives), the rest as one multiplier on that system. Each commander's flagship counts once, for their own ships only:
+   in a joint strike every member brings their own, so nothing is applied twice. The flagship itself is never an extra combat unit. */
+const FS_MAX = 60, FS_RESPEC_MS = 7 * 864e5, FS_RESPEC_COST = 50, FS_QMAX = 3, FS_DAY_CAP = 70;
+const FS_STAT = { atk: "Fleet attack", shd: "Fleet shields", hul: "Fleet hull", boss: "Attack vs pirates, monsters and Cubes", prod: "Resource output", bld: "Build time", rsch: "Research time", spd: "Fleet speed", cargo: "Cargo space", gath: "Gathering speed", fuel: "Fuel use" };
+const FS_NEG = { bld: 1, rsch: 1, fuel: 1 }; // shown as a reduction
+const FS_CAP = { atk: 40, shd: 40, hul: 40, boss: 30, prod: 30, bld: 30, rsch: 30, spd: 30, cargo: 40, gath: 40, fuel: 40 };
+const FS_TREES = [
+  ["war", "Warfare", "#ff7a59", [["atk", 1, "Gun Crews", "+1% fleet attack per rank"], ["boss", 1.5, "Hunter Doctrine", "+1.5% attack against pirates, monsters and Cubes per rank"], ["atk", .5, "Overcharge", "+0.5% attack and +0.5% hull per rank", "hul", .5]]],
+  ["def", "Defense", "#4fc3ff", [["shd", 1, "Shield Harmonics", "+1% fleet shields per rank"], ["hul", 1, "Ablative Plating", "+1% fleet hull per rank"], ["shd", .5, "Bulwark", "+0.5% shields and +0.5% hull per rank", "hul", .5]]],
+  ["eco", "Economy", "#f0b840", [["prod", 1, "Logistics Office", "+1% resource output per rank"], ["bld", 1, "Drone Foremen", "−1% build time per rank"], ["prod", .5, "Trade Routes", "+0.5% output and −0.5% build time per rank", "bld", .5]]],
+  ["res", "Research", "#c58bff", [["rsch", 1.2, "Science Deck", "−1.2% research time per rank"], ["rsch", .6, "Field Labs", "−0.6% research time and −0.4% build time per rank", "bld", .4], ["prod", .4, "Applied Science", "+0.4% output per rank"]]],
+  ["ops", "Fleet Operations", "#5dffa8", [["spd", 1, "Navigation", "+1% fleet speed per rank"], ["cargo", 1.5, "Hold Masters", "+1.5% cargo space per rank"], ["gath", 1.5, "Prospectors", "+1.5% gathering speed per rank"], ["fuel", 2, "Efficient Drives", "−2% fuel use per rank"]]]
+];
+const FS_RANKS = 5;
+const FS_SLOTS = [
+  ["weapon", "Main Weapon", "⚔", { atk: 2 }, "circuit", "cube"], ["shield", "Shield Generator", "⬡", { shd: 2 }, "crystal", "cube"],
+  ["armor", "Armor Plating", "▣", { hul: 2 }, "alloy", "bio"], ["reactor", "Reactor Core", "✺", { prod: 2, fuel: 3 }, "crystal", "void"],
+  ["bridge", "Command Bridge", "♛", { atk: 1, shd: 1 }, "circuit", "bio"], ["engine", "Engine System", "➤", { spd: 2, gath: 2 }, "alloy", "crystal"],
+  ["computer", "Tactical Computer", "⌬", { rsch: 2, bld: 1 }, "circuit", "crystal"], ["artifact", "Special Artifact", "✦", { boss: 2, cargo: 2 }, "void", "cube"]];
+const FS_SLOT = Object.fromEntries(FS_SLOTS.map(s => [s[0], s]));
+const FS_TIER = [null, ["Common", "#b8c4cc"], ["Uncommon", "#5dff8a"], ["Rare", "#4fc3ff"], ["Epic", "#c58bff"], ["Legendary", "#ffb347"], ["Mythic", "#ff4f6a"]];
+const FS_TMUL = [0, 1, 1.6, 2.4, 3.5, 5, 7], FS_ENH = 10, FS_ENH_K = .05; // +5% of the item's stats per enhancement level, up to +10
+const FS_MATS = { alloy: ["Reinforced Alloy", "▰", "Mined from metal fields, salvaged from pirates and wreckage"], circuit: ["Salvaged Circuitry", "⌁", "Pirate hideouts"], crystal: ["Quantum Crystal", "◈", "Crystal and gas fields"], bio: ["Exotic Tissue", "❋", "Space monsters"], cube: ["Cube Fragment", "■", "Collective Cubes"], void: ["Void Essence", "✧", "Cube cores, Leviathans and joint strikes"] };
+const FS_SETS = {
+  conq: ["Conqueror", [[2, { atk: 3 }], [4, { atk: 3 }], [6, { atk: 4, shd: 2 }]]], guard: ["Guardian", [[2, { shd: 3 }], [4, { hul: 3 }], [6, { shd: 3, hul: 3 }]]],
+  harv: ["Harvester", [[2, { gath: 5 }], [4, { cargo: 6 }], [6, { gath: 5, spd: 3 }]]], arch: ["Architect", [[2, { bld: 3 }], [4, { prod: 3 }], [6, { bld: 3, prod: 3 }]]],
+  sci: ["Scientist", [[2, { rsch: 3 }], [4, { rsch: 3 }], [6, { rsch: 4, bld: 2 }]]], hunt: ["Void Hunter", [[2, { boss: 4 }], [4, { boss: 4 }], [6, { boss: 4, atk: 3 }]]] };
+/* each faction's gear has its own names and, from Legendary up, a small perk in its own field (all four the same size) */
+const FS_FAC = { terran: ["Union", { shd: 1 }], solar: ["Dominion", { prod: 1 }], nyx: ["Nyx", { atk: 1 }], verdant: ["Verdant", { gath: 2 }] };
+const FS_NAMES = { weapon: { terran: "Railspear Battery", solar: "Sunlance Array", nyx: "Voidfang Cannons", verdant: "Thornbloom Launchers" }, shield: { terran: "Aegis Projector", solar: "Corona Veil", nyx: "Umbral Ward", verdant: "Canopy Field" },
+  armor: { terran: "Bastion Plating", solar: "Gilded Carapace", nyx: "Obsidian Scales", verdant: "Barkhide Lattice" }, reactor: { terran: "Fusion Heart", solar: "Star Furnace", nyx: "Null Engine", verdant: "Seed Reactor" },
+  bridge: { terran: "Admiralty Deck", solar: "Throne Bridge", nyx: "Shadow Helm", verdant: "Grove Council" }, engine: { terran: "Vector Drives", solar: "Solar Sails", nyx: "Phase Drives", verdant: "Pollen Thrusters" },
+  computer: { terran: "Strategos Core", solar: "Oracle Matrix", nyx: "Whisper Cogitator", verdant: "Rootmind Array" }, artifact: { terran: "Founders' Relic", solar: "Sunstone Idol", nyx: "Eclipse Shard", verdant: "Worldseed" } };
+const fsXpNeed = L => Math.round(200 * Math.pow(L, 1.5)); // XP from level L to L+1
+function fsOf() { if (!S) return null; if (!S.fs || typeof S.fs !== "object") S.fs = {}; const f = S.fs;
+  f.xp = +f.xp || 0; f.lv = clamp(+f.lv || 1, 1, FS_MAX); f.sk = f.sk && typeof f.sk === "object" ? f.sk : {}; f.eq = f.eq && typeof f.eq === "object" ? f.eq : {};
+  f.inv = Array.isArray(f.inv) ? f.inv : []; f.mats = f.mats && typeof f.mats === "object" ? f.mats : {}; f.q = Array.isArray(f.q) ? f.q : []; f.loads = Array.isArray(f.loads) ? f.loads : []; f.seq = +f.seq || 1; f.v = +f.v || 1; return f; }
+const fsOn = () => { try { return !!S && flagOK(G.me || "local"); } catch (e) { return false; } };
+const fsSpent = f => Object.values(f.sk).reduce((a, v) => a + (+v || 0), 0), fsPts = f => Math.max(0, f.lv - 1 - fsSpent(f));
+const fsItemStats = it => { const sl = FS_SLOT[it.s]; if (!sl) return {}; const k = FS_TMUL[it.t] * (1 + FS_ENH_K * (it.lv || 0)), o = {}; for (const s in sl[3]) o[s] = +(sl[3][s] * k).toFixed(2);
+  if (it.t >= 5 && FS_FAC[it.f]) for (const s in FS_FAC[it.f][1]) o[s] = +((o[s] || 0) + FS_FAC[it.f][1][s] * (it.t - 4)).toFixed(2); return o; };
+const fsItemName = it => `${FS_TIER[it.t][0]} ${(FS_NAMES[it.s] || {})[it.f] || FS_SLOT[it.s][1]}`;
+const fsEquipped = f => Object.values(f.eq).map(id => f.inv.find(x => x.id === id)).filter(Boolean);
+function fsSetCounts(items) { const c = {}; for (const it of items) if (it.set) c[it.set] = (c[it.set] || 0) + 1; return c; }
+/* the flagship's total bonus per stat (in %), raw sums and the capped values used by the game */
+function fsTotals(f, eqOverride) { f = f || fsOf(); const raw = {}; const add = (o, m = 1) => { for (const k in o) raw[k] = (raw[k] || 0) + o[k] * m; };
+  for (const [id, , , nodes] of FS_TREES) nodes.forEach((n, i) => { const r = +f.sk[id + i] || 0; if (!r) return; raw[n[0]] = (raw[n[0]] || 0) + n[1] * r; if (n[4]) raw[n[4]] = (raw[n[4]] || 0) + n[5] * r; });
+  const items = eqOverride || fsEquipped(f); for (const it of items) add(fsItemStats(it));
+  const sc = fsSetCounts(items); for (const s in sc) for (const [n, o] of FS_SETS[s][1]) if (sc[s] >= n) add(o);
+  const cap = {}; for (const k in FS_CAP) cap[k] = Math.min(FS_CAP[k], +(raw[k] || 0).toFixed(2)); return { raw, cap, sets: sc }; }
+/* cached, because battles ask for tech many times a frame */
+function fsB(k) { if (!S || !fsOn()) return 0; const f = fsOf(), key = f.v + "|" + f.lv + "|" + (S.faction || ""); if (fsB.key !== key) { fsB.key = key; fsB.c = fsTotals(f).cap; } return fsB.c[k] || 0; }
+const fsBump = () => { const f = fsOf(); f.v++; fsB.key = null; dirty(); };
+const techVs = x => { const t = techOf(null); const b = x && PB[x.id] ? fsB("boss") : 0; return b ? Object.assign({}, t, { weapons: t.weapons + b / 10 }) : t; }; // Void Hunter and Hunter Doctrine: only against pirates, monsters and Cubes
+/* experience: battles won, hunts, gathering and directives. Earned from commander Lv.15, when the flagship takes command */
+function fsXP(n, why) { if (!S || !fsOn() || !(n > 0)) return; const f = fsOf(); if (f.lv >= FS_MAX) return; f.xp += Math.round(n); let up = 0;
+  while (f.lv < FS_MAX && f.xp >= fsXpNeed(f.lv)) { f.xp -= fsXpNeed(f.lv); f.lv++; up++; } if (f.lv >= FS_MAX) f.xp = 0; fsBump();
+  if (up) note(`Your flagship reached Lv.${f.lv}${why ? ` (${why})` : ""}. ${up > 1 ? `${up} skill points` : "A skill point"} to spend in Flagship Command.`, "win"); }
+/* materials: six kinds in six tiers. Drops are counted per day: after FS_DAY_CAP the chance of each further drop halves, so steady play
+   always progresses but farming can't flood the economy */
+const fsMatKey = (m, t) => m + clamp(t, 1, 6);
+function fsDrop(list, why) { if (!S || !fsOn()) return; const f = fsOf(), d = utcDay(); if (!f.day || f.day.d !== d) f.day = { d, n: 0 }; const got = [];
+  for (const [m, t, n] of list) for (let i = 0; i < n; i++) { if (f.day.n >= FS_DAY_CAP && Math.random() > Math.pow(.5, 1 + (f.day.n - FS_DAY_CAP) / 15)) continue; const k = fsMatKey(m, t); f.mats[k] = (f.mats[k] || 0) + 1; f.day.n++; got.push(k); }
+  if (!got.length) return; fsBump(); const c = {}; for (const k of got) c[k] = (c[k] || 0) + 1;
+  note(`Flagship materials${why ? ` from ${why}` : ""}: ${Object.entries(c).map(([k, n]) => `${FS_TIER[+k.slice(-1)][0]} ${FS_MATS[k.slice(0, -1)][0]} ×${n}`).join(", ")}.`, "win"); }
+const fsRoll = p => Math.random() < p;
+function fsLootPB(x, rally) { if (!x) return; const L = x.lvl || 1;
+  /* v298 tuning (design/flagship-hero.md, economy model): an active player reaches a full Epic set in about two weeks, Legendary in about two
+     months and Mythic in most of a year; the daily soft cap keeps heavy farming within roughly 3x of that */
+  if (x.boss) { const t = clamp(1 + Math.floor(L / 7), 2, 5); fsXP(40 * L, x.name); fsDrop([["cube", t, 2 + Math.floor(L / 10) + (rally ? 1 : 0)], ["void", t, 1 + (fsRoll(rally ? .5 : .25) ? 1 : 0)], ["cube", t + 1, fsRoll(.1) ? 1 : 0]], x.name); }
+  else if (x.mon) { const t = clamp(1 + Math.floor(L / 8), 1, 5); fsXP(20 * L, x.name); fsDrop([["bio", t, 1 + Math.floor(L / 8)], ["void", t, fsRoll(.35) ? 1 : 0], ["cube", t, fsRoll(.08) ? 1 : 0], ["bio", t + 1, fsRoll(.1) ? 1 : 0]], x.name); }
+  else { const t = clamp(1 + Math.floor(L / 8), 1, 5); fsXP(10 * L, x.name); fsDrop([["circuit", t, 1 + Math.floor(L / 5)], ["alloy", t, 1 + Math.floor(L / 8)], ["circuit", t + 1, fsRoll(.12) ? 1 : 0]], x.name); } }
+function fsLootGather(n, amt) { if (!n || !(amt > 0)) return; fsXP(Math.min(200, amt / 5000), "gathering"); const t = clamp(1 + Math.floor((n.lvl || 1) / 8), 1, 5), c = clamp(Math.ceil(amt / 60000), 1, 6), m = n.res === "c" || n.res === "g" ? "crystal" : "alloy";
+  fsDrop([[m, t, c], [m, t + 1, fsRoll(.12) ? 1 : 0]], n.name); }
+function fsLootSalvage(amt) { if (!(amt > 0) || !fsRoll(.25)) return; fsDrop([["alloy", clamp(1 + Math.floor(Math.log10(1 + amt) - 4), 1, 3), 1]], "salvage"); }
+/* combining: five of a tier make one of the next (plus a little metal and crystal, so it never runs for free) */
+const fsCombCost = t => ({ m: 1000 * Math.pow(4, t - 1), c: 600 * Math.pow(4, t - 1), g: 0 });
+/* recipes: a slot, a tier and a set. Primary and secondary materials of that tier, alloy of the tier below for the frame, resources and time grow per tier */
+function fsRecipe(s, t) { const sl = FS_SLOT[s]; if (!sl) return null; const p = Math.pow(3, t - 1), mats = {}; const add = (k, n) => { mats[k] = (mats[k] || 0) + n; };
+  add(fsMatKey(sl[4], t), 3); add(fsMatKey(sl[5], t), 2); add(fsMatKey("alloy", Math.max(1, t - 1)), 5);
+  return { mats, res: { m: 20000 * p, c: 12000 * p, g: 5000 * p }, ms: Math.round(15 * 60000 * Math.pow(2.2, t - 1)) }; }
+const fsEnhCost = it => { const sl = FS_SLOT[it.s], lv = (it.lv || 0) + 1; return { mats: { [fsMatKey(sl[4], it.t)]: 1 + Math.floor(lv / 3) }, res: { m: 5000 * Math.pow(2, it.t - 1) * lv, c: 3000 * Math.pow(2, it.t - 1) * lv, g: 0 } }; };
+const fsHasMats = (f, mats) => Object.entries(mats).every(([k, n]) => (f.mats[k] || 0) >= n);
+const fsTakeMats = (f, mats) => { for (const [k, n] of Object.entries(mats)) { f.mats[k] -= n; if (f.mats[k] <= 0) delete f.mats[k]; } };
+/* finished forge jobs become items exactly once: each job leaves the queue in the same step that adds its item */
+function fsTick() { if (!S || !S.fs) return; const f = fsOf(), T = now(); let done = 0;
+  while (f.q.length && f.q[0].e <= T) { const j = f.q.shift(); if (!f.inv.some(x => x.job === j.id)) { const it = { id: "fq" + (f.seq++), job: j.id, s: j.s, t: j.t, set: j.set, f: j.f, lv: 0 }; f.inv.push(it); done++; note(`Forge: ${fsItemName(it)} (${FS_SETS[it.set][0]} set) is ready. Equip it in Flagship Command.`, "win"); }
+    if (f.q[0] && f.q[0].s0 == null) { f.q[0].s0 = j.e; f.q[0].e = j.e + f.q[0].ms; } }
+  if (done) fsBump(); }
+/* the hero portrait: the flagship's own 3D model, rendered once per faction by the ship studio, kept as an image */
+const FS_ART = {};
+function fsArt(fac) { if (FS_ART[fac]) return FS_ART[fac]; let c = null; try { c = shipArtSoon("flagship", fac, "hero"); } catch (e) {}
+  if (c && c.toDataURL) { try { FS_ART[fac] = c.toDataURL("image/webp", .85); } catch (e) {} return FS_ART[fac] || null; }
+  setTimeout(() => { if (sheet && sheet.type === "flagship" && (sheet.tab || "over") === "over") renderSheet(); }, 700); return null; }
+/* ---------- Flagship Command: the hero screen ---------- */
+const fsPct = (k, v) => `${FS_NEG[k] ? "−" : "+"}${(+v).toFixed(v % 1 ? 1 : 0)}%`;
+const fsStatRows = (o, cmp) => Object.keys(FS_STAT).filter(k => (o[k] || 0) || (cmp && cmp[k])).map(k => { const d = cmp ? +((o[k] || 0) - (cmp[k] || 0)).toFixed(2) : 0;
+  return `<div class="fsr"><span>${FS_STAT[k]}</span><b>${fsPct(k, o[k] || 0)}${cmp && d ? ` <i class="${d > 0 ? "up" : "dn"}">${d > 0 ? "▲" : "▼"}${Math.abs(d).toFixed(d % 1 ? 1 : 0)}</i>` : ""}</b></div>`; }).join("") || '<p class="note">No bonuses yet.</p>';
+const fsMatChip = (k, n, have) => { const m = FS_MATS[k.slice(0, -1)], t = +k.slice(-1); return `<span class="fsm${have != null && have < n ? " short" : ""}" style="--tc:${FS_TIER[t][1]}"><i>${m[1]}</i>${FS_TIER[t][0]} ${m[0]} ×${n}${have != null ? ` <small>(${fmt(have)})</small>` : ""}</span>`; };
+function fsItemCard(it, f, act) { const sl = FS_SLOT[it.s], on = f.eq[it.s] === it.id, st = fsItemStats(it);
+  return `<button class="fsi${on ? " on" : ""}" style="--tc:${FS_TIER[it.t][1]}" data-act="${act || "fsItem"}" data-id="${it.id}"><span class="fsic">${sl[2]}</span><span class="fsin"><b>${esc(fsItemName(it))}${it.lv ? ` +${it.lv}` : ""}</b><small>${sl[1]} · ${FS_SETS[it.set][0]}${on ? " · equipped" : ""}</small><small>${Object.entries(st).map(([k, v]) => `${FS_STAT[k]} ${fsPct(k, v)}`).join(" · ")}</small></span></button>`; }
+function shFlag() {
+  const f = fsOf(), tab = sheet.tab || "over", on = fsOn(), L = (() => { try { return cmdLevel(score()); } catch (e) { return 1; } })(), fac = facOf();
+  const tabs = `<div class="segc fstabs">${[["over", "Flagship"], ["skills", "Skills"], ["gear", "Gear"], ["forge", "Forge"], ["mats", "Materials"]].map(([k, n]) => `<button class="${tab === k ? "on" : ""}" data-act="fsTab" data-v="${k}">${n}${k === "skills" && fsPts(f) ? ` <i class="tb">${fsPts(f)}</i>` : ""}${k === "forge" && f.q.length ? ` <i class="tb">${f.q.length}</i>` : ""}</button>`).join("")}</div>`;
+  const head = `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:${FS_TIER[Math.max(1, ...fsEquipped(f).map(x => x.t), 1)][1]}">Flagship Command</div><h2>${esc((FS_FAC[fac] || ["Union"])[0])} flagship · Lv.${f.lv}</h2>
+    <p class="note">${on ? `Leads every fleet you send. Its skills and gear power your whole empire.` : `<b style="color:var(--amber)">Takes command at commander Lv.${FLAG_LV}</b> (you are Lv.${L}). Until then it earns nothing and its bonuses are off.`}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
+  let body = "";
+  if (tab === "over") { const tot = fsTotals(f), need = fsXpNeed(f.lv), art = fsArt(fac), best = Math.max(0, ...fsEquipped(f).map(x => x.t));
+    body = `<div class="fshero" style="--tc:${best ? FS_TIER[best][1] : "#38dfee"}">${art ? `<img src="${art}" alt="Your flagship">` : `<div class="fsload0">Preparing the 3D model…</div>`}<span class="fsglow"></span></div>
+      <div class="fsxp"><div class="xp"><i style="width:${f.lv >= FS_MAX ? 100 : clamp(f.xp / need * 100, 0, 100)}%"></i></div><small>${f.lv >= FS_MAX ? "Max level" : `${fmt(f.xp)} / ${fmt(need)} XP to Lv.${f.lv + 1}`} · ${fsPts(f)} skill point${fsPts(f) === 1 ? "" : "s"} to spend</small></div>
+      <div class="fsslots">${FS_SLOTS.map(([s, n, ic]) => { const it = f.inv.find(x => x.id === f.eq[s]); return `<button class="fsslot${it ? " on" : ""}" style="--tc:${it ? FS_TIER[it.t][1] : "#33505f"}" data-act="fsSlot" data-s="${s}"><span>${ic}</span><small>${it ? esc(fsItemName(it)) + (it.lv ? ` +${it.lv}` : "") : n}</small></button>`; }).join("")}</div>
+      <h2 class="sec">Combined bonuses</h2><div class="fsrows">${fsStatRows(tot.cap)}</div>${Object.keys(FS_CAP).some(k => (tot.raw[k] || 0) > FS_CAP[k]) ? `<p class="note">Some bonuses are at their cap (attack, shields and hull +40%, the rest +30–40%). Extra points there do nothing.</p>` : ""}
+      ${Object.keys(tot.sets).length ? `<h2 class="sec">Set bonuses</h2>${Object.entries(tot.sets).map(([s, n]) => `<div class="fsr"><span>${FS_SETS[s][0]} · ${n}/6</span><b>${FS_SETS[s][1].map(([k, o]) => `<i class="${n >= k ? "up" : "off"}">${k}: ${Object.entries(o).map(([a, v]) => `${FS_STAT[a]} ${fsPct(a, v)}`).join(", ")}</i>`).join(" ")}</b></div>`).join("")}` : ""}
+      <h2 class="sec">Loadouts</h2><div class="fsload">${[0, 1, 2].map(i => { const l = f.loads[i]; return `<div><b>${l ? esc(l.n) : `Loadout ${i + 1}`}</b><button class="btn ghost sm" data-act="fsLoadSave" data-i="${i}">Save current</button>${l ? `<button class="btn sm" data-act="fsLoadUse" data-i="${i}">Equip</button>` : ""}</div>`; }).join("")}</div>`; }
+  else if (tab === "skills") { const cd = (f.resp || 0) + FS_RESPEC_MS - now();
+    body = `<p class="note">${fsPts(f)} point${fsPts(f) === 1 ? "" : "s"} to spend: one per flagship level. Each skill has ${FS_RANKS} ranks.</p>` + FS_TREES.map(([id, n, col, nodes]) => `<div class="fstree" style="--tc:${col}"><h3>${n}</h3>${nodes.map((nd, i) => { const r = +f.sk[id + i] || 0;
+      return `<div class="fsnode"><span><b>${nd[2]}</b><small>${nd[3]}</small></span><span class="fsrk">${"●".repeat(r)}${"○".repeat(FS_RANKS - r)}</span><button class="btn sm" data-act="fsSkill" data-k="${id + i}" ${r < FS_RANKS && fsPts(f) > 0 ? "" : "disabled"}>+</button></div>`; }).join("")}</div>`).join("")
+      + `<button class="btn ghost wide" data-act="fsRespec" ${fsSpent(f) ? "" : "disabled"}>Reset all skill points · ${cd > 0 ? `◆${FS_RESPEC_COST} (free again in ${ftime(cd)})` : "free (once a week)"}</button>`; }
+  else if (tab === "gear") { const sel = sheet.it && f.inv.find(x => x.id === sheet.it), slotF = sheet.sl || "";
+    const list = f.inv.filter(x => !slotF || x.s === slotF).sort((a, b) => b.t - a.t || (b.lv || 0) - (a.lv || 0));
+    body = `<div class="segc fsf"><button class="${!slotF ? "on" : ""}" data-act="fsSlotF" data-v="">All</button>${FS_SLOTS.map(([s, n, ic]) => `<button class="${slotF === s ? "on" : ""}" data-act="fsSlotF" data-v="${s}" title="${n}">${ic}</button>`).join("")}</div>`;
+    if (sel) { const cur = f.inv.find(x => x.id === f.eq[sel.s]), eqd = cur && cur.id === sel.id, after = fsEquipped(f).filter(x => x.s !== sel.s).concat(eqd ? [] : [sel]), tNow = fsTotals(f).cap, tNew = fsTotals(f, eqd ? fsEquipped(f).filter(x => x.id !== sel.id) : after).cap, ec = fsEnhCost(sel);
+      body += `<div class="mcard">${fsItemCard(sel, f, "fsNoop")}<h3 style="margin-top:8px">${eqd ? "If you take it off" : cur ? `Compared with ${esc(fsItemName(cur))}${cur.lv ? ` +${cur.lv}` : ""}` : "If you equip it"}</h3><div class="fsrows">${fsStatRows(tNew, tNow)}</div>
+        <div class="fsact"><button class="btn" data-act="${eqd ? "fsUnequip" : "fsEquip"}" data-id="${sel.id}">${eqd ? "Unequip" : "Equip"}</button>
+        ${(sel.lv || 0) < FS_ENH ? `<button class="btn amber" data-act="fsEnh" data-id="${sel.id}" ${fsHasMats(f, ec.mats) && can(ec.res) ? "" : "disabled"}>Enhance to +${(sel.lv || 0) + 1}</button>` : '<span class="pill ok">Fully enhanced</span>'}
+        <button class="btn red" data-act="fsDis" data-id="${sel.id}">Dismantle</button></div>
+        ${(sel.lv || 0) < FS_ENH ? `<p class="note">Enhancing costs ${Object.entries(ec.mats).map(([k, n]) => fsMatChip(k, n, f.mats[k] || 0)).join(" ")} ${costHTML(ec.res)} and adds 5% to every stat on this item.</p>` : ""}
+        <p class="note">Dismantling returns half of its recipe's materials.</p><button class="btn ghost wide" data-act="fsItemClose">Back to the list</button></div>`; }
+    else body += list.length ? `<div class="fsil">${list.map(it => fsItemCard(it, f)).join("")}</div>` : `<p class="note">No equipment yet. Craft some in the Forge.</p>`; }
+  else if (tab === "forge") { const s = sheet.fs || "weapon", t = sheet.ft || 1, set = sheet.fset || "conq", rc = fsRecipe(s, t), T = now(), it = { s, t, set, f: fac, lv: 0 };
+    const cur = f.inv.find(x => x.id === f.eq[s]), okM = fsHasMats(f, rc.mats), okR = can(rc.res), full = f.q.length >= FS_QMAX;
+    body = `<h2 class="sec">Craft</h2><div class="segc fsf">${FS_SLOTS.map(([k, n, ic]) => `<button class="${s === k ? "on" : ""}" data-act="fsPick" data-k="fs" data-v="${k}" title="${n}">${ic}</button>`).join("")}</div>
+      <div class="segc fsf">${[1, 2, 3, 4, 5, 6].map(k => `<button class="${t === k ? "on" : ""}" style="color:${FS_TIER[k][1]}" data-act="fsPick" data-k="ft" data-v="${k}">${FS_TIER[k][0]}</button>`).join("")}</div>
+      <div class="segc fsf">${Object.entries(FS_SETS).map(([k, v]) => `<button class="${set === k ? "on" : ""}" data-act="fsPick" data-k="fset" data-v="${k}">${v[0]}</button>`).join("")}</div>
+      <div class="mcard">${fsItemCard(it, f, "fsNoop")}<div class="fsrows">${fsStatRows(fsItemStats(it), cur ? fsItemStats(cur) : {})}</div>
+        <p class="note">Needs ${Object.entries(rc.mats).map(([k, n]) => fsMatChip(k, n, f.mats[k] || 0)).join(" ")}</p><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">${costHTML(rc.res)}<span class="note">${ftime(rc.ms)}</span></div>
+        <button class="btn wide" data-act="fsCraft" ${okM && okR && !full ? "" : "disabled"}>${full ? `Forge queue full (${FS_QMAX})` : !okM ? "Not enough materials" : !okR ? "Not enough resources" : `Forge it · ${ftime(rc.ms)}`}</button></div>
+      <h2 class="sec">Forge queue · ${f.q.length}/${FS_QMAX}</h2>${f.q.length ? f.q.map((j, i) => `<div class="crow"><span class="nm">${esc(fsItemName(j))} · ${FS_SETS[j.set][0]}<small>${i === 0 ? `ready in <b data-end="${j.e}">${ftime(j.e - T)}</b>` : `waiting · ${ftime(j.ms)}`}</small></span><button class="btn ghost sm" data-act="fsCancel" data-i="${i}">Cancel</button></div>`).join("") : '<p class="note">Nothing in the forge.</p>'}
+      <p class="note">Cancelling returns the materials and resources.</p>`; }
+  else { const keys = Object.keys(FS_MATS);
+    body = `<p class="note">Combine five of a tier into one of the next. Today's drops: ${fmt((f.day && f.day.d === utcDay() ? f.day.n : 0))} (after ${FS_DAY_CAP} a day, each further drop is less likely).</p>` + keys.map(m => `<div class="fstree"><h3>${FS_MATS[m][1]} ${FS_MATS[m][0]}</h3><small class="note">${FS_MATS[m][2]}</small>${[1, 2, 3, 4, 5, 6].map(t => { const k = fsMatKey(m, t), n = f.mats[k] || 0;
+      return `<div class="fsnode"><span style="color:${FS_TIER[t][1]}">${FS_TIER[t][0]}</span><b>${fmt(n)}</b>${t < 6 ? `<button class="btn ghost sm" data-act="fsComb" data-k="${k}" ${n >= 5 && can(fsCombCost(t)) ? "" : "disabled"}>5 → 1 ${FS_TIER[t + 1][0]}</button>` : "<span></span>"}</div>`; }).join("")}</div>`).join(""); }
+  return head + tabs + body;
+}
 function rallyBossRewards(x, rep) {
+  fsLootPB(x, true); // v298: flagship XP and materials from a joint strike
   if (x && x.boss) cubeDebris(x, rep);
   S.pir = S.pir || {}; S.pir[x.id] = now() + xRegroup(x); S.wins++; bump(x.mon ? "monsters" : x.boss ? "cubes" : "pirates"); evPts("hunt", x.lvl * (x.boss ? 120 : x.mon ? 60 : 20));
   const sh = x.boss ? 1 + Math.floor(x.lvl / 5) : x.mon ? Math.floor(x.lvl / 6) : x.lvl >= 10 ? 1 : 0; /* v80: shards are scarce (Game of War gold, OGame Dark Matter) */ S.shards = (S.shards || 0) + sh; rep.shards = sh;
@@ -12024,7 +12197,7 @@ function vGalaxyBelow() {
 /* ---------- sheets ---------- */
 /* menus remember where you came from: opening one menu from another stacks it, and Back returns to the previous one */
 let sheetStack = [];
-const SHEET_NAME = { fbinbox: "feedback", spysend: "probes", howto: "how to play", planet: "planet", report: "report", settings: "settings", void: "the Void", assault: "attack", targets: "targets", node: "node", bld: "building", nexus: "Cube", skin: "planet looks", find: "search", pirate: "pirates", layers: "layers", tile: "tile", basedet: "base", planets: "planets", yard: "shipyard", labs: "labs", faction: "factions", profile: "profile", ranks: "rankings", friends: "friends", chat: "chat", mastery: "mastery", sound: "sound", shop: "shop", spyrep: "spy report", events: "events", detail: "details" };
+const SHEET_NAME = { fbinbox: "feedback", spysend: "probes", howto: "how to play", planet: "planet", report: "report", settings: "settings", void: "the Void", assault: "attack", targets: "targets", node: "node", bld: "building", nexus: "Cube", skin: "planet looks", find: "search", pirate: "pirates", layers: "layers", tile: "tile", basedet: "base", planets: "planets", yard: "shipyard", labs: "labs", flagship: "Flagship Command", faction: "factions", profile: "profile", ranks: "rankings", friends: "friends", chat: "chat", mastery: "mastery", sound: "sound", shop: "shop", spyrep: "spy report", events: "events", detail: "details" };
 function openSheet(s) { { const cp = document.getElementById("cubepanel"); if (cp) cp.remove(); } /* v111: never cover a panel's buttons */ if (s && s.from === undefined && ["planet", "pirate", "node", "assault", "targets"].includes(s.type)) { const ap = actPlanet(); if (ap && garrisonCount(ap)) s.from = ap.id; } // fleets launch from the planet you're using
   G.sheetDir = sheet && sheet !== s ? 1 : 0; if (sheet && sheet !== s && (sheet.type !== s.type || (sheet.id || "") !== (s.id || "") || sheet.k !== s.k)) { sheetStack.push(sheet); if (sheetStack.length > 12) sheetStack.shift(); } sheet = s; renderSheet(); }
 function sheetBack() { if (sheetStack.length) { G.sheetDir = -1; sheet = sheetStack.pop(); G.sel = null; G.selNode = null; renderSheet(); } else closeSheet(); }
@@ -12044,7 +12217,7 @@ function renderSheet() {
   if (G.rangeHeld && sheet) { G.rangeLate = 1; return; }
   let w = $("#sheetwrap");
   let html = ({ planet: shPlanet, report: shReport, settings: shSettings, void: shVoid, assault: shAssault, targets: shTargets, node: shNode, bld: shBld, nexus: shNexus, skin: shSkin, find: shFind, pirate: shPirate, pyramid: shPyramid, fctl: shFctl, station: shStation, ally: shAlly, layers: shLayers, tile: shTile, graphics: shGfx, cuberes: shCubeRes, basedet: shBaseDet, planets: shPlanets, fo: shFo, allymem: shAllyMem, altools: () => { const a = myAlly(); return a ? `<div class="hd"><div><div class="chapter">[${esc(a.tag)}] ${esc(a.name)}</div><h2>${allyRank(a, G.me) === "lead" ? "Leader" : "Captain"} tools</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${allyTools(a) || '<p class="note">Only the leader and captains have these tools.</p>'}` : ""; },
-    yard: shYard, labs: shLabs, sound: shSound, shop: shShop, vip: shVip, spyrep: shSpyRep, spysend: shSpySend, howto: shHowTo, fbinbox: shFbInbox, events: shEvents, ach: shAch, avatars: shAvatars, detail: () => { const h = shDetail(), P = sheet.pid ? G.byId[sheet.pid] : null; return h && sheet.kind === "b" && P && sheet.k === "shipyard" && (P.b || {}).shipyard ? h + `<div class="dp"><button class="btn wide" data-act="yardOpen" data-id="${P.id}">Open shipyard</button></div>` : h; }, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
+    yard: shYard, labs: shLabs, flagship: shFlag, sound: shSound, shop: shShop, vip: shVip, spyrep: shSpyRep, spysend: shSpySend, howto: shHowTo, fbinbox: shFbInbox, events: shEvents, ach: shAch, avatars: shAvatars, detail: () => { const h = shDetail(), P = sheet.pid ? G.byId[sheet.pid] : null; return h && sheet.kind === "b" && P && sheet.k === "shipyard" && (P.b || {}).shipyard ? h + `<div class="dp"><button class="btn wide" data-act="yardOpen" data-id="${P.id}">Open shipyard</button></div>` : h; }, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
     mastery: () => `<div class="hd"><div><div class="chapter">Progression</div><h2>Path to Mastery</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${mMastery()}` })[sheet.type]();
   if (!html) { closeSheet(); return; }
   html += sheet.type === "faction" && !S.faction ? "" : backBar(); html = `<div class="grab" aria-hidden="true"></div>` + html;
@@ -12090,7 +12263,7 @@ function effLoot() { try { if (!sheet) return 0;
     const r = (S.spyReps || []).find(x => x.pid === p.id && x.res); return r ? Math.floor(total(r.res) / 2) : 0; } } catch (e) {} return 0; }
 async function effPick() { const T = effTarget(); if (!T || G.effBusy) return; const avail = originAvail(), war = Object.keys(avail).filter(k => avail[k] > 0 && warK(k));
   if (!war.length) return toast("No warships here to send.", "warn"); const sh0 = sheet; G.effBusy = 1; toast("Testing fleets against defenders 10% stronger than these…");
-  try { const D = T.D.map(s => Object.assign({}, s, { atk: s.atk * 1.1, sh: s.sh * 1.1, hull: s.hull * 1.1 })), tech = techOf(null), ally = allyStacks(sheet.bots, T.lvl); let tick = performance.now();
+  try { const D = T.D.map(s => Object.assign({}, s, { atk: s.atk * 1.1, sh: s.sh * 1.1, hull: s.hull * 1.1 })), tech = sheet.type === "pirate" ? techVs(PB[sheet.id]) : techOf(null), ally = allyStacks(sheet.bots, T.lvl); let tick = performance.now();
     const fight = async (n, dd, seed) => { const r = simulate(stacksOf(n, tech, G.me).concat(ally), dd, { seed }); if (performance.now() - tick > 30) { await new Promise(ok => setTimeout(ok, 0)); tick = performance.now(); if (sheet !== sh0) throw 0; } return r.winner === "a"; };
     const wins = async (n, runs, base) => { for (let i = 0; i < runs; i++) if (!await fight(n, D, base * (i + 1) + 13)) return false; return true; };
     const mk = f => { const o = {}; for (const k of war) { const v = Math.min(avail[k], Math.round(avail[k] * f)); if (v > 0) o[k] = v; } if (!Object.keys(o).length) { const k = war.sort((a, b) => SH[b].atk - SH[a].atk)[0]; o[k] = 1; } return o; };
@@ -13346,7 +13519,7 @@ function tutSpot() {} // v81: the persistent guide replaced the old 7-second rin
 function tutClaim() {
   const st = TUT[S.tut.i]; if (!st || !st.ok(S)) return; const rw = st.rw || {};
   for (const k of ["m", "c", "g"]) if (rw[k]) S.res[k] += rw[k]; if (rw.shards) S.shards = (S.shards || 0) + rw.shards;
-  logReward(`Academy · ${st.t}`, rw, { shards: rw.shards || 0, kind: "quest" });
+  fsXP(50, "Academy"); logReward(`Academy · ${st.t}`, rw, { shards: rw.shards || 0, kind: "quest" });
   S.tut.i++; S.tut.open = 0; if (S.tut.i > TUT_BASICS) S.advHop = 1; dirty(); try { SFX.research(); } catch (e) {} // v81: straight on to the next task; the guide is already pointing at it
   const nx = TUT[S.tut.i];
   if (nx) toast(`Academy step done: +${fmt(rw.m || 0)} metal, +${fmt(rw.c || 0)} crystal${rw.g ? `, +${fmt(rw.g)} gas` : ""}${rw.shards ? `, ◆${rw.shards}` : ""}.`, "win");
@@ -14514,6 +14687,7 @@ addEventListener("resize", () => { if (battle) battle.lay = null; startAnim(); c
 function tickUI() {
   const T = now();
   document.querySelectorAll("[data-end]").forEach(el => { el.textContent = ftime(+el.dataset.end - T); });
+  try { fsTick(); } catch (e) {} // v298: finished forge jobs
   if (!tickUI.ai || T - tickUI.ai > 30000) { tickUI.ai = T; allyInSub(); }
   if (!tickUI.sw || T - tickUI.sw > 1000) { tickUI.sw = T; try { spyWatch(); } catch (e) {} } // v279: probes on their way to your worlds
   if (!tickUI.dw || T - tickUI.dw > 3000) { tickUI.dw = T; try { defWatch(); } catch (e) {} } // v273: joint defense watch // v271: watch alliance members' incoming attacks
@@ -14978,7 +15152,7 @@ function trayRender() {
     <div class="gm-list">${gl("labs", ic2(NAVI.lab), "Research", "")}${gl("bcat", ic2(NAVI.build), "Resource", 'data-v="res"')}${gl("bcat", ic2(MI.box), "Facility", 'data-v="fac"')}</div>
     <div class="gm-list">${gl("nav", ic2(NAVI.fleet), "Shipyard", 'data-v="build" data-s="ships"')}${gl("planets", ic2(MI.orbit), "Control Center")}${gl("nav", ic2(NAVI.fleets), "Fleet", 'data-v="fleets"')}</div>
     <div class="gm-list">${gl("nav", ic2(MI.shield), "Defense", 'data-v="build" data-s="def"')}${gl("nav", ic2(MI.alert), "Missile", 'data-v="build" data-s="mis"')}</div>
-    <div class="gm-list">${gl("mtab", ic2(MI.shield).replace("<svg", '<svg style="color:#e06bd8"'), "Element", 'data-k="elements"')}${gl("mastery", ic2(TRAY_I.path), "Mastery", "", mastN)}${gl("allyOpen", ic2(MI.wings), "Alliance", "", helpN)}${gl("ranks", ic2(TRAY_I.trophy), "Ranking")}${gl("friends", ic2(TRAY_I.friends), "Friends")}${gl("faction", ic2(TRAY_I.flag), "Faction")}</div>
+    <div class="gm-list">${gl("mtab", ic2(MI.shield).replace("<svg", '<svg style="color:#e06bd8"'), "Element", 'data-k="elements"')}${gl("flagHero", ic2(TRAY_I.flag), "Flagship", "", (S.fs && fsOn() ? fsPts(fsOf()) : 0))}${gl("mastery", ic2(TRAY_I.path), "Mastery", "", mastN)}${gl("allyOpen", ic2(MI.wings), "Alliance", "", helpN)}${gl("ranks", ic2(TRAY_I.trophy), "Ranking")}${gl("friends", ic2(TRAY_I.friends), "Friends")}${gl("faction", ic2(TRAY_I.flag), "Faction")}</div>
     ${window.udfAccount ? `<div class="gm-acct"><span class="ga-i">👤</span><span class="ga-t"><small>Signed in as</small><b>${esc(window.udfAccount.label())}</b></span><button class="btn ghost sm" data-act="udfSignOut">Sign out</button></div>` : ""}
     ${view === "galaxy" ? `<div class="gm-h">Finder</div><div class="tray-grid">${it.filter(x => x[0] === "find" || x[0] === "findClear").map(btn).join("")}</div>` : view === "base" ? `<div class="gm-list">${gl("basedet", ic2(MI.box), "Planet details")}</div>` : ""}`;
   el.classList.toggle("gmopen", open); // lift the whole bar above the floating top HUD while the drawer is out, so nothing covers it
@@ -15280,6 +15454,35 @@ const ACT = {
   yardOpen: d => openSheet({ type: "yard", pid: d.id || null }),
   launchForm: d => { if (!FORMS[d.v] || !sheet) return; sheet.form = d.v; renderSheet(); },
   fFormNext: d => { const f = S.fleets.find(x => x.id === d.id); if (!f) return; const ks = Object.keys(FORMS), k = ks[(ks.indexOf(fformOf(f)) + 1) % ks.length]; f.form = k; dirty(); toast(`${fleetLabel(f)} flies in ${FORMS[k].n} formation.`, "win"); formShow(f); fleetHud(true); },
+  /* v298 Flagship Command */
+  flagHero: () => { fsTick(); openSheet({ type: "flagship", tab: "over" }); },
+  fsTab: d => { sheet.tab = d.v; sheet.it = null; renderSheet(); },
+  fsNoop: () => {},
+  fsSlot: d => { sheet.tab = "gear"; sheet.sl = d.s; const f = fsOf(); sheet.it = f.eq[d.s] || null; renderSheet(); },
+  fsSlotF: d => { sheet.sl = d.v; sheet.it = null; renderSheet(); },
+  fsItem: d => { sheet.it = d.id; renderSheet(); }, fsItemClose: () => { sheet.it = null; renderSheet(); },
+  fsEquip: d => { const f = fsOf(), it = f.inv.find(x => x.id === d.id); if (!it) return; f.eq[it.s] = it.id; fsBump(); toast(`${fsItemName(it)} equipped.`, "win"); renderSheet(); },
+  fsUnequip: d => { const f = fsOf(), it = f.inv.find(x => x.id === d.id); if (!it || f.eq[it.s] !== it.id) return; delete f.eq[it.s]; fsBump(); renderSheet(); },
+  fsEnh: d => { const f = fsOf(), it = f.inv.find(x => x.id === d.id); if (!it || (it.lv || 0) >= FS_ENH) return; const c = fsEnhCost(it);
+    if (!fsHasMats(f, c.mats)) return toast("Not enough materials.", "warn"); if (!pay(c.res)) return toast("Not enough resources.", "warn"); fsTakeMats(f, c.mats); it.lv = (it.lv || 0) + 1; fsBump(); toast(`${fsItemName(it)} enhanced to +${it.lv}.`, "win"); renderSheet(); },
+  fsDis: d => { const f = fsOf(), i = f.inv.findIndex(x => x.id === d.id); if (i < 0) return; if (!sheet.disc || sheet.disc !== d.id) { sheet.disc = d.id; return toast("Tap Dismantle again to confirm. Half of its recipe's materials come back.", "warn"); }
+    const it = f.inv[i], rc = fsRecipe(it.s, it.t); f.inv.splice(i, 1); if (f.eq[it.s] === it.id) delete f.eq[it.s]; for (const [k, n] of Object.entries(rc.mats)) { const b = Math.floor(n / 2); if (b) f.mats[k] = (f.mats[k] || 0) + b; }
+    for (const l of f.loads) for (const s in (l && l.eq) || {}) if (l.eq[s] === it.id) delete l.eq[s]; sheet.disc = null; sheet.it = null; fsBump(); toast(`${fsItemName(it)} dismantled.`, "win"); renderSheet(); },
+  fsSkill: d => { const f = fsOf(); if (fsPts(f) <= 0 || (+f.sk[d.k] || 0) >= FS_RANKS) return; f.sk[d.k] = (+f.sk[d.k] || 0) + 1; fsBump(); renderSheet(); },
+  fsRespec: () => { const f = fsOf(); if (!fsSpent(f)) return; const free = !(f.resp && now() - f.resp < FS_RESPEC_MS);
+    if (!free && (S.shards || 0) < FS_RESPEC_COST) return toast(`A second reset this week costs ◆${FS_RESPEC_COST}.`, "warn"); if (!sheet.rconf) { sheet.rconf = 1; return toast(`Tap again to reset all ${fsSpent(f)} skill points${free ? "" : ` for ◆${FS_RESPEC_COST}`}.`, "warn"); }
+    if (!free) S.shards -= FS_RESPEC_COST; else f.resp = now(); f.sk = {}; sheet.rconf = 0; fsBump(); toast("Skill points reset. Spend them again any way you like.", "win"); renderSheet(); },
+  fsPick: d => { sheet[d.k] = d.k === "ft" ? +d.v : d.v; renderSheet(); },
+  fsCraft: () => { const f = fsOf(), s = sheet.fs || "weapon", t = sheet.ft || 1, set = sheet.fset || "conq", rc = fsRecipe(s, t); if (!rc || !FS_SETS[set]) return;
+    if (f.q.length >= FS_QMAX) return toast("The forge queue is full.", "warn"); if (!fsHasMats(f, rc.mats)) return toast("Not enough materials.", "warn"); if (!pay(rc.res)) return toast("Not enough resources.", "warn");
+    fsTakeMats(f, rc.mats); const T = now(), first = !f.q.length; f.q.push({ id: "fj" + (f.seq++) + "-" + T.toString(36), s, t, set, f: facOf(), ms: rc.ms, s0: first ? T : null, e: first ? T + rc.ms : 9e15, mats: rc.mats, res: rc.res });
+    fsBump(); toast(`Forging ${FS_TIER[t][0]} ${FS_SLOT[s][1]}: ${ftime(rc.ms)}.`, "win"); renderSheet(); },
+  fsCancel: d => { const f = fsOf(), i = +d.i, j = f.q[i]; if (!j) return; f.q.splice(i, 1); for (const [k, n] of Object.entries(j.mats || {})) f.mats[k] = (f.mats[k] || 0) + n; for (const r of ["m", "c", "g"]) S.res[r] += (j.res || {})[r] || 0;
+    if (i === 0 && f.q[0]) { f.q[0].s0 = now(); f.q[0].e = now() + f.q[0].ms; } fsBump(); toast("Forge job cancelled. Materials and resources returned.", "win"); renderSheet(); },
+  fsComb: d => { const f = fsOf(), k = d.k, t = +k.slice(-1); if (t >= 6 || (f.mats[k] || 0) < 5) return; const c = fsCombCost(t); if (!pay(c)) return toast("Not enough resources.", "warn");
+    f.mats[k] -= 5; if (!f.mats[k]) delete f.mats[k]; const k2 = k.slice(0, -1) + (t + 1); f.mats[k2] = (f.mats[k2] || 0) + 1; fsBump(); renderSheet(); },
+  fsLoadSave: d => { const f = fsOf(), i = +d.i; f.loads[i] = { n: `Loadout ${i + 1}`, eq: Object.assign({}, f.eq) }; fsBump(); toast(`Loadout ${i + 1} saved.`, "win"); renderSheet(); },
+  fsLoadUse: d => { const f = fsOf(), l = f.loads[+d.i]; if (!l) return; const eq = {}; for (const s in l.eq) if (f.inv.some(x => x.id === l.eq[s])) eq[s] = l.eq[s]; f.eq = eq; fsBump(); toast(`${l.n} equipped.`, "win"); renderSheet(); },
   fleetForm: d => { if (!FORMS[d.v]) return; if (d.id) { const f = S.fleets.find(x => x.id === d.id); if (!f) return; f.form = d.v; toast(`${fleetLabel(f)} flies in ${FORMS[d.v].n} formation.`, "win"); formShow(f); } else { S.fform = d.v; toast(`New fleets fly in ${FORMS[d.v].n} formation.`, "win"); } dirty(); render(true); },
   allyBioSave: () => { const a = myAlly(), el = $("#albio"); if (!a || allyRank(a, G.me) !== "lead" || !el) return; const v = el.value.trim().slice(0, 300); el.blur(); allyMutate(a.id, x => { x.bio = v; }, "Alliance bio saved."); },
   allyTitleSet: () => { const a = sheet && G.alliances[sheet.id], u = sheet && sheet.u, el = $("#altitle"); if (!a || !u || !el || !(allyRank(a, G.me) === "lead" || allyCan(a, "rank", u))) return; const v = el.value.trim().slice(0, 24); el.blur();
@@ -15359,7 +15562,7 @@ const ACT = {
     else if (d.q === "r" && S.rq) S.rq.e = Math.max(t, S.rq.e - 300000);
     else if (d.q === "s" && S.sq[0]) S.sq[0].next -= 300000; else return;
     S.boosts--; spdAdd(300000); advance(now()); }),
-  claim: () => act(() => { const q = quest(); if (!q.ok(S)) return; for (const r of ["m", "c", "g"]) S.res[r] += q.rw[r] || 0; S.boosts += q.rw.boost || 0; S.quest++; S.advHop = 1; S.shards = (S.shards || 0) + 1; logReward("Directive · " + q.t, q.rw, { shards: 1, boosts: q.rw.boost || 0, kind: "quest" }); toast("Reward collected, plus ◆3 Void Shards.", "win");
+  claim: () => act(() => { const q = quest(); if (!q.ok(S)) return; for (const r of ["m", "c", "g"]) S.res[r] += q.rw[r] || 0; S.boosts += q.rw.boost || 0; S.quest++; fsXP(80, "directive"); S.advHop = 1; S.shards = (S.shards || 0) + 1; logReward("Directive · " + q.t, q.rw, { shards: 1, boosts: q.rw.boost || 0, kind: "quest" }); toast("Reward collected, plus ◆3 Void Shards.", "win");
     const lines = { 2: ["Power is online. Watch the energy meter. If it goes red, the extractors slow down."],
       8: ["The Shipyard is ready. Light Fighters are cheap and fast. Three should be enough for a low-level Hive garrison."],
       9: ["Fighters ready. Open the Galaxy map. Amber worlds are held by the Hive. Pick a low level one and check the odds before you launch."],
