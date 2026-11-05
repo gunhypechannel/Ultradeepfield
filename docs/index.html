@@ -2264,7 +2264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 290;
+const GAME_V = 291;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13611,7 +13611,7 @@ function spawnVolley(b, v) {
   const lo = b.lowFx, cap = PERF.battleCap, wk = v.wk, many = v.n + v.ic, mis = wk === "missile" || wk === "torpedo", q = b.Q[v.s], side = q.side, sz = q.sz != null ? q.sz : (q.sz = szOf(q));
   if (q.role === "carrier") (b.ctgt = b.ctgt || [])[v.s] = v.e; // its fighter wing flies at whatever the carrier is shooting
   let cnt = v.bounce ? 1 : mis ? clamp(Math.round((2 + Math.log2(1 + many) * 1.6) * cap), 2, lo ? 2 : 14) : sz === 0 ? clamp(2 + Math.floor(Math.log2(1 + many) * .7), 2, lo ? 1 : 6) : clamp(1 + Math.floor(Math.log10(1 + many * 2)), 1, lo ? 1 : 5); // small craft: a spray of little darts
-  if (b.Q.length > 60 && !rp && cnt > (mis ? 4 : 2)) cnt = mis ? 4 : 2; // crowded battles (10 vs 10): fewer bolts per volley so the field never turns into a white blob
+  if (b.Q.length > 60 && !(q.k === "dreadnought" && !v.bounce) && cnt > (mis ? 4 : 2)) cnt = mis ? 4 : 2; /* v291: was !rp, read before rp existed */ // crowded battles (10 vs 10): fewer bolts per volley so the field never turns into a white blob
   /* v67: heavy gunships always show their cannon fire (big plasma shells with trails), and every capital ship flashes when it fires */
   const heavy = q.k === "battleship" || q.k === "bastion" || q.k === "destroyer" || q.role === "battleship"; if (heavy) cnt = Math.max(cnt, lo ? 2 : 3);
   /* v265 the Dreadnought fires a salvo of three purple beams (one unseen shot carries the volley's hits); the Reaper looses missile swarms from
