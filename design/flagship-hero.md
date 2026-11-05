@@ -222,3 +222,30 @@ The capped total joins the game's existing system once:
   - 3D visual gear evolution (Phase 5);
   - alliance-exclusive material events;
   - server-side validation (§8).
+
+---
+
+## v299: Flagship Dock, Lv.10 unlock, Academy steps
+
+- **Unlock moved to commander Lv.10.** The flagship starts at Lv.1 with no skills or gear, so at Lv.10 its bonuses are near 0. They grow only with play: Common gear gives +2%, and reaching flagship Lv.10 takes about 2 weeks. This keeps the new players' edge small. Commanders already at Lv.15+ keep their flagship automatically.
+- **The flagship must be commissioned.** This happens at the new **Flagship Dock**, a homeworld Facility building that needs commander Lv.10 and Shipyard Lv.2.
+  - Dock cost: 20k metal, 15k crystal, 6k gas, ×1.8 per level.
+  - Commissioning cost: 30k metal, 20k crystal, 10k gas, plus 10 Alloy T1, 6 Circuitry T1 and 4 Crystal T1.
+- **The Forge moved into the Dock.**
+
+| Gear tier | Common | Uncommon | Rare | Epic | Legendary | Mythic |
+|---|---|---|---|---|---|---|
+| Dock level needed | 1 | 2 | 4 | 6 | 9 | 12 |
+
+  Forge queue slots are 1 + ⌊Dock level/4⌋, up to 3. Forging gets 3% faster per Dock level, up to 30%.
+- **Materials drop from day one.** Pirates, monsters, Cubes, fields, wreckage and salvage pods all drop materials before the flagship exists; pods have a 35% chance of 1 T1 Alloy or Crystal. Flagship XP still starts only once it is commissioned.
+- **Academy.** Three steps were added after Astrophysics Lv.2: Reach Commander Level 10, Build the Flagship Dock, Commission your flagship. Their rewards pay every commissioning material: alloy 6+4, circuitry 4+2, crystal 3+1. They also pay 75k metal, 55k crystal and 25k gas in total, which covers the Dock and most of the commissioning. Normal drops along the way are left over for the first Common gear. Commanders who had already finished the Academy get the new steps unless they have both a Dock and a flagship.
+- **Tested** with `tools/t299.js`:
+  - the gate at Lv.1 (Dock locked: "Commander Level 10, Shipyard 2");
+  - materials but no XP before the flagship;
+  - the three Academy steps end to end: the rewards cover the commission exactly and nothing is left over;
+  - Forge gates: Rare blocked at Dock Lv.1, queue 1; at Dock Lv.9, queue 3, Legendary allowed, forging 24% faster;
+  - grandfathering and the `tech.fl` rule for other players;
+  - the Academy migration.
+
+  No page errors.
