@@ -747,7 +747,7 @@ canvas.dthumb{display:block}
 .fsseti{width:22px;height:22px;margin-right:5px}.fsr .fsseti{width:30px;height:30px}
 .fstri{width:44px;height:36px;margin-right:8px;border-radius:6px;background-size:contain}.fstree h3{display:flex;align-items:center}
 .fsski{width:52px;height:46px;border-radius:8px;border:1px solid color-mix(in srgb,var(--tc,#38dfee) 55%,transparent)}.fsnode>span:first-of-type{flex:1;min-width:0}
-.fsf button .fsseti{display:block;margin:0 auto 2px}
+.fsf button .fsseti{display:block;margin:0 auto 2px}.fssug{border-color:rgba(255,190,90,.45)!important;box-shadow:0 0 14px rgba(255,170,60,.12)}
 #sheetwrap[data-type="flagship"] .fshero img{animation:fsFloat 7s ease-in-out infinite;width:84%;max-width:600px}
 @keyframes fsFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @media (prefers-reduced-motion:reduce){#sheetwrap[data-type="flagship"] .fshero img{animation:none}}
@@ -2333,7 +2333,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 302;
+const GAME_V = 303;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9402,15 +9402,6 @@ function bModel(k, L, busy) {
       const ring = new TH.Mesh(new TH.TorusGeometry(1.25, .16, 12, 40), C.steel); ring.position.y = 1.85; b.add(ring);
       const ev = new TH.Mesh(new TH.CircleGeometry(1.1, 32), new TH.MeshBasicMaterial({ color: 0x8fd8ff, transparent: true, opacity: .5, side: TH.DoubleSide, depthWrite: false })); ev.position.y = 1.85; b.add(ev); anim.push([ev, "pulse", 0]);
       for (let i = 0; i < 8; i++) { const a = i / 8 * TAU, nd = new TH.Mesh(new TH.BoxGeometry(.14, .14, .26), C.cyan); nd.position.set(Math.cos(a) * 1.25, 1.85 + Math.sin(a) * 1.25, 0); b.add(nd); } break; }
-    case "flagDock": { // v299 a long cradle between two gantry towers; the flagship's hull rests in it once commissioned (a hologram until then)
-      const H = 1.7 + tier * .2; b.add(cbox(3.4, .22, 1.6, C.dark, 0, 0, 0));
-      for (const x of [-1.4, 1.4]) { for (const z of [-.6, .6]) b.add(cbox(.2, H, .2, C.steel, x, 0, z)); b.add(cbox(.28, .12, 1.5, C.dark, x, H, 0)); }
-      for (const z of [-.6, .6]) b.add(cbox(3.0, .1, .14, C.steel, 0, H, z)); for (const x of [-.8, 0, .8]) b.add(cbox(.18, .35, .9, C.dark, x, .22, 0));
-      const hb = new TH.Group(); hb.position.set(0, .98, 0); const built = fsBuilt(), hm = built ? C.light : C.holo;
-      const body = new TH.Mesh(new TH.ConeGeometry(.42, 2.8, 6), hm); body.rotation.z = -Math.PI / 2; hb.add(body); hb.add(cbox(1.1, .2, .95, built ? C.steel : C.holo, -.55, -.1, 0)); hb.add(cbox(.5, .32, .3, built ? C.dark : C.holo, -.3, .12, 0));
-      if (built) { const eng = new TH.Mesh(new TH.SphereGeometry(.15, 10, 8), C.cyan); eng.position.set(-1.42, 0, 0); hb.add(eng); anim.push([eng, "pulse", 0]); } b.add(hb);
-      const crane = cbox(.16, .16, 1.2, C.amber, .4, H - .15, 0); b.add(crane); anim.push([crane, "slide", 0]);
-      const spark = new TH.Mesh(new TH.SphereGeometry(.07, 8, 6), C.amber); spark.position.set(.3, 1.25, .32); b.add(spark); anim.push([spark, "blink", 1]); break; }
     case "repairYard": { // a dry-dock gantry with a hull on cradles, a crane and welding sparks
       for (const x of [-.9, .9]) b.add(cbox(.18, 1.4 + tier * .2, .18, C.steel, x, 0, 0)); b.add(cbox(2, .14, .3, C.dark, 0, 1.4 + tier * .2, 0));
       for (const x of [-.5, .5]) b.add(cbox(.2, .3, .7, C.dark, x, 0, 0));
@@ -9533,7 +9524,7 @@ function eraSpecific(k, b, era, C, anim) {
    the Repair Yard's white hull in a dry dock, the Fortress's ring station over its spire, the Geo-Former's banded silver tower and
    halo rings, the Lunar Outpost's geodesic domes, the Phalanx's great dish on a lit tower, and the Warp Gate's segmented ring
    round a swirling event horizon). Each grows through five visual stages: levels 0-1, 2-4, 5-7, 8-10 and 11+. */
-const ART_B = { metalMine: 1, crystalMine: 1, gasSynth: 1, shipyard: 1, missileSilo: 1, repairYard: 1, fortress: 1, terraformer: 1, lunarBase: 1, phalanx: 1, jumpGate: 1 };
+const ART_B = { metalMine: 1, crystalMine: 1, gasSynth: 1, shipyard: 1, missileSilo: 1, repairYard: 1, fortress: 1, terraformer: 1, lunarBase: 1, phalanx: 1, jumpGate: 1, flagDock: 1 };
 function artMats(C) {
   const K = artMats.K || (artMats.K = {}), f = facOf(); if (K[f]) return K[f];
   const S = (c, o) => new TH.MeshStandardMaterial(Object.assign({ color: c, roughness: .35, metalness: .6, envMapIntensity: 1 }, o || {}));
@@ -9642,6 +9633,34 @@ function artBld(k, b, e, C, anim) {
         lattice(x + rr + .2, z - .12, .22, h * 1.02, true); }
       if (e >= 3) for (const s of [-1, 1]) box(.5, .3, .5, C.windows, s * 1.25, 0, 1.1);
       break; }
+    case "flagDock": { /* v303 after the Flagship Dock painting: an orbital dry dock. Two tall gantry towers with lit window bands and red-tipped masts,
+         a bridge beam carrying a yellow crane, docking arms reaching down to a long dark warship in its cradles (the faction's own glow on its
+         engines and seams; a wireframe hologram on scaffolds until the flagship is commissioned), amber floodlights, welding sparks and a deck truck */
+      b.rotation.y = Math.PI / 4; // the dock's long axis runs across the screen, so the base camera sees the hull broadside between the towers
+      const built = fsBuilt(), H = 2.0 + e * .25, X = 1.95, hz = 0;
+      box(4.5, .08, 2.7, C.dark, 0, 0, 0); for (const z of [-1.3, 1.3]) box(4.5, .02, .06, C.amber, 0, .09, z);
+      for (let i = 0; i < 7; i++) box(.18, .02, .08, i % 2 ? A.black : A.yellow, -1.35 + i * .45, .09, 1.18); // hazard stripes at the cradle line
+      for (const s of [-1, 1]) { const x = s * X; box(.5, H, .5, C.light, x, 0, -.45); box(.06, H * .78, .02, C.windows, x - s * .26, H * .12, -.19); box(.42, .05, .42, C.dark, x, H * .5, -.45);
+        cyl(.03, .03, .9 + e * .12, C.dark, x, H, -.2, 6); const bc = dot(x, H + .92 + e * .12, -.2, C.redL, 1.6); anim.push([bc, "blink", s]); for (let y = .5; y < H; y += .55) dot(x + s * .27, y, .12, C.amber, 1.2); }
+      box(X * 2 + .5, .22, .34, C.dark, 0, H - .1, -.2); box(X * 2, .05, .05, C.amber, 0, H - .14, -.02);
+      const cr = cbox(.22, .2, .9, A.yellow, -.4, H - .36, .12); b.add(cr); anim.push([cr, "slideS", 1.1]); pipe([-.4, H - .36, .12], [-.4, 1.45, .12], .015, C.dark);
+      // the flagship in its cradles
+      const hg = new TH.Group(); hg.position.set(0, .72, hz); b.add(hg); const hm = built ? C.dark : C.holo, hp = built ? C.steel : C.holo, put = m => (hg.add(m), m);
+      const hb = (w, h, d, m, x, y, z) => put(cbox(w, h, d, m, x, y, z));
+      hb(2.9, .34, .62, hm, -.05, -.17, 0); hb(2.2, .2, .48, hp, -.25, .17, 0); hb(1.1, .16, .34, hm, -.55, .37, 0); hb(.36, .26, .2, hp, -.7, .53, 0); // stepped decks and the bridge tower
+      const nose = put(new TH.Mesh(new TH.ConeGeometry(.36, 1.1, 4), hm)); nose.rotation.z = -Math.PI / 2; nose.rotation.x = Math.PI / 4; nose.scale.set(1, 1, .75); nose.position.set(1.95, -.02, 0);
+      for (const sz of [-1, 1]) hb(1.9, .14, .1, hp, -.2, -.12, sz * .34);
+      if (built) { for (const sz of [-1, 1]) hb(2.4, .025, .02, C.cyan, -.1, .02, sz * .32); hb(1.6, .03, .02, C.windows, -.3, .24, .25);
+        for (const ez of [-.18, .18]) { const en = put(new TH.Mesh(new TH.CylinderGeometry(.13, .15, .24, 14), C.steel)); en.rotation.z = Math.PI / 2; en.position.set(-1.62, -.06, ez); const gl = put(new TH.Mesh(new TH.CircleGeometry(.11, 14), C.cyan)); gl.rotation.y = -Math.PI / 2; gl.position.set(-1.75, -.06, ez); } }
+      for (const x of [-1, 0, 1]) { box(.24, .4, .8, C.dark, x, 0, hz); dot(x, .34, hz + .42, C.amber, 1.3); } // cradles
+      for (const s of [-1, 1]) { pipe([s * (X - .25), 1.6, -.2], [s * .95, .98, -.1], .045, C.steel); pipe([s * (X - .25), 1.1, -.2], [s * 1.2, .8, -.05], .035, C.dark); } // docking arms
+      const sp = dot(.3, 1.08, .34, A.white0, 2.2); anim.push([sp, "blink", 1]); dot(.3, 1.08, .34, C.amber, 3.5);
+      if (!built) { lattice(-.5, .55, .28, 1.4, true); lattice(.7, -.55, .28, 1.2, true); }
+      if (e >= 1) { truck(-1.2, 1.0, .1); for (const x of [1.25, 1.6]) { box(.3, .28, .3, C.steel, x, 0, 1.0); dot(x + .16, .18, 1.16, C.amber); } }
+      if (e >= 2) { box(X * 2 + .5, .16, .26, C.dark, 0, H * .62, -.2); const cr2 = cbox(.2, .18, .8, A.yellow, .5, H * .62 - .2, .1); b.add(cr2); anim.push([cr2, "slideS", -.9]); for (const s of [-1, 1]) dot(s * X, H * .62 + .12, .05, C.cyan, 1.4); }
+      if (e >= 3) { box(X * 2 + .3, .06, 1.9, C.holo, 0, H + .05, .1); for (const s of [-1, 1]) { box(.32, H * .7, .32, C.steel, s * (X + .5), 0, .6); box(.04, H * .5, .02, C.windows, s * (X + .5), H * .1, .77); dot(s * (X + .5), H * .7 + .05, .6, C.redL, 1.4); } }
+      if (e >= 4) { const s2 = dot(-.9, 1.0, -.36, A.white0, 2.2); anim.push([s2, "blink", 2.4]); for (let x = -1.6; x <= 1.6; x += .8) dot(x, .1, 1.32, C.cyan, 1.1); }
+      break; }
     case "repairYard": { // a white hull on lit cradles in a dry dock, scaffold towers, a gantry crane and welding sparks
       const L = 1.6 + Math.min(e, 4) * .25, hz = .1;
       const hull = add(new TH.Mesh(new TH.CylinderGeometry(.4, .4, L, 8), A.white)); hull.rotation.z = Math.PI / 2; hull.position.set(0, .72, hz);
@@ -9727,6 +9746,8 @@ function artFx(k, b, e, anim) {
     case "gasSynth": glow(-.25, .8 + e * .1, -.35, 1.6 + e * .2, "green", "glowP", 0); glow(1.05, .45, .75, .8, "green", "glowP", 1); if (e >= 1) glow(-.2, .4, 1.2, .7, "green", "glowP", 2); if (e >= 3) glow(-1.5, 1.2, -1.4, .9, "green", "glowP", 3); if (e >= 4) glow(-.25, 3.6 + e * .3, -.35, .5, "red", "blink", 1); break;
     case "shipyard": { const s = .7 + (e >= 1 ? .15 : 0) + (e >= 4 ? .3 : 0); for (const ez of [-.38, 0, .38]) glow(.3 - 1.55 * s, .4 * s, .25 + ez * s, .55 * s + .25, "blue", "flick", ez * 7); glow(0, .6, -1.35, 2.2, "amber"); for (const x of [-2.5, 2.5]) glow(x, 1 + e * .2, -1.05, .7, "blue", "glowP", x); break; }
     case "missileSilo": glow(0, .4, 0, 2.6, "cyan", "glowP", 0); for (let i = 0; i < Math.min(5, 1 + e); i++) { const sp = [[0, -.1, 1], [-.78, .3, .78], [.78, .3, .8], [-.45, -.75, .7], [.5, -.78, .72]][i], h = (1.9 + e * .25) * sp[2]; glow(sp[0] + .32, .55 + h * 1.05, sp[1] - .12, .45, "red", "blink", i); glow(sp[0] + .3, .55 + h * .5, sp[1], .7, "amber", "glowP", i); } break;
+    case "flagDock": { const H = 2.0 + e * .25; glow(.3, 1.08, .34, 1.2, "white", "flick", 0); glow(.3, 1.08, .34, .8, "amber", "flick", 1.3); for (const s of [-1, 1]) { glow(s * 1.95, H + .92 + e * .12, -.2, .6, "red", "blink", s); glow(s * 1.7, H * .55, .2, .9, "amber", "glowP", s); }
+      if (fsBuilt()) for (const ez of [-.18, .18]) glow(-1.8, .66, ez, .6, facOf() === "nyx" ? "red" : facOf() === "verdant" ? "green" : facOf() === "solar" ? "amber" : "blue", "flick", ez * 9); if (e >= 4) glow(-.9, 1.0, -.36, 1, "white", "flick", 3); break; }
     case "repairYard": glow(-.2, .9, .52, 1.1, "white", "flick", 0); glow(-.2, .9, .52, .6, "amber", "flick", 1.7); if (e >= 3) for (const x of [-1.2, 0, 1.2]) glow(x, 1.95, .9, .8, "warm"); if (e >= 4) glow(.4, .95, -.32, 1, "white", "flick", 3); break;
     case "fortress": { const tH = 1.4 + e * .3, sy = 3.9 + e * .35; glow(0, tH + .1, 0, 1.4, "blue", "glowP", 0); glow(0, sy - .8, 0, 1.3, "blue", "glowP", 1); for (let y = tH + .6; y < sy - .9; y += .6) glow(0, y, 0, .5, "blue"); glow(0, sy, 0, 3.6 + e * .3, "cyan", "glowP", 2); break; }
     case "terraformer": glow(0, .6, -.15, 3 + e * .3, "cyan", "glowP", 0); if (e >= 1) glow(0, .95, -.15, 2.4, "cyan", "glowP", 1.5); glow(0, .25, .62, .8, "warm"); glow(0, 2.4 + e * .75 + 1, -.15, .45, "red", "blink", 0); break;
@@ -12194,7 +12215,40 @@ function fsCommissionCard(L) { const f = fsOf(), dock = fsDockL(), okL = L >= FL
 function fsDockCard() { const f = fsOf(), L = fsDockL();
   return `<div class="dp">${fsBuilt() ? `<p class="note"><b>Your flagship is in the dock.</b> Lv.${f.lv} · ${fsPts(f)} skill point${fsPts(f) === 1 ? "" : "s"} to spend · ${f.q.length}/${fsQMax()} forge jobs.</p>` : `<p class="note">No flagship yet. Commission it here.</p>`}
     <p class="note">Dock Lv.${L}: forges up to <b style="color:${FS_TIER[fsDockTier(L)][1]}">${FS_TIER[fsDockTier(L)][0]}</b> gear, ${fsQMax()} queue slot${fsQMax() > 1 ? "s" : ""}, forging ${Math.round((1 - fsForgeK()) * 100)}% faster.${fsDockTier(L) < 6 ? ` Next tier at Dock Lv.${FS_DOCK_T[fsDockTier(L) + 1]}.` : ""}</p>
+    ${fsBuilt() ? (n => n ? `<p class="note"><b>${n}</b> upgrade${n > 1 ? "s" : ""} can be forged from what you hold right now.</p>` : "")(fsSuggest().length) : ""}
     <div class="fsact"><button class="btn amber" data-act="flagHero">${fsBuilt() ? "Flagship Command" : "Commission the flagship"}</button>${fsBuilt() ? `<button class="btn" data-act="fsForgeOpen">Open the Forge</button>` : ""}</div></div>`; }
+/* v303 Flagship Dock helpers: craft suggestions and an auto combiner. Both plan only with the materials and resources you hold right now. */
+const FS_SET_FOR = { weapon: "conq", bridge: "conq", shield: "guard", armor: "guard", reactor: "arch", computer: "sci", engine: "harv", artifact: "hunt" };
+const FS_KEEP = m => m === "alloy" ? 5 : 3; // what auto-combine leaves at each tier: one recipe's frame alloy, or a primary's worth of anything else
+function fsPlanMats(have, need) { // can `need` be met from `have`, combining lower tiers up where short? the combines run lowest tier first
+  const h = Object.assign({}, have), comb = [];
+  const take = (m, t, n) => { const k = fsMatKey(m, t), got = Math.min(h[k] || 0, n); h[k] = (h[k] || 0) - got; const short = n - got; if (!short) return true; if (t <= 1) return false;
+    if (!take(m, t - 1, short * 5)) return false; comb.push([fsMatKey(m, t - 1), short]); return true; };
+  for (const [k, n] of Object.entries(need)) if (!take(k.slice(0, -1), +k.slice(-1), n)) return null;
+  return { comb, left: h }; }
+const fsCombRes = comb => { const r = { m: 0, c: 0, g: 0 }; for (const [k, n] of comb) { const c = fsCombCost(+k.slice(-1)); r.m += c.m * n; r.c += c.c * n; } return r; };
+function fsSuggest() { const f = fsOf(), out = []; if (!fsDockL()) return out; const dt = fsDockTier(fsDockL()), busy = new Set(f.q.map(j => j.s));
+  const dom = Object.entries(fsSetCounts(fsEquipped(f))).sort((a, b) => b[1] - a[1])[0];
+  for (const [s] of FS_SLOTS) { if (busy.has(s)) continue; const cur = f.inv.find(x => x.id === f.eq[s]), best = Math.max(0, ...f.inv.filter(x => x.s === s).map(x => x.t));
+    for (let t = dt; t > best; t--) { const rc = fsRecipe(s, t), pl = fsPlanMats(f.mats, rc.mats); if (!pl) continue; const cr = fsCombRes(pl.comb), res = { m: rc.res.m + cr.m, c: rc.res.c + cr.c, g: rc.res.g };
+      if (!can(res)) continue; out.push({ s, t, set: cur && FS_SETS[cur.set] ? cur.set : dom && dom[1] >= 2 ? dom[0] : FS_SET_FOR[s], rc, comb: pl.comb, res, gain: t - best, cur }); break; } }
+  return out.sort((a, b) => b.gain - a.gain || b.t - a.t); }
+function fsSuggestHTML() { if (!fsDockL()) return ""; const f = fsOf(), fac = facOf(), all = fsSuggest(), list = all.slice(0, 4), full = f.q.length >= fsQMax(), head = `<h2 class="sec">Suggested crafts</h2>`;
+  if (!list.length) return head + `<p class="note">${full ? "The forge queue is full." : "Nothing better can be forged from what you hold right now. Raid pirates and monsters, gather from fields, grab salvage pods and join Cube strikes for more materials."}</p>`;
+  return head + `<p class="note">The best upgrade for each slot that you can forge right now from your own materials and resources, combining lower tiers where needed.${all.length > list.length ? ` Showing ${list.length} of ${all.length}.` : ""}</p>` + list.map(g => { const it = { id: "sug-" + g.s, s: g.s, t: g.t, set: g.set, f: fac, lv: 0 }, nC = g.comb.reduce((a, [, n]) => a + n, 0);
+    return `<div class="mcard fssug">${fsItemCard(it, f, "fsNoop")}<div class="fsrows">${fsStatRows(fsItemStats(it), g.cur ? fsItemStats(g.cur) : {})}</div>
+      <p class="note">${g.cur ? `Replaces ${esc(fsItemName(g.cur))}` : "Fills an empty slot"} · ${FS_SETS[g.set][0]} set${nC ? ` · first combines ${g.comb.map(([k, n]) => `${n * 5} ${FS_TIER[+k.slice(-1)][0]} ${FS_MATS[k.slice(0, -1)][0]} → ${n} ${FS_TIER[+k.slice(-1) + 1][0]}`).join(", ")}` : ""}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">${costHTML(g.res)}<span class="note">${ftime(g.rc.ms)}</span></div>
+      <button class="btn amber wide" data-act="fsAuto" data-s="${g.s}" data-t="${g.t}" data-set="${g.set}" ${full ? "disabled" : ""}>${full ? "Forge queue full" : nC ? "Combine and forge" : "Forge it"}</button></div>`; }).join("") + `<h2 class="sec">Forge anything</h2>`; }
+function fsAutoCombPlan() { const f = fsOf(), top = Math.max(2, fsDockL() ? fsDockTier(fsDockL()) : 2), h = Object.assign({}, f.mats), steps = [];
+  for (const m of Object.keys(FS_MATS)) for (let t = 1; t < top; t++) { const k = fsMatKey(m, t), n = Math.floor(Math.max(0, (h[k] || 0) - FS_KEEP(m)) / 5); if (!n) continue;
+    h[k] -= n * 5; const k2 = fsMatKey(m, t + 1); h[k2] = (h[k2] || 0) + n; steps.push([k, n]); }
+  return { steps, res: fsCombRes(steps), top }; }
+function fsAutoCombHTML() { const p = fsAutoCombPlan(), n = p.steps.reduce((a, [, x]) => a + x, 0), keep = "keeping 5 Alloy and 3 of everything else at each tier for recipes";
+  if (!n) return `<div class="mcard"><h3>Auto-combine</h3><p class="note">Nothing to combine right now (it combines spare stacks of 5 upward, ${keep}).</p></div>`;
+  return `<div class="mcard"><h3>Auto-combine</h3><p class="note">Combines every spare stack upward to ${FS_TIER[p.top][0]}${fsDockL() ? " (your Dock's top tier)" : ""}, ${keep}.</p>
+    <div class="fsrows">${p.steps.map(([k, x]) => { const m = k.slice(0, -1), t0 = +k.slice(-1); return `<div class="fsr"><span><i class="fsmi fsmat-${m}"></i> ${x * 5} <b style="color:${FS_TIER[t0][1]}">${FS_TIER[t0][0]}</b> ${FS_MATS[m][0]}</span><b style="color:${FS_TIER[t0 + 1][1]}">→ ${x} ${FS_TIER[t0 + 1][0]}</b></div>`; }).join("")}</div>
+    <div style="margin:8px 0">${costHTML(p.res)}</div><button class="btn amber wide" data-act="fsAutoComb">${sheet && sheet.acConf ? "Tap again to combine" : `Combine ${n}×${can(p.res) ? "" : " (as many as you can pay for)"}`}</button></div>`; }
 function shFlag() {
   const f = fsOf(), tab = sheet.tab || "over", on = fsOn(), L = (() => { try { return cmdLevel(score()); } catch (e) { return 1; } })(), fac = facOf();
   const tabs = `<div class="segc fstabs">${[["over", "Flagship"], ["skills", "Skills"], ["gear", "Gear"], ["forge", "Forge"], ["mats", "Materials"]].map(([k, n]) => `<button class="${tab === k ? "on" : ""}" data-act="fsTab" data-v="${k}">${n}${k === "skills" && fsPts(f) ? ` <i class="tb">${fsPts(f)}</i>` : ""}${k === "forge" && f.q.length ? ` <i class="tb">${f.q.length}</i>` : ""}</button>`).join("")}</div>`;
@@ -12227,7 +12281,7 @@ function shFlag() {
   else if (tab === "forge" && !fsDockL()) body = `<p class="note">The Forge is part of the <b>Flagship Dock</b>. Build it under Structures → Facility (commander Lv.${FLAG_LV}).</p><button class="btn amber wide" data-act="fsDockGo" ${L >= FLAG_LV ? "" : "disabled"}>${L >= FLAG_LV ? "Build the Flagship Dock" : `Unlocks at commander Lv.${FLAG_LV}`}</button>`;
   else if (tab === "forge") { const s = sheet.fs || "weapon", t = Math.min(sheet.ft || 1, fsDockTier(fsDockL())), set = sheet.fset || "conq", rc = fsRecipe(s, t), T = now(), it = { s, t, set, f: fac, lv: 0 };
     const cur = f.inv.find(x => x.id === f.eq[s]), okM = fsHasMats(f, rc.mats), okR = can(rc.res), full = f.q.length >= fsQMax();
-    body = `<h2 class="sec">Craft</h2><div class="segc fsf">${FS_SLOTS.map(([k, n, ic]) => `<button class="${s === k ? "on" : ""}" data-act="fsPick" data-k="fs" data-v="${k}" title="${n}" aria-label="${n}"><span class="fsimg fspk s-${k}"></span></button>`).join("")}</div>
+    body = fsSuggestHTML() + `<h2 class="sec">Craft</h2><div class="segc fsf">${FS_SLOTS.map(([k, n, ic]) => `<button class="${s === k ? "on" : ""}" data-act="fsPick" data-k="fs" data-v="${k}" title="${n}" aria-label="${n}"><span class="fsimg fspk s-${k}"></span></button>`).join("")}</div>
       <div class="segc fsf">${[1, 2, 3, 4, 5, 6].map(k => { const lk = FS_DOCK_T[k] > fsDockL(); return `<button class="${t === k ? "on" : ""}" style="color:${FS_TIER[k][1]}" data-act="fsPick" data-k="ft" data-v="${k}" ${lk ? `disabled title="Needs Flagship Dock Lv.${FS_DOCK_T[k]}"` : ""}>${lk ? "🔒 " : ""}${FS_TIER[k][0]}</button>`; }).join("")}</div>
       ${fsDockTier(fsDockL()) < 6 ? `<p class="note">Flagship Dock Lv.${fsDockL()}: ${FS_TIER[fsDockTier(fsDockL()) + 1][0]} gear opens at Dock Lv.${FS_DOCK_T[fsDockTier(fsDockL()) + 1]}.</p>` : ""}
       <div class="segc fsf">${Object.entries(FS_SETS).map(([k, v]) => `<button class="${set === k ? "on" : ""}" data-act="fsPick" data-k="fset" data-v="${k}"><i class="fsseti fsset-${k}"></i>${v[0]}</button>`).join("")}</div>
@@ -12237,7 +12291,7 @@ function shFlag() {
       <h2 class="sec">Forge queue · ${f.q.length}/${fsQMax()}</h2>${f.q.length ? f.q.map((j, i) => `<div class="crow"><span class="nm">${esc(fsItemName(j))} · ${FS_SETS[j.set][0]}<small>${i === 0 ? `ready in <b data-end="${j.e}">${ftime(j.e - T)}</b>` : `waiting · ${ftime(j.ms)}`}</small></span><button class="btn ghost sm" data-act="fsCancel" data-i="${i}">Cancel</button></div>`).join("") : '<p class="note">Nothing in the forge.</p>'}
       <p class="note">Cancelling returns the materials and resources.</p>`; }
   else { const keys = Object.keys(FS_MATS);
-    body = `<p class="note">Combine five of a tier into one of the next. Today's drops: ${fmt((f.day && f.day.d === utcDay() ? f.day.n : 0))} (after ${FS_DAY_CAP} a day, each further drop is less likely).</p>` + keys.map(m => `<div class="fstree"><h3><i class="fsmi lg fsmat-${m}"></i>${FS_MATS[m][0]}</h3><small class="note">${FS_MATS[m][2]}</small>${[1, 2, 3, 4, 5, 6].map(t => { const k = fsMatKey(m, t), n = f.mats[k] || 0;
+    body = fsAutoCombHTML() + `<p class="note">Combine five of a tier into one of the next. Today's drops: ${fmt((f.day && f.day.d === utcDay() ? f.day.n : 0))} (after ${FS_DAY_CAP} a day, each further drop is less likely).</p>` + keys.map(m => `<div class="fstree"><h3><i class="fsmi lg fsmat-${m}"></i>${FS_MATS[m][0]}</h3><small class="note">${FS_MATS[m][2]}</small>${[1, 2, 3, 4, 5, 6].map(t => { const k = fsMatKey(m, t), n = f.mats[k] || 0;
       return `<div class="fsnode"><span style="color:${FS_TIER[t][1]}">${FS_TIER[t][0]}</span><b>${fmt(n)}</b>${t < 6 ? `<button class="btn ghost sm" data-act="fsComb" data-k="${k}" ${n >= 5 && can(fsCombCost(t)) ? "" : "disabled"}>5 → 1 ${FS_TIER[t + 1][0]}</button>` : "<span></span>"}</div>`; }).join("")}</div>`).join(""); }
   return head + tabs + body;
 }
@@ -15607,6 +15661,14 @@ const ACT = {
     fsBump(); toast(`Forging ${FS_TIER[t][0]} ${FS_SLOT[s][1]}: ${ftime(rc.ms)}.`, "win"); renderSheet(); },
   fsCancel: d => { const f = fsOf(), i = +d.i, j = f.q[i]; if (!j) return; f.q.splice(i, 1); for (const [k, n] of Object.entries(j.mats || {})) f.mats[k] = (f.mats[k] || 0) + n; for (const r of ["m", "c", "g"]) S.res[r] += (j.res || {})[r] || 0;
     if (i === 0 && f.q[0]) { f.q[0].s0 = now(); f.q[0].e = now() + f.q[0].ms; } fsBump(); toast("Forge job cancelled. Materials and resources returned.", "win"); renderSheet(); },
+  fsAuto: d => { if (!sheet) return; const f = fsOf(), s = d.s, t = +d.t, g = fsSuggest().find(x => x.s === s && x.t === t); if (!g) return toast("That suggestion is no longer possible with what you hold.", "warn");
+    if (f.q.length >= fsQMax()) return toast("The forge queue is full.", "warn"); if (!can(g.res)) return toast("Not enough resources.", "warn");
+    for (const [k, n] of g.comb) { const c = fsCombCost(+k.slice(-1)); pay({ m: c.m * n, c: c.c * n, g: 0 }); f.mats[k] -= 5 * n; if (f.mats[k] <= 0) delete f.mats[k]; const k2 = k.slice(0, -1) + (+k.slice(-1) + 1); f.mats[k2] = (f.mats[k2] || 0) + n; }
+    sheet.fs = s; sheet.ft = t; sheet.fset = FS_SETS[d.set] ? d.set : g.set; ACT.fsCraft(); },
+  fsAutoComb: () => { if (!sheet) return; if (!sheet.acConf) { sheet.acConf = 1; renderSheet(); return; } sheet.acConf = 0; const f = fsOf(), p = fsAutoCombPlan(); let done = 0, made = {};
+    for (const [k, n0] of p.steps) { const tt = +k.slice(-1), c = fsCombCost(tt), n = Math.min(n0, Math.floor(Math.max(0, (f.mats[k] || 0) - FS_KEEP(k.slice(0, -1))) / 5), c.m ? Math.floor(S.res.m / c.m) : n0, c.c ? Math.floor(S.res.c / c.c) : n0);
+      if (n <= 0) continue; pay({ m: c.m * n, c: c.c * n, g: 0 }); f.mats[k] -= 5 * n; if (f.mats[k] <= 0) delete f.mats[k]; const k2 = k.slice(0, -1) + (tt + 1); f.mats[k2] = (f.mats[k2] || 0) + n; made[k2] = (made[k2] || 0) + n; done += n; }
+    fsBump(); toast(done ? `Combined ${done}×: ${Object.entries(made).map(([k, n]) => `${n} ${FS_TIER[+k.slice(-1)][0]} ${FS_MATS[k.slice(0, -1)][0]}`).join(", ")}.` : "Not enough resources to combine.", done ? "win" : "warn"); renderSheet(); },
   fsComb: d => { const f = fsOf(), k = d.k, t = +k.slice(-1); if (t >= 6 || (f.mats[k] || 0) < 5) return; const c = fsCombCost(t); if (!pay(c)) return toast("Not enough resources.", "warn");
     f.mats[k] -= 5; if (!f.mats[k]) delete f.mats[k]; const k2 = k.slice(0, -1) + (t + 1); f.mats[k2] = (f.mats[k2] || 0) + 1; fsBump(); renderSheet(); },
   fsLoadSave: d => { const f = fsOf(), i = +d.i; f.loads[i] = { n: `Loadout ${i + 1}`, eq: Object.assign({}, f.eq) }; fsBump(); toast(`Loadout ${i + 1} saved.`, "win"); renderSheet(); },

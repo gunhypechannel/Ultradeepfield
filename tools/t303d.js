@@ -1,0 +1,17 @@
+const { chromium, devices } = require('playwright');
+(async () => { const b = await chromium.launch({ args: ['--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader'] }); const pg = await (await b.newContext({ ...devices['iPhone 15 Pro Max'], deviceScaleFactor: 2 })).newPage(); const errs = []; pg.on('pageerror', e => errs.push(e.message + ' | ' + (e.stack || '').split('\n')[1]));
+  await pg.route('**/three.min.js', r => r.fulfill({ path: 'threelib/three.min.js', contentType: 'application/javascript' })); await pg.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
+  pg.goto('file://' + process.cwd() + '/index.html', { waitUntil: 'commit' }).catch(() => {});
+  await pg.waitForFunction(() => window.__dbg && window.__dbg.S && window.__dbg.G.list, null, { timeout: 180000, polling: 1000 }); await pg.waitForTimeout(2500);
+  await pg.evaluate(() => { document.querySelectorAll('#authw,#adv').forEach(e => e.remove()); window.__dbg.closeAll(); });
+  const E = c => pg.evaluate(c => window.__dbg.ev(c), c);
+  const shot = async (n, top) => { await pg.evaluate(t => { try { advLines = []; } catch (e) {} document.querySelectorAll('#adv,#coach').forEach(e => e.remove()); const s = document.querySelector('.sheet'); if (s && t != null) { s.style.scrollBehavior = 'auto'; s.scrollTop = t; } }, top); await pg.waitForTimeout(400); await pg.screenshot({ path: '../' + n + '.png', timeout: 60000 }); };
+  console.log('plan:', await E(`(() => { S.faction = 'nyx'; S.spent = 3e6; S.fs = null; const f = fsOf(); f.built = 1; S.b.flagDock = 4; f.mats = { circuit1: 40, cube1: 30, crystal1: 40, alloy1: 60, bio1: 12, void1: 8 }; fsBump(); S.res.m = S.res.c = S.res.g = 5e6;
+    const sg = fsSuggest(); return JSON.stringify(sg.map(g => g.s + g.t + ' ' + g.set + ' comb:' + g.comb.map(c => c.join('x')).join(',') + ' res:' + g.res.m)); })()`));
+  console.log('auto forge:', await E(`(() => { const f = fsOf(); openSheet({ type: 'flagship', tab: 'forge' }); const g = fsSuggest()[0], m0 = JSON.stringify(f.mats); ACT.fsAuto({ s: g.s, t: g.t, set: g.set }); return JSON.stringify({ forged: g.s + g.t, q: f.q.map(j => j.s + j.t), mats: f.mats, next: fsSuggest().map(x => x.s + x.t) }); })()`));
+  await shot('a_forge', 0); await shot('a_forge2', 700);
+  console.log('auto comb:', await E(`(() => { const f = fsOf(); sheet.tab = 'mats'; renderSheet(); const p = fsAutoCombPlan(); return JSON.stringify(p.steps); })()`));
+  await shot('a_mats', 0);
+  console.log('auto comb run:', await E(`(() => { const f = fsOf(); ACT.fsAutoComb(); const conf = sheet.acConf; ACT.fsAutoComb(); return JSON.stringify({ conf, mats: f.mats, plan: fsAutoCombPlan().steps }); })()`));
+  console.log('poor:', await E(`(() => { const f = fsOf(); S.res.m = S.res.c = S.res.g = 0; f.mats = { alloy1: 30 }; return JSON.stringify({ sug: fsSuggest().length, plan: fsAutoCombPlan().steps }); })()`));
+  console.log(errs.slice(0, 6).join('\n') || 'no errors'); await b.close(); })();
