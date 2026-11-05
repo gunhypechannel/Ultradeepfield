@@ -1,0 +1,504 @@
+{
+  "title": "Ultra Deep Field (U.D.F.) Flagship Art Pack",
+  "total_individual_assets": 70,
+  "notes": [
+    "All 70 requested file IDs are present as separate PNG files.",
+    "Icons cropped from generated composite sheets, then resized to requested dimensions. Upscaling does not add native detail.",
+    "The original composite sheets are included for reference.",
+    "Generated gear art contains its own labels in the original sheets; individual icons are cropped to focus on art.",
+    "Flagship portraits are PNGs with alpha, made from the generated portraits; review edge glow and consistency with game 3D models before production.",
+    "The dock artwork is a cinematic generated scene, resized to 460 x 850."
+  ],
+  "assets": [
+    {
+      "id": "flagDock",
+      "size": "460x850",
+      "source": "orbital_shipyard_battleship_under_construction.png",
+      "group": "Dock",
+      "file": "01_Dock/flagDock.png"
+    },
+    {
+      "id": "gear-weapon-terran",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-weapon-terran.png"
+    },
+    {
+      "id": "gear-weapon-solar",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-weapon-solar.png"
+    },
+    {
+      "id": "gear-weapon-nyx",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-weapon-nyx.png"
+    },
+    {
+      "id": "gear-weapon-verdant",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-weapon-verdant.png"
+    },
+    {
+      "id": "gear-shield-terran",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-shield-terran.png"
+    },
+    {
+      "id": "gear-shield-solar",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-shield-solar.png"
+    },
+    {
+      "id": "gear-shield-nyx",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-shield-nyx.png"
+    },
+    {
+      "id": "gear-shield-verdant",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-shield-verdant.png"
+    },
+    {
+      "id": "gear-armor-terran",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-armor-terran.png"
+    },
+    {
+      "id": "gear-armor-solar",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-armor-solar.png"
+    },
+    {
+      "id": "gear-armor-nyx",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-armor-nyx.png"
+    },
+    {
+      "id": "gear-armor-verdant",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-armor-verdant.png"
+    },
+    {
+      "id": "gear-reactor-terran",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-reactor-terran.png"
+    },
+    {
+      "id": "gear-reactor-solar",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-reactor-solar.png"
+    },
+    {
+      "id": "gear-reactor-nyx",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-reactor-nyx.png"
+    },
+    {
+      "id": "gear-reactor-verdant",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-reactor-verdant.png"
+    },
+    {
+      "id": "gear-bridge-terran",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-bridge-terran.png"
+    },
+    {
+      "id": "gear-bridge-solar",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-bridge-solar.png"
+    },
+    {
+      "id": "gear-bridge-nyx",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-bridge-nyx.png"
+    },
+    {
+      "id": "gear-bridge-verdant",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-bridge-verdant.png"
+    },
+    {
+      "id": "gear-engine-terran",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-engine-terran.png"
+    },
+    {
+      "id": "gear-engine-solar",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-engine-solar.png"
+    },
+    {
+      "id": "gear-engine-nyx",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-engine-nyx.png"
+    },
+    {
+      "id": "gear-engine-verdant",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-engine-verdant.png"
+    },
+    {
+      "id": "gear-computer-terran",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-computer-terran.png"
+    },
+    {
+      "id": "gear-computer-solar",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-computer-solar.png"
+    },
+    {
+      "id": "gear-computer-nyx",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-computer-nyx.png"
+    },
+    {
+      "id": "gear-computer-verdant",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-computer-verdant.png"
+    },
+    {
+      "id": "gear-artifact-terran",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-artifact-terran.png"
+    },
+    {
+      "id": "gear-artifact-solar",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-artifact-solar.png"
+    },
+    {
+      "id": "gear-artifact-nyx",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-artifact-nyx.png"
+    },
+    {
+      "id": "gear-artifact-verdant",
+      "size": "512x512",
+      "source": "sci_fi_faction_armory_grid.png",
+      "group": "Gear",
+      "file": "02_Gear/gear-artifact-verdant.png"
+    },
+    {
+      "id": "mat-alloy",
+      "size": "512x512",
+      "source": "sci_fi_resource_asset_sheet.png",
+      "group": "Materials",
+      "file": "03_Materials/mat-alloy.png"
+    },
+    {
+      "id": "mat-circuit",
+      "size": "512x512",
+      "source": "sci_fi_resource_asset_sheet.png",
+      "group": "Materials",
+      "file": "03_Materials/mat-circuit.png"
+    },
+    {
+      "id": "mat-crystal",
+      "size": "512x512",
+      "source": "sci_fi_resource_asset_sheet.png",
+      "group": "Materials",
+      "file": "03_Materials/mat-crystal.png"
+    },
+    {
+      "id": "mat-bio",
+      "size": "512x512",
+      "source": "sci_fi_resource_asset_sheet.png",
+      "group": "Materials",
+      "file": "03_Materials/mat-bio.png"
+    },
+    {
+      "id": "mat-cube",
+      "size": "512x512",
+      "source": "sci_fi_resource_asset_sheet.png",
+      "group": "Materials",
+      "file": "03_Materials/mat-cube.png"
+    },
+    {
+      "id": "mat-void",
+      "size": "512x512",
+      "source": "sci_fi_resource_asset_sheet.png",
+      "group": "Materials",
+      "file": "03_Materials/mat-void.png"
+    },
+    {
+      "id": "set-conq",
+      "size": "256x256",
+      "source": "gear_set_emblems_sci_fi_badge_collection.png",
+      "group": "Sets",
+      "file": "04_Sets/set-conq.png"
+    },
+    {
+      "id": "set-guard",
+      "size": "256x256",
+      "source": "gear_set_emblems_sci_fi_badge_collection.png",
+      "group": "Sets",
+      "file": "04_Sets/set-guard.png"
+    },
+    {
+      "id": "set-harv",
+      "size": "256x256",
+      "source": "gear_set_emblems_sci_fi_badge_collection.png",
+      "group": "Sets",
+      "file": "04_Sets/set-harv.png"
+    },
+    {
+      "id": "set-arch",
+      "size": "256x256",
+      "source": "gear_set_emblems_sci_fi_badge_collection.png",
+      "group": "Sets",
+      "file": "04_Sets/set-arch.png"
+    },
+    {
+      "id": "set-sci",
+      "size": "256x256",
+      "source": "gear_set_emblems_sci_fi_badge_collection.png",
+      "group": "Sets",
+      "file": "04_Sets/set-sci.png"
+    },
+    {
+      "id": "set-hunt",
+      "size": "256x256",
+      "source": "gear_set_emblems_sci_fi_badge_collection.png",
+      "group": "Sets",
+      "file": "04_Sets/set-hunt.png"
+    },
+    {
+      "id": "tree-war",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill Tree",
+      "file": "05_Skills/tree-war.png"
+    },
+    {
+      "id": "sk-war0",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-war0.png"
+    },
+    {
+      "id": "sk-war1",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-war1.png"
+    },
+    {
+      "id": "sk-war2",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-war2.png"
+    },
+    {
+      "id": "tree-def",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill Tree",
+      "file": "05_Skills/tree-def.png"
+    },
+    {
+      "id": "sk-def0",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-def0.png"
+    },
+    {
+      "id": "sk-def1",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-def1.png"
+    },
+    {
+      "id": "sk-def2",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-def2.png"
+    },
+    {
+      "id": "tree-eco",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill Tree",
+      "file": "05_Skills/tree-eco.png"
+    },
+    {
+      "id": "sk-eco0",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-eco0.png"
+    },
+    {
+      "id": "sk-eco1",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-eco1.png"
+    },
+    {
+      "id": "sk-eco2",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-eco2.png"
+    },
+    {
+      "id": "tree-res",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill Tree",
+      "file": "05_Skills/tree-res.png"
+    },
+    {
+      "id": "sk-res0",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-res0.png"
+    },
+    {
+      "id": "sk-res1",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-res1.png"
+    },
+    {
+      "id": "sk-res2",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-res2.png"
+    },
+    {
+      "id": "tree-ops",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill Tree",
+      "file": "05_Skills/tree-ops.png"
+    },
+    {
+      "id": "sk-ops0",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-ops0.png"
+    },
+    {
+      "id": "sk-ops1",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-ops1.png"
+    },
+    {
+      "id": "sk-ops2",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-ops2.png"
+    },
+    {
+      "id": "sk-ops3",
+      "size": "256x256",
+      "source": "sci_fi_skills_asset_sheet_poster.png",
+      "group": "Skill",
+      "file": "05_Skills/sk-ops3.png"
+    },
+    {
+      "id": "flag-terran",
+      "size": "1200x600",
+      "source": "terran_union_flagship_holographic_dreadnought.png",
+      "group": "Flagship",
+      "file": "06_Flagships/flag-terran.png"
+    },
+    {
+      "id": "flag-solar",
+      "size": "1200x600",
+      "source": "dominion_solar_flagship_with_sunburst_crest.png",
+      "group": "Flagship",
+      "file": "06_Flagships/flag-solar.png"
+    },
+    {
+      "id": "flag-nyx",
+      "size": "1200x600",
+      "source": "nyx_flagship_cyan_hulled_warship.png",
+      "group": "Flagship",
+      "file": "06_Flagships/flag-nyx.png"
+    },
+    {
+      "id": "flag-verdant",
+      "size": "1200x600",
+      "source": "verdant_biomechanical_flagship.png",
+      "group": "Flagship",
+      "file": "06_Flagships/flag-verdant.png"
+    }
+  ]
+}
