@@ -2264,7 +2264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 291;
+const GAME_V = 292;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -10970,7 +10970,7 @@ function tourRun(i) {
     [() => ACT.viewMode({ m: "galaxy" }), `The whole galaxy. The <b>colour</b> around each world shows which alliance controls it.`],
     [() => { const c = G3.cam; c.follow = null; c.followFleet = null; c.goal = { tx: 0, ty: 12, tz: 0, dist: 230 }; c.ph = 1.05; }, `At the heart: <b>the Void</b>, and the <b>Cube</b> every alliance fights for each weekend.`],
     [() => ACT.viewMode({ m: "system", id: h.id }), `Tap any world to <b>spy</b>, <b>attack</b>, <b>transport</b> or add it to your <b>favourites</b>.`]];
-  if (i >= steps.length) return tourStop();
+  if (i >= steps.length) { tourStop(); G.hudT = performance.now() - 15001; G.hudIdle = true; const a = $("#app"); if (a && !sheet && !battle) a.classList.add("hudidle"); return; } // v292: tour done, the HUD fades at once
   steps[i][0](); el.innerHTML = `<span>${steps[i][1]}</span><small>${i + 1} / ${steps.length} · tap to skip</small>`; el.hidden = false;
   tourT = setTimeout(() => tourRun(i + 1), i === 3 ? 4800 : 4000);
 }
@@ -11654,7 +11654,7 @@ G.hudT = performance.now(); for (const ev of ["pointerdown", "pointermove", "whe
 // v138: the Advisor's bubble steps up above the base view's Quests tile instead of overlapping it (their heights differ by screen)
 setInterval(() => { const c = $("#coach"), d = $(".dirmini"); if (!c) return; c.style.bottom = ""; if (!d || !d.offsetParent) return; const cb = c.getBoundingClientRect(), db = d.getBoundingClientRect(), ov = cb.bottom - db.top + 8;
   if (ov > 0 && cb.right > db.left && cb.left < db.right) c.style.bottom = `calc(env(safe-area-inset-bottom,0px) + ${Math.round(196 + ov)}px)`; }, 500);
-setInterval(() => { const a = $("#app"); if (!a) return; const idle = view === "galaxy" && !sheet && !battle && performance.now() - G.hudT > 15000; G.hudIdle = idle; a.classList.toggle("hudidle", idle); }, 1000); // v109: the map HUD fades after 15 s idle
+setInterval(() => { const a = $("#app"); if (!a) return; const idle = view === "galaxy" && !sheet && !battle && !tourT && performance.now() - G.hudT > 15000; /* v292: never during the tour */ G.hudIdle = idle; a.classList.toggle("hudidle", idle); }, 1000); // v109: the map HUD fades after 15 s idle
 /* fleet control, opened by tapping one of your fleets on the map: where it is going, a speed boost, recall, its battle
    manoeuvre, and a follow camera */
 const ROUTE_N = { atk: "Attack", back: "Returning home", gather: "Gathering / exploring", joint: "Joint strike / stationing", spy: "Espionage" };
