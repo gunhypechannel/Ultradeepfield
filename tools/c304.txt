@@ -1,0 +1,2 @@
+(() => { const r = []; for (const fac of ['terran', 'solar', 'nyx', 'verdant']) { const K = fleetKit(G3, fac); if (!K) { r.push(fac + ' noK'); continue; } delete K.geo.flagship; const G = shipGeo(K, 'flagship'); let v = 0, n = 0; for (const k in G.parts) { v += G.parts[k].attributes.position.count; n++; } r.push(fac + ': verts ' + v + ' parts ' + n + ' glow ' + G.glow.length + ' eng ' + G.eng.length + ' midB ' + (G.midB ? G.midB.attributes.position.count : 0)); }
+  const bot = Object.keys(G.players || {}).length; return r.join(' | ') + ' | players ' + bot; })()
