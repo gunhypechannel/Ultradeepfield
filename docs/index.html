@@ -2337,7 +2337,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 312;
+const GAME_V = 313;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8489,7 +8489,7 @@ function flagshipModel(g, M, r) {
   // hover lights under the keel, the pools of light every painting shows beneath the hull
   for (const x of [-3.2, -1.9, -.6, .7, 2]) { box(.36, .04, beamW * .34, ALT, x, -.12 - tall * .52, 0); box(.26, .02, beamW * .24, ENG, x, -.12 - tall * .55, 0); glow(x, -.12 - tall * .78, 0, .9, .8); }
   glow(-.6, -.12 - tall * 1.1, 0, 2.6, .22);
-  if (fac !== "verdant") { const ry = -.12 - tall * 1.45; for (const [R, tb] of [[1.75, .018], [1.25, .014], [.8, .012], [.38, .01]]) { const rg = ring(-.6, ry, 0, R, tb, NEON, Math.PI / 2, 0, 48); rg.userData.nomid = 1; }
+  { const ry = -.12 - tall * 1.45; /* v313 Verdant hovers over its green ring too */ for (const [R, tb] of [[1.75, .018], [1.25, .014], [.8, .012], [.38, .01]]) { const rg = ring(-.6, ry, 0, R, tb, NEON, Math.PI / 2, 0, 48); rg.userData.nomid = 1; }
     if (fac === "nyx") { const CY = M.x_cyan || (M.x_cyan = new TH.MeshBasicMaterial({ color: 0x3ff0ff, toneMapped: false })); const rg = ring(-.6, ry, 0, 2.05, .012, CY, Math.PI / 2, 0, 48); rg.userData.nomid = 1; }
     for (const [a, b] of [[-1.5, -.4], [-1.1, -.9], [-.1, -.5], [.3, -1.0]]) beam([a, -.12 - tall * .6, 0], [-.6 + b * .2, ry, 0], .012, NEON); glow(-.6, ry, 0, 1.4, .5); glow(-.6, ry + .05, 0, .5, .9); } // v308
   // ---- faction signatures ----
