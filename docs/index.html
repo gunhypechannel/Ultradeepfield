@@ -2337,7 +2337,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 313;
+const GAME_V = 314;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13932,12 +13932,15 @@ function battleFlags(r, Q) { const mineS = r.kind === "defense" || r.kind === "r
     out[sd] = L.map(e => ({ f: e.f, idx: e.idx, acc: facAcc(e.f), col: FLAG_GLOW[e.f], rgba: `rgba(${FLAG_GLOW[e.f] >> 16},${FLAG_GLOW[e.f] >> 8 & 255},${FLAG_GLOW[e.f] & 255},1)` })); }
   return out; }
 function drawBattleFlags(ctx, b, scr, pos, W, H, t, real, T, lo, d) {
-  if (!b.flags) return; const Q = b.Q, L0 = Math.min(W, H) * .24, shots = b.fgS || (b.fgS = []), busy1 = Q.length > 60;
+  if (!b.flags) return; const Q = b.Q, L0 = Math.min(W, H) * .16, /* v314 a third smaller: it led the fight but filled the screen */ shots = b.fgS || (b.fgS = []), busy1 = Q.length > 60;
   for (const sd of ["d", "a"]) for (const e of b.flags[sd]) { const art = shipArtSoon("flagship", e.acc, "side"); if (!art) continue;
-    let sx = 0, sy = 0, sw = 0, gone = false, foeX = 0, foeW = 0;
-    for (const i of e.idx) { const n = b.n[i], p = pos[i], s = scr[i]; if (n > 0 && p && p.fl & 6) gone = true; if (n <= 0 || !p || p.fl & 6 || !s) continue; const w = Math.sqrt(Math.max(1, n * (Q[i].pow || 1))); sx += s.x * w; sy += s.y * w; sw += w; }
-    const foes = []; Q.forEach((q, i) => { if (q.side !== sd && b.n[i] > 0 && pos[i] && !(pos[i].fl & 6) && scr[i]) { foes.push(i); foeX += scr[i].x; foeW++; } });
-    if (sw) { const tx = sx / sw, ty = sy / sw; e.dead = null; if (e.x == null) { e.x = tx; e.y = ty; } const f = reduced ? 1 : Math.min(1, real / 1300); e.x += (tx - e.x) * f; e.y += (ty - e.y) * f; }
+    let sx = 0, sy = 0, sw = 0, gone = false, foeX = 0, foeY = 0, foeW = 0; e.pts = [];
+    for (const i of e.idx) { const n = b.n[i], p = pos[i], s = scr[i]; if (n > 0 && p && p.fl & 6) gone = true; if (n <= 0 || !p || p.fl & 6 || !s) continue; const w = Math.sqrt(Math.max(1, n * (Q[i].pow || 1))); sx += s.x * w; sy += s.y * w; sw += w; (e.pts = e.pts || []).push(s.x, s.y); }
+    const foes = []; Q.forEach((q, i) => { if (q.side !== sd && b.n[i] > 0 && pos[i] && !(pos[i].fl & 6) && scr[i]) { foes.push(i); foeX += scr[i].x; foeY += scr[i].y; foeW++; } });
+    if (sw) { const mx = sx / sw, my = sy / sw; let ux = foeW ? foeX / foeW - mx : sd === "a" ? 1 : -1, uy = foeW ? foeY / foeW - my : 0; const ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;
+      let rear = 0; for (let k = 0; k < e.pts.length; k += 2) rear = Math.min(rear, (e.pts[k] - mx) * ux + (e.pts[k + 1] - my) * uy); rear -= L0 * .35; /* v314 the flagship commands from behind its line, away from the enemy: its ships fight out front */
+      const F = b.fbox || (b.fbox = (() => { let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity; Q.forEach((q, i) => { const s = scr[i]; if (s && pos[i]) { x0 = Math.min(x0, s.x); x1 = Math.max(x1, s.x); y0 = Math.min(y0, s.y); y1 = Math.max(y1, s.y); } }); return isFinite(x0) ? [x0, x1, y0, y1] : [0, W, 0, H]; })());
+      const tx = clamp(mx + ux * rear, Math.max(L0 * .55, F[0]), Math.min(W - L0 * .55, F[1])), cb = b.ctlT > t ? b.ctlY : (b.ctlT = t + 1000, b.ctlY = (() => { try { const c = ctx.canvas.getBoundingClientRect(), k = $("#bctl"); if (!k || !k.offsetParent) return Infinity; return k.getBoundingClientRect().top - c.top; } catch (e) { return Infinity; } })()), /* the playback bar, in the same CSS units the squadrons are placed in */ ty = clamp(my + uy * rear, F[2] + L0 * .1, Math.min(F[3] - L0 * .1, cb - L0 * .4)); /* inside the field the squadrons fly in: the canvas runs on under the header and the controls */ e.dead = null; if (e.x == null) { e.x = tx; e.y = ty; } const f = reduced ? 1 : Math.min(1, real / 1300); e.x += (tx - e.x) * f; e.y += (ty - e.y) * f; }
     else { if (e.x == null) continue; if (e.dead == null) { e.dead = t; if (!gone) { for (const [ox, oy, big] of [[0, 0, 1], [-.5, .06, 0], [.45, -.05, 0], [-.2, -.08, 0]]) b.booms.push({ x: e.x + ox * L0, y: e.y + oy * L0, t: t + Math.abs(ox) * 260, big }); b.shake = Math.max(b.shake, 8 * d); } } }
     const fade = e.dead == null ? 1 : clamp(1 - (t - e.dead) / (gone ? 500 : 950), 0, 1); if (fade <= 0) continue;
     if (e.fa == null) e.fa = foeW ? (foeX / foeW >= e.x ? 1 : -1) : sd === "a" ? 1 : -1; const face = e.fa, fsc = face, ppx = e.px == null ? e.x : e.px; e.px = e.x; /* v255 it holds its heading and backs up on retros instead of flipping */ e.vx = (e.vx || 0) + ((e.x - ppx) / Math.max(1, real) - (e.vx || 0)) * Math.min(1, real / 300); e.rv = (e.rv || 0) + ((e.vx * face < -.0025 * L0 / 100 ? 1 : 0) - (e.rv || 0)) * Math.min(1, real / 420); const frv = e.rv;
