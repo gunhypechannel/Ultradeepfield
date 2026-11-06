@@ -2337,7 +2337,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 308;
+const GAME_V = 309;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -10636,9 +10636,8 @@ function shDetail() {
   // the whole sheet is the picture (a painting, or a tall studio render; see renderSheet) behind a glass header card with a thumbnail
   const desc = D.d || DF_D[k] || `${D.cls || D.n}.`, thumb = pic ? `<img class="dthumb" src="${pic}" alt="">` : `<canvas class="dthumb" ${art} role="img" aria-label="${esc(D.n)}"></canvas>`;
   return `<div class="dp dhead">${thumb}<div class="dti"><h2>${esc(D.n)}</h2>${unit ? (P ? `<div class="dsub">${esc(P.name)}</div>` : "") : `<div class="dsub">(level ${L}${P ? ` · ${esc(P.name)}` : ""})</div>`}<p>${esc(desc)}</p>${CLASS_OF[k] ? `<small>${CLS_BY[CLASS_OF[k]].ic} ${CLS_BY[CLASS_OF[k]].n} class · ${CLS_BY[CLASS_OF[k]].perk}</small>` : ""}</div><button class="x" data-act="close" aria-label="Close">✕</button></div>
-    ${kind === "b" && k === "shipyard" && P0 && (P0.b || {}).shipyard ? `<div class="dp"><button class="btn wide" data-act="yardOpen" data-id="${P0.id}">Open shipyard</button></div>` : ""/* v308: a colony's Open shipyard sits just under the header, not below the upgrade card */}
     ${tabs ? `<div class="segc dtabs">${tabs.map((t0, i) => `<button class="${i === tab ? "on" : ""}" data-act="dtab" data-i="${i}">${t0}</button>`).join("")}</div>` : ""}
-    ${extra || `${mid}<div class="dgap" aria-hidden="true"></div>${res}<div class="dp dreq"><table><tr><th>Requires</th><th>Need</th><th>Have</th><th></th></tr>${reqRows(D.req, P) || '<tr><td colspan="4" class="note">None</td></tr>'}</table><div class="dgo"><span>${ftime(time * (kind === "b" && (P ? P.cq : S.bq) ? QFAST : kind === "r" && S.rq ? QFAST : 1))} ⏱</span>${btn}</div></div>`}`;
+    ${extra || `${mid}${kind === "b" && k === "shipyard" && P0 && (P0.b || {}).shipyard ? `<div class="dp dyard"><button class="btn wide" data-act="yardOpen" data-id="${P0.id}">Open shipyard</button></div>` : ""/* v309: a colony's Open shipyard sits right under the Current/Next lvl box */}<div class="dgap" aria-hidden="true"></div>${res}<div class="dp dreq"><table><tr><th>Requires</th><th>Need</th><th>Have</th><th></th></tr>${reqRows(D.req, P) || '<tr><td colspan="4" class="note">None</td></tr>'}</table><div class="dgo"><span>${ftime(time * (kind === "b" && (P ? P.cq : S.bq) ? QFAST : kind === "r" && S.rq ? QFAST : 1))} ⏱</span>${btn}</div></div>`}`;
 }
 function rewardsCard() {
   const T0 = S.rtot || { m: 0, c: 0, g: 0, shards: 0, items: 0, runes: 0, boosts: 0 }, list = (S.rewards || []).slice(0, sub.rwAll ? 40 : 6), inbound = { m: 0, c: 0, g: 0 };
