@@ -2,7 +2,7 @@
 from PIL import Image, ImageFilter, ImageDraw, ImageChops
 import numpy as np, cv2, os
 os.chdir(os.path.dirname(os.path.abspath(__file__)) + '/..')
-P = 'pack/raw/UDF_Flagship_Art_Pack/06_Flagships/'
+P = 'art2/'
 W, H = 960, 317
 COL = {'terran': ((20, 60, 160), (60, 150, 255), (150, 210, 255)), 'solar': ((150, 60, 10), (255, 150, 40), (255, 215, 130)),
        'nyx': ((110, 8, 20), (230, 40, 60), (255, 130, 140)), 'verdant': ((10, 80, 50), (40, 200, 120), (160, 255, 200))}
@@ -39,10 +39,10 @@ for f, (c0, c1, c2) in COL.items():
     atm = np.clip(1 - np.abs(dist - R) / 26, 0, 1) ** 2 * (dist >= R)
     v += np.array(c1)[None, None, :] * atm[..., None] * .7
     img = Image.fromarray(np.clip(v, 0, 255).astype(np.uint8)).convert('RGBA')
-    sh = np.array(Image.open(P + f'flag-{f}.png').convert('RGBA'))
-    if f == 'nyx': sh = nyx_red(sh)
-    s = Image.fromarray(sh, 'RGBA'); s = s.crop(s.getbbox()); sw = int(W * .84); s = s.resize((sw, int(s.height * sw / s.width)), Image.LANCZOS).rotate(3, resample=Image.BICUBIC, expand=True)
-    gl = Image.new('RGBA', img.size, (0, 0, 0, 0)); gd = ImageDraw.Draw(gl); ox, oy = (W - s.width) // 2 + 14, (H - s.height) // 2 + 4
+    sh = np.array(Image.open(P + f'src-{f}.png').convert('RGBA'))
+    pass
+    s = Image.fromarray(sh, 'RGBA'); s = s.crop(s.getbbox()); sw = int(W * (.7 if f == 'verdant' else .84)); s = s.resize((sw, int(s.height * sw / s.width)), Image.LANCZOS).rotate(3, resample=Image.BICUBIC, expand=True)
+    gl = Image.new('RGBA', img.size, (0, 0, 0, 0)); gd = ImageDraw.Draw(gl); ox, oy = (W - s.width) // 2 + 14, (H - s.height) // 2 + (-8 if f == 'verdant' else 4)
     gd.ellipse((ox + 60, oy + s.height * .55, ox + s.width - 60, oy + s.height * 1.05), fill=c1 + (64,)); gl = gl.filter(ImageFilter.GaussianBlur(30))
     img = Image.alpha_composite(img, gl); img.alpha_composite(s, (ox, oy))
     v = np.array(img).astype(float); vg = np.clip(1 - (((xx - W / 2) / (W * .62)) ** 2 + ((yy - H / 2) / (H * .85)) ** 2) * .42, .5, 1); v[..., :3] *= vg[..., None]
