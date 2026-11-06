@@ -2337,7 +2337,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 306;
+const GAME_V = 307;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -12424,6 +12424,7 @@ function unitGrid(n) { const e = Object.entries(n).filter(([, v]) => v > 0); ret
    now (with any bot allies you added), plus a 10% margin. You can still change any number by hand afterwards. */
 function effTarget() { try { if (!sheet) return null;
   if (sheet.type === "pirate") { const x = PB[sheet.id]; return x && !(pirDown(x) > now()) ? { D: xStacks(x), lvl: x.lvl } : null; }
+  if (sheet.type === "pyramid") { const y = YB[sheet.id]; if (!y || pyrDown(y) > now()) return null; const g = pyrGuards(y.lvl); return { D: Object.keys(g).length ? stacksOf(g, { hive: y.lvl * 2 }, "hive") : [], lvl: y.lvl * 2, pyr: 1 }; } // v307: the station's guardians, as pyramidArrive fights them
   if (sheet.type === "planet") { const p = G.byId[sheet.id]; if (!p) return null; const st = pStatus(p, now()); if (st === "mine" || st === "myhome" || st === "shielded" || st === "razed" || p.owner === G.me) return null; const kn = spyKnown(p); return kn && kn.stacks.length ? { D: kn.stacks, lvl: p.lvl, est: !!(kn.rep && !kn.rep.tech) } : null; }
   } catch (e) {} return null; }
 /* v294 Efficient fight, remastered: warships only, in the same mix as the ones you have, scaled to the smallest share of each type that
@@ -12432,9 +12433,16 @@ function effTarget() { try { if (!sheet) return null;
    enough for all the loot the warships can't carry themselves. You can still change any number by hand afterwards. */
 function effLoot() { try { if (!sheet) return 0;
   if (sheet.type === "pirate") { const x = PB[sheet.id]; return x ? total(xLoot(x)) : 0; }
+  if (sheet.type === "pyramid") { const y = YB[sheet.id]; return y ? total(pyrLoot(y.lvl)) : 0; }
   if (sheet.type === "planet") { const p = G.byId[sheet.id]; if (!p) return 0; if (pStatus(p, now()) === "hive") return Math.floor(total(stock(p.lvl)) / 2);
     const r = (S.spyReps || []).find(x => x.pid === p.id && x.res); return r ? Math.floor(total(r.res) / 2) : 0; } } catch (e) {} return 0; }
+const effCargo = (avail, need) => { const cargo = {}; let left = need; const cks = Object.keys(avail).filter(k => avail[k] > 0 && !warK(k) && SH[k] && (SH[k].cargo || 0) > 0 && k !== "ark" && k !== "spyProbe" && k !== "recycler").sort((a, b) => (b === "heavyCargo") - (a === "heavyCargo") || (b === "hauler") - (a === "hauler") || SH[b].cargo - SH[a].cargo);
+  for (const k of cks) { if (left <= 0) break; const per = cargoOf({ [k]: 1 }) || SH[k].cargo, n = Math.min(avail[k], Math.ceil(left / per)); if (n > 0) { cargo[k] = n; left -= n * per; } } return { cargo, left }; };
 async function effPick() { const T = effTarget(); if (!T || G.effBusy) return; const avail = originAvail(), war = Object.keys(avail).filter(k => avail[k] > 0 && warK(k));
+  if (!T.D.length) { /* v307: an unguarded pyramid station: no fight, just enough hold space for its whole vault */ const loot = effLoot(), { cargo, left } = effCargo(avail, loot);
+    if (!sumShips(cargo)) { const w = war.sort((a, b) => (SH[b].cargo || 0) - (SH[a].cargo || 0))[0]; if (!w) return toast("No ships here with cargo space.", "warn"); const per = cargoOf({ [w]: 1 }) || SH[w].cargo || 1; pick = { [w]: Math.min(avail[w], Math.max(1, Math.ceil(loot / per))) }; }
+    else pick = cargo; sheet.oddsKey = null; renderSheet();
+    return toast(`Efficient fight: no guardians here, so no warships. ${left > 0 && sumShips(cargo) ? `Cargo ships for ${fmt(loot - left)} of the ${fmt(loot)} vault (not enough cargo ships here for all of it).` : `Enough hold space for all ${fmt(loot)} of the vault.`}`, "win"); }
   if (!war.length) return toast("No warships here to send.", "warn"); const sh0 = sheet; G.effBusy = 1; toast("Testing fleets against defenders 10% stronger than these…");
   try { const D = T.D.map(s => Object.assign({}, s, { atk: s.atk * 1.1, sh: s.sh * 1.1, hull: s.hull * 1.1 })), tech = sheet.type === "pirate" ? techVs(PB[sheet.id]) : techOf(null), ally = allyStacks(sheet.bots, T.lvl); let tick = performance.now();
     const fight = async (n, dd, seed) => { const r = simulate(stacksOf(n, tech, G.me).concat(ally), dd, { seed }); if (performance.now() - tick > 30) { await new Promise(ok => setTimeout(ok, 0)); tick = performance.now(); if (sheet !== sh0) throw 0; } return r.winner === "a"; };
@@ -12445,8 +12453,7 @@ async function effPick() { const T = effTarget(); if (!T || G.effBusy) return; c
       for (let f = hi, k = 0; k < 8; k++, f = Math.min(1, f * 1.1)) { if (await wins(mk(f), 24, 104729)) { warN = mk(f); break; } if (f >= 1) break; } } // fresh battles for the final check, so the search can't fit itself to its own test seeds
     if (sheet !== sh0) return;
     const all = mk(1), wsel = warN || all, loot = effLoot(), need = Math.max(0, loot - cargoOf(wsel)), cargo = {};
-    let left = need; const cks = Object.keys(avail).filter(k => avail[k] > 0 && !warK(k) && SH[k] && (SH[k].cargo || 0) > 0 && k !== "ark" && k !== "spyProbe" && k !== "recycler").sort((a, b) => (b === "heavyCargo") - (a === "heavyCargo") || (b === "hauler") - (a === "hauler") || SH[b].cargo - SH[a].cargo);
-    for (const k of cks) { if (left <= 0) break; const per = cargoOf({ [k]: 1 }) || SH[k].cargo, n = Math.min(avail[k], Math.ceil(left / per)); if (n > 0) { cargo[k] = n; left -= n * per; } }
+    const ec = effCargo(avail, need); Object.assign(cargo, ec.cargo); const left = ec.left;
     pick = Object.assign({}, wsel, cargo); sheet.oddsKey = null; renderSheet();
     const cTxt = !loot ? "" : !need ? ` Their own holds carry all ${fmt(loot)} of the loot.` : left > 0 ? ` Cargo ships added: ${fmt(sumShips(cargo))}, room for ${fmt(loot - Math.max(0, left))} of ${fmt(loot)} loot (not enough cargo ships here for all of it).` : ` Plus ${fmt(sumShips(cargo))} cargo ship${sumShips(cargo) === 1 ? "" : "s"} for all ${fmt(loot)} of the loot.`;
     if (!warN) { let w = 0; for (let i = 0; i < 12; i++) if (await fight(all, T.D, 7907 * (i + 1))) w++; if (sheet === sh0) toast(`Even every warship here wins only ${Math.round(w / 12 * 100)}% of test battles against these defenders, so all of them are selected.${cTxt} Add allies or build more ships.`, "warn"); return; }

@@ -1,0 +1,7 @@
+(async () => { const out = []; try { FOG = null; } catch (e) { out.push('FOG const'); } S.ships = Object.assign(S.ships || {}, { fighter: 400, heavyFighter: 200, cruiser: 120, battleship: 40, cargo: 60, heavyCargo: 40 }); S.r.weapons = S.r.weapons || 0;
+  const ys = Object.values(YB).sort((a, b) => a.lvl - b.lvl), y1 = ys.find(y => y.lvl < 3), y7 = ys.filter(y => y.lvl >= 5).pop();
+  for (const y of [y1, y7]) { if (!y) { out.push('no station'); continue; } S.pyr = {}; openSheet({ type: 'pyramid', id: y.id }); pick = {};
+    const btn = !!document.querySelector('.sheet [data-act="pkeff"]'); await effPick(); await new Promise(r => setTimeout(r, 300));
+    const sel = Object.assign({}, pick), g = pyrGuards(y.lvl); let w = 0; if (Object.keys(g).length) for (let i = 0; i < 20; i++) { const r = simulate(stacksOf(sel, techOf(null), G.me), stacksOf(g, { hive: y.lvl * 2 }, 'hive'), { seed: 991 * (i + 1) }); if (r.winner === 'a') w++; }
+    out.push(`Lv.${y.lvl} button:${btn} guards:${JSON.stringify(g)} pick:${JSON.stringify(sel)} cargo ${cargoOf(sel)} / vault ${total(pyrLoot(y.lvl))} wins ${w}/20`); closeSheet(); }
+  return out.join(' || '); })()
