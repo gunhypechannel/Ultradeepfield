@@ -3427,7 +3427,9 @@ function wellFrac(a, b) {
 /* v279: a probe's 100,000,000 speed would cross the galaxy in under a second on the linear scale ships use. OGame's own flight time goes
    with the square root of speed, so probes do too here: seconds for a neighbour, about a minute across the map, and never too fast to see. */
 const PROBE_K = .42, PROBE_MIN = 12000;
-function travelMs(from, to, n, r = S.r, pct = 100) {
+/* v322: during the Academy your own fleets fly in a quarter of the time, 3 minutes at most (same window as acadT) */
+function travelMs(from, to, n, r = S.r, pct = 100) { const t = travelRaw(from, to, n, r, pct); return r === S.r && acadT(1) < 1 ? Math.min(t * .25, 180000) : t; }
+function travelRaw(from, to, n, r, pct) {
   const ks = Object.keys(n).filter(k => n[k] > 0 && SH[k]); if (!ks.length || !from || !to) return 0;
   const spd = Math.min(...ks.map(k => spdOf(k, r))) * (r === S.r ? 1 + fsB("spd") / 100 : 1), T = now(), a = pos(from, T), b = pos(to, T);
   if (ks.length === 1 && ks[0] === "spyProbe") return Math.max(PROBE_MIN, (60 + Math.hypot(a.x - b.x, a.y - b.y) * 4.8) * 1000 * (1 + WELL_SLOW * wellFrac(a, b)) / (Math.sqrt(spd) * PROBE_K * clamp(pct, 1, 100) / 100));
@@ -4521,7 +4523,7 @@ function quest() {
 }
 function progress() {
   const q = quest();
-  if (q.ok(S) && S.qSeen !== S.quest && !(tutOn() && S.tut.i < TUT_BASICS)) { S.qSeen = S.quest; note("Directive complete. Claim your reward on the Quests tab.", "warn"); }
+  if (q.ok(S) && S.qSeen !== S.quest && !tutOn()) { S.qSeen = S.quest; note("Directive complete. Claim your reward on the Quests tab.", "warn"); }
   if (S.chapter === 1 && S.wins >= 1) { S.chapter = 2; S.nextRaid = S.t + 10 * 60000;
     S.say.push("Clean work, Commander. That garrison won't trouble us for a while.", "But the Hive knows we're here now. Expect raids on our homeworld.", "Build defenses and keep some ships at home. Chapter 2: Hold the Line."); }
   if (S.chapter === 2 && S.maxWin >= 5) { S.chapter = 3; S.say.push("The worlds nearer the Void are richer, and the Hive guards them harder.", "Check the tech tree in Research. Heavier hulls need lasers, ion and hyperspace tech. Chapter 3: Into the Reach."); }
@@ -13657,9 +13659,9 @@ function advPick() { // what the Advisor shows: a finished task first, then the 
    can't pay for it yet. (Only the ship's own price used to count, so the Advisor sat on an unaffordable research for hours while the
    Academy step it hid was ready to go.) */
 function spBlocked(sp) {
-  if (!sp) return true; const nd = sp.need, keep = tutKeep();
-  if (!nd) return !S.sq.some(q => q.k === sp.k) && !canPayRes(addC(sp.d.c || {}, keep));
-  if (nd.r ? rQd(nd.k) : bQd(nd.k)) return false;
+  if (!sp) return true; const nd = sp.need, keep = tutKeep(), aca = tutOn(); // v322: in the Academy, a side task already under way hands back to the step in hand
+  if (!nd) return S.sq.some(q => q.k === sp.k) ? aca : !canPayRes(addC(sp.d.c || {}, keep));
+  if (nd.r ? rQd(nd.k) : bQd(nd.k)) return aca;
   return !canPayRes(addC(cost(nd.r ? R[nd.k] : B[nd.k], nd.cur + 1), keep));
 }
 function shipShow() { const sp = shipStep(); if (!sp) return; if (sheet) closeSheet(); ACT.nav(sp.go); if (sp.rcat) { sub.rcat = sp.rcat; render(); } }
@@ -13701,7 +13703,7 @@ function guidePick() {
   if (!(st && st.fm && !st.ok(S))) { const m = $("#tutfm"); if (m) m.remove(); } if (!st) return null;
   const path = st.ok(S) ? [['#coach [data-act="tutClaim"], #coach [data-act="shipClaim"], #coach .cpill', "Collect your reward"]] : st.path ? st.path() : [SHOWME];
   for (const [sel, label, when] of path) { if (when && !when()) continue; for (const el of document.querySelectorAll(sel)) { if (el.classList.contains("on") || (el.disabled && /^(boost|finish)$/.test(el.dataset.act || ""))) continue; /* a tab already open, or a speed-up you can't use */ const v = guideVisible(el); if (v) return el.disabled && /^(up|research|make|cup|csb)$/.test(el.dataset.act || "") ? { el, label: (el.dataset.cost ? !canPayRes(JSON.parse(el.dataset.cost)) : $(".sheet .dres .no")) ? "Not enough resources yet. Your mines keep working: check back in a few minutes" : "Check the requirements below first", v } : el.disabled && /^(raid|launch|pyrGo|gather)$/.test(el.dataset.act || "") && /en route|on its way/i.test(el.textContent) ? { el, label: "Your fleet is on its way there. Wait for the report", v } : { el, label, v }; } } /* v235: never say "Tap" on a greyed-out button */
-  const cx = sheet && document.querySelector('.sheet [data-act="close"]'); if (cx && guideVisible(cx)) return { el: cx, label: "Close this to continue", v: 1 }; // something is in the way: close it first
+  const cx = sheet && document.querySelector('.sheet [data-act="close"]'); const cv = cx && guideVisible(cx); if (cv) return { el: cx, label: "Close this to continue", v: cv }; /* v322: v 2 scrolls a long card back up to its ✕ */ // something is in the way: close it first
   return null;
 }
 function guideFrame() {
