@@ -101,6 +101,7 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 #coach .cpt small{font-size:9px;letter-spacing:.14em;color:#ffd36b}#coach .cpill.done .cpt small{color:var(--green)}
 /* v81: the guide: spotlight ring, bouncing hand and label on the next thing to tap */
 #tutguide{position:fixed;inset:0;z-index:70;pointer-events:none;display:none}
+#tutfm{position:fixed;width:44px;height:44px;border-radius:50%;pointer-events:none;z-index:1;transition:left .14s linear,top .14s linear} /* v318: where your fleet is on the 3D map, for the guide ring */
 #tutguide .tgx{pointer-events:auto;margin-left:8px;width:24px;height:24px;border-radius:50%;border:1px solid rgba(7,16,25,.35);background:rgba(7,16,25,.18);color:inherit;font:700 12px/1 sans-serif;cursor:pointer;vertical-align:middle}
 #coach .cpx{position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(6,18,25,.9);color:#cfe;font:700 11px/1 sans-serif;z-index:2;padding:0;pointer-events:auto}
 #tutguide .tg-ring{position:fixed;border-radius:14px;border:3px solid #ffd36b;box-shadow:0 0 0 4px rgba(255,211,107,.25),0 0 26px rgba(255,211,107,.8);animation:tutp .8s ease-in-out infinite alternate;transition:left .18s,top .18s,width .18s,height .18s}
@@ -11781,7 +11782,7 @@ function followMvEnd(W, keep) { const c = W.cam; c.followMv = null; if (W.mvObj)
 const CINE_M = [["chase", "Chase"], ["side", "Side"], ["front", "Head-on"], ["top", "Overhead"], ["orbit", "Orbit"], ["free", "Free"]];
 function cineAngle(m, yaw, c) { const back = Math.atan2(-Math.cos(yaw), -Math.sin(yaw));
   return m === "chase" ? { th: back, ph: 1.28 } : m === "side" ? { th: back + Math.PI / 2, ph: 1.42 } : m === "front" ? { th: back + Math.PI, ph: 1.36 } : m === "top" ? { th: back, ph: .2 } : m === "orbit" ? { th: c.th + .05, ph: 1.25 + .12 * Math.sin(performance.now() * .0004) } : null; }
-function cineStart(m) { if (!G3 || !(G3.cam.followFleet || G3.cam.followMv)) return toast("Tap a fleet to follow it first.", "warn"); const c = G3.cam; closeSheet(); c.cine = { m: m || "chase" }; c.goal = { dist: 7 }; $("#app").classList.add("cine"); cineBar(); fleetHud(true); }
+function cineStart(m) { if (!G3 || !(G3.cam.followFleet || G3.cam.followMv)) return toast("Tap a fleet to follow it first.", "warn"); const c = G3.cam; closeSheet(); if (!S.tutCine && S.fleets.some(f => f.id === c.followFleet)) { S.tutCine = 1; dirty(); } c.cine = { m: m || "chase" }; c.goal = { dist: 7 }; $("#app").classList.add("cine"); cineBar(); fleetHud(true); }
 /* v135: film a Cube boss, a pyramid station or a space monster: the camera circles it, with the same angle buttons and free look */
 const cineBtn = id => `<button class="btn ghost wide" style="margin:6px 0" data-act="cineObj" data-id="${esc(id)}">🎥 Cinematic view</button>`;
 function cineObjStart(id, n) { const it = PB[id] || YB[id] || G.byId[id]; if (!it) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); }
@@ -11816,11 +11817,11 @@ function fleetHud(force) {
   if (!f || (G3 && G3.cam.cine)) { if (el) el.remove(); return; }
   if (!el) { el = document.createElement("div"); el.id = "fleethud"; $("#app").appendChild(el); force = true; }
   const T = now(), b = fleetBounds(f), tg = fleetTarget(f), rk = routeKind(f), rc = ROUTE_CSS[rk], end = b ? b[1] : T, canRecall = (f.phase === "out" && !f.assault && f.mission !== "spy") || f.phase === "gather";
-  const what = f.phase === "back" ? "↩ Home" : f.phase === "gather" ? `⛏ ${tg ? tg.name : ""}` : `→ ${tg ? tg.name : ""}`, key = f.id + f.phase + rk + (S.shards >= boostCost(f)) + fformOf(f);
+  const what = f.phase === "back" ? "↩ Home" : f.phase === "gather" ? `⛏ ${tg ? tg.name : ""}` : `→ ${tg ? tg.name : ""}`, key = f.id + f.phase + rk + (S.shards >= fbCost(f)) + fformOf(f);
   if (!force && el.dataset.k === key) { const t = el.querySelector(".fh-t"); if (t) t.textContent = ftime(end - T); const bar = el.querySelector(".fh-bar i"); if (bar && b) bar.style.width = clamp((T - b[0]) / Math.max(1, b[1] - b[0]), 0, 1) * 100 + "%"; return; }
   el.dataset.k = key; el.style.setProperty("--rc", rc);
   el.innerHTML = `<div class="fh-row"><span class="fh-dot"></span><span class="fh-w">${esc(what)}<small>${fmt(sumShips(f.n))} ships · <b class="fh-t">${ftime(end - T)}</b></small></span>
-    <button data-act="fBoost" data-id="${f.id}" aria-label="Afterburners" ${b && !f.assault && S.shards >= boostCost(f) ? "" : "disabled"}>⚡</button>${canRecall ? `<button data-act="${f.phase === "gather" ? "recallG" : "recallF"}" data-id="${f.id}" aria-label="Recall">↩</button>` : ""}${f.n && sumShips(f.n) && !f.assault ? `<button data-act="fFormNext" data-id="${f.id}" aria-label="Formation: ${FORMS[fformOf(f)].n}. Tap to change" title="${FORMS[fformOf(f)].n} formation">${FORMS[fformOf(f)].ic}</button>` : ""}<button data-act="fctl" data-id="${f.id}" aria-label="All fleet controls">⋯</button><button class="fh-cine" data-act="cineOn" aria-label="Cinematic view">🎥</button><button data-act="followStop" aria-label="Stop following">✕</button></div><div class="fh-bar"><i></i></div>`;
+    <button data-act="fBoost" data-id="${f.id}" aria-label="Afterburners" ${b && !f.assault && S.shards >= fbCost(f) ? "" : "disabled"}>⚡</button>${canRecall ? `<button data-act="${f.phase === "gather" ? "recallG" : "recallF"}" data-id="${f.id}" aria-label="Recall">↩</button>` : ""}${f.n && sumShips(f.n) && !f.assault ? `<button data-act="fFormNext" data-id="${f.id}" aria-label="Formation: ${FORMS[fformOf(f)].n}. Tap to change" title="${FORMS[fformOf(f)].n} formation">${FORMS[fformOf(f)].ic}</button>` : ""}<button data-act="fctl" data-id="${f.id}" aria-label="All fleet controls">⋯</button><button class="fh-cine" data-act="cineOn" aria-label="Cinematic view">🎥</button><button data-act="followStop" aria-label="Stop following">✕</button></div><div class="fh-bar"><i></i></div>`;
 }
 /* the follow bar for a fleet that isn't yours: whose it is, what it's doing, when it arrives, film it or stop following */
 function otherHud(force) {
@@ -11839,11 +11840,12 @@ G.hudT = performance.now(); for (const ev of ["pointerdown", "pointermove", "whe
 // v138: the Advisor's bubble steps up above the base view's Quests tile instead of overlapping it (their heights differ by screen)
 setInterval(() => { const c = $("#coach"), d = $(".dirmini"); if (!c) return; c.style.bottom = ""; if (!d || !d.offsetParent) return; const cb = c.getBoundingClientRect(), db = d.getBoundingClientRect(), ov = cb.bottom - db.top + 8;
   if (ov > 0 && cb.right > db.left && cb.left < db.right) c.style.bottom = `calc(env(safe-area-inset-bottom,0px) + ${Math.round(196 + ov)}px)`; }, 500);
-setInterval(() => { const a = $("#app"); if (!a) return; const idle = view === "galaxy" && !sheet && !battle && !tourT && performance.now() - G.hudT > 15000; /* v292: never during the tour */ G.hudIdle = idle; a.classList.toggle("hudidle", idle); }, 1000); // v109: the map HUD fades after 15 s idle
+setInterval(() => { const a = $("#app"); if (!a) return; const idle = view === "galaxy" && !sheet && !battle && !tourT && !GD.el && !(tutOn() && (TUT[S.tut.i] || {}).fly) && performance.now() - G.hudT > 15000; /* v292: never during the tour; v318: nor while the guide points at something, or during the Academy's fleet steps */ G.hudIdle = idle; a.classList.toggle("hudidle", idle); }, 1000); // v109: the map HUD fades after 15 s idle
 /* fleet control, opened by tapping one of your fleets on the map: where it is going, a speed boost, recall, its battle
    manoeuvre, and a follow camera */
 const ROUTE_N = { atk: "Attack", back: "Returning home", gather: "Gathering / exploring", joint: "Joint strike / stationing", spy: "Espionage" };
 const boostCost = f => { const b = fleetBounds(f); return b ? Math.max(1, Math.ceil((b[1] - now()) / 600000)) : 0; };
+const fbCost = f => tutAt("rush") ? 0 : boostCost(f); // v318: the Academy pays for your first afterburner burn
 function shFctl() {
   const f = S.fleets.find(x => x.id === sheet.id); if (!f) return `<div class="hd"><div><h2>Fleet</h2><p class="note">This fleet has landed.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
   const T = now(), tg = fleetTarget(f), b = fleetBounds(f), rk = routeKind(f), rc = ROUTE_CSS[rk], end = b ? b[1] : T, home = fleetHome(f);
@@ -13230,7 +13232,7 @@ function mGame() {
       ${mrow("This device", IOS ? "iPhone / iPad" : ANDROID ? "Android" : "Computer")}${mrow("Installed", STANDALONE ? "Yes, full screen" : "Running in the browser")}</div>
     <div class="mcard"><h3>${MI.grid.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Game</h3>${mrow("Galaxy", G.mode === "online" ? "Live" : G.mode === "offline" ? "Solo" : G.mode === "full" ? "Full" : G.mode === "readonly" ? "Watching" : "…")}<p>${net} Other people join when the owner shares this page with them as Editors.</p><div class="mrow"><span>Game version</span><b>v${GAME_V}</b></div>${G.me ? `<div class="mrow"><span>Account ID</span><b style="font-size:11px;word-break:break-all;text-align:right">${esc(G.me)}</b></div><button class="mbtn" data-act="copyId">Copy account ID</button>` : ""}</div>
     <div class="mcard"><h3>${MI.orbit.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Play on Android</h3><p>Open this page in Chrome on your phone, tap the ⋮ menu, then Add to Home screen. It opens like an app, and production keeps running while you're away.</p></div>
-    <div class="mcard"><h3>${MI.user.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Briefing</h3><p>Hear Admiral Kaskov's opening briefing again.</p><button class="mbtn" data-act="replayIntro">Replay briefing</button></div>
+    <div class="mcard"><h3>${MI.user.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Briefing</h3><p>Relive the ambush on the way in and hear Admiral Kaskov's opening briefing again.</p><button class="mbtn" data-act="replayIntro">Replay briefing</button></div>
     <div class="mcard"><h3>${MI.rank.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Records</h3>${mrow("Battles won", S.wins)}${mrow("Won against commanders", S.pvpWins)}${mrow("Planets occupied", S.captures)}${mrow("Ships recovered by repair docks", fmt((S.stats || {}).repaired || 0))}${mrow("Strongest Hive garrison", S.maxWin ? "Lv." + S.maxWin : "–")}</div>
     ${restartBtn()}`;
 }
@@ -13598,7 +13600,7 @@ function say(lines) {
   $("#advt").textContent = advLines[0];
   startAnim();
 }
-function advNext() { advLines.shift(); if (advLines.length) $("#advt").textContent = advLines[0]; else { advLines = null; $("#adv").remove(); } }
+function advNext() { advLines.shift(); if (advLines.length) $("#advt").textContent = advLines[0]; else { advLines = null; $("#adv").remove(); const th = G.advThen; G.advThen = null; if (th) th(); } } // v318: G.advThen runs once the last line is read (the opening battle)
 function flushSay() { if (S.say.length && !battle && !(sheet && sheet.type === "faction")) { const l = S.say.splice(0); dirty(); say(l); } }
 
 /* ---------- Flight Academy: the beginner tutorial ----------
@@ -13622,6 +13624,21 @@ const tutUnit = (k, n) => () => { const need = reqStep(SH[k].req); if (need) ret
     : !canPayRes(SH[k].c || {}) ? [["#hud", `Not enough resources for a ${SH[k].n} yet. Your mines keep working: come back in a few minutes`]]
     : [[`.sheet [data-act="make"][data-k="${k}"]`, `Set ${n}, then tap Build`], [`article.bn[data-kind="s"][data-k="${k}"]`, `Choose ${SH[k].n}`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")]; };
 const tutStrike = (what) => () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : [['.sheet [data-act="launch"]', what], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
+/* v318: the fleet you sent at the Hive, still flying out. The tap, rush and film steps need it in the air: if it has landed, send another */
+const tutFleet = () => S.fleets.find(f => f.pid && f.phase === "out" && !f.assault && f.mission !== "spy");
+const tutSend = () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : tutWaitShips() || [['.sheet [data-act="launch"]', "Send your fighters"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
+const tutAt = id => tutOn() && (TUT[S.tut.i] || {}).id === id;
+/* a ring on the fleet itself: the 3D map has no button to point at, so a marker sits where the fleet is on screen (taps pass through it) */
+function tutFleetMark(id) {
+  let m = $("#tutfm"); const o = G3 && view === "galaxy" && G3.fleets.get(id), v = o && o.pt ? new TH.Vector3(o.pt.x, o.pt.y, o.pt.z).project(G3.camera) : null;
+  if (!v || v.z >= 1 || Math.abs(v.x) > .92 || Math.abs(v.y) > .85) { if (m) m.remove(); return null; }
+  const r = G3.renderer.domElement.getBoundingClientRect(); if (!m) { m = document.createElement("div"); m.id = "tutfm"; document.body.appendChild(m); }
+  m.style.left = r.left + (v.x * .5 + .5) * r.width - 22 + "px"; m.style.top = r.top + (-v.y * .5 + .5) * r.height - 22 + "px"; return m;
+}
+/* null once you're following the fleet; until then: send one, open the map, tap it */
+const tutFlyPath = () => { const f = tutFleet(); if (!f) return tutSend(); if (G3 && view === "galaxy" && G3.cam.followFleet === f.id) return null;
+  if (view !== "galaxy") return [DOCKT("galaxy", "Open the Galaxy map to find your fleet")];
+  return [tutFleetMark(f.id) ? ["#tutfm", "Tap your fleet to follow it"] : null, [`.fchip[data-id="${f.id}"]`, "Tap your fleet to follow it"], SHOWME].filter(Boolean); };
 const mapPath = (final, pick) => () => [['.sheet [data-act="launch"]', "Send your fleet"], [final, "Choose this one"], pick ? [pick, "Pick a target"] : null, SHOWME].filter(Boolean);
 const TUT = [
   { lv: 1, t: "Choose your commander name", say: "First things first, Commander: what should the galaxy call you? Every commander sees this name. Type it and tap Save.", ok: s => !!s.tutNm, open: () => ACT.profile({ u: G.me }), path: () => [['.sheet [data-act="nameSave"]', "Type your name, then tap Save"], ['.sheet #cnin', "Type your commander name"], SHOWME], rw: { m: 200, c: 100 } }, /* v296 */
@@ -13638,7 +13655,13 @@ const TUT = [
   { lv: 3, t: "Research Combustion Drive", say: "Combustion Drive powers your first warships. Once it is done, the Shipyard can build Light Fighters.", ok: s => s.r.drive >= 1, go: { v: "lab" }, rcat: "Drive", path: rPath("drive", "Drive"), rw: { m: 3500, c: 1200, g: 300 } },
   { lv: 3, t: "Build 3 Light Fighters", say: "Light Fighters are cheap and fast: perfect for your first raids. Queue three of them. Academy crews build them in a minute each.", ok: () => own("fighter") >= 3, fast: "fighter", go: { v: "build", s: "ships" }, /* v190: academy fighters take a minute each (they took ~10, a half-hour wait mid-tutorial) */
     path: () => S.sq.some(q => q.k === "fighter") ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish them instantly"], ['.qrow [data-act="boost"]', "Tap to use a Boost: 5 minutes faster"], [".qrow .t", "Fighters in production. They join your fleet as they finish"], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard to watch them"], DOCKT("build", "Tap Build")] : [['.sheet [data-act="make"][data-k="fighter"]', "Set 3, then tap Build"], ['article.bn[data-kind="s"][data-k="fighter"]', "Choose Light Fighter"], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")], rw: { m: 800, c: 400, shards: 2 } },
-  { lv: 3, t: "Defeat a Hive garrison", say: "The amber worlds belong to the Hive. I've marked a weak one near us: send the fighters.", ok: s => s.wins >= 1, hive: 1, path: () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : [['.sheet [data-act="launch"]', "Send your fighters"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME], /* v235: the hive world's card opens first; the guide used to say "close this" there, and closing it looped back */ rw: { m: 1200, c: 700, g: 300, shards: 3 } },
+  /* v318: launch, then follow the fleet on the map, rush it and film it while it flies, then the win */
+  { lv: 3, t: "Attack a Hive garrison", say: "The amber worlds belong to the Hive. I've marked a weak one near us: send the fighters.", ok: s => s.wins >= 1 || !!tutFleet(), hive: 1, path: tutSend, rw: { m: 600, c: 300, shards: 1 } },
+  { lv: 3, id: "tap", t: "Tap your fleet on the map", say: "Our fighters are under way. Find them on the Galaxy map and tap them: the camera follows your fleet and its control bar opens.", ok: s => !!s.tutTap, fly: 1, fm: 1, path: () => tutFlyPath() || [SHOWME], rw: { m: 400, c: 300, g: 100 } },
+  { lv: 3, id: "rush", t: "Rush the attack", say: "Every minute in transit is a minute the Hive digs in. Tap ⚡ to light the afterburners: the rest of the trip is 50% faster. This first burn is on the Academy.", ok: s => !!s.tutRush, fly: 1, fm: 1,
+    path: () => tutFlyPath() || [['#fleethud [data-act="fBoost"]:not([disabled])', "Tap ⚡ to light the afterburners"], ['#fleethud [data-act="fctl"]', "Open the fleet controls to speed it up"], ['.sheet [data-act="fBoostItem"], .sheet [data-act="hurry"]', "Speed up your fleet"]], rw: { m: 500, c: 400, g: 200, shards: 1 } },
+  { lv: 3, id: "cine", t: "Watch it in cinematic view", say: "Now sit back, Commander. Tap 🎥 and the camera rides in with your fighters, right into the fight.", ok: s => !!s.tutCine, fly: 1, fm: 1, path: () => tutFlyPath() || [['#fleethud .fh-cine', "Tap 🎥 to watch in cinematic view"]], rw: { m: 500, c: 400, g: 200 } },
+  { lv: 3, t: "Defeat a Hive garrison", say: "Our fighters are closing on the garrison. Win the fight and the report lands in Mail. If they lost, send them again.", ok: s => s.wins >= 1, hive: 1, path: () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : [['.sheet [data-act="launch"]', "Send your fighters"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME], /* v235: the hive world's card opens first; the guide used to say "close this" there, and closing it looped back */ rw: { m: 1200, c: 700, g: 300, shards: 3 } },
   { lv: 3, t: "Gather from a resource field", say: "Resource fields pay out to whoever holds them. Fields already held by a rival must be fought for, so pick a free one.", ok: s => (s.stats || {}).gathers >= 1 || s.fleets.some(f => f.nid), find: "m", path: () => tutWaitShips() || mapPath('.sheet [data-act="gather"], .sheet [data-act="launch"]', '.sheet [data-act="node"]')(), rw: { m: 1000, c: 600, g: 300 } },
   { lv: 3, t: "Explore a pyramid space station", say: "Derelict pyramid stations drift all over the map. Low-level vaults are unguarded: free shards and relics.", ok: s => (s.stats || {}).pyramids >= 1 || s.fleets.some(f => f.yid), find: "y", path: () => tutWaitShips() || mapPath('.sheet [data-act="pyrGo"]', '.sheet [data-act="pyramid"]')(), rw: { m: 800, c: 800, g: 400, shards: 1 } },
   { lv: 4, t: "Read your reports in Mail", say: "Every battle, espionage report and message lands in Mail. Replays show you exactly why you won or lost.", ok: s => !!s.tutMail, go: { v: "mail" }, path: () => [DOCKT("mail", "Open Mail")], rw: { m: 500, c: 500, g: 500 } },
@@ -13677,7 +13700,7 @@ const SHIP_PATH = [["fighter", 5, "Light Fighters are the backbone of every earl
   ["destroyer", 1, "Destroyers are escort killers, best against Dreadnoughts and Laser Turrets. Bring one when the enemy fields Dreadnoughts."],
   ["bomber", 1, "Bombers crack defenses: best against turrets. Send them at fortified worlds once Plasma Technology is ready."],
   ["dreadnought", 1, "The Reaper is the king of the fleet, a towering flagship that hunts capital ships: best against Battleships, Bombers and Destroyers. The top of the fleet path."]];
-const TUT_BASICS = 14; // (v296: 12 + the two naming steps) // the Academy runs alone through its basics (first buildings, research, fighters, the first Hive win), then the Advisor hops
+const TUT_BASICS = 18; // (v296: 12 + the two naming steps; v318: + launch, tap, rush and film) // the Academy runs alone through its basics (first buildings, research, fighters, the first Hive win), then the Advisor hops
 const RCAT_OF = k => (RCAT.find(([, ks]) => ks.includes(k)) || ["Basic"])[0];
 function reqStep(req, depth) { // the first requirement on the road to req that can be worked on right now
   for (const [k, l] of missing(req)) { const D = B[k] || R[k]; if (!D) continue; const inner = (depth || 0) < 6 && reqStep(D.req, (depth || 0) + 1); if (inner) return inner; return { k, l, n: D.n, cur: lvlOf(k), r: !B[k] }; }
@@ -13715,7 +13738,9 @@ function fleetPathCard() {
   if (st.open) { if (sheet) closeSheet(); if (view !== "base") { view = "base"; render(); } st.open(); } // v296: steps that open a card (your profile, the homeworld's name)
   else if (st.go) { if (sheet) closeSheet(); ACT.nav(st.go); if (st.rcat) { sub.rcat = st.rcat; render(); } }
   else if (st.find) { if (st.pirLvl) G.pirLvl = st.pirLvl; ACT.find({ r: st.find }); }
-  else if (st.hive) { const h = homePlanet(), T = now(), hq = h ? pos(h, T) : { x: 0, y: 0 };
+  else if (st.fly && tutFleet()) { const f = tutFleet(); if (sheet) closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } // v318: fly the camera over to the fleet; tapping it is your job
+    let n = 0; const go = () => { const o = G3 && G3.fleets.get(f.id); if (!o || !o.pt) { if (n++ < 30) setTimeout(go, 100); return; } const c = G3.cam; c.follow = null; c.followFleet = null; c.vel = null; c.goal = { tx: o.pt.x, ty: o.pt.y, tz: o.pt.z, dist: 60 }; }; go(); }
+  else if (st.hive || st.fly) { const h = homePlanet(), T = now(), hq = h ? pos(h, T) : { x: 0, y: 0 };
     const p = G.list.filter(p => pStatus(p, T) === "hive").map(p => { const q = pos(p, T); return [p, (q.x - hq.x) ** 2 + (q.y - hq.y) ** 2 + p.lvl * p.lvl * 900, p.lvl]; }).sort((a, b) => a[2] - b[2] || a[1] - b[1])[0]; /* v235: the lowest-level Hive world first, then the nearest */
     if (sheet) closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } if (p) ACT.planet({ id: p[0].id }); }
   tutSpot(st.spot);
@@ -13728,13 +13753,15 @@ const guideNow = () => { GD.t = 0; try { coachRender(); } catch (e) {} };
 document.addEventListener("click", () => setTimeout(guideNow, 0), true);
 function guideVisible(el) {
   const r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2 || getComputedStyle(el).visibility === "hidden") return 0;
+  if (el.id === "tutfm") return 1; // v318: the marker on a fleet in the 3D map lets taps through, so nothing is ever "on top" of it
   if (r.bottom < 0 || r.top > innerHeight) return 2; // off-screen in a list: scroll to it
   const top = document.elementFromPoint(clamp(r.left + r.width / 2, 0, innerWidth - 1), clamp(r.top + r.height / 2, 0, innerHeight - 1));
   if (!top) return 0; if (top === el || el.contains(top)) return 1; if (top.closest("#coach")) return 3; // 3: under the Academy panel
   const cy = r.top + r.height / 2; if (top.closest("#dock") || cy > innerHeight - 160 || cy < 130) return 2; return 0; // tucked under the dock or top bar: scroll it into view
 }
 function guidePick() {
-  const st = !G.cubeDemo && !(G3 && (G3.cam.siege || G3.cam.cine)) && G.ready && !battle && !advLines && !$("#adv") && !$("#authw") && !(sheet && sheet.type === "faction") && !tutSnoozed() && !(S.pathSnz > now()) ? (m => m === "tut" ? TUT[S.tut.i] : m === "ship" ? shipStep() : null)(advPick()) : null; if (!st) return null;
+  const st = !G.cubeDemo && !(G3 && (G3.cam.siege || G3.cam.cine)) && G.ready && !battle && !advLines && !$("#adv") && !$("#authw") && !(sheet && sheet.type === "faction") && !tutSnoozed() && !(S.pathSnz > now()) ? (m => m === "tut" ? TUT[S.tut.i] : m === "ship" ? shipStep() : null)(advPick()) : null;
+  if (!(st && st.fm && !st.ok(S))) { const m = $("#tutfm"); if (m) m.remove(); } if (!st) return null;
   const path = st.ok(S) ? [['#coach [data-act="tutClaim"], #coach [data-act="shipClaim"], #coach .cpill', "Collect your reward"]] : st.path ? st.path() : [SHOWME];
   for (const [sel, label, when] of path) { if (when && !when()) continue; for (const el of document.querySelectorAll(sel)) { if (el.classList.contains("on") || (el.disabled && /^(boost|finish)$/.test(el.dataset.act || ""))) continue; /* a tab already open, or a speed-up you can't use */ const v = guideVisible(el); if (v) return el.disabled && /^(up|research|make|cup|csb)$/.test(el.dataset.act || "") ? { el, label: $(".sheet .dres .no") ? "Not enough resources yet. Your mines keep working: check back in a few minutes" : "Check the requirements below first", v } : el.disabled && /^(raid|launch|pyrGo|gather)$/.test(el.dataset.act || "") && /en route|on its way/i.test(el.textContent) ? { el, label: "Your fleet is on its way there. Wait for the report", v } : { el, label, v }; } } /* v235: never say "Tap" on a greyed-out button */
   const cx = sheet && document.querySelector('.sheet [data-act="close"]'); if (cx && guideVisible(cx)) return { el: cx, label: "Close this to continue", v: 1 }; // something is in the way: close it first
@@ -13787,6 +13814,7 @@ function coachRender(force) {
   if (!S.tutAstro) { S.tutAstro = 1; if (S.tut.i >= TUT_V1 && (S.r.astro || 0) >= 2) S.tut.i = TUT.length; else if (S.tut.i >= TUT_V1) S.tut.open = 1; dirty(); } /* v200: finished commanders without Astrophysics Lv.2 get the new steps */
   if (!S.tutFlag) { S.tutFlag = 1; if (S.tut.i >= TUT_V2) { if (fsBuilt() && (S.b.flagDock || 0) >= 1) S.tut.i = TUT.length; else S.tut.open = 1; } dirty(); } /* v299: finished commanders get the Dock and flagship steps */
   if (!S.tutSC) { S.tutSC = 1; const i = S.tut.i; if (i >= TUT_V2 && i <= TUT_V2 + 3) { const vet = myPlanets().length >= 2 || (S.captures || 0) >= 1; S.tut.i = vet ? (fsBuilt() && (S.b.flagDock || 0) >= 1 ? TUT.length : TUT_V2 + 6) : TUT_V2; if (S.tut.i < TUT.length) S.tut.open = 1; } dirty(); } /* v301: six scouting and colony steps after Astrophysics; commanders who already hold a colony skip them */
+  if (!S.tutFx) { S.tutFx = 1; if (S.tut.i > 13) S.tut.i = Math.min(TUT.length, S.tut.i + 4); dirty(); } /* v318: four fleet steps before the first Hive win; anyone past it keeps their place */
   if (view === "mail" && !S.tutMail) { S.tutMail = 1; dirty(); }
   if (S.tut.snz && S.tut.snz <= now()) { S.tut.snz = 0; S.tut.open = 1; dirty(); force = true; } /* v191: back after a 5-minute break, opened up */
   let w = $("#coach"); const mode = !battle && G.ready && !G.cubeDemo && !tutSnoozed() && !(S.pathSnz > now()) ? advPick() : null; /* v194: not over a demo battle; v210: the Advisor hops between the Academy or quest path and the fleet path */
@@ -15480,7 +15508,7 @@ const ACT = {
     const op = n.kind === "empty", ships = takeShips(pick); if (!Object.keys(ships).length || (!op && n.res !== "s" && cargoOf(ships) <= 0)) return toast(op ? "Pick the ships that will hold the outpost." : "Pick ships with cargo space. Small Cargos carry the most.", "warn");
     const f = sendFleet(n, ships, "gather", { nid: n.id }); if (!f) return; closeSheet(); toast(`${op ? "Outpost fleet" : "Gathering fleet"} launched. Arrives in ${ftime(f.tt)}, burned ${fmt(f.fuel)} gas.`);
   }),
-  fleetFocus: d => { if (G3) { closeSheet(); if (G3.cam.followMv) followMvEnd(G3, 1); G3.cam.follow = null; G3.cam.vel = null; G3.cam.followFleet = d.id; G3.cam.goal = { dist: Math.min(G3.cam.dist, 40) }; fleetHud(true); } else { const f = S.fleets.find(x => x.id === d.id), tg = f && fleetTarget(f); if (tg) { const q = pos(tg, now()); camTo(q.x, q.y); } } },
+  fleetFocus: d => { if (G3) { closeSheet(); if (G3.cam.followMv) followMvEnd(G3, 1); G3.cam.follow = null; G3.cam.vel = null; G3.cam.followFleet = d.id; G3.cam.goal = { dist: Math.min(G3.cam.dist, 40) }; if (!S.tutTap && S.fleets.some(f => f.id === d.id)) { S.tutTap = 1; dirty(); } fleetHud(true); } else { const f = S.fleets.find(x => x.id === d.id), tg = f && fleetTarget(f); if (tg) { const q = pos(tg, now()); camTo(q.x, q.y); } } },
   renameStart: () => { menu.rename = true; renderMenu(); const i = $("#mrename"); if (i) { i.focus(); i.select(); } },
   renameCancel: () => { menu.rename = false; renderMenu(); },
   renameSave: () => {
@@ -15626,8 +15654,8 @@ const ACT = {
   cineMode: d => { if (G3 && G3.cam.cine) { G3.cam.cine.m = d.m; const sg = G3.cam.siege; /* v130: on the siege film the angle buttons set your view on top of the director's shots */
     if (sg) { const P = { chase: [0, 0, 1], side: [Math.PI / 2, 0, 1], front: [Math.PI, 0, 1], top: [0, -1.1, 1.2], orbit: [sg.oth, sg.oph, sg.ok] }[d.m]; if (P) [sg.oth, sg.oph, sg.ok] = P; sg.spin = d.m === "orbit"; }
     cineBar(); } },
-  fBoost: d => act(() => { const f = S.fleets.find(x => x.id === d.id); if (!f || f.assault) return; const c = boostCost(f); if (S.shards < c) return toast(`Afterburners need ◆${c}.`, "warn"); if (fleetSpeedUp(f)) { S.shards -= c; toast(`Afterburners lit: the rest of the trip is 50% faster.`, "win"); } }),
-  fBoostItem: d => act(() => { const f = S.fleets.find(x => x.id === d.id); if (!f || f.assault || !(S.boosts > 0)) return; if (fleetSpeedUp(f, 5 * 60000)) { S.boosts--; spdAdd(300000); toast("Boost used: 5 minutes cut."); } }),
+  fBoost: d => act(() => { const f = S.fleets.find(x => x.id === d.id); if (!f || f.assault) return; const c = fbCost(f); if (S.shards < c) return toast(`Afterburners need ◆${c}.`, "warn"); if (fleetSpeedUp(f)) { S.shards -= c; S.tutRush = 1; toast(`Afterburners lit: the rest of the trip is 50% faster.${c ? "" : " This one is on the Academy."}`, "win"); } }),
+  fBoostItem: d => act(() => { const f = S.fleets.find(x => x.id === d.id); if (!f || f.assault || !(S.boosts > 0)) return; if (fleetSpeedUp(f, 5 * 60000)) { S.boosts--; S.tutRush = 1; spdAdd(300000); toast("Boost used: 5 minutes cut."); } }),
   recallG: d => act(() => { // stop gathering early: fly home with what is loaded so far
     const f = S.fleets.find(x => x.id === d.id); if (!f || f.phase !== "gather") return; const T = now(), h = f.haul || { res: "m", amt: 0 }, fr = clamp((T - f.arrive) / Math.max(1, f.gend - f.arrive), 0, 1);
     occClear(f.nid, f.id); f.phase = "back"; f.back = T + (f.tt || 60000); const got = Math.floor(h.amt * fr); setHaulLoot(f, h.res, got); f.gend = T; toast(`Gatherers recalled with ${fmt(got)} ${RES_N[h.res].toLowerCase()}.`); }),
@@ -15642,7 +15670,7 @@ const ACT = {
     S.shards -= c; const cut = b[1] - T;
     if (f.phase === "out") { f.arrive = T; } else if (f.phase === "gather") { f.gend = T; } else if (f.phase === "back") { f.back = T; }
     if (f.phase === "out" && cut > 0) f.out = Math.min(f.out, T - 1);
-    toast(`Fleet hurried for ◆${c}.`, "win"); advance(now());
+    S.tutRush = 1; toast(`Fleet hurried for ◆${c}.`, "win"); advance(now());
   }),
   freeAll: () => act(() => { const T = now(), js = freeJobs(); for (const [k, p] of js) { if (k === "b") S.bq.e = T; else if (k === "r") S.rq.e = T; else p.cq.e = T; }
     if (js.length) { advance(now()); toast(`Finished ${js.length} job${js.length > 1 ? "s" : ""} free.`, "win"); } }),
@@ -16300,7 +16328,7 @@ const ACT = {
     const lp = G.mode === "offline" ? { "home-local": S.lp["home-local"] } : {}, hn = S.homeName;
     store.shrinkOk = true; S = newState(); FOG = null; S.lp = lp; S.homeName = hn; S.savedAt = now(); closeSheet(); closeMenu(); view = "base"; rebuild(); dirty(); flush(); render(); intro();
   },
-  replayIntro: () => { closeSheet(); say(INTRO); },
+  replayIntro: () => { closeSheet(); closeMenu(); introPlay(); },
   advNext: () => advNext()
 };
 /* drag a sheet by its handle or header: down to dismiss, up to expand */
@@ -16356,8 +16384,22 @@ document.addEventListener("input", e => {
 const INTRO = ["Commander. We made it, barely. The convoy is gone, and this world is all we have left.",
   "Every planet here orbits the Void, a black hole at the heart of the galaxy. The Hive holds most of them.",
   "We're not alone either. Other commanders orbit the Void, and any colony can change hands.",
-  "Start with the Metal Extractor. I'll post directives on the Base tab. Complete them and Fleet Command will send supplies."];
-function intro() { if (!S.intro) { S.intro = true; dirty(); say(INTRO); } }
+  "Now we rebuild. I'll post directives on the Base tab. Complete them and Fleet Command will send supplies."];
+/* v318 the opening battle: a new commander's convoy is ambushed by a Hive swarm on the way in, survives it with heavy losses and sets down
+   on the homeworld. Built from a fixed seed on each device and kept in memory, never in the save; Menu › Briefing plays it again */
+const INTRO_PRE = ["Commander, on your feet! A Hive swarm just dropped out of the dark, right across the convoy's course.",
+  "They don't take prisoners and they don't bargain. Every gun we have: weapons free!"];
+const INTRO_POST = ["The swarm is broken. We held, Commander.", "It cost us dearly, and our reactors were nearly dry. We set down on the nearest world we could reach."];
+const INTRO_ID = "intro-ambush";
+function introBattle() {
+  if (G.introRep) return G.introRep;
+  const ours = { fighter: 80, heavyFighter: 30, corvette: 14, battleship: 4, hauler: 18, ark: 4 }, hive = colonyForce(9); for (const k in ours) if (!SH[k]) delete ours[k]; for (const k in hive) hive[k] *= 2;
+  let res = null, tech = 2; for (let i = 0; i < 16; i++) { res = simulate(stacksOf(hive, { hive: 9 }, null), stacksOf(ours, { weapons: tech, shields: tech, armor: tech }, G.me), { seed: 4100 + i }); if (res.winner === "d") break; if (i % 4 === 3) tech++; } // we always come through it
+  return (G.introRep = Object.assign(mkRep({ at: now(), kind: "raid", title: "Ambush on the way in", aName: "Hive Swarm", dName: "Our convoy", lvl: 9, ptype: "terran", fortL: 0, alien: true,
+    start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) }), { id: INTRO_ID, recDone: 1 }));
+}
+function introPlay() { G.advThen = () => { try { S.say.push(...INTRO_POST, ...INTRO); dirty(); playBattle(introBattle()); } catch (e) { S.say.length = 0; say(INTRO); } }; say(INTRO_PRE); }
+function intro() { if (!S.intro) { S.intro = true; dirty(); if (score() > 200) say(INTRO); else introPlay(); } } // veterans just get the briefing
 window.udfBeforeSignOut = async () => { try { if (S) { dirty(); await flush(); } } catch (e) {} }; // v200: the last moves reach your account before you sign out
 function start(data) {
   let fresh = false; try { fresh = localStorage.getItem("voidFresh") === "1"; if (fresh) { localStorage.removeItem("voidFresh"); const old = localStorage.getItem(KEY); if (old) localStorage.setItem(KEY + ".backup", old); } } catch (e) {}
