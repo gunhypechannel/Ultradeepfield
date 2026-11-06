@@ -3067,7 +3067,7 @@ function colonyForce(lvl, raid) {
 /* defenders of a planet as stacks, plus the fortress level that fights */
 /* v235 training fight: on the Academy step "Defeat a Hive garrison", until the player's first win, Hive worlds field a third of their
    garrison, so a new player's three Light Fighters always win their first battle (they used to lose to the Lv.2 world the guide picked) */
-const trainingHive = () => !!(S && S.tut && TUT[S.tut.i] && TUT[S.tut.i].hive && !(S.wins >= 1));
+const trainingHive = () => !!(S && S.tut && TUT[S.tut.i] && (TUT[S.tut.i].hive || TUT[S.tut.i].fly) && !(S.wins >= 1)); // v319: also while the fighters are followed, rushed and filmed (they met a full garrison then, and could draw)
 const trainForce = n => { const o = {}; let any = 0; for (const k in n) { const v = Math.floor(n[k] * .34); if (v > 0) { o[k] = v; any = 1; } } if (!any) { const k = Object.keys(n)[0]; if (k) o[k] = 1; } return o; };
 function defenders(p) {
   const st = pStatus(p);
@@ -3790,7 +3790,7 @@ function raidHits() {
   const lvl = S.raid.lvl, at = S.raid.at; S.raid = null;
   const home = {}; for (const k in S.ships) if (S.ships[k]) home[k] = S.ships[k]; for (const k in S.def) if (S.def[k]) home[k] = S.def[k];
   if (S.b.fortress) home.fortress = 1;
-  const raiders = colonyForce(lvl, true); for (const k in raiders) raiders[k] = Math.max(1, Math.round(raiders[k] * .6)); // Hive raids 40% lighter
+  const aca = tutOn(), raiders = colonyForce(lvl, true); for (const k in raiders) raiders[k] = Math.max(1, Math.round(raiders[k] * (aca ? .35 : .6))); // Hive raids 40% lighter, and lighter still while the Academy is teaching you
   const hp = homePlanet(), res = simulate(stacksOf(intercept(raiders, { hive: lvl }, S.homeName, at, homePlanet()), { hive: lvl }, null), stacksOf(home, techOf(null), G.me, S.b.fortress).concat(hp ? guardStacks(hp) : []));
   const mineLeft = hp && hp.ag ? (res.dByOwn[G.me] || {}) : res.dLeft; // allied guards stationed on the homeworld fight the raid too
   const rep = mkRep({ at, kind: "raid", title: `Hive raid on ${S.homeName} (Lv.${lvl})`, aName: "Hive Raiders", dName: S.homeName, lvl, ptype: hp ? hp.type : "terran", fortL: S.b.fortress, alien: true,
@@ -3803,8 +3803,8 @@ function raidHits() {
   if (rep.lossD.fortress) S.b.fortress = Math.max(0, S.b.fortress - 1);
   rep.rebuilt = rebuilt;
   if (res.winner === "a") {
-    for (const r of ["m", "c", "g"]) { const x = Math.floor(S.res[r] * .25); rep.loot[r] = -x; S.res[r] -= x; }
-    note("The raid broke through. The Hive took a quarter of our stockpile.", "loss");
+    for (const r of ["m", "c", "g"]) { const x = Math.floor(S.res[r] * (aca ? .1 : .25)); rep.loot[r] = -x; S.res[r] -= x; }
+    note(`The raid broke through. The Hive took a ${aca ? "tenth" : "quarter"} of our stockpile.${aca ? " Defenses and ships at home stop raids." : ""}`, "loss");
   } else {
     let salv = 0; for (const k in rep.lossA) salv += AL[k].val * rep.lossA[k] * .1;
     rep.loot = { m: Math.floor(salv * .6), c: Math.floor(salv * .4), g: 0 }; S.res.m += rep.loot.m; S.res.c += rep.loot.c; logReward("Hive raid salvage", rep.loot, { shards: res.winner === "d" ? 1 : 0, kind: "battle" });
@@ -4518,7 +4518,7 @@ function quest() {
 }
 function progress() {
   const q = quest();
-  if (q.ok(S) && S.qSeen !== S.quest) { S.qSeen = S.quest; note("Directive complete. Claim your reward on the Quests tab.", "warn"); }
+  if (q.ok(S) && S.qSeen !== S.quest && !(tutOn() && S.tut.i < TUT_BASICS)) { S.qSeen = S.quest; note("Directive complete. Claim your reward on the Quests tab.", "warn"); }
   if (S.chapter === 1 && S.wins >= 1) { S.chapter = 2; S.nextRaid = S.t + 10 * 60000;
     S.say.push("Clean work, Commander. That garrison won't trouble us for a while.", "But the Hive knows we're here now. Expect raids on our homeworld.", "Build defenses and keep some ships at home. Chapter 2: Hold the Line."); }
   if (S.chapter === 2 && S.maxWin >= 5) { S.chapter = 3; S.say.push("The worlds nearer the Void are richer, and the Hive guards them harder.", "Check the tech tree in Research. Heavier hulls need lasers, ion and hyperspace tech. Chapter 3: Into the Reach."); }
@@ -13489,29 +13489,49 @@ function flushSay() { if (S.say.length && !battle && !(sheet && sheet.type === "
 const DOCKT = (v, l) => v === "build" ? ['[data-act="qgo"][data-q="b"], #view [data-act="nav"][data-v="build"]', l] : [`#dock [data-act="nav"][data-v="${v}"]`, l]; // v123: Build lives in the top bar now
 const SHOWME = ['#coach [data-act="tutShow"], #coach [data-act="shipShow"], #coach .cpill', "Tap here and I'll take you there"];
 /* v235: which extractor to grow next: power first when the mines are starved, then whichever one we can pay for now */
-const growPick = () => { const r = rates(), up = k => canPayRes(cost(B[k], (S.b[k] || 0) + 1)); if (r.eff < .9) return "solar"; return ["metalMine", "crystalMine", "gasSynth", "solar", "metalStore", "crystalStore", "gasTank", "robotics", "shipyard", "lab"].find(k => up(k) && !missing(B[k].req).length) || (r.eff < 1 ? "solar" : "metalMine"); }; /* full silos: grow storage so the next level fits */
-const bPath = (k, cat) => () => S.bq && S.bq.k === k ? [[`[data-act="finish"][data-free="1"]`, "Tap Free to finish it instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed it up"], [".qrow .t", "Under construction. It finishes on its own"], ['[data-act="sub"][data-g="build"][data-v="bld"]', "Open Structures to watch it"], DOCKT("build", "Tap Build")]
-  : [[`.sheet [data-act="up"][data-k="${k}"]`, `Tap ${S.b[k] ? "Upgrade" : "Build"}`], [`article.bn[data-kind="b"][data-k="${k}"]`, `Choose ${B[k].n}`], [`[data-act="bcat"][data-v="${cat}"]`, `Open ${cat === "fac" ? "Facility" : "Resource"}`], ['[data-act="sub"][data-g="build"][data-v="bld"]', "Open Structures"], DOCKT("build", "Tap Build")];
-const rPath = (k, cat) => () => S.rq && S.rq.k === k ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish it instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed it up"], [".qrow .t", "Researching. It finishes on its own"], ['[data-act="sub"][data-g="build"][data-v="research"]', "Open Research to watch it"], ['.qc[data-act="qgo"][data-q="r"]', "Tap Lab"], DOCKT("build", "Tap Build")]
-  : [[`.sheet [data-act="research"][data-k="${k}"]`, "Tap Research"], [`article.bn[data-kind="r"][data-k="${k}"]`, `Choose ${R[k].n}`], ['.rhd [data-act="rcat"][data-v=""]', "Back to all research"], [`[data-act="rcat"][data-v="${cat}"]`, `Open ${cat === "Drive" ? "Engine" : cat} Research`], ['[data-act="sub"][data-g="build"][data-v="research"]', "Open Research"], ['.qc[data-act="qgo"][data-q="r"]', "Tap Lab"], DOCKT("build", "Tap Build")];
+const GROW_K = ["metalMine", "crystalMine", "gasSynth", "solar", "metalStore", "crystalStore", "gasTank", "robotics", "shipyard", "lab"];
+const growPick = () => { const r = rates(), up = k => canPayRes(cost(B[k], (S.b[k] || 0) + 1));
+  if (sheet && sheet.type === "detail" && sheet.kind === "b" && !sheet.pid && GROW_K.includes(sheet.k) && !missing(B[sheet.k].req).length && (sheet.k !== "solar" || r.eff < 1) && (c => { const cp = caps(); return ["m", "c", "g"].every(x => !(c[x] > cp[x])); })(cost(B[sheet.k], (S.b[sheet.k] || 0) + 1))) return sheet.k; /* v319: stick with the building you already have open (switching meant "Close this" first) */
+  if (r.eff < .9) return "solar"; return GROW_K.find(k => up(k) && !missing(B[k].req).length) || (r.eff < 1 ? "solar" : "metalMine"); }; /* full silos: grow storage so the next level fits */
+/* v319: a target that costs more than our silos hold can never be paid for: the guide sends you to the storage first (it used to say
+   "check back in a few minutes" forever; Impulse Drive Lv.3 needs 16,000 crystal and an unbuilt Crystal Vault holds 10,000) */
+const STORE_OF = { m: "metalStore", c: "crystalStore", g: "gasTank" };
+const capNeed = c => { const cp = caps(); return ["m", "c", "g"].filter(r => c[r] > cp[r]).map(r => STORE_OF[r])[0] || null; };
+/* and a long wait on one resource becomes something to do: grow the extractor that is short, if we can pay for it without spending
+   that same resource (a Colony Ship waited two days on gas with the Gas Synthesizer never upgraded) */
+const MINE_OF = { m: "metalMine", c: "crystalMine", g: "gasSynth" };
+const shortPath = c => { if (canPayRes(c)) return null; const r = rates(); let worst = null, wt = 0;
+  for (const x of ["m", "c", "g"]) { const need = (c[x] || 0) - S.res[x]; if (need > 0) { const t = need / Math.max(.01, r[x]); if (t > wt) { wt = t; worst = x; } } }
+  const mk = worst && wt > 20 && MINE_OF[worst], mc = mk && cost(B[mk], (S.b[mk] || 0) + 1);
+  if (!mk || bQd(mk) || !canPayRes(mc) || mc[worst] > 0 || capNeed(mc)) return null;
+  return bPath(mk, "res")().map(([s, l]) => [s, /^Choose /.test(l) ? `Choose ${B[mk].n}: more ${RES_N[worst].toLowerCase()} gets us there sooner` : l]); };
+const storeFirst = (c, name, k) => { const sk = capNeed(c); return sk && sk !== k ? bPath(sk, "res")().map(([s, l]) => [s, /^Choose /.test(l) ? `Choose ${B[sk].n}: it must hold more before ${name}` : l]) : null; };
+/* a level already waiting in the queue counts as on its way, so the guide never asks for a second upgrade */
+const bQd = k => !!S.bq && (S.bq.k === k || bqList().some(q => q.k === k)), rQd = k => !!S.rq && (S.rq.k === k || rqList().some(q => q.k === k));
+const bPath = (k, cat) => () => bQd(k) ? [[`[data-act="finish"][data-free="1"]`, "Tap Free to finish it instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed it up"], [".qrow .t", S.bq.k === k ? "Under construction. It finishes on its own" : "Queued. It starts when the current build finishes"], ['[data-act="sub"][data-g="build"][data-v="bld"]', "Open Structures to watch it"], DOCKT("build", "Tap Build")]
+  : storeFirst(cost(B[k], (S.b[k] || 0) + 1), B[k].n, k) || shortPath(cost(B[k], (S.b[k] || 0) + 1)) || [[`.sheet [data-act="up"][data-k="${k}"]`, `Tap ${S.b[k] ? "Upgrade" : "Build"}`], [`article.bn[data-kind="b"][data-k="${k}"]`, `Choose ${B[k].n}`], [`[data-act="bcat"][data-v="${cat}"]`, `Open ${cat === "fac" ? "Facility" : "Resource"}`], ['[data-act="sub"][data-g="build"][data-v="bld"]', "Open Structures"], DOCKT("build", "Tap Build")];
+const rPath = (k, cat) => () => rQd(k) ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish it instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed it up"], [".qrow .t", S.rq.k === k ? "Researching. It finishes on its own" : "Queued. It starts when the current research finishes"], ['[data-act="sub"][data-g="build"][data-v="research"]', "Open Research to watch it"], ['.qc[data-act="qgo"][data-q="r"]', "Tap Lab"], DOCKT("build", "Tap Build")]
+  : storeFirst(cost(R[k], (S.r[k] || 0) + 1), R[k].n) || shortPath(cost(R[k], (S.r[k] || 0) + 1)) || [[`.sheet [data-act="research"][data-k="${k}"]`, "Tap Research"], [`article.bn[data-kind="r"][data-k="${k}"]`, `Choose ${R[k].n}`], ['.rhd [data-act="rcat"][data-v=""]', "Back to all research"], [`[data-act="rcat"][data-v="${cat}"]`, `Open ${cat === "Drive" ? "Engine" : cat} Research`], ['[data-act="sub"][data-g="build"][data-v="research"]', "Open Research"], ['.qc[data-act="qgo"][data-q="r"]', "Tap Lab"], DOCKT("build", "Tap Build")];
 /* v235: a fleet step that needs ships while every ship is still out (the fighters flying home from the first fight) waits on the
    Fleets tab instead of sending you round in circles */
 const tutWaitShips = () => !Object.values(S.ships || {}).some(v => v > 0) && S.fleets.some(f => f.phase === "back" || f.phase === "out") ? [DOCKT("fleets", "Your fighters are flying home. They'll be ready in a moment")] : null;
 /* v301: build n of a ship, pointing at its first missing requirement until the Shipyard can make it */
 const tutUnit = (k, n) => () => { const need = reqStep(SH[k].req); if (need) return need.r ? rPath(need.k, RCAT_OF(need.k))() : bPath(need.k, B[need.k].cat === "fac" ? "fac" : "res")();
   return S.sq.some(q => q.k === k) ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish them instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed them up"], [".qrow .t", `${SH[k].n}s in production`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard to watch them"], DOCKT("build", "Tap Build")]
-    : !canPayRes(SH[k].c || {}) ? [["#hud", `Not enough resources for a ${SH[k].n} yet. Your mines keep working: come back in a few minutes`]]
-    : [[`.sheet [data-act="make"][data-k="${k}"]`, `Tap Build to make ${n}`], [`article.bn[data-kind="s"][data-k="${k}"]`, `Choose ${SH[k].n}`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")]; };
+    : !canPayRes(SH[k].c || {}) ? storeFirst(SH[k].c || {}, `a ${SH[k].n}`) || shortPath(SH[k].c || {}) || [["#hud", `Not enough resources for a ${SH[k].n} yet. Your mines keep working: come back in a few minutes`]]
+    : [[`.sheet [data-act="make"][data-k="${k}"]`, tutMake(k, n)], [`article.bn[data-kind="s"][data-k="${k}"]`, `Choose ${SH[k].n}`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")]; };
 const tutStrike = (what) => () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : [['.sheet [data-act="launch"]', what], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
 /* v318: the fleet you sent at the Hive, still flying out. The tap, rush and film steps need it in the air: if it has landed, send another */
 const tutFleet = () => S.fleets.find(f => f.pid && f.phase === "out" && !f.assault && f.mission !== "spy");
-const tutSend = () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : tutWaitShips() || [['.sheet [data-act="launch"]', "Send your fighters"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
+const tutSend = () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : tutWaitShips() || (!own("fighter") ? tutUnit("fighter", 3)() : null) /* v319: none left: build more first */ || [['.sheet [data-act="launch"]', "Send your fighters"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
 const tutAt = id => tutOn() && (TUT[S.tut.i] || {}).id === id;
 /* v319: how many of ship k the Academy step or fleet-path step still wants, so the Shipyard's amount starts there (it started at 1, and
    "Tap Build to make 3" was a stumbling block for young players) */
 const tutQty = k => { const st = tutOn() ? TUT[S.tut.i] : null, m = st && /^Build (\d+) /.exec(st.t), sp = shipStep();
   const want = m && (st.fast === k || st.t.includes(SH[k].n)) ? +m[1] : sp && sp.k === k ? sp.n : 0;
-  return Math.max(0, want - own(k) - S.sq.filter(q => q.k === k).reduce((a, q) => a + (q.left || 0), 0)); };
+  const left = Math.max(0, want - own(k) - S.sq.filter(q => q.k === k).reduce((a, q) => a + (q.left || 0), 0)), c = SH[k].c || {};
+  return left && Math.max(1, Math.min(left, ...["m", "c", "g"].filter(r => c[r]).map(r => Math.floor(S.res[r] / c[r])))); }; // no more than you can pay for now: a full amount you can't afford greyed the button out
+const tutMake = (k, n) => { const q = tutQty(k) || n; return q < n ? `Tap Build to make ${q} now (more as your mines refill)` : `Tap Build to make ${q}`; };
 /* a ring on the fleet itself: the 3D map has no button to point at, so a marker sits where the fleet is on screen (taps pass through it) */
 function tutFleetMark(id) {
   let m = $("#tutfm"); const o = G3 && view === "galaxy" && G3.fleets.get(id), v = o && o.pt ? new TH.Vector3(o.pt.x, o.pt.y, o.pt.z).project(G3.camera) : null;
@@ -13538,14 +13558,14 @@ const TUT = [
   { lv: 3, t: "Research Energy Technology", say: "Energy Technology is the root of the tech tree, and Combustion Drive needs it. Start it now.", ok: s => s.r.energyT >= 1, go: { v: "lab" }, rcat: "Basic", path: rPath("energyT", "Basic"), rw: { m: 2500, c: 1200, g: 700, shards: 1 } },
   { lv: 3, t: "Research Combustion Drive", say: "Combustion Drive powers your first warships. Once it is done, the Shipyard can build Light Fighters.", ok: s => s.r.drive >= 1, go: { v: "lab" }, rcat: "Drive", path: rPath("drive", "Drive"), rw: { m: 3500, c: 1200, g: 300 } },
   { lv: 3, t: "Build 3 Light Fighters", say: "Light Fighters are cheap and fast: perfect for your first raids. Queue three of them. Academy crews build them in a minute each.", ok: () => own("fighter") >= 3, fast: "fighter", go: { v: "build", s: "ships" }, /* v190: academy fighters take a minute each (they took ~10, a half-hour wait mid-tutorial) */
-    path: () => S.sq.some(q => q.k === "fighter") ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish them instantly"], ['.qrow [data-act="boost"]', "Tap to use a Boost: 5 minutes faster"], [".qrow .t", "Fighters in production. They join your fleet as they finish"], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard to watch them"], DOCKT("build", "Tap Build")] : [['.sheet [data-act="make"][data-k="fighter"]', "Tap Build to make 3"], ['article.bn[data-kind="s"][data-k="fighter"]', "Choose Light Fighter"], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")], rw: { m: 800, c: 400, shards: 2 } },
+    path: () => S.sq.some(q => q.k === "fighter") ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish them instantly"], ['.qrow [data-act="boost"]', "Tap to use a Boost: 5 minutes faster"], [".qrow .t", "Fighters in production. They join your fleet as they finish"], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard to watch them"], DOCKT("build", "Tap Build")] : [['.sheet [data-act="make"][data-k="fighter"]', tutMake("fighter", 3)], ['article.bn[data-kind="s"][data-k="fighter"]', "Choose Light Fighter"], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")], rw: { m: 800, c: 400, shards: 2 } },
   /* v318: launch, then follow the fleet on the map, rush it and film it while it flies, then the win */
   { lv: 3, t: "Attack a Hive garrison", say: "The amber worlds belong to the Hive. I've marked a weak one near us: send the fighters.", ok: s => s.wins >= 1 || !!tutFleet(), hive: 1, path: tutSend, rw: { m: 600, c: 300, shards: 1 } },
   { lv: 3, id: "tap", t: "Tap your fleet on the map", say: "Our fighters are under way. Find them on the Galaxy map and tap them: the camera follows your fleet and its control bar opens.", ok: s => !!s.tutTap, fly: 1, fm: 1, path: () => tutFlyPath() || [SHOWME], rw: { m: 400, c: 300, g: 100 } },
   { lv: 3, id: "rush", t: "Rush the attack", say: "Every minute in transit is a minute the Hive digs in. Tap ⚡ to light the afterburners: the rest of the trip is 50% faster. This first burn is on the Academy.", ok: s => !!s.tutRush, fly: 1, fm: 1,
     path: () => tutFlyPath() || [['#fleethud [data-act="fBoost"]:not([disabled])', "Tap ⚡ to light the afterburners"], ['#fleethud [data-act="fctl"]', "Open the fleet controls to speed it up"], ['.sheet [data-act="fBoostItem"], .sheet [data-act="hurry"]', "Speed up your fleet"]], rw: { m: 500, c: 400, g: 200, shards: 1 } },
   { lv: 3, id: "cine", t: "Watch it in cinematic view", say: "Now sit back, Commander. Tap 🎥 and the camera rides in with your fighters, right into the fight.", ok: s => !!s.tutCine, fly: 1, fm: 1, path: () => tutFlyPath() || [['#fleethud .fh-cine', "Tap 🎥 to watch in cinematic view"]], rw: { m: 500, c: 400, g: 200 } },
-  { lv: 3, t: "Defeat a Hive garrison", say: "Our fighters are closing on the garrison. Win the fight and the report lands in Mail. If they lost, send them again.", ok: s => s.wins >= 1, hive: 1, path: () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : [['.sheet [data-act="launch"]', "Send your fighters"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME], /* v235: the hive world's card opens first; the guide used to say "close this" there, and closing it looped back */ rw: { m: 1200, c: 700, g: 300, shards: 3 } },
+  { lv: 3, t: "Defeat a Hive garrison", say: "Our fighters are closing on the garrison. Win the fight and the report lands in Mail. If they lost, send them again.", ok: s => s.wins >= 1, hive: 1, path: tutSend, /* v319: waits for fighters flying home (it looped between Show me and Attack); v235: the hive world's card opens first; the guide used to say "close this" there, and closing it looped back */ rw: { m: 1200, c: 700, g: 300, shards: 3 } },
   { lv: 3, t: "Gather from a resource field", say: "Resource fields pay out to whoever holds them. Fields already held by a rival must be fought for, so pick a free one.", ok: s => (s.stats || {}).gathers >= 1 || s.fleets.some(f => f.nid), find: "m", path: () => tutWaitShips() || mapPath('.sheet [data-act="gather"], .sheet [data-act="launch"]', '.sheet [data-act="node"]')(), rw: { m: 1000, c: 600, g: 300 } },
   { lv: 3, t: "Explore a pyramid space station", say: "Derelict pyramid stations drift all over the map. Low-level vaults are unguarded: free shards and relics.", ok: s => (s.stats || {}).pyramids >= 1 || s.fleets.some(f => f.yid), find: "y", path: () => tutWaitShips() || mapPath('.sheet [data-act="pyrGo"]', '.sheet [data-act="pyramid"]')(), rw: { m: 800, c: 800, g: 400, shards: 1 } },
   { lv: 4, t: "Read your reports in Mail", say: "Every battle, espionage report and message lands in Mail. Replays show you exactly why you won or lost.", ok: s => !!s.tutMail, go: { v: "mail" }, path: () => [DOCKT("mail", "Open Mail")], rw: { m: 500, c: 500, g: 500 } },
@@ -13568,7 +13588,7 @@ const TUT = [
   /* v299: the Academy ends with your flagship. Its last three steps pay all the materials (and most of the resources) the Dock and the flagship need */
   { lv: 6, t: `Reach Commander Level ${FLAG_LV}`, say: `At commander Lv.${FLAG_LV} the Flagship Dock unlocks and our faction's flagship can take command. Keep growing: upgrade mines, raid pirates, gather from fields and grab salvage pods. They all drop flagship materials too.`, ok: () => cmdLevel(score()) >= FLAG_LV, go: { v: "build", s: "res" }, path: () => { const k = growPick(); return bPath(k, B[k].cat === "fac" ? "fac" : "res")(); }, rw: { m: 40000, c: 30000, g: 12000, shards: 5, fs: { alloy1: 6, circuit1: 4, crystal1: 3 } } },
   { lv: 6, t: "Build the Flagship Dock", say: "The Flagship Dock is where our flagship is commissioned and where its gear is forged. Find it under Structures → Facility.", ok: s => (s.b.flagDock || 0) >= 1, go: { v: "build", s: "fac" }, path: bPath("flagDock", "fac"), rw: { m: 20000, c: 15000, g: 8000, shards: 3, fs: { alloy1: 4, circuit1: 2, crystal1: 1 } } },
-  { lv: 6, t: "Commission your flagship", say: "Everything's ready, Commander. Commission the flagship: from now on it leads every fleet we send, gains experience and wears the gear the Dock forges.", ok: s => !!(s.fs && s.fs.built), open: () => ACT.flagHero(), path: () => [['.sheet [data-act="fsBuild"]:not([disabled])', "Tap Commission the flagship"], ['.sheet .fsrows', "Anything marked ✕ is still missing"], SHOWME], rw: { m: 15000, c: 10000, g: 5000, shards: 10 } }
+  { lv: 6, t: "Commission your flagship", say: "Everything's ready, Commander. Commission the flagship: from now on it leads every fleet we send, gains experience and wears the gear the Dock forges.", ok: s => !!(s.fs && s.fs.built), open: () => ACT.flagHero(), path: () => [['.sheet [data-act="fsBuild"]:not([disabled])', "Tap Commission the flagship"], ...(fsHasMats(fsOf(), FS_BUILD.mats) && !canPayRes(FS_BUILD.res) ? shortPath(FS_BUILD.res) || [['.sheet .fsrows', "Not enough resources yet. Your mines keep working: check back in a few minutes"]] : []), ['.sheet .fsrows', "Anything marked ✕ is still missing"], SHOWME], rw: { m: 15000, c: 10000, g: 5000, shards: 10 } }
 ];
 const TUT_V2 = 24; // v299: the Academy's length before the flagship steps
 const TUT_V1 = 19; // (v296: 17 + the two naming steps) // the Academy's length before the Astrophysics steps were added
@@ -13594,8 +13614,8 @@ function shipStep() {
   const i = S.shipQ || 0, e = SHIP_PATH[i]; if (!e) return null; const [k, n, say] = e, d = SH[k], need = reqStep(d.req), c = d.c || {};
   const rw = { m: Math.round((c.m || 0) * n * .15), c: Math.round((c.c || 0) * n * .15), g: Math.round((c.g || 0) * n * .15), shards: i + 1 };
   const make = () => S.sq.some(q => q.k === k) ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish them instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed them up"], [".qrow .t", `${d.n}s in production`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard to watch them"], DOCKT("build", "Tap Build")]
-    : !canPayRes(c) ? [["#hud", `Not enough resources for a ${d.n} yet. Your mines keep working: come back in a few minutes`]] /* v235: never point at a greyed-out Build button */
-    : [[`.sheet [data-act="make"][data-k="${k}"]`, `Tap Build to make ${n}`], [`article.bn[data-kind="s"][data-k="${k}"]`, `Choose ${d.n}`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")];
+    : !canPayRes(c) ? storeFirst(c, `a ${d.n}`) || shortPath(c) || [["#hud", `Not enough resources for a ${d.n} yet. Your mines keep working: come back in a few minutes`]] /* v235: never point at a greyed-out Build button */
+    : [[`.sheet [data-act="make"][data-k="${k}"]`, tutMake(k, n)], [`article.bn[data-kind="s"][data-k="${k}"]`, `Choose ${d.n}`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")];
   return { i, k, n, d, need, say, rw, t: `Build ${n} ${d.n}${n > 1 ? "s" : ""}`, ok: () => own(k) >= n,
     go: need ? (need.r ? { v: "lab" } : { v: "build", s: B[need.k].cat === "fac" ? "fac" : "res" }) : { v: "build", s: "ships" }, rcat: need && need.r ? RCAT_OF(need.k) : null,
     path: need ? (need.r ? rPath(need.k, RCAT_OF(need.k)) : bPath(need.k, B[need.k].cat === "fac" ? "fac" : "res")) : make };
@@ -13606,8 +13626,16 @@ function advPick() { // what the Advisor shows: a finished task first, then the 
   if (st && S.tut.i < TUT_BASICS) return "tut";
   if (sp && sp.ok()) return "ship";
   if (!st && quest().ok(S)) return "dir";
-  const spWait = sp && !sp.need && !S.sq.some(q => q.k === sp.k) && !canPayRes(sp.d.c || {}); /* v235: a fleet step you cannot pay for yet yields to a task you can do now */
-  return sp && S.advHop && !(spWait && st) ? "ship" : main;
+  return sp && S.advHop && !spBlocked(sp) && st !== TUT[TUT.length - 1] ? "ship" : main; /* v235: a fleet step you cannot pay for yet yields to a task you can do now; the last Academy step keeps its resources for the flagship */
+}
+/* v319: the fleet path's next move can't start right now: its requirement's lab or build queue is busy with something else, or we
+   can't pay for it yet. (Only the ship's own price used to count, so the Advisor sat on an unaffordable research for hours while the
+   Academy step it hid was ready to go.) */
+function spBlocked(sp) {
+  if (!sp) return true; const nd = sp.need;
+  if (!nd) return !S.sq.some(q => q.k === sp.k) && !canPayRes(sp.d.c || {});
+  if (nd.r ? rQd(nd.k) : bQd(nd.k)) return false;
+  return !canPayRes(cost(nd.r ? R[nd.k] : B[nd.k], nd.cur + 1));
 }
 function shipShow() { const sp = shipStep(); if (!sp) return; if (sheet) closeSheet(); ACT.nav(sp.go); if (sp.rcat) { sub.rcat = sp.rcat; render(); } }
 /* the fleet path on the Quests tab: every hull in order, done, next (with what it needs) or still ahead */
@@ -13647,7 +13675,7 @@ function guidePick() {
   const st = !G.cubeDemo && !(G3 && (G3.cam.siege || G3.cam.cine)) && G.ready && !battle && !advLines && !$("#adv") && !$("#authw") && !(sheet && sheet.type === "faction") && !tutSnoozed() && !(S.pathSnz > now()) ? (m => m === "tut" ? TUT[S.tut.i] : m === "ship" ? shipStep() : null)(advPick()) : null;
   if (!(st && st.fm && !st.ok(S))) { const m = $("#tutfm"); if (m) m.remove(); } if (!st) return null;
   const path = st.ok(S) ? [['#coach [data-act="tutClaim"], #coach [data-act="shipClaim"], #coach .cpill', "Collect your reward"]] : st.path ? st.path() : [SHOWME];
-  for (const [sel, label, when] of path) { if (when && !when()) continue; for (const el of document.querySelectorAll(sel)) { if (el.classList.contains("on") || (el.disabled && /^(boost|finish)$/.test(el.dataset.act || ""))) continue; /* a tab already open, or a speed-up you can't use */ const v = guideVisible(el); if (v) return el.disabled && /^(up|research|make|cup|csb)$/.test(el.dataset.act || "") ? { el, label: $(".sheet .dres .no") ? "Not enough resources yet. Your mines keep working: check back in a few minutes" : "Check the requirements below first", v } : el.disabled && /^(raid|launch|pyrGo|gather)$/.test(el.dataset.act || "") && /en route|on its way/i.test(el.textContent) ? { el, label: "Your fleet is on its way there. Wait for the report", v } : { el, label, v }; } } /* v235: never say "Tap" on a greyed-out button */
+  for (const [sel, label, when] of path) { if (when && !when()) continue; for (const el of document.querySelectorAll(sel)) { if (el.classList.contains("on") || (el.disabled && /^(boost|finish)$/.test(el.dataset.act || ""))) continue; /* a tab already open, or a speed-up you can't use */ const v = guideVisible(el); if (v) return el.disabled && /^(up|research|make|cup|csb)$/.test(el.dataset.act || "") ? { el, label: (el.dataset.cost ? !canPayRes(JSON.parse(el.dataset.cost)) : $(".sheet .dres .no")) ? "Not enough resources yet. Your mines keep working: check back in a few minutes" : "Check the requirements below first", v } : el.disabled && /^(raid|launch|pyrGo|gather)$/.test(el.dataset.act || "") && /en route|on its way/i.test(el.textContent) ? { el, label: "Your fleet is on its way there. Wait for the report", v } : { el, label, v }; } } /* v235: never say "Tap" on a greyed-out button */
   const cx = sheet && document.querySelector('.sheet [data-act="close"]'); if (cx && guideVisible(cx)) return { el: cx, label: "Close this to continue", v: 1 }; // something is in the way: close it first
   return null;
 }
@@ -13677,7 +13705,7 @@ function tutClaim() {
   if (rw.fs) { const f = fsOf(); for (const [k, n] of Object.entries(rw.fs)) f.mats[k] = (f.mats[k] || 0) + n; fsBump(); note(`Academy: flagship materials ${Object.entries(rw.fs).map(([k, n]) => `${FS_MATS[k.slice(0, -1)][0]} ×${n}`).join(", ")}.`, "win"); } // v299
   fsXP(50, "Academy"); logReward(`Academy · ${st.t}`, rw, { shards: rw.shards || 0, kind: "quest" });
   S.tut.i++; S.tut.open = 0; if (S.tut.i > TUT_BASICS) S.advHop = 1; dirty(); try { SFX.research(); } catch (e) {} // v81: straight on to the next task; the guide is already pointing at it
-  const nx = TUT[S.tut.i];
+  const nx = TUT[S.tut.i]; if (sheet) closeSheet(); // the card that finished this step would only be in the way of the next one
   if (nx) toast(`Academy step done: +${fmt(rw.m || 0)} metal, +${fmt(rw.c || 0)} crystal${rw.g ? `, +${fmt(rw.g)} gas` : ""}${rw.shards ? `, ◆${rw.shards}` : ""}.`, "win");
   else { S.say.push("That's the Academy done, Commander. Our flagship leads the fleet now: it earns experience in every fight, and the Flagship Dock forges its gear.", "Every 2 Astrophysics levels lets us hold another world: build more Colony Ships and send them with escorts to Hive worlds we can beat. I'll keep pointing you at the next directive on your path."); S.pathOpen = 1; flushSay(); }
   coachRender(true);
@@ -15482,7 +15510,7 @@ const ACT = {
   tutClaim: () => tutClaim(),
   tutMin: () => { S.tut.open = 0; S.tut.snz = now() + TUT_SNOOZE; dirty(); coachRender(true); toast("Academy hidden. It'll pop back up in 5 minutes, or open it any time from the Quests tab."); },
   shipShow: () => shipShow(),
-  shipClaim: () => act(() => { const sp = shipStep(); if (!sp || !sp.ok()) return; for (const r of ["m", "c", "g"]) S.res[r] += sp.rw[r] || 0; S.shards = (S.shards || 0) + sp.rw.shards; S.shipQ = sp.i + 1; S.advHop = 0;
+  shipClaim: () => act(() => { const sp = shipStep(); if (!sp || !sp.ok()) return; for (const r of ["m", "c", "g"]) S.res[r] += sp.rw[r] || 0; S.shards = (S.shards || 0) + sp.rw.shards; S.shipQ = sp.i + 1; S.advHop = 0; if (sheet) closeSheet();
     logReward("Fleet path · " + sp.t, sp.rw, { shards: sp.rw.shards, kind: "quest" }); try { SFX.research(); } catch (e) {} const nx = shipStep(); toast(nx ? `Fleet path reward collected. Next hull: ${nx.d.n}.` : "Fleet path complete. Every hull class is yours.", "win"); coachRender(true); }),
   advHop: () => { S.advHop = S.advHop ? 0 : 1; S.pathOpen = 1; dirty(); coachRender(true); },
   pathOpen: () => { S.pathOpen = 1; S.pathSnz = 0; dirty(); coachRender(true); },
@@ -15830,7 +15858,7 @@ const ACT = {
     if (!/^[\p{L}\p{N} ._'-]+$/u.test(v)) return toast("Use letters, numbers, spaces and . _ ' - only.", "warn");
     const low = v.toLowerCase(); if (["you", "hive", "unnamed commander", "commander", "admin", "advisor"].includes(low) || BOTS.some(b => b.name.toLowerCase() === low)) return toast("That name is reserved. Try another.", "warn");
     if (Object.entries(G.names).some(([id, n]) => id !== G.me && (n || "").toLowerCase() === low)) return toast("Another commander already uses that name.", "warn");
-    if (!S.tutNm) { S.tutNm = 1; dirty(); try { coachRender(true); } catch (e) {} } /* v296: the Academy's naming step (keeping your current name counts) */
+    const first = !S.tutNm; if (first) { S.tutNm = 1; dirty(); if (tutOn() && sheet) closeSheet(); try { coachRender(true); } catch (e) {} } /* v296: the Academy's naming step (keeping your current name counts); v319: the card closes so the next step is in view */
     if (v === S.cname) return; S.cname = v; G.myName = v; dirty(); syncPlayer(); toast(`You are now Commander ${v}.`, "win"); render(true); },
   bioSave: () => { const v = (($("#bioin") || {}).value || "").replace(/[\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 160); S.bio = v; dirty(); syncPlayer(); toast("Bio saved.", "win"); render(true); },
   allyOpen: () => { closeSheet(); ACT.nav({ v: "ally" }); },
