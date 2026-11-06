@@ -628,6 +628,7 @@ canvas.dthumb{display:block}
 .bctl{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--bhb,11%) + 10px);z-index:3;display:flex;gap:6px}
 .bctl button.on{color:#ffd66a;border-color:rgba(255,214,106,.7)}.labsv{display:block;margin:-2px 0 8px auto}
 .bctl button{min-width:40px;height:34px;padding:0 9px;border-radius:9px;background:rgba(8,24,36,.85);border:1px solid rgba(95,208,255,.45);color:#cfefff;font-family:var(--f-display);font-size:13px;cursor:pointer}
+@media (max-width:420px){.bctl{gap:4px}.bctl button{min-width:34px;padding:0 6px}} /* v319: all nine replay controls fit a 360px phone (the last one was cut off) */
 .bev{position:absolute;left:10px;top:calc(13% + 56px);z-index:2;display:flex;flex-direction:column;gap:4px;max-width:62%;pointer-events:none}
 .be{font-family:var(--f-display);font-size:11px;color:#e8f4fb;background:rgba(4,12,20,.72);border-left:3px solid #9fb6c4;padding:3px 7px;border-radius:0 6px 6px 0;animation:bein .3s}.be.a{border-color:#5fd0ff}.be.d{border-color:#ff8a5c}.be time{color:#9fb6c4;margin-right:6px}
 @keyframes bein{from{opacity:0;transform:translateX(-8px)}to{opacity:1}}
@@ -1483,6 +1484,8 @@ const DPR = () => Math.min(window.devicePixelRatio || 1, 2);
 const $ = s => document.querySelector(s);
 let TSKEW = 0; // v80 Sentinel: the correction applied when the device clock is found to be wrong
 const now = () => Date.now() + TSKEW;
+/* v319: the display and body font families, read from CSS once (canvas labels asked for them every frame, which can force a style recalculation) */
+const cssFont = body => cssFont[body ? "b" : "d"] || (cssFont[body ? "b" : "d"] = (body ? getComputedStyle(document.body).fontFamily : getComputedStyle(document.documentElement).getPropertyValue("--f-display")) || "sans-serif");
 const TAU = Math.PI * 2;
 const pad = n => String(n).padStart(2, "0");
 const L11 = L => L * Math.pow(1.1, L);
@@ -1498,7 +1501,6 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 const rnd = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 const hash = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const sroll = x => { const f = Math.floor(x); return f + (Math.random() < x - f ? 1 : 0); };
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- icons ---------- */
@@ -1747,7 +1749,6 @@ const layerOf = r => LAYERS.find(L => r >= L.r0) || LAYERS[5];
 /* Hive level: higher toward the inner edge of each layer, with a little noise */
 const layerHive = (rad, u) => { const L = layerOf(rad), t = clamp((L.r1 - rad) / (L.r1 - L.r0), 0, 1); return clamp(Math.round(L.hive[0] + (L.hive[1] - L.hive[0]) * (.6 * t + .4 * u)), 1, 16); };
 const layerNode = (rad, u) => clamp(layerOf(rad).node + (u < .3 ? 1 : 0), 1, 7);
-const pirRad = (lvl, u) => { const L = LAYERS.find(x => lvl >= x.pir[0] && lvl <= x.pir[1]) || LAYERS[0], lo = Math.max(L.r0, 18 * SC) + 5, hi = L.r1 - 5, t = (lvl - L.pir[0] + .5) / (L.pir[1] - L.pir[0] + 1); return clamp(hi - (hi - lo) * t + (u - .5) * 6, lo, hi); };
 const GEN = (() => {
   const r = rnd(4242), out = [];
   for (let i = 0; i < 230; i++) {
@@ -2998,13 +2999,10 @@ const reqText = req => missing(req).map(([k, l]) => `${ANY[k].n} Lv.${l}`).join(
 /* build time on a planet: a colony uses its own Drone Works and Nanite Assembly, the homeworld its own */
 /* v79 balance: costs still double by level (the resource sink is unchanged), but job times past 1 hour grow more gently, so a
    late-game building or research takes hours rather than days (time^0.65 past the first hour). Early levels are untouched */
-const softT = ms => ms; // v86: OGame times, no softening
 const bTimeL = (k, lvl, p) => { const b = p && p.kind !== "home" ? (p.b || {}) : S.b; const c = cost(B[k], lvl); return Math.max(2, ((c.m || 0) + (c.c || 0)) * 1.44 / (UNI * (1 + (b.robotics || 0)))) * 1000 * bTimeMul() / Math.pow(2, b.nanite || 0); }; // OGame: (m+c) / (2500 (1+robotics) 2^nanite) hours
-const bTime = k => bTimeL(k, S.b[k] + 1);
 /* research network: every Research Center you own works on the same project, so all lab levels across your planets add up */
 const colLabs = () => { let n = 0; try { for (const p of myPlanets()) if (p.kind !== "home") n += (p.b || {}).lab || 0; } catch (e) {} return n; };
 const labPower = () => (S.b.lab || 0) + colLabs();
-const rTime = k => rTimeL(k, S.r[k] + 1);
 const uTime = c => Math.max(1, ((c.m || 0) + (c.c || 0)) * 1.44 / (UNI * (1 + S.b.shipyard)) / Math.pow(2, S.b.nanite || 0)) * 1000; // OGame: (m+c) / (2500 (1+shipyard) 2^nanite) hours
 const RES_SLOW = 3; // v270: research takes 3x as long
 const rTimeL = (k, lvl) => { const c = cost(R[k], lvl); return Math.max(3, ((c.m || 0) + (c.c || 0)) * 3.6 * RES_SLOW / (UNI * (1 + labPower()))) * 1000 * rTimeMul(); }; // OGame: (m+c) / (1000 (1+lab)) hours
@@ -5987,10 +5985,6 @@ const PQ = {}; const COLC = new Map(); const FOGC = TH ? new TH.Color(.2, .22, .
 /* close-up detail for a planet near the camera: clouds, a rim-lit atmosphere, moons and a particle aura, all in the planet's own colours */
 const AURA = { lava: [1.6, .5, 1.2], ice: [1.0, .35, .9], toxic: [1.3, .6, 1.0], gas: [2.4, .08, .7], ocean: [1.15, .2, .7], desert: [1.9, .12, .8], terran: [1.25, .25, .6] };
 /* a premium skin's ring on the map: concentric bands of varying brightness with gaps, like real ring systems */
-const PXRT = {};
-function pxRingTex(col, inner) { const key = col + inner.toFixed(3); if (PXRT[key]) return PXRT[key]; const S0 = 512, c = document.createElement("canvas"); c.width = c.height = S0; const x = c.getContext("2d"), r = rnd(hash(key)), rgb = hex3(col);
-  for (let i = 0; i < 160; i++) { const t = i / 160, rr = S0 / 2 * (inner + (1 - inner) * t), a = (.15 + .55 * Math.pow(Math.abs(Math.sin(t * 11 + r() * .6)), 1.5)) * (r() < .08 ? .1 : 1) * Math.sin(Math.PI * Math.min(1, t * 1.05)); x.strokeStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a.toFixed(3)})`; x.lineWidth = S0 / 2 * (1 - inner) / 160 + .6; x.beginPath(); x.arc(S0 / 2, S0 / 2, rr, 0, TAU); x.stroke(); }
-  const t = new TH.CanvasTexture(c); t.encoding = TH.sRGBEncoding; return (PXRT[key] = t); }
 /* v77 planet view in the skin's own colours and in ultra HD. While you look at a skinned world: a nebula in its palette glows
    behind it, a rim light in its glow colour wraps the far edge, a softer fill in its palette lights the near side, the ambient
    light drifts toward its colour, and its surface is re-baked at 2048 px with a sharper relief map. All of it eases in and out. */
@@ -8036,7 +8030,7 @@ function overlay3D(W, fx, w, h, dpr, t, T) {
       ctx.save(); ctx.strokeStyle = "rgba(255,60,60,.85)"; ctx.lineWidth = 2; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(s[0], s[1], R * (1 + i * .12), sp * (i % 2 ? -1 : 1) + i, sp * (i % 2 ? -1 : 1) + i + 1.6); ctx.stroke(); }
       ctx.beginPath(); ctx.arc(s[0], s[1], 14, 0, TAU); ctx.moveTo(s[0] - 26, s[1]); ctx.lineTo(s[0] + 26, s[1]); ctx.moveTo(s[0], s[1] - 26); ctx.lineTo(s[0], s[1] + 26); ctx.stroke();
       const bx = s[0] - R - 22, vals = [ph ? ph.energy : 0, cubeIntegrity(cur), ph ? ph.shield / 1.35 : 0]; vals.forEach((v, i) => { ctx.fillStyle = "rgba(60,255,110,.25)"; ctx.fillRect(bx + i * 7, s[1] - 50, 4, 100); ctx.fillStyle = "rgba(60,255,110,.9)"; ctx.fillRect(bx + i * 7, s[1] + 50 - 100 * v, 4, 100 * v); });
-      ctx.font = "700 11px " + getComputedStyle(document.body).fontFamily; ctx.fillStyle = "rgba(255,80,80,.95)"; ctx.fillText(`${Math.floor(t / 400) % 2 ? "UPLOADING DATA" : "SCANNING"} · ${ph ? ph.n.toUpperCase() : "DORMANT"}`, s[0] - R, s[1] - R - 10);
+      ctx.font = "700 11px " + cssFont(1); ctx.fillStyle = "rgba(255,80,80,.95)"; ctx.fillText(`${Math.floor(t / 400) % 2 ? "UPLOADING DATA" : "SCANNING"} · ${ph ? ph.n.toUpperCase() : "DORMANT"}`, s[0] - R, s[1] - R - 10);
       ctx.fillStyle = "rgba(190,255,200,.9)"; ctx.fillText(`ENERGY ${Math.round((ph ? ph.energy : 0) * 100)}%  ·  ${cur.holder ? "HELD BY [" + ((G.alliances[cur.holder] || {}).tag || "?") + "]" : "WARDEN " + Math.round(cubeIntegrity(cur) * 100) + "%"}  ·  SHIELDS ${Math.round((ph ? ph.shield : 1) * 100)}%`, s[0] - R, s[1] + R + 18); ctx.restore(); } }
   // v124 mouse hover: a soft ring and a name tag on whatever the mouse is over
   if (G.hover && G.hover.label && performance.now() - G.hover.t < 2000) { ctx.save(); ctx.strokeStyle = "rgba(255,255,255,.85)"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(G.hover.x, G.hover.y, 15, 0, TAU); ctx.stroke(); ctx.restore(); label(G.hover.label, G.hover.x, G.hover.y - 24, "#ffffff", 12); }
@@ -8356,7 +8350,6 @@ function wingMesh(pts, th, mat) {
    Terran: steel and cyan, square and modular. Solar: ivory and gold, crowned with two halo rings. Nyx: black, flat and bladed, seamed in
    red. Verdant: rounded, grown hull in jade with lime veins and one tilted ring. The soft glow is a list of points (g.userData.glow)
    drawn in the fleet's single glow draw call, so all this adds no draw calls per light. */
-const FLAG_X = {}; // v304 extra flagship materials (Union stripe, Verdant vines and leaves), made once
 const FLAG_GLOW = { terran: 0x2aa6ff, solar: 0xffc23a, nyx: 0xff2a3c, verdant: 0x4dff7a }; // v304 the Union's drive light is the painting's deep blue
 /* v256 real-looking plate: brushed metal in panels of slightly different tones, dark seams, rivet rows, wear along the edges, and a matching
    roughness map, so highlights break across the hull like polished and scuffed steel instead of sliding over a flat colour */
@@ -10498,15 +10491,6 @@ function costHTML(c) {
   return `<span class="cost">${["m", "c", "g"].filter(r => c[r]).map(r => `<span class="ci r-${r}" data-r="${r}" data-v="${c[r]}">${RI[r]}${fmt(c[r])}</span>`).join("")}</span>`;
 }
 function activePlayers() { const T = now(); return Object.values(G.players).filter(p => (p.last || p.joined) > T - ACTIVE_MS).length; }
-function modeChip() {
-  switch (G.mode) {
-    case "online": return `<span class="chip">Live galaxy · ${activePlayers()} / ${MAX_PLAYERS}</span>`;
-    case "offline": return `<span class="chip off">Solo galaxy</span>`;
-    case "full": return `<span class="chip off">Galaxy full · ${MAX_PLAYERS} / ${MAX_PLAYERS}</span>`;
-    case "readonly": return `<span class="chip off">Watching only</span>`;
-    default: return `<span class="chip">Connecting…</span>`;
-  }
-}
 /* the planet the HUD reports on: the colony open in the Base view, otherwise the homeworld */
 /* the planet you're using: picked on the base slider or with the ‹ › arrows, and it stays picked in every tab.
    Build, Shipyard, Fleets and the resource bar all show that planet's own buildings, ships and stockpile. */
@@ -10721,12 +10705,6 @@ function colonyRow(p, k) {
   else ctl = `<button class="btn sm" data-act="cup" data-id="${p.id}" data-k="${k}" ${!canCol(p, c) ? "disabled" : ""}>${p.cq ? "Queue " : ""}Lv.${lvl} · ${ftime(bTimeL(k, lvl, p) * (p.cq ? QFAST : 1))}</button>`;
   return `<div class="crow"><span class="ic">${bicon(k)}</span><span class="nm">${B[k].n} · Lv.${L}${busy ? ` <b style="color:var(--cyan);font-weight:600" data-end="${p.cq.e}">${ftime(p.cq.e - T)}</b>` : ""}<small>${colCost(c)}</small></span>${ctl}</div>`;
 }
-function colShipRow(p, k) {
-  const d = SH[k], miss = missingAt(d.req, p);
-  const ctl = d.max ? `<span class="req">Homeworld shipyard only</span>` : miss.length ? `<span class="req">Needs ${miss.map(([kk, l]) => `${ANY[kk].n} ${l}`).join(", ")}</span>`
-    : `<div style="display:flex;gap:6px;align-items:center"><div class="stepper"><input id="cq-${k}" type="number" min="1" value="1" inputmode="numeric" aria-label="Quantity of ${d.n}"></div><button class="btn sm" data-act="csb" data-id="${p.id}" data-k="${k}" ${(p.sq ? 1 : 0) + csList(p).length >= Q_MAX ? "disabled" : ""}>${p.sq ? "Queue" : "Build"}</button></div>`;
-  return `<div class="crow"><canvas data-ship="${k}" role="img" aria-label="${d.n}"></canvas><span class="nm">${d.n}<small>${colCost(d.c)} each · ${ftime(colShipTime(p, d.c))}${colLines(p) > 1 ? ` · ${colLines(p)} lines` : ""}</small></span>${ctl}</div>`;
-}
 function vColony(p) {
   const s = colStock(p), cp = colCap(p), r = colonyRates(p);
   const res = ["m", "c", "g"].map(k => `<div class="res r-${k}${s[k] >= cp[k] ? " full" : ""}">${RI[k]}<div><b>${fmt(s[k])}</b><small>+${fmt(r[k])}/m · cap ${fmt(cp[k])}</small></div></div>`).join("");
@@ -10762,12 +10740,6 @@ function vBase() {
 }
 /* planet slider: swipe through your worlds; the base slides over to the one that snaps to the centre */
 const sliderOrder = () => myPlanets().slice().sort((a, b) => (a.kind === "home" ? -1 : 0) - (b.kind === "home" ? -1 : 0)).map(p => [p.kind === "home" ? "home" : p.id, p]);
-function planetSlider() {
-  const list = sliderOrder(); if (list.length < 2) return ""; const cur = sub.base || "home";
-  return `<div class="pslide" id="pslide" role="listbox" aria-label="Your planets, swipe to switch">${list.map(([id, p], i) => { const s = p.kind === "home" ? S.res : colStock(p), on = cur === id;
-    return `<button class="pcell${on ? " on" : ""}" role="option" aria-selected="${on}" data-act="slideTo" data-id="${id}" data-slide="${id}"><canvas data-p="${p.id}"></canvas><span><b>${esc(p.name)}${p.kind === "home" ? " ⌂" : ""}</b><small><i class="r-m">${fmt(s.m)}</i> <i class="r-c">${fmt(s.c)}</i> <i class="r-g">${fmt(s.g)}</i></small></span></button>`; }).join("")}</div>
-    <div class="pdots">${list.map(([id]) => `<i class="${cur === id ? "on" : ""}"></i>`).join("")}</div>`;
-}
 function bindSlider() {
   const el = $("#pslide"); if (!el || el.dataset.bound) return; el.dataset.bound = "1";
   const cur = el.querySelector(".pcell.on"); if (cur) { el.style.scrollBehavior = "auto"; el.scrollLeft = cur.offsetLeft - (el.clientWidth - cur.offsetWidth) / 2; el.style.scrollBehavior = ""; }
@@ -11074,41 +11046,7 @@ function vLab() {
       return `<article class="card item"><button class="dchev" data-act="detail" data-kind="r" data-k="${k}" aria-label="Details: ${d.n}">»</button>${ART[k] ? artImg(k, "r", `${d.n} research, level ${L}`) : `<canvas class="shipart bart" data-act="detail" data-kind="r" data-k="${k}" data-rs="${k}|${L}" role="img" aria-label="${d.n} research, level ${L}"></canvas>`}<div class="ic">${bicon(k)}</div><div><h3>${d.n}<span class="lv">LV.${L}</span></h3><p>${d.d}</p>${k === "astro" ? `<div class="fx" style="color:var(--cyan)">${worldCap()} / ${MAX_PLANETS} worlds unlocked${worldCap() < MAX_PLANETS ? ` · next at Lv.${worldCap() * 2}` : ""}</div>` : ""}${ul.length ? `<div class="fx">Leads to ${ul.join(", ")}</div>` : ""}${busy ? `<div class="fx" style="color:var(--cyan)">Researching Lv.${S.rq.lvl} · <span data-end="${S.rq.e}">${ftime(S.rq.e - now())}</span>${queued ? ` · +${queued} queued` : ""}</div>` : queued ? `<div class="fx" style="color:var(--cyan)">${queued} level${queued > 1 ? "s" : ""} queued</div>` : ""}</div><div class="row">${costHTML(c)}${btn}</div></article>`;
     }).join("") : ""; }).join("")}`;
 }
-function uCard(k, kind) {
-  const d = kind === "def" ? DF[k] : SH[k], st = unitStat(k, techOf(null)), miss = missing(d.req);
-  const have = kind === "def" ? S.def[k] : S.ships[k], away = kind === "def" ? 0 : own(k) - have;
-  const capped = d.max && (kind === "def" ? have : own(k)) + S.sq.filter(x => x.k === k).reduce((a, x) => a + x.left, 0) >= d.max;
-  const rf = Object.entries(RF[k] || {}).filter(([t, v]) => v > 1 && t !== "spyProbe").map(([t, v]) => `${unitName(t)} ×${v}`);
-  let ctrl;
-  if (miss.length) ctrl = `<span class="req">Requires ${reqText(d.req)}</span>`;
-  else if (allyBlock(d)) ctrl = `<span class="req">Requires ${allyBlock(d)}</span>`;
-  else if (capped) ctrl = `<span class="req">Limit ${d.max}</span>`;
-  else ctrl = `<div style="display:flex;gap:8px;align-items:center"><div class="stepper"><button data-act="step" data-k="${k}" data-d="-1" aria-label="Fewer">−</button><input id="q-${k}" type="number" min="1" max="${d.max || 99999}" value="1" inputmode="numeric" aria-label="Quantity"><button data-act="step" data-k="${k}" data-d="1" aria-label="More">+</button></div>
-    <button class="btn" data-act="make" data-k="${k}" data-kind="${kind}" data-cost='${JSON.stringify(d.c)}' data-qf="q-${k}">Build</button></div>`;
-  const art = `<button class="dchev" data-act="detail" data-kind="${kind === "def" ? "d" : "s"}" data-k="${k}" aria-label="Details: ${d.n}">»</button>${ART[k] ? artImg(k, kind === "def" ? "d" : "s", d.n) : `<canvas class="shipart" data-act="detail" data-kind="${kind === "def" ? "d" : "s"}" data-k="${k}" data-ship="${k}" role="img" aria-label="${d.n}"></canvas>`}`; // a painting when we have one, otherwise a studio portrait
-  return `<article class="card item">${art}<div class="ic"><canvas data-u="${k}" style="width:40px;height:40px"></canvas></div><div><h3>${d.n}<span class="lv">${fmt(have)}${away ? ` +${fmt(away)} away` : ""}</span></h3>
-    ${kind === "ships" ? `<div class="cls">${CLASS_OF[k] ? `<b class="clsb cl-${CLASS_OF[k]}">${CLS_BY[CLASS_OF[k]].ic} ${CLS_BY[CLASS_OF[k]].n}</b> · ` : ""}${d.cls && d.cls !== d.n ? d.cls + " hull · " : ""}${{ drive: "combustion", impulse: "impulse", hyper: "hyperspace" }[drvOf(k).dt]} drive</div>` : d.cls && d.cls !== d.n ? `<div class="cls">${d.cls} class</div>` : ""}${d.d || DF_D[k] ? `<p>${d.d || DF_D[k]}</p>` : ""}
-    <div class="stats"><span>ATK <b>${fmt(st.atk)}</b></span><span>SHD <b>${fmt(st.sh)}</b></span><span>HULL <b>${fmt(st.hull)}</b></span>${d.cargo ? `<span>CARGO <b>${fmt(d.cargo)}</b></span>` : ""}${kind === "ships" ? `<span>SPD <b>${fmt(spdNum(k))}</b></span><span>FUEL <b>${fmt(drvOf(k).fu)}</b></span>` : ""}<span>${ftime(uTime(d.c))} each</span></div>
-    ${rf.length ? `<div class="stats"><span>Strong against: <b>${rf.slice(0, 5).join(", ")}${rf.length > 5 ? "…" : ""}</b></span></div>` : ""}</div>
-    <div class="row">${costHTML(d.c)}${ctrl}</div></article>`;
-}
 const repWin = r => (r.kind === "attack" && r.winner === "a") || ((r.kind === "raid" || r.kind === "defense") && r.winner === "d");
-function vFleet() {
-  const t = sub.fleet;
-  const tabs = `<div class="tabs"><button class="${t === "ships" ? "on" : ""}" data-act="sub" data-g="fleet" data-v="ships">Ships</button><button class="${t === "def" ? "on" : ""}" data-act="sub" data-g="fleet" data-v="def">Defense</button><button class="${t === "rep" ? "on" : ""}" data-act="sub" data-g="fleet" data-v="rep">Reports${S.unread ? ` (${S.unread})` : ""}</button></div>`;
-  if (t === "rep") {
-    return tabs + (S.reports.length ? `<div class="list">${S.reports.map(r => {
-      const win = repWin(r);
-      const pill = r.captured ? `<span class="pill ${r.kind === "defense" ? "bad" : "ok"}">${r.kind === "defense" ? "Lost world" : "Captured"}</span>` : win ? '<span class="pill ok">Victory</span>' : r.winner === "draw" ? '<span class="pill amb">Draw</span>' : '<span class="pill bad">Defeat</span>';
-      const red = r.kind === "raid" || r.kind === "defense";
-      const who = r.kind === "raid" ? "Hive raid" : r.kind === "defense" ? `by ${esc((r.aUids || []).map(nameOf).join(", ") || "a commander")}` : (r.aUids || []).length > 1 ? `Joint · ${r.aUids.length} commanders` : r.dUid ? `vs ${esc(nameOf(r.dUid))}` : "Assault";
-      return `<button class="tgt" data-act="report" data-id="${r.id}"><span class="lvl" style="${red ? "color:var(--red);border-color:rgba(255,98,98,.5)" : ""}">${r.lvl}</span><span><span class="nm">${esc(r.title)}</span><br><span class="sub">${ago(r.at)} ago · ${who}</span></span>${pill}</button>`;
-    }).join("")}</div>` : '<div class="empty">No battles yet. Reports from attacks and raids land here.</div>');
-  }
-  if (!S.b.shipyard) return tabs + `<div class="card hi"><h3 style="font-size:17px">No Shipyard yet</h3><p class="note" style="margin:6px 0 10px">Ships and defenses come from the Shipyard. It needs Drone Works Lv.1 first.</p><button class="btn" data-act="nav" data-v="build" data-s="fac">Open Facilities</button></div>`;
-  const qs = S.sq.length ? `<div class="queue">${S.sq.map((x, i) => i === 0 ? qRow("Shipyard", { what: `${UDEF(x.k).n} · ${x.n - x.left + 1} of ${x.n}`, s: x.next - x.each, e: x.next, boost: "s", finish: "s" }) : `<div class="qrow"><div><div class="lbl">Queued</div><div class="what">${UDEF(x.k).n} ×${x.left}</div></div></div>`).join("")}</div>` : "";
-  return tabs + qs + (t === "ships" ? Object.keys(SH).map(k => uCard(k, "ships")).join("") : `<p class="note">Defenses guard your homeworld. Colonies are held by the ships you station there and by their own Orbital Fortress.</p>` + Object.keys(DF).map(k => uCard(k, "def")).join(""));
-}
 function mapShell(use3) {
   return `<section class="map3d" id="mapwrap">${use3 ? '<canvas id="galaxy3d"></canvas><canvas id="galaxyfx" aria-label="3D galaxy map. Drag to scroll, pinch or scroll to zoom, twist with two fingers or right-drag to rotate, tap a world, field or empty orbit."></canvas>' : '<canvas id="galaxy" aria-label="Galaxy map. Drag to pan, pinch or scroll to zoom, tap a world."></canvas>'}
     <div class="ov tl" id="ovtl"></div>
@@ -11532,7 +11470,6 @@ const ALLY_PAGE = 7;
 const allyHd = (title, sub2, back) => `<div class="mailhd"><div><div class="chapter">Diplomacy</div><h2>${title}</h2>${sub2 ? `<p class="note">${sub2}</p>` : ""}</div>${back ? `<div class="mailact"><button class="btn ghost sm" data-act="allyView" data-v="" aria-label="Back">‹ Back</button></div>` : ""}</div>`;
 const allyCost = () => `<div class="alcost"><span class="r-m">${RI.m} ${fmt(ALLY_COST.m)}</span><span class="r-c">${RI.c} ${fmt(ALLY_COST.c)}</span><span class="r-g">${RI.g} ${fmt(ALLY_COST.g)}</span></div>`;
 /* v88: every alliance gets its own emblem: a hex shield with two colours and a sigil picked from its id, and its tag */
-const AL_SIG = ["M12 3l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6L3 10l6-1z", "M12 2l8 10-8 10-8-10z", "M4 18L12 4l8 14z M12 11l3 5H9z", "M3 12h18M12 3v18M6 6l12 12M18 6L6 18", "M12 3a9 9 0 100 18 6 6 0 110-12 3 3 0 100-6z", "M5 4h14l-2 9-5 7-5-7z"];
 /* v137 alliance crests: metallic insignias drawn once per alliance and cached. Six forms (winged blade, geared medallion, star compass,
    diamond badge, star seal, crowned shield) in polished silver or gold with a glowing gem core, all picked from the alliance id */
 const CREST_GEM = [[90, 220, 255], [70, 150, 255], [255, 190, 70], [255, 80, 70], [90, 240, 150], [190, 120, 255]], CRESTS = new Map();
@@ -11676,8 +11613,6 @@ function vAlly() {
   if (sub.allyView === "list") return `<div class="gstack allyv">${allyListView()}</div>`;
   if (!myAlly()) return `<div class="gstack allyv">${sub.allyView === "create" ? allyCreateView() : allyInfoView()}</div>`;
   const a = myAlly(), T = now(), strikes = Object.values(G.assaults || {}).filter(x => x.arrive > T && !x.disb && canSeeJoint(x)).sort((x, y) => (x.rally ? x.launch : x.arrive) - (y.rally ? y.launch : y.arrive));
-  const sRow = x => { const p = asTgt(x.pid) || PB[x.pid], n = Object.keys(x.members || {}).length, mine = !!(x.members || {})[G.me];
-    return `<button class="tgt" data-act="assault" data-id="${x.id}"><span class="lvl" style="color:#5dff8a;border-color:#5dff8a">${n}</span><span><span class="nm">⚔ ${esc(p ? p.name : "Target")}</span><br><span class="sub">led by ${esc(nameOf(x.leader))} · launches in <span data-end="${x.arrive}">${ftime(x.arrive - T)}</span></span></span><span class="pill ${mine ? "ok" : "go"}">${mine ? "Joined" : "Join"}</span></button>`; };
   const ranks = boardRows("alliances").slice(0, 10);
   return `<div class="gstack allyv">
     ${allyHero(a, strikes.length)}
@@ -11840,7 +11775,10 @@ G.hudT = performance.now(); for (const ev of ["pointerdown", "pointermove", "whe
 // v138: the Advisor's bubble steps up above the base view's Quests tile instead of overlapping it (their heights differ by screen)
 setInterval(() => { const c = $("#coach"), d = $(".dirmini"); if (!c) return; c.style.bottom = ""; if (!d || !d.offsetParent) return; const cb = c.getBoundingClientRect(), db = d.getBoundingClientRect(), ov = cb.bottom - db.top + 8;
   if (ov > 0 && cb.right > db.left && cb.left < db.right) c.style.bottom = `calc(env(safe-area-inset-bottom,0px) + ${Math.round(196 + ov)}px)`; }, 500);
-setInterval(() => { const a = $("#app"); if (!a) return; const idle = view === "galaxy" && !sheet && !battle && !tourT && !GD.el && !(tutOn() && (TUT[S.tut.i] || {}).fly) && performance.now() - G.hudT > 15000; /* v292: never during the tour; v318: nor while the guide points at something, or during the Academy's fleet steps */ G.hudIdle = idle; a.classList.toggle("hudidle", idle); }, 1000); // v109: the map HUD fades after 15 s idle
+setInterval(() => { const a = $("#app"); if (!a) return; const idle = view === "galaxy" && !sheet && !battle && !tourT && !GD.el && !(tutOn() && (TUT[S.tut.i] || {}).fly) && performance.now() - G.hudT > 15000; /* v292: never during the tour; v318: nor while the guide points at something, or during the Academy's fleet steps */ G.hudIdle = idle; a.classList.toggle("hudidle", idle);
+  /* v319: an Academy commander filming their first strike gets the camera back once the fight is over (it used to follow the fleet all the way home, with the guide hidden) */
+  const cm = G3 && G3.cam; if (cm && cm.cine && !cm.siege && tutOn() && S.tut.i < TUT_BASICS && S.tutCine) { const f = S.fleets.find(x => x.id === cm.followFleet); if ((!f || f.phase !== "out") && !G.clashes.some(c => c.loc === cm.lastTgt)) { cineEnd(); followStopSoft(); } } }, 1000); // v109: the map HUD fades after 15 s idle
+const followStopSoft = () => { if (G3) G3.cam.followFleet = null; fleetHud(true); coachRender(true); };
 /* fleet control, opened by tapping one of your fleets on the map: where it is going, a speed boost, recall, its battle
    manoeuvre, and a follow camera */
 const ROUTE_N = { atk: "Attack", back: "Returning home", gather: "Gathering / exploring", joint: "Joint strike / stationing", spy: "Espionage" };
@@ -12538,18 +12476,6 @@ function speedBar(to, sel) {
 }
 const selected = () => Object.fromEntries(Object.entries(pick).filter(([, v]) => v > 0));
 const homeShipsAvail = () => Object.fromEntries(Object.entries(S.ships).filter(([k, v]) => v > 0 && SH[k]));
-function colonyBuildings(p) {
-  const used = usedOf(p), tot = fieldsOf(p), T = now(), r = colonyRates(p);
-  return `<h2 class="sec">Colony buildings</h2>${fieldsBar(used, tot)}
-    <dl class="kv"><dt>Output now</dt><dd>${costHTML({ m: Math.round(r.m), c: Math.round(r.c), g: Math.round(r.g) })}</dd>${r.eff < 1 ? `<dt>Power</dt><dd style="color:var(--red)">${Math.round(r.eff * 100)}%</dd>` : ""}</dl>
-    <div>${CB.map(k => { const L = (p.b || {})[k] || 0, c = cost(B[k], L + 1), miss = missingAt(B[k].req, p), busy = p.cq && p.cq.k === k;
-      let ctl;
-      if (busy) ctl = `<span style="font-family:var(--f-display);color:var(--cyan)" data-end="${p.cq.e}">${ftime(p.cq.e - T)}</span>`;
-      else if (miss.length) ctl = `<span class="req">Needs ${reqText(B[k].req)}</span>`;
-      else if (used >= tot) ctl = `<span class="req">No fields</span>`;
-      else ctl = `<button class="btn sm" data-act="cup" data-id="${p.id}" data-k="${k}" data-cost='${JSON.stringify(c)}' ${p.cq ? "data-block disabled" : ""}>${p.cq ? "Busy" : "Lv." + (L + 1) + " · " + ftime(bTimeL(k, L + 1, p))}</button>`;
-      return `<div class="crow"><span class="ic">${bicon(k)}</span><span class="nm">${B[k].n} · Lv.${L}<small>${costHTML(c)}</small></span>${ctl}</div>`; }).join("")}</div>`;
-}
 /* planet command grid: the main orders as big icon buttons */
 const AI = {
   spy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 18l5-5M9 13l3-7 6 6-7 3zM15 5a6 6 0 014 4M15 2a9 9 0 017 7"/></svg>',
@@ -12915,7 +12841,6 @@ const MI = {
   swords: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l10 10M20 4L10 14M7 17l-3 3M17 17l3 3M6 13l5 5M18 13l-5 5"/></svg>',
   alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></svg>'
 };
-const MTABS = [["game", "Game Menu", "grid"], ["info", "My Info", "user"], ["quest", "Quest", "q"], ["save", "Save", "save"], ["shop", "Shop", "tag"], ["inv", "Inventory", "box"], ["msg", "Message", "mail"], ["etc", "Etc.", "dots"]];
 let menu = { open: { quests: true }, tr: { from: "m", to: "c", amt: 0 } };
 const maxFleets = () => 2 + (S.r.computer || 0) + Math.max(0, myPlanets().length - 1) + (officer("admiral") ? 2 : 0) + (cmdClass() === "general" ? 2 : 0) + vipEff().march; // every colony adds a slot, active VIP 6 and 14 add more
 /* v128: steeper curve (score 10·(L-1)^2.5), capped at CMD_MAX: Lv.10 ≈ 2.4k, Lv.50 ≈ 168k, Lv.100 ≈ 975k */
@@ -12925,7 +12850,6 @@ const cmdLevel = s => { let L = Math.min(CMD_MAX, Math.floor(Math.pow(Math.max(0
 const TITLES = [[100, "Fleet Marshal"], [80, "Supreme Admiral"], [60, "Grand Admiral"], [40, "Admiral"], [30, "Vice Admiral"], [20, "Commodore"], [12, "Captain"], [6, "Commander"], [3, "Lieutenant"], [1, "Ensign"]];
 const titleOf = L => TITLES.find(([l]) => L >= l)[1];
 function myRank() { if (G.mode !== "online") return null; const ids = allCommanders().sort((a, b) => b[1].score - a[1].score).map(([id]) => id); const i = ids.indexOf(G.me); return i < 0 ? null : i + 1; }
-const fmtDate = t => { try { return new Date(t).toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" }); } catch (e) { return "–"; } };
 
 /* daily tasks: three a day, picked by date, progress measured from counters at day start */
 const DAILY = [
@@ -12949,11 +12873,9 @@ function ensureDaily() {
 }
 const dailyDone = t => metric(t.k) - t.base >= t.n;
 const dailyReward = () => { const s = Math.max(1, score()); return { m: Math.round(600 + s * 25), c: Math.round(400 + s * 15), g: Math.round(150 + s * 6) }; };
-function dailyReady() { if (!S || !S.daily) return false; return S.daily.tasks.some(t => dailyDone(t) && !t.claimed) || (!S.daily.bonus && S.daily.tasks.every(t => t.claimed)); }
 const bump = k => { S.stats = S.stats || {}; S.stats[k] = (S.stats[k] || 0) + 1; };
 
 /* the old slide-out menu is now the Commander tab; these keep older call sites working */
-function openMenu() { view = "cmd"; render(); }
 function closeMenu() {}
 function renderMenu() { if (view === "cmd") render(true); }
 function vCmd() {
@@ -13029,19 +12951,6 @@ function mElem() {
     <div class="rsumb">${sum}</div>
     <h3 style="margin-top:8px">Ring workshop</h3>${shop}
     <p class="note">Elemental runes are rare: they are torn from the cores of Collective Cubes. Only some Cube cores hold one: a ${Math.round(runeChance(1) * 100)}% chance at Lv.1, rising to ${Math.round(runeChance(30) * 100)}% at Lv.25+, where a lucky core holds 2. A joint strike on a Lv.10+ Cube adds +10%.</p></div>`;
-}
-function mQuest() {
-  ensureDaily();
-  const q = quest(), ok = q.ok(S), rw = dailyReward();
-  const rwHTML = r => Object.entries(r).filter(([, v]) => v).map(([k, v]) => k === "boost" ? `<span class="ci" style="color:var(--amber)">+${v} Boost</span>` : `<span class="ci r-${k}">${RI[k]}${fmt(v)}</span>`).join("");
-  const done = Q.slice(0, Math.min(S.quest, Q.length)).slice(-6).reverse();
-  return `<div class="mcard"><h3>${MI.q.replace("<svg", '<svg style="width:24px;height:24px"')}Story · Chapter ${S.chapter}</h3><p style="color:var(--amber);font-family:var(--f-display);letter-spacing:.12em;text-transform:uppercase;font-size:12px">${CHAPTERS[S.chapter]}</p>
-      <p style="color:#f2f6f8;font-size:17px">${esc(q.t)}</p><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span class="cost">${rwHTML(q.rw)}</span>${ok ? `<button class="btn amber" data-act="claim">Claim reward</button>` : `<button class="btn ghost" data-act="mgo">Go there</button>`}</div></div>
-    <div class="mcard"><h3>${MI.cycle.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Daily tasks</h3><p>New tasks every day at midnight. Finish all three for a bonus Boost.</p>
-      ${S.daily.tasks.map((t, i) => { const def = DAILY.find(x => x.k === t.k), prog = Math.min(t.n, metric(t.k) - t.base), d = prog >= t.n;
-        return `<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:center;padding:8px 0;border-top:1px solid #333a42"><span style="font-size:16px;color:#eef3f6">${def.t(t.n)}<br><small style="color:#93a1ac">${prog} / ${t.n}</small></span>${t.claimed ? '<span class="pill ok">Claimed</span>' : `<button class="btn ${d ? "amber" : "ghost"} sm" data-act="dailyClaim" data-i="${i}" ${d ? "" : "disabled"}>Claim</button>`}<div class="xp" style="grid-column:1/-1"><i style="width:${prog / t.n * 100}%"></i></div></div>`; }).join("")}
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span class="cost">${rwHTML(rw)} each</span>${S.daily.bonus ? '<span class="pill ok">Bonus claimed</span>' : `<button class="btn amber sm" data-act="dailyBonus" ${S.daily.tasks.every(t => t.claimed) ? "" : "disabled"}>+1 Boost bonus</button>`}</div></div>
-    ${done.length ? `<div class="mcard"><h3>${MI.check.replace("<svg", '<svg style="width:22px;height:22px;color:#7be39a"')}Completed · ${S.quest}</h3>${done.map(x => `<div class="qdone">${MI.check}<span>${esc(x.t)}</span></div>`).join("")}</div>` : ""}`;
 }
 function mSave() {
   return `<div class="mcard"><h3>${MI.save.replace("<svg", '<svg style="width:24px;height:24px"')}Save</h3>
@@ -13209,15 +13118,6 @@ function vMail() {
   return `<div class="mailhd"><div><div class="chapter">Fleet Command</div><h2>Mail</h2></div><div class="mailact">${G.mode === "online" ? `<button class="btn sm" data-act="mailNew">✉ New message</button>` : ""}${f === "alert" && S.log.length ? `<button class="btn ghost sm" data-act="mailClear">Clear alerts</button>` : ""}</div></div>${tabs}
     <div class="mlist">${list.length ? list.map(row).join("") : `<p class="note" style="text-align:center;padding:24px 0">${empty}</p>`}</div>`;
 }
-function mMsg() {
-  const items = S.reports.map(r => ({ t: r.at, rep: r })).concat((S.spyReps || []).map(s => ({ t: s.at, spy: s })), S.log.slice(0, 20).map(l => ({ t: l.t, log: l }))).sort((a, b) => b.t - a.t).slice(0, 40);
-  return `<div class="mcard"><h3>${MI.mail.replace("<svg", '<svg style="width:24px;height:24px"')}Messages</h3><p>Battle reports and alerts from Fleet Command. Tap a report to open it.</p></div>
-    <div class="feed">${items.length ? items.map(x => {
-      if (x.spy) { const s = x.spy; return `<button class="it spyit" data-act="spyOpen" data-id="${s.id}"><span class="ico">${AI.spy}</span><span><b>Espionage report: ${esc(s.name)}</b><small>${ago(s.at)} ago · ${s.res ? fmt(total(s.res)) + " resources · " : ""}${spySum(s)}</small></span></button>`; }
-      if (x.rep) { const r = x.rep, win = repWin(r); return `<button class="it ${win ? "good" : "bad"}" data-act="mreport" data-id="${r.id}"><span class="ico">${MI.swords}</span><span><b>${esc(r.title)}</b><small>${ago(r.t || r.at)} ago · ${r.captured ? (r.kind === "defense" ? "planet lost" : "planet captured") : win ? "victory" : r.winner === "draw" ? "draw" : "defeat"}</small></span></button>`; }
-      const l = x.log; return `<div class="it ${l.kind === "win" ? "good" : l.kind === "loss" ? "bad" : ""}" style="cursor:default"><span class="ico">${l.kind === "warn" || l.kind === "loss" ? MI.alert : MI.mail}</span><span><b>${esc(l.msg)}</b><small>${ago(l.t)} ago</small></span></div>`;
-    }).join("") : '<p class="note">No messages yet.</p>'}</div>`;
-}
 function mGame() {
   const net = G.mode === "online" ? `Live galaxy, ${activePlayers()} of ${MAX_PLAYERS} commander seats taken.` : G.mode === "full" ? `The shared galaxy is full (${MAX_PLAYERS} commanders).` : G.mode === "readonly" ? "You can watch the shared galaxy but can't play in it." : G.mode === "offline" ? "Solo galaxy." : "Connecting…";
   const tg = (act, on, label) => `<div class="tgl"><span>${label}</span><button class="toggle${on ? " on" : ""}" style="width:auto;padding:4px" data-act="${act}" aria-pressed="${on}" aria-label="${label}"><span class="sw"></span></button></div>`;
@@ -13342,27 +13242,6 @@ function unlockAudio() {
   audioStart(); if (!AU.ctx) return; if (AU.mFail) { AU.mTry = 2; musicRetry(); } /* v284: each tap gets one more try, inside the tap so phones allow it to play */ if (!SB.busy && !unlockAudio.prep) { unlockAudio.prep = 1; setTimeout(() => { try { sbPrep(); } catch (e) {} }, 5000); } // battle sounds made in the background, before the first fight
   if (AU.ctx.state !== "running") AU.ctx.resume().catch(() => {});
   if (AU.file && AU.file.paused && AU.musicOn && !AU.muted && !document.hidden && AU.track === "file") AU.file.play().catch(() => {});
-}
-function genMusic() {
-  const c = AU.ctx; if (!c || AU.gen) return;
-  const mtof = m => 440 * Math.pow(2, (m - 69) / 12), out = c.createGain(); out.gain.value = .55; out.connect(AU.mus);
-  const delay = c.createDelay(2), fb = c.createGain(), dl = c.createBiquadFilter(); delay.delayTime.value = .48; fb.gain.value = .38; dl.type = "lowpass"; dl.frequency.value = 1600;
-  delay.connect(fb); fb.connect(dl); dl.connect(delay); delay.connect(out);
-  const padF = c.createBiquadFilter(); padF.type = "lowpass"; padF.frequency.value = 650; padF.Q.value = .6; padF.connect(out);
-  const lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = .04; lg.gain.value = 300; lfo.connect(lg); lg.connect(padF.frequency); lfo.start();
-  const chords = [[45, 52, 57, 60], [41, 48, 53, 57], [43, 50, 55, 59], [40, 47, 52, 55]];
-  const voices = []; for (let i = 0; i < 4; i++) for (const det of [-7, 7]) { const o = c.createOscillator(), g = c.createGain(); o.type = "sawtooth"; o.detune.value = det; g.gain.value = .028; o.connect(g); g.connect(padF); o.start(); voices.push([o, i]); }
-  const sub = c.createOscillator(), sg = c.createGain(); sub.type = "sine"; sg.gain.value = .1; sub.connect(sg); sg.connect(out); sub.start();
-  const scale = [57, 60, 62, 64, 67, 69, 72, 74, 76, 79]; let step = 0;
-  const tick = () => {
-    if (!AU.musicOn || AU.muted || document.hidden) { step++; return; }
-    const t = c.currentTime, ch = chords[Math.floor(step / 16) % chords.length];
-    if (step % 16 === 0) { voices.forEach(([o, i]) => o.frequency.setTargetAtTime(mtof(ch[i]), t, 1.4)); sub.frequency.setTargetAtTime(mtof(ch[0] - 12), t, 1.6); }
-    if (Math.random() < .42) { const n = scale[(Math.random() * scale.length) | 0], o = c.createOscillator(), g = c.createGain(); o.type = "triangle"; o.frequency.value = mtof(n);
-      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + 1.8); o.connect(g); g.connect(out); g.connect(delay); o.start(t); o.stop(t + 1.9); }
-    step++;
-  };
-  AU.gen = setInterval(tick, 520);
 }
 let NOISE = null, lastZap = 0;
 function noiseSrc() { const c = AU.ctx; if (!NOISE) { NOISE = c.createBuffer(1, c.sampleRate, c.sampleRate); const d = NOISE.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } const s = c.createBufferSource(); s.buffer = NOISE; return s; }
@@ -13622,12 +13501,17 @@ const tutWaitShips = () => !Object.values(S.ships || {}).some(v => v > 0) && S.f
 const tutUnit = (k, n) => () => { const need = reqStep(SH[k].req); if (need) return need.r ? rPath(need.k, RCAT_OF(need.k))() : bPath(need.k, B[need.k].cat === "fac" ? "fac" : "res")();
   return S.sq.some(q => q.k === k) ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish them instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed them up"], [".qrow .t", `${SH[k].n}s in production`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard to watch them"], DOCKT("build", "Tap Build")]
     : !canPayRes(SH[k].c || {}) ? [["#hud", `Not enough resources for a ${SH[k].n} yet. Your mines keep working: come back in a few minutes`]]
-    : [[`.sheet [data-act="make"][data-k="${k}"]`, `Set ${n}, then tap Build`], [`article.bn[data-kind="s"][data-k="${k}"]`, `Choose ${SH[k].n}`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")]; };
+    : [[`.sheet [data-act="make"][data-k="${k}"]`, `Tap Build to make ${n}`], [`article.bn[data-kind="s"][data-k="${k}"]`, `Choose ${SH[k].n}`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")]; };
 const tutStrike = (what) => () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : [['.sheet [data-act="launch"]', what], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
 /* v318: the fleet you sent at the Hive, still flying out. The tap, rush and film steps need it in the air: if it has landed, send another */
 const tutFleet = () => S.fleets.find(f => f.pid && f.phase === "out" && !f.assault && f.mission !== "spy");
 const tutSend = () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : tutWaitShips() || [['.sheet [data-act="launch"]', "Send your fighters"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
 const tutAt = id => tutOn() && (TUT[S.tut.i] || {}).id === id;
+/* v319: how many of ship k the Academy step or fleet-path step still wants, so the Shipyard's amount starts there (it started at 1, and
+   "Tap Build to make 3" was a stumbling block for young players) */
+const tutQty = k => { const st = tutOn() ? TUT[S.tut.i] : null, m = st && /^Build (\d+) /.exec(st.t), sp = shipStep();
+  const want = m && (st.fast === k || st.t.includes(SH[k].n)) ? +m[1] : sp && sp.k === k ? sp.n : 0;
+  return Math.max(0, want - own(k) - S.sq.filter(q => q.k === k).reduce((a, q) => a + (q.left || 0), 0)); };
 /* a ring on the fleet itself: the 3D map has no button to point at, so a marker sits where the fleet is on screen (taps pass through it) */
 function tutFleetMark(id) {
   let m = $("#tutfm"); const o = G3 && view === "galaxy" && G3.fleets.get(id), v = o && o.pt ? new TH.Vector3(o.pt.x, o.pt.y, o.pt.z).project(G3.camera) : null;
@@ -13654,7 +13538,7 @@ const TUT = [
   { lv: 3, t: "Research Energy Technology", say: "Energy Technology is the root of the tech tree, and Combustion Drive needs it. Start it now.", ok: s => s.r.energyT >= 1, go: { v: "lab" }, rcat: "Basic", path: rPath("energyT", "Basic"), rw: { m: 2500, c: 1200, g: 700, shards: 1 } },
   { lv: 3, t: "Research Combustion Drive", say: "Combustion Drive powers your first warships. Once it is done, the Shipyard can build Light Fighters.", ok: s => s.r.drive >= 1, go: { v: "lab" }, rcat: "Drive", path: rPath("drive", "Drive"), rw: { m: 3500, c: 1200, g: 300 } },
   { lv: 3, t: "Build 3 Light Fighters", say: "Light Fighters are cheap and fast: perfect for your first raids. Queue three of them. Academy crews build them in a minute each.", ok: () => own("fighter") >= 3, fast: "fighter", go: { v: "build", s: "ships" }, /* v190: academy fighters take a minute each (they took ~10, a half-hour wait mid-tutorial) */
-    path: () => S.sq.some(q => q.k === "fighter") ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish them instantly"], ['.qrow [data-act="boost"]', "Tap to use a Boost: 5 minutes faster"], [".qrow .t", "Fighters in production. They join your fleet as they finish"], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard to watch them"], DOCKT("build", "Tap Build")] : [['.sheet [data-act="make"][data-k="fighter"]', "Set 3, then tap Build"], ['article.bn[data-kind="s"][data-k="fighter"]', "Choose Light Fighter"], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")], rw: { m: 800, c: 400, shards: 2 } },
+    path: () => S.sq.some(q => q.k === "fighter") ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish them instantly"], ['.qrow [data-act="boost"]', "Tap to use a Boost: 5 minutes faster"], [".qrow .t", "Fighters in production. They join your fleet as they finish"], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard to watch them"], DOCKT("build", "Tap Build")] : [['.sheet [data-act="make"][data-k="fighter"]', "Tap Build to make 3"], ['article.bn[data-kind="s"][data-k="fighter"]', "Choose Light Fighter"], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")], rw: { m: 800, c: 400, shards: 2 } },
   /* v318: launch, then follow the fleet on the map, rush it and film it while it flies, then the win */
   { lv: 3, t: "Attack a Hive garrison", say: "The amber worlds belong to the Hive. I've marked a weak one near us: send the fighters.", ok: s => s.wins >= 1 || !!tutFleet(), hive: 1, path: tutSend, rw: { m: 600, c: 300, shards: 1 } },
   { lv: 3, id: "tap", t: "Tap your fleet on the map", say: "Our fighters are under way. Find them on the Galaxy map and tap them: the camera follows your fleet and its control bar opens.", ok: s => !!s.tutTap, fly: 1, fm: 1, path: () => tutFlyPath() || [SHOWME], rw: { m: 400, c: 300, g: 100 } },
@@ -13711,7 +13595,7 @@ function shipStep() {
   const rw = { m: Math.round((c.m || 0) * n * .15), c: Math.round((c.c || 0) * n * .15), g: Math.round((c.g || 0) * n * .15), shards: i + 1 };
   const make = () => S.sq.some(q => q.k === k) ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish them instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed them up"], [".qrow .t", `${d.n}s in production`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard to watch them"], DOCKT("build", "Tap Build")]
     : !canPayRes(c) ? [["#hud", `Not enough resources for a ${d.n} yet. Your mines keep working: come back in a few minutes`]] /* v235: never point at a greyed-out Build button */
-    : [[`.sheet [data-act="make"][data-k="${k}"]`, `Set ${n}, then tap Build`], [`article.bn[data-kind="s"][data-k="${k}"]`, `Choose ${d.n}`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")];
+    : [[`.sheet [data-act="make"][data-k="${k}"]`, `Tap Build to make ${n}`], [`article.bn[data-kind="s"][data-k="${k}"]`, `Choose ${d.n}`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")];
   return { i, k, n, d, need, say, rw, t: `Build ${n} ${d.n}${n > 1 ? "s" : ""}`, ok: () => own(k) >= n,
     go: need ? (need.r ? { v: "lab" } : { v: "build", s: B[need.k].cat === "fac" ? "fac" : "res" }) : { v: "build", s: "ships" }, rcat: need && need.r ? RCAT_OF(need.k) : null,
     path: need ? (need.r ? rPath(need.k, RCAT_OF(need.k)) : bPath(need.k, B[need.k].cat === "fac" ? "fac" : "res")) : make };
@@ -13983,7 +13867,7 @@ function drawBattleFlags(ctx, b, scr, pos, W, H, t, real, T, lo, d) {
     for (const [tx, ty] of thr) { const pL = L0 * .66 * plK * fli; ctx.save(); ctx.translate(tx * L0, ty * L0); ctx.rotate(axA); ctx.drawImage(glowSprite(e.rgba), -pL * .08, -L0 * .055, pL, L0 * .11); ctx.drawImage(glowSprite(e.rgba), -L0 * .06, -L0 * .06, L0 * .12, L0 * .12); ctx.drawImage(glowSprite("rgba(255,255,255,1)"), -L0 * .025, -L0 * .022, L0 * .17 * plK, L0 * .044); ctx.restore(); }
     if (frv > .03) { const bw = art.bow || [.9, 0]; ctx.save(); ctx.translate(bw[0] * L0, bw[1] * L0); ctx.rotate(axA + Math.PI); ctx.globalAlpha = .95 * frv * fade; for (const off of [-.03, .03]) { const rL = L0 * .32 * frv; ctx.drawImage(glowSprite(e.rgba), -L0 * .22, off * L0 - L0 * .022, rL * 2, L0 * .044); ctx.drawImage(glowSprite("rgba(255,255,255,1)"), -L0 * .22, off * L0 - L0 * .01, rL * .7, L0 * .02); } ctx.restore(); }
     ctx.restore();
-    if (e.dead == null) { const fz = Math.max(11 * d, L0 * .1); ctx.save(); ctx.font = `700 ${fz}px ${getComputedStyle(document.documentElement).getPropertyValue("--f-display") || "sans-serif"}`; ctx.textAlign = "center"; ctx.fillStyle = e.rgba; ctx.shadowColor = e.rgba; ctx.shadowBlur = 8 * d; ctx.globalAlpha = .9; ctx.fillText(FACTIONS[e.f].n, x, y + L0 * .34); ctx.restore(); }
+    if (e.dead == null) { const fz = Math.max(11 * d, L0 * .1); ctx.save(); ctx.font = `700 ${fz}px ${cssFont()}`; ctx.textAlign = "center"; ctx.fillStyle = e.rgba; ctx.shadowColor = e.rgba; ctx.shadowBlur = 8 * d; ctx.globalAlpha = .9; ctx.fillText(FACTIONS[e.f].n, x, y + L0 * .34); ctx.restore(); }
     /* v253 the flagship's guns, visual only (no damage, no effect on the result): 5 turrets each hammer one enemy squadron with short bursts. Every couple of
        seconds the guns swing to the next 5, working through a shuffled list of every enemy, so in time the whole enemy fleet comes under fire. */
     if (e.dead == null && !b.paused && !b.done && b.intro <= 0 && foes.length) { const slow = busy1 || b.tier >= 2 || lo, gap = slow ? 105 : 62;
@@ -14132,7 +14016,6 @@ function bExplode(b, x, y, size, t, d) {
     if (size >= 1.8 && b.flares.length < 6) b.flares.push({ x, y, t, life: 520 + size * 170, s: size }); }
   for (const A of [b.fire, b.smoke, b.sparks, b.flashes, b.embers]) if (A.length > 420) A.splice(0, A.length - 420);
 }
-const bPan = (x, W) => clamp(x / W * 2 - 1, -1, 1);
 function drawHexes(ctx, b, t, d) {
   for (const h of b.hexes) { const p = (t - h.t) / 360; if (p < 0 || p > 1) continue; ctx.globalAlpha = (1 - p) * .95;
     for (const [ox, oy] of h.cells) { const cx = h.x + ox * h.r * 1.74, cy = h.y + oy * h.r * 1.5, r = h.r * (1 + p * .2); ctx.beginPath();
@@ -15051,7 +14934,6 @@ function boardRows(kind) {
   if (kind === "players") for (const b of BOTS) rows.push({ id: b.id, val: botScore(b), bot: true, p: { score: botScore(b), planets: botColonyIds(b).length + 1 } });
   return rows.sort((x, y) => y.val - x.val || (x.me ? -1 : 1));
 }
-const myRankIn = kind => boardRows(kind).findIndex(r => r.me) + 1;
 function shRanks(st) {
   st = st || sheet; const inView = st !== sheet;
   const t = ["players", "pvp", "alliances"].includes(st.tab) ? st.tab : "players", rows = boardRows(t), mi = rows.findIndex(r => r.me);
@@ -15088,7 +14970,6 @@ const hexA = (h, a) => { const c = TH_Color0(h); return `rgba(${c[0]},${c[1]},${
 function TH_Color0(h) { const n = typeof h === "number" ? h : parseInt(String(h).replace("#", ""), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
 const AV_PHOTO = {}; // uid → Image (loaded) | "loading" | null
 const AV_CACHE = new Map(); // painted portraits by id|faction|size
-function avPhotoSrc(uid) { if (uid === G.me) return S.avPhoto || null; const e = AV_PHOTO[uid]; return e && e.src ? e.src : null; }
 function avPhotoLoad(uid, cb) {
   if (uid === G.me) { if (!S.avPhoto) return null; let im = AV_PHOTO[uid]; if (!im || im.src !== S.avPhoto) { im = AV_PHOTO[uid] = new Image(); im.onload = cb; im.src = S.avPhoto; } return im.complete && im.naturalWidth ? im : null; }
   const e = AV_PHOTO[uid]; if (e && e.complete && e.naturalWidth) return e; if (e) return null;
@@ -15210,18 +15091,6 @@ const avOf = uid => { const v = uid === G.me ? (S.avatar || defAv(uid)) : ((G.pl
 const avFacOf = uid => uid === G.me ? facOf() : ((G.players[uid] || {}).fac || "terran");
 const avCanvas = (uid, cls) => `<canvas class="${cls || "avc"}" data-av="${avOf(uid)}|${avFacOf(uid)}|${uid}" role="img" aria-label="Avatar"></canvas>`;
 /* your own photo as your avatar: picked on the phone, cropped square, resized to 128 px and stored small enough to share */
-function avPhotoPick() {
-  const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.style.display = "none"; document.body.appendChild(inp);
-  inp.addEventListener("change", () => { const f = inp.files && inp.files[0]; inp.remove(); if (!f) return; if (!/^image\//.test(f.type)) return toast("Pick a photo or image.", "warn");
-    const url = URL.createObjectURL(f), im = new Image();
-    im.onload = () => { const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d"), k = Math.min(im.naturalWidth, im.naturalHeight); x.drawImage(im, (im.naturalWidth - k) / 2, (im.naturalHeight - k) / 2, k, k, 0, 0, 128, 128); URL.revokeObjectURL(url);
-      let q = .82, du = c.toDataURL("image/jpeg", q); while (du.length > 30000 && q > .4) { q -= .1; du = c.toDataURL("image/jpeg", q); }
-      S.avPhoto = du; S.avatar = "photo"; AV_PHOTO[G.me] = null; dirty(); store.lastPlayer = "";
-      if (G.db && G.mode === "online") serial("avpic", () => G.db.doc("players/" + G.me + "/av/pic").set({ u: du, w: now() }).catch(() => toast("Your photo is set here, but it could not be shared with other players right now.", "warn")));
-      syncPlayer(); hud.last = ""; render(true); if (sheet) renderSheet(); toast("Your photo is now your avatar.", "win"); };
-    im.onerror = () => { URL.revokeObjectURL(url); toast("That image could not be opened.", "warn"); }; im.src = url; });
-  inp.click();
-}
 function shProfile() {
   const uid = sheet.u || G.me, me = uid === G.me, bot = isBot(uid) && BOT_BY[uid], P = me ? myPub() : bot ? { score: botScore(bot), planets: botColonyIds(bot).length + 1, lvl: cmdLevel(botScore(bot)), fac: "terran", bio: `${botFriend(uid) ? "A bot commander in your alliance" : BOT_RAIDS ? "A hostile bot commander" : "A rival bot commander, at war with the other bots"}, strength tier ${bot.tier}.`, rec: { w: 0, l: 0, d: 0 }, last: now() } : G.players[uid];
   if (!P) return `<div class="hd"><div><h2>Unknown commander</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
@@ -15283,7 +15152,6 @@ function chatInit() {
 }
 let chatT = 0;
 function chatChanged() { clearTimeout(chatT); chatT = setTimeout(() => { if (sheet && sheet.type === "chat") renderSheet(); trayRender(); dock(); if (view === "mail") render(true); }, 120); }
-const chatSeenKey = (ch, to) => ch === "d" ? "d:" + dmKey(G.me, to) : ch + ":" + CHAT.day;
 function chatUnread() {
   const seen = S.chatSeen || {}, blocked = new Set(S.blocked || []), count = (arr, key) => arr.filter(m => m.u !== G.me && !blocked.has(m.u) && m.t > (seen[key] || 0)).length;
   let n = count(CHAT.a, "a:" + CHAT.day); for (const c of Object.values(CHAT.dms)) n += count(c.m, "d:" + c.id); return n; // global chat doesn't badge; alliance and direct do
@@ -16014,7 +15882,7 @@ const ACT = {
   openShop: () => openSheet({ type: "shop", cat: "boost" }),
   openShop2: d => openSheet({ type: "shop", cat: d.v || "boost" }),
   spyOpen: d => openSheet({ type: "spyrep", id: d.id }),
-  detail: d => { if (d.kind === "b") SFX.tapB(d.k); openSheet({ type: "detail", kind: d.kind, k: d.k, qty: 1, tab: 0, pid: d.pid || null }); },
+  detail: d => { if (d.kind === "b") SFX.tapB(d.k); openSheet({ type: "detail", kind: d.kind, k: d.k, qty: (d.kind === "s" && !d.pid && tutQty(d.k)) || 1, tab: 0, pid: d.pid || null }); }, // v319: the Academy's amount, ready to build
   bcat: d => { sub.bcat = d.v; sub.build = "bld"; view = "build"; render(true); },
   rcat: d => { sub.rcat = d.v || null; render(); $("#view").scrollTop = 0; },
   ffrom: d => { sub.ffrom = d.v === "all" ? null : d.v; render(); },
@@ -16431,7 +16299,7 @@ function start(data) {
     try {
       if (++slow % 20 === 0) { radarSweep(); nexusFinalize(); chatInit(); phalanxSweep(); botWarTick(); vipTrial(); }
       // Astrophysics arrived after some commanders already held several worlds: credit them the levels their empire needs, once
-      if (slow % 20 === 9 && S.intro && S.faction && !sheet && !battle && performance.now() - (G.btClosedAt || -1e9) > 15000 && S.loginNag !== utcDay() && !loginState().claimed) { S.loginNag = utcDay(); crumb("events opened (daily login)"); openSheet({ type: "events" }); } // v268: not straight after a battle
+      if (slow % 20 === 9 && S.intro && S.faction && !sheet && !battle && !advLines && !(tutOn() && S.tut.i < TUT_BASICS) && performance.now() - (G.btClosedAt || -1e9) > 15000 && S.loginNag !== utcDay() && !loginState().claimed) { S.loginNag = utcDay(); crumb("events opened (daily login)"); openSheet({ type: "events" }); } // v268: not straight after a battle
       if (!S.resG && slow > 4) { S.resG = 1; const r0 = S.r; r0.computer = Math.max(r0.computer || 0, (r0.command || 0) + 1); if (r0.hyper > 0) r0.hyperT = Math.max(r0.hyperT || 0, Math.min(8, Math.max(3, r0.hyper))); if (r0.astro > 0) r0.espionage = Math.max(r0.espionage || 0, 4); if (own("worldbreaker") > 0) r0.graviton = Math.max(r0.graviton || 0, 1); dirty(); }
       if (G.ready && !S.astroG && slow > 6) { S.astroG = 1; const need = Math.min(R.astro.max, 2 * (myPlanets().length - 1)); if ((S.r.astro || 0) < need) { S.r.astro = need; note(`New research: Astrophysics. Your ${myPlanets().length} worlds earned you Lv.${need} for free.`, "win"); } dirty(); }
       if (slow % 2 === 0) fogTick();
