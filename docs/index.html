@@ -2337,7 +2337,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 316;
+const GAME_V = 317;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13938,10 +13938,11 @@ function drawBattleFlags(ctx, b, scr, pos, W, H, t, real, T, lo, d) {
     for (const i of e.idx) { const n = b.n[i], p = pos[i], s = scr[i]; if (n > 0 && p && p.fl & 6) gone = true; if (n <= 0 || !p || p.fl & 6 || !s) continue; const w = Math.sqrt(Math.max(1, n * (Q[i].pow || 1))); sx += s.x * w; sy += s.y * w; sw += w; (e.pts = e.pts || []).push(s.x, s.y); }
     const foes = []; Q.forEach((q, i) => { if (q.side !== sd && b.n[i] > 0 && pos[i] && !(pos[i].fl & 6) && scr[i]) { foes.push(i); foeX += scr[i].x; foeY += scr[i].y; foeW++; } });
     if (sw) { const mx = sx / sw, my = sy / sw; let ux = foeW ? foeX / foeW - mx : sd === "a" ? 1 : -1, uy = foeW ? foeY / foeW - my : 0; const ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;
-      let rear = 0; for (let k = 0; k < e.pts.length; k += 2) rear = Math.min(rear, (e.pts[k] - mx) * ux + (e.pts[k + 1] - my) * uy); rear = Math.max(rear * .6, -L0 * .9); /* v316 at the back of its line, but never far behind it */ /* v314 the flagship commands from behind its line, away from the enemy: its ships fight out front */
+      let rear = 0; for (let k = 0; k < e.pts.length; k += 2) rear = Math.min(rear, (e.pts[k] - mx) * ux + (e.pts[k + 1] - my) * uy); rear -= L0 * .25; /* v317 behind every one of its squadrons, so the whole formation flies ahead of it (the clamp below keeps it on screen) */ /* v314 the flagship commands from behind its line, away from the enemy: its ships fight out front */
       const F = b.fbox || (b.fbox = (() => { let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity; Q.forEach((q, i) => { const s = scr[i]; if (s && pos[i]) { x0 = Math.min(x0, s.x); x1 = Math.max(x1, s.x); y0 = Math.min(y0, s.y); y1 = Math.max(y1, s.y); } }); return isFinite(x0) ? [x0, x1, y0, y1] : [0, W, 0, H]; })());
       const vb = b.vbT > t ? b.vb : (b.vbT = t + 1000, b.vb = (() => { try { const c = ctx.canvas.getBoundingClientRect(), r = s => { const k = $(s); return k && k.offsetParent ? k.getBoundingClientRect() : null; }, A = r("#bhA"), Dd = r("#bhD"), K = r("#bctl");
-        return [A ? A.bottom - c.top : 0, Math.min(Dd ? Dd.top - c.top : Infinity, K ? K.top - c.top : Infinity, c.height)]; } catch (e) { return [0, H]; } })()); /* the open strip between the two fleet panels and the playback bar, in CSS units */
+        const k = H / Math.max(1, c.height); return [(A ? A.bottom - c.top : 0) * k, Math.min(Dd ? Dd.top - c.top : Infinity, K ? K.top - c.top : Infinity, c.height) * k]; } catch (e) { return [0, H]; } })()); /* the open strip between the two fleet panels and the playback bar, in canvas pixels */
+      b.fdir = Math.abs(uy) >= Math.abs(ux) ? "y" : "x"; /* which way the fleets face: the field leaves room behind each one for its flagship (drawBattle) */
       const tx = clamp(mx + ux * rear, L0 * .55, W - L0 * .55), ty = clamp(my + uy * rear, vb[0] + L0 * .55, vb[1] - L0 * .5); e.dead = null; if (e.x == null) { e.x = tx; e.y = ty; } const f = reduced ? 1 : Math.min(1, real / 1300); e.x += (tx - e.x) * f; e.y += (ty - e.y) * f; }
     else { if (e.x == null) continue; if (e.dead == null) { e.dead = t; if (!gone) { for (const [ox, oy, big] of [[0, 0, 1], [-.5, .06, 0], [.45, -.05, 0], [-.2, -.08, 0]]) b.booms.push({ x: e.x + ox * L0, y: e.y + oy * L0, t: t + Math.abs(ox) * 260, big }); b.shake = Math.max(b.shake, 8 * d); } } }
     const fade = e.dead == null ? 1 : clamp(1 - (t - e.dead) / (gone ? 500 : 950), 0, 1); if (fade <= 0) continue;
@@ -14133,7 +14134,9 @@ function drawBattle(t) {
   const real = b.last ? Math.min(80, t - b.last) : 16; b.last = t;
   // the intro waits (up to 2.5 s) for the unit renders to finish baking, so nothing pops from flat icons into 3D mid-fight
   if (!b.paused && !b.done) { if (b.intro > 0) { if ((ART_Q.length || !fbReady()) && (b.introHold || 0) < 4500) b.introHold = (b.introHold || 0) + real; else b.intro -= real; } else b.simT = Math.min(b.end + (b.ending ? 0 : 1.5), b.simT + real / 1000 * b.speed * BATTLE_PACE * (t < b.slowUntil ? .3 : 1)); } // capital kills play in slow motion
-  const top = H * .14, bot = H * .79, T = b.simT, Q = b.Q, r = b.r, lo = b.lowFx;
+  /* v317 with flagships, the field leaves a flagship's length behind each fleet inside the open strip, so every squadron flies ahead of its flagship */
+  const fm = b.flags && b.fdir ? Math.min(W, H) * .16 * .95 : 0, fy = fm && b.fdir === "y" && b.vb, fxm = fm && b.fdir === "x" ? fm / W : 0;
+  const top = fy ? Math.max(H * .14, b.vb[0] + fm) : H * .14, bot = fy ? Math.max(top + H * .25, Math.min(H * .79, b.vb[1] - fm)) : H * .79, xl = Math.max(.06, fxm), xr = Math.max(.06, fxm), T = b.simT, Q = b.Q, r = b.r, lo = b.lowFx;
   /* v60 camera: frames the action. It follows the bulk of the fighting (the 5th to 95th percentile of live squadrons) and zooms in
      up to 2x, easing smoothly, so a 10 vs 10 brawl fills the whole screen instead of sitting in a clump in the middle */
   { const F0 = b.R.frames, fs = F0[Math.min(F0.length - 1, Math.max(0, Math.floor(T / b.R.dt)))].s, xs = [], ys = [];
@@ -14144,7 +14147,7 @@ function drawBattle(t) {
       const sx = Math.max(52, tx1 - tx0), sy = Math.max(52, ty1 - ty0), mx = (tx0 + tx1) / 2, my = (ty0 + ty1) / 2; tx0 = mx - sx / 2; tx1 = mx + sx / 2; ty0 = my - sy / 2; ty1 = my + sy / 2; }
     const c0 = b.cam || (b.cam = { x0: 0, x1: 100, y0: 0, y1: 100 }), f = reduced ? 1 : Math.min(1, real / 1100);
     c0.x0 += (tx0 - c0.x0) * f; c0.x1 += (tx1 - c0.x1) * f; c0.y0 += (ty0 - c0.y0) * f; c0.y1 += (ty1 - c0.y1) * f; }
-  const cam = b.cam, X = x => W * (.06 + .88 * (x - cam.x0) / (cam.x1 - cam.x0)), Y = y => top + (bot - top) * (y - cam.y0) / (cam.y1 - cam.y0), zoomX = 100 / (cam.x1 - cam.x0);
+  const cam = b.cam, X = x => W * (xl + (1 - xl - xr) * (x - cam.x0) / (cam.x1 - cam.x0)), Y = y => top + (bot - top) * (y - cam.y0) / (cam.y1 - cam.y0), zoomX = 100 / (cam.x1 - cam.x0);
   // backdrop: cached nebula, stars and the defender's planet on the horizon
   const pr = W * .78, pcx = W * 1.02, pcy = H * .98 + pr * .35;
   if (!b.bg || b.bg.width !== W || b.bg.height !== H) { b.dustL = b.fgL = null; const c = b.bg || (b.bg = document.createElement("canvas")); c.width = W; c.height = H; const x = c.getContext("2d");
