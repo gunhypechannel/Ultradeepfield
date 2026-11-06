@@ -2337,7 +2337,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 314;
+const GAME_V = 315;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -14021,9 +14021,11 @@ function bindBattleCam(cv) {
   cv.addEventListener("wheel", e => { const b = battle; if (!b || !b.vw) return; e.preventDefault(); camFree(b); const r = cv.getBoundingClientRect(), v = b.vw, fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height, ns = clamp(v.ts * (e.deltaY < 0 ? 1.18 : 1 / 1.18), 1, 3.5);
     v.tx = clamp(v.tx + (fx - .5) * (1 / v.ts - 1 / ns), 0, 1); v.ty = clamp(v.ty + (fy - .5) * (1 / v.ts - 1 / ns), 0, 1); v.ts = ns; }, { passive: false });
 }
+/* v315 squadron name and count badges in the battle viewer: on by default, remembered on this device */
+const bLblOn = () => { if (G.bLbl == null) { try { G.bLbl = localStorage.getItem("udfBLbl") !== "0"; } catch (e) { G.bLbl = true; } } return G.bLbl; };
 function battleCtl() {
   const b = battle, el = $("#bctl"); if (!b || !el) return;
-  el.innerHTML = `<button data-act="bpause" aria-label="${b.paused ? "Play" : "Pause"}">${b.paused ? "▶" : "❚❚"}</button><button data-act="bspeed" aria-label="Speed">${b.speed}×</button><button data-act="breplay" aria-label="Replay from the start">⟲</button><button data-act="bskip" aria-label="Skip to the result">⏭</button><button data-act="bfx" aria-label="Effects level">${b.lowFx ? "FX lo" : "FX hi"}</button><button data-act="bcam" class="${b.vw && b.vw.mode === "free" ? "on" : ""}" aria-label="${b.vw && b.vw.mode === "free" ? "Free camera: drag and pinch. Tap for the director" : "Director camera. Tap for free camera"}">${b.vw && b.vw.mode === "free" ? "✋" : "🎬"}</button><button data-act="bview" aria-label="Tactical overview">⊡</button><button data-act="bsave" class="${bSaved(b.r) ? "on" : ""}" aria-label="${bSaved(b.r) ? "Remove from Saved" : "Save to favourites"}">${bSaved(b.r) ? "★" : "☆"}</button>`;
+  el.innerHTML = `<button data-act="bpause" aria-label="${b.paused ? "Play" : "Pause"}">${b.paused ? "▶" : "❚❚"}</button><button data-act="bspeed" aria-label="Speed">${b.speed}×</button><button data-act="breplay" aria-label="Replay from the start">⟲</button><button data-act="bskip" aria-label="Skip to the result">⏭</button><button data-act="bfx" aria-label="Effects level">${b.lowFx ? "FX lo" : "FX hi"}</button><button data-act="blbl" class="${bLblOn() ? "on" : ""}" aria-label="${bLblOn() ? "Hide ship names and counts" : "Show ship names and counts"}" aria-pressed="${bLblOn()}">🏷</button><button data-act="bcam" class="${b.vw && b.vw.mode === "free" ? "on" : ""}" aria-label="${b.vw && b.vw.mode === "free" ? "Free camera: drag and pinch. Tap for the director" : "Director camera. Tap for free camera"}">${b.vw && b.vw.mode === "free" ? "✋" : "🎬"}</button><button data-act="bview" aria-label="Tactical overview">⊡</button><button data-act="bsave" class="${bSaved(b.r) ? "on" : ""}" aria-label="${bSaved(b.r) ? "Remove from Saved" : "Save to favourites"}">${bSaved(b.r) ? "★" : "☆"}</button>`;
 }
 const bPos = (b, i, tt) => { const F = b.R.frames, fd = b.R.dt, k = Math.min(F.length - 1, Math.max(0, Math.floor(tt / fd + 1e-6))), f0 = F[k], f1 = F[Math.min(F.length - 1, k + 1)];
   const u = f1.t > f0.t ? clamp((tt - f0.t) / (f1.t - f0.t), 0, 1) : 0, a = f0.s[i], c = f1.s[i]; return { x: a[0] + (c[0] - a[0]) * u, y: a[1] + (c[1] - a[1]) * u, sh: a[2], wd: a[3], fl: a[4] }; };
@@ -14315,7 +14317,7 @@ function drawBattle(t) {
       if (huA > 0 && !lo) { ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = huA * .6; const hr = L * .5; ctx.drawImage(glowSprite("fire"), ex - hr, cy - hr, hr * 2, hr * 2); ctx.restore(); }
     }
     ctx.globalAlpha = 1;
-    if (n > 0) (b.lblQ = b.lblQ || []).push([n * (q.pow || 1), () => { // labels are drawn after all squadrons, biggest first, skipping any that would overlap
+    if (n > 0 && bLblOn()) (b.lblQ = b.lblQ || []).push([n * (q.pow || 1), () => { // v315 the badges can be switched off // labels are drawn after all squadrons, biggest first, skipping any that would overlap
       /* v75 unit badge: a glass pill with the side's colour bar, the unit's name and its live count. It tries below, above, then
          beside its formation and only gives up if every spot would cover another badge. v78: text stays the same size at any camera zoom */
       const dS = d / vs;
@@ -16268,6 +16270,7 @@ const ACT = {
   bpause: () => { const b = battle; if (!b || b.done) return; b.paused = !b.paused; battleCtl(); },
   bspeed: () => { const b = battle; if (!b) return; b.speed = b.speed === 1 ? 2 : b.speed === 2 ? 4 : b.speed === 4 ? .5 : 1; battleCtl(); try { crumb(`battle speed ${b.speed}x · ${(b.Q || []).length} stacks`); } catch (e) {} },
   bros: d => { const b = battle; if (!b) return; b.rosOpen = b.rosOpen || {}; b.rosOpen[d.s] = !b.rosOpen[d.s]; },
+  blbl: () => { G.bLbl = !bLblOn(); try { localStorage.setItem("udfBLbl", G.bLbl ? "1" : "0"); } catch (e) {} battleCtl(); toast(G.bLbl ? "Ship names and counts shown." : "Ship names and counts hidden."); },
   bfx: () => { const b = battle; if (!b) return; b.lowFx = !b.lowFx; G.lowFx = b.lowFx; battleCtl(); },
   breplay: () => { const b = battle; if (!b) return; const r = b.r, sp = b.speed, lf = b.lowFx; playBattle(r); battle.speed = sp; battle.lowFx = lf; battleCtl(); },
   combatTest: () => { const res = combatTests(); sheet.tests = res; renderSheet(); },
