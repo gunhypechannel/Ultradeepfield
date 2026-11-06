@@ -2337,7 +2337,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 310;
+const GAME_V = 311;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8372,6 +8372,36 @@ function flagMetal(fac) { if (FM_T[fac]) return FM_T[fac]; const Z = IOS || WEAK
 /* the flagship's own materials, shared by its map model and its battle portrait: plated metal, and windows and drive nozzles lit in the faction's colour */
 function flagMats(fac, envI) { const T = flagMetal(fac), C = new TH.Color(FLAG_GLOW[fac]), F = { terran: [1, .78, .62], solar: [1, .86, .62], nyx: [1, .72, .5], verdant: [1, .8, .62] }[fac], metal = (v, m, ro) => { const q = new TH.MeshStandardMaterial({ map: T.map, roughnessMap: T.rough, bumpMap: T.map, bumpScale: .004, color: new TH.Color(v, v, v), metalness: m, roughness: ro, envMapIntensity: envI, flatShading: true }); return q; };
   return { fhull: metal(F[0] * .74, .96, .78), fdark: metal(F[1] * .5, .94, .82), ftrim: metal(F[2] * .46, .96, .66), fwin: new TH.MeshBasicMaterial({ color: C.clone().lerp(new TH.Color(0xffffff), .32), toneMapped: false }), feng: new TH.MeshBasicMaterial({ color: C.clone().lerp(new TH.Color(0xffffff), .62), toneMapped: false }) }; }
+/* v311 the flagship's silhouette follows the user's 3D prototypes (UDF_3D_Flagships). FLAG_PROF holds each prototype's hull slices
+   along its length: top, bottom and half-width (in its own units, nose +x, up +z). flagWarp measures the same slices on the built hull's
+   core, then remaps every part of the ship slice by slice: inside the hull's envelope a point is stretched to the prototype's envelope,
+   outside it (tower, sponsons, guns, rings) it is carried along without stretching, so all the plating, turrets, lights and glows keep
+   their shape and simply sit on the new hull. */
+const FLAG_PROF = {"terran":{"x0":-10.3,"x1":11.2,"t":[1.174,1.249,1.324,1.381,1.382,1.384,1.386,2.081,2.155,2.224,2.298,2.35,2.332,2.267,2.204,2.138,2.075,2.009,1.937,1.857,1.787,1.717,1.644,1.284,1.27,1.256,1.243,1.203,1.157,1.111,1.064,1.018,0.966,0.894,0.823,0.749,0.68,0.591,0.443,0.291],"b":[-1.174,-1.25,-1.324,-1.381,-1.382,-1.384,-1.386,-1.388,-1.39,-1.392,-1.393,-1.395,-1.397,-1.399,-1.4,-1.393,-1.379,-1.366,-1.352,-1.339,-1.325,-1.311,-1.298,-1.284,-1.27,-1.257,-1.243,-1.204,-1.158,-1.111,-1.062,-1.017,-0.966,-0.895,-0.822,-0.751,-0.679,-0.589,-0.431,-0.285],"h":[2.346,2.478,2.606,2.707,2.736,2.762,2.791,2.819,2.847,2.875,2.902,2.93,2.958,2.985,3.0,2.998,2.994,2.989,2.985,2.981,2.977,2.972,2.968,2.964,2.959,2.955,2.951,2.856,2.737,2.617,2.496,2.374,2.237,2.018,1.798,1.579,1.363,1.12,0.768,0.402]},"solar":{"x0":-10.3,"x1":11.6,"t":[1.111,1.223,1.336,1.37,1.365,2.3,2.3,2.3,2.3,2.3,2.24,2.25,2.25,2.25,2.25,2.14,2.066,1.988,1.917,1.843,1.767,1.72,1.614,1.529,1.439,1.355,1.266,1.182,1.094,0.997,0.877,0.817,0.755,0.7,0.642,0.584,0.486,0.386,0.287,0.171],"b":[-1.109,-1.225,-1.337,-1.37,-1.365,-1.359,-1.352,-1.347,-1.34,-1.334,-1.328,-1.321,-1.315,-1.309,-1.303,-1.288,-1.266,-1.245,-1.224,-1.202,-1.181,-1.159,-1.138,-1.117,-1.095,-1.075,-1.054,-1.032,-0.995,-0.936,-0.87,-0.819,-0.76,-0.7,-0.641,-0.583,-0.487,-0.38,-0.287,-0.182],"h":[2.265,2.389,2.509,2.566,2.588,2.611,2.633,2.655,2.678,2.701,2.723,2.745,2.768,2.79,2.8,2.789,2.77,2.751,2.732,2.713,2.693,2.674,2.656,2.637,2.618,2.599,2.58,2.56,2.466,2.282,2.09,1.906,1.712,1.53,1.33,1.16,0.932,0.709,0.476,0.244]},"nyx":{"x0":-10.2,"x1":11.5,"t":[1.145,1.262,1.376,2.225,2.225,2.225,2.225,2.225,2.306,2.34,2.309,2.26,2.206,2.159,2.225,2.225,2.225,2.225,1.899,1.846,2.225,2.225,2.225,2.225,1.564,1.512,1.148,1.098,1.027,0.961,0.893,0.824,0.755,0.687,0.617,0.536,0.444,0.362,0.271,0.173],"b":[-1.142,-1.259,-1.376,-1.492,-1.502,-1.503,-1.505,-1.507,-1.509,-1.51,-1.512,-1.514,-1.516,-1.517,-1.519,-1.52,-1.502,-1.466,-1.431,-1.395,-1.361,-1.325,-1.289,-1.255,-1.219,-1.184,-1.149,-1.097,-1.029,-0.961,-0.889,-0.825,-0.755,-0.687,-0.619,-0.534,-0.446,-0.36,-0.263,-0.187],"h":[2.413,2.588,2.763,2.938,2.967,2.986,3.003,3.022,3.04,3.059,3.078,3.096,3.114,3.133,3.151,3.16,3.137,3.093,3.049,3.007,2.964,2.92,2.874,2.834,2.79,2.746,2.702,2.595,2.399,2.219,2.037,1.855,1.67,1.487,1.296,1.098,0.886,0.659,0.462,0.247]},"verdant":{"x0":-10.0,"x1":11.4,"t":[1.127,1.263,1.393,1.402,1.404,1.406,1.408,1.409,1.411,1.413,1.415,1.417,1.419,1.42,1.413,1.393,1.373,1.353,1.334,1.314,1.294,1.274,1.254,1.235,1.215,1.196,1.166,1.111,1.054,0.998,0.94,0.883,0.827,0.77,0.713,0.64,0.534,0.425,0.313,0.204],"b":[-1.127,-1.264,-1.4,-1.402,-1.404,-1.406,-1.408,-1.409,-1.411,-1.413,-1.415,-1.417,-1.419,-1.42,-1.413,-1.392,-1.373,-1.353,-1.334,-1.314,-1.294,-1.274,-1.255,-1.235,-1.214,-1.196,-1.168,-1.111,-1.055,-0.997,-0.941,-0.884,-0.826,-0.769,-0.713,-0.642,-0.521,-0.424,-0.31,-0.202],"h":[2.352,2.557,2.76,2.796,2.833,2.869,2.906,2.943,2.979,3.016,3.053,3.087,3.126,3.15,3.139,3.106,3.074,3.042,3.009,2.978,2.945,2.912,2.881,2.849,2.816,2.785,2.723,2.581,2.436,2.29,2.138,1.995,1.849,1.707,1.556,1.386,1.115,0.844,0.572,0.308]}};
+function flagWarp(g, fac, core) { const P = FLAG_PROF[fac]; if (!P || !core.length) return; const N = P.t.length;
+  g.updateMatrixWorld(true); const inv = new TH.Matrix4().copy(g.matrixWorld).invert(), V = new TH.Vector3(), A = new TH.Vector3(), B = new TH.Vector3(), C = new TH.Vector3(), pts = [];
+  for (const m of core) { if (!m.isMesh) continue; const geo = m.geometry, pos = geo.attributes.position, ix = geo.index, mw = new TH.Matrix4().multiplyMatrices(inv, m.matrixWorld), n = ix ? ix.count : pos.count;
+    for (let i = 0; i < n; i += 3) { const ia = ix ? ix.getX(i) : i, ib = ix ? ix.getX(i + 1) : i + 1, ic = ix ? ix.getX(i + 2) : i + 2;
+      A.fromBufferAttribute(pos, ia).applyMatrix4(mw); B.fromBufferAttribute(pos, ib).applyMatrix4(mw); C.fromBufferAttribute(pos, ic).applyMatrix4(mw);
+      for (let k = 0; k < 12; k++) { let u = (k * .618) % 1, v = (k * .382 + .17) % 1; if (u + v > 1) { u = 1 - u; v = 1 - v; } pts.push(A.x + u * (B.x - A.x) + v * (C.x - A.x), A.y + u * (B.y - A.y) + v * (C.y - A.y), A.z + u * (B.z - A.z) + v * (C.z - A.z)); } } }
+  let x0 = Infinity, x1 = -Infinity; for (let i = 0; i < pts.length; i += 3) { x0 = Math.min(x0, pts[i]); x1 = Math.max(x1, pts[i]); }
+  const ot = new Array(N).fill(-Infinity), ob = new Array(N).fill(Infinity), oh = new Array(N).fill(0), bin = x => clamp(Math.floor((x - x0) / (x1 - x0) * N), 0, N - 1);
+  for (let i = 0; i < pts.length; i += 3) { const b = bin(pts[i]); ot[b] = Math.max(ot[b], pts[i + 1]); ob[b] = Math.min(ob[b], pts[i + 1]); oh[b] = Math.max(oh[b], Math.abs(pts[i + 2])); }
+  for (let b = 0; b < N; b++) if (!isFinite(ot[b])) { const q = b ? b - 1 : 1; ot[b] = ot[q]; ob[b] = ob[q]; oh[b] = oh[q]; }
+  const s = (x1 - x0) / (P.x1 - P.x0); let om = 0, pm = 0; for (let b = 0; b < N; b++) { om += (ot[b] + ob[b]) / 2; pm += (P.t[b] + P.b[b]) / 2 * s; } const dy = (om - pm) / N;
+  const sm = a => a.map((v, i) => (a[Math.max(0, i - 1)] + 2 * v + a[Math.min(N - 1, i + 1)]) / 4), pt = sm(P.t.map(v => v * s + dy)), pb = sm(P.b.map(v => v * s + dy)), ph = sm(P.h.map(v => v * s)), Ot = sm(ot), Ob = sm(ob), Oh = sm(oh);
+  const at = (a, x) => { const f = clamp((x - x0) / (x1 - x0) * N - .5, 0, N - 1), i = Math.floor(f), w = f - i; return a[i] * (1 - w) + a[Math.min(N - 1, i + 1)] * w; };
+  const warp = p => { const x = p.x, T = at(Ot, x), Bt = at(Ob, x), H = Math.max(.02, at(Oh, x)), T2 = at(pt, x), B2 = at(pb, x), H2 = at(ph, x), ky = clamp((T2 - B2) / Math.max(.02, T - Bt), .35, 3.2), kz = clamp(1 + (H2 / H - 1) * .55, .35, 2.4); // the prototypes are broad in the beam: take a little over half of it, so the hull stays a blade from above
+    p.y = p.y > T ? T2 + (p.y - T) : p.y < Bt ? B2 + (p.y - Bt) : B2 + (p.y - Bt) * ky;
+    const az = Math.abs(p.z); p.z = Math.sign(p.z) * (az > H ? H * kz + (az - H) : az * kz); return p; };
+  const outside = c => c.y > at(Ot, c.x) + .02 || c.y < at(Ob, c.x) - .02 || Math.abs(c.z) > at(Oh, c.x) + .02, D3 = new TH.Vector3();
+  for (const m of g.children.slice()) { if (!m.isMesh) continue; m.updateMatrix(); const geo = m.geometry.clone(); geo.applyMatrix4(m.matrix); const pos = geo.attributes.position;
+    geo.computeBoundingBox(); const c = geo.boundingBox.getCenter(new TH.Vector3()), sz = geo.boundingBox.getSize(new TH.Vector3());
+    if (outside(c) && sz.x < (x1 - x0) * .45) { D3.copy(c); warp(D3).sub(c); geo.translate(D3.x, D3.y, D3.z); } // parts off the hull (tower, rings, crown, guns) move as one piece
+    else for (let i = 0; i < pos.count; i++) { warp(V.fromBufferAttribute(pos, i)); pos.setXYZ(i, V.x, V.y, V.z); }
+    geo.computeVertexNormals(); geo.computeBoundingSphere(); m.geometry = geo; m.position.set(0, 0, 0); m.rotation.set(0, 0, 0); m.scale.set(1, 1, 1); m.updateMatrix(); }
+  const wp = a => { V.set(a[0], a[1], a[2]); warp(V); a[0] = V.x; a[1] = V.y; a[2] = V.z; };
+  for (const q of g.userData.glow || []) wp(q); for (const e of g.userData.eng || []) wp(e); for (const q of g.userData.guns || []) wp(q); }
 function flagshipModel(g, M, r) {
   const fac = M.fac || "terran", nyx = fac === "nyx", solar = fac === "solar", verdant = fac === "verdant", NEON = M.neon || M.accent, GL = g.userData.glow = [], WIN = M.fwin || M.win, ENG = M.feng || M.engine, GUNS = g.userData.guns = [];
   const HULL = M.fhull || M.hull, ALT = M.fdark || M.dark, STEEL = M.ftrim || M.trim, PLATE = nyx ? ALT : HULL, TRIM = solar ? M.gold : STEEL;
@@ -8392,6 +8422,7 @@ function flagshipModel(g, M, r) {
   const turret = (x, y, z, s) => { cylY(.22 * s, .08 * s, TRIM, x, y, z, 10); const b = box(.44 * s, .17 * s, .36 * s, HULL, x, y + .12 * s, z); b.rotation.y = (z > 0 ? -1 : z < 0 ? 1 : 0) * .08; for (const o of [-.09, .09]) barrel(.036 * s, .62 * s, ALT, x + .16 * s, y + .14 * s, z + o * s); };
   const winRow = (x0, x1, y, z, n, mat) => { for (let i = 0; i < n; i++) box(.075, .04, .02, mat || WIN, x0 + (x1 - x0) * i / Math.max(1, n - 1), y, z); };
 
+  const core0 = g.children.length; // v311: the meshes up to the ventral bulge are the hull's core; flagWarp reads its silhouette from them
   // ---- the shared bones: main hull, prow, decks ----
   const beamW = nyx ? 2.25 : 1.9, tall = nyx ? .46 : verdant ? .86 : .72;
   seg(-3.9, 1.1, beamW, tall, beamW * .74, tall * .82, -.12, 0, HULL);
@@ -8400,6 +8431,7 @@ function flagshipModel(g, M, r) {
   seg(.7, 3.8, beamW * .58, tall * .42, .1, .05, tall * .46, 0, PLATE);
   seg(-3.2, -.5, beamW * .48, tall * .44, beamW * .34, tall * .34, tall, 0, HULL);
   seg(-3.5, -1.2, beamW * .3, tall * .34, beamW * .22, tall * .22, -tall * .62, 0, ALT);        // ventral bulge
+  const core1 = g.children.length;
   // the command tower: stepped blocks, a bridge band of dark glass with lit windows, sensor masts
   const ty = tall * 1.34; seg(-2, -.85, .68, .54, .5, .42, ty, 0, HULL); seg(-1.84, -1, .74, .12, .56, .1, ty + .32, 0, ALT);
   seg(-1.02, -.82, .5, .13, .42, .1, ty + .1, 0, M.glass, false); winRow(-1.75, -1.1, ty + .1, .35, 6); winRow(-1.75, -1.1, ty + .1, -.35, 6);
@@ -8502,6 +8534,7 @@ function flagshipModel(g, M, r) {
     glow(-.8, 0, 0, 1.25, .16); }
   if (fac === "terran") { glow(-.8, tall * .2, 0, 1.15, .13); }
   for (const x of [-4, -1.5, 1.5]) glow(x, 0, 0, 2.5, .3); // a wide soft aura, so the flagship stands out on a crowded map from afar
+  flagWarp(g, fac, g.children.slice(core0, core1)); // v311 the hull takes the silhouette of the faction's 3D prototype
   const FS = 1.45; g.scale.setScalar(FS); for (const e of g.userData.eng) e[3] *= FS; for (const q of GL) q[3] *= FS; // overall size
   return g;
 }

@@ -1,0 +1,34 @@
+{
+  "format": "glTF 2.0 binary (.glb)",
+  "units": "arbitrary game units; ship length approximately 23",
+  "orientation": "nose points +X, top +Z",
+  "status": "Original stylized procedural 3D blockout / prototype, NOT a photogrammetric or exact 1-to-1 reconstruction of supplied 2D art",
+  "ships": {
+    "terran": {
+      "path": "flag-terran.glb",
+      "components": 143,
+      "bytes": 99492
+    },
+    "solar": {
+      "path": "flag-solar.glb",
+      "components": 164,
+      "bytes": 129256
+    },
+    "verdant": {
+      "path": "flag-verdant.glb",
+      "components": 346,
+      "bytes": 250256
+    },
+    "nyx_red": {
+      "path": "flag-nyx-red.glb",
+      "components": 159,
+      "bytes": 109136
+    }
+  },
+  "recommended_next_steps": [
+    "Refine silhouettes against side references and new top/front concept views",
+    "UV unwrap and author PBR textures; current materials are color-only",
+    "Create optimized game LODs, collision meshes, hardpoints, engine VFX anchors",
+    "Verify engine and material rendering in target game engine"
+  ]
+}
