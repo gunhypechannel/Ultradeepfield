@@ -13313,8 +13313,8 @@ function genSpace() {
 }
 function applyAudio() {
   if (!AU.ctx) return; const t = AU.ctx.currentTime;
-  AU.master.gain.setTargetAtTime(AU.muted ? 0 : gainOf(AU.vol) * 1.45, t, .05); AU.mus.gain.setTargetAtTime(AU.musicOn ? .1 * gainOf(AU.mv) / gainOf(50) : 0, t, .15); AU.sfx.gain.setTargetAtTime(AU.sfxOn ? gainOf(AU.sv) * 1.17 : 0, t, .05);
-  if (AU.file) { if (AU.direct) AU.file.volume = clamp((AU.muted ? 0 : gainOf(AU.vol) * 1.45) * (.1 * gainOf(AU.mv) / gainOf(50)) * 1.6, 0, 1); /* v119: played directly on file:// pages */ if (AU.muted || !AU.musicOn || AU.track !== "file") AU.file.pause(); else AU.file.play().catch(() => {}); }
+  AU.master.gain.setTargetAtTime(AU.muted ? 0 : gainOf(AU.vol) * 1.45, t, .05); AU.mus.gain.setTargetAtTime(AU.musicOn ? .1 * gainOf(AU.mv) / gainOf(50) * (AU.duck || 1) : 0, t, AU.duck < 1 ? .12 : AU.ducked ? .55 : .15); AU.ducked = AU.duck < 1; // v334: ducked under the Advisor's voice AU.sfx.gain.setTargetAtTime(AU.sfxOn ? gainOf(AU.sv) * 1.17 : 0, t, .05);
+  if (AU.file) { if (AU.direct) AU.file.volume = clamp((AU.muted ? 0 : gainOf(AU.vol) * 1.45) * (.1 * gainOf(AU.mv) / gainOf(50)) * 1.6 * (AU.duck || 1), 0, 1); /* v119: played directly on file:// pages */ if (AU.muted || !AU.musicOn || AU.track !== "file") AU.file.pause(); else AU.file.play().catch(() => {}); }
   if (AU.spaceOut) AU.spaceOut.gain.setTargetAtTime(AU.track === "file" ? 0 : .6, t, .6);
 }
 function audioStart() {
@@ -13580,11 +13580,11 @@ const VOICE = { on: true, clips: null, au: null, lastStep: -1 };
 try { VOICE.on = localStorage.getItem("void.voice") !== "0"; } catch (e) {}
 const voiceKey = s => hash(String(s)).toString(36);
 try { fetch("voice/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (j && typeof j === "object") VOICE.clips = j; }).catch(() => {}); } catch (e) {}
-function voiceTalk(on) { const a = $("#adv"); if (a) a.classList.toggle("talk", !!on); }
+function voiceTalk(on) { const a = $("#adv"); if (a) a.classList.toggle("talk", !!on); if (typeof AU !== "undefined") { const d = on ? .22 : 1; if (AU.duck !== d) { AU.duck = d; try { applyAudio(); } catch (e) {} } } } // v334: music dips under her voice
 function voiceStop() { voiceTalk(0); try { if (VOICE.au) { VOICE.au.pause(); VOICE.au = null; } } catch (e) {} }
 function speak(line) { if (!VOICE.on || (typeof AU !== "undefined" && AU.muted) || !line || !VOICE.clips) return; const k = voiceKey(line); if (!VOICE.clips[k]) return; voiceStop();
   try { const a = new Audio("voice/" + k + ".mp3?v=" + VOICE.clips[k]); a.volume = Math.min(1, .95 * ((typeof AU !== "undefined" && AU.sfxVol != null) ? Math.max(.4, AU.sfxVol) : 1)); VOICE.au = a;
-    a.onplay = () => voiceTalk(1); a.onended = a.onpause = () => voiceTalk(0); a.play().catch(() => voiceTalk(0)); } catch (e) {} }
+    a.onplay = () => voiceTalk(1); a.onended = a.onpause = a.onerror = () => voiceTalk(0); a.play().catch(() => voiceTalk(0)); } catch (e) {} }
 function say(lines) {
   if (!lines.length) return;
   advLines = (advLines || []).concat(lines);
