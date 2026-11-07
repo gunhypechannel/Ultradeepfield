@@ -2094,7 +2094,7 @@ function fogLoad() {
 function fogSave() { if (!FOGD) return; let s = ""; for (let i = 0; i < FOGD.length; i++) s += String.fromCharCode(FOGD[i]); S.fogD = btoa(s); }
 const fogIdx = (x, z) => { const cx = Math.floor((x + FOG_R) / FOG_CELL), cz = Math.floor((z + FOG_R) / FOG_CELL); return cx < 0 || cz < 0 || cx >= FOG_N || cz >= FOG_N ? -1 : cz * FOG_N + cx; };
 const fogSeen = (x, z) => { if (!FOG) return true; const i = fogIdx(x, z); return i >= 0 && FOG[i] === 1; };
-function isFogged(p, T) { if (!p || p.owner === G.me) return false; const q = pos(p, T || now()); return !fogSeen(q.x, q.y); }
+function isFogged(p, T) { if (!p || p.owner === G.me) return false; if (S && S.tutSee && S.tutSee.includes(p.id) && tutOn()) return false; /* v331: the Academy targets */ const q = pos(p, T || now()); return !fogSeen(q.x, q.y); }
 function reveal(x, z, rad) {
   if (!FOG) return 0; let n = 0; const day = (S.fogDay || 0) + 1, c0x = Math.floor((x - rad + FOG_R) / FOG_CELL), c1x = Math.floor((x + rad + FOG_R) / FOG_CELL), c0z = Math.floor((z - rad + FOG_R) / FOG_CELL), c1z = Math.floor((z + rad + FOG_R) / FOG_CELL);
   for (let cz = Math.max(0, c0z); cz <= Math.min(FOG_N - 1, c1z); cz++) for (let cx = Math.max(0, c0x); cx <= Math.min(FOG_N - 1, c1x); cx++) {
@@ -13783,17 +13783,19 @@ function fleetPathCard() {
     return `<div class="fpn ${st}"><i>${i < cur ? "✓" : i + 1}</i><b>${esc(d.n)}</b><small>${i === cur && sp ? (sp.ok() ? "Ready to claim" : sp.need ? `${esc(sp.need.n)} Lv.${sp.need.l}` : `Build ${n}`) : i < cur ? "Done" : `× ${n}`}</small></div>`; }).join("")}</div>
     ${sp ? `<article class="card quest${sp.ok() ? " done hi" : ""}"><header>${esc(sp.t)}</header><p>${esc(sp.say)}</p>${sp.need && !sp.ok() ? `<p class="note">Next step: <b>${esc(sp.need.n)} Lv.${sp.need.l}</b> (you have Lv.${sp.need.cur}).</p>` : ""}
       <div class="rw"><span class="cost">${costHTML(sp.rw)} <span class="shard">◆${sp.rw.shards}</span></span>${sp.ok() ? `<button class="btn amber" data-act="shipClaim">Claim reward</button>` : `<button class="btn ghost" data-act="shipShow">Show me</button>`}</div></article>` : `<p class="note">Every hull on the fleet path is built. Your fleet is complete.</p>`}`;
-}function tutShow() {
+}function tutMark(id) { S.tutSee = (S.tutSee || []).filter(x => x !== id).concat([id]).slice(-12); dirty(); } // v331
+function tutShow() {
   const st = TUT[S.tut.i]; if (!st) return;
   if (st.open) { if (sheet) closeSheet(); if (view !== "base") { view = "base"; render(); } st.open(); } // v296: steps that open a card (your profile, the homeworld's name)
   else if (st.go) { if (sheet) closeSheet(); ACT.nav(st.go); if (st.rcat) { sub.rcat = st.rcat; render(); } }
   else if (st.find) { if (st.pirLvl) G.pirLvl = st.pirLvl; ACT.find({ r: st.find }); }
   else if (st.fly && tutFleet()) { const f = tutFleet(); if (sheet) closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } // v318: fly the camera over to the fleet; tapping it is your job
     let n = 0; const go = () => { const o = G3 && G3.fleets.get(f.id); if (!o || !o.pt) { if (n++ < 30) setTimeout(go, 100); return; } const c = G3.cam; c.follow = null; c.followFleet = null; c.vel = null; c.goal = { tx: o.pt.x, ty: o.pt.y, tz: o.pt.z, dist: 60 }; }; go(); }
-  else if (st.id === "scouted" && S.tutSpyP && G.byId[S.tutSpyP] && pStatus(G.byId[S.tutSpyP], now()) === "hive") { if (sheet) closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } ACT.planet({ id: S.tutSpyP }); } // v324: the world you scouted
+  else if (st.id === "scouted" && S.tutSpyP && G.byId[S.tutSpyP] && pStatus(G.byId[S.tutSpyP], now()) === "hive") { tutMark(S.tutSpyP); if (sheet) closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } ACT.planet({ id: S.tutSpyP }); } // v324: the world you scouted
   else if (st.hive || st.fly) { const h = homePlanet(), T = now(), hq = h ? pos(h, T) : { x: 0, y: 0 };
     const p = G.list.filter(p => pStatus(p, T) === "hive").map(p => { const q = pos(p, T); return [p, (q.x - hq.x) ** 2 + (q.y - hq.y) ** 2 + p.lvl * p.lvl * 900, p.lvl]; }).sort((a, b) => a[2] - b[2] || a[1] - b[1])[0]; /* v235: the lowest-level Hive world first, then the nearest */
     if (p && isFogged(p[0], T)) { const q = pos(p[0], T); reveal(q.x, q.y, 24); fogSave(); } // v330: never an uncharted target
+    if (p) tutMark(p[0].id);
     if (sheet) closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } if (p) ACT.planet({ id: p[0].id }); }
   tutSpot(st.spot);
 }
@@ -16277,7 +16279,7 @@ const ACT = {
   spy: d => { const p = G.byId[d.id]; if (!p || p.owner === G.me) return; const hm = (S.ships.spyProbe || 0) > 0, c = hm ? null : myPlanets().find(q => q.kind !== "home" && (q.garrison || {}).spyProbe > 0); openSheet({ type: "spysend", id: p.id, from: c ? c.id : "home" }); },
   spyN: d => { const have = originAvail().spyProbe || 0; sheet.pn = d.max ? have : clamp((sheet.pn || 1) + (+d.d || 0), 1, Math.max(1, have)); renderSheet(); },
   spyGo: d => act(() => { const p = G.byId[d.id]; if (!p || !canPlay() || p.owner === G.me) return; advance(now()); const have = originAvail().spyProbe || 0, n = clamp(Math.floor(+(($("#spyn") || {}).value) || sheet.pn || 1), 1, have);
-    if (!have) return toast("No Espionage Probes here.", "warn"); if (slotsFull()) return; sheet.speed = 100; const f = sendFleet(p, { spyProbe: n }, "spy"); if (!f) return; S.spyN = n; if (tutAt("spy")) { S.tutSpyP = p.id; S.tutSpyW = (S.stats || {}).hiveWins || 0; } bump("spies"); try { syncPlayer(); } catch (e) {} closeSheet(); toast(`${n} probe${n > 1 ? "s" : ""} launched at ${p.name}. Arriving in ${ftime(f.arrive - f.out)}.`); }),
+    if (!have) return toast("No Espionage Probes here.", "warn"); if (slotsFull()) return; sheet.speed = 100; const f = sendFleet(p, { spyProbe: n }, "spy"); if (!f) return; S.spyN = n; if (tutAt("spy")) { S.tutSpyP = p.id; S.tutSpyW = (S.stats || {}).hiveWins || 0; tutMark(p.id); } bump("spies"); try { syncPlayer(); } catch (e) {} closeSheet(); toast(`${n} probe${n > 1 ? "s" : ""} launched at ${p.name}. Arriving in ${ftime(f.arrive - f.out)}.`); }),
   missile: d => act(() => {
     const p = G.byId[d.id], h = homePlanet(); if (!p || !h || !canPlay() || pStatus(p) !== "player" || isAlly(p.owner)) return;
     const have = (S.mis || {}).ballistic || 0, n = clamp(Math.floor(+(($("#misn") || {}).value) || 1), 1, have); if (!have) return;
