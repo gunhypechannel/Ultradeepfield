@@ -104,6 +104,7 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 #celeb .cbbt{position:relative;display:flex;flex-direction:column;gap:8px;margin-top:16px}#celeb .cbbt .btn{width:100%}
 @keyframes cbIn{from{transform:scale(.6) translateY(30px);opacity:0}to{transform:none;opacity:1}}@keyframes cbSpin{to{transform:rotate(360deg)}}@keyframes cbArt{from{transform:scale(1.25);opacity:0;filter:brightness(2.2)}to{transform:none;opacity:1}}
 .adv .box{position:relative}
+#adv .advv{position:absolute;right:10px;top:10px;z-index:3;width:38px;height:38px;border-radius:50%;border:1px solid rgba(85,214,232,.6);background:rgba(4,14,22,.75);color:#bff6ff;font-size:17px;line-height:1;cursor:pointer}
 #coach.gdhide>*{opacity:0!important;pointer-events:none!important;transition:opacity .2s}/* v324 */
 #coach{position:absolute;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 196px);display:flex;justify-content:flex-end;z-index:24;pointer-events:none;max-width:calc(100% - 20px)}
 #coach>*{pointer-events:auto}
@@ -13223,7 +13224,7 @@ function mGame() {
   const net = G.mode === "online" ? `Live galaxy, ${activePlayers()} of ${MAX_PLAYERS} commander seats taken.` : G.mode === "full" ? `The shared galaxy is full (${MAX_PLAYERS} commanders).` : G.mode === "readonly" ? "You can watch the shared galaxy but can't play in it." : G.mode === "offline" ? "Solo galaxy." : "Connecting…";
   const tg = (act, on, label) => `<div class="tgl"><span>${label}</span><button class="toggle${on ? " on" : ""}" style="width:auto;padding:4px" data-act="${act}" aria-pressed="${on}" aria-label="${label}"><span class="sw"></span></button></div>`;
   return `<div class="mcard"><h3>${SND_I.on.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Sound</h3>
-      ${volSliders()}${tg("sound", !AU.muted, "All sound")}${tg("musicToggle", AU.musicOn, "Music")}${tg("sfxToggle", AU.sfxOn, "Battle, construction and interface effects")}${tg("remindToggle", remindOn(), "Pop-up reminders when jobs finish")}
+      ${volSliders()}${tg("sound", !AU.muted, "All sound")}${tg("musicToggle", AU.musicOn, "Music")}${tg("sfxToggle", AU.sfxOn, "Battle, construction and interface effects")}${tg("voiceToggle", VOICE.on, "Advisor voice")}${tg("remindToggle", remindOn(), "Pop-up reminders when jobs finish")}
 
       <p>Playing your music track. Construction, ship launches and finished research each have their own sound.</p></div>
     <div class="mcard"><h3>${MI.grid.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Play on your phone</h3>
@@ -13505,7 +13506,7 @@ const volSliders = () => `<div class="vols">${[["vol", "Master volume"], ["mv", 
 function shSound() {
   return `<div class="hd"><div><div class="chapter">Settings</div><h2>Sound</h2><p class="note">Saved on this device.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
     <div class="card">${tglRow("sound", !AU.muted, AU.muted ? "Sound is muted" : "Sound on")}${volSliders()}</div>
-    <div class="card">${tglRow("musicToggle", AU.musicOn, "Music")}${tglRow("sfxToggle", AU.sfxOn, "Battle, construction and interface effects")}${tglRow("remindToggle", remindOn(), "Pop-up reminders when jobs finish")}</div>
+    <div class="card">${tglRow("musicToggle", AU.musicOn, "Music")}${tglRow("sfxToggle", AU.sfxOn, "Battle, construction and interface effects")}${tglRow("voiceToggle", VOICE.on, "Advisor voice")}${tglRow("remindToggle", remindOn(), "Pop-up reminders when jobs finish")}</div>
 `;
 }
 
@@ -13569,18 +13570,27 @@ document.addEventListener("visibilitychange", () => { if (!AU.ctx) return; if (d
 
 /* ---------- advisor ---------- */
 let advLines = null;
+const VOICE = { on: true, clips: null, au: null, lastStep: -1 };
+try { VOICE.on = localStorage.getItem("void.voice") !== "0"; } catch (e) {}
+const voiceKey = s => hash(String(s)).toString(36);
+try { fetch("voice/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (j && typeof j === "object") VOICE.clips = j; }).catch(() => {}); } catch (e) {}
+function voiceTalk(on) { const a = $("#adv"); if (a) a.classList.toggle("talk", !!on); }
+function voiceStop() { voiceTalk(0); try { if (VOICE.au) { VOICE.au.pause(); VOICE.au = null; } } catch (e) {} }
+function speak(line) { if (!VOICE.on || (typeof AU !== "undefined" && AU.muted) || !line || !VOICE.clips) return; const k = voiceKey(line); if (!VOICE.clips[k]) return; voiceStop();
+  try { const a = new Audio("voice/" + k + ".mp3"); a.volume = Math.min(1, .95 * ((typeof AU !== "undefined" && AU.sfxVol != null) ? Math.max(.4, AU.sfxVol) : 1)); VOICE.au = a;
+    a.onplay = () => voiceTalk(1); a.onended = a.onpause = () => voiceTalk(0); a.play().catch(() => voiceTalk(0)); } catch (e) {} }
 function say(lines) {
   if (!lines.length) return;
   advLines = (advLines || []).concat(lines);
   if (!$("#adv")) {
     const w = document.createElement("div"); w.id = "adv";
-    w.innerHTML = `<div class="advscrim"></div><div class="adv" data-act="advNext" role="dialog" aria-label="Message from ${ADV}"><div class="box"><img class="advimg" src="${ADV_ART}" alt=""><i class="hscan"></i><i class="hbeam"></i><div class="tx"><div class="who">${ADV}</div><div class="say" id="advt"></div><div class="tap">Tap to continue</div></div></div></div>`;
+    w.innerHTML = `<div class="advscrim"></div><div class="adv" data-act="advNext" role="dialog" aria-label="Message from ${ADV}"><div class="box"><img class="advimg" src="${ADV_ART}" alt=""><i class="hscan"></i><i class="hbeam"></i><div class="tx"><div class="who">${ADV}</div><div class="say" id="advt"></div><div class="tap">Tap to continue</div></div><button class="advv" data-act="voiceToggle" aria-label="Advisor voice">${VOICE.on ? "🔊" : "🔇"}</button></div></div>`;
     $("#app").appendChild(w);
   }
-  $("#advt").textContent = advLines[0];
+  $("#advt").textContent = advLines[0]; speak(advLines[0]);
   startAnim();
 }
-function advNext() { advLines.shift(); if (advLines.length) $("#advt").textContent = advLines[0]; else { advLines = null; $("#adv").remove(); const th = G.advThen; G.advThen = null; if (th) th(); } } // v318: G.advThen runs once the last line is read (the opening battle)
+function advNext() { advLines.shift(); if (advLines.length) { $("#advt").textContent = advLines[0]; speak(advLines[0]); } else { voiceStop(); advLines = null; $("#adv").remove(); const th = G.advThen; G.advThen = null; if (th) th(); } } // v318: G.advThen runs once the last line is read (the opening battle)
 /* v328 celebrations: queued in S.celeb, shown one at a time when nothing else is on screen (before the Advisor's lines), with the
    moment's art, a burst of light, the reward and a Share button */
 function celebrate(c) { S.celeb = S.celeb || []; if (!S.celeb.some(x => x.k === c.k)) { S.celeb.push(c); dirty(); } }
@@ -13588,7 +13598,7 @@ function showCeleb(c) { const w = document.createElement("div"); w.id = "celeb";
   w.innerHTML = `<div class="cbscrim"></div><div class="cbbox ${c.k}"><div class="cbrays"></div>${art ? `<img class="cbart${c.art === "adv" ? " adv" : ""}" src="${art}" alt="">` : `<div class="cbicon">${c.ic || "★"}</div>`}
     <div class="cbk">${esc(c.kick || "")}</div><h2 class="cbt">${esc(c.t)}</h2><p class="cbs">${esc(c.s)}</p>${c.rw ? `<div class="cbrw">${esc(c.rw)}</div>` : ""}
     <div class="cbbt"><button class="btn amber" data-act="celebX">${esc(c.go || "Onward")}</button>${c.rep && G.mode === "online" ? `<button class="btn ghost" data-act="celebShare" data-id="${esc(c.rep)}">↗ Share the battle</button>` : `<button class="btn ghost" data-act="celebShare">↗ Share</button>`}${c.chat && G.mode === "online" ? `<button class="btn ghost" data-act="celebChat">💬 Say hi in chat</button>` : ""}</div></div>`;
-  $("#app").appendChild(w); try { SFX.gong(); } catch (e) {} G.celebNow = c; }
+  $("#app").appendChild(w); try { SFX.gong(); } catch (e) {} try { speak(c.say || c.s); } catch (e) {} G.celebNow = c; }
 function flushSay() { if (S.celeb && S.celeb.length && !battle && !sheet && !advLines && !$("#celeb") && !$("#adv") && G.ready) { showCeleb(S.celeb.shift()); dirty(); return; } if ($("#celeb")) return; // v328 a celebration first, then the Advisor
   flushSay0(); }
 function flushSay0() { if (S.say.length && !battle && !(sheet && sheet.type === "faction") && !$("#oldw")) { /* v330: not behind the old-server card */ const l = S.say.splice(0); dirty(); say(l); } }
@@ -13914,6 +13924,7 @@ function coachRender(force) {
     : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "tutClaim" : "tutOpen"}" aria-label="${done ? "Collect the Academy reward" : "Open the Flight Academy"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : `${S.tut.i + 1}/${TUT.length}`}</span><b class="cpt"><small>${done ? "STEP DONE" : "NEXT TASK"}</small>${done ? "Collect reward ▸" : esc(st.t)}</b></button><button class="cpx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button>`;
   if (!w) { w = document.createElement("div"); w.id = "coach"; $("#app").appendChild(w); force = true; } w.style.display = sheet || view === "quests" ? "none" : ""; /* v123: the Quests tab shows the same step in full */
   if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
+  if (open && !done && VOICE.lastStep !== S.tut.i && !advLines && !$("#celeb") && !battle) { VOICE.lastStep = S.tut.i; speak(st.say); } // v331: each new step, read once as it opens
 }
 setInterval(() => { try { coachRender(); } catch (e) {} }, 800);
 
@@ -15721,13 +15732,15 @@ const ACT = {
   bldInfo: d => { SFX.tapB(d.k); const bt = baseTarget(); openSheet({ type: "bld", k: d.k, pid: bt.key === "home" ? null : bt.key }); },
   sound: () => { if (!AU.started) audioStart(); AU.muted = !AU.muted; applyAudio(); saveAudioPrefs(); hud(); if (sheet) renderSheet(); },
   musicToggle: () => { if (!AU.started) audioStart(); AU.musicOn = !AU.musicOn; applyAudio(); saveAudioPrefs(); render(true); },
-  celebX: () => { const w = $("#celeb"); if (w) w.remove(); G.celebNow = null; setTimeout(() => { try { flushSay(); coachRender(true); } catch (e) {} }, 60); },
+  celebX: () => { const w = $("#celeb"); if (w) w.remove(); G.celebNow = null; voiceStop(); setTimeout(() => { try { flushSay(); coachRender(true); } catch (e) {} }, 60); },
   celebChat: () => { ACT.celebX(); setTimeout(() => ACT.chat({}), 120); },
   celebShare: async d => { const c = G.celebNow || {}; if (d.id && findRep(d.id) && G.mode === "online") { ACT.celebX(); return setTimeout(() => ACT.repShareOpen({ id: d.id }), 120); }
     const text = `${c.t || "Ultra Deep Field"}: ${c.s || ""} Come play Ultra Deep Field with me.`, url = location.protocol.startsWith("http") ? location.href.split("#")[0] : "https://gunhypechannel.github.io/Ultradeepfield/";
     try { if (navigator.share) { await navigator.share({ title: "Ultra Deep Field", text, url }); return; } } catch (e) { return; }
     try { await navigator.clipboard.writeText(text + " " + url); toast("Copied. Paste it to your friends."); } catch (e) { toast("Couldn't share from here.", "warn"); } },
   retClaim: () => { const g = S.retGift; if (!g || g.at > now()) return; for (const r of ["m", "c", "g"]) S.res[r] += g.rw[r] || 0; S.shards = (S.shards || 0) + (g.rw.shards || 0); logReward("Fleet Command supply convoy", g.rw, { shards: g.rw.shards, kind: "quest" }); S.retGift = null; dirty(); try { SFX.research(); } catch (e) {} toast("Supply convoy unloaded.", "win"); render(true); },
+  voiceToggle: () => { VOICE.on = !VOICE.on; try { localStorage.setItem("void.voice", VOICE.on ? "1" : "0"); } catch (e) {} if (!VOICE.on) voiceStop(); else if (advLines) speak(advLines[0]);
+    const b = $("#adv .advv"); if (b) b.textContent = VOICE.on ? "🔊" : "🔇"; toast(VOICE.on ? "Advisor voice on." : "Advisor voice off."); if (sheet) renderSheet(); else render(true); },
   sfxToggle: () => { if (!AU.started) audioStart(); AU.sfxOn = !AU.sfxOn; applyAudio(); saveAudioPrefs(); render(true); },
   skin: d => { const p = d.id ? G.byId[d.id] : homePlanet(); if (!p || p.owner !== G.me) return; openSheet({ type: "skin", id: p.id }); },
   skinOpt: d => { const n = $("#pname"); if (n) sheet.nm = n.value; const max = { at: ATMOS.length, rg: 3, rc: RINGC.length }[d.o]; if (!max) return; sheet[d.o] = clamp(+d.i || 0, 0, max - 1); renderSheet(); },
