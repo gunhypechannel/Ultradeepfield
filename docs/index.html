@@ -901,6 +901,21 @@ canvas.dthumb{display:block}
 .cm.me{align-self:flex-end;background:rgba(85,214,232,.16);border-radius:12px 12px 4px 12px}.cu{background:none;border:0;padding:0;color:var(--amber);font-family:var(--f-display);font-size:11px;text-align:left;cursor:pointer}
 .cx{font-size:14px;line-height:1.35;overflow-wrap:anywhere;white-space:pre-wrap}.cm time{font-size:9.5px;color:var(--muted);align-self:flex-end}
 .chatin{display:flex;gap:6px}.chatin .minput{flex:1;min-width:0;font-size:16px}.dmhd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+/* v323 chat */
+.cmr{display:flex;align-items:flex-end;gap:6px;max-width:100%}.cmr.me{justify-content:flex-end}.cmr.run{margin-top:-3px}
+.cav{flex:none;width:30px;height:30px;padding:0;border:1px solid rgba(127,230,243,.35);border-radius:50%;overflow:hidden;background:#0b1a26;cursor:pointer}.cav canvas,.cavc{width:30px;height:30px;display:block}.cav0{flex:none;width:30px}
+.cmr .cm{max-width:calc(100% - 40px)}.cm{cursor:pointer;position:relative}.cm.pick{outline:1px solid rgba(127,230,243,.6)}.cm.ment{background:rgba(255,190,90,.16);box-shadow:0 0 0 1px rgba(255,190,90,.45) inset}
+.chd{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.ctag{font-style:normal;font-size:10.5px;color:#7fe6f3;font-family:var(--f-display)}.clv{font-style:normal;font-size:10px;color:var(--muted);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:0 4px}
+.cre{display:block;font-size:12px;color:var(--muted);border-left:2px solid rgba(127,230,243,.55);padding:1px 0 1px 6px;margin:2px 0 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}.cre b{color:#bfeef7;font-weight:600}
+.ccoord{background:none;border:0;border-bottom:1px dashed #7fe6f3;color:#7fe6f3;padding:0;font:inherit;cursor:pointer}.cmen{color:#7fe6f3;font-weight:600}.cmen.me{color:var(--amber)}
+.cday{display:flex;align-items:center;gap:8px;margin:6px 0 2px;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase}.cday::before,.cday::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.1)}
+.crx{display:flex;gap:4px;flex-wrap:wrap;margin:-2px 0 2px 36px}.crx.me{justify-content:flex-end;margin:-2px 0 2px}.crx button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:var(--text);border-radius:11px;padding:1px 7px;font-size:12px;cursor:pointer}.crx button.on{border-color:#7fe6f3;background:rgba(85,214,232,.18)}
+.cbar{display:flex;gap:2px;flex-wrap:wrap;align-items:center;margin:0 0 4px 36px;padding:3px;border-radius:14px;background:rgba(8,22,34,.95);border:1px solid rgba(127,230,243,.35);align-self:flex-start}.cbar.me{align-self:flex-end;margin-left:0}.cbar button{background:none;border:0;font-size:19px;padding:3px 5px;cursor:pointer;color:var(--text)}.cbar .crep2{font-size:12.5px;font-family:var(--f-display);color:#7fe6f3}
+.crep{display:flex;align-items:center;gap:8px;width:100%;min-width:210px;margin:3px 0 1px;padding:8px;border-radius:10px;border:1px solid rgba(255,190,90,.5);background:linear-gradient(135deg,rgba(60,30,10,.55),rgba(10,20,34,.7));color:var(--text);text-align:left;cursor:pointer;font:inherit}
+.crepi{font-size:20px;color:var(--amber)}.crept{flex:1;min-width:0;display:flex;flex-direction:column}.crept b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.crept small{font-size:11.5px;color:var(--muted)}.crepw{font-family:var(--f-display);font-size:12px;color:var(--amber);white-space:nowrap}.csub{font-size:12px;color:var(--muted)}
+.creply{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);padding:4px 8px;border-left:2px solid #7fe6f3;background:rgba(85,214,232,.08);border-radius:6px}.creply span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.creply button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:14px}
+.cemo{display:flex;flex-wrap:wrap;gap:2px}.cemo button{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;font-size:18px;padding:3px 6px;cursor:pointer;color:var(--text);min-width:36px}
+.chatin .cib{flex:none;padding:0 8px;font-size:16px;min-width:36px}.crpick{display:flex;flex-direction:column;gap:4px}.srow b{font-size:14px}
 .cbadge{font-style:normal;display:inline-block;min-width:16px;padding:0 4px;border-radius:8px;background:var(--amber);color:#1a1206;font-size:10px;line-height:16px;text-align:center}
 /* alliance station and help */
 .mcard.station canvas{width:100%;height:110px;border-radius:10px;background:#03070d;margin-bottom:6px}
@@ -2339,7 +2354,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 317;
+const GAME_V = 323;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -12363,7 +12378,7 @@ function vGalaxyBelow() {
 /* ---------- sheets ---------- */
 /* menus remember where you came from: opening one menu from another stacks it, and Back returns to the previous one */
 let sheetStack = [];
-const SHEET_NAME = { fbinbox: "feedback", spysend: "probes", howto: "how to play", planet: "planet", report: "report", settings: "settings", void: "the Void", assault: "attack", targets: "targets", node: "node", bld: "building", nexus: "Cube", skin: "planet looks", find: "search", pirate: "pirates", layers: "layers", tile: "tile", basedet: "base", planets: "planets", yard: "shipyard", labs: "labs", flagship: "Flagship Command", faction: "factions", profile: "profile", ranks: "rankings", friends: "friends", chat: "chat", mastery: "mastery", sound: "sound", shop: "shop", spyrep: "spy report", events: "events", detail: "details" };
+const SHEET_NAME = { repshare: "share", fbinbox: "feedback", spysend: "probes", howto: "how to play", planet: "planet", report: "report", settings: "settings", void: "the Void", assault: "attack", targets: "targets", node: "node", bld: "building", nexus: "Cube", skin: "planet looks", find: "search", pirate: "pirates", layers: "layers", tile: "tile", basedet: "base", planets: "planets", yard: "shipyard", labs: "labs", flagship: "Flagship Command", faction: "factions", profile: "profile", ranks: "rankings", friends: "friends", chat: "chat", mastery: "mastery", sound: "sound", shop: "shop", spyrep: "spy report", events: "events", detail: "details" };
 function openSheet(s) { { const cp = document.getElementById("cubepanel"); if (cp) cp.remove(); } /* v111: never cover a panel's buttons */ if (s && s.from === undefined && ["planet", "pirate", "node", "assault", "targets"].includes(s.type)) { const ap = actPlanet(); if (ap && garrisonCount(ap)) s.from = ap.id; } // fleets launch from the planet you're using
   G.sheetDir = sheet && sheet !== s ? 1 : 0; if (sheet && sheet !== s && (sheet.type !== s.type || (sheet.id || "") !== (s.id || "") || sheet.k !== s.k)) { sheetStack.push(sheet); if (sheetStack.length > 12) sheetStack.shift(); } sheet = s; renderSheet(); }
 function sheetBack() { if (sheetStack.length) { G.sheetDir = -1; sheet = sheetStack.pop(); G.sel = null; G.selNode = null; renderSheet(); } else closeSheet(); }
@@ -12383,7 +12398,7 @@ function renderSheet() {
   if (G.rangeHeld && sheet) { G.rangeLate = 1; return; }
   let w = $("#sheetwrap");
   let html = ({ planet: shPlanet, report: shReport, settings: shSettings, void: shVoid, assault: shAssault, targets: shTargets, node: shNode, bld: shBld, nexus: shNexus, skin: shSkin, find: shFind, pirate: shPirate, pyramid: shPyramid, fctl: shFctl, station: shStation, ally: shAlly, layers: shLayers, tile: shTile, graphics: shGfx, cuberes: shCubeRes, basedet: shBaseDet, planets: shPlanets, fo: shFo, allymem: shAllyMem, altools: () => { const a = myAlly(); return a ? `<div class="hd"><div><div class="chapter">[${esc(a.tag)}] ${esc(a.name)}</div><h2>${allyRank(a, G.me) === "lead" ? "Leader" : "Captain"} tools</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${allyTools(a) || '<p class="note">Only the leader and captains have these tools.</p>'}` : ""; },
-    yard: shYard, labs: shLabs, flagship: shFlag, sound: shSound, shop: shShop, vip: shVip, spyrep: shSpyRep, spysend: shSpySend, howto: shHowTo, fbinbox: shFbInbox, events: shEvents, ach: shAch, avatars: shAvatars, detail: shDetail, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
+    yard: shYard, labs: shLabs, flagship: shFlag, sound: shSound, shop: shShop, vip: shVip, spyrep: shSpyRep, spysend: shSpySend, repshare: shRepShare, howto: shHowTo, fbinbox: shFbInbox, events: shEvents, ach: shAch, avatars: shAvatars, detail: shDetail, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
     mastery: () => `<div class="hd"><div><div class="chapter">Progression</div><h2>Path to Mastery</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${mMastery()}` })[sheet.type]();
   if (!html) { closeSheet(); return; }
   html += sheet.type === "faction" && !S.faction ? "" : backBar(); html = `<div class="grab" aria-hidden="true"></div>` + html;
@@ -12783,15 +12798,15 @@ function shVoid() {
     <dl class="kv"><dt>Worlds in orbit</dt><dd>${G.list.length}</dd><dt>Planet sizes</dt><dd>169 – 255 fields</dd><dt>Held by commanders</dt><dd>${G.list.filter(p => p.owner).length}</dd><dt>Held by the Hive</dt><dd>${G.list.filter(p => pStatus(p) === "hive").length}</dd><dt>Commanders</dt><dd>${activePlayers() || 1} / ${MAX_PLAYERS}</dd></dl>`;
 }
 /* v65 saved reports: kept apart from the 25 most recent, so a saved fight never rolls out of Mail */
-const findRep = id => S.reports.find(x => x.id === id) || (S.savedReps || []).find(x => x.id === id);
+const findRep = id => S.reports.find(x => x.id === id) || (S.savedReps || []).find(x => x.id === id) || (G.shReps || []).find(x => x.id === id); // v323: reports shared with you
 const repSaved = id => (S.savedReps || []).some(x => x.id === id);
 function shReport() {
   const r = findRep(sheet.id); if (!r) return ""; if (r.rounds.length) setTimeout(() => battlePrebake(r), 0);
   const win = repWin(r);
   const aN = r.kind === "raid" ? "Hive Raiders" : (r.aUids || []).length ? r.aUids.map(nameOf).join(", ") : r.aName, dN = r.dUid ? `${r.dName} (${nameOf(r.dUid)})` : r.dName;
   const lootLine = r.kind === "raid" && r.winner === "a" ? `<dt>Stolen by the Hive</dt><dd>${costHTML({ m: -r.loot.m, c: -r.loot.c, g: -r.loot.g })}</dd>` : r.kind === "defense" ? "" : `<dt>${r.kind === "raid" ? "Salvage" : "Your loot"}</dt><dd>${costHTML(r.loot || {})}</dd>`;
-  return `<div class="hd"><div><div class="chapter" style="color:${win ? "var(--green)" : r.winner === "draw" ? "var(--amber)" : "var(--red)"}">${win ? "Victory" : r.winner === "draw" ? "Draw" : "Defeat"} · ${r.rounds.length} rounds${r.captured ? (r.kind === "defense" ? " · planet lost" : " · planet captured") : ""}</div><h2>${esc(r.title)}</h2><p class="note">${ago(r.at)} ago</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
-    <div style="display:flex;gap:8px">${r.rounds.length ? `<button class="btn" style="flex:2" data-act="replay" data-id="${r.id}">Watch the battle</button>` : ""}<button class="btn ${repSaved(r.id) ? "amber" : "ghost"}" style="flex:1" data-act="repSave" data-id="${r.id}">${repSaved(r.id) ? "★ Saved" : "☆ Save report"}</button></div>
+  return `<div class="hd"><div><div class="chapter" style="color:${r.shBy ? "var(--cyan)" : win ? "var(--green)" : r.winner === "draw" ? "var(--amber)" : "var(--red)"}">${r.shBy ? `${r.winner === "draw" ? "Draw" : r.winner === "a" ? "Attackers won" : "Defenders held"} · shared by ${esc(nameOf(r.shBy))}` : win ? "Victory" : r.winner === "draw" ? "Draw" : "Defeat"} · ${r.rounds.length} rounds${r.captured ? (r.kind === "defense" ? " · planet lost" : " · planet captured") : ""}</div><h2>${esc(r.title)}</h2><p class="note">${ago(r.at)} ago</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
+    <div style="display:flex;gap:8px">${r.rounds.length ? `<button class="btn" style="flex:2" data-act="replay" data-id="${r.id}">Watch the battle</button>` : ""}<button class="btn ${repSaved(r.id) ? "amber" : "ghost"}" style="flex:1" data-act="repSave" data-id="${r.id}">${repSaved(r.id) ? "★ Saved" : "☆ Save report"}</button></div>${G.mode === "online" ? `<button class="btn ghost wide" style="margin-top:6px" data-act="repShareOpen" data-id="${r.id}">↗ Share with friends or your alliance</button>` : ""}
     ${r.src ? `<div class="card srcc"><b>Launched from</b><span>${esc(r.src.name)} <span class="cbig">[${esc(r.src.c)}]</span></span><button class="btn ghost sm" data-act="coordShow" data-v="${esc(r.src.c)}">Locate on map ›</button></div>` : ""}
     ${r.sim && r.sim.stats ? `<h2 class="sec">Battle analysis</h2>${battleAnalysis(r, r.sim)}<h2 class="sec">Damage by unit</h2>${sideTable(r, r.sim.stats.a, "a")}${sideTable(r, r.sim.stats.d, "d")}${r.xp != null ? `<p class="note">Experience earned: +${fmt(r.xp)} XP</p>` : ""}` : ""}
     <h2 class="sec">${esc(aN)} · attacker</h2>${superSideOf(r) === "a" ? scCard(r, "a") : `${unitGrid(r.start.a)}<dl class="kv"><dt>Lost</dt><dd>${Object.entries(r.lossA).map(([k, v]) => `${fmt(v)} ${unitName(k)}`).join(", ") || "Nothing"}</dd></dl>`}
@@ -15191,8 +15206,16 @@ function shFriends() {
 const CHAT = { g: [], a: [], dms: {}, subs: {}, day: "", aKey: null, last: 0 };
 const utcDay = () => new Date().toISOString().slice(0, 10).replace(/-/g, "");
 const dmKey = (a, b) => { const [x, y] = [a, b].sort(); return "d" + hash(x + "|" + y).toString(36) + hash(y + "#" + x).toString(36); };
+/* v323 chat: reactions (one per commander per message), replies quoting the message they answer, and shared battle reports (the
+   report itself lives in its own record, chat/r-<id>, so the chat room stays small) */
+const CHAT_RX = ["👍", "🔥", "😂", "⚔️", "🫡", "😮"];
+function cleanMsg(id, v) { if (!v || typeof v !== "object" || typeof v.u !== "string" || typeof v.x !== "string") return null; const o = { id, u: v.u.slice(0, 80), x: v.x.slice(0, 240), t: +v.t || 0 };
+  if (v.rx && typeof v.rx === "object") { const rx = {}; let n = 0; for (const k in v.rx) { if (n >= 60) break; if (typeof k === "string" && k.length <= 80 && CHAT_RX.includes(v.rx[k])) { rx[k] = v.rx[k]; n++; } } if (n) o.rx = rx; }
+  if (v.re && typeof v.re === "object" && typeof v.re.u === "string" && typeof v.re.x === "string") o.re = { u: v.re.u.slice(0, 80), x: v.re.x.slice(0, 90) };
+  if (v.r && typeof v.r === "object" && /^[a-z0-9]{6,24}$/.test(String(v.r.id || ""))) o.r = { id: v.r.id, ti: String(v.r.ti || "Battle report").slice(0, 70), w: ["a", "d", "draw"].includes(v.r.w) ? v.r.w : "", k: String(v.r.k || "").slice(0, 12), an: String(v.r.an || "").slice(0, 40), dn: String(v.r.dn || "").slice(0, 40) };
+  return o; }
 function cleanMsgs(m) {
-  const out = []; if (m && typeof m === "object") for (const id in m) { const v = m[id]; if (!v || typeof v !== "object" || typeof v.u !== "string" || typeof v.x !== "string") continue; out.push({ id, u: v.u.slice(0, 80), x: v.x.slice(0, 240), t: +v.t || 0 }); }
+  const out = []; if (m && typeof m === "object") for (const id in m) { const o = cleanMsg(id, m[id]); if (o) out.push(o); }
   return out.sort((a, b) => a.t - b.t).slice(-150);
 }
 function chatInit() {
@@ -15210,29 +15233,77 @@ let chatT = 0;
 function chatChanged() { clearTimeout(chatT); chatT = setTimeout(() => { if (sheet && sheet.type === "chat") renderSheet(); trayRender(); dock(); if (view === "mail") render(true); }, 120); }
 function chatUnread() {
   const seen = S.chatSeen || {}, blocked = new Set(S.blocked || []), count = (arr, key) => arr.filter(m => m.u !== G.me && !blocked.has(m.u) && m.t > (seen[key] || 0)).length;
-  let n = count(CHAT.a, "a:" + CHAT.day); for (const c of Object.values(CHAT.dms)) n += count(c.m, "d:" + c.id); return n; // global chat doesn't badge; alliance and direct do
+  let n = count(CHAT.a, "a:" + CHAT.day); for (const c of Object.values(CHAT.dms)) n += count(c.m, "d:" + c.id);
+  n += CHAT.g.filter(m => m.u !== G.me && !blocked.has(m.u) && m.t > (seen["g:" + CHAT.day] || 0) && chatMentions(m.x)).length; return n; // global chat badges only when someone mentions you; alliance and direct always do
 }
+const chatPath = (ch, to) => ch === "g" ? "chat/g-" + CHAT.day : ch === "a" ? (CHAT.aKey ? "chat/" + CHAT.aKey : null) : to ? "dms/" + dmKey(G.me, to) : null;
+async function chatPost(ch, to, msg) { // posts one message; creates the day's room (or the conversation) if it isn't there yet
+  chatInit(); const path = chatPath(ch, to); if (!path) return false; const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ref = G.db.doc(path), extra = ch === "d" ? { p: [G.me, to] } : {};
+  try { await ref.update({ m: { [id]: msg } }); return true; }
+  catch (e) {
+    if (e && e.code === "invalid_argument") { try { const s = await ref.get(); if (s.exists) { toast("This chat room is full for today. Try again tomorrow.", "warn"); return false; } await ref.set(Object.assign({ m: { [id]: msg } }, extra)); return true; } catch (e2) {} }
+    toast("Couldn't send that message.", "warn"); return false; } }
 async function chatSend() {
   const inp = $("#chatin"); if (!inp || !sheet) return; const text = inp.value.replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 240); if (!text) return;
   if (G.mode !== "online" || !G.db) return toast("Chat needs the shared galaxy.", "warn");
   if (now() - CHAT.last < 1500) return toast("Slow down a little.", "warn"); CHAT.last = now();
-  const ch = sheet.ch || "g", to = sheet.to, id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6), msg = { u: G.me, x: text, t: now() };
-  let path, extra = {};
-  if (ch === "g") path = "chat/g-" + CHAT.day; else if (ch === "a") { if (!CHAT.aKey) return; path = "chat/" + CHAT.aKey; } else { if (!to) return; path = "dms/" + dmKey(G.me, to); extra = { p: [G.me, to] }; }
-  inp.value = ""; const ref = G.db.doc(path);
-  try { await ref.update({ m: { [id]: msg } }); }
-  catch (e) {
-    if (e && e.code === "invalid_argument") { try { const s = await ref.get(); if (s.exists) return toast("This chat room is full for today. Try again tomorrow.", "warn"); await ref.set(Object.assign({ m: { [id]: msg } }, extra)); } catch (e2) { toast("Couldn't send that message.", "warn"); } }
-    else toast("Couldn't send that message.", "warn");
-  }
+  const ch = sheet.ch || "g", to = sheet.to, msg = { u: G.me, x: text, t: now() }; if (sheet.reply) msg.re = { u: sheet.reply.u, x: String(sheet.reply.x).slice(0, 90) };
+  inp.value = ""; sheet.reply = null; sheet.draft = ""; if (!(await chatPost(ch, to, msg))) { inp.value = text; return; } renderSheet();
 }
+/* v323 share a battle report: the report goes to its own record (chat/r-<id>, readable by any commander who has the link), the chat gets a card */
+async function repShare(r, ch, to) {
+  if (G.mode !== "online" || !G.db) return toast("Sharing needs the shared galaxy.", "warn"); if (!r) return;
+  if (now() - CHAT.last < 1500) return toast("Slow down a little.", "warn"); CHAT.last = now();
+  const rep = JSON.parse(JSON.stringify(r)); delete rep.recDone; delete rep.shBy; delete rep.shId; const js = JSON.stringify(rep); if (js.length > 400000) return toast("That battle is too big to share.", "warn");
+  const sid = (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)).slice(0, 20);
+  try { await G.db.doc("chat/r-" + sid).set({ rep, by: G.me, t: now() }); } catch (e) { return toast("Couldn't share that report.", "warn"); }
+  const an = r.kind === "raid" ? "Hive Raiders" : (r.aUids || []).length ? r.aUids.map(u => u === G.me ? (G.names[G.me] || "You") : nameOf(u)).join(", ") : r.aName, dn = r.dUid ? (r.dUid === G.me ? (G.names[G.me] || "You") : nameOf(r.dUid)) : r.dName;
+  const ok = await chatPost(ch, to, { u: G.me, x: "shared a battle report", t: now(), r: { id: sid, ti: String(r.title || "Battle report").slice(0, 70), w: r.winner, k: r.kind, an: String(an || "").slice(0, 40), dn: String(dn || "").slice(0, 40) } });
+  if (ok) { toast(`Report shared ${ch === "a" ? "in alliance chat" : ch === "g" ? "in global chat" : "with " + nameOf(to)}.`, "win"); try { SFX.research(); } catch (e) {} }
+  return ok; }
+async function repOpenShared(sid) { G.shReps = G.shReps || []; let r = G.shReps.find(x => x.shId === sid);
+  if (!r) { try { const s = await G.db.doc("chat/r-" + sid).get(), v = s.exists ? s.data() : null, x = v && v.rep;
+      if (!x || typeof x !== "object" || !Array.isArray(x.rounds) || !x.start || typeof x.start !== "object") return toast("That report is no longer available.", "warn");
+      r = Object.assign({}, x, { id: "x" + sid, shId: sid, shBy: typeof v.by === "string" ? v.by : "", recDone: 1 }); if (typeof r.title !== "string") r.title = "Battle report"; r.loot = r.loot && typeof r.loot === "object" ? r.loot : { m: 0, c: 0, g: 0 };
+      G.shReps.unshift(r); if (G.shReps.length > 12) G.shReps.length = 12; } catch (e) { return toast("Couldn't open that report.", "warn"); } }
+  openSheet({ type: "report", id: r.id }); }
+/* v323 where to share a battle report: your alliance, the whole galaxy, a friend or anyone you've been messaging */
+function shRepShare() { const r = findRep(sheet.id); if (!r) return ""; chatInit(); const blocked = new Set(S.blocked || []);
+  const ppl = [...new Set((S.friends || []).concat(Object.values(CHAT.dms).map(c => c.with)))].filter(u => u && u !== G.me && !blocked.has(u) && !isBot(u));
+  const row = (act, ic, nm, sub, extra) => `<button class="frow conv srow" data-act="${act}" data-id="${r.id}" ${extra || ""}><b>${ic} ${nm}</b><small>${sub}</small></button>`;
+  return `<div class="hd"><div><div class="chapter">Share report</div><h2>${esc(r.title)}</h2><p class="note">Anyone you share with can watch the whole battle and see both fleets.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
+    <div class="flist">${S.ally ? row("repShareTo", "🛡", "Alliance chat", esc(allyTag(S.ally)), 'data-ch="a"') : ""}${row("repShareTo", "🌐", "Global chat", "Every commander in the galaxy", 'data-ch="g"')}</div>
+    <h2 class="sec">Friends and conversations</h2><div class="flist">${ppl.map(u => row("repShareTo", "✉", esc(nameOf(u)), (S.friends || []).includes(u) ? "Friend" : "Conversation", `data-ch="d" data-u="${esc(u)}"`)).join("") || '<p class="note">Add friends from a commander\'s card to share with them directly.</p>'}</div>`; }
 function shChat() {
   if (G.mode !== "online") return `<div class="hd"><div><h2>Comms</h2><p class="note">Chat needs the shared galaxy. You're playing solo right now.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
   chatInit(); const ch = ["g", "a", "d"].includes(sheet.ch) ? sheet.ch : "g", blocked = new Set(S.blocked || []);
   const tabs = `<div class="segc">${[["g", "Global"], ["a", "Alliance"], ["d", "Direct"]].map(([k, l]) => { const un = k === "d" ? Object.values(CHAT.dms).reduce((a, c) => a + c.m.filter(m => m.u !== G.me && m.t > ((S.chatSeen || {})["d:" + c.id] || 0)).length, 0) : k === "a" ? CHAT.a.filter(m => m.u !== G.me && m.t > ((S.chatSeen || {})["a:" + CHAT.day] || 0)).length : 0;
     return `<button class="${k === ch ? "on" : ""}" data-act="chatTab" data-v="${k}">${l}${un ? ` <i class="cbadge">${un}</i>` : ""}</button>`; }).join("")}</div>`;
-  const log = msgs => `<div class="chatlog">${msgs.filter(m => !blocked.has(m.u)).map(m => { const mine = m.u === G.me; return `<div class="cm${mine ? " me" : ""}">${mine ? "" : `<button class="cu" data-act="profile" data-u="${esc(m.u)}">${esc(nameOf(m.u))}</button>`}<span class="cx">${esc(m.x)}</span><time>${clockAt(m.t)}</time></div>`; }).join("") || '<p class="note" style="text-align:center">No messages yet. Say hello.</p>'}</div>`;
-  const input = `<div class="chatin"><input class="minput" id="chatin" maxlength="240" placeholder="Message" aria-label="Message" autocomplete="off"><button class="btn" data-act="chatSend">Send</button></div>`;
+  /* v323 bubbles: avatar, name, alliance tag and level on the first message of a run; replies quote what they answer; reactions; coordinates
+     you can tap to fly to; @mentions of you light up; shared battle reports show as cards with a Watch button; a date line between days */
+  const myN = (G.names[G.me] || "").toLowerCase(), day0 = ts => new Date(ts).toDateString();
+  const fmtX = x => esc(x).replace(/\b([1-6]):(\d{1,3}):(\d{1,4}|H\d{2})\b/g, (s, l, y, z) => /^H/.test(z) ? s : `<button class="ccoord" data-act="chatCoord" data-v="${l}:${y}:${z}">${s}</button>`)
+    .replace(/(^|\s)@([\w\-.]{2,24})/g, (s, sp, nm) => `${sp}<b class="cmen${myN && myN.startsWith(nm.toLowerCase()) ? " me" : ""}">@${nm}</b>`);
+  const repCard = m => { const w = m.r.w === "draw" ? "Draw" : m.r.w === "a" ? `${esc(m.r.an || "Attacker")} won` : m.r.w === "d" ? `${esc(m.r.dn || "Defender")} held` : "";
+    return `<button class="crep" data-act="chatRep" data-id="${m.r.id}"><span class="crepi">⚔</span><span class="crept"><b>${esc(m.r.ti)}</b><small>${esc(m.r.an || "?")} vs ${esc(m.r.dn || "?")}${w ? ` · ${w}` : ""}</small></span><span class="crepw">▶ Watch</span></button>`; };
+  const log = msgs => { const L = msgs.filter(m => !blocked.has(m.u)); let prev = null, html = "";
+    for (const m of L) { const mine = m.u === G.me, run = prev && prev.u === m.u && m.t - prev.t < 300000 && day0(prev.t) === day0(m.t);
+      if (!prev || day0(prev.t) !== day0(m.t)) html += `<div class="cday"><span>${day0(m.t) === day0(now()) ? "Today" : new Date(m.t).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</span></div>`;
+      const aid = allyOf(m.u), at = aid && G.alliances[aid] ? `<i class="ctag">[${esc(G.alliances[aid].tag)}]</i>` : "", pl = G.players[m.u], lv = m.u === G.me ? cmdLevel(score()) : pl && pl.score != null ? cmdLevel(pl.score) : 0;
+      const ment = !mine && chatMentions(m.x), rx = m.rx ? Object.entries(m.rx).reduce((o, [u, e]) => { (o[e] = o[e] || []).push(u); return o; }, {}) : null, pick = sheet.pick === m.id;
+      html += `<div class="cmr${mine ? " me" : ""}${run ? " run" : ""}">${!mine ? (run ? `<span class="cav0"></span>` : `<button class="cav" data-act="profile" data-u="${esc(m.u)}" aria-label="${esc(nameOf(m.u))}">${avCanvas(m.u, "avc cavc")}</button>`) : ""}
+        <div class="cm${mine ? " me" : ""}${ment ? " ment" : ""}${m.r ? " hasrep" : ""}${pick ? " pick" : ""}" data-act="chatPick" data-id="${m.id}">
+          ${!mine && !run ? `<span class="chd"><button class="cu" data-act="profile" data-u="${esc(m.u)}">${esc(nameOf(m.u))}</button>${at}${lv ? `<i class="clv">Lv.${lv}</i>` : ""}</span>` : ""}
+          ${m.re ? `<span class="cre"><b>${esc(m.re.u === G.me ? "You" : nameOf(m.re.u))}</b> ${esc(m.re.x)}</span>` : ""}
+          ${m.r ? `${mine ? "" : `<span class="cx csub">shared a battle report</span>`}${repCard(m)}` : `<span class="cx">${fmtX(m.x)}</span>`}<time>${clockAt(m.t)}</time></div></div>`;
+      if (rx) html += `<div class="crx${mine ? " me" : ""}">${Object.entries(rx).map(([e, us]) => `<button class="${us.includes(G.me) ? "on" : ""}" data-act="chatReact" data-id="${m.id}" data-e="${e}" title="${esc(us.map(nameOf).join(", "))}">${e} ${us.length}</button>`).join("")}</div>`;
+      if (pick) html += `<div class="cbar${mine ? " me" : ""}">${CHAT_RX.map(e => `<button data-act="chatReact" data-id="${m.id}" data-e="${e}" aria-label="React ${e}">${e}</button>`).join("")}<button class="crep2" data-act="chatReply" data-id="${m.id}">↩ Reply</button></div>`;
+      prev = m; }
+    CHAT.view = L; return `<div class="chatlog">${html || '<p class="note" style="text-align:center">No messages yet. Say hello!</p>'}</div>`; };
+  const input = `${sheet.reply ? `<div class="creply"><span>Replying to <b>${esc(sheet.reply.u === G.me ? "yourself" : nameOf(sheet.reply.u))}</b>: ${esc(String(sheet.reply.x).slice(0, 60))}</span><button data-act="chatReplyX" aria-label="Cancel reply">✕</button></div>` : ""}
+    ${sheet.emo ? `<div class="cemo">${["👋", "👍", "🔥", "😂", "⚔️", "🛡️", "🚀", "💥", "🫡", "🤝", "🎯", "💎", "🙏", "😎", "😮", "👀", "GG", "o7"].map(e => `<button data-act="chatEmo" data-v="${e}">${e}</button>`).join("")}</div>` : ""}
+    <div class="chatin"><button class="btn ghost sm cib" data-act="chatEmoT" aria-label="Emoji">😊</button><button class="btn ghost sm cib" data-act="chatRepPick" aria-label="Share a battle report">⚔</button><input class="minput" id="chatin" maxlength="240" placeholder="Message${ch === "a" ? " your alliance" : ch === "g" ? " the galaxy" : ""}" aria-label="Message" autocomplete="off" value="${esc(sheet.draft || "")}"><button class="btn" data-act="chatSend">Send</button></div>
+    ${sheet.repPick ? `<div class="crpick"><h2 class="sec">Share a battle report here</h2>${chatRepList().map(r => `<button class="frow conv" data-act="chatRepGo" data-id="${r.id}"><b>${esc(r.title)}</b><small>${ago(r.at)} ago · ${r.winner === "draw" ? "Draw" : repWin(r) ? "Victory" : "Defeat"}</small></button>`).join("") || '<p class="note">No battle reports yet.</p>'}</div>` : ""}`;
   const mark = (key, msgs) => { const t = msgs.length ? msgs[msgs.length - 1].t : 0; S.chatSeen = S.chatSeen || {}; if (t > (S.chatSeen[key] || 0)) { S.chatSeen[key] = t; dirty(); setTimeout(trayRender, 0); } };
   let body;
   if (ch === "g") { mark("g:" + CHAT.day, CHAT.g); body = log(CHAT.g) + input; }
@@ -15245,13 +15316,16 @@ function shChat() {
       ${(S.friends || []).length ? `<h2 class="sec">Message a friend</h2><div class="flist">${S.friends.map(u => `<button class="frow conv" data-act="dmOpen" data-u="${u}"><b>${esc(nameOf(u))}</b></button>`).join("")}</div>` : ""}`; }
   return `<div class="hd"><div><div class="chapter">Comms · ${ch === "g" ? "everyone in the galaxy" : ch === "a" ? "your alliance" : "direct"}</div><h2>Chat</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${tabs}${body}`;
 }
+const chatMentions = x => { const n = (G.names[G.me] || "").toLowerCase(); if (!n || n.length < 2) return false; const L = String(x).toLowerCase(); return L.includes("@" + n) || L.includes("@" + n.split(/\s+/)[0]); };
+const chatRepList = () => S.reports.concat((S.savedReps || []).filter(r => !S.reports.some(x => x.id === r.id))).filter(r => r && r.rounds && r.rounds.length).slice(0, 10);
+const chatFind = id => (CHAT.view || []).find(m => m.id === id);
 function chatScroll(w) { const lg = w && w.querySelector(".chatlog"); if (!lg) return; const key = (sheet.ch || "g") + (sheet.to || "");
   if (lg._key !== key || lg.scrollHeight - lg.scrollTop - lg.clientHeight < 140) lg.scrollTop = lg.scrollHeight; lg._key = key; }
 document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target && e.target.id === "chatin") { e.preventDefault(); chatSend(); } if (e.key === "Enter" && e.target && e.target.id === "coordin") { e.preventDefault(); ACT.coordGo(); } });
 // Escape (or a keyboard/remote Back key) steps back out of whatever is open: battle, then menu, then the slide-up tray
 document.addEventListener("keydown", e => { if (e.key !== "Escape" && e.key !== "BrowserBack" && e.key !== "GoBack") return;
   if (battle) { e.preventDefault(); closeBattle(); } else if (sheet) { e.preventDefault(); sheetBack(); } else if (G.trayOpen) { e.preventDefault(); G.trayOpen = false; trayRender(); } });
-document.addEventListener("input", e => { if (e.target && e.target.id === "fsearch" && sheet) { sheet.q = e.target.value; renderSheet(); } });
+document.addEventListener("input", e => { if (e.target && e.target.id === "fsearch" && sheet) { sheet.q = e.target.value; renderSheet(); } if (e.target && e.target.id === "chatin" && sheet) sheet.draft = e.target.value; }); // v323: a typed message survives the chat redrawing
 
 /* ---------- Path to Mastery: a reward for every technology researched and every ship type built, steering you to unlock them all ---------- */
 function masteryList() {
@@ -15866,6 +15940,20 @@ const ACT = {
   allyChat: () => { chatInit(); openSheet({ type: "chat", ch: "a" }); },
   chatTab: d => { sheet.ch = d.v; sheet.to = null; renderSheet(); },
   chatSend: () => chatSend(),
+  chatPick: d => { if (!sheet) return; sheet.pick = sheet.pick === d.id ? null : d.id; renderSheet(); },
+  chatReact: async d => { if (!sheet || !CHAT_RX.includes(d.e)) return; const m = chatFind(d.id), path = chatPath(sheet.ch || "g", sheet.to); if (!m || !path) return; sheet.pick = null;
+    const off = m.rx && m.rx[G.me] === d.e; m.rx = Object.assign({}, m.rx || {}); if (off) delete m.rx[G.me]; else m.rx[G.me] = d.e; renderSheet(); // shown at once; the room catches up
+    try { await G.db.doc(path).update({ m: { [d.id]: { rx: { [G.me]: off ? "" : d.e } } } }); } catch (e) { toast("Couldn't react to that.", "warn"); } },
+  chatReply: d => { const m = chatFind(d.id); if (!m || !sheet) return; sheet.reply = { u: m.u, x: m.r ? "⚔ " + m.r.ti : m.x }; sheet.pick = null; renderSheet(); setTimeout(() => { const i = $("#chatin"); if (i) i.focus(); }, 30); },
+  chatReplyX: () => { if (!sheet) return; sheet.reply = null; renderSheet(); },
+  chatEmoT: () => { if (!sheet) return; sheet.emo = !sheet.emo; sheet.repPick = false; renderSheet(); },
+  chatEmo: d => { const i = $("#chatin"); if (!i || !sheet) return; i.value = (i.value + (i.value && !/\s$/.test(i.value) ? " " : "") + d.v + " ").slice(0, 240); sheet.draft = i.value; i.focus(); },
+  chatRepPick: () => { if (!sheet) return; sheet.repPick = !sheet.repPick; sheet.emo = false; renderSheet(); },
+  chatRepGo: async d => { if (!sheet) return; const r = findRep(d.id); sheet.repPick = false; if (await repShare(r, sheet.ch || "g", sheet.to)) renderSheet(); },
+  chatRep: d => { if (/^[a-z0-9]{6,24}$/.test(d.id || "")) repOpenShared(d.id); },
+  chatCoord: d => { const c = parseCoord(d.v); if (!c || !locAt(c[0], c[1], c[2])) return toast("Nothing at those coordinates.", "warn"); ACT.coordShow({ v: d.v }); },
+  repShareOpen: d => { if (G.mode !== "online") return toast("Sharing needs the shared galaxy.", "warn"); chatInit(); openSheet({ type: "repshare", id: d.id }); },
+  repShareTo: async d => { const r = findRep(d.id); if (!r) return; if (await repShare(r, d.ch, d.u || null)) sheetBack(); },
   dmOpen: d => { if (!d.u || d.u === G.me) return; chatInit(); openSheet({ type: "chat", ch: "d", to: d.u }); },
   mastery: () => openSheet({ type: "mastery" }),
   mastClaim: d => act(() => { S.mast = S.mast || {};
