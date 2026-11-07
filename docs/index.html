@@ -16575,8 +16575,8 @@ const INTRO_POST = ["We lost them, Commander. The swarm tore through every ship 
 const INTRO_ID = "intro-ambush";
 function introBattle() {
   if (G.introRep) return G.introRep;
-  const ours = { fighter: 80, heavyFighter: 30, corvette: 14, battleship: 4, hauler: 18, ark: 4 }, hive = colonyForce(9); for (const k in ours) if (!SH[k]) delete ours[k]; for (const k in hive) hive[k] *= 2;
-  let res = null, tech = 2, best = null; for (let i = 0; i < 24; i++) { res = simulate(stacksOf(hive, { hive: 9 }, null), stacksOf(ours, { weapons: tech, shields: tech, armor: tech }, G.me), { seed: 4100 + i }); if (res.winner === "a") { if (!best || res.rounds.length > best.rounds.length) best = res; if (res.rounds.length >= 4) break; } if (i % 6 === 5 && !best) tech = Math.max(0, tech - 1); } // v332: the swarm wins: a long fight we lose
+  const ours = { fighter: 80, heavyFighter: 30, corvette: 14, battleship: 4, hauler: 18, ark: 4 }, hive = colonyForce(9); for (const k in ours) if (!SH[k]) delete ours[k]; for (const k in hive) hive[k] *= 5; // v332: a swarm five times a Lv.9 garrison: it wins every time (measured: 8 of 8 seeds, ~6-7 rounds)
+  let res = null, best = null; for (let i = 0; i < 8; i++) { res = simulate(stacksOf(hive, { hive: 9 }, null), stacksOf(ours, { weapons: 0, shields: 0, armor: 0 }, G.me), { seed: 4100 + i }); if (res.winner === "a" && (!best || res.rounds.length > best.rounds.length)) best = res; } // the longest fight we lose
   if (best) res = best;
   return (G.introRep = Object.assign(mkRep({ at: now(), kind: "raid", title: "Ambush on the way in", aName: "Hive Swarm", dName: "Our convoy", lvl: 9, ptype: "terran", fortL: 0, alien: true,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) }), { id: INTRO_ID, recDone: 1 }));
