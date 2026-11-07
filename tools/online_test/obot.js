@@ -57,7 +57,7 @@ const MAXIT = +process.env.MAXIT || 2600, DEV = process.env.DEV || 'iPhone 15 Pr
     idle++; const jump = s.cine || /on its way|flying home|Under construction|Researching|in production|Queued|finishes on its own|Wait/.test(s.lab || '') || !s.lab ? 60000 : 30000;
     await E(`TSKEW += ${jump}`); skipped += jump; if (idle % 20 === 19) stepIt++; await pg.waitForTimeout(350);
   }
-  console.log('OPENING BATTLE seen: ' + seenBattle + ' | FACTION sheet seen: ' + seenFac + ' | old-server card: ' + seenOld + ' | intro flag ' + await E('S.intro'));
+  console.log('tutT keys ' + await E('Object.keys(S.tutT || {}).length + " hints " + JSON.stringify(S.tutH || {}).slice(0, 200) + " errs " + JSON.stringify(S.errs || [])')); console.log('introWinner ' + await E('G.introRep ? G.introRep.winner + " rounds " + G.introRep.rounds.length : "none"')); console.log('OPENING BATTLE seen: ' + seenBattle + ' | FACTION sheet seen: ' + seenFac + ' | old-server card: ' + seenOld + ' | intro flag ' + await E('S.intro'));
   const toasts = await pg.evaluate(() => window.__toasts.filter((t, i, a) => a.indexOf(t) === i));
   console.log(report.join('\n')); console.log('\nISSUES:\n' + (issues.filter((x, i, a) => a.indexOf(x) === i).join('\n') || 'none'));
   console.log('\nTOASTS:\n' + toasts.join('\n')); console.log('\nERRORS:\n' + (errs.slice(0, 8).join('\n') || 'none'));

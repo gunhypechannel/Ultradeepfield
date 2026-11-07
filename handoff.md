@@ -1,11 +1,12 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-07 (America/Phoenix). Current game version: **v331** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v139**.
+Last updated: 2026-11-07 (America/Phoenix). Current game version: **v333** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v140**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
 ## Pending work (as of 2026-11-07): start here in a new session
 
+000. **v332–v333 (2026-11-07):** opening ambush is a defeat (`introBattle`: swarm 5× a Lv.9 garrison, tech 0, longest losing seed of 8). Academy is 39 steps: `scout0` (Fleet Command sends 4 probes, `S.tutLoan`) and `scoutR` before the first attack; the later spy/report steps need a second run for commanders who scouted (`S.tutScouted`); `S.tutSpyR` counts reports read. Every step has a permanent id; saves keep `S.tut.k` and find their step by id on load (no more index migrations — add steps anywhere). Onboarding data in the private save: `S.tutT`, `S.tutH`, `S.errs`; owner view `public.academy_funnel`; daily health-check scheduled task (6:23 AM Phoenix). Unvoiced lines (need the voice studio on the owner's PC): the 2 new INTRO_POST lines, the scout0/scoutR says, and the new Attack say. Audit + findings: `tools/academy_audit.md`.
 00. **v331 (2026-11-07):** Advisor voice (58 recorded clips in `docs/voice/`, Emma voice of the open Kokoro model, made in `docs/voicelab.html` on the user's PC browser — the container can't reach the model; listen at `docs/voicecheck.html`; game plays clips only, never a device voice; 🔊 on her card + Settings). Mail all friends / Mail all alliance (chat Direct tab + Mail › 📣 Mail all; 60 recipients, once per 2 min; `tools/online_test/mailall.js` 14/14). One-time welcome-back supply drop for commanders returning ≥1 day mid-Academy (`comeback()`). Academy targets stay charted while they orbit (`S.tutSee`, `tutMark`). To re-voice a line: edit `tools/voice_lines.json`, regenerate in voicelab, bump its number in `docs/voice/index.json`.
 0. **TEST ONLINE, NOT OFFLINE.** The game is online (Supabase). v329 exists because every earlier Academy test ran the offline mode and missed that a real new account got stuck after step 1. `tools/online_test/` runs the REAL `udf-supabase.js` + sign-in screen against a stand-in database:
    - `fakesb.js` (in-page, one browser) and `fakesrv.js` + `fakesb2.js` (a shared server, several browsers = several players).
