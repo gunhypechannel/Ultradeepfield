@@ -13744,6 +13744,7 @@ const TUT = [
   { lv: 6, id: "dock", t: "Build the Flagship Dock", say: "The Flagship Dock is where our flagship is commissioned and where its gear is forged. Find it under Structures → Facility.", ok: s => (s.b.flagDock || 0) >= 1, go: { v: "build", s: "fac" }, path: bPath("flagDock", "fac"), fund: () => addC(bFund("shipyard", 2), bFund("flagDock", 1)), rw: { m: 20000, c: 15000, g: 8000, shards: 3, fs: { alloy1: 4, circuit1: 2, crystal1: 1 } } },
   { lv: 6, t: "Commission your flagship", say: "Everything's ready, Commander. Commission the flagship: from now on it leads every fleet we send, gains experience and wears the gear the Dock forges.", ok: s => !!(s.fs && s.fs.built), open: () => ACT.flagHero(), fund: () => fsOf().built ? {} : FS_BUILD.res, path: () => [['.sheet [data-act="fsBuild"]:not([disabled])', "Tap Commission the flagship"], ...(fsHasMats(fsOf(), FS_BUILD.mats) && !canPayRes(FS_BUILD.res) ? shortPath(FS_BUILD.res) || [['.sheet .fsrows', "Not enough resources yet. Your mines keep working: check back in a few minutes"]] : []), ['.sheet .fsrows', "Anything marked ✕ is still missing"], SHOWME], rw: { m: 15000, c: 10000, g: 5000, shards: 10 } }
 ];
+TUT.forEach(s => { if (!s.id) s.id = s.t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }); // v333: a permanent id for every step
 const TUT_V2 = 24; // v299: the Academy's length before the flagship steps
 const TUT_V1 = 19; // (v296: 17 + the two naming steps) // the Academy's length before the Astrophysics steps were added
 const tutOn = () => S && S.tut && !S.tut.off && S.tut.i < TUT.length;
@@ -13900,6 +13901,8 @@ function coachRender(force) {
   if (!S.tutFx) { S.tutFx = 1; if (S.tut.i > 13) S.tut.i = Math.min(TUT.length, S.tut.i + 4); dirty(); } /* v318: four fleet steps before the first Hive win; anyone past it keeps their place */
   if (!S.tutHop) { S.tutHop = 1; if (tutOn()) S.advHop = 0; dirty(); } /* v324: commanders mid-Academy go back to its path */
   if (!S.tutScout) { S.tutScout = 1; if (S.tut.i > 12) S.tut.i = Math.min(TUT.length, S.tut.i + 2); dirty(); } /* v332: two scouting steps before the first attack; anyone past them keeps their place */
+  if (!G.tutFound) { G.tutFound = 1; const k = S.tut.k, j = k && k !== "done" ? TUT.findIndex(s => s.id === k) : -1; if (j >= 0 && j !== S.tut.i) { S.tut.i = j; dirty(); } } // v333: back to the step this save was on, wherever it now sits
+  { const k = TUT[S.tut.i] ? TUT[S.tut.i].id : "done"; if (S.tut.k !== k) { S.tut.k = k; dirty(); } }
   if (tutAt("scout0") && !S.tutLoan) { S.tutLoan = 1; S.ships.spyProbe = (S.ships.spyProbe || 0) + 4; dirty(); note("Fleet Command sent 4 Espionage Probes for the Academy.", "win"); }
   if (view === "mail" && !S.tutMail) { S.tutMail = 1; dirty(); }
   if (S.tut.snz && S.tut.snz <= now()) { S.tut.snz = 0; S.tut.open = 1; dirty(); force = true; } /* v191: back after a 5-minute break, opened up */

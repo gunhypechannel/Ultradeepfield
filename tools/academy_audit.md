@@ -46,9 +46,9 @@ Generated from the live `TUT` array (37 steps). Columns: step, permanent id (onl
 Sign-in → (new account, no cloud save) "Played before the move?" card → faction choice → opening ambush briefing (2 lines) → opening battle (`introBattle`, seed 4100+, the convoy survives) → 3 lines after → 4-line briefing → step 1.
 
 ## Findings against the remaster brief (to fix)
-1. **The opening battle is won, not lost.** `introBattle` retries seeds until the defender wins ("we always come through it"); the owner asked for a battle we lose and then rebuild.
-2. **First attack happens without scouting.** Steps 13–18 send fighters at a Hive garrison; espionage comes at steps 29–32. The owner's order: build fighters → espionage → read the report → attack → upgrades/research → Astrophysics 2 → colony.
-3. **No onboarding measurement.** Where players stop is only visible by reading saves by hand (2026-11-07: 9 of 10 accounts stopped mid-Academy: steps 1, 11, 11, 12, 12, 15, 15, 18, 28).
-4. **Only 9 of 37 steps have a permanent id**; the rest are tracked by array index, which is why old saves needed index-shifting migrations (`tutFx`, `tutSC`, `TUT_V2`).
+1. ~~The opening battle was won~~ — v332: the swarm is 5× a Lv.9 garrison; the convoy is lost every time (8/8 seeds, ~7 rounds).
+2. ~~First attack happened without scouting~~ — v332: steps 14–15 spy on the garrison (4 probes from Fleet Command) and read the report before the attack.
+3. ~~No onboarding measurement~~ — v333: `S.tutT` (step opened), `S.tutH` (Show-me taps), `S.errs` (script errors) in the private save; `public.academy_funnel` view; daily health-check task.
+4. ~~Only 9 of 37 steps had a permanent id~~ — v333: every step has one (`s.id`, a title slug when not set) and saves keep `S.tut.k`; on load the save finds its step by id.
 5. **Commander level labels go backwards** (step 22 shows Lv5, step 23 Lv4).
 6. Fixed in v329–v331 (regression-tested online): hidden guide, old-server card over the opening, faction skipped on account switch, uncharted targets (steps 14, 30, 32), returning-fleet guidance (step 22), taken commander name.
