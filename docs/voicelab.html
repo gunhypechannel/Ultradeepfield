@@ -47,7 +47,7 @@ $("#load").onclick = async () => { $("#load").disabled = true; try { $("#st").te
   catch (e) { $("#st").textContent = "Couldn't load: " + e.message; window.__vs.err = e.message; log("ERROR " + e.stack); $("#load").disabled = false; } };
 // the voice: Kokoro at (speed / pitch factor), then resampled by the pitch factor (lower pitch, same pace), then a starship-comms polish
 // what she says out loud: symbols become words, and the Hive Matriarch's name is said the same way every time
-const sayText = s => String(s).replace(/Vael'Khor/g, "Vail Kor").replace(/🎥/g, "the camera button").replace(/⚡/g, "the lightning bolt").replace(/◆\s?(\d+)/g, "$1 shards").replace(/[◆⚔↗›✦★]/g, "").replace(/\s+/g, " ").trim();
+const sayText = s => String(s).replace(/Lv\.\s?(\d+)/g, "level $1").replace(/Vael'Khor/g, "Vail Kor").replace(/🎥/g, "the camera button").replace(/⚡/g, "the lightning bolt").replace(/◆\s?(\d+)/g, "$1 shards").replace(/[◆⚔↗›✦★]/g, "").replace(/\s+/g, " ").trim();
 // each sentence is made on its own and brought to the same loudness, so a second sentence never trails off quietly
 async function speechPcm(text, speed) { const parts = sayText(text).match(/[^.!?]+[.!?]+["']?|[^.!?]+$/g) || [text], out = []; let sr = 24000;
   for (const s of parts.map(x => x.trim()).filter(Boolean)) { const a = await tts.generate(s, { voice, speed }); sr = a.sampling_rate; const d = Float32Array.from(a.audio);
