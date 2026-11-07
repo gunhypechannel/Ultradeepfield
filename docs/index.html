@@ -2355,7 +2355,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 324;
+const GAME_V = 326;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -3087,6 +3087,7 @@ function colonyForce(lvl, raid) {
 /* v235 training fight: on the Academy step "Defeat a Hive garrison", until the player's first win, Hive worlds field a third of their
    garrison, so a new player's three Light Fighters always win their first battle (they used to lose to the Lv.2 world the guide picked) */
 const trainingHive = () => !!(S && S.tut && TUT[S.tut.i] && (TUT[S.tut.i].hive || TUT[S.tut.i].fly) && !(S.wins >= 1)); // v319: also while the fighters are followed, rushed and filmed (they met a full garrison then, and could draw)
+const trainTT = (p, tt) => trainingHive() && p && pStatus(p, now()) === "hive" ? Math.max(tt, 240000) : tt; // v325
 const trainForce = () => ({ drone: 1 }); // v324: one Lv.1 drone, whatever the world: even a single Light Fighter wins inside the 8 rounds
 function defenders(p) {
   const st = pStatus(p);
@@ -4632,8 +4633,11 @@ function syncPlayer() {
   if (G.mode !== "online" || !G.db || !G.me || !G.myHome) return;
   const d = { joined: G.joinedAt, last: Math.floor(now() / 600000) * 600000, score: score(), wins: S.wins, planets: myPlanets().length, home: G.myHome, ally: S.ally || null,
     tech: { weapons: S.r.weapons, shields: S.r.shields, armor: S.r.armor, esp: S.r.espionage || 0, fsa: Math.round(fsB("atk")), fss: Math.round(fsB("shd")), fsh: Math.round(fsB("hul")), fl: fsBuilt() ? (acadFlag() ? 2 : 1) : 0 }, pvp: (S.pvp || {}).pts || 0, rec: S.rec || { w: 0, l: 0, d: 0 }, bio: (S.bio || "").slice(0, 160), nm: S.cname || "", fac: facOf(), lvl: cmdLevel(score()), ast: S.r.astro || 0, av: S.avatar || null, mv: myMoves(), iv: myIntel(), cf: secFlag(), sh: hash(G.me) % SHARDS, gw: S.gw && S.gw.i === gwIdx(now()) ? { i: S.gw.i, p: S.gw.pts } : null };
-  const j = JSON.stringify(d); if (j === store.lastPlayer) return; store.lastPlayer = j;
-  serial("me", () => G.db.doc("players/" + G.me).set(d).catch(() => { store.lastPlayer = ""; }));
+  const j = JSON.stringify(d); if (j === store.lastPlayer) return;
+  const fast = JSON.stringify(Object.assign({}, d, { last: 0, score: 0, wins: 0, rec: 0, pvp: 0, lvl: 0, tech: 0, gw: 0 })); // v324+: what other players must see at once
+  if (fast === store.lastFast && now() - (store.lastPW || 0) < 120000) return; // only the stats moved: they ride along within 2 minutes
+  store.lastPlayer = j; store.lastFast = fast; store.lastPW = now();
+  serial("me", () => G.db.doc("players/" + G.me).set(d).catch(() => { store.lastPlayer = ""; store.lastFast = ""; }));
 }
 /* ---------- v80 Sentinel: anti-cheat ----------
    Runs on every device. It signs each save so a save edited outside the game is caught (and the last clean one restored), keeps
@@ -5154,9 +5158,8 @@ function sprite(type, v) {
   return (SPR[key] = c);
 }
 /* v67: a battle-born or seeded moon beside a skinned planet: cratered grey, lit from the same side */
-function drawMoon2D(ctx, x, y, sr, lvl) { if (sr < 4) return; const mr = sr * (.26 + Math.min(lvl || 1, 10) * .012), mx = x - sr * 1.3, my = y - sr * .55, g = ctx.createRadialGradient(mx - mr * .4, my - mr * .45, mr * .1, mx, my, mr);
-  g.addColorStop(0, "#e2e4e8"); g.addColorStop(.55, "#8a8e96"); g.addColorStop(1, "#22252a"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU); ctx.fill();
-  ctx.fillStyle = "rgba(40,42,48,.45)"; for (const [cx2, cy2, cr] of [[-.3, -.1, .22], [.25, .2, .16], [.05, -.35, .12], [-.1, .35, .1]]) { ctx.beginPath(); ctx.arc(mx + cx2 * mr, my + cy2 * mr, cr * mr, 0, TAU); ctx.fill(); } }
+function drawMoon2D(ctx, x, y, sr, lvl) { if (sr < 4) return; const mr = sr * (.26 + Math.min(lvl || 1, 10) * .012), mx = x - sr * 1.3, my = y - sr * .55;
+  try { ctx.drawImage(moonSprite(), mx - mr, my - mr, mr * 2, mr * 2); } catch (e) { ctx.fillStyle = "#8a8e96"; ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU); ctx.fill(); } } // v326
 function drawPlanetBody(ctx, p, x, y, sr, lx, ly) {
   if (pxOf(p)) { const C = pxReady(p.px); if (C && C.art) { const s2 = sr / pxF(p.px); ctx.drawImage(C.art, x - s2 / 2, y - s2 / 2, s2, s2); if (p.moon) drawMoon2D(ctx, x, y, sr, p.moon.lvl); return; } pxNeed(p.px); } // premium skin (v67: with its moon)
   const P = PAL[p.type];
@@ -5611,6 +5614,46 @@ function planetTexAsync(type, v, Wd) {
       if (s.emi) { const e = new TH.CanvasTexture(s.emi); e.encoding = TH.sRGBEncoding; t.emiTex = e; } res(PTEX[key] = t); });
     w.postMessage({ id, type, v, W: Wd }); });
 }
+/* v326 moons: a procedural lunar surface. moonSurf(v) paints an equirectangular colour map and height map (W x W/2): fractal
+   highland noise, a few broad dark maria, ~170 craters sized by a power law (bowl, raised rim, central peak on the big ones,
+   bright ejecta and rays on young ones). moonTex(v) wraps them as textures; moonSprite() bakes a lit disc for the 2D views. */
+const MSURF = {}, MTEXC = {};
+function moonSurf(v, W) {
+  W = W || 512; const key = v + "|" + W; if (MSURF[key]) return MSURF[key]; const H = W / 2, rn = rnd(91373 + v * 7919), N = W * H, hgt = new Float32Array(N), alb = new Float32Array(N);
+  const grid = (g) => { const a = new Float32Array((g + 1) * (g / 2 + 1)); for (let i = 0; i < a.length; i++) a[i] = rn(); return [a, g]; };
+  const oct = [grid(8), grid(16), grid(32), grid(64), grid(128), grid(256)], mar = grid(6), mar2 = grid(14);
+  const samp = ([a, g], x, y) => { const gx = x / W * g, gy = y / H * (g / 2), x0 = Math.floor(gx), y0 = Math.min(g / 2 - 1, Math.floor(gy)), fx = gx - x0, fy = gy - y0, s = q => q * q * (3 - 2 * q), X = s(fx), Y = s(fy), r = g + 1,
+    i = (xx, yy) => a[(yy) * r + (xx % g)]; return (i(x0, y0) * (1 - X) + i(x0 + 1, y0) * X) * (1 - Y) + (i(x0, y0 + 1) * (1 - X) + i(x0 + 1, y0 + 1) * X) * Y; };
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const k = y * W + x; let n = 0, w = .5, tw = 0; for (const o of oct) { n += samp(o, x, y) * w; tw += w; w *= .55; } n /= tw;
+    const mw = samp(mar, x, y) * .62 + samp(mar2, x, y) * .38 + (samp(oct[2], x, y) - .5) * .12, m = clamp((mw - .55) / .12, 0, 1); // maria: broad, smooth, ragged-edged and dark
+    hgt[k] = (n - .5) * .5 * (1 - m * .6) - m * .3; alb[k] = .62 + (n - .5) * .3 * (1 - m * .5) - m * .27; }
+  const dirOf = (x, y) => { const lo = x / W * TAU, la = (.5 - y / H) * Math.PI; return [Math.cos(la) * Math.cos(lo), Math.sin(la), Math.cos(la) * Math.sin(lo)]; };
+  const NC = 300 + (v % 3) * 40;
+  for (let c = 0; c < NC; c++) { const u = rn(), la = Math.asin((2 * rn() - 1) * .92), lo = rn() * TAU, r = .012 + .19 * Math.pow(u, 3.6), young = rn() < .08, dep = (.5 + rn() * .4) * (1 - .5 * Math.min(1, r / .2));
+    const cd = [Math.cos(la) * Math.cos(lo), Math.sin(la), Math.cos(la) * Math.sin(lo)], R = r * (young ? 3 : 1.6);
+    const yc = (.5 - la / Math.PI) * H, dy = Math.ceil(R / Math.PI * H) + 1, y0 = Math.max(0, Math.floor(yc - dy)), y1 = Math.min(H - 1, Math.ceil(yc + dy));
+    for (let y = y0; y <= y1; y++) { const cl = Math.max(.05, Math.cos((.5 - y / H) * Math.PI)), dx = Math.min(W / 2, Math.ceil(R / TAU * W / cl) + 1), xc = lo / TAU * W;
+      for (let xx = Math.floor(xc - dx); xx <= Math.ceil(xc + dx); xx++) { const x = ((xx % W) + W) % W, d = dirOf(x, y), dt = Math.acos(Math.min(1, d[0] * cd[0] + d[1] * cd[1] + d[2] * cd[2])), q = dt / r; if (q > (young ? 3 : 1.6)) continue; const k = y * W + x;
+        if (q < 1) { hgt[k] += (q * q - 1) * dep * r * 1.6 + (r > .08 && q < .25 ? (1 - q / .25) ** 2 * dep * r * .9 : 0); alb[k] += (young ? .1 : -.025) * (1 - q * q); } // the bowl, a central peak on the big ones
+        const rim = Math.exp(-(((q - 1) / (q < 1 ? .16 : .32)) ** 2)); hgt[k] += rim * dep * r * .7; alb[k] += rim * (young ? .07 : .018);
+        if (q > 1 && young) alb[k] += .09 * Math.exp(-(q - 1) * 1.4) * (.5 + .5 * Math.cos(Math.atan2(d[1] - cd[1], d[0] - cd[0] + d[2] - cd[2]) * 9 + c)); } } } // bright ejecta and rays on young craters
+  let lo = 1e9, hi = -1e9; for (let i = 0; i < N; i++) { if (hgt[i] < lo) lo = hgt[i]; if (hgt[i] > hi) hi = hgt[i]; }
+  const col = document.createElement("canvas"), hc = document.createElement("canvas"); col.width = hc.width = W; col.height = hc.height = H;
+  const cx = col.getContext("2d"), hx = hc.getContext("2d"), ci = cx.createImageData(W, H), hi2 = hx.createImageData(W, H), tint = [[1, .985, .96], [.97, .98, 1], [1, .97, .93]][v % 3];
+  for (let i = 0; i < N; i++) { const a = clamp(alb[i], .08, 1) * 235, h = (hgt[i] - lo) / (hi - lo) * 255;
+    ci.data[i * 4] = a * tint[0]; ci.data[i * 4 + 1] = a * tint[1]; ci.data[i * 4 + 2] = a * tint[2]; ci.data[i * 4 + 3] = 255; hi2.data[i * 4] = hi2.data[i * 4 + 1] = hi2.data[i * 4 + 2] = h; hi2.data[i * 4 + 3] = 255; }
+  cx.putImageData(ci, 0, 0); hx.putImageData(hi2, 0, 0); return (MSURF[key] = { col, hgt: hc, W, H, alb, h: hgt, lo, hi });
+}
+function moonTex(v) { v = v || 0; if (MTEXC[v]) return MTEXC[v]; const s = moonSurf(v, 512), map = new TH.CanvasTexture(s.col), bump = new TH.CanvasTexture(s.hgt); map.encoding = TH.sRGBEncoding; map.anisotropy = bump.anisotropy = texAniso(); return (MTEXC[v] = { map, bump }); }
+const moonMat = (v, tint, em) => { const m = moonTex(v); return new TH.MeshStandardMaterial({ map: m.map, bumpMap: m.bump, bumpScale: 1.4, roughness: .96, metalness: 0, color: new TH.Color(tint || 0xffffff), emissive: em ? new TH.Color(em) : 0, emissiveIntensity: em ? .06 : 0 }); };
+/* the lit disc for the 2D map and cards: the surface seen from the front, lit from the upper left, with a soft limb */
+let MSPR = null;
+function moonSprite() { if (MSPR) return MSPR; const Z = 128, s = moonSurf(0, 512), c = document.createElement("canvas"); c.width = c.height = Z; const x = c.getContext("2d"), im = x.createImageData(Z, Z), L = [-.55, .5, .67];
+  for (let py = 0; py < Z; py++) for (let px = 0; px < Z; px++) { const nx = (px + .5) / Z * 2 - 1, ny = 1 - (py + .5) / Z * 2, rr = nx * nx + ny * ny, k = (py * Z + px) * 4; if (rr > 1) continue; const nz = Math.sqrt(1 - rr);
+    const la = Math.asin(ny), lo = Math.atan2(nx, nz) + 1.1, sx = Math.floor(((lo / TAU) % 1 + 1) % 1 * s.W), sy = Math.floor((.5 - la / Math.PI) * s.H), i = clamp(sy, 0, s.H - 1) * s.W + sx, i2 = clamp(sy, 0, s.H - 1) * s.W + (sx + 1) % s.W, i3 = clamp(sy + 1, 0, s.H - 1) * s.W + sx;
+    const gx = (s.h[i2] - s.h[i]) * 9, gy = (s.h[i3] - s.h[i]) * 9, n0 = [nx - gx, ny + gy, nz], nl = Math.hypot(...n0), lam = Math.max(0, (n0[0] * L[0] + n0[1] * L[1] + n0[2] * L[2]) / nl), a = clamp(s.alb[i], .08, 1);
+    const b = (lam * 1.15 + .05) * a * 255, edge = Math.min(1, (1 - Math.sqrt(rr)) * Z * .5); im.data[k] = b; im.data[k + 1] = b * .99; im.data[k + 2] = b * .97; im.data[k + 3] = 255 * edge; }
+  x.putImageData(im, 0, 0); return (MSPR = c); }
 function planetTex(type, v, W) {
   const key = type + v + "|" + (W || 256); if (PTEX[key]) return PTEX[key];
   const s = planetSurf(type, v || 0, W || 256), t = new TH.CanvasTexture(s.col); t.encoding = TH.sRGBEncoding; t.anisotropy = texAniso();
@@ -6054,8 +6097,10 @@ function planetDetail(W, p, o) {
   if (sk) { const Ly = pxLayers(p.px); if (Ly) { const mk = (cv, ord) => { const tx = new TH.CanvasTexture(cv); tx.encoding = TH.sRGBEncoding; tx.anisotropy = texAniso(); const sp = new TH.Sprite(new TH.SpriteMaterial({ map: tx, transparent: true, depthWrite: false, toneMapped: false })); sp.renderOrder = ord; g.add(sp); return sp; };
     g.userData.lb = mk(Ly.back, 1); g.userData.lf = mk(Ly.front, 9); g.userData.lr = rad; g.userData.pf = pxF(p.px); } } // the skin's artwork decorations, exactly as on its card
   const moons = [];
-  if (p.moon) { const m = new TH.Mesh(W.sph, new TH.MeshStandardMaterial({ color: 0xa4a8b0, roughness: 1 })); m.scale.setScalar(rad * (.3 + p.moon.lvl * .02)); g.add(m); moons.push([m, rad * 2.6, .00025, 1.3, .15]); }
-  for (let i = 0; i < hash(p.id) % 3; i++) { const m = new TH.Mesh(W.sph, new TH.MeshStandardMaterial({ color: new TH.Color(sk ? (sk.p ? sk.p[Math.min(2, sk.p.length - 1)] : `rgb(${sk.ec.map(v => Math.round(v * .4)).join(",")})`) : P[2]).lerp(new TH.Color(sk ? sk.glow : "#8a8a8a"), sk ? .25 : .35).lerp(new TH.Color("#8a8a8a"), sk ? .3 : 0), roughness: 1, emissive: sk ? new TH.Color(sk.glow) : 0, emissiveIntensity: sk ? .08 : 0 })); /* v77: a skinned world's moons share its palette */ m.scale.setScalar(rad * (.14 + i * .06)); g.add(m); moons.push([m, rad * (2 + i * .9), .0004 / (1 + i), rn() * TAU, (rn() - .5) * .5]); }
+  if (p.moon) { const m = new TH.Mesh(W.sphM || W.sph, moonMat(0, 0xe6e7ea)); m.scale.setScalar(rad * (.3 + p.moon.lvl * .02)); m.rotation.set(.4, hash(p.id) % 6, .1); g.add(m); moons.push([m, rad * 2.6, .00025, 1.3, .15]);
+    const LT = W.moonLt || (W.moonLt = new TH.MeshBasicMaterial({ color: 0xffd89a, toneMapped: false })), rs = rnd(hash(p.id) + 5); // v326 the outpost's lights, more with every level
+    for (let i = 0; i < Math.min(8, 1 + p.moon.lvl); i++) { const la = (rs() - .5) * 1.6, lo = rs() * TAU, l = new TH.Mesh(W.sph, LT); l.scale.setScalar(.03); l.position.set(Math.cos(la) * Math.cos(lo), Math.sin(la), Math.cos(la) * Math.sin(lo)); m.add(l); } }
+  for (let i = 0; i < hash(p.id) % 3; i++) { const m = new TH.Mesh(W.sph, Object.assign(moonMat(1 + i), { color: new TH.Color(sk ? (sk.p ? sk.p[Math.min(2, sk.p.length - 1)] : `rgb(${sk.ec.map(v => Math.round(v * .4)).join(",")})`) : P[2]).lerp(new TH.Color(sk ? sk.glow : "#8a8a8a"), sk ? .25 : .35).lerp(new TH.Color("#8a8a8a"), sk ? .3 : 0), emissive: sk ? new TH.Color(sk.glow) : new TH.Color(0), emissiveIntensity: sk ? .08 : 0 })); /* v77: a skinned world's moons share its palette; v326 on a cratered surface */ m.scale.setScalar(rad * (.14 + i * .06)); g.add(m); moons.push([m, rad * (2 + i * .9), .0004 / (1 + i), rn() * TAU, (rn() - .5) * .5]); }
   const [spread, thick, sz] = AURA[p.type] || AURA.terran, n = 160, pa = new Float32Array(n * 3);
   for (let i = 0; i < n; i++) { const a = rn() * TAU, rr = rad * (1.25 + rn() * spread); pa[i * 3] = Math.cos(a) * rr; pa[i * 3 + 1] = (rn() - .5) * rad * thick * 2; pa[i * 3 + 2] = Math.sin(a) * rr; }
   const pg = new TH.BufferGeometry(); pg.setAttribute("position", new TH.BufferAttribute(pa, 3));
@@ -9191,9 +9236,9 @@ function planetArt(p) {
     const cl = new TH.Mesh(new TH.SphereGeometry(1.018, 48, 32), new TH.MeshStandardMaterial({ map: cloudTex(p.type), transparent: true, opacity: .6, depthWrite: false, roughness: 1 })); cl.rotation.set(.3, .4, 0); grp.add(cl);
     const atm = new TH.Mesh(new TH.SphereGeometry(1.1, 48, 32), fresnelMat(atmoOf(p), 2.8, 1.1)); grp.add(atm);
     if (ringed) { const rg = new TH.Mesh(new TH.RingGeometry(1.45, 2.05, 96), new TH.MeshStandardMaterial({ color: p.rc ? new TH.Color(RINGC[p.rc]) : new TH.Color(P[1]).lerp(new TH.Color(P[3]), .4), transparent: true, opacity: .55, side: TH.DoubleSide, roughness: .9, depthWrite: false })); rg.rotation.x = -Math.PI / 2 + .42; rg.rotation.y = .2; grp.add(rg); }
-    for (let i = 0; i < moons; i++) { const m = new TH.Mesh(new TH.SphereGeometry(.13 + i * .05, 24, 16), new TH.MeshStandardMaterial({ color: new TH.Color(P[2]).lerp(new TH.Color("#888"), .35), roughness: 1 })); const a = 2.4 + i * 1.7; m.position.set(Math.cos(a) * (1.75 + i * .35), .25 - i * .3, Math.sin(a) * (1.75 + i * .35)); grp.add(m); }
+    for (let i = 0; i < moons; i++) { const m = new TH.Mesh(new TH.SphereGeometry(.13 + i * .05, 32, 20), Object.assign(moonMat(1 + i), { color: new TH.Color(P[2]).lerp(new TH.Color("#ddd"), .6) })); const a = 2.4 + i * 1.7; m.position.set(Math.cos(a) * (1.75 + i * .35), .25 - i * .3, Math.sin(a) * (1.75 + i * .35)); grp.add(m); }
     if (p.moon) { // the battle-born moon: big, cratered grey, with a lit outpost that grows with its level
-      const mm = new TH.Mesh(new TH.SphereGeometry(.3 + p.moon.lvl * .015, 40, 28), new TH.MeshStandardMaterial({ map: planetTex("ice", 2, 256), color: 0x9a9ea6, roughness: 1, bumpMap: planetTex("ice", 2, 256), bumpScale: .04 }));
+      const mm = new TH.Mesh(new TH.SphereGeometry(.3 + p.moon.lvl * .015, 40, 28), moonMat(0, 0xe6e7ea));
       mm.position.set(-2.05, .55, .6); grp.add(mm); for (let i = 0; i < Math.min(6, p.moon.lvl); i++) { const l = new TH.Mesh(new TH.SphereGeometry(.018, 6, 4), new TH.MeshBasicMaterial({ color: 0xffd89a })); const a = i * 1.3; l.position.set(-2.05 + Math.cos(a) * .2, .55 + Math.sin(a) * .2, .6 + .28); grp.add(l); } }
     // development in orbit: fortress ring, shipyard dock, satellites, silo flare
     const C = shipMats("#55d6e8");
@@ -12488,7 +12533,7 @@ function formShow(f) { if (!G3 || !G3.cam || view !== "galaxy" || !f || f.phase 
 const launchForm = () => sheet && FORMS[sheet.form] ? sheet.form : FORMS[S && S.fform] ? S.fform : "wedge"; // v274: each fleet flies its own formation
 function speedBar(to, sel) {
   const h = originPlanet(), pct = spdPct(), has = Object.keys(sel).length > 0;
-  const fuel = has ? fuelFor(h, to, sel, pct) : 0, gas = h && h.kind !== "home" ? colStock(h).g : S.res.g, tt = has ? travelMs(h, to, sel, S.r, pct) : 0;
+  const fuel = has ? fuelFor(h, to, sel, pct) : 0, gas = h && h.kind !== "home" ? colStock(h).g : S.res.g, tt = has ? trainTT(to, travelMs(h, to, sel, S.r, pct)) : 0;
   const T = now(), wf = h ? wellFrac(pos(h, T), pos(to, T)) : 0;
   return `<div class="spdbar"><div style="display:flex;justify-content:space-between;align-items:center"><span class="note">Fleet speed</span><b id="spdv" style="font-family:var(--f-display)">${pct}%</b></div>
     <input type="range" id="spd" min="1" max="100" value="${pct}" aria-label="Fleet speed, 1 to 100 percent">
@@ -13555,10 +13600,11 @@ const tutUnit = (k, n) => () => { const need = reqStep(SH[k].req); if (need) ret
   return S.sq.some(q => q.k === k) ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish them instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed them up"], [".qrow .t", `${SH[k].n}s in production`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard to watch them"], DOCKT("build", "Tap Build")]
     : !canPayRes(SH[k].c || {}) ? storeFirst(SH[k].c || {}, `a ${SH[k].n}`) || shortPath(SH[k].c || {}) || [["#hud", `Not enough resources for a ${SH[k].n} yet. Your mines keep working: come back in a few minutes`]]
     : [[`.sheet [data-act="make"][data-k="${k}"]`, tutMake(k, n)], [`article.bn[data-kind="s"][data-k="${k}"]`, `Choose ${SH[k].n}`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")]; };
-const tutStrike = (what) => () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : [['.sheet [data-act="launch"]', what], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
+const tutStrike = (what) => () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : slotWait() || [['.sheet [data-act="launch"]', what], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
 /* v318: the fleet you sent at the Hive, still flying out. The tap, rush and film steps need it in the air: if it has landed, send another */
 const tutFleet = () => S.fleets.find(f => f.pid && f.phase === "out" && !f.assault && f.mission !== "spy");
-const tutSend = () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : tutWaitShips() || (!own("fighter") ? tutUnit("fighter", 3)() : null) /* v319: none left: build more first */ || [['.sheet [data-act="launch"]', "Send your fighters"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
+const slotWait = () => fleetsUsed() >= maxFleets() ? [DOCKT("fleets", "Every fleet slot is busy. Wait for a fleet to come home")] : null; // v325
+const tutSend = () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : tutWaitShips() || slotWait() || (!own("fighter") ? tutUnit("fighter", 3)() : null) /* v319: none left: build more first */ || [['.sheet [data-act="launch"]', "Send your fighters"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
 const tutAt = id => tutOn() && (TUT[S.tut.i] || {}).id === id;
 /* v319: how many of ship k the Academy step or fleet-path step still wants, so the Shipyard's amount starts there (it started at 1, and
    "Tap Build to make 3" was a stumbling block for young players) */
@@ -13590,8 +13636,8 @@ const pirPath = () => S.fleets.some(f => f.xid && f.phase === "out") ? [DOCKT("f
 /* v324: the fighting steps (pirate raids, the scouted world, the colony invasion) keep at least n armed ships ready, paid by the Academy */
 const armedFund = n => { const k = armedMax(); return k >= n ? {} : uFund("fighter", own("fighter") + n - k); };
 const tutArmed = n => armedMax() < n && !S.fleets.some(f => f.phase === "back") ? tutUnit("fighter", own("fighter") + n - armedMax())() : null;
-const tutInvade = () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : tutWaitShips() || (own("ark") < 1 ? tutUnit("ark", 1)() : null) || tutArmed(6) || [['.sheet [data-act="launch"]', "Send the Colony Ship with your warships"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
-const mapPath = (final, pick) => () => [fromPick(), ['.sheet [data-act="launch"]', "Send your fleet"], [final, "Choose this one"], pick ? [pick, "Pick a target"] : null, SHOWME].filter(Boolean);
+const tutInvade = () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : tutWaitShips() || slotWait() || (own("ark") < 1 ? tutUnit("ark", 1)() : null) || tutArmed(6) || [['.sheet [data-act="launch"]', "Send the Colony Ship with your warships"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
+const mapPath = (final, pick) => () => slotWait() || [fromPick(), ['.sheet [data-act="launch"]', "Send your fleet"], [final, "Choose this one"], pick ? [pick, "Pick a target"] : null, SHOWME].filter(Boolean);
 const TUT = [
   { lv: 1, t: "Choose your commander name", say: "First things first, Commander: what should the galaxy call you? Every commander sees this name. Type it and tap Save.", ok: s => !!s.tutNm, open: () => ACT.profile({ u: G.me }), path: () => [['.sheet [data-act="nameSave"]', "Type your name, then tap Save"], ['.sheet #cnin', "Type your commander name"], SHOWME], rw: { m: 200, c: 100 } }, /* v296 */
   { lv: 1, t: "Name your homeworld", say: "This world is ours now. Give our capital a name worthy of an empire, then tap Save.", ok: s => !!s.tutHw, open: () => ACT.skin({}), path: () => [['.sheet [data-act="skinSave"]', "Type a name, then tap Save"], ['.sheet #pname', "Type your homeworld's name"], SHOWME], rw: { m: 200, c: 150 } }, /* v296 */
@@ -13714,7 +13760,7 @@ const guideNow = () => { GD.t = 0; try { coachRender(); } catch (e) {} };
 document.addEventListener("click", () => setTimeout(guideNow, 0), true);
 function guideVisible(el) {
   const r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2 || getComputedStyle(el).visibility === "hidden") return 0;
-  if (el.id === "tutfm") return 1; // v318: the marker on a fleet in the 3D map lets taps through, so nothing is ever "on top" of it
+  if (el.id === "tutfm") { const top = document.elementFromPoint(clamp(r.left + r.width / 2, 0, innerWidth - 1), clamp(r.top + r.height / 2, 0, innerHeight - 1)); return top && G3 && top === G3.renderer.domElement ? 1 : 0; } // v325: only where the tap reaches the map // v318: the marker on a fleet in the 3D map lets taps through, so nothing is ever "on top" of it
   if (r.bottom < 0 || r.top > innerHeight) return 2; // off-screen in a list: scroll to it
   const top = document.elementFromPoint(clamp(r.left + r.width / 2, 0, innerWidth - 1), clamp(r.top + r.height / 2, 0, innerHeight - 1));
   if (!top) return 0; if (top === el || el.contains(top)) return 1; if (top.closest("#coach")) return 3; // 3: under the Academy panel
@@ -13724,6 +13770,7 @@ function guidePick() {
   const st = !G.cubeDemo && !(G3 && (G3.cam.siege || G3.cam.cine)) && G.ready && !battle && !advLines && !$("#adv") && !$("#authw") && !(sheet && sheet.type === "faction") && !tutSnoozed() && !(S.pathSnz > now()) ? (m => m === "tut" ? TUT[S.tut.i] : m === "ship" ? shipStep() : null)(advPick()) : null;
   if (!(st && st.fm && !st.ok(S))) { const m = $("#tutfm"); if (m) m.remove(); } if (!st) return null;
   const path = st.ok(S) ? [['#coach [data-act="tutClaim"], #coach [data-act="shipClaim"], #coach .cpill', "Collect your reward"]] : st.path ? st.path() : [SHOWME];
+  { const sq = path.find(q => q && /article\.bn\[data-kind="s"\]/.test(q[0])), all = sq && !document.querySelector(sq[0]) && !sheet && $('[data-act="scls"][data-v="all"]:not(.on)'), v = all && guideVisible(all); if (v) return { el: all, label: "Tap All to see every ship", v }; } // v325
   for (const [sel, label, when] of path) { if (when && !when()) continue; for (const el of document.querySelectorAll(sel)) { if (el.classList.contains("on") || (el.disabled && /^(boost|finish)$/.test(el.dataset.act || ""))) continue; /* a tab already open, or a speed-up you can't use */ const v = guideVisible(el); if (v) return el.disabled && /^(up|research|make|cup|csb)$/.test(el.dataset.act || "") ? { el, label: (el.dataset.cost ? !canPayRes(JSON.parse(el.dataset.cost)) : $(".sheet .dres .no")) ? "Not enough resources yet. Your mines keep working: check back in a few minutes" : "Check the requirements below first", v } : el.disabled && /^(raid|launch|pyrGo|gather)$/.test(el.dataset.act || "") && /en route|on its way/i.test(el.textContent) ? { el, label: "Your fleet is on its way there. Wait for the report", v }
       : el.disabled && /^(raid|launch|pyrGo|gather)$/.test(el.dataset.act || "") && !sumShips(originAvail()) && S.fleets.some(f => f.phase === "back") ? { el, label: "Your ships are flying home. Wait a moment: they'll be picked as they land", v }
       : el.disabled && /^(raid|launch|pyrGo|gather)$/.test(el.dataset.act || "") && !sumShips(pick || {}) && (G.pkAll = $('.sheet [data-act="pkevery"]') || $('.sheet [data-act="pkmax"]')) && guideVisible(G.pkAll) ? { el: G.pkAll, label: G.pkAll.dataset.act === "pkevery" ? "Tap Select all ships first" : "Tap All to pick your ships first", v: guideVisible(G.pkAll) } : { el, label, v }; } } /* v324 */ /* v235: never say "Tap" on a greyed-out button */
@@ -15232,13 +15279,16 @@ function cleanMsgs(m) {
   const out = []; if (m && typeof m === "object") for (const id in m) { const o = cleanMsg(id, m[id]); if (o) out.push(o); }
   return out.sort((a, b) => a.t - b.t).slice(-150);
 }
+const chatSlot = t => new Date(t).toISOString().slice(0, 10).replace(/-/g, "") + "h" + Math.floor(new Date(t).getUTCHours() / 3); // v325: 3-hour rooms
+function chatSub(path, part, grp) { return G.db.doc(path).onSnapshot(s => { CHAT[grp + part] = s.exists ? cleanMsgs(s.data().m).map(m => (m.room = path, m)) : [];
+  CHAT[grp] = (CHAT[grp + "p"] || []).concat(CHAT[grp + "c"] || []).slice(-150); chatChanged(); }, () => {}); }
 function chatInit() {
-  if (G.mode !== "online" || !G.db || !G.me) return; const day = utcDay();
-  if (CHAT.day !== day) { CHAT.day = day; if (CHAT.subs.g) CHAT.subs.g(); CHAT.g = [];
-    CHAT.subs.g = G.db.doc("chat/g-" + day).onSnapshot(s => { CHAT.g = s.exists ? cleanMsgs(s.data().m) : []; chatChanged(); }, () => {}); CHAT.aKey = "?"; }
+  if (G.mode !== "online" || !G.db || !G.me) return; const T = now(), day = chatSlot(T), prev = chatSlot(T - 3 * 3600e3);
+  if (CHAT.day !== day) { CHAT.day = day; for (const k of ["g", "gp"]) if (CHAT.subs[k]) CHAT.subs[k](); CHAT.g = []; CHAT.gc = []; CHAT.gp = [];
+    CHAT.subs.g = chatSub("chat/g-" + day, "c", "g"); CHAT.subs.gp = chatSub("chat/g-" + prev, "p", "g"); CHAT.aKey = "?"; }
   const ak = S.ally ? "a-" + S.ally + "-" + day : null;
-  if (CHAT.aKey !== ak) { if (CHAT.subs.a) CHAT.subs.a(); CHAT.subs.a = null; CHAT.a = []; CHAT.aKey = ak;
-    if (ak) CHAT.subs.a = G.db.doc("chat/" + ak).onSnapshot(s => { CHAT.a = s.exists ? cleanMsgs(s.data().m) : []; chatChanged(); }, () => {}); }
+  if (CHAT.aKey !== ak) { for (const k of ["a", "ap"]) { if (CHAT.subs[k]) CHAT.subs[k](); CHAT.subs[k] = null; } CHAT.a = []; CHAT.ac = []; CHAT.ap = []; CHAT.aKey = ak;
+    if (ak) { CHAT.subs.a = chatSub("chat/" + ak, "c", "a"); CHAT.subs.ap = chatSub("chat/a-" + S.ally + "-" + prev, "p", "a"); } }
   if (!CHAT.subs.d) CHAT.subs.d = G.db.collection("dms").where("p", "array-contains", G.me).limit(100).onSnapshot(snap => {
     const o = {}; for (const d of snap.docs) { const v = d.data(); if (!v || !Array.isArray(v.p)) continue; const other = v.p.find(x => x !== G.me); if (typeof other !== "string") continue; o[d.id] = { id: d.id, with: other, m: cleanMsgs(v.m) }; }
     CHAT.dms = o; chatChanged(); }, () => {});
@@ -15247,8 +15297,8 @@ let chatT = 0;
 function chatChanged() { clearTimeout(chatT); chatT = setTimeout(() => { if (sheet && sheet.type === "chat") renderSheet(); trayRender(); dock(); if (view === "mail") render(true); }, 120); }
 function chatUnread() {
   const seen = S.chatSeen || {}, blocked = new Set(S.blocked || []), count = (arr, key) => arr.filter(m => m.u !== G.me && !blocked.has(m.u) && m.t > (seen[key] || 0)).length;
-  let n = count(CHAT.a, "a:" + CHAT.day); for (const c of Object.values(CHAT.dms)) n += count(c.m, "d:" + c.id);
-  n += CHAT.g.filter(m => m.u !== G.me && !blocked.has(m.u) && m.t > (seen["g:" + CHAT.day] || 0) && chatMentions(m.x)).length; return n; // global chat badges only when someone mentions you; alliance and direct always do
+  let n = count(CHAT.a, "a:" + (S.ally || "")); for (const c of Object.values(CHAT.dms)) n += count(c.m, "d:" + c.id);
+  n += CHAT.g.filter(m => m.u !== G.me && !blocked.has(m.u) && m.t > (seen["g:"] || 0) && chatMentions(m.x)).length; return n; // global chat badges only when someone mentions you; alliance and direct always do
 }
 const chatPath = (ch, to) => ch === "g" ? "chat/g-" + CHAT.day : ch === "a" ? (CHAT.aKey ? "chat/" + CHAT.aKey : null) : to ? "dms/" + dmKey(G.me, to) : null;
 async function chatPost(ch, to, msg) { // posts one message; creates the day's room (or the conversation) if it isn't there yet
@@ -15291,7 +15341,7 @@ function shRepShare() { const r = findRep(sheet.id); if (!r) return ""; chatInit
 function shChat() {
   if (G.mode !== "online") return `<div class="hd"><div><h2>Comms</h2><p class="note">Chat needs the shared galaxy. You're playing solo right now.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
   chatInit(); const ch = ["g", "a", "d"].includes(sheet.ch) ? sheet.ch : "g", blocked = new Set(S.blocked || []);
-  const tabs = `<div class="segc">${[["g", "Global"], ["a", "Alliance"], ["d", "Direct"]].map(([k, l]) => { const un = k === "d" ? Object.values(CHAT.dms).reduce((a, c) => a + c.m.filter(m => m.u !== G.me && m.t > ((S.chatSeen || {})["d:" + c.id] || 0)).length, 0) : k === "a" ? CHAT.a.filter(m => m.u !== G.me && m.t > ((S.chatSeen || {})["a:" + CHAT.day] || 0)).length : 0;
+  const tabs = `<div class="segc">${[["g", "Global"], ["a", "Alliance"], ["d", "Direct"]].map(([k, l]) => { const un = k === "d" ? Object.values(CHAT.dms).reduce((a, c) => a + c.m.filter(m => m.u !== G.me && m.t > ((S.chatSeen || {})["d:" + c.id] || 0)).length, 0) : k === "a" ? CHAT.a.filter(m => m.u !== G.me && m.t > ((S.chatSeen || {})["a:" + (S.ally || "")] || 0)).length : 0;
     return `<button class="${k === ch ? "on" : ""}" data-act="chatTab" data-v="${k}">${l}${un ? ` <i class="cbadge">${un}</i>` : ""}</button>`; }).join("")}</div>`;
   /* v323 bubbles: avatar, name, alliance tag and level on the first message of a run; replies quote what they answer; reactions; coordinates
      you can tap to fly to; @mentions of you light up; shared battle reports show as cards with a Watch button; a date line between days */
@@ -15320,8 +15370,8 @@ function shChat() {
     ${sheet.repPick ? `<div class="crpick"><h2 class="sec">Share a battle report here</h2>${chatRepList().map(r => `<button class="frow conv" data-act="chatRepGo" data-id="${r.id}"><b>${esc(r.title)}</b><small>${ago(r.at)} ago · ${r.winner === "draw" ? "Draw" : repWin(r) ? "Victory" : "Defeat"}</small></button>`).join("") || '<p class="note">No battle reports yet.</p>'}</div>` : ""}`;
   const mark = (key, msgs) => { const t = msgs.length ? msgs[msgs.length - 1].t : 0; S.chatSeen = S.chatSeen || {}; if (t > (S.chatSeen[key] || 0)) { S.chatSeen[key] = t; dirty(); setTimeout(trayRender, 0); } };
   let body;
-  if (ch === "g") { mark("g:" + CHAT.day, CHAT.g); body = log(CHAT.g) + input; }
-  else if (ch === "a") { if (!S.ally) body = `<p class="note">Join an alliance to use alliance chat.</p>`; else { mark("a:" + CHAT.day, CHAT.a); body = log(CHAT.a) + input; } }
+  if (ch === "g") { mark("g:", CHAT.g); body = log(CHAT.g) + input; }
+  else if (ch === "a") { if (!S.ally) body = `<p class="note">Join an alliance to use alliance chat.</p>`; else { mark("a:" + (S.ally || ""), CHAT.a); body = log(CHAT.a) + input; } }
   else if (sheet.to) { const c = CHAT.dms[dmKey(G.me, sheet.to)], msgs = c ? c.m : []; mark("d:" + dmKey(G.me, sheet.to), msgs);
     body = `<div class="dmhd"><button class="btn ghost sm" data-act="chatTab" data-v="d">‹ Back</button><b>${esc(nameOf(sheet.to))}</b><button class="btn ghost sm" data-act="profile" data-u="${sheet.to}">Card</button></div>${log(msgs)}${input}<p class="note">Direct messages are hidden from other players in the game, but they are stored in the galaxy's shared data and are not encrypted. Don't share anything private.</p>`; }
   else { const convs = Object.values(CHAT.dms).filter(c => !blocked.has(c.with)).sort((a, b) => ((b.m[b.m.length - 1] || {}).t || 0) - ((a.m[a.m.length - 1] || {}).t || 0));
@@ -15483,7 +15533,7 @@ function sendFleet(p, n, mission, extra) {
     S.res.g -= fuel; for (const k in n) S.ships[k] -= n[k];
   }
   const T = now(), tt = travelMs(h, p, n, S.r, pct), hp = pos(h, T);
-  const f = Object.assign({ id: "f" + (S.seq++), pid: p.id, mission, n, out: T, arrive: T + tt, tt, back: null, loot: null, phase: "out", ox: hp.x, oy: hp.y, from: h.kind !== "home" ? h.id : null, spd: pct, fuel }, extra || {});
+  const f = Object.assign({ id: "f" + (S.seq++), pid: p.id, mission, n, out: T, arrive: T + (mission === "spy" ? tt : trainTT(p, tt)), tt, back: null, loot: null, phase: "out", ox: hp.x, oy: hp.y, from: h.kind !== "home" ? h.id : null, spd: pct, fuel }, extra || {});
   if (!f.form && sheet && FORMS[sheet.form]) f.form = sheet.form; // v274: the formation picked on the launch screen
   S.fleets.push(f);
   if (Object.keys(n).some(k => CLASS_OF[k] === "frigate" && n[k] > 0) && typeof reveal === "function") { const q = pos(p, T); reveal(q.x, q.y, 12); } // frigates scout ahead
@@ -15955,7 +16005,7 @@ const ACT = {
   chatTab: d => { sheet.ch = d.v; sheet.to = null; renderSheet(); },
   chatSend: () => chatSend(),
   chatPick: d => { if (!sheet) return; sheet.pick = sheet.pick === d.id ? null : d.id; renderSheet(); },
-  chatReact: async d => { if (!sheet || !CHAT_RX.includes(d.e)) return; const m = chatFind(d.id), path = chatPath(sheet.ch || "g", sheet.to); if (!m || !path) return; sheet.pick = null;
+  chatReact: async d => { if (!sheet || !CHAT_RX.includes(d.e)) return; const m = chatFind(d.id), path = (m && m.room) || chatPath(sheet.ch || "g", sheet.to); if (!m || !path) return; sheet.pick = null;
     const off = m.rx && m.rx[G.me] === d.e; m.rx = Object.assign({}, m.rx || {}); if (off) delete m.rx[G.me]; else m.rx[G.me] = d.e; renderSheet(); // shown at once; the room catches up
     try { await G.db.doc(path).update({ m: { [d.id]: { rx: { [G.me]: off ? "" : d.e } } } }); } catch (e) { toast("Couldn't react to that.", "warn"); } },
   chatReply: d => { const m = chatFind(d.id); if (!m || !sheet) return; sheet.reply = { u: m.u, x: m.r ? "⚔ " + m.r.ti : m.x }; sheet.pick = null; renderSheet(); setTimeout(() => { const i = $("#chatin"); if (i) i.focus(); }, 30); },
@@ -16197,7 +16247,7 @@ const ACT = {
     const jt = (sheet && sheet.jt || 10) * 60000, T0 = now(), tt0 = joint ? travelMs(originPlanet(), p, n, S.r, spdPct()) : 0, arrive0 = T0 + Math.max(jt, tt0);
     const f = joint ? sendFleet(p, n, "attack", { arrive: arrive0, tt: arrive0 - T0, muster: jt }) : sendFleet(p, n, "attack"); if (!f) return; callAllies(f);
     if (joint) { openJoint(f, p); toast(`Joint strike opened with a ${Math.round(jt / 60000)}-minute muster. Allies whose fleets arrive in time strike with you in ${ftime(f.arrive - now())}.`); }
-    else toast(`${n.ark ? "Invasion" : "Fleet"} launched. Arrival in ${ftime(f.tt)}.`);
+    else toast(`${n.ark ? "Invasion" : "Fleet"} launched. Arrival in ${ftime(f.arrive - now())}.`); // v325: the real arrival (training flights take longer)
     closeSheet();
   }),
   assault: d => { pick = {}; for (const k in S.ships) if (S.ships[k] && SH[k]) pick[k] = S.ships[k]; openSheet({ type: "assault", id: d.id }); },

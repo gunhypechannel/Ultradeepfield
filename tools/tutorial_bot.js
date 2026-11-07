@@ -32,7 +32,7 @@ const MAXIT = +process.env.MAXIT || 2600, DEV = process.env.DEV || 'iPhone 15 Pr
     if (clickable) { idle = 0; stepIt++;
       if (s.el.tag === 'INPUT' || /^Type /.test(s.lab)) { const sel = (await E(`document.querySelector('.sheet #cnin') ? '#cnin' : document.querySelector('.sheet #pname') ? '#pname' : ''`));
         if (sel) { const v = await pg.$eval('.sheet ' + sel, e => e.value); if (!v) { await pg.fill('.sheet ' + sel, sel === '#cnin' ? 'Nova Tester' : 'Aurora Prime'); labels.push('[typed]'); await pg.waitForTimeout(300); if (s.el.tag === 'INPUT') continue; } } }
-      { await pg.waitForTimeout(220); const r2 = JSON.parse(await E(`(() => { const e = GD.el && GD.el.isConnected ? GD.el : null; if (!e) return 'null'; const r = e.getBoundingClientRect(); return JSON.stringify([r.left + r.width / 2, r.top + r.height / 2]); })()`)); if (!r2 || Math.hypot(r2[0] - s.el.x, r2[1] - s.el.y) > 3) continue; } // a person waits for the screen to settle
+      if (s.el.id !== 'tutfm') { await pg.waitForTimeout(220); const r2 = JSON.parse(await E(`(() => { const e = GD.el && GD.el.isConnected ? GD.el : null; if (!e) return 'null'; const r = e.getBoundingClientRect(); return JSON.stringify([r.left + r.width / 2, r.top + r.height / 2]); })()`)); if (!r2 || Math.hypot(r2[0] - s.el.x, r2[1] - s.el.y) > 3) continue; } // a person waits for the screen to settle
       try { await pg.touchscreen.tap(s.el.x, s.el.y); } catch (e) { await pg.mouse.click(s.el.x, s.el.y); }
       await pg.waitForTimeout(s.el.id === 'tutfm' ? 900 : 450); continue; }
     // nothing to tap: waiting on a build, research, production or a fleet in flight

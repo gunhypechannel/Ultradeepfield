@@ -132,3 +132,9 @@ do $$ begin
     alter publication supabase_realtime add table public.docs;
   end if;
 end $$;
+
+-- v325 security pass: the RLS auto-enable event-trigger function is not an API endpoint; is_owner() only for signed-in users
+do $$ begin if exists (select 1 from pg_proc where proname = 'rls_auto_enable' and pronamespace = 'public'::regnamespace) then
+  revoke execute on function public.rls_auto_enable() from public, anon, authenticated; end if; end $$;
+revoke execute on function public.is_owner() from public, anon;
+grant execute on function public.is_owner() to authenticated;
