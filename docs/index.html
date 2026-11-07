@@ -1159,7 +1159,7 @@ main.full{padding:0;overflow:hidden;gap:0}
 .dock button{font-size:9.5px!important;letter-spacing:.02em!important}
 .mbadge.fl{background:#2bc4d6;color:#03141a;box-shadow:0 0 8px rgba(43,196,214,.6)}
 .mbadge{position:absolute;top:3px;left:calc(50% + 6px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#ff4a4a;color:#fff;font:700 10px/16px var(--f-display);letter-spacing:0;box-shadow:0 0 8px rgba(255,74,74,.6)}
-.mailhd{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin:4px 0 8px}.mailhd h2{margin:0;font-size:22px}.mailact{display:flex;gap:6px}
+.mallrow{margin:0 0 10px}.mallrow .btn{flex:1}.mailhd{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin:4px 0 8px}.mailhd h2{margin:0;font-size:22px}.mailact{display:flex;gap:6px}
 .mailtabs{overflow-x:auto;scrollbar-width:none}.mailtabs button{flex:none;padding:8px 11px}
 .mlist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .mrowc{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid rgba(127,230,243,.22);background:linear-gradient(160deg,rgba(24,64,96,.32),rgba(4,14,26,.5));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:var(--ink,#e6f2f6);font:inherit;cursor:pointer;position:relative}
@@ -13216,7 +13216,7 @@ function vMail() {
     if (x.dm) { const c = x.dm, lm = c.m[c.m.length - 1]; return `<button class="mrowc dm${nw ? " unread" : ""}" data-act="dmOpen" data-u="${esc(c.with)}"><span class="mi av">${avCanvas(c.with)}</span><span class="mt"><b>${esc(nameOf(c.with))}${x.un ? ` <i class="cbadge">${x.un}</i>` : ""}</b><small>${lm.u === G.me ? "You: " : ""}${esc(lm.x.slice(0, 70))}</small></span><span class="mw"><time>${when}</time></span></button>`; }
     const l = x.log; return `<div class="mrowc alert ${l.kind === "win" ? "good" : l.kind === "loss" ? "bad" : l.kind === "warn" ? "warn" : ""}${nw ? " unread" : ""}"><span class="mi">${l.kind === "warn" || l.kind === "loss" ? MI.alert : MI.mail}</span><span class="mt"><b>${esc(l.msg)}</b></span><span class="mw">${tag}<time>${when}</time></span></div>`; };
   const empty = { saved: "No saved reports yet. Open any battle report and tap ☆ Save report to keep it here for good.", all: "No mail yet.", battle: "No battle reports yet. Fights you take part in land here.", spy: "No espionage reports yet. Probe a planet from its card.", dm: G.mode === "online" ? "No direct messages yet." : "Direct messages need the shared galaxy.", alert: "No alerts." }[f];
-  return `<div class="mailhd"><div><div class="chapter">Fleet Command</div><h2>Mail</h2></div><div class="mailact">${G.mode === "online" ? `<button class="btn sm" data-act="mailNew">✉ New message</button>` : ""}${f === "alert" && S.log.length ? `<button class="btn ghost sm" data-act="mailClear">Clear alerts</button>` : ""}</div></div>${tabs}
+  return `<div class="mailhd"><div><div class="chapter">Fleet Command</div><h2>Mail</h2></div><div class="mailact">${G.mode === "online" ? `<button class="btn sm" data-act="mailNew">✉ New message</button><button class="btn ghost sm" data-act="mailNew">📣 Mail all</button>` : ""}${f === "alert" && S.log.length ? `<button class="btn ghost sm" data-act="mailClear">Clear alerts</button>` : ""}</div></div>${tabs}
     <div class="mlist">${list.length ? list.map(row).join("") : `<p class="note" style="text-align:center;padding:24px 0">${empty}</p>`}</div>`;
 }
 function mGame() {
@@ -15322,6 +15322,7 @@ const dmKey = (a, b) => { const [x, y] = [a, b].sort(); return "d" + hash(x + "|
 const CHAT_RX = ["👍", "🔥", "😂", "⚔️", "🫡", "😮"];
 function cleanMsg(id, v) { if (!v || typeof v !== "object" || typeof v.u !== "string" || typeof v.x !== "string") return null; const o = { id, u: v.u.slice(0, 80), x: v.x.slice(0, 240), t: +v.t || 0 };
   if (v.rx && typeof v.rx === "object") { const rx = {}; let n = 0; for (const k in v.rx) { if (n >= 60) break; if (typeof k === "string" && k.length <= 80 && CHAT_RX.includes(v.rx[k])) { rx[k] = v.rx[k]; n++; } } if (n) o.rx = rx; }
+  if (v.bc === "f" || v.bc === "a") o.bc = v.bc; // v331: sent to all friends / all alliance members
   if (v.re && typeof v.re === "object" && typeof v.re.u === "string" && typeof v.re.x === "string") o.re = { u: v.re.u.slice(0, 80), x: v.re.x.slice(0, 90) };
   if (v.r && typeof v.r === "object" && /^[a-z0-9]{6,24}$/.test(String(v.r.id || ""))) o.r = { id: v.r.id, ti: String(v.r.ti || "Battle report").slice(0, 70), w: ["a", "d", "draw"].includes(v.r.w) ? v.r.w : "", k: String(v.r.k || "").slice(0, 12), an: String(v.r.an || "").slice(0, 40), dn: String(v.r.dn || "").slice(0, 40) };
   return o; }
@@ -15356,16 +15357,27 @@ function chatUnread() {
   n += CHAT.g.filter(m => m.u !== G.me && !blocked.has(m.u) && m.t > (seen["g:"] || 0) && chatMentions(m.x)).length; return n; // global chat badges only when someone mentions you; alliance and direct always do
 }
 const chatPath = (ch, to) => ch === "g" ? "chat/g-" + CHAT.day : ch === "a" ? (CHAT.aKey ? "chat/" + CHAT.aKey : null) : to ? "dms/" + dmKey(G.me, to) : null;
-async function chatPost(ch, to, msg) { // posts one message; creates the day's room (or the conversation) if it isn't there yet
+async function chatPost(ch, to, msg, quiet) { // posts one message; creates the day's room (or the conversation) if it isn't there yet
   chatInit(); const path = chatPath(ch, to); if (!path) return false; const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ref = G.db.doc(path), extra = ch === "d" ? { p: [G.me, to] } : {};
   try { await ref.update({ m: { [id]: msg } }); return true; }
   catch (e) {
-    if (e && e.code === "invalid_argument") { try { const s = await ref.get(); if (s.exists) { toast("This chat room is full for today. Try again tomorrow.", "warn"); return false; } await ref.set(Object.assign({ m: { [id]: msg } }, extra)); return true; } catch (e2) {} }
-    toast("Couldn't send that message.", "warn"); return false; } }
+    if (e && e.code === "invalid_argument") { try { const s = await ref.get(); if (s.exists) { if (!quiet) toast("This chat room is full for today. Try again tomorrow.", "warn"); return false; } await ref.set(Object.assign({ m: { [id]: msg } }, extra)); return true; } catch (e2) {} }
+    if (!quiet) toast("Couldn't send that message.", "warn"); return false; } }
+const MAIL_ALL_GAP = 120000, MAIL_ALL_MAX = 60;
+function mailGroup(g) { const bl = new Set(S.blocked || []), al = S.ally && G.alliances[S.ally];
+  const ids = g === "f" ? (S.friends || []) : al ? Object.keys(al.members || {}) : [];
+  return [...new Set(ids)].filter(u => typeof u === "string" && u && u !== G.me && !bl.has(u) && !isBot(u)).slice(0, MAIL_ALL_MAX); }
+async function mailAll(g, text) { const to = mailGroup(g), who = g === "a" ? "alliance members" : "friends";
+  if (!to.length) { toast(g === "a" ? (S.ally ? "No other members in your alliance yet." : "Join an alliance first.") : "Add friends from a commander's card first.", "warn"); return false; }
+  const wait = (S.mailAllAt || 0) + MAIL_ALL_GAP - now(); if (wait > 0) { toast(`You can mail everyone again in ${ftime(wait)}.`, "warn"); return false; }
+  S.mailAllAt = now(); dirty(); toast(`Sending to ${to.length} ${who}…`); let ok = 0;
+  for (let i = 0; i < to.length; i += 4) { const r = await Promise.all(to.slice(i, i + 4).map(u => chatPost("d", u, { u: G.me, x: text, t: now(), bc: g }, true).catch(() => false))); ok += r.filter(Boolean).length; }
+  toast(ok === to.length ? `Sent to all ${ok} ${who}.` : ok ? `Sent to ${ok} of ${to.length} ${who}. The rest couldn't be reached.` : "Couldn't send that message.", ok ? "win" : "warn"); return ok > 0; }
 async function chatSend() {
   const inp = $("#chatin"); if (!inp || !sheet) return; const text = inp.value.replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 240); if (!text) return;
   if (G.mode !== "online" || !G.db) return toast("Chat needs the shared galaxy.", "warn");
   if (now() - CHAT.last < 1500) return toast("Slow down a little.", "warn"); CHAT.last = now();
+  if (sheet.bc) { const g = sheet.bc; inp.value = ""; sheet.draft = ""; if (await mailAll(g, text)) { sheet.bc = null; sheet.ch = "d"; } else inp.value = text; renderSheet(); return; } // v331
   const ch = sheet.ch || "g", to = sheet.to, msg = { u: G.me, x: text, t: now() }; if (sheet.reply) msg.re = { u: sheet.reply.u, x: String(sheet.reply.x).slice(0, 90) };
   inp.value = ""; sheet.reply = null; sheet.draft = ""; if (!(await chatPost(ch, to, msg))) { inp.value = text; return; } renderSheet();
 }
@@ -15413,6 +15425,7 @@ function shChat() {
       html += `<div class="cmr${mine ? " me" : ""}${run ? " run" : ""}">${!mine ? (run ? `<span class="cav0"></span>` : `<button class="cav" data-act="profile" data-u="${esc(m.u)}" aria-label="${esc(nameOf(m.u))}">${avCanvas(m.u, "avc cavc")}</button>`) : ""}
         <div class="cm${mine ? " me" : ""}${ment ? " ment" : ""}${m.r ? " hasrep" : ""}${pick ? " pick" : ""}" data-act="chatPick" data-id="${m.id}">
           ${!mine && !run ? `<span class="chd"><button class="cu" data-act="profile" data-u="${esc(m.u)}">${esc(nameOf(m.u))}</button>${at}${lv ? `<i class="clv">Lv.${lv}</i>` : ""}</span>` : ""}
+          ${m.bc ? `<span class="cx csub">📣 ${mine ? "You sent this" : "Sent"} to all ${m.bc === "a" ? "alliance members" : "friends"}</span>` : ""}
           ${m.re ? `<span class="cre"><b>${esc(m.re.u === G.me ? "You" : nameOf(m.re.u))}</b> ${esc(m.re.x)}</span>` : ""}
           ${m.r ? `${mine ? "" : `<span class="cx csub">shared a battle report</span>`}${repCard(m)}` : `<span class="cx">${fmtX(m.x)}</span>`}<time>${clockAt(m.t)}</time></div></div>`;
       if (rx) html += `<div class="crx${mine ? " me" : ""}">${Object.entries(rx).map(([e, us]) => `<button class="${us.includes(G.me) ? "on" : ""}" data-act="chatReact" data-id="${m.id}" data-e="${e}" title="${esc(us.map(nameOf).join(", "))}">${e} ${us.length}</button>`).join("")}</div>`;
@@ -15427,10 +15440,15 @@ function shChat() {
   let body;
   if (ch === "g") { mark("g:", CHAT.g); body = log(CHAT.g) + input; }
   else if (ch === "a") { if (!S.ally) body = `<p class="note">Join an alliance to use alliance chat.</p>`; else { mark("a:" + (S.ally || ""), CHAT.a); body = log(CHAT.a) + input; } }
+  else if (sheet.bc) { const g = sheet.bc, to = mailGroup(g), who = g === "a" ? "your alliance" : "your friends"; // v331: mail everyone at once
+    body = `<div class="dmhd"><button class="btn ghost sm" data-act="chatTab" data-v="d">‹ Back</button><b>📣 Mail all ${g === "a" ? "alliance members" : "friends"}</b><span></span></div>
+      <p class="note">${to.length ? `Goes to each of the ${to.length} commander${to.length > 1 ? "s" : ""} in ${who} as a direct message: ${esc(to.slice(0, 8).map(nameOf).join(", "))}${to.length > 8 ? ` and ${to.length - 8} more` : ""}.` : g === "a" ? (S.ally ? "No other members in your alliance yet." : "Join an alliance first.") : "Add friends from a commander's card first."}</p>
+      ${to.length ? `<div class="chatin"><input class="minput" id="chatin" maxlength="240" placeholder="Message ${who}" aria-label="Message ${who}" autocomplete="off" value="${esc(sheet.draft || "")}"><button class="btn" data-act="chatSend">Send to ${to.length}</button></div>` : ""}`; }
   else if (sheet.to) { const c = CHAT.dms[dmKey(G.me, sheet.to)], msgs = c ? c.m : []; mark("d:" + dmKey(G.me, sheet.to), msgs);
     body = `<div class="dmhd"><button class="btn ghost sm" data-act="chatTab" data-v="d">‹ Back</button><b>${esc(nameOf(sheet.to))}</b><button class="btn ghost sm" data-act="profile" data-u="${sheet.to}">Card</button></div>${log(msgs)}${input}<p class="note">Direct messages are hidden from other players in the game, but they are stored in the galaxy's shared data and are not encrypted. Don't share anything private.</p>`; }
   else { const convs = Object.values(CHAT.dms).filter(c => !blocked.has(c.with)).sort((a, b) => ((b.m[b.m.length - 1] || {}).t || 0) - ((a.m[a.m.length - 1] || {}).t || 0));
-    body = `<div class="flist">${convs.map(c => { const lm = c.m[c.m.length - 1], un = c.m.filter(m => m.u !== G.me && m.t > ((S.chatSeen || {})["d:" + c.id] || 0)).length;
+    const nf = mailGroup("f").length, na = mailGroup("a").length; // v331
+    body = `<div class="row2 mallrow"><button class="btn sm wide" data-act="mailAllOpen" data-g="f"${nf ? "" : " disabled"}>📣 Mail all friends${nf ? ` · ${nf}` : ""}</button><button class="btn sm wide" data-act="mailAllOpen" data-g="a"${na ? "" : " disabled"}>📣 Mail all alliance${na ? ` · ${na}` : ""}</button></div><div class="flist">${convs.map(c => { const lm = c.m[c.m.length - 1], un = c.m.filter(m => m.u !== G.me && m.t > ((S.chatSeen || {})["d:" + c.id] || 0)).length;
       return `<button class="frow conv" data-act="dmOpen" data-u="${c.with}"><b>${esc(nameOf(c.with))}${un ? ` <i class="cbadge">${un}</i>` : ""}</b><small>${lm ? esc(lm.x.slice(0, 60)) : ""}</small></button>`; }).join("") || '<p class="note">No conversations yet. Open a commander\'s card or your friends list to message them.</p>'}</div>
       ${(S.friends || []).length ? `<h2 class="sec">Message a friend</h2><div class="flist">${S.friends.map(u => `<button class="frow conv" data-act="dmOpen" data-u="${u}"><b>${esc(nameOf(u))}</b></button>`).join("")}</div>` : ""}`; }
   return `<div class="hd"><div><div class="chapter">Comms · ${ch === "g" ? "everyone in the galaxy" : ch === "a" ? "your alliance" : "direct"}</div><h2>Chat</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${tabs}${body}`;
@@ -16065,7 +16083,8 @@ const ACT = {
   trayToggle: () => { G.trayOpen = !G.trayOpen; trayRender(); dock(); },
   chat: () => { chatInit(); openSheet({ type: "chat", ch: "g" }); },
   allyChat: () => { chatInit(); openSheet({ type: "chat", ch: "a" }); },
-  chatTab: d => { sheet.ch = d.v; sheet.to = null; renderSheet(); },
+  chatTab: d => { sheet.ch = d.v; sheet.to = null; sheet.bc = null; renderSheet(); },
+  mailAllOpen: d => { chatInit(); if (sheet && sheet.type === "chat") { Object.assign(sheet, { ch: "d", to: null, bc: d.g, draft: "" }); renderSheet(); } else openSheet({ type: "chat", ch: "d", bc: d.g }); }, // v331
   chatSend: () => chatSend(),
   chatPick: d => { if (!sheet) return; sheet.pick = sheet.pick === d.id ? null : d.id; renderSheet(); },
   chatReact: async d => { if (!sheet || !CHAT_RX.includes(d.e)) return; const m = chatFind(d.id), path = (m && m.room) || chatPath(sheet.ch || "g", sheet.to); if (!m || !path) return; sheet.pick = null;
