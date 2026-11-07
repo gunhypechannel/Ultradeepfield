@@ -104,6 +104,7 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 #celeb .cbbt{position:relative;display:flex;flex-direction:column;gap:8px;margin-top:16px}#celeb .cbbt .btn{width:100%}
 @keyframes cbIn{from{transform:scale(.6) translateY(30px);opacity:0}to{transform:none;opacity:1}}@keyframes cbSpin{to{transform:rotate(360deg)}}@keyframes cbArt{from{transform:scale(1.25);opacity:0;filter:brightness(2.2)}to{transform:none;opacity:1}}
 .adv .box{position:relative}
+#adv .advv{position:absolute;right:10px;top:10px;z-index:3;width:38px;height:38px;border-radius:50%;border:1px solid rgba(85,214,232,.6);background:rgba(4,14,22,.75);color:#bff6ff;font-size:17px;line-height:1;cursor:pointer}
 #coach.gdhide>*{opacity:0!important;pointer-events:none!important;transition:opacity .2s}/* v324 */
 #coach{position:absolute;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 196px);display:flex;justify-content:flex-end;z-index:24;pointer-events:none;max-width:calc(100% - 20px)}
 #coach>*{pointer-events:auto}
@@ -1159,7 +1160,7 @@ main.full{padding:0;overflow:hidden;gap:0}
 .dock button{font-size:9.5px!important;letter-spacing:.02em!important}
 .mbadge.fl{background:#2bc4d6;color:#03141a;box-shadow:0 0 8px rgba(43,196,214,.6)}
 .mbadge{position:absolute;top:3px;left:calc(50% + 6px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#ff4a4a;color:#fff;font:700 10px/16px var(--f-display);letter-spacing:0;box-shadow:0 0 8px rgba(255,74,74,.6)}
-.mailhd{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin:4px 0 8px}.mailhd h2{margin:0;font-size:22px}.mailact{display:flex;gap:6px}
+.mallrow{margin:0 0 10px}.mallrow .btn{flex:1}.mailhd{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin:4px 0 8px}.mailhd h2{margin:0;font-size:22px}.mailact{display:flex;gap:6px}
 .mailtabs{overflow-x:auto;scrollbar-width:none}.mailtabs button{flex:none;padding:8px 11px}
 .mlist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .mrowc{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid rgba(127,230,243,.22);background:linear-gradient(160deg,rgba(24,64,96,.32),rgba(4,14,26,.5));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:var(--ink,#e6f2f6);font:inherit;cursor:pointer;position:relative}
@@ -2094,7 +2095,7 @@ function fogLoad() {
 function fogSave() { if (!FOGD) return; let s = ""; for (let i = 0; i < FOGD.length; i++) s += String.fromCharCode(FOGD[i]); S.fogD = btoa(s); }
 const fogIdx = (x, z) => { const cx = Math.floor((x + FOG_R) / FOG_CELL), cz = Math.floor((z + FOG_R) / FOG_CELL); return cx < 0 || cz < 0 || cx >= FOG_N || cz >= FOG_N ? -1 : cz * FOG_N + cx; };
 const fogSeen = (x, z) => { if (!FOG) return true; const i = fogIdx(x, z); return i >= 0 && FOG[i] === 1; };
-function isFogged(p, T) { if (!p || p.owner === G.me) return false; const q = pos(p, T || now()); return !fogSeen(q.x, q.y); }
+function isFogged(p, T) { if (!p || p.owner === G.me) return false; if (S && S.tutSee && S.tutSee.includes(p.id) && tutOn()) return false; /* v331: the Academy targets */ const q = pos(p, T || now()); return !fogSeen(q.x, q.y); }
 function reveal(x, z, rad) {
   if (!FOG) return 0; let n = 0; const day = (S.fogDay || 0) + 1, c0x = Math.floor((x - rad + FOG_R) / FOG_CELL), c1x = Math.floor((x + rad + FOG_R) / FOG_CELL), c0z = Math.floor((z - rad + FOG_R) / FOG_CELL), c1z = Math.floor((z + rad + FOG_R) / FOG_CELL);
   for (let cz = Math.max(0, c0z); cz <= Math.min(FOG_N - 1, c1z); cz++) for (let cx = Math.max(0, c0x); cx <= Math.min(FOG_N - 1, c1x); cx++) {
@@ -2378,7 +2379,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 330;
+const GAME_V = 331;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4841,7 +4842,7 @@ async function connectCloud() {
           if (cs.repsSep) await repsInto(cs, uid); // v293: its reports come from their own record
           const take = foreign || (!behind && (S.uid === uid ? cAt > (S.cloudAt || 0) : true));
           if (take) { try { if (lp > 0) localStorage.setItem(KEY + ".device", JSON.stringify(S)); } catch (e) {}
-            S = migrate(cs); S.cloudAt = cAt; secBoot(); FOG = null; live = false; advance(now()); live = true; render(true); toast(foreign ? "Signed in. Loaded this account's empire." : "Loaded your saved empire.", "win"); }
+            G.awayMs = cs.t ? now() - cs.t : 0; S = migrate(cs); S.cloudAt = cAt; secBoot(); FOG = null; live = false; advance(now()); live = true; render(true); toast(foreign ? "Signed in. Loaded this account's empire." : "Loaded your saved empire.", "win"); }
           else if (behind) toast("Your account's save was behind this device. This device's empire was kept and saved to your account.", "warn"); } }
       else if (foreign) { try { localStorage.setItem(KEY + ".device", JSON.stringify(S)); } catch (e) {}
         const hn = S.homeName; store.shrinkOk = true; S = newState(); FOG = null; S.homeName = hn; live = false; advance(now()); live = true; view = "base"; rebuild(); render(true); G.askFac = G.askFac0; toast("New account: a fresh homeworld is ready for you."); } // v329: faction, then the opening battle
@@ -4853,7 +4854,7 @@ async function connectCloud() {
        over each other every few seconds, so progress and alliances flipped back and forth) and asks you to continue here */
     try { db.doc(`data/users/${uid}/save`).onSnapshot(s3 => { const v = s3 && s3.exists ? s3.data() : null; if (!v || !v.sess || v.sess === SESS || store.adopting) return;
       if ((+v.savedAt || 0) > (S.cloudAt || 0) || (+v.seq || 0) > (store.seq || 0)) followCloud(v); }, () => {}); } catch (e) {}
-    if (G.oldWait) oldOffer(); else if (G.askFac) G.askFac(); // v329: the old-server card first, on its own // v138: the cloud save is in (or there is none): now ask for a faction only if this empire never chose one
+    comeback(); if (G.oldWait) oldOffer(); else if (G.askFac) G.askFac(); // v329: the old-server card first, on its own // v138: the cloud save is in (or there is none): now ask for a faction only if this empire never chose one
     store.mode = "cloud"; dirty();
     let gotP = false, gotPl = false;
     // a query returns at most 1,000 documents, so players and planets are read as 8 shards (field `sh`) plus one query for
@@ -13216,14 +13217,14 @@ function vMail() {
     if (x.dm) { const c = x.dm, lm = c.m[c.m.length - 1]; return `<button class="mrowc dm${nw ? " unread" : ""}" data-act="dmOpen" data-u="${esc(c.with)}"><span class="mi av">${avCanvas(c.with)}</span><span class="mt"><b>${esc(nameOf(c.with))}${x.un ? ` <i class="cbadge">${x.un}</i>` : ""}</b><small>${lm.u === G.me ? "You: " : ""}${esc(lm.x.slice(0, 70))}</small></span><span class="mw"><time>${when}</time></span></button>`; }
     const l = x.log; return `<div class="mrowc alert ${l.kind === "win" ? "good" : l.kind === "loss" ? "bad" : l.kind === "warn" ? "warn" : ""}${nw ? " unread" : ""}"><span class="mi">${l.kind === "warn" || l.kind === "loss" ? MI.alert : MI.mail}</span><span class="mt"><b>${esc(l.msg)}</b></span><span class="mw">${tag}<time>${when}</time></span></div>`; };
   const empty = { saved: "No saved reports yet. Open any battle report and tap ☆ Save report to keep it here for good.", all: "No mail yet.", battle: "No battle reports yet. Fights you take part in land here.", spy: "No espionage reports yet. Probe a planet from its card.", dm: G.mode === "online" ? "No direct messages yet." : "Direct messages need the shared galaxy.", alert: "No alerts." }[f];
-  return `<div class="mailhd"><div><div class="chapter">Fleet Command</div><h2>Mail</h2></div><div class="mailact">${G.mode === "online" ? `<button class="btn sm" data-act="mailNew">✉ New message</button>` : ""}${f === "alert" && S.log.length ? `<button class="btn ghost sm" data-act="mailClear">Clear alerts</button>` : ""}</div></div>${tabs}
+  return `<div class="mailhd"><div><div class="chapter">Fleet Command</div><h2>Mail</h2></div><div class="mailact">${G.mode === "online" ? `<button class="btn sm" data-act="mailNew">✉ New message</button><button class="btn ghost sm" data-act="mailNew">📣 Mail all</button>` : ""}${f === "alert" && S.log.length ? `<button class="btn ghost sm" data-act="mailClear">Clear alerts</button>` : ""}</div></div>${tabs}
     <div class="mlist">${list.length ? list.map(row).join("") : `<p class="note" style="text-align:center;padding:24px 0">${empty}</p>`}</div>`;
 }
 function mGame() {
   const net = G.mode === "online" ? `Live galaxy, ${activePlayers()} of ${MAX_PLAYERS} commander seats taken.` : G.mode === "full" ? `The shared galaxy is full (${MAX_PLAYERS} commanders).` : G.mode === "readonly" ? "You can watch the shared galaxy but can't play in it." : G.mode === "offline" ? "Solo galaxy." : "Connecting…";
   const tg = (act, on, label) => `<div class="tgl"><span>${label}</span><button class="toggle${on ? " on" : ""}" style="width:auto;padding:4px" data-act="${act}" aria-pressed="${on}" aria-label="${label}"><span class="sw"></span></button></div>`;
   return `<div class="mcard"><h3>${SND_I.on.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Sound</h3>
-      ${volSliders()}${tg("sound", !AU.muted, "All sound")}${tg("musicToggle", AU.musicOn, "Music")}${tg("sfxToggle", AU.sfxOn, "Battle, construction and interface effects")}${tg("remindToggle", remindOn(), "Pop-up reminders when jobs finish")}
+      ${volSliders()}${tg("sound", !AU.muted, "All sound")}${tg("musicToggle", AU.musicOn, "Music")}${tg("sfxToggle", AU.sfxOn, "Battle, construction and interface effects")}${tg("voiceToggle", VOICE.on, "Advisor voice")}${tg("remindToggle", remindOn(), "Pop-up reminders when jobs finish")}
 
       <p>Playing your music track. Construction, ship launches and finished research each have their own sound.</p></div>
     <div class="mcard"><h3>${MI.grid.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Play on your phone</h3>
@@ -13505,7 +13506,7 @@ const volSliders = () => `<div class="vols">${[["vol", "Master volume"], ["mv", 
 function shSound() {
   return `<div class="hd"><div><div class="chapter">Settings</div><h2>Sound</h2><p class="note">Saved on this device.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
     <div class="card">${tglRow("sound", !AU.muted, AU.muted ? "Sound is muted" : "Sound on")}${volSliders()}</div>
-    <div class="card">${tglRow("musicToggle", AU.musicOn, "Music")}${tglRow("sfxToggle", AU.sfxOn, "Battle, construction and interface effects")}${tglRow("remindToggle", remindOn(), "Pop-up reminders when jobs finish")}</div>
+    <div class="card">${tglRow("musicToggle", AU.musicOn, "Music")}${tglRow("sfxToggle", AU.sfxOn, "Battle, construction and interface effects")}${tglRow("voiceToggle", VOICE.on, "Advisor voice")}${tglRow("remindToggle", remindOn(), "Pop-up reminders when jobs finish")}</div>
 `;
 }
 
@@ -13569,18 +13570,27 @@ document.addEventListener("visibilitychange", () => { if (!AU.ctx) return; if (d
 
 /* ---------- advisor ---------- */
 let advLines = null;
+const VOICE = { on: true, clips: null, au: null, lastStep: -1 };
+try { VOICE.on = localStorage.getItem("void.voice") !== "0"; } catch (e) {}
+const voiceKey = s => hash(String(s)).toString(36);
+try { fetch("voice/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (j && typeof j === "object") VOICE.clips = j; }).catch(() => {}); } catch (e) {}
+function voiceTalk(on) { const a = $("#adv"); if (a) a.classList.toggle("talk", !!on); }
+function voiceStop() { voiceTalk(0); try { if (VOICE.au) { VOICE.au.pause(); VOICE.au = null; } } catch (e) {} }
+function speak(line) { if (!VOICE.on || (typeof AU !== "undefined" && AU.muted) || !line || !VOICE.clips) return; const k = voiceKey(line); if (!VOICE.clips[k]) return; voiceStop();
+  try { const a = new Audio("voice/" + k + ".mp3?v=" + VOICE.clips[k]); a.volume = Math.min(1, .95 * ((typeof AU !== "undefined" && AU.sfxVol != null) ? Math.max(.4, AU.sfxVol) : 1)); VOICE.au = a;
+    a.onplay = () => voiceTalk(1); a.onended = a.onpause = () => voiceTalk(0); a.play().catch(() => voiceTalk(0)); } catch (e) {} }
 function say(lines) {
   if (!lines.length) return;
   advLines = (advLines || []).concat(lines);
   if (!$("#adv")) {
     const w = document.createElement("div"); w.id = "adv";
-    w.innerHTML = `<div class="advscrim"></div><div class="adv" data-act="advNext" role="dialog" aria-label="Message from ${ADV}"><div class="box"><img class="advimg" src="${ADV_ART}" alt=""><i class="hscan"></i><i class="hbeam"></i><div class="tx"><div class="who">${ADV}</div><div class="say" id="advt"></div><div class="tap">Tap to continue</div></div></div></div>`;
+    w.innerHTML = `<div class="advscrim"></div><div class="adv" data-act="advNext" role="dialog" aria-label="Message from ${ADV}"><div class="box"><img class="advimg" src="${ADV_ART}" alt=""><i class="hscan"></i><i class="hbeam"></i><div class="tx"><div class="who">${ADV}</div><div class="say" id="advt"></div><div class="tap">Tap to continue</div></div><button class="advv" data-act="voiceToggle" aria-label="Advisor voice">${VOICE.on ? "🔊" : "🔇"}</button></div></div>`;
     $("#app").appendChild(w);
   }
-  $("#advt").textContent = advLines[0];
+  $("#advt").textContent = advLines[0]; speak(advLines[0]);
   startAnim();
 }
-function advNext() { advLines.shift(); if (advLines.length) $("#advt").textContent = advLines[0]; else { advLines = null; $("#adv").remove(); const th = G.advThen; G.advThen = null; if (th) th(); } } // v318: G.advThen runs once the last line is read (the opening battle)
+function advNext() { advLines.shift(); if (advLines.length) { $("#advt").textContent = advLines[0]; speak(advLines[0]); } else { voiceStop(); advLines = null; $("#adv").remove(); const th = G.advThen; G.advThen = null; if (th) th(); } } // v318: G.advThen runs once the last line is read (the opening battle)
 /* v328 celebrations: queued in S.celeb, shown one at a time when nothing else is on screen (before the Advisor's lines), with the
    moment's art, a burst of light, the reward and a Share button */
 function celebrate(c) { S.celeb = S.celeb || []; if (!S.celeb.some(x => x.k === c.k)) { S.celeb.push(c); dirty(); } }
@@ -13588,7 +13598,7 @@ function showCeleb(c) { const w = document.createElement("div"); w.id = "celeb";
   w.innerHTML = `<div class="cbscrim"></div><div class="cbbox ${c.k}"><div class="cbrays"></div>${art ? `<img class="cbart${c.art === "adv" ? " adv" : ""}" src="${art}" alt="">` : `<div class="cbicon">${c.ic || "★"}</div>`}
     <div class="cbk">${esc(c.kick || "")}</div><h2 class="cbt">${esc(c.t)}</h2><p class="cbs">${esc(c.s)}</p>${c.rw ? `<div class="cbrw">${esc(c.rw)}</div>` : ""}
     <div class="cbbt"><button class="btn amber" data-act="celebX">${esc(c.go || "Onward")}</button>${c.rep && G.mode === "online" ? `<button class="btn ghost" data-act="celebShare" data-id="${esc(c.rep)}">↗ Share the battle</button>` : `<button class="btn ghost" data-act="celebShare">↗ Share</button>`}${c.chat && G.mode === "online" ? `<button class="btn ghost" data-act="celebChat">💬 Say hi in chat</button>` : ""}</div></div>`;
-  $("#app").appendChild(w); try { SFX.gong(); } catch (e) {} G.celebNow = c; }
+  $("#app").appendChild(w); try { SFX.gong(); } catch (e) {} try { speak(c.say || c.s); } catch (e) {} G.celebNow = c; }
 function flushSay() { if (S.celeb && S.celeb.length && !battle && !sheet && !advLines && !$("#celeb") && !$("#adv") && G.ready) { showCeleb(S.celeb.shift()); dirty(); return; } if ($("#celeb")) return; // v328 a celebration first, then the Advisor
   flushSay0(); }
 function flushSay0() { if (S.say.length && !battle && !(sheet && sheet.type === "faction") && !$("#oldw")) { /* v330: not behind the old-server card */ const l = S.say.splice(0); dirty(); say(l); } }
@@ -13783,17 +13793,19 @@ function fleetPathCard() {
     return `<div class="fpn ${st}"><i>${i < cur ? "✓" : i + 1}</i><b>${esc(d.n)}</b><small>${i === cur && sp ? (sp.ok() ? "Ready to claim" : sp.need ? `${esc(sp.need.n)} Lv.${sp.need.l}` : `Build ${n}`) : i < cur ? "Done" : `× ${n}`}</small></div>`; }).join("")}</div>
     ${sp ? `<article class="card quest${sp.ok() ? " done hi" : ""}"><header>${esc(sp.t)}</header><p>${esc(sp.say)}</p>${sp.need && !sp.ok() ? `<p class="note">Next step: <b>${esc(sp.need.n)} Lv.${sp.need.l}</b> (you have Lv.${sp.need.cur}).</p>` : ""}
       <div class="rw"><span class="cost">${costHTML(sp.rw)} <span class="shard">◆${sp.rw.shards}</span></span>${sp.ok() ? `<button class="btn amber" data-act="shipClaim">Claim reward</button>` : `<button class="btn ghost" data-act="shipShow">Show me</button>`}</div></article>` : `<p class="note">Every hull on the fleet path is built. Your fleet is complete.</p>`}`;
-}function tutShow() {
+}function tutMark(id) { S.tutSee = (S.tutSee || []).filter(x => x !== id).concat([id]).slice(-12); dirty(); } // v331
+function tutShow() {
   const st = TUT[S.tut.i]; if (!st) return;
   if (st.open) { if (sheet) closeSheet(); if (view !== "base") { view = "base"; render(); } st.open(); } // v296: steps that open a card (your profile, the homeworld's name)
   else if (st.go) { if (sheet) closeSheet(); ACT.nav(st.go); if (st.rcat) { sub.rcat = st.rcat; render(); } }
   else if (st.find) { if (st.pirLvl) G.pirLvl = st.pirLvl; ACT.find({ r: st.find }); }
   else if (st.fly && tutFleet()) { const f = tutFleet(); if (sheet) closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } // v318: fly the camera over to the fleet; tapping it is your job
     let n = 0; const go = () => { const o = G3 && G3.fleets.get(f.id); if (!o || !o.pt) { if (n++ < 30) setTimeout(go, 100); return; } const c = G3.cam; c.follow = null; c.followFleet = null; c.vel = null; c.goal = { tx: o.pt.x, ty: o.pt.y, tz: o.pt.z, dist: 60 }; }; go(); }
-  else if (st.id === "scouted" && S.tutSpyP && G.byId[S.tutSpyP] && pStatus(G.byId[S.tutSpyP], now()) === "hive") { if (sheet) closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } ACT.planet({ id: S.tutSpyP }); } // v324: the world you scouted
+  else if (st.id === "scouted" && S.tutSpyP && G.byId[S.tutSpyP] && pStatus(G.byId[S.tutSpyP], now()) === "hive") { tutMark(S.tutSpyP); if (sheet) closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } ACT.planet({ id: S.tutSpyP }); } // v324: the world you scouted
   else if (st.hive || st.fly) { const h = homePlanet(), T = now(), hq = h ? pos(h, T) : { x: 0, y: 0 };
     const p = G.list.filter(p => pStatus(p, T) === "hive").map(p => { const q = pos(p, T); return [p, (q.x - hq.x) ** 2 + (q.y - hq.y) ** 2 + p.lvl * p.lvl * 900, p.lvl]; }).sort((a, b) => a[2] - b[2] || a[1] - b[1])[0]; /* v235: the lowest-level Hive world first, then the nearest */
     if (p && isFogged(p[0], T)) { const q = pos(p[0], T); reveal(q.x, q.y, 24); fogSave(); } // v330: never an uncharted target
+    if (p) tutMark(p[0].id);
     if (sheet) closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } if (p) ACT.planet({ id: p[0].id }); }
   tutSpot(st.spot);
 }
@@ -13912,6 +13924,7 @@ function coachRender(force) {
     : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "tutClaim" : "tutOpen"}" aria-label="${done ? "Collect the Academy reward" : "Open the Flight Academy"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : `${S.tut.i + 1}/${TUT.length}`}</span><b class="cpt"><small>${done ? "STEP DONE" : "NEXT TASK"}</small>${done ? "Collect reward ▸" : esc(st.t)}</b></button><button class="cpx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button>`;
   if (!w) { w = document.createElement("div"); w.id = "coach"; $("#app").appendChild(w); force = true; } w.style.display = sheet || view === "quests" ? "none" : ""; /* v123: the Quests tab shows the same step in full */
   if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
+  if (open && !done && VOICE.lastStep !== S.tut.i && !advLines && !$("#celeb") && !battle) { VOICE.lastStep = S.tut.i; speak(st.say); } // v331: each new step, read once as it opens
 }
 setInterval(() => { try { coachRender(); } catch (e) {} }, 800);
 
@@ -15322,6 +15335,7 @@ const dmKey = (a, b) => { const [x, y] = [a, b].sort(); return "d" + hash(x + "|
 const CHAT_RX = ["👍", "🔥", "😂", "⚔️", "🫡", "😮"];
 function cleanMsg(id, v) { if (!v || typeof v !== "object" || typeof v.u !== "string" || typeof v.x !== "string") return null; const o = { id, u: v.u.slice(0, 80), x: v.x.slice(0, 240), t: +v.t || 0 };
   if (v.rx && typeof v.rx === "object") { const rx = {}; let n = 0; for (const k in v.rx) { if (n >= 60) break; if (typeof k === "string" && k.length <= 80 && CHAT_RX.includes(v.rx[k])) { rx[k] = v.rx[k]; n++; } } if (n) o.rx = rx; }
+  if (v.bc === "f" || v.bc === "a") o.bc = v.bc; // v331: sent to all friends / all alliance members
   if (v.re && typeof v.re === "object" && typeof v.re.u === "string" && typeof v.re.x === "string") o.re = { u: v.re.u.slice(0, 80), x: v.re.x.slice(0, 90) };
   if (v.r && typeof v.r === "object" && /^[a-z0-9]{6,24}$/.test(String(v.r.id || ""))) o.r = { id: v.r.id, ti: String(v.r.ti || "Battle report").slice(0, 70), w: ["a", "d", "draw"].includes(v.r.w) ? v.r.w : "", k: String(v.r.k || "").slice(0, 12), an: String(v.r.an || "").slice(0, 40), dn: String(v.r.dn || "").slice(0, 40) };
   return o; }
@@ -15356,16 +15370,27 @@ function chatUnread() {
   n += CHAT.g.filter(m => m.u !== G.me && !blocked.has(m.u) && m.t > (seen["g:"] || 0) && chatMentions(m.x)).length; return n; // global chat badges only when someone mentions you; alliance and direct always do
 }
 const chatPath = (ch, to) => ch === "g" ? "chat/g-" + CHAT.day : ch === "a" ? (CHAT.aKey ? "chat/" + CHAT.aKey : null) : to ? "dms/" + dmKey(G.me, to) : null;
-async function chatPost(ch, to, msg) { // posts one message; creates the day's room (or the conversation) if it isn't there yet
+async function chatPost(ch, to, msg, quiet) { // posts one message; creates the day's room (or the conversation) if it isn't there yet
   chatInit(); const path = chatPath(ch, to); if (!path) return false; const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ref = G.db.doc(path), extra = ch === "d" ? { p: [G.me, to] } : {};
   try { await ref.update({ m: { [id]: msg } }); return true; }
   catch (e) {
-    if (e && e.code === "invalid_argument") { try { const s = await ref.get(); if (s.exists) { toast("This chat room is full for today. Try again tomorrow.", "warn"); return false; } await ref.set(Object.assign({ m: { [id]: msg } }, extra)); return true; } catch (e2) {} }
-    toast("Couldn't send that message.", "warn"); return false; } }
+    if (e && e.code === "invalid_argument") { try { const s = await ref.get(); if (s.exists) { if (!quiet) toast("This chat room is full for today. Try again tomorrow.", "warn"); return false; } await ref.set(Object.assign({ m: { [id]: msg } }, extra)); return true; } catch (e2) {} }
+    if (!quiet) toast("Couldn't send that message.", "warn"); return false; } }
+const MAIL_ALL_GAP = 120000, MAIL_ALL_MAX = 60;
+function mailGroup(g) { const bl = new Set(S.blocked || []), al = S.ally && G.alliances[S.ally];
+  const ids = g === "f" ? (S.friends || []) : al ? Object.keys(al.members || {}) : [];
+  return [...new Set(ids)].filter(u => typeof u === "string" && u && u !== G.me && !bl.has(u) && !isBot(u)).slice(0, MAIL_ALL_MAX); }
+async function mailAll(g, text) { const to = mailGroup(g), who = g === "a" ? "alliance members" : "friends";
+  if (!to.length) { toast(g === "a" ? (S.ally ? "No other members in your alliance yet." : "Join an alliance first.") : "Add friends from a commander's card first.", "warn"); return false; }
+  const wait = (S.mailAllAt || 0) + MAIL_ALL_GAP - now(); if (wait > 0) { toast(`You can mail everyone again in ${ftime(wait)}.`, "warn"); return false; }
+  S.mailAllAt = now(); dirty(); toast(`Sending to ${to.length} ${who}…`); let ok = 0;
+  for (let i = 0; i < to.length; i += 4) { const r = await Promise.all(to.slice(i, i + 4).map(u => chatPost("d", u, { u: G.me, x: text, t: now(), bc: g }, true).catch(() => false))); ok += r.filter(Boolean).length; }
+  toast(ok === to.length ? `Sent to all ${ok} ${who}.` : ok ? `Sent to ${ok} of ${to.length} ${who}. The rest couldn't be reached.` : "Couldn't send that message.", ok ? "win" : "warn"); return ok > 0; }
 async function chatSend() {
   const inp = $("#chatin"); if (!inp || !sheet) return; const text = inp.value.replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 240); if (!text) return;
   if (G.mode !== "online" || !G.db) return toast("Chat needs the shared galaxy.", "warn");
   if (now() - CHAT.last < 1500) return toast("Slow down a little.", "warn"); CHAT.last = now();
+  if (sheet.bc) { const g = sheet.bc; inp.value = ""; sheet.draft = ""; if (await mailAll(g, text)) { sheet.bc = null; sheet.ch = "d"; } else inp.value = text; renderSheet(); return; } // v331
   const ch = sheet.ch || "g", to = sheet.to, msg = { u: G.me, x: text, t: now() }; if (sheet.reply) msg.re = { u: sheet.reply.u, x: String(sheet.reply.x).slice(0, 90) };
   inp.value = ""; sheet.reply = null; sheet.draft = ""; if (!(await chatPost(ch, to, msg))) { inp.value = text; return; } renderSheet();
 }
@@ -15413,6 +15438,7 @@ function shChat() {
       html += `<div class="cmr${mine ? " me" : ""}${run ? " run" : ""}">${!mine ? (run ? `<span class="cav0"></span>` : `<button class="cav" data-act="profile" data-u="${esc(m.u)}" aria-label="${esc(nameOf(m.u))}">${avCanvas(m.u, "avc cavc")}</button>`) : ""}
         <div class="cm${mine ? " me" : ""}${ment ? " ment" : ""}${m.r ? " hasrep" : ""}${pick ? " pick" : ""}" data-act="chatPick" data-id="${m.id}">
           ${!mine && !run ? `<span class="chd"><button class="cu" data-act="profile" data-u="${esc(m.u)}">${esc(nameOf(m.u))}</button>${at}${lv ? `<i class="clv">Lv.${lv}</i>` : ""}</span>` : ""}
+          ${m.bc ? `<span class="cx csub">📣 ${mine ? "You sent this" : "Sent"} to all ${m.bc === "a" ? "alliance members" : "friends"}</span>` : ""}
           ${m.re ? `<span class="cre"><b>${esc(m.re.u === G.me ? "You" : nameOf(m.re.u))}</b> ${esc(m.re.x)}</span>` : ""}
           ${m.r ? `${mine ? "" : `<span class="cx csub">shared a battle report</span>`}${repCard(m)}` : `<span class="cx">${fmtX(m.x)}</span>`}<time>${clockAt(m.t)}</time></div></div>`;
       if (rx) html += `<div class="crx${mine ? " me" : ""}">${Object.entries(rx).map(([e, us]) => `<button class="${us.includes(G.me) ? "on" : ""}" data-act="chatReact" data-id="${m.id}" data-e="${e}" title="${esc(us.map(nameOf).join(", "))}">${e} ${us.length}</button>`).join("")}</div>`;
@@ -15427,10 +15453,15 @@ function shChat() {
   let body;
   if (ch === "g") { mark("g:", CHAT.g); body = log(CHAT.g) + input; }
   else if (ch === "a") { if (!S.ally) body = `<p class="note">Join an alliance to use alliance chat.</p>`; else { mark("a:" + (S.ally || ""), CHAT.a); body = log(CHAT.a) + input; } }
+  else if (sheet.bc) { const g = sheet.bc, to = mailGroup(g), who = g === "a" ? "your alliance" : "your friends"; // v331: mail everyone at once
+    body = `<div class="dmhd"><button class="btn ghost sm" data-act="chatTab" data-v="d">‹ Back</button><b>📣 Mail all ${g === "a" ? "alliance members" : "friends"}</b><span></span></div>
+      <p class="note">${to.length ? `Goes to each of the ${to.length} commander${to.length > 1 ? "s" : ""} in ${who} as a direct message: ${esc(to.slice(0, 8).map(nameOf).join(", "))}${to.length > 8 ? ` and ${to.length - 8} more` : ""}.` : g === "a" ? (S.ally ? "No other members in your alliance yet." : "Join an alliance first.") : "Add friends from a commander's card first."}</p>
+      ${to.length ? `<div class="chatin"><input class="minput" id="chatin" maxlength="240" placeholder="Message ${who}" aria-label="Message ${who}" autocomplete="off" value="${esc(sheet.draft || "")}"><button class="btn" data-act="chatSend">Send to ${to.length}</button></div>` : ""}`; }
   else if (sheet.to) { const c = CHAT.dms[dmKey(G.me, sheet.to)], msgs = c ? c.m : []; mark("d:" + dmKey(G.me, sheet.to), msgs);
     body = `<div class="dmhd"><button class="btn ghost sm" data-act="chatTab" data-v="d">‹ Back</button><b>${esc(nameOf(sheet.to))}</b><button class="btn ghost sm" data-act="profile" data-u="${sheet.to}">Card</button></div>${log(msgs)}${input}<p class="note">Direct messages are hidden from other players in the game, but they are stored in the galaxy's shared data and are not encrypted. Don't share anything private.</p>`; }
   else { const convs = Object.values(CHAT.dms).filter(c => !blocked.has(c.with)).sort((a, b) => ((b.m[b.m.length - 1] || {}).t || 0) - ((a.m[a.m.length - 1] || {}).t || 0));
-    body = `<div class="flist">${convs.map(c => { const lm = c.m[c.m.length - 1], un = c.m.filter(m => m.u !== G.me && m.t > ((S.chatSeen || {})["d:" + c.id] || 0)).length;
+    const nf = mailGroup("f").length, na = mailGroup("a").length; // v331
+    body = `<div class="row2 mallrow"><button class="btn sm wide" data-act="mailAllOpen" data-g="f"${nf ? "" : " disabled"}>📣 Mail all friends${nf ? ` · ${nf}` : ""}</button><button class="btn sm wide" data-act="mailAllOpen" data-g="a"${na ? "" : " disabled"}>📣 Mail all alliance${na ? ` · ${na}` : ""}</button></div><div class="flist">${convs.map(c => { const lm = c.m[c.m.length - 1], un = c.m.filter(m => m.u !== G.me && m.t > ((S.chatSeen || {})["d:" + c.id] || 0)).length;
       return `<button class="frow conv" data-act="dmOpen" data-u="${c.with}"><b>${esc(nameOf(c.with))}${un ? ` <i class="cbadge">${un}</i>` : ""}</b><small>${lm ? esc(lm.x.slice(0, 60)) : ""}</small></button>`; }).join("") || '<p class="note">No conversations yet. Open a commander\'s card or your friends list to message them.</p>'}</div>
       ${(S.friends || []).length ? `<h2 class="sec">Message a friend</h2><div class="flist">${S.friends.map(u => `<button class="frow conv" data-act="dmOpen" data-u="${u}"><b>${esc(nameOf(u))}</b></button>`).join("")}</div>` : ""}`; }
   return `<div class="hd"><div><div class="chapter">Comms · ${ch === "g" ? "everyone in the galaxy" : ch === "a" ? "your alliance" : "direct"}</div><h2>Chat</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${tabs}${body}`;
@@ -15701,13 +15732,15 @@ const ACT = {
   bldInfo: d => { SFX.tapB(d.k); const bt = baseTarget(); openSheet({ type: "bld", k: d.k, pid: bt.key === "home" ? null : bt.key }); },
   sound: () => { if (!AU.started) audioStart(); AU.muted = !AU.muted; applyAudio(); saveAudioPrefs(); hud(); if (sheet) renderSheet(); },
   musicToggle: () => { if (!AU.started) audioStart(); AU.musicOn = !AU.musicOn; applyAudio(); saveAudioPrefs(); render(true); },
-  celebX: () => { const w = $("#celeb"); if (w) w.remove(); G.celebNow = null; setTimeout(() => { try { flushSay(); coachRender(true); } catch (e) {} }, 60); },
+  celebX: () => { const w = $("#celeb"); if (w) w.remove(); G.celebNow = null; voiceStop(); setTimeout(() => { try { flushSay(); coachRender(true); } catch (e) {} }, 60); },
   celebChat: () => { ACT.celebX(); setTimeout(() => ACT.chat({}), 120); },
   celebShare: async d => { const c = G.celebNow || {}; if (d.id && findRep(d.id) && G.mode === "online") { ACT.celebX(); return setTimeout(() => ACT.repShareOpen({ id: d.id }), 120); }
     const text = `${c.t || "Ultra Deep Field"}: ${c.s || ""} Come play Ultra Deep Field with me.`, url = location.protocol.startsWith("http") ? location.href.split("#")[0] : "https://gunhypechannel.github.io/Ultradeepfield/";
     try { if (navigator.share) { await navigator.share({ title: "Ultra Deep Field", text, url }); return; } } catch (e) { return; }
     try { await navigator.clipboard.writeText(text + " " + url); toast("Copied. Paste it to your friends."); } catch (e) { toast("Couldn't share from here.", "warn"); } },
   retClaim: () => { const g = S.retGift; if (!g || g.at > now()) return; for (const r of ["m", "c", "g"]) S.res[r] += g.rw[r] || 0; S.shards = (S.shards || 0) + (g.rw.shards || 0); logReward("Fleet Command supply convoy", g.rw, { shards: g.rw.shards, kind: "quest" }); S.retGift = null; dirty(); try { SFX.research(); } catch (e) {} toast("Supply convoy unloaded.", "win"); render(true); },
+  voiceToggle: () => { VOICE.on = !VOICE.on; try { localStorage.setItem("void.voice", VOICE.on ? "1" : "0"); } catch (e) {} if (!VOICE.on) voiceStop(); else if (advLines) speak(advLines[0]);
+    const b = $("#adv .advv"); if (b) b.textContent = VOICE.on ? "🔊" : "🔇"; toast(VOICE.on ? "Advisor voice on." : "Advisor voice off."); if (sheet) renderSheet(); else render(true); },
   sfxToggle: () => { if (!AU.started) audioStart(); AU.sfxOn = !AU.sfxOn; applyAudio(); saveAudioPrefs(); render(true); },
   skin: d => { const p = d.id ? G.byId[d.id] : homePlanet(); if (!p || p.owner !== G.me) return; openSheet({ type: "skin", id: p.id }); },
   skinOpt: d => { const n = $("#pname"); if (n) sheet.nm = n.value; const max = { at: ATMOS.length, rg: 3, rc: RINGC.length }[d.o]; if (!max) return; sheet[d.o] = clamp(+d.i || 0, 0, max - 1); renderSheet(); },
@@ -16065,7 +16098,8 @@ const ACT = {
   trayToggle: () => { G.trayOpen = !G.trayOpen; trayRender(); dock(); },
   chat: () => { chatInit(); openSheet({ type: "chat", ch: "g" }); },
   allyChat: () => { chatInit(); openSheet({ type: "chat", ch: "a" }); },
-  chatTab: d => { sheet.ch = d.v; sheet.to = null; renderSheet(); },
+  chatTab: d => { sheet.ch = d.v; sheet.to = null; sheet.bc = null; renderSheet(); },
+  mailAllOpen: d => { chatInit(); if (sheet && sheet.type === "chat") { Object.assign(sheet, { ch: "d", to: null, bc: d.g, draft: "" }); renderSheet(); } else openSheet({ type: "chat", ch: "d", bc: d.g }); }, // v331
   chatSend: () => chatSend(),
   chatPick: d => { if (!sheet) return; sheet.pick = sheet.pick === d.id ? null : d.id; renderSheet(); },
   chatReact: async d => { if (!sheet || !CHAT_RX.includes(d.e)) return; const m = chatFind(d.id), path = (m && m.room) || chatPath(sheet.ch || "g", sheet.to); if (!m || !path) return; sheet.pick = null;
@@ -16258,7 +16292,7 @@ const ACT = {
   spy: d => { const p = G.byId[d.id]; if (!p || p.owner === G.me) return; const hm = (S.ships.spyProbe || 0) > 0, c = hm ? null : myPlanets().find(q => q.kind !== "home" && (q.garrison || {}).spyProbe > 0); openSheet({ type: "spysend", id: p.id, from: c ? c.id : "home" }); },
   spyN: d => { const have = originAvail().spyProbe || 0; sheet.pn = d.max ? have : clamp((sheet.pn || 1) + (+d.d || 0), 1, Math.max(1, have)); renderSheet(); },
   spyGo: d => act(() => { const p = G.byId[d.id]; if (!p || !canPlay() || p.owner === G.me) return; advance(now()); const have = originAvail().spyProbe || 0, n = clamp(Math.floor(+(($("#spyn") || {}).value) || sheet.pn || 1), 1, have);
-    if (!have) return toast("No Espionage Probes here.", "warn"); if (slotsFull()) return; sheet.speed = 100; const f = sendFleet(p, { spyProbe: n }, "spy"); if (!f) return; S.spyN = n; if (tutAt("spy")) { S.tutSpyP = p.id; S.tutSpyW = (S.stats || {}).hiveWins || 0; } bump("spies"); try { syncPlayer(); } catch (e) {} closeSheet(); toast(`${n} probe${n > 1 ? "s" : ""} launched at ${p.name}. Arriving in ${ftime(f.arrive - f.out)}.`); }),
+    if (!have) return toast("No Espionage Probes here.", "warn"); if (slotsFull()) return; sheet.speed = 100; const f = sendFleet(p, { spyProbe: n }, "spy"); if (!f) return; S.spyN = n; if (tutAt("spy")) { S.tutSpyP = p.id; S.tutSpyW = (S.stats || {}).hiveWins || 0; tutMark(p.id); } bump("spies"); try { syncPlayer(); } catch (e) {} closeSheet(); toast(`${n} probe${n > 1 ? "s" : ""} launched at ${p.name}. Arriving in ${ftime(f.arrive - f.out)}.`); }),
   missile: d => act(() => {
     const p = G.byId[d.id], h = homePlanet(); if (!p || !h || !canPlay() || pStatus(p) !== "player" || isAlly(p.owner)) return;
     const have = (S.mis || {}).ballistic || 0, n = clamp(Math.floor(+(($("#misn") || {}).value) || 1), 1, have); if (!have) return;
@@ -16538,6 +16572,9 @@ function introBattle() {
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) }), { id: INTRO_ID, recDone: 1 }));
 }
 function introPlay() { G.advThen = () => { try { S.say.push(...INTRO_POST, ...INTRO); dirty(); playBattle(introBattle()); } catch (e) { S.say.length = 0; say(INTRO); } }; say(INTRO_PRE); }
+function comeback() { if (!S || S.comeback || !tutOn() || !(S.tut.i > 0) || !(G.awayMs >= 864e5)) return; S.comeback = 1; // v331
+  const rw = { m: 8000, c: 5000, g: 2500, shards: 5, boosts: 3 }; grantRw(rw, "Welcome back"); dirty();
+  celebrate({ k: "comeback", kick: "Welcome back, Commander", t: "Supplies Have Landed", art: "adv", s: `The Academy is right where you left it: step ${S.tut.i + 1} of ${TUT.length}. Fleet Command sent supplies to get you moving again.`, rw: "8,000 metal, 5,000 crystal, 2,500 gas, ◆5 and ⚡3 boosts. Already in your stores.", go: "Let's go" }); }
 function intro() { if (!S.intro) { S.intro = true; dirty(); if (score() > 200) say(INTRO); else introPlay(); } } // veterans just get the briefing
 window.udfBeforeSignOut = async () => { try { if (S) { dirty(); await flush(); } } catch (e) {} }; // v200: the last moves reach your account before you sign out
 function start(data) {
@@ -16551,6 +16588,7 @@ function start(data) {
   advance(now());
   live = true;
   rebuild(); render(); awaySummary();
+  G.awayMs = away; // v331: how long since this save was last played (the cloud save corrects it once checked)
   const idx = S.log.indexOf(before), n = idx < 0 ? S.log.length : idx;
   if (away > 60000 && n) toast(`Welcome back. ${n} thing${n > 1 ? "s" : ""} happened while you were away.`);
   try { gfxApply(); } catch (e) {} // v124: graphics settings
