@@ -9,6 +9,7 @@ const MAXIT = +process.env.MAXIT || 2600, DEV = process.env.DEV || 'iPhone 15 Pr
   const URL = 'http://localhost:' + (process.env.PORT || 8123) + '/index.html';
   const signUp = async (name, email) => { await pg.waitForSelector('#udfAuth form', { timeout: 300000 }); await pg.evaluate(() => document.querySelector('#udfAuth [data-a=up]').click()); await pg.waitForTimeout(300); await pg.fill('#udfAuth input[name=n]', name); await pg.fill('#udfAuth input[name=e]', email); await pg.fill('#udfAuth input[name=p]', 'secret123'); await pg.evaluate(() => document.querySelector('#udfAuth form').requestSubmit()); };
   const ready = async () => { await pg.waitForFunction(() => window.__dbg && window.__dbg.S && window.__dbg.G.list && window.__dbg.G.ready, null, { timeout: 240000, polling: 1000 }); await pg.waitForTimeout(3000); };
+  if (process.env.SLOW) await pg.addInitScript(() => { window.__lat = 1500; });
   await pg.goto(URL, { waitUntil: 'commit' }).catch(() => {});
   if (process.env.SCEN === 'switch') { // a phone that already played on another account, then a NEW account signs in on it
     await signUp('Old Hand', 'old@test.io'); await ready(); console.log('old account in, tut', await pg.evaluate(() => window.__dbg.ev('JSON.stringify(S.tut)')));
@@ -20,7 +21,10 @@ const MAXIT = +process.env.MAXIT || 2600, DEV = process.env.DEV || 'iPhone 15 Pr
   const E = c => pg.evaluate(c => window.__dbg.ev(c), c);
   let hidT = 0, seenOld = 0, seenFac = 0, seenBattle = 0, hidden = 0; let last = -1, stepIt = 0, labels = [], idle = 0, skipped = 0; const report = [], issues = [];
   const tag = s => s.replace(/\s+/g, ' ').slice(0, 110);
+  let reloads = 0;
   for (let it = 0; it < MAXIT; it++) {
+    if (process.env.RELOAD && it > 0 && it % +process.env.RELOAD === 0) { const before = await E('JSON.stringify([S.tut.i, S.tut.k])'); await pg.reload({ waitUntil: 'commit' }).catch(() => {}); await ready(); reloads++;
+      await pg.evaluate(() => { window.__toasts = window.__toasts || []; }); const after = await E('JSON.stringify([S.tut.i, S.tut.k])'); if (JSON.parse(after)[0] < JSON.parse(before)[0]) issues.push(`RELOAD lost progress: before ${before} after ${after}`); console.log('reload ' + reloads + ' ' + before + ' -> ' + after); }
     const s = JSON.parse(await E(`JSON.stringify((() => { const st = TUT[S.tut.i]; const el = GD.el && GD.el.isConnected ? GD.el : null, r = el && el.getBoundingClientRect();
       return { i: S.tut.i, n: TUT.length, t: st ? st.t : null, ok: st ? !!st.ok(S) : 0, mode: G.ready ? advPick() : 'notready', adv: !!document.querySelector('#adv'), battle: !!battle, cine: !!(G3 && G3.cam && G3.cam.cine), sheet: sheet && sheet.type, view,
         lab: GD.label, pk: (() => { const p = guidePick(); return p ? p.label : ''; })(), el: el ? { tag: el.tagName, id: el.id, act: el.dataset.act || '', dis: !!el.disabled, x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height } : null,
@@ -49,7 +53,7 @@ const MAXIT = +process.env.MAXIT || 2600, DEV = process.env.DEV || 'iPhone 15 Pr
         if (sel) { const v = await pg.$eval('.sheet ' + sel, e => e.value); if (!v || /taken/.test(s.lab)) { await pg.fill('.sheet ' + sel, sel === '#cnin' ? 'Nova ' + Math.floor(Math.random() * 9e4) : 'Aurora Prime'); labels.push('[typed]'); await pg.waitForTimeout(300); if (s.el.tag === 'INPUT') continue; } } }
       if (s.el.id !== 'tutfm') { await pg.waitForTimeout(220); const r2 = JSON.parse(await E(`(() => { const e = GD.el && GD.el.isConnected ? GD.el : null; if (!e) return 'null'; const r = e.getBoundingClientRect(); return JSON.stringify([r.left + r.width / 2, r.top + r.height / 2]); })()`)); if (!r2 || Math.hypot(r2[0] - s.el.x, r2[1] - s.el.y) > 3) continue; } // a person waits for the screen to settle
       { const vy = Math.min(Math.max(s.el.y, 6), (await pg.evaluate(() => innerHeight)) - 6); s.el.y = vy; } // tap the part that is on screen, as a person would
-      try { await pg.touchscreen.tap(s.el.x, s.el.y); } catch (e) { await pg.mouse.click(s.el.x, s.el.y); }
+      try { await pg.touchscreen.tap(s.el.x, s.el.y); if (process.env.TAP2) { await pg.waitForTimeout(60); await pg.touchscreen.tap(s.el.x, s.el.y); } } catch (e) { await pg.mouse.click(s.el.x, s.el.y); }
       await pg.waitForTimeout(s.el.id === 'tutfm' ? 900 : 450); continue; }
     if (!s.pk && !s.lab && !s.sheet && !s.battle && !s.cine && !s.adv && !(await pg.evaluate(() => !!document.querySelector('#celeb')))) { if (!hidden) hidT = Date.now(); hidden++; if (hidden === 3) { await pg.screenshot({ path: (SHOTS || '.') + `/hid_${s.i + 1}.png`, timeout: 120000 }).catch(() => {}); }
       if (hidden === 3) issues.push(`#${s.i + 1} GUIDE HIDDEN: ` + await E(`JSON.stringify({ say: (S.say || []).length, advLines: !!advLines, sheet: sheet && sheet.type, pick: (() => { const p = guidePick(); return p ? p.label : null; })(), gdl: GD.label, tg: (document.querySelector('#tutguide') || {}).style ? document.querySelector('#tutguide').style.display : 'none', ready: G.ready, t: TUT[S.tut.i].t, fl: S.fleets.map(f => f.phase + ':' + f.mission), siege: !!(G3 && G3.cam.siege),  snz: tutSnoozed(), pathSnz: S.pathSnz > now(), coach: (document.querySelector('#coach') || {}).className, mode: advPick() })`)); } else { if (hidden >= 3) issues.push(`#${s.i + 1} guide was hidden for ${hidden} checks / ${Math.round((Date.now() - hidT) / 1000)} s real time`); hidden = 0; }
@@ -57,7 +61,7 @@ const MAXIT = +process.env.MAXIT || 2600, DEV = process.env.DEV || 'iPhone 15 Pr
     idle++; const jump = s.cine || /on its way|flying home|Under construction|Researching|in production|Queued|finishes on its own|Wait/.test(s.lab || '') || !s.lab ? 60000 : 30000;
     await E(`TSKEW += ${jump}`); skipped += jump; if (idle % 20 === 19) stepIt++; await pg.waitForTimeout(350);
   }
-  console.log('tutT keys ' + await E('Object.keys(S.tutT || {}).length + " hints " + JSON.stringify(S.tutH || {}).slice(0, 200) + " errs " + JSON.stringify(S.errs || [])')); console.log('introWinner ' + await E('G.introRep ? G.introRep.winner + " rounds " + G.introRep.rounds.length : "none"')); console.log('OPENING BATTLE seen: ' + seenBattle + ' | FACTION sheet seen: ' + seenFac + ' | old-server card: ' + seenOld + ' | intro flag ' + await E('S.intro'));
+  console.log('tutT keys ' + await E('Object.keys(S.tutT || {}).length + " hints " + JSON.stringify(S.tutH || {}).slice(0, 200) + " errs " + JSON.stringify(S.errs || [])')); console.log('reloads ' + reloads); console.log('introWinner ' + await E('G.introRep ? G.introRep.winner + " rounds " + G.introRep.rounds.length : "none"')); console.log('OPENING BATTLE seen: ' + seenBattle + ' | FACTION sheet seen: ' + seenFac + ' | old-server card: ' + seenOld + ' | intro flag ' + await E('S.intro'));
   const toasts = await pg.evaluate(() => window.__toasts.filter((t, i, a) => a.indexOf(t) === i));
   console.log(report.join('\n')); console.log('\nISSUES:\n' + (issues.filter((x, i, a) => a.indexOf(x) === i).join('\n') || 'none'));
   console.log('\nTOASTS:\n' + toasts.join('\n')); console.log('\nERRORS:\n' + (errs.slice(0, 8).join('\n') || 'none'));
