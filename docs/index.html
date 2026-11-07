@@ -16576,7 +16576,12 @@ document.addEventListener("click", e => {
   // v121 touchscreens (Windows tablets like the ASUS Z13): a map tap opens a card on finger-up, then the browser's follow-up click
   // lands on the new backdrop and would close the card at once. A backdrop click right after a map tap is that ghost: ignore it.
   if (el.classList.contains("scrim") && performance.now() - (G.mapTapAt || 0) < 650) { e.preventDefault(); return; }
-  const f = ACT[el.dataset.act]; if (!f) return; e.preventDefault(); if (el.dataset.act !== "sound") SFX.click();
+  const f = ACT[el.dataset.act]; if (!f) return; e.preventDefault();
+  /* v334: a quick second tap while a card is opening landed on whatever slid under the finger (the next building in the list), so
+     taps that open cards are ignored for 400 ms after one opened, unless they're inside the card that just opened */
+  { const tn = performance.now(), sh = document.querySelector(".sheet"); if (tn - (G.openTapAt || 0) < 400 && !(sh && sh.contains(el) && G.openTapSheet === sh)) return;
+    if (/^(detail|planet|pirate|pyramid|node|spyOpen|repOpen|dmOpen|fleetMap|nav|sub|bcat|rcat|tutShow|shipShow)$/.test(el.dataset.act)) { G.openTapAt = tn; setTimeout(() => { G.openTapSheet = document.querySelector(".sheet"); }, 0); } }
+  if (el.dataset.act !== "sound") SFX.click();
   const run = () => f(el.dataset, el), a = el.dataset.act;
   if (el.classList.contains("toggle") && !reduced) { el.classList.toggle("on"); el.setAttribute("aria-pressed", el.classList.contains("on")); requestAnimationFrame(() => setTimeout(run, 140)); return; } // let the knob glide before the screen updates
   if (VT_ACTS.has(a) && document.startViewTransition && !reduced && !G.vt && !battle) { G.vt = 1; try { const tr = document.startViewTransition(run); tr.finished.finally(() => { G.vt = 0; }); } catch (err) { G.vt = 0; run(); } return; }
