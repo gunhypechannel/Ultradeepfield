@@ -10375,6 +10375,7 @@ function turretRing(n, mix) {
       else { if (old) W.scene.remove(old); W.scene.add(m); }
       W.blds[k] = m; W.keys[k] = key; W.renderer.shadowMap.needsUpdate = true; }
   }
+  { const on = tutOn(), want = on ? tutBld() : null; for (const k of bt.keys) { const m = W.blds[k]; if (!m) continue; const show = !on || bt.lv(k) > 0 || !!bt.busy(k) || k === want; if (m.visible !== show) { m.visible = show; W.renderer.shadowMap.needsUpdate = true; } } } // v334
   const mix = bt.key === "home" ? S.def : null, tk = Math.min(24, bt.defs) + "|" + (mix ? Object.keys(DF).map(k => mix[k] || 0).join(",") : "");
   if (W.tkey !== tk) { if (W.turrets) W.scene.remove(W.turrets); W.turrets = turretRing(bt.defs, mix); W.scene.add(W.turrets); W.tkey = tk; W.renderer.shadowMap.needsUpdate = true; }
   const dn = Math.min(8, Math.ceil(Math.log2(bt.ships + 1))), dk = String(dn);
@@ -10419,13 +10420,14 @@ function turretRing(n, mix) {
   for (const k of bt.keys) {
     const L = bt.lv(k), bq = bt.busy(k), busy = !!bq, [x, z] = BPOS[k];
     V3.set(x, L ? 3 + Math.min(L, 25) * .06 : 2.6, z).project(W.cam); const sx = (V3.x * .5 + .5) * w, sy = (-V3.y * .5 + .5) * h;
+    const want = tutOn() && tutBld() === k; if (!L && !busy && tutOn() && !want) continue; // v334: during the Academy, only the empty slot the step needs is shown (and tappable)
     V3.set(x, .5, z).project(W.cam); hits.push({ k, x: (V3.x * .5 + .5) * w, y: (-V3.y * .5 + .5) * h, tx: sx, ty: sy });
-    const txt = busy ? `${B[k].n} → Lv.${bq.lvl} · ${ftime(bq.e - TT)}` : L ? `${B[k].n} Lv.${L}` : `${B[k].n} · build`;
+    const txt = busy ? `${B[k].n} → Lv.${bq.lvl} · ${ftime(bq.e - TT)}` : want ? (L ? `Tap ${B[k].n} to upgrade` : `＋ Tap to build ${B[k].n}`) : L ? `${B[k].n} Lv.${L}` : `＋ ${B[k].n}`;
     ctx.font = `600 ${W.v.zoom > 1.4 ? 11 : 10}px Oxanium, sans-serif`; const tw = ctx.measureText(txt).width + 14, th = 17;
     ctx.beginPath(); ctx.roundRect ? ctx.roundRect(sx - tw / 2, sy - th / 2, tw, th, 8) : ctx.rect(sx - tw / 2, sy - th / 2, tw, th);
-    ctx.fillStyle = busy ? "rgba(60,36,8,.88)" : L ? "rgba(6,32,42,.86)" : "rgba(10,18,26,.7)"; ctx.fill();
-    ctx.strokeStyle = busy ? "rgba(255,184,90,.9)" : L ? "rgba(85,214,232,.8)" : "rgba(125,149,165,.6)"; ctx.lineWidth = 1; ctx.setLineDash(L || busy ? [] : [3, 3]); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = busy ? "#ffd59a" : L ? "#c9f6fc" : "#93a8b6"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(txt, sx, sy + .5); ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = want && !busy ? "rgba(255,196,84,.95)" : busy ? "rgba(60,36,8,.88)" : L ? "rgba(6,32,42,.86)" : "rgba(10,18,26,.78)"; ctx.fill();
+    ctx.strokeStyle = want && !busy ? "#fff1c2" : busy ? "rgba(255,184,90,.9)" : L ? "rgba(85,214,232,.8)" : "rgba(160,190,205,.75)"; ctx.lineWidth = want ? 2 : 1; ctx.stroke();
+    ctx.fillStyle = want && !busy ? "#241503" : busy ? "#ffd59a" : L ? "#c9f6fc" : "#b8cad6"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(txt, sx, sy + .5); ctx.textBaseline = "alphabetic";
   }
   // selection arrows around the chosen building
   if (W.sel && BPOS[W.sel] && bt.keys.includes(W.sel)) {
@@ -13661,6 +13663,7 @@ const tutFleet = () => S.fleets.find(f => f.pid && f.phase === "out" && !f.assau
 const slotWait = () => fleetsUsed() >= maxFleets() ? [DOCKT("fleets", "Every fleet slot is busy. Wait for a fleet to come home")] : null; // v325
 const tutSend = () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : tutWaitShips() || slotWait() || (!own("fighter") ? tutUnit("fighter", 3)() : null) /* v319: none left: build more first */ || [['.sheet [data-act="launch"]', "Send your fighters"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
 const tutAt = id => tutOn() && (TUT[S.tut.i] || {}).id === id;
+function tutBld() { const st = tutOn() ? TUT[S.tut.i] : null; if (!st || !/^(Build|Upgrade)/.test(st.t)) return null; let best = null; for (const k in B) if (st.t.includes(B[k].n) && (!best || B[k].n.length > B[best].n.length)) best = k; return best; } // v334
 const tutKey = i => { const s = TUT[i]; return s ? (s.id || s.t) : "done"; }; // v333: steps are recorded by a name that survives renumbering
 function tutTrack() { if (!S || !S.tut) return; const k = tutKey(S.tut.i); S.tutT = S.tutT || {}; if (!S.tutT[k]) { S.tutT[k] = now(); dirty(); } }
 /* v319: how many of ship k the Academy step or fleet-path step still wants, so the Shipyard's amount starts there (it started at 1, and
@@ -13859,6 +13862,7 @@ function guideFrame() {
   { const cw = $("#coach"); if (cw) { let hide = false; if (el && !cw.contains(el)) { const a = el.getBoundingClientRect(), x = a.left + a.width / 2, y = a.top + a.height / 2;
       for (const k of cw.children) { const b = k.getBoundingClientRect(); if (b.width && x > b.left - 4 && x < b.right + 4 && y > b.top - 4 && y < b.bottom + 4) { hide = true; break; } } }
     if (cw.classList.contains("gdhide") !== hide) cw.classList.toggle("gdhide", hide); } }
+  if (el) { let op = 1; for (let n = el; n && n.nodeType === 1 && op > .5; n = n.parentElement) op *= +getComputedStyle(n).opacity; if (op < .9) { g.style.display = "none"; return requestAnimationFrame(guideFrame); } } // v334: no frame around a card that's still fading in
   if (!el) { g.style.display = "none"; return requestAnimationFrame(guideFrame); }
   const r = el.getBoundingClientRect(), pad = 6, ring = g.firstChild, hand = g.children[1], tip = g.children[2], low = r.top > innerHeight * .62;
   const nudge = tutOn() && performance.now() - (G.lastIn || performance.now()) > 20000 && !GUIDE_WAIT.test(GD.label || "") && !document.hidden; // v334
