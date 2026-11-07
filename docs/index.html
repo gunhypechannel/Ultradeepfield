@@ -135,6 +135,7 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 #tutguide .tg-hand.down{animation-name:tghandd}
 @keyframes tghand{from{transform:translateY(8px)}to{transform:translateY(-2px)}}@keyframes tghandd{from{transform:translateY(-8px)}to{transform:translateY(2px)}}
 #tutguide .tg-tip{position:fixed;max-width:240px;padding:8px 12px;border-radius:12px;background:linear-gradient(180deg,#ffe08a,#f0a945);color:#1a1004;font:700 14px/1.25 var(--f-display);letter-spacing:.02em;box-shadow:0 6px 18px rgba(0,0,0,.5);transition:left .18s,top .18s}
+#tutguide.info .tg-hand{display:none}#tutguide.info .tg-ring{animation:none;border:2px dashed rgba(127,232,255,.9);box-shadow:0 0 14px rgba(85,214,232,.45)}#tutguide.info .tg-tip{background:linear-gradient(180deg,#123447,#0b2231);color:#d8f6ff;border:1px solid rgba(127,232,255,.5)}
 #toasts .toast.gdfade{opacity:.12!important;pointer-events:none!important;transition:opacity .15s}#tutguide.nudge .tg-tip{animation:tgnudge 1.1s ease-in-out infinite}#tutguide.nudge .tg-hand{font-size:48px}
 @keyframes tgnudge{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 @media (prefers-reduced-motion:reduce){#tutguide .tg-ring,#tutguide .tg-hand,#tutguide.nudge .tg-tip{animation:none;transition:none}}
@@ -13869,11 +13870,12 @@ function guideFrame() {
   for (const ts of document.querySelectorAll("#toasts .toast")) { const b = ts.getBoundingClientRect(), over = b.right > r.left - 6 && b.left < r.right + 6 && b.bottom > r.top - 6 && b.top < r.bottom + 6; ts.classList.toggle("gdfade", over); } // v334
   const nudge = tutOn() && performance.now() - (G.lastIn || performance.now()) > 20000 && !GUIDE_WAIT.test(GD.label || "") && !document.hidden; // v334
   if (nudge && G.nudged !== S.tut.i) { G.nudged = S.tut.i; const k = tutKey(S.tut.i); S.tutStuck = S.tutStuck || {}; S.tutStuck[k] = (S.tutStuck[k] || 0) + 1; dirty(); }
-  g.style.display = "block"; g.classList.toggle("spot", S.tut.i < 9 || nudge); g.classList.toggle("nudge", nudge);
+  const info = GUIDE_WAIT.test(GD.label || ""); // v334: a waiting message, not something to tap: no hand, a calm dashed outline and ⏳
+  g.style.display = "block"; g.classList.toggle("spot", (S.tut.i < 9 || nudge) && !info); g.classList.toggle("nudge", nudge); g.classList.toggle("info", info);
   Object.assign(ring.style, { left: r.left - pad + "px", top: r.top - pad + "px", width: r.width + pad * 2 + "px", height: r.height + pad * 2 + "px" });
   hand.textContent = low ? "👇" : "👆"; hand.classList.toggle("down", low);
   Object.assign(hand.style, { left: clamp(r.left + r.width / 2 - 18, 4, innerWidth - 44) + "px", top: (low ? r.top - 50 : r.bottom + 4) + "px" });
-  { const tl = tip.querySelector(".tgl"); if (tl && tl.textContent !== GD.label) tl.textContent = GD.label; }
+  { const tl = tip.querySelector(".tgl"), lb = (info ? "⏳ " : "") + GD.label; if (tl && tl.textContent !== lb) tl.textContent = lb; }
   const tw = tip.offsetWidth || 160, th = tip.offsetHeight || 34;
   Object.assign(tip.style, { left: clamp(r.left + r.width / 2 - tw / 2, 8, innerWidth - tw - 8) + "px", top: (low ? r.top - 58 - th : r.bottom + 50) + "px" });
   requestAnimationFrame(guideFrame);
