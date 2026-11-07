@@ -13577,7 +13577,7 @@ try { fetch("voice/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json()
 function voiceTalk(on) { const a = $("#adv"); if (a) a.classList.toggle("talk", !!on); }
 function voiceStop() { voiceTalk(0); try { if (VOICE.au) { VOICE.au.pause(); VOICE.au = null; } } catch (e) {} }
 function speak(line) { if (!VOICE.on || (typeof AU !== "undefined" && AU.muted) || !line || !VOICE.clips) return; const k = voiceKey(line); if (!VOICE.clips[k]) return; voiceStop();
-  try { const a = new Audio("voice/" + k + ".mp3"); a.volume = Math.min(1, .95 * ((typeof AU !== "undefined" && AU.sfxVol != null) ? Math.max(.4, AU.sfxVol) : 1)); VOICE.au = a;
+  try { const a = new Audio("voice/" + k + ".mp3?v=" + VOICE.clips[k]); a.volume = Math.min(1, .95 * ((typeof AU !== "undefined" && AU.sfxVol != null) ? Math.max(.4, AU.sfxVol) : 1)); VOICE.au = a;
     a.onplay = () => voiceTalk(1); a.onended = a.onpause = () => voiceTalk(0); a.play().catch(() => voiceTalk(0)); } catch (e) {} }
 function say(lines) {
   if (!lines.length) return;
