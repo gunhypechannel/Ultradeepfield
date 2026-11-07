@@ -1453,7 +1453,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
 .dirmini{background:rgba(9,24,36,.5)!important}.dirmini .dmtx{text-shadow:0 1px 3px rgba(0,0,0,.95)}
 /* v254 the pointing hand's label is see-through too, with its text and ✕ on one line so the box stays small */
 #tutguide .tg-tip{display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,rgba(255,206,105,.42),rgba(226,142,38,.42))!important;border:1px solid rgba(255,221,145,.7);color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 2px rgba(0,0,0,.8);box-shadow:0 4px 12px rgba(0,0,0,.28)}
-#tutguide .tg-tip .tgl{flex:1 1 auto;min-width:0}#tutguide .tgx{flex:none;margin-left:0;background:rgba(7,16,25,.35);border-color:rgba(255,255,255,.55);color:#fff}
+#tutguide.acad .tgx{display:none!important}#tutguide .tg-tip .tgl{flex:1 1 auto;min-width:0}#tutguide .tgx{flex:none;margin-left:0;background:rgba(7,16,25,.35);border-color:rgba(255,255,255,.55);color:#fff}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
@@ -2378,7 +2378,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 328;
+const GAME_V = 329;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4828,7 +4828,7 @@ async function connectCloud() {
     ownerCheck(user); // the game's owner has every premium skin unlocked
     try { G.myName = (await user.me()).name || ""; } catch (e) {} if (S && S.cname) G.myName = S.cname;
     try {
-      const snap = await db.doc(`data/users/${uid}/save`).get(); if (!snap.exists) setTimeout(oldOffer, 1500);
+      const snap = await db.doc(`data/users/${uid}/save`).get(); if (!snap.exists && window.udfOld && window.udfOld.available && !(S.uid && S.uid === uid && S.intro)) G.oldWait = 1; // v329
       /* v200: which empire wins when you sign in. It used to be "newest savedAt", but every device stamps its save as it plays, so a
          second phone's brand-new planet (saved while you were still typing your password) beat your real empire and then overwrote
          it. Now: an empire on this device that belongs to another account never wins; a device that has synced with this account
@@ -4844,7 +4844,7 @@ async function connectCloud() {
             S = migrate(cs); S.cloudAt = cAt; secBoot(); FOG = null; live = false; advance(now()); live = true; render(true); toast(foreign ? "Signed in. Loaded this account's empire." : "Loaded your saved empire.", "win"); }
           else if (behind) toast("Your account's save was behind this device. This device's empire was kept and saved to your account.", "warn"); } }
       else if (foreign) { try { localStorage.setItem(KEY + ".device", JSON.stringify(S)); } catch (e) {}
-        const hn = S.homeName; store.shrinkOk = true; S = newState(); FOG = null; S.homeName = hn; live = false; advance(now()); live = true; view = "base"; rebuild(); render(true); intro(); toast("New account: a fresh homeworld is ready for you."); }
+        const hn = S.homeName; store.shrinkOk = true; S = newState(); FOG = null; S.homeName = hn; live = false; advance(now()); live = true; view = "base"; rebuild(); render(true); G.askFac = G.askFac0; toast("New account: a fresh homeworld is ready for you."); } // v329: faction, then the opening battle
       if (snap && snap.exists) store.seq = +(snap.data() || {}).seq || 0;
       S.uid = uid; if (snap && snap.exists) S.cloudAt = Math.max(S.cloudAt || 0, +(snap.data() || {}).savedAt || 0); /* v204: the save already on the server is not "another device" */
     } catch (e) {}
@@ -4853,7 +4853,7 @@ async function connectCloud() {
        over each other every few seconds, so progress and alliances flipped back and forth) and asks you to continue here */
     try { db.doc(`data/users/${uid}/save`).onSnapshot(s3 => { const v = s3 && s3.exists ? s3.data() : null; if (!v || !v.sess || v.sess === SESS || store.adopting) return;
       if ((+v.savedAt || 0) > (S.cloudAt || 0) || (+v.seq || 0) > (store.seq || 0)) followCloud(v); }, () => {}); } catch (e) {}
-    if (G.askFac) G.askFac(); // v138: the cloud save is in (or there is none): now ask for a faction only if this empire never chose one
+    if (G.oldWait) oldOffer(); else if (G.askFac) G.askFac(); // v329: the old-server card first, on its own // v138: the cloud save is in (or there is none): now ask for a faction only if this empire never chose one
     store.mode = "cloud"; dirty();
     let gotP = false, gotPl = false;
     // a query returns at most 1,000 documents, so players and planets are read as 8 shards (field `sh`) plus one query for
@@ -4924,15 +4924,19 @@ async function maybeJoin() {
     const snaps = await Promise.all([G.db.collection("players").limit(1000).get()].concat(Array.from({ length: SHARDS }, (_, k) => G.db.collection("players").where("sh", "==", k).limit(1000).get())));
     const T = now(), seen = new Set(); let active = 0, existing = null;
     for (const ps of snaps) for (const d of ps.docs) { if (seen.has(d.id)) continue; seen.add(d.id); const v = d.data() || {}; if (d.id === G.me) existing = v; else if ((+v.last || +v.joined || 0) > T - ACTIVE_MS) active++; }
+    if (existing && existing.home && !G.byId[existing.home]) { try { const hs = await G.db.doc("planets/" + existing.home).get(); if (hs.exists) { const d = cleanDoc(hs.data()); if (d) { G.docs[existing.home] = d; rebuild(); } } } catch (e) {} } // v329
     if (existing && existing.home && G.byId[existing.home]) { G.myHome = existing.home; G.joinedAt = +existing.joined || T; G.mode = "online"; finishJoin(); return; }
     if (active >= MAX_PLAYERS) { G.mode = "full"; G.ready = true; softRender(); return; }
     const h = makeHome(G.me, G.list.filter(p => p.kind === "home")); h.name = genName(rnd(hash(G.me) + 3));
+    { const old = await G.db.doc("planets/" + h.id).get().catch(() => null), od = old && old.exists ? cleanDoc(old.data()) : null; // v329: never write over a homeworld you already have
+      if (od && od.owner === G.me) { G.docs[h.id] = od; G.myHome = h.id; G.joinedAt = T; rebuild(); G.mode = "online"; store.lastPlayer = ""; syncPlayer(); finishJoin(true); return; } }
     await G.db.doc("planets/" + h.id).set(planetDoc(h));
     G.docs[h.id] = cleanDoc(planetDoc(h)); G.myHome = h.id; G.joinedAt = T; rebuild();
     G.mode = "online"; store.lastPlayer = ""; syncPlayer();
     finishJoin(true);
   } catch (e) {
     if (e && e.code === "invalid_argument") { G.mode = "readonly"; G.ready = true; softRender(); }
+    else if ((G.joinTry = (G.joinTry || 0) + 1) < 4) { G.mode = "connecting"; setTimeout(maybeJoin, 2500 * G.joinTry); } // v329: try again before giving up
     else { G.mode = "connecting"; initOffline(); softRender(); }
   } finally { joining = false; }
 }
@@ -13104,10 +13108,10 @@ function empLoad(d, fromOld) { let st;
     empApply(st, planets);
   }
 }
-async function empOld() { closeOld(); let d; try { d = await window.udfOld.fetch(); } catch (e) { return toast((e && e.message) || "Couldn't reach the old server.", "warn"); } if (d) empLoad(d, true); }
-function closeOld() { const el = document.getElementById("oldw"); if (el) el.remove(); }
+async function empOld() { const w = G.oldWait; G.oldWait = 0; closeOld(true); const after = () => { if (w && G.askFac) G.askFac(); }; let d; try { d = await window.udfOld.fetch(); } catch (e) { toast((e && e.message) || "Couldn't reach the old server.", "warn"); return after(); } if (d) empLoad(d, true); after(); }
+function closeOld(keep) { const el = document.getElementById("oldw"); if (el) el.remove(); if (G.oldWait && !keep) { G.oldWait = 0; setTimeout(() => G.askFac && G.askFac(), 250); } } // v329: then the faction choice and the opening
 /* v206: the first sign-in on the new server offers to bring the empire from the old one */
-function oldOffer() { if (!window.udfOld || !window.udfOld.available || document.getElementById("oldw")) return; const el = document.createElement("div"); el.id = "oldw";
+function oldOffer() { if (!window.udfOld || !window.udfOld.available || document.getElementById("oldw")) return closeOld(); const el = document.createElement("div"); el.id = "oldw";
   el.innerHTML = `<div class="sessbox"><b>Played before the move?</b><p>The game moved to a new server. If you played on the old one, bring your empire across: your homeworld, buildings, research, ships, resources and worlds. Alliances need founding or joining again.</p><button class="btn wide" data-act="empOld">Bring my empire</button><button class="btn ghost wide" data-act="oldNo">I'm new: start fresh</button></div>`;
   document.body.appendChild(el); }
 function empApply(st, planets) { store.shrinkOk = true;
@@ -13678,7 +13682,8 @@ const tutArmed = n => armedMax() < n && !S.fleets.some(f => f.phase === "back") 
 const tutInvade = () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : tutWaitShips() || slotWait() || (own("ark") < 1 ? tutUnit("ark", 1)() : null) || tutArmed(6) || [['.sheet [data-act="launch"]', "Send the Colony Ship with your warships"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
 const mapPath = (final, pick) => () => slotWait() || [fromPick(), ['.sheet [data-act="launch"]', "Send your fleet"], [final, "Choose this one"], pick ? [pick, "Pick a target"] : null, SHOWME].filter(Boolean);
 const TUT = [
-  { lv: 1, t: "Choose your commander name", say: "First things first, Commander: what should the galaxy call you? Every commander sees this name. Type it and tap Save.", ok: s => !!s.tutNm, open: () => ACT.profile({ u: G.me }), path: () => [['.sheet [data-act="nameSave"]', "Type your name, then tap Save"], ['.sheet #cnin', "Type your commander name"], SHOWME], rw: { m: 200, c: 100 } }, /* v296 */
+  { lv: 1, t: "Choose your commander name", say: "First things first, Commander: what should the galaxy call you? Every commander sees this name. Type it and tap Save.", ok: s => !!s.tutNm, open: () => ACT.profile({ u: G.me }), path: () => { const v = (($(".sheet #cnin") || {}).value || "").trim().toLowerCase(), taken = v && Object.entries(G.names || {}).some(([id, n]) => id !== G.me && (n || "").toLowerCase() === v); // v329
+      return taken ? [['.sheet #cnin', "That name is taken: type a different one"], SHOWME] : [['.sheet [data-act="nameSave"]', "Type your name, then tap Save"], ['.sheet #cnin', "Type your commander name"], SHOWME]; }, rw: { m: 200, c: 100 } }, /* v296 */
   { lv: 1, t: "Name your homeworld", say: "This world is ours now. Give our capital a name worthy of an empire, then tap Save.", ok: s => !!s.tutHw, open: () => ACT.skin({}), path: () => [['.sheet [data-act="skinSave"]', "Type a name, then tap Save"], ['.sheet #pname', "Type your homeworld's name"], SHOWME], rw: { m: 200, c: 150 } }, /* v296 */
   { lv: 1, t: "Build a Metal Extractor", say: "Everything starts with metal. Open Structures and build your first Metal Extractor.", ok: s => s.b.metalMine >= 1, go: { v: "build", s: "res" }, path: bPath("metalMine", "res"), rw: { m: 300, c: 150 } },
   { lv: 1, t: "Build a Solar Array", say: "Extractors need power. A Solar Array keeps them running at full speed.", ok: s => s.b.solar >= 1, go: { v: "build", s: "res" }, path: bPath("solar", "res"), rw: { m: 300, c: 200 } },
@@ -13726,7 +13731,7 @@ const TUT = [
 const TUT_V2 = 24; // v299: the Academy's length before the flagship steps
 const TUT_V1 = 19; // (v296: 17 + the two naming steps) // the Academy's length before the Astrophysics steps were added
 const tutOn = () => S && S.tut && !S.tut.off && S.tut.i < TUT.length;
-const TUT_SNOOZE = 5 * 60000, tutSnoozed = () => !!(S && S.tut && S.tut.snz > now());
+const TUT_SNOOZE = 5 * 60000, tutSnoozed = () => !!(S && S.tut && S.tut.snz > now()), guideSnz = () => !tutOn() && (tutSnoozed() || S.pathSnz > now()); // v329
 /* v210 fleet path: one hull class at a time in the order the tech tree opens them, so nobody is left wondering what to build next.
    The Advisor hops between this and the Academy (after its basics) or the quest path; "Show me" leads to the next missing requirement. */
 const SHIP_PATH = [["fighter", 5, "Light Fighters are the backbone of every early fleet. Five of them clear the weakest Hive garrisons."],
@@ -13806,7 +13811,7 @@ function guideVisible(el) {
   const cy = r.top + r.height / 2; if (top.closest("#dock") || cy > innerHeight - 160 || cy < 130) return 2; return 0; // tucked under the dock or top bar: scroll it into view
 }
 function guidePick() {
-  const st = !G.cubeDemo && !(G3 && (G3.cam.siege || G3.cam.cine)) && G.ready && !battle && !advLines && !$("#adv") && !$("#celeb") && !$("#authw") && !(sheet && sheet.type === "faction") && !tutSnoozed() && !(S.pathSnz > now()) ? (m => m === "tut" ? TUT[S.tut.i] : m === "ship" ? shipStep() : null)(advPick()) : null;
+  const st = !G.cubeDemo && !(G3 && (G3.cam.siege || G3.cam.cine)) && G.ready && !battle && !advLines && !$("#adv") && !$("#celeb") && !$("#authw") && !(sheet && sheet.type === "faction") && !guideSnz() ? (m => m === "tut" ? TUT[S.tut.i] : m === "ship" ? shipStep() : null)(advPick()) : null;
   if (!(st && st.fm && !st.ok(S))) { const m = $("#tutfm"); if (m) m.remove(); } if (!st) return null;
   const path = st.ok(S) ? [['#coach [data-act="tutClaim"], #coach [data-act="shipClaim"], #coach .cpill', "Collect your reward"]] : st.path ? st.path() : [SHOWME];
   { const sq = path.find(q => q && /article\.bn\[data-kind="s"\]/.test(q[0])), all = sq && !document.querySelector(sq[0]) && !sheet && $('[data-act="scls"][data-v="all"]:not(.on)'), v = all && guideVisible(all); if (v) return { el: all, label: "Tap All to see every ship", v }; } // v325
@@ -13818,7 +13823,8 @@ function guidePick() {
 }
 function guideFrame() {
   let g = $("#tutguide"); if (!g) { g = document.createElement("div"); g.id = "tutguide"; g.innerHTML = '<div class="tg-ring"></div><div class="tg-hand">👆</div><div class="tg-tip"><span class="tgl"></span><button class="tgx" aria-label="Hide the guide for 5 minutes">✕</button></div>'; document.body.appendChild(g);
-    g.querySelector(".tgx").addEventListener("click", e => { e.stopPropagation(); e.preventDefault(); const T = now(); if (S.tut) { S.tut.open = 0; S.tut.snz = T + TUT_SNOOZE; } S.pathSnz = T + TUT_SNOOZE; dirty(); coachRender(true); g.style.display = "none"; toast("Guide hidden for 5 minutes. Open it any time from the Quests tab."); }, true); }
+    g.querySelector(".tgx").addEventListener("click", e => { e.stopPropagation(); e.preventDefault(); const T = now(); if (tutOn()) { S.tut.open = 0; dirty(); coachRender(true); return; } if (S.tut) { S.tut.open = 0; S.tut.snz = T + TUT_SNOOZE; } S.pathSnz = T + TUT_SNOOZE; dirty(); coachRender(true); g.style.display = "none"; toast("Guide hidden for 5 minutes. Open it any time from the Quests tab."); }, true); }
+  g.classList.toggle("acad", tutOn()); // v329: no ✕ during the Academy
   const tn = performance.now(); if (tn - GD.t > 140) { GD.t = tn; const p = guidePick(); GD.el = p && p.el; GD.label = p ? p.label : "";
     if (p && p.v === 2 && (GD.scrolled !== p.el || (!GD.again && tn - (GD.st || 0) > 1500))) { GD.again = GD.scrolled === p.el; GD.scrolled = p.el; GD.st = tn; p.el.scrollIntoView({ block: "center", behavior: GD.again ? "auto" : "smooth" }); } /* v324: one retry, so it never fights your own scrolling */
     if (p && p.v === 3 && S.tut.open) { S.tut.open = 0; dirty(); coachRender(true); } }
@@ -13874,7 +13880,7 @@ function coachRender(force) {
   if (!S.tutHop) { S.tutHop = 1; if (tutOn()) S.advHop = 0; dirty(); } /* v324: commanders mid-Academy go back to its path */
   if (view === "mail" && !S.tutMail) { S.tutMail = 1; dirty(); }
   if (S.tut.snz && S.tut.snz <= now()) { S.tut.snz = 0; S.tut.open = 1; dirty(); force = true; } /* v191: back after a 5-minute break, opened up */
-  let w = $("#coach"); const mode = !battle && G.ready && !G.cubeDemo && !tutSnoozed() && !(S.pathSnz > now()) ? advPick() : null; /* v194: not over a demo battle; v210: the Advisor hops between the Academy or quest path and the fleet path */
+  let w = $("#coach"); const mode = !battle && G.ready && !G.cubeDemo && !guideSnz() ? advPick() : null; /* v194: not over a demo battle; v210: the Advisor hops between the Academy or quest path and the fleet path */
   if (!mode) { if (w) w.remove(); coachHtml = ""; return; }
   const hop = (mode === "ship" ? (tutOn() || quest()) : shipStep()) && !(mode !== "ship" && tutOn() && S.tut.i < TUT_BASICS) ? `<button class="btn ghost sm" data-act="advHop">${mode === "ship" ? "Main path ›" : "Fleet path ›"}</button>` : "";
   if (mode === "ship") { const sp = shipStep(), done = sp.ok(), open = S.pathOpen && !sheet && !advLines, rwt = (sp.rw.m || 0) + (sp.rw.c || 0) + (sp.rw.g || 0);
@@ -15728,14 +15734,14 @@ const ACT = {
   findClear: () => { G.find = null; closeSheet(); mapOverlay(); },
   tutShow: () => { S.tut.open = 0; S.tut.snz = 0; dirty(); coachRender(true); tutShow(); },
   tutClaim: () => tutClaim(),
-  tutMin: () => { S.tut.open = 0; S.tut.snz = now() + TUT_SNOOZE; dirty(); coachRender(true); toast("Academy hidden. It'll pop back up in 5 minutes, or open it any time from the Quests tab."); },
+  tutMin: () => { S.tut.open = 0; if (!tutOn()) S.tut.snz = now() + TUT_SNOOZE; dirty(); coachRender(true); toast(tutOn() ? "Academy folded. Your next step stays marked on screen." : "Academy hidden. It'll pop back up in 5 minutes, or open it any time from the Quests tab."); }, // v329
   shipShow: () => shipShow(),
   shipClaim: () => act(() => { const sp = shipStep(); if (!sp || !sp.ok()) return; for (const r of ["m", "c", "g"]) S.res[r] += sp.rw[r] || 0; S.shards = (S.shards || 0) + sp.rw.shards; S.shipQ = sp.i + 1; S.advHop = 0; if (sheet) closeSheet();
     logReward("Fleet path · " + sp.t, sp.rw, { shards: sp.rw.shards, kind: "quest" }); try { SFX.research(); } catch (e) {} const nx = shipStep(); toast(nx ? `Fleet path reward collected. Next hull: ${nx.d.n}.` : "Fleet path complete. Every hull class is yours.", "win"); coachRender(true); }),
   advHop: () => { S.advHop = S.advHop ? 0 : 1; S.pathOpen = 1; dirty(); coachRender(true); },
   pathOpen: () => { S.pathOpen = 1; S.pathSnz = 0; dirty(); coachRender(true); },
   pathFold: () => { S.pathOpen = 0; dirty(); coachRender(true); },
-  pathMin: () => { S.pathOpen = 0; S.pathSnz = now() + TUT_SNOOZE; dirty(); coachRender(true); toast("Advisor hidden for 5 minutes. Your next directive is always on the Quests tab."); },
+  pathMin: () => { S.pathOpen = 0; if (!tutOn()) S.pathSnz = now() + TUT_SNOOZE; dirty(); coachRender(true); toast("Advisor hidden for 5 minutes. Your next directive is always on the Quests tab."); },
   tutOpen: () => { S.tut.open = 1; S.tut.snz = 0; dirty(); coachRender(true); },
   tutSkip: () => { if (!confirm("Skip the Flight Academy? You can't restart it.")) return; S.tut.off = 1; dirty(); coachRender(true); toast("Academy skipped. The Advisor and your quests on the Quests tab still guide you."); },
   fleetMap: d => { closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } // v98: wait for the map to be ready, then fly to the fleet and follow it
@@ -16550,7 +16556,9 @@ function start(data) {
   G.askFac = () => { G.askFac = null;
     if (!S.faction && S.facAsked) { S.faction = "terran"; dirty(); } /* v122: ask once per save; after that the default stands (change it any time in Faction) */
     if (!S.faction) { S.facAsked = 1; dirty(); openSheet({ type: "faction" }); } else intro(); flushSay(); }; // pick a faction first; the briefing follows
-  if (S.faction || S.facAsked || !(window.claude && window.claude.use)) G.askFac(); else setTimeout(() => G.askFac && G.askFac(), 8000);
+  G.askFac0 = G.askFac; // v329: kept, so a new account signed in on this device is asked too
+  const facWait = () => { if (!G.askFac) return; if (!store.ready && G.mode === "connecting" || $("#udfAuth") || $("#oldw")) return void setTimeout(facWait, 1000); G.askFac(); }; // v329: never behind the sign-in screen
+  if (S.faction || S.facAsked || !(window.claude && window.claude.use)) G.askFac(); else setTimeout(facWait, 1000);
   window.__booted = true; warmStudio();
   setTimeout(() => { try { coordsBuild(); } catch (e) {} }, 2500); // the coordinate index (230,000 addresses) is built in the background
   if ((IOS || ANDROID) && !STANDALONE) { try { if (!localStorage.getItem("void.installTip")) { localStorage.setItem("void.installTip", "1");

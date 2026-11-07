@@ -1,10 +1,18 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-07 (America/Phoenix). Current game version: **v328** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v136**.
+Last updated: 2026-11-07 (America/Phoenix). Current game version: **v329** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v137**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
 ## Pending work (as of 2026-11-07): start here in a new session
+
+0. **TEST ONLINE, NOT OFFLINE.** The game is online (Supabase). v329 exists because every earlier Academy test ran the offline mode and missed that a real new account got stuck after step 1. `tools/online_test/` runs the REAL `udf-supabase.js` + sign-in screen against a stand-in database:
+   - `fakesb.js` (in-page, one browser) and `fakesrv.js` + `fakesb2.js` (a shared server, several browsers = several players).
+   - Seed it with a copy of the live galaxy: `select json_agg(json_build_object('path',path,'data',data)) from docs where top in ('players','planets','assaults','event','alliances','profiles','occ')` saved as `seed.json` beside `mk.py` (never commit seed.json: it is player data).
+   - `python3 mk.py` builds `index.html` (fakesb) and `index2.html` (shared server); serve the folder on :8123 (`python3 -m http.server 8123`, with `../gt/threelib/three.min.js` or adjust the route).
+   - `DEV=phone1 SCEN=fresh|switch SHOTS=dir node obot.js`: signs up through the real screen (switch = a phone that already played on another account), plays all 37 Academy steps, reports the opening battle / faction / old-server card, stuck steps and a hidden guide.
+   - `node fakesrv.js & node mp.js`: two/three players: join, chat, DMs, alliance, espionage, PvP, report sharing, second device, sign out/in.
+   - SwiftShader renders at ~1 fps here: use `DEV=phone1` (DPR 1) and one browser at a time.
 
 1. **v328 is released** (the patch is kept in `tools/patches/p328_engagement.py` for reference). It adds the hologram Advisor (CSS `#adv .advimg/.hscan/.hbeam`), the named enemy Vael'Khor (intro, step 14, step 34, chapter 2), full-screen celebrations (`celebrate`, `showCeleb`, `S.celeb`: first victory, first colony, flagship, Academy complete, with Share and Say hi in chat), the 8-hour supply convoy after the Academy (`S.retGift`, Quests card, `retClaim`), the "make N now" wording fix and gathering fleets counted as busy in `tutWaitShips`. Also: the guide scrolls a target whose middle is off the screen fully into view (`guideVisible`).
 2. **No Advisor voice.** A voice-over was tried and dropped at the user's request (the device voices sound robotic and no AI voice service was reachable). Don't add one unless the user asks again.
