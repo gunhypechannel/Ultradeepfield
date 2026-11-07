@@ -221,7 +221,8 @@
   function authMsg(e) {
     var m = String((e && (e.message || e.error_description)) || e || "");
     if (/Invalid login credentials/i.test(m)) return "Wrong email or password.";
-    if (/Email not confirmed/i.test(m)) return "Confirm your email first: open the link we emailed you, then sign in.";
+    if (/Email not confirmed/i.test(m)) return "Your email isn't confirmed yet. Open the link we emailed you (check Spam and Promotions too), then sign in. No email? Tap Resend below.";
+    if (/email rate limit|over_email_send_rate_limit/i.test(m) || (e && e.code === "over_email_send_rate_limit")) return "We can only send a few emails an hour, so no new one went out. Your account is already made: use the link in the email we sent before (check Spam), or try Resend again in an hour.";
     if (/already registered|already been registered|User already exists/i.test(m)) return "That email already has an account. Sign in instead.";
     if (/Password should be|weak/i.test(m)) return "Use at least 6 characters.";
     if (/invalid format|valid email|Unable to validate email/i.test(m)) return "That email doesn't look right.";
@@ -236,7 +237,7 @@
     return new Promise(function (resolve) {
       addCss();
       var w = document.createElement("div"); w.id = "udfAuth"; w.className = "udfa"; document.body.appendChild(w);
-      var mode = startMode || "in", busy = false, finished = false;
+      var mode = startMode || "in", busy = false, finished = false, resendOn = false; /* v324: the Resend link shows once an email confirmation is in play */
       function draw(msg, okMsg) {
         var up = mode === "up", reset = mode === "reset", np = mode === "newpw";
         var google = CFG.google && !reset && !np;
@@ -248,7 +249,8 @@
           (reset ? "" : '<div class="pw"><input name="p" type="password" autocomplete="' + (up || np ? "new-password" : "current-password") + '" placeholder="' + (np ? "New password" : "Password") + (up || np ? ' (6+ characters)' : "") + '"><button type="button" class="eye" data-a="eye" aria-label="Show password">Show</button></div>') +
           '<div class="er' + (okMsg ? " ok" : "") + '" role="alert">' + esc(msg || okMsg || "") + '</div>' +
           '<button type="submit" class="p">' + (np ? "Save password" : reset ? "Send reset link" : up ? "Create account" : "Sign in") + '</button>' +
-          (np ? "" : '<div class="row">' + (mode === "in" ? '<button type="button" class="l" data-a="up">New here? Create account</button><button type="button" class="l" data-a="reset">Forgot password?</button>' : '<button type="button" class="l" data-a="in">Back to sign in</button>') + '</div>') + '</form>';
+          (np ? "" : '<div class="row">' + (mode === "in" ? '<button type="button" class="l" data-a="up">New here? Create account</button><button type="button" class="l" data-a="reset">Forgot password?</button>' : '<button type="button" class="l" data-a="in">Back to sign in</button>') + '</div>') +
+          (mode === "in" && resendOn ? '<div class="row"><button type="button" class="l" data-a="resend">Resend confirmation email</button></div>' : "") + '</form>';
       }
       function say(t, ok) { var el = w.querySelector(".er"); if (!el) return draw(t); el.className = "er" + (ok ? " ok" : ""); el.textContent = t; }
       function done(u) { if (finished) return; finished = true; try { sub && sub.data && sub.data.subscription.unsubscribe(); } catch (x) {} w.remove(); resolve(u); }
@@ -256,6 +258,9 @@
         var b = e.target.closest("[data-a]"); if (!b) return; e.preventDefault();
         var a = b.getAttribute("data-a");
         if (a === "google") sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: HERE, queryParams: { prompt: "select_account" } } }).then(function (r) { if (r && r.error) say(authMsg(r.error)); });
+        else if (a === "resend") { var ei = w.querySelector("input[name=e]"), em2 = ei ? (ei.value || "").trim() : lastEmail(); if (!em2) return say("Type your email first.");
+          if (busy) return; busy = true; say("…", true);
+          sb.auth.resend({ type: "signup", email: em2, options: { emailRedirectTo: HERE } }).then(function (r) { busy = false; if (r && r.error) return say(authMsg(r.error)); say("Sent. Open the newest email from us (check Spam too), tap its link, and you're in.", true); }, function (er) { busy = false; say(authMsg(er)); }); }
         else if (a === "eye") { var pi = w.querySelector("input[name=p]"); if (pi) { var sh = pi.type === "password"; pi.type = sh ? "text" : "password"; b.textContent = sh ? "Hide" : "Show"; } }
         else { mode = a; draw(); }
       });
@@ -263,7 +268,7 @@
         e.preventDefault(); if (busy) return; var f = e.target;
         var em = f.e ? (f.e.value || "").trim() : "", pw = f.p ? f.p.value || "" : "";
         try { if (em) localStorage.setItem("udf.lastEmail", em); } catch (x) {}
-        function go(p, then) { busy = true; say("…", true); p.then(function (r) { busy = false; if (r && r.error) return say(authMsg(r.error)); then(r && r.data); }, function (er) { busy = false; say(authMsg(er)); }); }
+        function go(p, then) { busy = true; say("…", true); p.then(function (r) { busy = false; if (r && r.error) { var em3 = authMsg(r.error); if (/confirmed|few emails/.test(em3) && !resendOn) { resendOn = true; if (mode === "up") mode = "in"; draw(em3); return; } return say(em3); } then(r && r.data); }, function (er) { busy = false; say(authMsg(er)); }); }
         if (mode === "newpw") { if (pw.length < 6) return say("Use at least 6 characters."); return go(sb.auth.updateUser({ password: pw }), function (d) { try { history.replaceState(null, "", HERE); } catch (x) {} done(d && d.user); }); }
         if (mode === "reset") return go(sb.auth.resetPasswordForEmail(em, { redirectTo: HERE }), function () { mode = "in"; draw("", "Check your email for the reset link."); });
         if (mode === "up") {
@@ -271,7 +276,7 @@
           return go(sb.auth.signUp({ email: em, password: pw, options: { data: { name: nm }, emailRedirectTo: HERE } }), function (d) {
             if (d && d.session) return done(d.user);
             if (d && d.user && Array.isArray(d.user.identities) && !d.user.identities.length) return say("That email already has an account. Sign in instead.");
-            mode = "in"; draw("", "Account made. Open the link we just emailed you, then sign in here.");
+            mode = "in"; resendOn = true; draw("", "Account made! Open the link we just emailed you (check Spam too). It signs you straight in. Already tapped it? Just sign in here.");
           });
         }
         go(sb.auth.signInWithPassword({ email: em, password: pw }), function (d) { done(d && d.user); });
