@@ -2378,7 +2378,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 330;
+const GAME_V = 331;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4841,7 +4841,7 @@ async function connectCloud() {
           if (cs.repsSep) await repsInto(cs, uid); // v293: its reports come from their own record
           const take = foreign || (!behind && (S.uid === uid ? cAt > (S.cloudAt || 0) : true));
           if (take) { try { if (lp > 0) localStorage.setItem(KEY + ".device", JSON.stringify(S)); } catch (e) {}
-            S = migrate(cs); S.cloudAt = cAt; secBoot(); FOG = null; live = false; advance(now()); live = true; render(true); toast(foreign ? "Signed in. Loaded this account's empire." : "Loaded your saved empire.", "win"); }
+            G.awayMs = cs.t ? now() - cs.t : 0; S = migrate(cs); S.cloudAt = cAt; secBoot(); FOG = null; live = false; advance(now()); live = true; render(true); toast(foreign ? "Signed in. Loaded this account's empire." : "Loaded your saved empire.", "win"); }
           else if (behind) toast("Your account's save was behind this device. This device's empire was kept and saved to your account.", "warn"); } }
       else if (foreign) { try { localStorage.setItem(KEY + ".device", JSON.stringify(S)); } catch (e) {}
         const hn = S.homeName; store.shrinkOk = true; S = newState(); FOG = null; S.homeName = hn; live = false; advance(now()); live = true; view = "base"; rebuild(); render(true); G.askFac = G.askFac0; toast("New account: a fresh homeworld is ready for you."); } // v329: faction, then the opening battle
@@ -4853,7 +4853,7 @@ async function connectCloud() {
        over each other every few seconds, so progress and alliances flipped back and forth) and asks you to continue here */
     try { db.doc(`data/users/${uid}/save`).onSnapshot(s3 => { const v = s3 && s3.exists ? s3.data() : null; if (!v || !v.sess || v.sess === SESS || store.adopting) return;
       if ((+v.savedAt || 0) > (S.cloudAt || 0) || (+v.seq || 0) > (store.seq || 0)) followCloud(v); }, () => {}); } catch (e) {}
-    if (G.oldWait) oldOffer(); else if (G.askFac) G.askFac(); // v329: the old-server card first, on its own // v138: the cloud save is in (or there is none): now ask for a faction only if this empire never chose one
+    comeback(); if (G.oldWait) oldOffer(); else if (G.askFac) G.askFac(); // v329: the old-server card first, on its own // v138: the cloud save is in (or there is none): now ask for a faction only if this empire never chose one
     store.mode = "cloud"; dirty();
     let gotP = false, gotPl = false;
     // a query returns at most 1,000 documents, so players and planets are read as 8 shards (field `sh`) plus one query for
@@ -16538,6 +16538,9 @@ function introBattle() {
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) }), { id: INTRO_ID, recDone: 1 }));
 }
 function introPlay() { G.advThen = () => { try { S.say.push(...INTRO_POST, ...INTRO); dirty(); playBattle(introBattle()); } catch (e) { S.say.length = 0; say(INTRO); } }; say(INTRO_PRE); }
+function comeback() { if (!S || S.comeback || !tutOn() || !(S.tut.i > 0) || !(G.awayMs >= 864e5)) return; S.comeback = 1; // v331
+  const rw = { m: 8000, c: 5000, g: 2500, shards: 5, boosts: 3 }; grantRw(rw, "Welcome back"); dirty();
+  celebrate({ k: "comeback", kick: "Welcome back, Commander", t: "Supplies Have Landed", art: "adv", s: `The Academy is right where you left it: step ${S.tut.i + 1} of ${TUT.length}. Fleet Command sent supplies to get you moving again.`, rw: "8,000 metal, 5,000 crystal, 2,500 gas, ◆5 and ⚡3 boosts. Already in your stores.", go: "Let's go" }); }
 function intro() { if (!S.intro) { S.intro = true; dirty(); if (score() > 200) say(INTRO); else introPlay(); } } // veterans just get the briefing
 window.udfBeforeSignOut = async () => { try { if (S) { dirty(); await flush(); } } catch (e) {} }; // v200: the last moves reach your account before you sign out
 function start(data) {
@@ -16551,6 +16554,7 @@ function start(data) {
   advance(now());
   live = true;
   rebuild(); render(); awaySummary();
+  G.awayMs = away; // v331: how long since this save was last played (the cloud save corrects it once checked)
   const idx = S.log.indexOf(before), n = idx < 0 ? S.log.length : idx;
   if (away > 60000 && n) toast(`Welcome back. ${n} thing${n > 1 ? "s" : ""} happened while you were away.`);
   try { gfxApply(); } catch (e) {} // v124: graphics settings
