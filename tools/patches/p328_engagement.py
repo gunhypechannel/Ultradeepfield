@@ -87,6 +87,11 @@ rep('''#coach.gdhide>*{''', '''#adv .advimg{opacity:.9;filter:drop-shadow(0 0 18
 rep('''const tutWaitShips = () => !Object.values(S.ships || {}).some(v => v > 0) && S.fleets.some(f => f.phase === "back" || f.phase === "out") ? [DOCKT("fleets", "Your fighters are flying home. They'll be ready in a moment")] : null;''',
     '''const tutWaitShips = () => !Object.values(S.ships || {}).some(v => v > 0) && S.fleets.some(f => f.phase === "back" || f.phase === "out" || f.phase === "gather") ? [DOCKT("fleets", S.fleets.some(f => f.phase === "gather") && !S.fleets.some(f => f.phase === "back") ? "Your fighters are gathering at the field. They'll be home soon" : "Your fighters are flying home. They'll be ready in a moment")] : null; // v328: gathering counts as busy''')
 
+# a target whose middle is off the screen (the Build button on a ship card, just below the bottom edge on a 430x739 phone) counted as
+# visible because a sliver showed, so the guide never scrolled it into view: now it does
+rep('''  if (r.bottom < 0 || r.top > innerHeight) return 2; // off-screen in a list: scroll to it''',
+    '''  if (r.bottom < 0 || r.top > innerHeight || r.top + r.height / 2 > innerHeight - 2 || r.top + r.height / 2 < 2) return 2; // off-screen, or half under the edge: scroll to it (v328)''')
+
 # ---- styles ----
 rep('''#coach.gdhide>*{''', '''/* v328 celebrations and the Advisor's voice button */
 #celeb{position:fixed;inset:0;z-index:95;display:flex;align-items:flex-start;justify-content:center;padding:18px;overflow-y:auto;overscroll-behavior:contain}#celeb .cbscrim{position:fixed;inset:0;background:radial-gradient(circle at 50% 45%,rgba(30,40,70,.55),rgba(0,0,0,.88));animation:fadeIn .35s ease}

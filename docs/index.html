@@ -81,6 +81,29 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 .btn[disabled]{border-color:var(--line-hi);color:var(--muted);background:transparent;cursor:default}
 .btn.warn{border-color:var(--red);color:var(--red);background:rgba(255,98,98,.1)}
 .btn.amber{border-color:var(--amber);color:var(--amber);background:rgba(240,169,69,.12)}
+#adv .advimg{opacity:.9;filter:drop-shadow(0 0 18px rgba(85,214,232,.7)) grayscale(1) sepia(.6) hue-rotate(150deg) saturate(2.3) brightness(1.1) contrast(1.08);animation:holoIn .8s cubic-bezier(.2,.9,.3,1) both,holoFlick 7s 1.2s infinite}
+#adv .hscan{position:absolute;left:0;bottom:0;width:clamp(118px,32vw,230px);height:min(58vh,470px);pointer-events:none;z-index:1;mix-blend-mode:screen;
+  background:linear-gradient(180deg,transparent 0,rgba(140,240,255,.32) 50%,transparent 100%) 0 -120%/100% 34% no-repeat,repeating-linear-gradient(180deg,rgba(140,235,255,.24) 0 1px,transparent 1px 3px),linear-gradient(180deg,rgba(85,214,232,.26),rgba(85,214,232,.08) 70%,transparent);
+  -webkit-mask-image:linear-gradient(180deg,#000 82%,transparent);mask-image:linear-gradient(180deg,#000 82%,transparent);animation:holoIn .8s cubic-bezier(.2,.9,.3,1) both,holoScan 3.6s 1s linear infinite}
+#adv .hbeam{position:absolute;left:0;bottom:-10px;width:clamp(118px,32vw,230px);height:30px;pointer-events:none;z-index:1;background:radial-gradient(ellipse 50% 40% at 50% 55%,rgba(170,245,255,.95),rgba(85,214,232,.45) 45%,transparent 72%);filter:blur(1.5px);animation:holoPad 2.4s ease-in-out infinite}
+#adv .hbeam::before{content:"";position:absolute;left:12%;right:12%;bottom:45%;height:min(40vh,320px);background:linear-gradient(0deg,rgba(110,230,255,.45),rgba(85,214,232,.08) 70%,transparent);clip-path:polygon(10% 100%,90% 100%,100% 0,0 0);opacity:.7}
+#adv.talk .advimg{animation:holoIn .8s cubic-bezier(.2,.9,.3,1) both,holoTalk .42s ease-in-out infinite alternate}#adv.talk .hbeam{animation-duration:.8s}
+@keyframes holoIn{0%{clip-path:inset(100% 0 0 0);opacity:0}45%{clip-path:inset(0 0 0 0);opacity:.9}55%{opacity:.35}62%{opacity:1}70%{opacity:.6}78%,100%{clip-path:inset(0 0 0 0);opacity:1}}
+@keyframes holoFlick{0%,90%,100%{opacity:1;transform:none}91%{opacity:.7;transform:translateX(1.5px)}92%{opacity:1;transform:none}95%{opacity:.82}}
+@keyframes holoScan{to{background-position:0 220%,0 0,0 0}}@keyframes holoPad{50%{opacity:.7;transform:scaleX(.92)}}
+@keyframes holoTalk{from{filter:drop-shadow(0 0 18px rgba(85,214,232,.7)) grayscale(1) sepia(.6) hue-rotate(150deg) saturate(2.3) brightness(1.04) contrast(1.08)}to{filter:drop-shadow(0 0 32px rgba(120,235,255,.95)) grayscale(1) sepia(.6) hue-rotate(150deg) saturate(2.6) brightness(1.24) contrast(1.08)}}
+@media (prefers-reduced-motion:reduce){#adv .advimg,#adv .hscan,#adv .hbeam,#adv.talk .advimg{animation:none}}
+/* v328 celebrations and the Advisor's voice button */
+#celeb{position:fixed;inset:0;z-index:95;display:flex;align-items:flex-start;justify-content:center;padding:18px;overflow-y:auto;overscroll-behavior:contain}#celeb .cbscrim{position:fixed;inset:0;background:radial-gradient(circle at 50% 45%,rgba(30,40,70,.55),rgba(0,0,0,.88));animation:fadeIn .35s ease}
+#celeb .cbbox{position:relative;margin:auto 0;width:min(420px,100%);text-align:center;padding:26px 18px 18px;border-radius:20px;background:linear-gradient(180deg,rgba(18,30,52,.96),rgba(6,12,24,.97));border:1px solid rgba(255,206,110,.55);box-shadow:0 0 60px rgba(255,180,70,.28),inset 0 0 40px rgba(255,200,120,.06);animation:cbIn .55s cubic-bezier(.2,1.4,.4,1);overflow:hidden}
+#celeb .cbrays{position:absolute;left:50%;top:22%;width:640px;height:640px;margin:-320px 0 0 -320px;background:repeating-conic-gradient(from 0deg,rgba(255,210,120,.13) 0 6deg,transparent 6deg 18deg);animation:cbSpin 18s linear infinite;pointer-events:none;mask:radial-gradient(circle,#000 20%,transparent 62%);-webkit-mask:radial-gradient(circle,#000 20%,transparent 62%)}
+#celeb .cbart{position:relative;width:100%;max-height:200px;object-fit:contain;filter:drop-shadow(0 8px 26px rgba(255,190,90,.35));animation:cbArt 1.1s ease-out}#celeb .cbart.adv{max-height:min(200px,24vh);object-fit:cover;object-position:top;border-radius:12px}#celeb .cbart{max-height:min(200px,26vh)}
+#celeb .cbicon{position:relative;font-size:76px;line-height:1.1;filter:drop-shadow(0 0 22px rgba(255,200,110,.8));animation:cbArt 1.1s ease-out}
+#celeb .cbk{position:relative;margin-top:8px;font:600 12px var(--f-display);letter-spacing:.28em;text-transform:uppercase;color:#ffd36b}#celeb .cbt{position:relative;margin:4px 0 6px;font:800 30px var(--f-display);letter-spacing:.03em;background:linear-gradient(180deg,#fff6dc,#ffc861);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 30px rgba(255,190,90,.25)}
+#celeb .cbs{position:relative;color:#d7e4ef;font-size:15px;line-height:1.45;margin:0 4px}#celeb .cbrw{position:relative;margin:12px 0 0;padding:9px 10px;border-radius:12px;background:rgba(255,200,110,.1);border:1px solid rgba(255,200,110,.35);color:#ffe2a6;font-size:13.5px}
+#celeb .cbbt{position:relative;display:flex;flex-direction:column;gap:8px;margin-top:16px}#celeb .cbbt .btn{width:100%}
+@keyframes cbIn{from{transform:scale(.6) translateY(30px);opacity:0}to{transform:none;opacity:1}}@keyframes cbSpin{to{transform:rotate(360deg)}}@keyframes cbArt{from{transform:scale(1.25);opacity:0;filter:brightness(2.2)}to{transform:none;opacity:1}}
+.adv .box{position:relative}
 #coach.gdhide>*{opacity:0!important;pointer-events:none!important;transition:opacity .2s}/* v324 */
 #coach{position:absolute;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 196px);display:flex;justify-content:flex-end;z-index:24;pointer-events:none;max-width:calc(100% - 20px)}
 #coach>*{pointer-events:auto}
@@ -2355,7 +2378,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 327;
+const GAME_V = 328;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -3683,6 +3706,7 @@ function arrive(f) {
       for (const r of ["m", "c", "g"]) S.res[r] += rep.loot[r];
       S.captures++; rep.captured = true; S.fleets = S.fleets.filter(x => x !== f);
       note(prev ? `We took ${p.name} from another commander. It's shielded for 7 days.` : `${p.name} is occupied. Welcome to the empire.`, "win");
+      if (!prev && myPlanets().length === 2) celebrate({ k: "colony1", kick: "A second world", t: `${p.name} Is Ours`, ic: "🪐", s: `Our flag flies over ${p.name}. The empire now spans two worlds, and the first one we took back from the Hive.`, go: "Onward" });
     } else {
       settlePlanet(p, st, f.arrive, null, null, !!rep.lossD.fortress);
       f.loot = rep.loot;
@@ -4539,10 +4563,12 @@ function quest() {
     : { t: `Win ${w} battles against other commanders`, ok: s => s.pvpWins >= w, rw: { m: 30000, c: 20000, g: 8000, boost: 2 }, go: "galaxy" };
 }
 function progress() {
+  if (S.retGift && S.retGift.at <= now() && !S.retGift.told) { S.retGift.told = 1; note("Fleet Command's supply convoy has landed. Claim it on the Quests tab.", "win"); }
   const q = quest();
   if (q.ok(S) && S.qSeen !== S.quest && !tutOn()) { S.qSeen = S.quest; note("Directive complete. Claim your reward on the Quests tab.", "warn"); }
   if (S.chapter === 1 && S.wins >= 1) { S.chapter = 2; S.nextRaid = S.t + 10 * 60000;
-    S.say.push("Clean work, Commander. That garrison won't trouble us for a while.", "But the Hive knows we're here now. Once your Academy training is done, expect raids on our homeworld.", "Build defenses and keep some ships at home. Chapter 2: Hold the Line."); }
+    celebrate({ k: "win1", kick: "Chapter 1 complete", t: "First Victory", ic: "⚔", s: "The Hive garrison is broken. Our fighters drew first blood against Vael'Khor.", say: "First blood, Commander! The garrison is broken, and Vael'Khor knows it.", rep: (S.reports.find(r => r.kind === "attack" && r.winner === "a") || {}).id, go: "Onward" });
+    S.say.push("Clean work, Commander. That garrison won't trouble us for a while.", "Vael'Khor felt that. Once your Academy training is done, expect her raiders over our homeworld.", "Build defenses and keep some ships at home. Chapter 2: Hold the Line."); }
   if (S.chapter === 2 && S.maxWin >= 5) { S.chapter = 3; S.say.push("The worlds nearer the Void are richer, and the Hive guards them harder.", "Check the tech tree in Research. Heavier hulls need lasers, ion and hyperspace tech. Chapter 3: Into the Reach."); }
   if (S.chapter === 3 && S.maxWin >= 10) { S.chapter = 4; S.say.push("Scouts found Hive breeding grounds along the event rim. Leviathans guard them.", "Plasma weapons and Reapers will break them. Chapter 4: Breaking the Hive."); }
 }
@@ -10537,6 +10563,8 @@ function vQuests() {
   const qrw = costHTML(q.rw || {}) + (q.rw && q.rw.boost ? ` <span class="pill">⚡${q.rw.boost}</span>` : "");
   return `<div class="gstack questv">
     <div class="advhero"><img src="${ADV_ART}" alt="${ADV}"><div class="advsay"><small>${ADV.toUpperCase()}</small><p>${esc(line)}</p>${act}</div></div>
+    ${S.retGift ? `<article class="card quest${S.retGift.at <= T ? " done hi" : ""}"><header>📦 Fleet Command supply convoy</header><p>${S.retGift.at <= T ? "The convoy has landed. Your supplies are waiting." : "On its way from Fleet Command for finishing the Academy."}</p>
+      <div class="rw"><span class="cost">${costHTML(S.retGift.rw)} <span class="shard">◆${S.retGift.rw.shards}</span></span>${S.retGift.at <= T ? `<button class="btn amber" data-act="retClaim">Claim</button>` : `<span class="note">Lands in <span data-end="${S.retGift.at}">${ftime(S.retGift.at - T)}</span></span>`}</div></article>` : ""}
     ${st ? `<h2 class="sec">Flight Academy · step ${S.tut.i + 1} of ${TUT.length}</h2><article class="card quest${td ? " done hi" : ""}"><header>${esc(st.t)}</header><p>${esc(st.say)}</p>
       <div class="rw"><span class="cost">${costHTML(st.rw || {})}${st.rw && st.rw.shards ? ` <span class="shard">◆${st.rw.shards}</span>` : ""}</span>${td ? `<button class="btn amber" data-act="tutClaim">Collect</button>` : `<button class="btn ghost" data-act="tutShow">Show me</button>`}</div></article>` : ""}
     <h2 class="sec">Quests · Chapter ${S.chapter} · ${CHAPTERS[S.chapter]}</h2>
@@ -13542,14 +13570,24 @@ function say(lines) {
   advLines = (advLines || []).concat(lines);
   if (!$("#adv")) {
     const w = document.createElement("div"); w.id = "adv";
-    w.innerHTML = `<div class="advscrim"></div><div class="adv" data-act="advNext" role="dialog" aria-label="Message from ${ADV}"><div class="box"><img class="advimg" src="${ADV_ART}" alt=""><div class="tx"><div class="who">${ADV}</div><div class="say" id="advt"></div><div class="tap">Tap to continue</div></div></div></div>`;
+    w.innerHTML = `<div class="advscrim"></div><div class="adv" data-act="advNext" role="dialog" aria-label="Message from ${ADV}"><div class="box"><img class="advimg" src="${ADV_ART}" alt=""><i class="hscan"></i><i class="hbeam"></i><div class="tx"><div class="who">${ADV}</div><div class="say" id="advt"></div><div class="tap">Tap to continue</div></div></div></div>`;
     $("#app").appendChild(w);
   }
   $("#advt").textContent = advLines[0];
   startAnim();
 }
 function advNext() { advLines.shift(); if (advLines.length) $("#advt").textContent = advLines[0]; else { advLines = null; $("#adv").remove(); const th = G.advThen; G.advThen = null; if (th) th(); } } // v318: G.advThen runs once the last line is read (the opening battle)
-function flushSay() { if (S.say.length && !battle && !(sheet && sheet.type === "faction")) { const l = S.say.splice(0); dirty(); say(l); } }
+/* v328 celebrations: queued in S.celeb, shown one at a time when nothing else is on screen (before the Advisor's lines), with the
+   moment's art, a burst of light, the reward and a Share button */
+function celebrate(c) { S.celeb = S.celeb || []; if (!S.celeb.some(x => x.k === c.k)) { S.celeb.push(c); dirty(); } }
+function showCeleb(c) { const w = document.createElement("div"); w.id = "celeb"; const fac = facOf(), art = c.art === "flag" ? FS_PORT[fac] : c.art === "adv" ? ADV_ART : null;
+  w.innerHTML = `<div class="cbscrim"></div><div class="cbbox ${c.k}"><div class="cbrays"></div>${art ? `<img class="cbart${c.art === "adv" ? " adv" : ""}" src="${art}" alt="">` : `<div class="cbicon">${c.ic || "★"}</div>`}
+    <div class="cbk">${esc(c.kick || "")}</div><h2 class="cbt">${esc(c.t)}</h2><p class="cbs">${esc(c.s)}</p>${c.rw ? `<div class="cbrw">${esc(c.rw)}</div>` : ""}
+    <div class="cbbt"><button class="btn amber" data-act="celebX">${esc(c.go || "Onward")}</button>${c.rep && G.mode === "online" ? `<button class="btn ghost" data-act="celebShare" data-id="${esc(c.rep)}">↗ Share the battle</button>` : `<button class="btn ghost" data-act="celebShare">↗ Share</button>`}${c.chat && G.mode === "online" ? `<button class="btn ghost" data-act="celebChat">💬 Say hi in chat</button>` : ""}</div></div>`;
+  $("#app").appendChild(w); try { SFX.gong(); } catch (e) {} G.celebNow = c; }
+function flushSay() { if (S.celeb && S.celeb.length && !battle && !sheet && !advLines && !$("#celeb") && !$("#adv") && G.ready) { showCeleb(S.celeb.shift()); dirty(); return; } if ($("#celeb")) return; // v328 a celebration first, then the Advisor
+  flushSay0(); }
+function flushSay0() { if (S.say.length && !battle && !(sheet && sheet.type === "faction")) { const l = S.say.splice(0); dirty(); say(l); } }
 
 /* ---------- Flight Academy: the beginner tutorial ----------
    Admiral Kaskov coaches a new commander through their first five commander levels, one step at a time. Each step says
@@ -13594,7 +13632,7 @@ const rPath = (k, cat) => () => rQd(k) ? [['[data-act="finish"][data-free="1"]',
   : storeFirst(cost(R[k], (S.r[k] || 0) + 1), R[k].n) || shortPath(cost(R[k], (S.r[k] || 0) + 1)) || [[`.sheet [data-act="research"][data-k="${k}"]`, "Tap Research"], [`article.bn[data-kind="r"][data-k="${k}"]`, `Choose ${R[k].n}`], ['.rhd [data-act="rcat"][data-v=""]', "Back to all research"], [`[data-act="rcat"][data-v="${cat}"]`, `Open ${cat === "Drive" ? "Engine" : cat} Research`], ['[data-act="sub"][data-g="build"][data-v="research"]', "Open Research"], ['.qc[data-act="qgo"][data-q="r"]', "Tap Lab"], DOCKT("build", "Tap Build")];
 /* v235: a fleet step that needs ships while every ship is still out (the fighters flying home from the first fight) waits on the
    Fleets tab instead of sending you round in circles */
-const tutWaitShips = () => !Object.values(S.ships || {}).some(v => v > 0) && S.fleets.some(f => f.phase === "back" || f.phase === "out") ? [DOCKT("fleets", "Your fighters are flying home. They'll be ready in a moment")] : null;
+const tutWaitShips = () => !Object.values(S.ships || {}).some(v => v > 0) && S.fleets.some(f => f.phase === "back" || f.phase === "out" || f.phase === "gather") ? [DOCKT("fleets", S.fleets.some(f => f.phase === "gather") && !S.fleets.some(f => f.phase === "back") ? "Your fighters are gathering at the field. They'll be home soon" : "Your fighters are flying home. They'll be ready in a moment")] : null; // v328: gathering counts as busy
 /* v301: build n of a ship, pointing at its first missing requirement until the Shipyard can make it */
 const tutUnit = (k, n) => () => { const need = reqStep(SH[k].req); if (need) return need.r ? rPath(need.k, RCAT_OF(need.k))() : bPath(need.k, B[need.k].cat === "fac" ? "fac" : "res")();
   return S.sq.some(q => q.k === k) ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish them instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed them up"], [".qrow .t", `${SH[k].n}s in production`], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard to watch them"], DOCKT("build", "Tap Build")]
@@ -13613,7 +13651,7 @@ const tutQty = (k, n) => { const st = tutOn() ? TUT[S.tut.i] : null, m = st && /
   const main = self || (m && (st.fast === k || st.t.includes(SH[k].n))), want = self ? n : main ? +m[1] : sp && sp.k === k ? sp.n : 0, keep = main ? {} : tutKeep(); // v321: a side task leaves the Academy step's supplies alone
   const left = Math.max(0, want - own(k) - S.sq.filter(q => q.k === k).reduce((a, q) => a + (q.left || 0), 0)), c = SH[k].c || {};
   return left && Math.max(1, Math.min(left, ...["m", "c", "g"].filter(r => c[r]).map(r => Math.floor((S.res[r] - (keep[r] || 0)) / c[r])))); }; // no more than you can pay for now: a full amount you can't afford greyed the button out
-const tutMake = (k, n) => { G.tutN = [k, n, S.tut.i]; const q = tutQty(k, n) || n; return q < n ? `Tap Build to make ${q} now (more as your mines refill)` : `Tap Build to make ${q}`; };
+const tutMake = (k, n) => { G.tutN = [k, n, S.tut.i]; const need = Math.max(1, n - own(k) - S.sq.filter(q => q.k === k).reduce((a, q) => a + (q.left || 0), 0)), q = tutQty(k, n) || need; return q < need ? `Tap Build to make ${q} now (more as your mines refill)` : `Tap Build to make ${q}`; };
 /* a ring on the fleet itself: the 3D map has no button to point at, so a marker sits where the fleet is on screen (taps pass through it) */
 function tutFleetMark(id) {
   let m = $("#tutfm"); const o = G3 && view === "galaxy" && G3.fleets.get(id), v = o && o.pt ? new TH.Vector3(o.pt.x, o.pt.y, o.pt.z).project(G3.camera) : null;
@@ -13655,7 +13693,7 @@ const TUT = [
   { lv: 3, t: "Build 3 Light Fighters", say: "Light Fighters are cheap and fast: perfect for your first raids. Queue three of them. Academy crews build them in a minute each.", ok: () => own("fighter") >= 3, fast: "fighter", go: { v: "build", s: "ships" }, /* v190: academy fighters take a minute each (they took ~10, a half-hour wait mid-tutorial) */
     path: () => S.sq.some(q => q.k === "fighter") ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish them instantly"], ['.qrow [data-act="boost"]', "Tap to use a Boost: 5 minutes faster"], [".qrow .t", "Fighters in production. They join your fleet as they finish"], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard to watch them"], DOCKT("build", "Tap Build")] : [['.sheet [data-act="make"][data-k="fighter"]', tutMake("fighter", 3)], ['article.bn[data-kind="s"][data-k="fighter"]', "Choose Light Fighter"], ['[data-act="sub"][data-g="build"][data-v="ships"]', "Open Shipyard"], DOCKT("build", "Tap Build")], rw: { m: 800, c: 400, shards: 2 } },
   /* v318: launch, then follow the fleet on the map, rush it and film it while it flies, then the win */
-  { lv: 3, t: "Attack a Hive garrison", say: "The amber worlds belong to the Hive. I've marked a weak one near us: send the fighters.", ok: s => s.wins >= 1 || !!tutFleet(), hive: 1, path: tutSend, rw: { m: 600, c: 300, shards: 1 } },
+  { lv: 3, t: "Attack a Hive garrison", say: "The amber worlds belong to Vael'Khor's Hive. I've marked a weak garrison near us: send the fighters and show her we bite back.", ok: s => s.wins >= 1 || !!tutFleet(), hive: 1, path: tutSend, rw: { m: 600, c: 300, shards: 1 } },
   { lv: 3, id: "tap", t: "Tap your fleet on the map", say: "Our fighters are under way. Find them on the Galaxy map and tap them: the camera follows your fleet and its control bar opens.", ok: s => !!s.tutTap, fly: 1, fm: 1, path: () => tutFlyPath() || [SHOWME], rw: { m: 400, c: 300, g: 100 } },
   { lv: 3, id: "rush", t: "Rush the attack", say: "Every minute in transit is a minute the Hive digs in. Tap ⚡ to light the afterburners: the rest of the trip is 50% faster. This first burn is on the Academy.", ok: s => !!s.tutRush, fly: 1, fm: 1,
     path: () => tutFlyPath() || [['#fleethud [data-act="fBoost"]:not([disabled])', "Tap ⚡ to light the afterburners"], ['#fleethud [data-act="fctl"]', "Open the fleet controls to speed it up"], ['.sheet [data-act="fBoostItem"], .sheet [data-act="hurry"]', "Speed up your fleet"]], rw: { m: 500, c: 400, g: 200, shards: 1 } },
@@ -13679,7 +13717,7 @@ const TUT = [
   { lv: 6, t: "Read the espionage report", say: "The probes are back. Open the report in Mail: it shows the defenders, their ships and the resources you could take home.", ok: s => !!s.tutSpyR, go: { v: "mail" }, path: () => [['[data-act="spyOpen"]', "Open the espionage report"], DOCKT("mail", "Open Mail")], rw: { m: 2000, c: 2000, g: 1000, shards: 1 } },
   { lv: 6, id: "scouted", t: "Attack the world you scouted", say: "Now we know what's there. Send a fleet that outguns its garrison: the report shows exactly what you're up against.", ok: s => ((s.stats || {}).hiveWins || 0) >= (s.tutSpyW != null ? s.tutSpyW : 1) + 1, /* v324: a win after the scouting run */ hive: 1, path: () => S.fleets.some(f => f.pid && f.phase === "out") ? tutStrike("Send your fleet")() : tutWaitShips() || tutArmed(5) || tutStrike("Send your fleet")(), fund: () => armedFund(5), rw: { m: 6000, c: 4000, g: 2000, shards: 3 } },
   { lv: 6, t: "Build a Colony Ship", say: "Astrophysics Lv.2 lets us hold a second world. A Colony Ship needs Shipyard Lv.4 and Impulse Drive Lv.3.", ok: s => own("ark") >= 1 || (s.captures || 0) >= 1 || myPlanets().length >= 2, go: { v: "build", s: "ships" }, path: tutUnit("ark", 1), fund: () => addC(bFund("shipyard", 4), uFund("ark", 1)), rw: { m: 10000, c: 12000, g: 6000, shards: 3 } },
-  { lv: 6, t: "Settle your first colony", say: "Send the Colony Ship along with your warships to a Hive world you can beat. Win the battle and the world becomes ours: our second planet.", ok: s => (s.captures || 0) >= 1 || myPlanets().length >= 2, hive: 1, path: tutInvade, fund: () => addC(own("ark") || S.fleets.some(f => f.pid && f.phase === "out") ? {} : uFund("ark", 1), armedFund(6)), rw: { m: 15000, c: 15000, g: 8000, shards: 5 } },
+  { lv: 6, t: "Settle your first colony", say: "Send the Colony Ship along with your warships to a Hive world you can beat. Win the battle and the world becomes ours: our second planet, and the first world we take back from Vael'Khor.", ok: s => (s.captures || 0) >= 1 || myPlanets().length >= 2, hive: 1, path: tutInvade, fund: () => addC(own("ark") || S.fleets.some(f => f.pid && f.phase === "out") ? {} : uFund("ark", 1), armedFund(6)), rw: { m: 15000, c: 15000, g: 8000, shards: 5 } },
   /* v299: the Academy ends with your flagship. Its last three steps pay all the materials (and most of the resources) the Dock and the flagship need */
   { lv: 6, t: "Raid pirates for flagship materials", say: "Our flagship is built from rare materials, and pirates hoard them. Raid another hideout: what they drop goes to the Flagship Dock. After that, the Academy clears you to build the Dock.", ok: s => ((s.stats || {}).pirates || 0) >= 2, /* v321: was "Reach Commander Level 10", about three days of grinding */ find: "x", pirLvl: "5", pirN: 2, path: pirPath, fund: () => armedFund(3), rw: { m: 40000, c: 30000, g: 12000, shards: 5, fs: { alloy1: 6, circuit1: 4, crystal1: 3 } } },
   { lv: 6, id: "dock", t: "Build the Flagship Dock", say: "The Flagship Dock is where our flagship is commissioned and where its gear is forged. Find it under Structures → Facility.", ok: s => (s.b.flagDock || 0) >= 1, go: { v: "build", s: "fac" }, path: bPath("flagDock", "fac"), fund: () => addC(bFund("shipyard", 2), bFund("flagDock", 1)), rw: { m: 20000, c: 15000, g: 8000, shards: 3, fs: { alloy1: 4, circuit1: 2, crystal1: 1 } } },
@@ -13762,13 +13800,13 @@ document.addEventListener("click", () => setTimeout(guideNow, 0), true);
 function guideVisible(el) {
   const r = el.getBoundingClientRect(); if (r.width < 2 || r.height < 2 || getComputedStyle(el).visibility === "hidden") return 0;
   if (el.id === "tutfm") { const top = document.elementFromPoint(clamp(r.left + r.width / 2, 0, innerWidth - 1), clamp(r.top + r.height / 2, 0, innerHeight - 1)); return top && G3 && top === G3.renderer.domElement ? 1 : 0; } // v325: only where the tap reaches the map // v318: the marker on a fleet in the 3D map lets taps through, so nothing is ever "on top" of it
-  if (r.bottom < 0 || r.top > innerHeight) return 2; // off-screen in a list: scroll to it
+  if (r.bottom < 0 || r.top > innerHeight || r.top + r.height / 2 > innerHeight - 2 || r.top + r.height / 2 < 2) return 2; // off-screen, or half under the edge: scroll to it (v328)
   const top = document.elementFromPoint(clamp(r.left + r.width / 2, 0, innerWidth - 1), clamp(r.top + r.height / 2, 0, innerHeight - 1));
   if (!top) return 0; if (top === el || el.contains(top)) return 1; if (top.closest("#coach")) return 3; // 3: under the Academy panel
   const cy = r.top + r.height / 2; if (top.closest("#dock") || cy > innerHeight - 160 || cy < 130) return 2; return 0; // tucked under the dock or top bar: scroll it into view
 }
 function guidePick() {
-  const st = !G.cubeDemo && !(G3 && (G3.cam.siege || G3.cam.cine)) && G.ready && !battle && !advLines && !$("#adv") && !$("#authw") && !(sheet && sheet.type === "faction") && !tutSnoozed() && !(S.pathSnz > now()) ? (m => m === "tut" ? TUT[S.tut.i] : m === "ship" ? shipStep() : null)(advPick()) : null;
+  const st = !G.cubeDemo && !(G3 && (G3.cam.siege || G3.cam.cine)) && G.ready && !battle && !advLines && !$("#adv") && !$("#celeb") && !$("#authw") && !(sheet && sheet.type === "faction") && !tutSnoozed() && !(S.pathSnz > now()) ? (m => m === "tut" ? TUT[S.tut.i] : m === "ship" ? shipStep() : null)(advPick()) : null;
   if (!(st && st.fm && !st.ok(S))) { const m = $("#tutfm"); if (m) m.remove(); } if (!st) return null;
   const path = st.ok(S) ? [['#coach [data-act="tutClaim"], #coach [data-act="shipClaim"], #coach .cpill', "Collect your reward"]] : st.path ? st.path() : [SHOWME];
   { const sq = path.find(q => q && /article\.bn\[data-kind="s"\]/.test(q[0])), all = sq && !document.querySelector(sq[0]) && !sheet && $('[data-act="scls"][data-v="all"]:not(.on)'), v = all && guideVisible(all); if (v) return { el: all, label: "Tap All to see every ship", v }; } // v325
@@ -13810,7 +13848,9 @@ function tutClaim() {
   S.tut.i++; S.tut.open = 0; dirty(); try { SFX.research(); } catch (e) {} // v81: straight on to the next task; the guide is already pointing at it
   const nx = TUT[S.tut.i]; if (sheet) closeSheet(); // the card that finished this step would only be in the way of the next one
   if (nx) toast(`Academy step done: +${fmt(rw.m || 0)} metal, +${fmt(rw.c || 0)} crystal${rw.g ? `, +${fmt(rw.g)} gas` : ""}${rw.shards ? `, ◆${rw.shards}` : ""}.`, "win");
-  else { S.say.push("That's the Academy done, Commander. Our flagship leads the fleet now: it earns experience in every fight, and the Flagship Dock forges its gear.", "Every 2 Astrophysics levels lets us hold another world: build more Colony Ships and send them with escorts to Hive worlds we can beat. I'll keep pointing you at the next directive on your path."); S.pathOpen = 1; flushSay(); }
+  else { S.retGift = { at: now() + 8 * 3600e3, rw: { m: 30000, c: 20000, g: 10000, shards: 10 } }; // v328
+    celebrate({ k: "acad", kick: "Flight Academy", t: "Academy Complete", art: "adv", s: "You've built an empire, won your first battles, settled a second world and commissioned a flagship. The galaxy is yours to take.", rw: "Fleet Command is sending a supply convoy: 30K metal, 20K crystal, 10K gas and ◆10. It lands in 8 hours.", chat: 1, go: "Onward, Commander" });
+    S.say.push("That's the Academy done, Commander. Our flagship leads the fleet now: it earns experience in every fight, and the Flagship Dock forges its gear.", "Every 2 Astrophysics levels lets us hold another world: build more Colony Ships and send them with escorts to Hive worlds we can beat. I'll keep pointing you at the next directive on your path.", "And Commander: Fleet Command's supply convoy lands in 8 hours. Come back then and claim it on the Quests tab."); S.pathOpen = 1; flushSay(); }
   coachRender(true);
 }
 /* v210: what the Advisor says about the next directive on the quest path */
@@ -15652,6 +15692,13 @@ const ACT = {
   bldInfo: d => { SFX.tapB(d.k); const bt = baseTarget(); openSheet({ type: "bld", k: d.k, pid: bt.key === "home" ? null : bt.key }); },
   sound: () => { if (!AU.started) audioStart(); AU.muted = !AU.muted; applyAudio(); saveAudioPrefs(); hud(); if (sheet) renderSheet(); },
   musicToggle: () => { if (!AU.started) audioStart(); AU.musicOn = !AU.musicOn; applyAudio(); saveAudioPrefs(); render(true); },
+  celebX: () => { const w = $("#celeb"); if (w) w.remove(); G.celebNow = null; setTimeout(() => { try { flushSay(); coachRender(true); } catch (e) {} }, 60); },
+  celebChat: () => { ACT.celebX(); setTimeout(() => ACT.chat({}), 120); },
+  celebShare: async d => { const c = G.celebNow || {}; if (d.id && findRep(d.id) && G.mode === "online") { ACT.celebX(); return setTimeout(() => ACT.repShareOpen({ id: d.id }), 120); }
+    const text = `${c.t || "Ultra Deep Field"}: ${c.s || ""} Come play Ultra Deep Field with me.`, url = location.protocol.startsWith("http") ? location.href.split("#")[0] : "https://gunhypechannel.github.io/Ultradeepfield/";
+    try { if (navigator.share) { await navigator.share({ title: "Ultra Deep Field", text, url }); return; } } catch (e) { return; }
+    try { await navigator.clipboard.writeText(text + " " + url); toast("Copied. Paste it to your friends."); } catch (e) { toast("Couldn't share from here.", "warn"); } },
+  retClaim: () => { const g = S.retGift; if (!g || g.at > now()) return; for (const r of ["m", "c", "g"]) S.res[r] += g.rw[r] || 0; S.shards = (S.shards || 0) + (g.rw.shards || 0); logReward("Fleet Command supply convoy", g.rw, { shards: g.rw.shards, kind: "quest" }); S.retGift = null; dirty(); try { SFX.research(); } catch (e) {} toast("Supply convoy unloaded.", "win"); render(true); },
   sfxToggle: () => { if (!AU.started) audioStart(); AU.sfxOn = !AU.sfxOn; applyAudio(); saveAudioPrefs(); render(true); },
   skin: d => { const p = d.id ? G.byId[d.id] : homePlanet(); if (!p || p.owner !== G.me) return; openSheet({ type: "skin", id: p.id }); },
   skinOpt: d => { const n = $("#pname"); if (n) sheet.nm = n.value; const max = { at: ATMOS.length, rg: 3, rc: RINGC.length }[d.o]; if (!max) return; sheet[d.o] = clamp(+d.i || 0, 0, max - 1); renderSheet(); },
@@ -15831,7 +15878,7 @@ const ACT = {
     if (!fsHasMats(f, FS_BUILD.mats)) return toast("Not enough materials. Raid pirates, gather from fields and collect salvage pods.", "warn"); if (!pay(FS_BUILD.res)) return toast("Not enough resources.", "warn");
     fsTakeMats(f, FS_BUILD.mats); f.built = 1; f.bAt = now(); fsBump(); try { SFX.research(); } catch (e) {}
     note(`Your ${(FS_FAC[facOf()] || ["Union"])[0]} flagship is commissioned. It leads every fleet you send from now on and earns experience in every fight.`, "win");
-    toast("Flagship commissioned! It leads your fleets now.", "win"); if (sheet) { if (sheet.type === "flagship") sheet.tab = "over"; renderSheet(); } },
+    toast("Flagship commissioned! It leads your fleets now.", "win"); celebrate({ k: "flag", kick: "Flagship commissioned", t: "Our Flagship Rises", art: "flag", s: "Our flagship leads every fleet from now on. It gains experience in every fight and wears the gear the Dock forges.", go: "Onward" }); if (sheet) { if (sheet.type === "flagship") sheet.tab = "over"; renderSheet(); } },
   fsDockGo: () => { openSheet({ type: "detail", kind: "b", k: "flagDock", qty: 1, tab: 0 }); },
   fsForgeOpen: () => { fsTick(); openSheet({ type: "flagship", tab: "forge" }); },
   fsPick: d => { sheet[d.k] = d.k === "ft" ? +d.v : d.v; renderSheet(); },
@@ -16467,12 +16514,12 @@ document.addEventListener("input", e => {
 const INTRO = ["Commander. We made it, barely. The convoy is gone, and this world is all we have left.",
   "Every planet here orbits the Void, a black hole at the heart of the galaxy. The Hive holds most of them.",
   "We're not alone either. Other commanders orbit the Void, and any colony can change hands.",
-  "Now we rebuild. I'll post directives on the Base tab. Complete them and Fleet Command will send supplies."];
+  "Now we rebuild, and we grow strong enough to end Vael'Khor. I'll post directives on the Base tab. Complete them and Fleet Command will send supplies."];
 /* v318 the opening battle: a new commander's convoy is ambushed by a Hive swarm on the way in, survives it with heavy losses and sets down
    on the homeworld. Built from a fixed seed on each device and kept in memory, never in the save; Menu › Briefing plays it again */
 const INTRO_PRE = ["Commander, on your feet! A Hive swarm just dropped out of the dark, right across the convoy's course.",
   "They don't take prisoners and they don't bargain. Every gun we have: weapons free!"];
-const INTRO_POST = ["The swarm is broken. We held, Commander.", "It cost us dearly, and our reactors were nearly dry. We set down on the nearest world we could reach."];
+const INTRO_POST = ["The swarm is broken. We held, Commander.", "That swarm answered to Vael'Khor, the Hive Matriarch. She devours whole worlds, and now she knows our name.", "It cost us dearly, and our reactors were nearly dry. We set down on the nearest world we could reach."];
 const INTRO_ID = "intro-ambush";
 function introBattle() {
   if (G.introRep) return G.introRep;
