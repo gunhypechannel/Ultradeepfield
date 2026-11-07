@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-07 (America/Phoenix). Current game version: **v329** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v137**.
+Last updated: 2026-11-07 (America/Phoenix). Current game version: **v330** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v138**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 

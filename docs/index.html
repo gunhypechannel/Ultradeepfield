@@ -2378,7 +2378,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 329;
+const GAME_V = 330;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13591,7 +13591,7 @@ function showCeleb(c) { const w = document.createElement("div"); w.id = "celeb";
   $("#app").appendChild(w); try { SFX.gong(); } catch (e) {} G.celebNow = c; }
 function flushSay() { if (S.celeb && S.celeb.length && !battle && !sheet && !advLines && !$("#celeb") && !$("#adv") && G.ready) { showCeleb(S.celeb.shift()); dirty(); return; } if ($("#celeb")) return; // v328 a celebration first, then the Advisor
   flushSay0(); }
-function flushSay0() { if (S.say.length && !battle && !(sheet && sheet.type === "faction")) { const l = S.say.splice(0); dirty(); say(l); } }
+function flushSay0() { if (S.say.length && !battle && !(sheet && sheet.type === "faction") && !$("#oldw")) { /* v330: not behind the old-server card */ const l = S.say.splice(0); dirty(); say(l); } }
 
 /* ---------- Flight Academy: the beginner tutorial ----------
    Admiral Kaskov coaches a new commander through their first five commander levels, one step at a time. Each step says
@@ -13793,6 +13793,7 @@ function fleetPathCard() {
   else if (st.id === "scouted" && S.tutSpyP && G.byId[S.tutSpyP] && pStatus(G.byId[S.tutSpyP], now()) === "hive") { if (sheet) closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } ACT.planet({ id: S.tutSpyP }); } // v324: the world you scouted
   else if (st.hive || st.fly) { const h = homePlanet(), T = now(), hq = h ? pos(h, T) : { x: 0, y: 0 };
     const p = G.list.filter(p => pStatus(p, T) === "hive").map(p => { const q = pos(p, T); return [p, (q.x - hq.x) ** 2 + (q.y - hq.y) ** 2 + p.lvl * p.lvl * 900, p.lvl]; }).sort((a, b) => a[2] - b[2] || a[1] - b[1])[0]; /* v235: the lowest-level Hive world first, then the nearest */
+    if (p && isFogged(p[0], T)) { const q = pos(p[0], T); reveal(q.x, q.y, 24); fogSave(); } // v330: never an uncharted target
     if (sheet) closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } if (p) ACT.planet({ id: p[0].id }); }
   tutSpot(st.spot);
 }
@@ -13815,9 +13816,11 @@ function guidePick() {
   if (!(st && st.fm && !st.ok(S))) { const m = $("#tutfm"); if (m) m.remove(); } if (!st) return null;
   const path = st.ok(S) ? [['#coach [data-act="tutClaim"], #coach [data-act="shipClaim"], #coach .cpill', "Collect your reward"]] : st.path ? st.path() : [SHOWME];
   { const sq = path.find(q => q && /article\.bn\[data-kind="s"\]/.test(q[0])), all = sq && !document.querySelector(sq[0]) && !sheet && $('[data-act="scls"][data-v="all"]:not(.on)'), v = all && guideVisible(all); if (v) return { el: all, label: "Tap All to see every ship", v }; } // v325
-  for (const [sel, label, when] of path) { if (when && !when()) continue; for (const el of document.querySelectorAll(sel)) { if (el.classList.contains("on") || (el.disabled && /^(boost|finish)$/.test(el.dataset.act || ""))) continue; /* a tab already open, or a speed-up you can't use */ const v = guideVisible(el); if (v) return el.disabled && /^(up|research|make|cup|csb)$/.test(el.dataset.act || "") ? { el, label: (el.dataset.cost ? !canPayRes(JSON.parse(el.dataset.cost)) : $(".sheet .dres .no")) ? "Not enough resources yet. Your mines keep working: check back in a few minutes" : "Check the requirements below first", v } : el.disabled && /^(raid|launch|pyrGo|gather)$/.test(el.dataset.act || "") && /en route|on its way/i.test(el.textContent) ? { el, label: "Your fleet is on its way there. Wait for the report", v }
+  let waitLab = ""; for (const [sel, label, when] of path) { if (when && !when()) continue; for (const el of document.querySelectorAll(sel)) { if (el.classList.contains("on") && el.dataset.act === "nav" && /on its way|flying home|gathering|Wait/.test(label)) waitLab = waitLab || label; // v330
+      if (el.classList.contains("on") || (el.disabled && /^(boost|finish)$/.test(el.dataset.act || ""))) continue; /* a tab already open, or a speed-up you can't use */ const v = guideVisible(el); if (v) return el.disabled && /^(up|research|make|cup|csb)$/.test(el.dataset.act || "") ? { el, label: (el.dataset.cost ? !canPayRes(JSON.parse(el.dataset.cost)) : $(".sheet .dres .no")) ? "Not enough resources yet. Your mines keep working: check back in a few minutes" : "Check the requirements below first", v } : el.disabled && /^(raid|launch|pyrGo|gather)$/.test(el.dataset.act || "") && /en route|on its way/i.test(el.textContent) ? { el, label: "Your fleet is on its way there. Wait for the report", v }
       : el.disabled && /^(raid|launch|pyrGo|gather)$/.test(el.dataset.act || "") && !sumShips(originAvail()) && S.fleets.some(f => f.phase === "back") ? { el, label: "Your ships are flying home. Wait a moment: they'll be picked as they land", v }
       : el.disabled && /^(raid|launch|pyrGo|gather)$/.test(el.dataset.act || "") && !sumShips(pick || {}) && (G.pkAll = $('.sheet [data-act="pkevery"]') || $('.sheet [data-act="pkmax"]')) && guideVisible(G.pkAll) ? { el: G.pkAll, label: G.pkAll.dataset.act === "pkevery" ? "Tap Select all ships first" : "Tap All to pick your ships first", v: guideVisible(G.pkAll) } : { el, label, v }; } } /* v324 */ /* v235: never say "Tap" on a greyed-out button */
+  if (waitLab && !sheet) { const fc = [...document.querySelectorAll("#view .fcard")].find(e => guideVisible(e)); if (fc) return { el: fc, label: waitLab, v: guideVisible(fc) }; } // v330: the fleet you're waiting for
   const cx = sheet && document.querySelector('.sheet [data-act="close"]'); const cv = cx && guideVisible(cx); if (cv) return { el: cx, label: st.ok(S) ? "Close this to collect your reward" : "Close this to continue", v: cv }; /* v322: v 2 scrolls a long card back up to its ✕ */ // something is in the way: close it first
   return null;
 }
