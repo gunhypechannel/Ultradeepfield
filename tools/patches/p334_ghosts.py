@@ -32,3 +32,17 @@ rep('''      W.blds[k] = m; W.keys[k] = key; W.renderer.shadowMap.needsUpdate = 
   }
   { const on = tutOn(), want = on ? tutBld() : null; for (const k of bt.keys) { const m = W.blds[k]; if (!m) continue; const show = !on || bt.lv(k) > 0 || !!bt.busy(k) || k === want; if (m.visible !== show) { m.visible = show; W.renderer.shadowMap.needsUpdate = true; } } } // v334''')
 open(p, 'w', encoding='utf-8', newline='').write(t); print('ok')
+import sys
+p = sys.argv[1]; t = open(p, encoding='utf-8', newline='').read()
+def rep(a, b, n=1):
+    global t; c = t.count(a); assert c == n, (c, a[:110]); t = t.replace(a, b)
+# found in the screen-by-screen review: the Academy's scouting run sent 1 probe (the stepper starts at 1), so the report hid the
+# defenders behind "Send 2 probes" and the lesson ("it counts the defenders") fell flat. During the Academy the stepper starts at
+# every probe you have.
+rep('''near = sheet.pn = clamp(sheet.pn || S.spyN || 1, 1, Math.max(1, have));''', '''near = sheet.pn = clamp(sheet.pn || (tutOn() ? have : 0) || S.spyN || 1, 1, Math.max(1, have)); // v334: the Academy sends every probe''')
+# a toast that lands on top of the thing the guide points at fades out of the way (it covered the Research tab at step 11)
+rep('''  const r = el.getBoundingClientRect(), pad = 6, ring = g.firstChild, hand = g.children[1], tip = g.children[2], low = r.top > innerHeight * .62;''',
+    '''  const r = el.getBoundingClientRect(), pad = 6, ring = g.firstChild, hand = g.children[1], tip = g.children[2], low = r.top > innerHeight * .62;
+  for (const ts of document.querySelectorAll("#toasts .toast")) { const b = ts.getBoundingClientRect(), over = b.right > r.left - 6 && b.left < r.right + 6 && b.bottom > r.top - 6 && b.top < r.bottom + 6; ts.classList.toggle("gdfade", over); } // v334''')
+rep('''#tutguide.nudge .tg-tip{animation:tgnudge''', '''#toasts .toast.gdfade{opacity:.12!important;pointer-events:none!important;transition:opacity .15s}#tutguide.nudge .tg-tip{animation:tgnudge''')
+open(p, 'w', encoding='utf-8', newline='').write(t); print('ok')
