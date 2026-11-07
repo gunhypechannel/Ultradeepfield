@@ -150,6 +150,7 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 @keyframes tghand{from{transform:translateY(8px)}to{transform:translateY(-2px)}}@keyframes tghandd{from{transform:translateY(-8px)}to{transform:translateY(2px)}}
 #tutguide .tg-tip{position:fixed;max-width:240px;padding:8px 12px;border-radius:12px;background:linear-gradient(180deg,#ffe08a,#f0a945);color:#1a1004;font:700 14px/1.25 var(--f-display);letter-spacing:.02em;box-shadow:0 6px 18px rgba(0,0,0,.5);transition:left .18s,top .18s}
 #tutguide.info .tg-hand{display:none}#tutguide.info .tg-ring{animation:none;border:2px dashed rgba(127,232,255,.9);box-shadow:0 0 14px rgba(85,214,232,.45)}#tutguide.info .tg-tip{background:linear-gradient(180deg,#123447,#0b2231);color:#d8f6ff;border:1px solid rgba(127,232,255,.5)}
+.qready{margin:0 0 12px;padding:10px 12px;border:1px solid rgba(240,169,69,.55);border-radius:12px;background:rgba(240,169,69,.08)}.qready b{display:block;font:700 11px/1 var(--f-display);letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}.qready div{display:flex;flex-wrap:wrap;gap:8px}
 #toasts .toast.gdfade{opacity:.12!important;pointer-events:none!important;transition:opacity .15s}#tutguide.nudge .tg-tip{animation:tgnudge 1.1s ease-in-out infinite}#tutguide.nudge .tg-hand{font-size:48px}
 @keyframes tgnudge{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 @media (prefers-reduced-motion:reduce){#tutguide .tg-ring,#tutguide .tg-hand,#tutguide.nudge .tg-tip{animation:none;transition:none}}
@@ -10588,6 +10589,12 @@ function vQuests() {
   const qrw = costHTML(q.rw || {}) + (q.rw && q.rw.boost ? ` <span class="pill">⚡${q.rw.boost}</span>` : "");
   return `<div class="gstack questv">
     <div class="advhero"><img src="${ADV_ART}" alt="${ADV}"><div class="advsay"><small>${ADV.toUpperCase()}</small><p>${esc(line)}</p>${act}</div></div>
+    ${(() => { const r = [], mN = masteryReady() || 0, soloN = SOLO_TIERS.filter(([need], i) => s.pts >= need && !s.claimed.includes(i)).length, dN = S.daily && S.daily.tasks ? S.daily.tasks.filter(t => !t.claimed && dailyDone(t)).length + (!S.daily.bonus && S.daily.tasks.every(t => t.claimed) ? 1 : 0) : 0; // v334
+      if (!ls.claimed) r.push(`<button class="btn amber" data-act="loginClaim">🎁 Daily login reward · claim</button>`);
+      if (dN) r.push(`<button class="btn amber" data-act="qJump" data-ev="qdaily">✓ ${dN} daily mission${dN > 1 ? "s" : ""} ready</button>`);
+      if (soloN) r.push(`<button class="btn amber" data-act="qJump" data-ev="daily">★ ${soloN} event reward${soloN > 1 ? "s" : ""} ready</button>`);
+      if (mN) r.push(`<button class="btn amber" data-act="mastery">◆ ${mN} Mastery reward${mN > 1 ? "s" : ""} ready</button>`);
+      return r.length ? `<section class="qready"><b>Ready to claim</b><div>${r.join("")}</div></section>` : ""; })()}
     ${S.retGift ? `<article class="card quest${S.retGift.at <= T ? " done hi" : ""}"><header>📦 Fleet Command supply convoy</header><p>${S.retGift.at <= T ? "The convoy has landed. Your supplies are waiting." : "On its way from Fleet Command for finishing the Academy."}</p>
       <div class="rw"><span class="cost">${costHTML(S.retGift.rw)} <span class="shard">◆${S.retGift.rw.shards}</span></span>${S.retGift.at <= T ? `<button class="btn amber" data-act="retClaim">Claim</button>` : `<span class="note">Lands in <span data-end="${S.retGift.at}">${ftime(S.retGift.at - T)}</span></span>`}</div></article>` : ""}
     ${st ? `<h2 class="sec">Flight Academy · step ${S.tut.i + 1} of ${TUT.length}</h2><article class="card quest${td ? " done hi" : ""}"><header>${esc(st.t)}</header><p>${esc(st.say)}</p>
@@ -10595,7 +10602,7 @@ function vQuests() {
     <h2 class="sec">Quests · Chapter ${S.chapter} · ${CHAPTERS[S.chapter]}</h2>
     <article class="card quest${ok ? " done hi" : ""}"><header>Directive ${S.quest + 1}</header><p>${esc(q.t)}</p><div class="rw"><span class="cost">${qrw}</span>${ok ? `<button class="btn amber" data-act="claim">Claim reward</button>` : `<button class="btn ghost" data-act="go">Go there</button>`}</div></article>
     <h2 class="sec">Fleet path · hull ${Math.min(SHIP_PATH.length, (S.shipQ || 0) + 1)} of ${SHIP_PATH.length}</h2>${fleetPathCard()}
-    <h2 class="sec">Daily missions</h2>
+    <h2 class="sec" data-ev="qdaily">Daily missions</h2>
     <section class="evc" data-ev="login"><div class="evh"><b>DAILY LOGIN · DAY ${ls.claimed ? ls.streak : ls.next}</b><span class="note">streak ${ls.streak}</span></div>
       <div class="cal">${LOGIN_RW.map((rw0, i) => { const rw = loginRw(i), cyc = (ls.claimed ? ls.streak - 1 : ls.next - 1) % 7, done = i < cyc || (ls.claimed && i === cyc), now0 = !ls.claimed && i === cyc; return `<div class="cd${done ? " done" : ""}${now0 ? " now" : ""}"><small>Day ${i + 1}</small><span>${rw.item ? "🎁" : rw.shards ? "◆" : rw.boosts ? "⚡" : "▣"}</span><em>${rw.shards ? "◆" + rw.shards : rw.boosts ? "⚡" + rw.boosts : rw.item ? SHOP[rw.item].n : fmt(total({ m: rw.m, c: rw.c, g: rw.g }))}</em></div>`; }).join("")}</div>
       ${ls.claimed ? `<p class="note">Claimed today. Come back tomorrow to keep the streak.</p>` : `<button class="btn amber wide" data-act="loginClaim">Claim day ${ls.next} · +${Math.min(7, ls.next) * 50} VIP</button>`}</section>
@@ -16167,6 +16174,7 @@ const ACT = {
   repShareTo: async d => { const r = findRep(d.id); if (!r) return; if (await repShare(r, d.ch, d.u || null)) sheetBack(); },
   dmOpen: d => { if (!d.u || d.u === G.me) return; chatInit(); openSheet({ type: "chat", ch: "d", to: d.u }); },
   mastery: () => openSheet({ type: "mastery" }),
+  qJump: d => { const el = document.querySelector(`#view [data-ev="${d.ev}"]`); if (el) el.scrollIntoView({ block: "start", behavior: "smooth" }); }, // v334
   mastClaim: d => act(() => { S.mast = S.mast || {};
     if (d.id === "grand") { if (S.mast.grand || masteryList().some(m => !S.mast[m.id])) return; S.mast.grand = 1; S.shards = (S.shards || 0) + 25; toast("Grand Mastery! Every technology and ship type unlocked: ◆25.", "win"); SFX.research(); return; }
     const m = masteryList().find(x => x.id === d.id); if (!m || !m.done || S.mast[m.id]) return; const r = masteryReward(m);
