@@ -2379,7 +2379,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 332;
+const GAME_V = 333;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5499,7 +5499,8 @@ function crumb(msg) { CRUMBS.open = true; CRUMBS.ev.push([Date.now(), String(msg
 function crumbBeat() { const W = typeof G3 !== "undefined" ? G3 : null, mem = performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1e6) + " MB" : "";
   CRUMBS.beat = { v: typeof GAME_V !== "undefined" ? GAME_V : 0, t: Date.now(), view, battle: !!battle, demo: !!G.cubeDemo, dist: W && W.cam ? Math.round(W.cam.dist) : null, fps: frame.ema ? Math.round(1000 / frame.ema) : null, pr: W && W.renderer ? +W.renderer.getPixelRatio().toFixed(2) : null, mem, gl: G.glLost || 0, calls: W && W.renderer ? W.renderer.info.render.calls : null, tex: W && W.renderer ? W.renderer.info.memory.textures : null, geo: W && W.renderer ? W.renderer.info.memory.geometries : null, art: (() => { try { return STU && STU.cache ? Object.keys(STU.cache).length : null; } catch (e) { return null; } })(), sheet: (() => { try { return sheet ? sheet.type : null; } catch (e) { return null; } })(), dpr: +(devicePixelRatio || 1).toFixed(2), w: innerWidth, h: innerHeight, bt: (() => { try { const b = battle; if (!b) return null; const S0 = studio(); return { n: (b.Q || []).length, sp: b.paused ? 0 : b.speed, t: +(b.simT || 0).toFixed(1), end: b.end, qs: b.qs, tier: b.tier, lo: b.lowFx ? 1 : 0, fx: (b.fire || []).length + (b.fx || []).length + (b.parts || []).length + (b.debris || []).length + (b.pend || []).length, err: b.errs || 0, art: S0 && S0.orderSide ? S0.orderSide.length : null, live: ART_LIVE.size, q: ART_Q.length, cv: (() => { const c = $("#bcv"); return c ? c.width + "x" + c.height : null; })() }; } catch (e) { return null; } })() }; CRUMBS.open = true; crumbSave(); } /* v260: the battle's own state (squadrons, speed, quality, effects, hull pictures) goes with every heartbeat */
 /* v260 errors after start-up are recorded too (the first few distinct ones a session), so a crash report says what failed, not only what the player tapped */
-const ERR_SEEN = new Set(); function errCrumb(m) { try { m = String(m || "error").slice(0, 140); if (ERR_SEEN.has(m) || ERR_SEEN.size >= 8) return; ERR_SEEN.add(m); crumb("error: " + m); } catch (e) {} }
+const ERR_SEEN = new Set(); function errCrumb(m) { try { m = String(m || "error").slice(0, 140); if (ERR_SEEN.has(m) || ERR_SEEN.size >= 8) return; ERR_SEEN.add(m); crumb("error: " + m);
+  if (typeof S !== "undefined" && S) { S.errs = (S.errs || []).concat([{ t: Date.now(), v: GAME_V, m, i: S.tut ? S.tut.i : -1 }]).slice(-12); try { dirty(); } catch (e) {} } } catch (e) {} } // v333: errors reach the cloud save
 addEventListener("error", e => { if (window.__booted) errCrumb((e.message || "script error") + (e.lineno ? " @" + e.lineno : "")); });
 addEventListener("unhandledrejection", e => { if (window.__booted) { const r = e.reason; errCrumb("promise: " + (r && (r.message || r.code) || r)); } });
 setInterval(() => { try { if (!document.hidden) crumbBeat(); } catch (e) {} }, 4000);
@@ -13658,6 +13659,8 @@ const tutFleet = () => S.fleets.find(f => f.pid && f.phase === "out" && !f.assau
 const slotWait = () => fleetsUsed() >= maxFleets() ? [DOCKT("fleets", "Every fleet slot is busy. Wait for a fleet to come home")] : null; // v325
 const tutSend = () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way. Watch it here")] : tutWaitShips() || slotWait() || (!own("fighter") ? tutUnit("fighter", 3)() : null) /* v319: none left: build more first */ || [['.sheet [data-act="launch"]', "Send your fighters"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
 const tutAt = id => tutOn() && (TUT[S.tut.i] || {}).id === id;
+const tutKey = i => { const s = TUT[i]; return s ? (s.id || s.t) : "done"; }; // v333: steps are recorded by a name that survives renumbering
+function tutTrack() { if (!S || !S.tut) return; const k = tutKey(S.tut.i); S.tutT = S.tutT || {}; if (!S.tutT[k]) { S.tutT[k] = now(); dirty(); } }
 /* v319: how many of ship k the Academy step or fleet-path step still wants, so the Shipyard's amount starts there (it started at 1, and
    "Tap Build to make 3" was a stumbling block for young players) */
 const tutQty = (k, n) => { const st = tutOn() ? TUT[S.tut.i] : null, m = st && /^Build (\d+) /.exec(st.t), sp = shipStep();
@@ -13798,7 +13801,7 @@ function fleetPathCard() {
       <div class="rw"><span class="cost">${costHTML(sp.rw)} <span class="shard">◆${sp.rw.shards}</span></span>${sp.ok() ? `<button class="btn amber" data-act="shipClaim">Claim reward</button>` : `<button class="btn ghost" data-act="shipShow">Show me</button>`}</div></article>` : `<p class="note">Every hull on the fleet path is built. Your fleet is complete.</p>`}`;
 }function tutMark(id) { S.tutSee = (S.tutSee || []).filter(x => x !== id).concat([id]).slice(-12); dirty(); } // v331
 function tutShow() {
-  const st = TUT[S.tut.i]; if (!st) return;
+  const st = TUT[S.tut.i]; if (!st) return; { const k = tutKey(S.tut.i); S.tutH = S.tutH || {}; S.tutH[k] = (S.tutH[k] || 0) + 1; dirty(); } // v333
   if (st.open) { if (sheet) closeSheet(); if (view !== "base") { view = "base"; render(); } st.open(); } // v296: steps that open a card (your profile, the homeworld's name)
   else if (st.go) { if (sheet) closeSheet(); ACT.nav(st.go); if (st.rcat) { sub.rcat = st.rcat; render(); } }
   else if (st.find) { if (st.pirLvl) G.pirLvl = st.pirLvl; ACT.find({ r: st.find }); }
@@ -13929,6 +13932,7 @@ function coachRender(force) {
     : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "tutClaim" : "tutOpen"}" aria-label="${done ? "Collect the Academy reward" : "Open the Flight Academy"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : `${S.tut.i + 1}/${TUT.length}`}</span><b class="cpt"><small>${done ? "STEP DONE" : "NEXT TASK"}</small>${done ? "Collect reward ▸" : esc(st.t)}</b></button><button class="cpx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button>`;
   if (!w) { w = document.createElement("div"); w.id = "coach"; $("#app").appendChild(w); force = true; } w.style.display = sheet || view === "quests" ? "none" : ""; /* v123: the Quests tab shows the same step in full */
   if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
+  try { tutTrack(); } catch (e) {}
   if (open && !done && VOICE.lastStep !== S.tut.i && !advLines && !$("#celeb") && !$("#oldw") && !$("#adv") && !battle && S.intro && !(sheet && sheet.type === "faction") && !(S.say && S.say.length)) { VOICE.lastStep = S.tut.i; speak(st.say); } // v331: each new step, read once as it opens
 }
 setInterval(() => { try { coachRender(); } catch (e) {} }, 800);

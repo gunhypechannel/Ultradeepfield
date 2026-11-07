@@ -138,3 +138,13 @@ do $$ begin if exists (select 1 from pg_proc where proname = 'rls_auto_enable' a
   revoke execute on function public.rls_auto_enable() from public, anon, authenticated; end if; end $$;
 revoke execute on function public.is_owner() from public, anon;
 grant execute on function public.is_owner() to authenticated;
+
+-- v333: Academy funnel for the owner (read with the service role / SQL editor; no client access)
+create or replace view public.academy_funnel as
+with s as (select split_part(path,'/',3) uid, (data->>'json')::jsonb j from docs where path like 'data/users/%/save' and data ? 'json')
+select s.uid, coalesce(s.j->>'cname', p.data->>'name') commander, (s.j->'tut'->>'i')::int + 1 as step, s.j->>'faction' faction,
+  to_timestamp(((pl.data->>'joined')::bigint)/1000) joined, to_timestamp(((pl.data->>'last')::bigint)/1000) last_seen,
+  s.j->'tutT' step_opened, s.j->'tutH' show_me_taps, s.j->'errs' errors, (s.j->>'comeback') comeback
+from s left join docs p on p.path='profiles/'||s.uid left join docs pl on pl.path='players/'||s.uid;
+alter view public.academy_funnel set (security_invoker = on);
+revoke all on public.academy_funnel from anon, authenticated;
