@@ -6,7 +6,7 @@ const ok = (name, cond, info) => { res.push((cond ? 'PASS ' : 'FAIL ') + name + 
 (async () => {
   const b = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader'] });
   async function player(tag) {
-    const ctx = await b.newContext({ ...devices['Pixel 7'] }), pg = await ctx.newPage();
+    const ctx = await b.newContext({ viewport: { width: 412, height: 900 }, hasTouch: true, isMobile: true, deviceScaleFactor: 1, userAgent: devices['Pixel 7'].userAgent }), pg = await ctx.newPage();
     pg.on('pageerror', e => errs.push(tag + ': ' + e.message + ' @ ' + ((e.stack || '').split('\n')[1] || '').trim()));
     await pg.route('**/three.min.js', r => r.fulfill({ path: '../gt/threelib/three.min.js', contentType: 'application/javascript' })); await pg.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
     pg.E = c => pg.evaluate(c => window.__dbg.ev(c), c); pg.tag = tag; pg.ctx = ctx; return pg; }
@@ -17,11 +17,12 @@ const ok = (name, cond, info) => { res.push((cond ? 'PASS ' : 'FAIL ') + name + 
     await pg.fill('#udfAuth input[name=e]', email); await pg.fill('#udfAuth input[name=p]', 'secret123'); await pg.evaluate(() => document.querySelector('#udfAuth form').requestSubmit());
     await pg.waitForFunction(() => window.__dbg && window.__dbg.G && window.__dbg.G.ready, null, { timeout: 240000, polling: 1000 });
     for (let k = 0; k < 40; k++) { // a new player: the old-server card, the faction, the opening briefing and battle
-      const st = await pg.evaluate(() => ({ old: !!document.querySelector('#oldw'), fac: !!document.querySelector('.sheet [data-act="facPick"]'), adv: !!document.querySelector('#adv'), battle: !!window.__dbg.battle }));
-      if (st.old) await pg.evaluate(() => document.querySelector('#oldw [data-act="oldNo"]').click());
-      else if (st.fac) await pg.evaluate(() => document.querySelector('.sheet [data-act="facPick"]').click());
-      else if (st.battle) await pg.evaluate(() => window.__dbg.closeBattle());
-      else if (st.adv) await pg.evaluate(() => { const a = document.querySelector('#adv'); a.click(); });
+      const st = await pg.evaluate(() => ({ celeb: !!document.querySelector('#celeb'), old: !!document.querySelector('#oldw'), fac: !!document.querySelector('.sheet [data-act="facPick"]'), adv: !!document.querySelector('#adv'), battle: !!window.__dbg.battle }));
+      if (st.celeb) await pg.evaluate(() => document.querySelector('#celeb [data-act="celebX"]')?.click());
+      else if (st.old) await pg.evaluate(() => document.querySelector('#oldw [data-act="oldNo"]')?.click());
+      else if (st.fac) await pg.evaluate(() => document.querySelector('.sheet [data-act="facPick"]')?.click());
+      else if (st.battle) await pg.evaluate(() => { try { window.__dbg.closeBattle(); } catch (e) {} });
+      else if (st.adv) await pg.evaluate(() => { const a = document.querySelector('#adv .adv') || document.querySelector('#adv'); a?.click(); });
       else if (k > 6) break; await pg.waitForTimeout(700); }
   }
   const wait = async (pg, code, ms = 20000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { try { if (await pg.E(code)) return true; } catch (e) {} await pg.waitForTimeout(600); } return false; };
@@ -43,7 +44,7 @@ const ok = (name, cond, info) => { res.push((cond ? 'PASS ' : 'FAIL ') + name + 
   await A.E(`chatPost("d", "${ub}", { u: G.me, x: "secret dm", t: now() })`);
   ok('DM reaches B', await wait(B, `JSON.stringify(CHAT.dms || {}).includes("secret dm")`, 25000), await B.E('JSON.stringify(CHAT.dms || null).slice(0, 300)'));
   // 4 alliance: A founds, B joins, chat both ways
-  await A.E(`S.res.m = S.res.c = S.res.g = 9e6; for (const k in S.b) S.b[k] = Math.max(S.b[k] || 0, 12); for (const k in S.r) S.r[k] = Math.max(S.r[k] || 0, 6); dirty(); 1`);
+  await A.E(`for (const k in B) S.b[k] = Math.max(S.b[k] || 0, 12); for (const k in S.r) S.r[k] = Math.max(S.r[k] || 0, 6); advance(now()); S.res.m = S.res.c = S.res.g = 9e5; dirty(); 1`);
   await A.E(`document.body.insertAdjacentHTML("beforeend", '<input id="alname" value="Test Legion"><input id="altag" value="TL">'); ACT.allyCreate(); 1`);
   ok('A founded an alliance', await wait(A, `!!S.ally && !!G.alliances[S.ally]`), await A.E('JSON.stringify({ ally: S.ally, lvl: cmdLevel(score()), toasts: [...document.querySelectorAll(".toast")].map(t => t.textContent).slice(-3) })'));
   const al = await A.E('S.ally');

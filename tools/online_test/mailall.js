@@ -17,11 +17,12 @@ const ok = (name, cond, info) => { res.push((cond ? 'PASS ' : 'FAIL ') + name + 
     await pg.fill('#udfAuth input[name=e]', email); await pg.fill('#udfAuth input[name=p]', 'secret123'); await pg.evaluate(() => document.querySelector('#udfAuth form').requestSubmit());
     await pg.waitForFunction(() => window.__dbg && window.__dbg.G && window.__dbg.G.ready, null, { timeout: 240000, polling: 1000 });
     for (let k = 0; k < 40; k++) { // a new player: the old-server card, the faction, the opening briefing and battle
-      const st = await pg.evaluate(() => ({ old: !!document.querySelector('#oldw'), fac: !!document.querySelector('.sheet [data-act="facPick"]'), adv: !!document.querySelector('#adv'), battle: !!window.__dbg.battle }));
-      if (st.old) await pg.evaluate(() => document.querySelector('#oldw [data-act="oldNo"]').click());
-      else if (st.fac) await pg.evaluate(() => document.querySelector('.sheet [data-act="facPick"]').click());
-      else if (st.battle) await pg.evaluate(() => window.__dbg.closeBattle());
-      else if (st.adv) await pg.evaluate(() => { const a = document.querySelector('#adv'); a.click(); });
+      const st = await pg.evaluate(() => ({ celeb: !!document.querySelector('#celeb'), old: !!document.querySelector('#oldw'), fac: !!document.querySelector('.sheet [data-act="facPick"]'), adv: !!document.querySelector('#adv'), battle: !!window.__dbg.battle }));
+      if (st.celeb) await pg.evaluate(() => document.querySelector('#celeb [data-act="celebX"]')?.click());
+      else if (st.old) await pg.evaluate(() => document.querySelector('#oldw [data-act="oldNo"]')?.click());
+      else if (st.fac) await pg.evaluate(() => document.querySelector('.sheet [data-act="facPick"]')?.click());
+      else if (st.battle) await pg.evaluate(() => { try { window.__dbg.closeBattle(); } catch (e) {} });
+      else if (st.adv) await pg.evaluate(() => { const a = document.querySelector('#adv .adv') || document.querySelector('#adv'); a?.click(); });
       else if (k > 6) break; await pg.waitForTimeout(700); }
   }
   const wait = async (pg, code, ms = 20000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { try { if (await pg.E(code)) return true; } catch (e) {} await pg.waitForTimeout(600); } return false; };
@@ -33,9 +34,9 @@ const ok = (name, cond, info) => { res.push((cond ? 'PASS ' : 'FAIL ') + name + 
   await A.E(`ACT.befriend({ u: "${ub}" }); ACT.befriend({ u: "${uc}" }); 1`); await A.waitForTimeout(800);
   ok('A has 2 friends', await A.E(`(S.friends || []).length === 2`), await A.E('JSON.stringify(S.friends)'));
   // alliance: A founds, B joins (C stays out)
-  await A.E(`S.res.m = S.res.c = S.res.g = 9e6; for (const k in S.b) S.b[k] = Math.max(S.b[k] || 0, 12); for (const k in S.r) S.r[k] = Math.max(S.r[k] || 0, 6); dirty(); 1`);
-  await A.E(`document.body.insertAdjacentHTML("beforeend", '<input id="alname" value="Mail Legion"><input id="altag" value="ML">'); ACT.allyCreate(); 1`);
-  ok('A founded an alliance', await wait(A, `!!S.ally && !!G.alliances[S.ally]`), await A.E('JSON.stringify({ ally: S.ally })'));
+  await A.E(`for (const k in B) S.b[k] = Math.max(S.b[k] || 0, 12); for (const k in S.r) S.r[k] = Math.max(S.r[k] || 0, 6); advance(now()); S.res.m = S.res.c = S.res.g = 9e5; dirty(); 1`);
+  await A.E(`document.body.insertAdjacentHTML("beforeend", '<input id="alname" value="Mail Legion"><input id="altag" value="ML">'); S.spent = Math.max(S.spent || 0, 3e6); ACT.allyCreate(); 1`); // a commander past level 3
+  ok('A founded an alliance', await wait(A, `!!S.ally && !!G.alliances[S.ally]`), await A.E('JSON.stringify({ ally: S.ally, lvl: cmdLevel(score()), res: S.res, toasts: [...document.querySelectorAll(".toast")].map(t => t.textContent).slice(-3) })'));
   const al = await A.E('S.ally'); await wait(B, `!!G.alliances["${al}"]`, 30000); await B.E(`ACT.allyJoin({ id: "${al}" }); 1`);
   ok('B joined', await wait(A, `!!(G.alliances["${al}"].members || {})["${ub}"]`, 30000));
   // the UI: Mail tab → 📣 Mail all → Mail all friends → type → Send

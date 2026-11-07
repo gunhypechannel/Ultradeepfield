@@ -1,11 +1,12 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-07 (America/Phoenix). Current game version: **v330** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v138**.
+Last updated: 2026-11-07 (America/Phoenix). Current game version: **v331** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v139**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
 ## Pending work (as of 2026-11-07): start here in a new session
 
+00. **v331 (2026-11-07):** Advisor voice (58 recorded clips in `docs/voice/`, Emma voice of the open Kokoro model, made in `docs/voicelab.html` on the user's PC browser — the container can't reach the model; listen at `docs/voicecheck.html`; game plays clips only, never a device voice; 🔊 on her card + Settings). Mail all friends / Mail all alliance (chat Direct tab + Mail › 📣 Mail all; 60 recipients, once per 2 min; `tools/online_test/mailall.js` 14/14). One-time welcome-back supply drop for commanders returning ≥1 day mid-Academy (`comeback()`). Academy targets stay charted while they orbit (`S.tutSee`, `tutMark`). To re-voice a line: edit `tools/voice_lines.json`, regenerate in voicelab, bump its number in `docs/voice/index.json`.
 0. **TEST ONLINE, NOT OFFLINE.** The game is online (Supabase). v329 exists because every earlier Academy test ran the offline mode and missed that a real new account got stuck after step 1. `tools/online_test/` runs the REAL `udf-supabase.js` + sign-in screen against a stand-in database:
    - `fakesb.js` (in-page, one browser) and `fakesrv.js` + `fakesb2.js` (a shared server, several browsers = several players).
    - Seed it with a copy of the live galaxy: `select json_agg(json_build_object('path',path,'data',data)) from docs where top in ('players','planets','assaults','event','alliances','profiles','occ')` saved as `seed.json` beside `mk.py` (never commit seed.json: it is player data).

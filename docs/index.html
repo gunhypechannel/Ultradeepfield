@@ -13924,7 +13924,7 @@ function coachRender(force) {
     : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "tutClaim" : "tutOpen"}" aria-label="${done ? "Collect the Academy reward" : "Open the Flight Academy"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : `${S.tut.i + 1}/${TUT.length}`}</span><b class="cpt"><small>${done ? "STEP DONE" : "NEXT TASK"}</small>${done ? "Collect reward ▸" : esc(st.t)}</b></button><button class="cpx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button>`;
   if (!w) { w = document.createElement("div"); w.id = "coach"; $("#app").appendChild(w); force = true; } w.style.display = sheet || view === "quests" ? "none" : ""; /* v123: the Quests tab shows the same step in full */
   if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
-  if (open && !done && VOICE.lastStep !== S.tut.i && !advLines && !$("#celeb") && !battle) { VOICE.lastStep = S.tut.i; speak(st.say); } // v331: each new step, read once as it opens
+  if (open && !done && VOICE.lastStep !== S.tut.i && !advLines && !$("#celeb") && !$("#oldw") && !$("#adv") && !battle && S.intro && !(sheet && sheet.type === "faction") && !(S.say && S.say.length)) { VOICE.lastStep = S.tut.i; speak(st.say); } // v331: each new step, read once as it opens
 }
 setInterval(() => { try { coachRender(); } catch (e) {} }, 800);
 
