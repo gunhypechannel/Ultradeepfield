@@ -93,6 +93,20 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 @keyframes holoScan{to{background-position:0 220%,0 0,0 0}}@keyframes holoPad{50%{opacity:.7;transform:scaleX(.92)}}
 @keyframes holoTalk{from{filter:drop-shadow(0 0 18px rgba(85,214,232,.7)) grayscale(1) sepia(.6) hue-rotate(150deg) saturate(2.3) brightness(1.04) contrast(1.08)}to{filter:drop-shadow(0 0 32px rgba(120,235,255,.95)) grayscale(1) sepia(.6) hue-rotate(150deg) saturate(2.6) brightness(1.24) contrast(1.08)}}
 @media (prefers-reduced-motion:reduce){#adv .advimg,#adv .hscan,#adv .hbeam,#adv.talk .advimg{animation:none}}
+#advh .advimg{opacity:.9;filter:drop-shadow(0 0 18px rgba(85,214,232,.7)) grayscale(1) sepia(.6) hue-rotate(150deg) saturate(2.3) brightness(1.1) contrast(1.08);animation:holoIn .8s cubic-bezier(.2,.9,.3,1) both,holoFlick 7s 1.2s infinite}
+#advh .hscan{position:absolute;left:0;bottom:0;width:clamp(118px,32vw,230px);height:min(58vh,470px);pointer-events:none;z-index:1;mix-blend-mode:screen;
+  background:linear-gradient(180deg,transparent 0,rgba(140,240,255,.32) 50%,transparent 100%) 0 -120%/100% 34% no-repeat,repeating-linear-gradient(180deg,rgba(140,235,255,.24) 0 1px,transparent 1px 3px),linear-gradient(180deg,rgba(85,214,232,.26),rgba(85,214,232,.08) 70%,transparent);
+  -webkit-mask-image:linear-gradient(180deg,#000 82%,transparent);mask-image:linear-gradient(180deg,#000 82%,transparent);animation:holoIn .8s cubic-bezier(.2,.9,.3,1) both,holoScan 3.6s 1s linear infinite}
+#advh .hbeam{position:absolute;left:0;bottom:-10px;width:clamp(118px,32vw,230px);height:30px;pointer-events:none;z-index:1;background:radial-gradient(ellipse 50% 40% at 50% 55%,rgba(170,245,255,.95),rgba(85,214,232,.45) 45%,transparent 72%);filter:blur(1.5px);animation:holoPad 2.4s ease-in-out infinite}
+#advh .hbeam::before{content:"";position:absolute;left:12%;right:12%;bottom:45%;height:min(40vh,320px);background:linear-gradient(0deg,rgba(110,230,255,.45),rgba(85,214,232,.08) 70%,transparent);clip-path:polygon(10% 100%,90% 100%,100% 0,0 0);opacity:.7}
+#advh.talk .advimg{animation:holoIn .8s cubic-bezier(.2,.9,.3,1) both,holoTalk .42s ease-in-out infinite alternate}#advh.talk .hbeam{animation-duration:.8s}
+#advh{position:fixed;left:max(8px,env(safe-area-inset-left,0px));z-index:69;display:flex;align-items:flex-end;gap:8px;pointer-events:none;opacity:0;transform:translateY(10px);transition:opacity .3s,transform .3s;max-width:min(94vw,520px)}
+#advh.on{opacity:1;transform:none}body.advtalk #coach{opacity:0!important;pointer-events:none!important;transition:opacity .25s}#advh .holo{position:relative;flex:none;width:84px;height:126px}
+#advh .advimg{position:absolute;left:0;bottom:0;width:84px;height:126px;object-fit:cover;object-position:50% 8%}
+#advh .hscan{width:84px;height:126px}#advh .hbeam{width:84px;bottom:-8px;height:22px}#advh .hbeam::before{height:90px}
+#advh .hsay{margin-bottom:10px;padding:8px 11px;border-radius:12px;background:rgba(4,18,28,.9);border:1px solid rgba(85,214,232,.65);box-shadow:0 0 18px rgba(85,214,232,.28);color:#e2f9ff;font:500 13.5px/1.38 var(--f-body,system-ui);text-wrap:pretty}
+#advh .hsay b{display:block;font:700 10px/1 var(--f-display);letter-spacing:.2em;text-transform:uppercase;color:#7fe8ff;margin-bottom:4px}
+@media (prefers-reduced-motion:reduce){#advh,#advh .advimg,#advh .hscan,#advh .hbeam{animation:none;transition:none}}
 /* v328 celebrations and the Advisor's voice button */
 #celeb{position:fixed;inset:0;z-index:95;display:flex;align-items:flex-start;justify-content:center;padding:18px;overflow-y:auto;overscroll-behavior:contain}#celeb .cbscrim{position:fixed;inset:0;background:radial-gradient(circle at 50% 45%,rgba(30,40,70,.55),rgba(0,0,0,.88));animation:fadeIn .35s ease}
 #celeb .cbbox{position:relative;margin:auto 0;width:min(420px,100%);text-align:center;padding:26px 18px 18px;border-radius:20px;background:linear-gradient(180deg,rgba(18,30,52,.96),rgba(6,12,24,.97));border:1px solid rgba(255,206,110,.55);box-shadow:0 0 60px rgba(255,180,70,.28),inset 0 0 40px rgba(255,200,120,.06);animation:cbIn .55s cubic-bezier(.2,1.4,.4,1);overflow:hidden}
@@ -13580,8 +13594,15 @@ const VOICE = { on: true, clips: null, au: null, lastStep: -1 };
 try { VOICE.on = localStorage.getItem("void.voice") !== "0"; } catch (e) {}
 const voiceKey = s => hash(String(s)).toString(36);
 try { fetch("voice/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (j && typeof j === "object") VOICE.clips = j; }).catch(() => {}); } catch (e) {}
-function voiceTalk(on) { const a = $("#adv"); if (a) a.classList.toggle("talk", !!on); if (typeof AU !== "undefined") { const d = on ? .22 : 1; if (AU.duck !== d) { AU.duck = d; try { applyAudio(); } catch (e) {} } } } // v334: music dips under her voice
+function voiceTalk(on) { const a = $("#adv"); if (a) a.classList.toggle("talk", !!on); const h = $("#advh"); if (h) h.classList.toggle("talk", !!on); if (typeof AU !== "undefined") { const d = on ? .22 : 1; if (AU.duck !== d) { AU.duck = d; try { applyAudio(); } catch (e) {} } } } // v334: music dips under her voice
 function voiceStop() { voiceTalk(0); try { if (VOICE.au) { VOICE.au.pause(); VOICE.au = null; } } catch (e) {} }
+function advHoloPlace() { const w = $("#advh"); if (!w || !w.classList.contains("on")) return; const el = GD.el && GD.el.isConnected ? GD.el : null, r = el && el.getBoundingClientRect(), dock = $("#dock"), db = dock ? dock.getBoundingClientRect().top : innerHeight;
+  const cw = $("#coach"), inCoach = el && cw && cw.contains(el), top = r && !inCoach ? r.top + r.height / 2 > innerHeight * .5 : false; w.style.top = top ? "max(86px, calc(env(safe-area-inset-top,0px) + 86px))" : "auto"; w.style.bottom = top ? "auto" : (innerHeight - db + 64) + "px"; }
+function advHolo(line) { if (!line) return; let w = $("#advh"); // v334: her hologram for every spoken step line
+  if (!w) { w = document.createElement("div"); w.id = "advh"; w.setAttribute("aria-live", "polite"); w.innerHTML = `<div class="holo"><img class="advimg" src="${ADV_ART}" alt=""><i class="hscan"></i><i class="hbeam"></i></div><div class="hsay"><b>${ADV}</b><span></span></div>`; $("#app").appendChild(w); }
+  w.querySelector(".hsay span").textContent = line; for (const im of w.querySelectorAll(".advimg,.hscan")) { im.style.animation = "none"; void im.offsetWidth; im.style.animation = ""; } w.classList.add("on"); document.body.classList.add("advtalk"); // she materializes each time; the Academy card steps aside while she talks advHoloPlace(); clearTimeout(G.advhT); speak(line);
+  const hide = () => { clearTimeout(G.advhT); G.advhT = setTimeout(() => { const x = $("#advh"); if (x) x.classList.remove("on", "talk"); document.body.classList.remove("advtalk"); }, 900); };
+  const a = VOICE.au; if (a && !a.ended) { a.addEventListener("ended", hide, { once: true }); a.addEventListener("error", hide, { once: true }); G.advhT = setTimeout(hide, 30000); } else G.advhT = setTimeout(hide, Math.max(4500, line.length * 65)); }
 function speak(line) { if (!VOICE.on || (typeof AU !== "undefined" && AU.muted) || !line || !VOICE.clips) return; const k = voiceKey(line); if (!VOICE.clips[k]) return; voiceStop();
   try { const a = new Audio("voice/" + k + ".mp3?v=" + VOICE.clips[k]); a.volume = Math.min(1, .95 * ((typeof AU !== "undefined" && AU.sfxVol != null) ? Math.max(.4, AU.sfxVol) : 1)); VOICE.au = a;
     a.onplay = () => voiceTalk(1); a.onended = a.onpause = a.onerror = () => voiceTalk(0); a.play().catch(() => voiceTalk(0)); } catch (e) {} }
@@ -13952,8 +13973,8 @@ function coachRender(force) {
     : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "tutClaim" : "tutOpen"}" aria-label="${done ? "Collect the Academy reward" : "Open the Flight Academy"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : `${S.tut.i + 1}/${TUT.length}`}</span><b class="cpt"><small>${done ? "STEP DONE" : "NEXT TASK"}</small>${done ? "Collect reward ▸" : esc(st.t)}</b></button><button class="cpx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button>`;
   if (!w) { w = document.createElement("div"); w.id = "coach"; $("#app").appendChild(w); force = true; } w.style.display = sheet || view === "quests" ? "none" : ""; /* v123: the Quests tab shows the same step in full */
   if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
-  try { tutTrack(); } catch (e) {}
-  if (open && !done && VOICE.lastStep !== S.tut.i && !advLines && !$("#celeb") && !$("#oldw") && !$("#adv") && !battle && S.intro && !(sheet && sheet.type === "faction") && !(S.say && S.say.length)) { VOICE.lastStep = S.tut.i; speak(st.say); } // v331: each new step, read once as it opens
+  try { tutTrack(); } catch (e) {} try { const h = $("#advh"); if (h && h.classList.contains("on")) { if ($("#adv") || battle || $("#celeb")) { h.classList.remove("on"); document.body.classList.remove("advtalk"); } else advHoloPlace(); } } catch (e) {}
+  if (open && !done && VOICE.lastStep !== S.tut.i && !advLines && !$("#celeb") && !$("#oldw") && !$("#adv") && !battle && S.intro && !(sheet && sheet.type === "faction") && !(S.say && S.say.length)) { VOICE.lastStep = S.tut.i; advHolo(st.say); } // v331: each new step, read once as it opens
 }
 setInterval(() => { try { coachRender(); } catch (e) {} }, 800);
 
