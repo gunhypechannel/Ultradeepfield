@@ -2355,7 +2355,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 326;
+const GAME_V = 327;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13608,11 +13608,12 @@ const tutSend = () => S.fleets.some(f => f.pid && f.phase === "out") ? [DOCKT("f
 const tutAt = id => tutOn() && (TUT[S.tut.i] || {}).id === id;
 /* v319: how many of ship k the Academy step or fleet-path step still wants, so the Shipyard's amount starts there (it started at 1, and
    "Tap Build to make 3" was a stumbling block for young players) */
-const tutQty = k => { const st = tutOn() ? TUT[S.tut.i] : null, m = st && /^Build (\d+) /.exec(st.t), sp = shipStep();
-  const main = m && (st.fast === k || st.t.includes(SH[k].n)), want = main ? +m[1] : sp && sp.k === k ? sp.n : 0, keep = main ? {} : tutKeep(); // v321: a side task leaves the Academy step's supplies alone
+const tutQty = (k, n) => { const st = tutOn() ? TUT[S.tut.i] : null, m = st && /^Build (\d+) /.exec(st.t), sp = shipStep();
+  if (n == null && G.tutN && G.tutN[0] === k && G.tutN[2] === S.tut.i) n = G.tutN[1]; const self = !!(n && st && st.fund && !m); // v326: ships the step itself asks for (and pays for)
+  const main = self || (m && (st.fast === k || st.t.includes(SH[k].n))), want = self ? n : main ? +m[1] : sp && sp.k === k ? sp.n : 0, keep = main ? {} : tutKeep(); // v321: a side task leaves the Academy step's supplies alone
   const left = Math.max(0, want - own(k) - S.sq.filter(q => q.k === k).reduce((a, q) => a + (q.left || 0), 0)), c = SH[k].c || {};
   return left && Math.max(1, Math.min(left, ...["m", "c", "g"].filter(r => c[r]).map(r => Math.floor((S.res[r] - (keep[r] || 0)) / c[r])))); }; // no more than you can pay for now: a full amount you can't afford greyed the button out
-const tutMake = (k, n) => { const q = tutQty(k) || n; return q < n ? `Tap Build to make ${q} now (more as your mines refill)` : `Tap Build to make ${q}`; };
+const tutMake = (k, n) => { G.tutN = [k, n, S.tut.i]; const q = tutQty(k, n) || n; return q < n ? `Tap Build to make ${q} now (more as your mines refill)` : `Tap Build to make ${q}`; };
 /* a ring on the fleet itself: the 3D map has no button to point at, so a marker sits where the fleet is on screen (taps pass through it) */
 function tutFleetMark(id) {
   let m = $("#tutfm"); const o = G3 && view === "galaxy" && G3.fleets.get(id), v = o && o.pt ? new TH.Vector3(o.pt.x, o.pt.y, o.pt.z).project(G3.camera) : null;
@@ -13630,7 +13631,7 @@ const fromPick = () => { const n = b => parseFloat(b.textContent.split("·").pop
 /* v321: a pirate step without 3 armed ships on any one world (some lost in an earlier fight) builds fighters first: one fighter alone
    can't finish even the training crew in time, and with none the guide pointed at nothing */
 const armedOn = sh => Object.entries(sh || {}).reduce((a, [k, n]) => a + (SH[k] && (SH[k].atk || 0) >= 50 ? n : 0), 0);
-const armedMax = () => Math.max(armedOn(S.ships), ...myPlanets().map(p => p.ships ? armedOn(p.ships) : 0));
+const armedMax = () => Math.max(armedOn(S.ships), ...myPlanets().map(p => p.kind !== "home" && p.garrison ? armedOn(p.garrison) : 0)); // v326: colonies keep their ships in garrison
 /* the raid card sends what is home when it opens, so the guide waits for a raid in flight and for fighters flying home (a lone fighter can't finish even the training crew) */
 const pirPath = () => S.fleets.some(f => f.xid && f.phase === "out") ? [DOCKT("fleets", "Your fleet is on its way there. Wait for the report")] : S.fleets.some(f => f.phase === "back") ? [DOCKT("fleets", "Your fighters are flying home. They'll be ready in a moment")] : tutWaitShips() || (armedMax() < 3 ? tutUnit("fighter", own("fighter") + 3 - armedMax())() : null) || mapPath('.sheet [data-act="raid"]', '.sheet .tgt[data-act="pirate"], .sheet [data-act="pirate"]')();
 /* v324: the fighting steps (pirate raids, the scouted world, the colony invasion) keep at least n armed ships ready, paid by the Academy */
@@ -15280,15 +15281,20 @@ function cleanMsgs(m) {
   return out.sort((a, b) => a.t - b.t).slice(-150);
 }
 const chatSlot = t => new Date(t).toISOString().slice(0, 10).replace(/-/g, "") + "h" + Math.floor(new Date(t).getUTCHours() / 3); // v325: 3-hour rooms
-function chatSub(path, part, grp) { return G.db.doc(path).onSnapshot(s => { CHAT[grp + part] = s.exists ? cleanMsgs(s.data().m).map(m => (m.room = path, m)) : [];
-  CHAT[grp] = (CHAT[grp + "p"] || []).concat(CHAT[grp + "c"] || []).slice(-150); chatChanged(); }, () => {}); }
+function chatMerge(grp) { const seen = new Set(), all = [].concat(...Object.values(CHAT[grp + "H"] || {}), CHAT[grp + "c"] || []);
+  CHAT[grp] = all.filter(m => !seen.has(m.id) && seen.add(m.id)).sort((a, b) => a.t - b.t).slice(-150); chatChanged(); }
+function chatSub(path, part, grp) { return G.db.doc(path).onSnapshot(s => { CHAT[grp + "c"] = s.exists ? cleanMsgs(s.data().m).map(m => (m.room = path, m)) : []; chatMerge(grp); }, () => {}); }
+const utcDayAt = t => new Date(t).toISOString().slice(0, 10).replace(/-/g, "");
+function chatHist(grp, base, T) { CHAT[grp + "H"] = {}; // v327: the last 24 hours of rooms, read once (no live updates needed for the past)
+  const paths = []; for (let i = 1; i <= 8; i++) paths.push(base + chatSlot(T - i * 3 * 3600e3)); paths.push(base + utcDayAt(T), base + utcDayAt(T - 864e5)); // + the pre-v326 day rooms
+  for (const pth of paths) G.db.doc(pth).get().then(s => { if (!s || !s.exists || !CHAT[grp + "H"]) return; CHAT[grp + "H"][pth] = cleanMsgs((s.data() || {}).m).map(m => (m.room = pth, m)); chatMerge(grp); }).catch(() => {}); }
 function chatInit() {
   if (G.mode !== "online" || !G.db || !G.me) return; const T = now(), day = chatSlot(T), prev = chatSlot(T - 3 * 3600e3);
   if (CHAT.day !== day) { CHAT.day = day; for (const k of ["g", "gp"]) if (CHAT.subs[k]) CHAT.subs[k](); CHAT.g = []; CHAT.gc = []; CHAT.gp = [];
-    CHAT.subs.g = chatSub("chat/g-" + day, "c", "g"); CHAT.subs.gp = chatSub("chat/g-" + prev, "p", "g"); CHAT.aKey = "?"; }
+    CHAT.subs.g = chatSub("chat/g-" + day, "c", "g"); CHAT.subs.gp = null; chatHist("g", "chat/g-", T); CHAT.aKey = "?"; }
   const ak = S.ally ? "a-" + S.ally + "-" + day : null;
   if (CHAT.aKey !== ak) { for (const k of ["a", "ap"]) { if (CHAT.subs[k]) CHAT.subs[k](); CHAT.subs[k] = null; } CHAT.a = []; CHAT.ac = []; CHAT.ap = []; CHAT.aKey = ak;
-    if (ak) { CHAT.subs.a = chatSub("chat/" + ak, "c", "a"); CHAT.subs.ap = chatSub("chat/a-" + S.ally + "-" + prev, "p", "a"); } }
+    if (ak) { CHAT.subs.a = chatSub("chat/" + ak, "c", "a"); CHAT.subs.ap = null; chatHist("a", "chat/a-" + S.ally + "-", T); } }
   if (!CHAT.subs.d) CHAT.subs.d = G.db.collection("dms").where("p", "array-contains", G.me).limit(100).onSnapshot(snap => {
     const o = {}; for (const d of snap.docs) { const v = d.data(); if (!v || !Array.isArray(v.p)) continue; const other = v.p.find(x => x !== G.me); if (typeof other !== "string") continue; o[d.id] = { id: d.id, with: other, m: cleanMsgs(v.m) }; }
     CHAT.dms = o; chatChanged(); }, () => {});
@@ -15526,7 +15532,8 @@ function sendFleet(p, n, mission, extra) {
   const h = originPlanet(); if (!h) return null;
   const pct = spdPct(), fuel = fuelFor(h, p, n, pct);
   if (h.kind !== "home") {
-    settle(h); if (h.st.g < fuel) { toast(`${h.name} needs ${fmt(fuel)} gas for this flight and has ${fmt(h.st.g)}. Fly slower or send gas there.`, "warn"); return null; }
+    settle(h); if (h.st.g < fuel && tutOn()) { const add = Math.ceil(fuel - h.st.g) + 50; h.st.g += add; note(`Academy supplies: +${fmt(add)} gas at ${h.name} for this flight.`, "win"); } // v327
+    if (h.st.g < fuel) { toast(`${h.name} needs ${fmt(fuel)} gas for this flight and has ${fmt(h.st.g)}. Fly slower or send gas there.`, "warn"); return null; }
     h.st.g -= fuel; const g = Object.assign({}, h.garrison); for (const k in n) { g[k] = (g[k] || 0) - n[k]; if (g[k] <= 0) delete g[k]; } h.garrison = g; putPlanet(h);
   } else {
     if (S.res.g < fuel) { toast(`This flight needs ${fmt(fuel)} gas and you have ${fmt(S.res.g)}. Fly slower to save fuel.`, "warn"); return null; }
