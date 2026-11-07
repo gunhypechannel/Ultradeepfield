@@ -12552,7 +12552,7 @@ async function effPick() { const T = effTarget(); if (!T || G.effBusy) return; c
     toast(`Efficient fight: ${fmt(sumShips(wsel))} warships won all 24 test battles against defenders 10% stronger${T.est ? " (their research is hidden, so that assumes none)" : ""}.${cTxt}`, "win");
   } catch (e) { if (e !== 0) throw e; } finally { G.effBusy = 0; } }
 function picker(avail) {
-  if (sheet && !sheet.pkSeen && Object.values(avail).some(v => v > 0)) { sheet.pkSeen = 1; if (!sumShips(pick)) for (const k in avail) if (avail[k] > 0 && SH[k]) pick[k] = avail[k]; } // v324
+  if (sheet && !sheet.pkSeen && Object.values(avail).some(v => v > 0)) { sheet.pkSeen = 1; if (!sumShips(pick)) for (const k in avail) if (avail[k] > 0 && SH[k] && k !== "spyProbe") pick[k] = avail[k]; } // v324; v334: never probes (they died in the first attack)
   for (const k of Object.keys(pick)) if (!avail[k]) delete pick[k];
   for (const k of Object.keys(pick)) pick[k] = Math.min(pick[k], avail[k]);
   const eff = effTarget() ? `<button class="btn amber wide" style="margin:4px 0 8px" data-act="pkeff">⚡ Efficient fight · warships to win at 110%, cargo for the loot</button>` : "";
