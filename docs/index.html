@@ -2492,7 +2492,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 356;
+const GAME_V = 357;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -14792,8 +14792,8 @@ function spawnVolley(b, v) {
   if (heavy || q.role === "capital" || q.role === "titan" || q.role === "cruiser" || q.role === "station") { (b.muz = b.muz || []).push({ s: v.s, t: v.t, big: q.role !== "cruiser", col: shotCol(q.k, side) }); if (b.muz.length > 40) b.muz.shift(); }
   const icN = v.ic > 0 ? Math.round(cnt * v.ic / (v.ic + v.n + 1e-9)) : 0, tr = rp ? TRAVEL.missile * .7 : dn ? .3 : TRAVEL[wk] || .3, gap = rp ? .03 : mis ? .045 : .07;
   for (let j = 0; j < cnt; j++) b.fx.push({ t0: v.t + j * gap, t1: v.t + j * gap + tr * (mis || rp ? 1 + (j % 3) * .14 : 1), v, last: j === cnt - 1, first: j === 0, n: cnt, mis: mis || rp, ic: j < icN && j !== cnt - 1, side, off: ((hash(v.t + "|" + j) % 100) / 100 - .5), hv: heavy && !dn ? 1 : 0, sz, j, sw: q.k === "destroyer" && mis && !lo, bs: rp ? (j % 2 ? 1 : -1) : 0, hide: dn || rp ? 1 : 0 }); // v251 sw: a destroyer's Sidewinder
-  if (dn) { for (let i = 0; i < 3; i++) b.beams.push({ t0: v.t + i * .06, s: v.s, e: v.e, side, w: clamp(2.3 + Math.log10(1 + many * (q.pow || 1)) * .6, 2.3, 4.6), charge: .2, life: .36, tri: i - 1, dn: 1 });
-    const dl = b.beams.filter(m => m.dn); if (dl.length > (b.Q.length > 60 ? 6 : 15)) for (const m of dl.slice(0, dl.length - (b.Q.length > 60 ? 6 : 15))) b.beams.splice(b.beams.indexOf(m), 1); return; }
+  if (dn) { b.beams.push({ t0: v.t, s: v.s, e: v.e, side, w: clamp(5.5 + Math.log10(1 + many * (q.pow || 1)) * 1.4, 5.5, 12), charge: .3, life: .5, dn: 1 }); // v357 one big purple mega beam
+    const dl = b.beams.filter(m => m.dn); if (dl.length > (b.Q.length > 60 ? 2 : 5)) for (const m of dl.slice(0, dl.length - (b.Q.length > 60 ? 2 : 5))) b.beams.splice(b.beams.indexOf(m), 1); return; }
   /* v266 the Reaper's second battery: red flak shells from the middle of its hull that burst in a cloud of blasts around the target */
   /* v267 the Reaper's swarm guns: a dense stream of small orange rounds out of both broadsides, each on its own path, fanning out from the
      flanks and converging on the target like a swarm; and red flak shells from mid-hull that burst into a field of flak around it */
@@ -14803,9 +14803,11 @@ function spawnVolley(b, v) {
     return; }
   if (lo || v.bounce) return;
   if (q.k === "worldbreaker") { b.beams = b.beams.filter(m => m.s !== v.s); b.beams.push({ t0: v.t, s: v.s, e: v.e, side, w: 12, charge: .32, life: .55, wb: 1 }); return; } // the Cube Destroyer always fires its red beam, never dropped by the beam limit
+  if (wk === "beam" && sz < 2 && q.role !== "station" && q.role !== "titan") { /* v357 small beam ships (the Pathfinder): quick thin twin beams that stop on the target */
+    if (b.beams.filter(m => m.sb).length < (b.Q.length > 60 ? 4 : 10)) for (let i = 0; i < 2; i++) b.beams.push({ t0: v.t + i * .07, s: v.s, e: v.e, side, w: clamp(.9 + Math.log10(1 + many) * .35, .9, 1.6), charge: .06, life: .18, lance: 1, sb: 1, tri: i ? .5 : -.5, wk }); return; }
   if (wk === "beam" || q.role === "station" || q.role === "titan") { if (b.beams.filter(m => !m.wb && !m.lance).length < 3) b.beams.push({ t0: v.t, s: v.s, e: v.e, side, w: clamp(3 + Math.log10(1 + many * (q.pow || 1)) * 1.4, 3, 12), charge: .3, life: .45 }); }
   /* v201: a capital hull's lasers are heavy lances, a thick short-lived beam that stops on its target */
-  else if (sz === 2 && !heavy && (wk === "laser" || wk === "ion" || wk === "plasma" || wk === "mass" || wk === "acid")) { if (b.beams.filter(m => m.lance).length < (b.Q.length > 60 ? 3 : 6)) b.beams.push({ t0: v.t, s: v.s, e: v.e, side, w: clamp(3.2 + Math.log10(1 + many * (q.pow || 1)) * 1.1, 3.2, 8), charge: .14, life: .3, lance: 1, wk }); }
+  else if (sz === 2 && !heavy && (wk === "laser" || wk === "ion" || wk === "plasma" || wk === "mass" || wk === "acid")) { if (b.beams.filter(m => m.lance && !m.sb).length < (b.Q.length > 60 ? 3 : 6)) b.beams.push({ t0: v.t, s: v.s, e: v.e, side, w: clamp(3.2 + Math.log10(1 + many * (q.pow || 1)) * 1.1, 3.2, 8), charge: .14, life: .3, lance: 1, wk }); }
   else if (!heavy && sz >= 1 && (wk === "laser" || wk === "mass" || wk === "ion" || wk === "flak" || wk === "plasma") && many >= 3) { b.salvos.push({ t0: v.t, s: v.s, e: v.e, side, wk, n: clamp(Math.round((1 + Math.log2(many) * .8) * cap), 1, 6), w: clamp(1 + Math.log10(1 + many) * .9, 1, 4), life: .26 }); if (b.salvos.length > (b.Q.length > 60 ? 5 : 18)) b.salvos.shift(); }
 }
 /* an explosion in layers: a white flash, rolling fireballs, sparks, a shockwave, and smoke that lingers and drifts */
@@ -14961,7 +14963,7 @@ function drawBattle(t) {
     const R0 = Math.min(W, H) * .2; idx.forEach((i, k) => { const a = k * 2.399, rr = R0 * (.25 + .55 * ((k * .618) % 1)); scr[i] = { x: b.scC.x + Math.cos(a) * rr, y: b.scC.y + Math.sin(a) * rr * .8, s: 1 }; }); }
   /* v78 light sources this frame (from the effects already on screen): blasts, beam impacts and muzzle flashes */
   const lights = []; if (!lo) { for (const o of b.flashes) { const k = (t - o.t) / o.life; if (k >= 0 && k < 1) lights.push({ x: o.x, y: o.y, r: o.r * 4, I: (1 - k) * 1.1, c: [255, 225, 190] }); }
-    for (const m of b.beams) { const A = scr[m.s], E = scr[m.e], age = T - m.t0; if (!A || !E || age < m.charge) continue; const c = (Q[m.s] || {}).k === "worldbreaker" ? [255, 60, 40] : m.side === "a" ? [120, 225, 255] : [255, 140, 110]; lights.push({ x: E.x, y: E.y, r: W * .16, I: .9, c }, { x: (A.x + E.x) / 2, y: (A.y + E.y) / 2, r: W * .12, I: .45, c }); }
+    for (const m of b.beams) { const A = scr[m.s], E = scr[m.e], age = T - m.t0; if (!A || !E || age < m.charge || m.sb) continue; const c = (Q[m.s] || {}).k === "worldbreaker" ? [255, 60, 40] : m.side === "a" ? [120, 225, 255] : [255, 140, 110]; lights.push({ x: E.x, y: E.y, r: W * .16, I: .9, c }, { x: (A.x + E.x) / 2, y: (A.y + E.y) / 2, r: W * .12, I: .45, c }); }
     for (const m of b.muz || []) { const A = scr[m.s]; if (A && T >= m.t && T - m.t < .22) lights.push({ x: A.x, y: A.y, r: W * .08, I: .5 * (1 - (T - m.t) / .22), c: [255, 230, 200] }); }
     if (lights.length > 14) lights.splice(0, lights.length - 14); }
   const drawSq = (q, i) => {
@@ -15159,13 +15161,13 @@ function drawBattle(t) {
   for (const m of b.beams) { const age = T - m.t0; if (age < 0) continue; const A = scr[m.s], E = scr[m.e]; if (!A || !E) continue;
     const sx = A.x + (m.wb ? (b.face[m.s] || 1) * Math.min(W * .1 * bLen("worldbreaker") * A.s, W * .55 * A.s) * .62 : 0), sy = A.y + (m.wb ? Math.min(W * .1 * bLen("worldbreaker") * A.s, W * .55 * A.s) * .07 : 0) + (m.tri || 0) * 12 * d * Math.max(.6, A.s), ex = E.x, ey = E.y + (m.tri || 0) * 6 * d, dx = ex - sx, dy = ey - sy, L2 = Math.hypot(dx, dy) || 1, ux = dx / L2, uy = dy / L2, col = (Q[m.s] || {}).k === "worldbreaker" ? "#ff2a1a" : SHOT_COL[(Q[m.s] || {}).k] ? SHOT_COL[(Q[m.s] || {}).k] : m.wk === "ion" ? "#c3b2ff" : m.wk === "acid" ? "#a6ff6a" : m.side === "a" ? "#6fe4ff" : "#ff7a5a"; // the Cube Destroyer always fires its red laser
     if (m.lance) { /* v201 heavy lance from a capital hull: a quick charge at a hardpoint, then a thick beam that ends in a burst on the target */
-      const [hx, hy] = hp(m.s, m.t0 + .4, 1), [tx, ty] = hp(m.e, m.t0 + .7, 0), lx = tx - hx, ly = ty - hy;
-      if (age < m.charge) { const k = age / m.charge, r = (5 + 16 * k) * d; ctx.globalAlpha = .5 + .5 * k; ctx.drawImage(glowSprite(col), hx - r, hy - r, r * 2, r * 2); ctx.drawImage(glowSprite("#ffffff"), hx - r * .35, hy - r * .35, r * .7, r * .7); continue; }
+      const [hx, hy0] = hp(m.s, m.t0 + .4, 1), [tx, ty] = hp(m.e, m.t0 + .7, 0), hy = hy0 + (m.sb ? m.tri * 7 * d * Math.max(.6, A.s) : 0), lx = tx - hx, ly = ty - hy;
+      if (age < m.charge) { const k = age / m.charge, r = (m.sb ? 3 + 5 * k : 5 + 16 * k) * d; ctx.globalAlpha = .5 + .5 * k; ctx.drawImage(glowSprite(col), hx - r, hy - r, r * 2, r * 2); ctx.drawImage(glowSprite("#ffffff"), hx - r * .35, hy - r * .35, r * .7, r * .7); continue; }
       const k = (age - m.charge) / m.life, al = k < .1 ? k / .1 : Math.pow(Math.max(0, 1 - (k - .1) / .9), 1.6), w = m.w * d * (.85 + .15 * Math.sin(t * .11 + m.s)) * (busy ? .7 : 1), reach = Math.min(1, k * 5);
-      if (!m.fs) { m.fs = 1; SFX.laser(m.side === "d"); b.shake = Math.max(b.shake, 3 * d); }
+      if (!m.fs) { m.fs = 1; if (!m.sb || m.tri < 0) SFX.laser(m.side === "d"); if (!m.sb) b.shake = Math.max(b.shake, 3 * d); }
       for (const [lw, a, c2] of [[4.5, .16, col], [2.2, .5, col], [1, .95, "#eefcff"], [.4, 1, "#ffffff"]]) { ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + lx * reach, hy + ly * reach); ctx.strokeStyle = c2; ctx.globalAlpha = al * a * (.45 + .55 * dim); ctx.lineWidth = w * lw; ctx.stroke(); }
-      const mr = (7 + m.w * 2.2) * d * al; ctx.globalAlpha = al; ctx.drawImage(glowSprite(col), hx - mr, hy - mr, mr * 2, mr * 2);
-      if (reach >= 1) { const ir = (10 + m.w * 3) * d * al; ctx.drawImage(glowSprite(col), tx - ir, ty - ir, ir * 2, ir * 2); ctx.drawImage(glowSprite("#ffffff"), tx - ir * .4, ty - ir * .4, ir * .8, ir * .8); }
+      const mr = (m.sb ? 3 + m.w * 1.5 : 7 + m.w * 2.2) * d * al; ctx.globalAlpha = al; ctx.drawImage(glowSprite(col), hx - mr, hy - mr, mr * 2, mr * 2);
+      if (reach >= 1) { const ir = (m.sb ? 5 + m.w * 2 : 10 + m.w * 3) * d * al; ctx.drawImage(glowSprite(col), tx - ir, ty - ir, ir * 2, ir * 2); ctx.drawImage(glowSprite("#ffffff"), tx - ir * .4, ty - ir * .4, ir * .8, ir * .8); }
       continue; }
     if (age < m.charge) { const k = age / m.charge, r = (6 + 34 * k) * d; if (!m.cs) { m.cs = 1; SFX.charge(sp(sx, sy)); } ctx.globalAlpha = .5 + .5 * k; ctx.drawImage(glowSprite(col), sx - r, sy - r, r * 2, r * 2); ctx.drawImage(glowSprite("#ffffff"), sx - r * .4, sy - r * .4, r * .8, r * .8); continue; }
     const k = (age - m.charge) / m.life, al = k < .08 ? k / .08 : Math.pow(Math.max(0, 1 - (k - .08) / .92), 1.8), fl = .8 + .2 * Math.sin(t * .09), w = m.w * d * fl, len = Math.max(L2 * 1.5, W);
