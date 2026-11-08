@@ -1,0 +1,471 @@
+[
+ {
+  "id": "starter_intro",
+  "family": "starter",
+  "familyName": "Starter Commander Pack",
+  "name": "Starter Spark",
+  "tier": "intro",
+  "priceUsd": 0.99,
+  "oncePerAccount": true,
+  "testerEligible": true,
+  "contents": {
+   "shards": 30,
+   "items": {
+    "boost": 10,
+    "mb1": 1,
+    "pm_bronze": 1,
+    "xb_bronze": 1
+   }
+  },
+  "valueShards": 59,
+  "blurb": "One per account. Your first week, faster.",
+  "store": {
+   "play": "udf_starter_intro",
+   "apple": "udf.starter_intro"
+  },
+  "art": "pack-starter-intro",
+  "sort": 0
+ },
+ {
+  "id": "starter_pack",
+  "family": "starter",
+  "familyName": "Starter Commander Pack",
+  "name": "Starter Commander",
+  "tier": "starter",
+  "priceUsd": 4.99,
+  "oncePerAccount": true,
+  "testerEligible": true,
+  "contents": {
+   "shards": 150,
+   "items": {
+    "boost": 20,
+    "xb_silver": 2,
+    "xr_silver": 2,
+    "xs_silver": 1,
+    "mb2": 2,
+    "pAll_gold": 1,
+    "vipPts500": 1,
+    "repairKit": 1,
+    "probe5": 1
+   }
+  },
+  "valueShards": 358,
+  "blurb": "One per account. Speed-ups, supplies and a first Rare box.",
+  "store": {
+   "play": "udf_starter_pack",
+   "apple": "udf.starter_pack"
+  },
+  "art": "pack-starter-pack",
+  "sort": 1
+ },
+ {
+  "id": "empire_std",
+  "family": "empire",
+  "familyName": "Empire Development Pack",
+  "name": "Empire Development",
+  "tier": "standard",
+  "priceUsd": 9.99,
+  "oncePerAccount": false,
+  "testerEligible": true,
+  "contents": {
+   "shards": 350,
+   "items": {
+    "pAll_gold": 3,
+    "xb_gold": 4,
+    "xr_gold": 3,
+    "o_commander_7": 1,
+    "o_technocrat_7": 1,
+    "bm_gold": 1,
+    "bc_gold": 1,
+    "boost": 40,
+    "pm_silver": 2
+   }
+  },
+  "valueShards": 802,
+  "blurb": "Resources, construction and research speed.",
+  "store": {
+   "play": "udf_empire_std",
+   "apple": "udf.empire_std"
+  },
+  "art": "pack-empire-std",
+  "sort": 2
+ },
+ {
+  "id": "empire_adv",
+  "family": "empire",
+  "familyName": "Empire Development Pack",
+  "name": "Empire Development+",
+  "tier": "advanced",
+  "priceUsd": 19.99,
+  "oncePerAccount": false,
+  "testerEligible": true,
+  "contents": {
+   "shards": 700,
+   "items": {
+    "pAll_gold": 6,
+    "xb_gold": 8,
+    "xr_gold": 8,
+    "xs_gold": 4,
+    "o_staff_7": 1,
+    "bm_platinum": 1,
+    "bc_platinum": 1,
+    "boost": 60,
+    "f_silver": 1
+   }
+  },
+  "valueShards": 1685,
+  "blurb": "A week of command staff and serious speed.",
+  "store": {
+   "play": "udf_empire_adv",
+   "apple": "udf.empire_adv"
+  },
+  "art": "pack-empire-adv",
+  "sort": 3
+ },
+ {
+  "id": "fleet_std",
+  "family": "fleet",
+  "familyName": "Fleet Warfare Pack",
+  "name": "Fleet Warfare",
+  "tier": "standard",
+  "priceUsd": 9.99,
+  "oncePerAccount": false,
+  "testerEligible": true,
+  "contents": {
+   "shards": 350,
+   "items": {
+    "xs_gold": 8,
+    "xs_silver": 6,
+    "boost": 50,
+    "repairKit": 5,
+    "pirIntel": 2,
+    "o_admiral_7": 1,
+    "mb2": 2,
+    "pg_gold": 1
+   }
+  },
+  "valueShards": 819,
+  "blurb": "Ship production speed and fleet support.",
+  "store": {
+   "play": "udf_fleet_std",
+   "apple": "udf.fleet_std"
+  },
+  "art": "pack-fleet-std",
+  "sort": 4
+ },
+ {
+  "id": "fleet_adv",
+  "family": "fleet",
+  "familyName": "Fleet Warfare Pack",
+  "name": "Fleet Warfare+",
+  "tier": "advanced",
+  "priceUsd": 19.99,
+  "oncePerAccount": false,
+  "testerEligible": true,
+  "contents": {
+   "shards": 700,
+   "items": {
+    "xs_gold": 16,
+    "boost": 100,
+    "repairKit": 10,
+    "pirIntel": 4,
+    "o_admiral_30": 1,
+    "cl_general": 1,
+    "pg_gold": 3,
+    "mb3": 2,
+    "probe5": 5,
+    "chart": 5
+   }
+  },
+  "valueShards": 1694,
+  "blurb": "A month of Admiral and the Warlord license.",
+  "store": {
+   "play": "udf_fleet_adv",
+   "apple": "udf.fleet_adv"
+  },
+  "art": "pack-fleet-adv",
+  "sort": 5
+ },
+ {
+  "id": "forge_std",
+  "family": "forge",
+  "familyName": "Flagship Forge Pack",
+  "name": "Flagship Forge",
+  "tier": "standard",
+  "priceUsd": 9.99,
+  "oncePerAccount": false,
+  "testerEligible": true,
+  "contents": {
+   "shards": 300,
+   "items": {
+    "mb2": 5,
+    "mb3": 4,
+    "mb4": 1
+   }
+  },
+  "valueShards": 840,
+  "blurb": "Material Selection Boxes for your next gear tier.",
+  "store": {
+   "play": "udf_forge_std",
+   "apple": "udf.forge_std"
+  },
+  "art": "pack-forge-std",
+  "sort": 6
+ },
+ {
+  "id": "forge_adv",
+  "family": "forge",
+  "familyName": "Flagship Forge Pack",
+  "name": "Flagship Forge+",
+  "tier": "advanced",
+  "priceUsd": 19.99,
+  "oncePerAccount": false,
+  "testerEligible": true,
+  "contents": {
+   "shards": 600,
+   "items": {
+    "mb2": 4,
+    "mb3": 8,
+    "mb4": 3
+   }
+  },
+  "valueShards": 1760,
+  "blurb": "Rare and Epic boxes: pick exactly what the forge needs.",
+  "store": {
+   "play": "udf_forge_adv",
+   "apple": "udf.forge_adv"
+  },
+  "art": "pack-forge-adv",
+  "sort": 7
+ },
+ {
+  "id": "forge_prem",
+  "family": "forge",
+  "familyName": "Flagship Forge Pack",
+  "name": "Flagship Forge Elite",
+  "tier": "premium",
+  "priceUsd": 49.99,
+  "oncePerAccount": false,
+  "testerEligible": true,
+  "contents": {
+   "shards": 1500,
+   "items": {
+    "mb3": 6,
+    "mb4": 8,
+    "mb5": 2,
+    "boost": 45
+   }
+  },
+  "valueShards": 4532,
+  "blurb": "Epic and Legendary boxes.",
+  "store": {
+   "play": "udf_forge_prem",
+   "apple": "udf.forge_prem"
+  },
+  "art": "pack-forge-prem",
+  "sort": 8
+ },
+ {
+  "id": "hunter_std",
+  "family": "hunter",
+  "familyName": "Boss Hunter Pack",
+  "name": "Boss Hunter",
+  "tier": "standard",
+  "priceUsd": 9.99,
+  "oncePerAccount": false,
+  "testerEligible": true,
+  "contents": {
+   "shards": 350,
+   "items": {
+    "repairKit": 8,
+    "pirIntel": 4,
+    "boost": 60,
+    "xs_gold": 4,
+    "mb2": 4,
+    "mb3": 2
+   }
+  },
+  "valueShards": 822,
+  "blurb": "Repairs, intel and speed for hunting.",
+  "store": {
+   "play": "udf_hunter_std",
+   "apple": "udf.hunter_std"
+  },
+  "art": "pack-hunter-std",
+  "sort": 9
+ },
+ {
+  "id": "hunter_adv",
+  "family": "hunter",
+  "familyName": "Boss Hunter Pack",
+  "name": "Boss Hunter+",
+  "tier": "advanced",
+  "priceUsd": 19.99,
+  "oncePerAccount": false,
+  "testerEligible": true,
+  "contents": {
+   "shards": 700,
+   "items": {
+    "repairKit": 15,
+    "pirIntel": 8,
+    "boost": 120,
+    "xs_gold": 8,
+    "mb3": 6,
+    "o_admiral_7": 1,
+    "teleport": 1,
+    "chart": 5,
+    "probe5": 10
+   }
+  },
+  "valueShards": 1715,
+  "blurb": "Everything a hunting season needs.",
+  "store": {
+   "play": "udf_hunter_adv",
+   "apple": "udf.hunter_adv"
+  },
+  "art": "pack-hunter-adv",
+  "sort": 10
+ },
+ {
+  "id": "legend_prem",
+  "family": "legend",
+  "familyName": "Legendary Crafting Pack",
+  "name": "Legendary Crafting",
+  "tier": "premium",
+  "priceUsd": 49.99,
+  "oncePerAccount": false,
+  "testerEligible": true,
+  "contents": {
+   "shards": 1400,
+   "items": {
+    "mb5": 4,
+    "mb4": 4,
+    "mb3": 5,
+    "vipPts500": 1
+   }
+  },
+  "valueShards": 4535,
+  "blurb": "Late-game crafting: Legendary boxes.",
+  "store": {
+   "play": "udf_legend_prem",
+   "apple": "udf.legend_prem"
+  },
+  "art": "pack-legend-prem",
+  "sort": 11
+ },
+ {
+  "id": "cube_adv",
+  "family": "cube",
+  "familyName": "Cube Event Pack",
+  "name": "Cube Event",
+  "tier": "advanced",
+  "priceUsd": 19.99,
+  "oncePerAccount": false,
+  "testerEligible": true,
+  "contents": {
+   "shards": 700,
+   "mats": [
+    [
+     "cube",
+     4,
+     4
+    ],
+    [
+     "void",
+     4,
+     2
+    ]
+   ],
+   "items": {
+    "repairKit": 10,
+    "boost": 100,
+    "xs_gold": 5,
+    "pirIntel": 5
+   }
+  },
+  "valueShards": 1680,
+  "blurb": "Cube Fragments, Void Essence and repairs for Cube fights.",
+  "store": {
+   "play": "udf_cube_adv",
+   "apple": "udf.cube_adv"
+  },
+  "art": "pack-cube-adv",
+  "sort": 12
+ },
+ {
+  "id": "cube_prem",
+  "family": "cube",
+  "familyName": "Cube Event Pack",
+  "name": "Cube Event Elite",
+  "tier": "premium",
+  "priceUsd": 49.99,
+  "oncePerAccount": false,
+  "testerEligible": true,
+  "contents": {
+   "shards": 1500,
+   "mats": [
+    [
+     "cube",
+     5,
+     3
+    ],
+    [
+     "void",
+     5,
+     1
+    ],
+    [
+     "cube",
+     4,
+     4
+    ]
+   ],
+   "items": {
+    "repairKit": 15,
+    "boost": 200,
+    "o_staff_7": 1,
+    "xs_gold": 4
+   }
+  },
+  "valueShards": 4466,
+  "blurb": "Legendary Cube materials for the event.",
+  "store": {
+   "play": "udf_cube_prem",
+   "apple": "udf.cube_prem"
+  },
+  "art": "pack-cube-prem",
+  "sort": 13
+ },
+ {
+  "id": "ultimate",
+  "family": "ultimate",
+  "familyName": "Ultimate Combination Pack",
+  "name": "Ultimate Combination",
+  "tier": "ultimate",
+  "priceUsd": 99.99,
+  "oncePerAccount": false,
+  "testerEligible": true,
+  "contents": {
+   "shards": 3500,
+   "items": {
+    "mb6": 1,
+    "mb5": 3,
+    "mb4": 4,
+    "o_staff_30": 1,
+    "vipAct30": 1,
+    "pAll_gold": 5,
+    "xb_gold": 5,
+    "xr_gold": 5,
+    "xs_gold": 5
+   }
+  },
+  "valueShards": 9540,
+  "blurb": "The full set: a Mythic box, a month of VIP and the command staff.",
+  "store": {
+   "play": "udf_ultimate",
+   "apple": "udf.ultimate"
+  },
+  "art": "pack-ultimate",
+  "sort": 14
+ }
+]
