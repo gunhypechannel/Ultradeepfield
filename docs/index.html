@@ -2492,7 +2492,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 347;
+const GAME_V = 348;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9601,7 +9601,7 @@ const eraOf = (L, k) => { const a = eraAt(k); return L >= a[4] ? 4 : L >= a[3] ?
 const ERA_CAT = { metalMine: "prod", crystalMine: "prod", gasSynth: "prod", solar: "prod", fusion: "prod", metalStore: "store", crystalStore: "store", gasTank: "store", shipyard: "mil", fortress: "mil", missileSilo: "mil", repairYard: "mil", phalanx: "mil", radar: "mil" };
 /* ---------- v345 Meshy models: textured hulls and buildings made from the card art (docs/models/<id>.glb) ----------
    Meshy exports each model about 1.9 units long, Y up; ships face -X (the game's hulls face +X, so they turn half a circle). */
-const GLB_SHIPS = new Set(["fighter", "heavyFighter", "hauler", "heavyCargo", "recycler", "lancer", "ark", "corvette", "battleship", "bastion", "bomber", "destroyer", "dreadnought", "escortCarrier", "supercarrier", "guardian", "tender", "spyProbe", "worldbreaker"]);
+const GLB_SHIPS = new Set(["fighter", "heavyFighter", "hauler", "heavyCargo", "recycler", "lancer", "ark", "corvette", "battleship", "bastion", "bomber", "destroyer", "dreadnought", "escortCarrier", "supercarrier", "guardian", "tender", "spyProbe"]); // v348: not the Cube Destroyer, which is a sphere (its hand-built model)
 const GLB_YAW = { worldbreaker: -Math.PI / 2 }; // turn from the model file to the hull pointing +X (default: half a turn)
 const GLB_BLDS = new Set(["metalMine", "crystalMine", "gasSynth", "solar", "shipyard", "metalStore", "crystalStore", "gasTank", "robotics", "lab", "radar", "fusion"]);
 const GLB = {};
