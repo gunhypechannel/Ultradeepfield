@@ -2705,7 +2705,8 @@ const PX_DIR = "skins/";
 /* v238: how much of a painting the world fills (its radius over the frame). Ringed skins paint the world smaller so the whole ring fits */
 const PX_RING = { forge: .25, pearl: .25, metropolis: .25, lattice: .25, clockwork: .25, saturn: .25 };
 const pxF = id => (PXS[id] && PXS[id].img && !PXS[id].imgBad && PX_RING[id]) || .34;
-function pxPic(src, ok, bad) { const im = new Image(); im.decoding = "async"; im.onload = () => ok(im); im.onerror = () => bad && bad(); im.src = PX_DIR + src; }
+function pxPic(src, ok, bad) { const im = new Image(); im.decoding = "async"; im.onload = () => ok(im); im.onerror = () => bad && bad(); im.src = PX_DIR + src + (PX_FIX[src] ? "?v=" + PX_FIX[src] : ""); }
+const PX_FIX = { "dragon.webp": 2, "hellgate.webp": 2 }; /* v339: dragon's cut-off top now fades out; Hellgate's stray line removed */
 const hex3 = c => { const v = parseInt(c.slice(1), 16); return [v >> 16 & 255, v >> 8 & 255, v & 255]; };
 function pxGen(id, Wd) {
   const s = PXS[id], f = s.f, W = Wd || 512, H = W / 2, r = rnd(hash(id)), fb = pxNoise(hash(id) + 7), fb2 = pxNoise(hash(id) + 19), pal = s.p.map(hex3), pts = [];
