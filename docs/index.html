@@ -2398,7 +2398,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 335;
+const GAME_V = 336;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -12786,7 +12786,7 @@ function shSpyRep() {
   const r = (S.spyReps || []).find(x => x.id === sheet.id); if (r && !(S.tutSpyRd || []).includes(r.at)) { S.tutSpyRd = (S.tutSpyRd || []).concat([r.at]).slice(-6); S.tutSpyR = (S.tutSpyR || 0) + 1; dirty(); } // v332: each report counts once (v301: the Academy's "read the report" steps) if (!r) return `<div class="hd"><h2>Espionage report</h2><button class="x" data-act="close" aria-label="Close">✕</button></div><p class="note">This report has expired.</p>`;
   const p = G.byId[r.pid], T = now(), v2 = r.v === 2, who = r.owner ? (isBot(r.owner) ? esc(nameOf(r.owner)) + " (bot)" : esc(nameOf(r.owner))) : r.alien ? "The Hive" : "Unclaimed";
   const tour = tutAt("scoutR") && (S.tutTour || 0) < 3 ? S.tutTour || 0 : -1; /* v336: three stops through your first report */
-  const sec = (title, body) => { const k = SPY_TOUR.findIndex(x => x[0].test(title)), on = k >= 0 && k === tour; return `<section class="spys${on ? " tourOn" : ""}"><h3>${title}</h3>${body}${on ? `<p class="tourtip">💡 ${SPY_TOUR[k][1]}</p><button class="btn amber sm" data-act="tutTour">Got it ›</button>` : ""}</section>`; }, plunder = r.res && !r.home ? Object.fromEntries(Object.entries(r.res).map(([k, v]) => [k, Math.floor(v / 2)])) : null;
+  const sec = (title, body) => { const k = SPY_TOUR.findIndex(x => x[0].test(title)), on = k >= 0 && k === tour; return `<section class="spys${on ? " tourOn" : ""}"><h3>${title}</h3>${body}${on ? `<p class="tourtip">💡 ${SPY_TOUR[k][1]}</p><button class="btn amber sm" data-act="tutTour">Got it ›</button>` : ""}</section>${on && k === 2 ? `<div style="height:55vh"></div>` : ""}`; }, plunder = r.res && !r.home ? Object.fromEntries(Object.entries(r.res).map(([k, v]) => [k, Math.floor(v / 2)])) : null;
   const d = (r.mineE || 0) - (r.theirE || 0), fleet = v2 ? r.fleet : r.units, def = v2 ? r.def : r.units ? {} : null, lock = thr => `<p class="note lock">🔒 Hidden. Send ${v2 ? `${spyNeed(thr, d)} probes` : "more probes"} or raise Espionage Technology to see this.</p>`;
   const bl = Object.entries(r.b || {}).filter(([k, v]) => v > 0 && B[k]), rl = Object.entries(r.rs || {}).filter(([k, v]) => v > 0 && R[k]);
   const out = r.sim ? (r.sim.w === "a" ? `<b style="color:var(--green)">Your home fleet would win</b>` : r.sim.w === "draw" ? `<b style="color:var(--amber)">Likely a draw</b>` : `<b style="color:var(--red)">Your home fleet would lose</b>`) : "";
@@ -16425,7 +16425,7 @@ const ACT = {
   pk: d => { pick[d.k] = clamp((pick[d.k] || 0) + +d.d, 0, originAvail()[d.k] || 0); renderSheet(); },
   pkmax: d => { pick[d.k] = originAvail()[d.k] || 0; renderSheet(); },
   pknone: d => { pick[d.k] = 0; renderSheet(); }, // v95: deselect a whole ship type, like All selects it
-  pkevery: () => { pick = Object.assign({}, originAvail()); renderSheet(); }, pkeff: () => effPick(),
+  pkevery: () => { pick = Object.assign({}, originAvail()); if (tutOn()) delete pick.spyProbe; renderSheet(); }, /* v336: the Academy keeps its probes out of the fight (they need them for scouting) */ pkeff: () => effPick(),
   pkclear: () => { for (const k in pick) pick[k] = 0; renderSheet(); },
   setFrom: d => { sheet.from = d.id; pick = Object.assign({}, originAvail()); sheet.oddsKey = null; renderSheet(); },
   jointToggle: () => { sheet.joint = !sheet.joint; renderSheet(); },
@@ -16561,7 +16561,7 @@ const ACT = {
   duelBattle: () => { if (!duelOwner()) return; toast("Building the 1 vs 1 duel…"); setTimeout(() => { try { playBattle(duelBattle()); } catch (e) { toast("Couldn't build the duel on this device.", "warn"); } }, 60); },
   copyId: () => { const v = String(G.me || ""); try { navigator.clipboard.writeText(v).then(() => toast("Account ID copied."), () => toast("Account ID: " + v)); } catch (e) { toast("Account ID: " + v); } }, // v213: so the owner's account on each server can be added to OWNER_IDS
   labSave: () => { S.labSaved = S.labSaved ? 0 : 1; dirty(); toast(S.labSaved ? "10 vs 10 saved. Find it under Mail › Saved." : "10 vs 10 removed from Saved.", S.labSaved ? "win" : ""); render(true); },
-  tutTour: () => { S.tutTour = Math.min(3, (S.tutTour || 0) + 1); dirty(); renderSheet(); setTimeout(() => { const n = $(".sheet .tourOn"); if (n) n.scrollIntoView({ block: "center", behavior: "smooth" }); }, 60); coachRender(true); }, // v336
+  tutTour: () => { S.tutTour = Math.min(3, (S.tutTour || 0) + 1); dirty(); renderSheet(); setTimeout(() => { const n = $(".sheet .tourOn"); if (n) n.scrollIntoView({ block: "start", behavior: "smooth" }); }, 60); /* the tip then sits below the Got it button, not over what you're reading */ coachRender(true); }, // v336
   repSave: d => { const r = findRep(d.id); if (!r) return; S.savedReps = S.savedReps || []; const i = S.savedReps.findIndex(x => x.id === d.id);
     if (i >= 0) { S.savedReps.splice(i, 1); toast("Report removed from Saved."); } else { if (S.savedReps.length >= 30) return toast("You can keep 30 saved reports. Remove one first.", "warn"); S.savedReps.unshift(r); toast("Report saved. Find it under Mail › Saved.", "win"); }
     dirty(); renderSheet(); },
