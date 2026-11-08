@@ -13273,6 +13273,7 @@ function mGame() {
     <div class="mcard"><h3>${MI.grid.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Game</h3>${mrow("Galaxy", G.mode === "online" ? "Live" : G.mode === "offline" ? "Solo" : G.mode === "full" ? "Full" : G.mode === "readonly" ? "Watching" : "…")}<p>${net} Other people join when the owner shares this page with them as Editors.</p><div class="mrow"><span>Game version</span><b>v${GAME_V}</b></div>${G.me ? `<div class="mrow"><span>Account ID</span><b style="font-size:11px;word-break:break-all;text-align:right">${esc(G.me)}</b></div><button class="mbtn" data-act="copyId">Copy account ID</button>` : ""}</div>
     <div class="mcard"><h3>${MI.orbit.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Play on Android</h3><p>Open this page in Chrome on your phone, tap the ⋮ menu, then Add to Home screen. It opens like an app, and production keeps running while you're away.</p></div>
     <div class="mcard"><h3>${MI.user.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Briefing</h3><p>Relive the ambush on the way in and hear Admiral Kaskov's opening briefing again.</p><button class="mbtn" data-act="replayIntro">Replay briefing</button></div>
+    <div class="mcard"><h3>${MI.user.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Feedback</h3><p>Found a bug, or something confusing? Tell us, with a screenshot if you like.</p><button class="mbtn" data-act="fbMenu">Send feedback</button></div>
     <div class="mcard"><h3>${MI.rank.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Records</h3>${mrow("Battles won", S.wins)}${mrow("Won against commanders", S.pvpWins)}${mrow("Planets occupied", S.captures)}${mrow("Ships recovered by repair docks", fmt((S.stats || {}).repaired || 0))}${mrow("Strongest Hive garrison", S.maxWin ? "Lv." + S.maxWin : "–")}</div>
     ${restartBtn()}`;
 }
@@ -16562,6 +16563,7 @@ const ACT = {
   duelBattle: () => { if (!duelOwner()) return; toast("Building the 1 vs 1 duel…"); setTimeout(() => { try { playBattle(duelBattle()); } catch (e) { toast("Couldn't build the duel on this device.", "warn"); } }, 60); },
   copyId: () => { const v = String(G.me || ""); try { navigator.clipboard.writeText(v).then(() => toast("Account ID copied."), () => toast("Account ID: " + v)); } catch (e) { toast("Account ID: " + v); } }, // v213: so the owner's account on each server can be added to OWNER_IDS
   labSave: () => { S.labSaved = S.labSaved ? 0 : 1; dirty(); toast(S.labSaved ? "10 vs 10 saved. Find it under Mail › Saved." : "10 vs 10 removed from Saved.", S.labSaved ? "win" : ""); render(true); },
+  fbMenu: () => { const b = document.getElementById("fbBtn"); if (b) b.click(); }, // v336
   tutTour: () => { S.tutTour = Math.min(3, (S.tutTour || 0) + 1); dirty(); renderSheet(); setTimeout(() => { const n = $(".sheet .tourOn"); if (n) n.scrollIntoView({ block: "start", behavior: "smooth" }); }, 60); /* the tip then sits below the Got it button, not over what you're reading */ coachRender(true); }, // v336
   repSave: d => { const r = findRep(d.id); if (!r) return; S.savedReps = S.savedReps || []; const i = S.savedReps.findIndex(x => x.id === d.id);
     if (i >= 0) { S.savedReps.splice(i, 1); toast("Report removed from Saved."); } else { if (S.savedReps.length >= 30) return toast("You can keep 30 saved reports. Remove one first.", "warn"); S.savedReps.unshift(r); toast("Report saved. Find it under Mail › Saved.", "win"); }
@@ -16741,7 +16743,7 @@ setTimeout(() => boot((window.claude && window.claude.hot && window.claude.hot.d
 #fbBtn{position:fixed;left:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 72px);z-index:65;display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:18px;border:1px solid rgba(127,230,243,.45);background:rgba(6,18,30,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#bff3fa;font:600 12px "Oxanium",sans-serif;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 4px 14px rgba(0,0,0,.45);opacity:.85;touch-action:manipulation}
 #fbBtn:active{opacity:1}
 .cnrow{display:flex;gap:8px;align-items:stretch}.cnrow .minput{flex:1;min-width:0}.cnrow .btn{flex:none}
-body:has(.sheet) #fbBtn,body:has(#adv) #fbBtn,body:has(#udfAuth) #fbBtn{display:none}
+body:has(.sheet) #fbBtn,body:has(#adv) #fbBtn,body:has(#tutguide.acad[style*="block"]) #fbBtn,body:has(#udfAuth) #fbBtn{display:none}
 #fbW{position:fixed;inset:0;z-index:95;display:none;align-items:flex-end;justify-content:center;background:rgba(2,6,12,.6)}
 #fbW.on{display:flex}
 #fbW form{width:min(480px,100%);background:linear-gradient(180deg,#11202d,#0b1520);border:1px solid #2c5468;border-radius:18px 18px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 16px);display:flex;flex-direction:column;gap:10px;color:#d5e4ec;font-family:"Barlow Semi Condensed",sans-serif}
