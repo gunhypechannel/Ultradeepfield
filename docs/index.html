@@ -2492,7 +2492,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 346;
+const GAME_V = 347;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9601,8 +9601,9 @@ const eraOf = (L, k) => { const a = eraAt(k); return L >= a[4] ? 4 : L >= a[3] ?
 const ERA_CAT = { metalMine: "prod", crystalMine: "prod", gasSynth: "prod", solar: "prod", fusion: "prod", metalStore: "store", crystalStore: "store", gasTank: "store", shipyard: "mil", fortress: "mil", missileSilo: "mil", repairYard: "mil", phalanx: "mil", radar: "mil" };
 /* ---------- v345 Meshy models: textured hulls and buildings made from the card art (docs/models/<id>.glb) ----------
    Meshy exports each model about 1.9 units long, Y up; ships face -X (the game's hulls face +X, so they turn half a circle). */
-const GLB_SHIPS = new Set(["fighter", "heavyFighter", "hauler", "heavyCargo", "recycler", "lancer", "ark", "corvette", "battleship", "bastion", "bomber", "destroyer", "dreadnought", "escortCarrier", "supercarrier", "guardian", "tender", "spyProbe"]);
-const GLB_BLDS = new Set(["metalMine", "crystalMine", "gasSynth", "solar", "shipyard", "metalStore", "crystalStore", "gasTank", "robotics", "lab", "radar"]);
+const GLB_SHIPS = new Set(["fighter", "heavyFighter", "hauler", "heavyCargo", "recycler", "lancer", "ark", "corvette", "battleship", "bastion", "bomber", "destroyer", "dreadnought", "escortCarrier", "supercarrier", "guardian", "tender", "spyProbe", "worldbreaker"]);
+const GLB_YAW = { worldbreaker: -Math.PI / 2 }; // turn from the model file to the hull pointing +X (default: half a turn)
+const GLB_BLDS = new Set(["metalMine", "crystalMine", "gasSynth", "solar", "shipyard", "metalStore", "crystalStore", "gasTank", "robotics", "lab", "radar", "fusion"]);
 const GLB = {};
 function glbOn() {
   if (!(TH && TH.GLTFLoader) || /[?&]glb=0/.test(location.search)) return false; if (/[?&]glb=1/.test(location.search)) return true;
@@ -9646,7 +9647,7 @@ function glbReady(k) {
 function glbShip(k) {
   if (!GLB_SHIPS.has(k)) return null; const src = glbGet(k); if (!src) return null;
   const g = new TH.Group(), m = src.clone(true), bb = src.userData.bb, c = bb.getCenter(new TH.Vector3()), sz = bb.getSize(new TH.Vector3());
-  m.position.set(-c.x, -c.y, -c.z); const pv = new TH.Group(); pv.add(m); pv.rotation.y = Math.PI; g.add(pv);
+  m.position.set(-c.x, -c.y, -c.z); const pv = new TH.Group(); pv.add(m); pv.rotation.y = GLB_YAW[k] !== undefined ? GLB_YAW[k] : Math.PI; g.add(pv);
   const sc = 3 / Math.max(sz.x, .01); g.scale.setScalar(sc); // about the length of the hand-built hulls, so lights and glow sizes still fit
   g.userData.eng = k === "spyProbe" ? [] : [[-sz.x / 2 * .97, 0, 0, Math.max(.05, Math.min(sz.y, sz.z) * .16)]]; g.userData.glb = true;
   g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
