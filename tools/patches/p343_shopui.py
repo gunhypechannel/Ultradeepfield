@@ -19,7 +19,7 @@ rep('SHEET_NAME = { ','SHEET_NAME = { shop: "shop", pack: "pack", packadmin: "ow
 a=h[h.index("function packsBody() {"):h.index("function pkApply(")]
 b='''const PK_TIER = { intro: ["Starter", "#9fd6ff"], starter: ["Starter", "#9fd6ff"], standard: ["Standard", "#55d6e8"], advanced: ["Advanced", "#b46cff"], premium: ["Premium", "#ffa63a"], ultimate: ["Ultimate", "#ffd36b"], pouch: ["", "#c9a6ff"], satchel: ["", "#c9a6ff"], crate: ["", "#c9a6ff"], vault: ["", "#c9a6ff"], hoard: ["", "#c9a6ff"], treasury: ["", "#ffd36b"] };
 const PK_FEAT = ["starter_pack", "forge_adv", "ultimate"];
-const pkArt = p => `art/packs/pack-${p.family}.webp`;
+const pkArt = p => p.family === "shards" ? `art/packs/pack-shards-${p.tier}.webp?v=1` : `art/packs/pack-${p.family}.webp?v=1`;
 function pkState() { const st = G.tstat || {}, tester = !!st.tester, claimed = st.claimed ? (G.packs || []).find(p => p.id === st.claimed) : null; return { st, tester, claimed }; }
 function pkBtn(p, big) { const { tester, claimed } = pkState(), can = tester && !claimed && p.tester;
   return can ? `<button class="btn amber ${big ? "wide" : "sm"}" data-act="packClaim" data-k="${esc(p.id)}">Claim free</button>` : `<button class="btn ${big ? "wide" : "sm"}" disabled>${tester ? (claimed && claimed.id === p.id ? "Claimed ✓" : "Claimed this week") : "Coming soon"}</button>`; }
