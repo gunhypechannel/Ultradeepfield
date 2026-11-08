@@ -1,11 +1,12 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-08 (America/Phoenix). Current game version: **v349** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v156**.
+Last updated: 2026-11-08 (America/Phoenix). Current game version: **v350** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v157**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
 ## Pending work (as of 2026-11-07): start here in a new session
 
+000000000000000000000. **v350 (2026-11-08):** celebration cards (Academy Complete, Flagship Commissioned) showed only the top of the Advisor's hair: her full-length portrait (`ADV_ART`, 330×1219) was a full-width cover banner. Now a centred head-and-shoulders frame (`#celeb .cbart.adv`, `p350_celart.py`).
 00000000000000000000. **v349 (2026-11-08): "Commander" scaled back** (owner: it sounded odd on many lines). `p349_cmdr.py` + `.json`: 96 of v341's 110 lines go back to their original wording and original clips (still in `docs/voice`; key = hash of the text). Kept on 14: naming the capital, never attack blind, show Vael'Khor we bite back, second-world goal, everything is in place, power before the second world, raiders/radar, convoy lost, clean work, scout report on breeding grounds, first blood, homeworld balanced, both Academy-complete lines. Don't re-run `p341_commander.py`.
 0000000000000000000. **v348 (2026-11-08):** the Cube Destroyer is a sphere (owner): its Meshy cube model is removed and the hand-built battle sphere is back (`p348_sphere.py`). A spherical model would need new credits (9 left).
 000000000000000000. **v347 (2026-11-08): Cube Destroyer and Fusion Plant models** (`p347_cube.py`, last Meshy credits; 9 left). The Cube Destroyer (`worldbreaker`) is an original armoured cube with a red emitter eye (its card art is a Death Star look-alike, so the model is not made from the card); it turns a quarter (`GLB_YAW`) so the eye faces the battle camera. Fusion Plant 51k triangles. A Missile Silo model was made (`Downloads/udf-meshy/missileSilo_raw.glb` on the owner's PC) but not added: it only simplifies to 84k triangles (seams), too heavy for phones. Not modelled: Discovery (`eclipse`), flagship, defenses, aliens, Repair Yard, Missile Silo, Nanite Assembly, Geo-Former, Coalition Depot, Lunar Outpost, Phalanx Array, Flagship Dock, Warp Gate, Orbital Fortress.
