@@ -5,6 +5,7 @@ def rep(a, b, n=1):
 # report sections get a "Got it" stop during the scouting step
 rep('''  const sec = (title, body) => `<section class="spys"><h3>${title}</h3>${body}</section>`, plunder''',
 '''  const tour = tutAt("scoutR") && (S.tutTour || 0) < 3 ? S.tutTour || 0 : -1; /* v336: three stops through your first report */
+  if (tour === 0 && G.tourAt !== sheet.id) { G.tourAt = sheet.id; setTimeout(() => { const n = $(".sheet .tourOn"); if (n) n.scrollIntoView({ block: "start", behavior: "smooth" }); }, 450); } /* first stop: lift it so the guide's tip sits below, not on the text */
   const sec = (title, body) => { const k = SPY_TOUR.findIndex(x => x[0].test(title)), on = k >= 0 && k === tour; return `<section class="spys${on ? " tourOn" : ""}"><h3>${title}</h3>${body}${on ? `<p class="tourtip">💡 ${SPY_TOUR[k][1]}</p><button class="btn amber sm" data-act="tutTour">Got it ›</button>` : ""}</section>${on && k === 2 ? `<div style="height:55vh"></div>` : ""}`; }, plunder''')
 rep('function shSpyRep() {', '''const SPY_TOUR = [[/^Resources$/, "What's stored there. Win the fight and your ships carry part of it home."], [/^(Hive swarm|Fleet)$/, "The ships guarding it. Compare them with your own fleet."], [/^Battle forecast$/, "The verdict: a simulated battle against your fleet. Green means attack."]];
 function shSpyRep() {''')
