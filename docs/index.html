@@ -2492,7 +2492,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 355;
+const GAME_V = 356;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9616,6 +9616,16 @@ function glbOn() {
   return (glbOn.v = ok);
 }
 const GLB_Q = []; let GLB_RUN = 0;
+const GLB_V = {"allyDepot":"c2dfe0e8","ark":"9b3cccf1","bastion":"70f5614b","battleship":"e235b570","bomber":"09efbb28","corvette":"1d10b235","crystalMine":"96bb71b9","crystalStore":"1a929fcf","destroyer":"831f8994","dreadnought":"7703142f","escortCarrier":"b4256abb","fighter":"80489844","fortress":"405286e5","fusion":"ec8965d4","gasSynth":"708df8c8","gasTank":"dbcabb5c","guardian":"a9a493f6","hauler":"0b4fb8e6","heavyCargo":"0b382b6b","heavyFighter":"1d458c8b","lab":"4a2529f7","lancer":"7f74a79b","lunarBase":"6e5b6c72","metalMine":"54532b9d","metalStore":"72d30726","nanite":"c3b6fb3e","phalanx":"4fe44153","radar":"8b652465","recycler":"4919e165","repairYard":"3374af55","robotics":"67616b88","shipyard":"e82b8bd0","solar":"32100219","spyProbe":"4c7bf229","supercarrier":"fa2ab171","tender":"054f88f4","terraformer":"fd97993c","worldbreaker":"df12e57d"}; // v356 each model file's fingerprint (tools/glb_versions.json)
+/* v356 start loading your buildings' and hulls' models as soon as the game is ready, before the base is opened */
+function glbPreload() {
+  if (glbPreload.done || !G.ready || typeof S === "undefined" || !S || !S.b) return; glbPreload.done = true; if (!glbOn() || WEAK) return;
+  const want = new Set(); for (const k in S.b) if (S.b[k] > 0 && GLB_BLDS.has(k)) want.add(k);
+  try { for (const p of myPlanets()) for (const k in (p.b || {})) if (p.b[k] > 0 && GLB_BLDS.has(k)) want.add(k); } catch (e) {}
+  for (const k of want) glbGet(k);
+  for (const k in (S.ships || {})) if (S.ships[k] > 0 && GLB_SHIPS.has(k)) glbGet(k);
+}
+setInterval(() => { if (!glbPreload.done) try { glbPreload(); } catch (e) {} }, 1000);
 function glbMark(on) { try { if (on) localStorage.setItem("udfGlbBusy", Date.now()); else localStorage.removeItem("udfGlbBusy"); } catch (e) {} }
 /* v354 a normal ending (closing, switching away, reloading) is not a crash: clear the note; set it again if loading carries on */
 window.addEventListener("pagehide", () => glbMark(false)); document.addEventListener("visibilitychange", () => { if (document.hidden) glbMark(false); else if (GLB_RUN || GLB_Q.length) glbMark(true); });
@@ -9668,11 +9678,12 @@ function glbNext() {
   const k = GLB_Q.shift(); GLB_RUN = 1; if (!document.hidden) glbMark(true);
   const done = () => { GLB_RUN = 0; setTimeout(glbNext, 120); };
   try {
-    new TH.GLTFLoader().load("models/" + k + ".glb?v=" + GAME_V, g => {
+    GLB[k].t0 = performance.now(); setTimeout(() => { if (GLB[k] && !GLB[k].scene) { GLB[k].slow = true; if (C3 && C3.keys) C3.keys[k] = null; } }, 10000); // v356 too slow: show the plain building
+    new TH.GLTFLoader().load("models/" + (MOBILE ? "m/" : "") + k + ".glb?h=" + (GLB_V[k] || GAME_V), g => {
       const s = g.scene, big = MOBILE ? (GLB_BLDS.has(k) && GLB_BN++ < 8 ? 1536 : 1024) : 2048, aux = MOBILE ? 512 : 1024, an = texAniso(), ps = [];
       s.traverse(o => { if (o.isMesh) { const m = o.material; if (m && m.isMeshStandardMaterial) { m.envMapIntensity = .9; ps.push(glbShrink(m.map, big)); for (const t of new Set([m.normalMap, m.roughnessMap, m.metalnessMap])) ps.push(glbShrink(t, aux)); for (const t of [m.map, m.normalMap]) if (t) t.anisotropy = an; } } });
       Promise.all(ps).then(() => GLB_BLDS.has(k) ? glbLights(k, s) : null).then(() => { const bb = new TH.Box3().setFromObject(s); s.userData.bb = bb; GLB[k].scene = s; done(); glbReady(k); });
-    }, undefined, () => { GLB[k].fail = true; done(); });
+    }, undefined, () => { GLB[k].fail = true; done(); if (C3 && C3.keys) C3.keys[k] = null; });
   } catch (e) { GLB[k].fail = true; done(); }
 }
 function glbGet(k) {
@@ -9697,7 +9708,8 @@ function glbShip(k) {
 }
 /* a building on its plot: the model scaled to the plot, standing on it */
 function glbBld(k, b, big, small, anim) {
-  if (!GLB_BLDS.has(k) || WEAK) return false; /* slower Android phones keep the light hand-built buildings */ const src = glbGet(k); if (!src) return false;
+  if (!GLB_BLDS.has(k) || WEAK) return false; /* slower Android phones keep the light hand-built buildings */ const src = glbGet(k);
+  if (!src) { const e = GLB[k]; return e && !e.fail && !e.slow ? "wait" : false; } // v356 on its way: bModel shows a hologram if (!src) return false;
   const m = src.clone(true), bb = src.userData.bb, c = bb.getCenter(new TH.Vector3()), sz = bb.getSize(new TH.Vector3());
   const foot = big ? 6.2 : small ? 3.4 : 4.6, hmax = big ? 6 : small ? 3.8 : 5.5, s = Math.min(foot / Math.max(sz.x, sz.z, .01), hmax / Math.max(sz.y, .01)); m.scale.setScalar(s); m.userData.nobake = true; m.position.set(-c.x * s, -bb.min.y * s, -c.z * s);
   b.add(m);
@@ -9719,7 +9731,8 @@ function bModel(k, L, busy) {
   const rim = new TH.Mesh(new TH.TorusGeometry(big ? 3.35 : small ? 1.95 : 2.55, .05, 4, 6), L ? C.cyan : C.holo); rim.rotation.x = Math.PI / 2; rim.position.y = .24; g.add(rim);
   if (!L) { g.add(cbox(2.2, 1.8, 2.2, C.holo, 0, .25, 0)); g.userData.anim = anim; return g; }
   const b = new TH.Group(); b.scale.setScalar(1 + era * .045 + Math.min(4, L - eraAt(k)[era]) * .006); b.position.y = .22; g.add(b); // grows upward through eras, never out into the neighbouring plots
-  if (!glbBld(k, b, big, small, anim) && !artBld(k, b, era, C, anim)) switch (k) { // v177 the card-art buildings have their own models (v345: and the Meshy models before them)
+  const gw = glbBld(k, b, big, small, anim); // v356 true: the model; "wait": it is loading (shown as a hologram)
+  if (gw !== true && !artBld(k, b, era, C, anim)) switch (k) { // v177 the card-art buildings have their own models (v345: and the Meshy models before them)
     case "metalMine": {
       b.add(cbox(1.8, 1.1, 1.6, C.steel, -.4, 0, -.2)); b.add(cbox(1.9, .25, 1.7, C.dark, -.4, 1.1, -.2));
       for (let i = 0; i <= Math.min(tier, 2); i++) { const x = .9 - i * .9, z = .9; b.add(ccyl(.18, .18, 2.4 + tier * .3, C.dark, x, 0, z, 8)); const head = new TH.Mesh(new TH.ConeGeometry(.35, .7, 6), C.light); head.position.set(x, 2.6 + tier * .3, z); b.add(head); anim.push([head, "spin", 3]); }
@@ -9817,6 +9830,7 @@ function bModel(k, L, busy) {
       const hatch = cbox(.9, .06, .45, C.amber, .9, .5, 0); b.add(hatch); break;
     }
   }
+  if (gw === "wait") { const HM = HOLO_WIRE(); b.traverse(o => { if (o.isMesh) { o.material = HM; o.castShadow = false; } }); }
   if (!ART_B[k]) eraSpecific(k, b, era, C, anim); eraKit(g, k, L, era, C, anim, big ? 3.3 : small ? 1.9 : 2.5, !!ART_B[k]); // the card-art models grow in their own way, so they keep only the plinth details
   const beacon = new TH.Mesh(new TH.SphereGeometry(.09, 8, 6), C.cyan); beacon.position.set(1.7, .4, 1.7); g.add(beacon); anim.push([beacon, "blink", (hash(k) % 10)]);
   // v177 under construction: scaffolding, a tower crane slewing its jib, a hovering pair of builder drones and flashing work lights
