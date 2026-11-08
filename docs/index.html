@@ -270,6 +270,14 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 /* v210 fleet path: the hull ladder on the Quests tab and the Advisor's next-step line */
 .fpath{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:8px}.fpn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025);text-align:center;opacity:.55;min-width:0}.fpn i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:700 11px var(--f-display);font-style:normal;background:#1a252e;color:var(--muted)}.fpn b{font-size:11.5px;color:#e8f2f8;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fpn small{font-size:10px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fpn.done{opacity:.85}.fpn.done i{background:rgba(95,224,138,.2);color:#5fe08a}.fpn.next{opacity:1;border-color:rgba(255,199,106,.7);background:rgba(255,199,106,.08);box-shadow:0 0 14px rgba(255,199,106,.15)}.fpn.next i{background:var(--amber);color:#1a1206}.fpn.next small{color:#ffd66a}
 .road{margin:6px 0;padding:6px 10px;border-radius:8px;background:rgba(85,214,232,.07);display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:#cfe6ef}.road small{flex-basis:100%;color:var(--cyan);letter-spacing:.1em}.road span.ok{color:var(--green)}.road span.nx{color:var(--amber);font-weight:700}.road i{font-style:normal;opacity:.7}.road em{flex-basis:100%;font-style:normal;opacity:.8}
+#rwcard{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 118px);z-index:66;transform:translate(-50%,-14px);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:min(92vw,420px);padding:10px 14px 12px;border-radius:14px;background:linear-gradient(180deg,rgba(14,24,36,.96),rgba(7,13,22,.96));border:1px solid var(--tc,#5dd4e8);box-shadow:0 10px 30px rgba(0,0,0,.55),0 0 18px color-mix(in srgb,var(--tc,#5dd4e8) 35%,transparent)}
+#rwcard.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}#rwcard small{display:block;font:700 11px/1.3 var(--f-display);letter-spacing:.12em;color:var(--tc,#9fd)}
+#rwcard.rare{box-shadow:0 10px 30px rgba(0,0,0,.55),0 0 34px color-mix(in srgb,var(--tc) 70%,transparent);animation:rwflare 1.2s ease-out 1}@keyframes rwflare{0%{filter:brightness(2.2)}100%{filter:none}}
+#rwcard .rwm{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:8px}#rwcard .rwm span{display:flex;align-items:center;gap:4px}#rwcard .rwm .fsmi.lg{width:42px;height:42px;margin:0;box-shadow:0 0 0 2px var(--tc),0 0 12px color-mix(in srgb,var(--tc) 60%,transparent)}
+#rwcard .rwm b{font:800 22px/1 var(--f-display);color:#fff}#rwcard .rwm em{font-style:normal;font-size:11px;line-height:1.15;color:var(--tc)}
+.lprev{margin:8px 0;padding:8px 10px;border-radius:10px;background:rgba(85,214,232,.06);border:1px solid rgba(85,214,232,.18)}.lprev small{color:var(--cyan);letter-spacing:.1em;font-size:11px}.lprev>div{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.lprev .lp{display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:8px;border:1px solid var(--tc);background:rgba(0,0,0,.25);font-size:12px}.lprev .lp b{font-weight:600}.lprev .lp em{font-style:normal;color:var(--tc)}.lprev .note{margin:6px 0 0;font-size:11px}
+.lfk{margin:6px 0 0;font-size:12px;color:var(--amber)}.elite{margin:6px 0;padding:6px 10px;border-radius:8px;background:linear-gradient(90deg,rgba(255,190,80,.22),rgba(255,190,80,.05));border:1px solid rgba(255,200,100,.6);color:#ffd890;font:700 12px/1.3 var(--f-display);letter-spacing:.06em}
 .cneed{font-size:12.5px;padding:6px 10px;border-radius:8px;background:rgba(255,199,106,.08);border-left:3px solid var(--amber);color:#e8f2f8}.cneed small{color:var(--muted)}
 /* v210 How to play: counters as a "best against" list */
 .ctrl{display:flex;flex-direction:column;gap:4px;margin:8px 0}.ctrl span{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.035)}.ctrl b{color:#f2f6f8}.ctrl i{font-style:normal;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}.ctrl em{font-style:normal;text-align:right;color:#ffd66a}
@@ -2004,6 +2012,8 @@ const monLoot = lvl => ({ m: Math.round(5000 * lvl ** 1.45), c: Math.round(3200 
 const monAccel = lvl => ({ tier: lvl >= 20 ? "gold" : lvl >= 10 ? "silver" : "bronze", n: 1 + (lvl >= 15 ? 1 : 0) + (lvl >= 25 ? 1 : 0) });
 const xForce0 = x => trainingPir(x) ? { fighter: 1 } : x.mon ? monForce(x.mon, x.lvl) : pirateForce(x.lvl, x.boss);
 const xForce = x => { const o = xForce0(x); try { if (isElite(x)) for (const k in o) o[k] = Math.max(1, Math.round(o[k] * 1.6)); } catch (e) {} return o; }; /* v338 elites: ELITE_K.force */
+const xShards = x => x.boss ? 1 + Math.floor(x.lvl / 5) : x.mon ? Math.floor(x.lvl / 6) : x.lvl >= 10 ? 1 : 0; /* v338 */
+const pyrShards = L => Math.max(1, Math.floor(L / 3));
 const xLoot0 = x => x.mon ? monLoot(x.lvl) : pirLoot(x.lvl, x.boss);
 const xLoot = x => { const o = xLoot0(x); try { return isElite(x) ? mul(o, 1.5) : o; } catch (e) { return o; } }; /* v338 elites: ELITE_K.res */
 const xRegroup = x => x.mon ? (25 + 3 * x.lvl) * 60000 : pirRegroup(x.lvl, x.boss);
@@ -3648,7 +3658,7 @@ function pirateArrive(f) {
     const L = xLoot(x), cap = cargoOf(f.n), ratio = Math.min(1, cap / total(L));
     rep.loot = { m: Math.floor(L.m * ratio), c: Math.floor(L.c * ratio), g: Math.floor(L.g * ratio) }; f.loot = rep.loot;
     S.pir = S.pir || {}; S.pir[x.id] = f.arrive + xRegroup(x); S.wins++; bump(x.mon ? "monsters" : x.boss ? "cubes" : "pirates"); evPts("hunt", x.lvl * (x.boss ? 120 : x.mon ? 60 : 20)); if (x.boss) sendGift(x.lvl >= 20 ? 2 : 1, "destroyed " + x.name);
-    { const sh = x.boss ? 1 + Math.floor(x.lvl / 5) : x.mon ? Math.floor(x.lvl / 6) : x.lvl >= 10 ? 1 : 0; /* v80: shards are scarce (Game of War gold, OGame Dark Matter) */ S.shards = (S.shards || 0) + sh; rep.shards = sh; } // every win pays Void Shards
+    { const sh = xShards(x); /* v80: shards are scarce (Game of War gold, OGame Dark Matter); v338: one formula for the card and the payout */ S.shards = (S.shards || 0) + sh; rep.shards = sh; } // every win pays Void Shards
     if (x.mon) { // monsters always drop time accelerators: Forge Swarm, Yard Overdrive or Insight Matrix, better ones at higher levels
       const A = monAccel(x.lvl), got = []; for (let i = 0; i < A.n; i++) { const it = `x${"bsr"[(Math.random() * 3) | 0]}_${A.tier}`; giveItem(it); got.push(SHOP[it].n); rep.item = it; }
       rep.accel = got; note(`Harvested from ${x.name}: ${got.map(n => `${n} (${A.tier})`).join(", ")}. They're in your Void Shop inventory.`, "win"); }
@@ -3675,7 +3685,7 @@ function pyramidArrive(f) {
   }
   const L = pyrLoot(y.lvl), cap = cargoOf(f.n), ratio = Math.min(1, cap / total(L)); f.loot = { m: Math.floor(L.m * ratio), c: Math.floor(L.c * ratio), g: Math.floor(L.g * ratio) };
   S.pyr = S.pyr || {}; S.pyr[y.id] = f.arrive + PYR_CD; bump("pyramids");
-  const sh = Math.max(1, Math.floor(y.lvl / 3)); S.shards = (S.shards || 0) + sh; let extra = `◆${sh}`;
+  const sh = pyrShards(y.lvl); S.shards = (S.shards || 0) + sh; let extra = `◆${sh}`;
   if (Math.random() < .25 + y.lvl * .06) { const it = DROPS[(Math.random() * DROPS.length) | 0]; giveItem(it); extra += `, ${SHOP[it].n}`; }
   if (y.lvl >= 5 && Math.random() < .05) { giveItem("teleport"); extra += ", a Teleport Ticket"; }
   /* v79: pyramids no longer drop runes */ fsDrop(lootRoll(LOOT.pyramid(y.lvl)), y.name); /* v338: vault materials */
@@ -3834,7 +3844,7 @@ function gatherEnd(f) {
 /* rewards ledger: every plunder haul and every reward, kept for the Fleets screen (last 40 entries plus lifetime totals) */
 function logReward(src, res, extra) {
   const e = Object.assign({ at: now(), src, res: res ? { m: Math.floor(res.m || 0), c: Math.floor(res.c || 0), g: Math.floor(res.g || 0) } : null }, extra || {});
-  if (!(e.res && total(e.res)) && !e.shards && !e.item && !e.runes && !e.boosts) return;
+  if (!(e.res && total(e.res)) && !e.shards && !e.item && !e.runes && !e.boosts && !e.mats) return;
   S.rewards = [e].concat(S.rewards || []).slice(0, 40); const T0 = S.rtot || (S.rtot = { m: 0, c: 0, g: 0, shards: 0, items: 0, runes: 0, boosts: 0 });
   if (e.res) for (const k of ["m", "c", "g"]) T0[k] += e.res[k]; T0.shards += e.shards || 0; T0.items += e.item ? 1 : 0; T0.runes += e.runes || 0; T0.boosts += e.boosts || 0;
 }
@@ -10827,12 +10837,12 @@ function shDetail() {
 function rewardsCard() {
   const T0 = S.rtot || { m: 0, c: 0, g: 0, shards: 0, items: 0, runes: 0, boosts: 0 }, list = (S.rewards || []).slice(0, sub.rwAll ? 40 : 6), inbound = { m: 0, c: 0, g: 0 };
   for (const f of S.fleets) if (f.phase === "back" && f.loot && lootSrc(f)) for (const k of ["m", "c", "g"]) inbound[k] += f.loot[k] || 0;
-  const chips = e => `${e.res && total(e.res) ? gainHTML(e.res) : ""}${e.shards ? `<span class="shard">◆${e.shards}</span>` : ""}${e.item && SHOP[e.item] ? `<span class="rwi">🎁 ${esc(SHOP[e.item].n)}</span>` : ""}${e.runes ? `<span class="rwi">◈ ${e.runes} rune${e.runes > 1 ? "s" : ""}</span>` : ""}${e.boosts ? `<span class="rwi">⚡ ${e.boosts}</span>` : ""}`;
+  const chips = e => `${e.res && total(e.res) ? gainHTML(e.res) : ""}${e.shards ? `<span class="shard">◆${e.shards}</span>` : ""}${e.item && SHOP[e.item] ? `<span class="rwi">🎁 ${esc(SHOP[e.item].n)}</span>` : ""}${e.runes ? `<span class="rwi">◈ ${e.runes} rune${e.runes > 1 ? "s" : ""}</span>` : ""}${e.boosts ? `<span class="rwi">⚡ ${e.boosts}</span>` : ""}${e.mats ? Object.entries(e.mats).map(([k, n]) => `<span class="rwi" style="color:${FS_TIER[+k.slice(-1)][1]}"><i class="fsmi fsmat-${k.slice(0, -1)}"></i>×${n}</span>`).join("") : ""}`;
   return `<div class="card rwc"><div class="rbh"><b>PLUNDER & REWARDS</b><span>${fmt(T0.m + T0.c + T0.g)} resources earned</span></div>
     <div class="spyres">${["m", "c", "g"].map(k => `<span class="r-${k}">${RI[k]}<b>${fmt(T0[k])}</b><small>${RES_N[k]}</small></span>`).join("")}</div>
     <div class="rwt"><span><b class="shard">◆ ${fmt(T0.shards)}</b><small>shards</small></span><span><b>${fmt(T0.items)}</b><small>items</small></span><span><b>${fmt(T0.runes)}</b><small>runes</small></span><span><b>${fmt(T0.boosts)}</b><small>boosts</small></span></div>
     ${total(inbound) ? `<div class="rwin">On the way home: ${gainHTML(inbound)}</div>` : ""}
-    ${list.length ? `<div class="rwl">${list.map(e => `<div class="rwr"><span class="rk k-${e.kind || "x"}">${e.kind === "plunder" ? "⛏" : e.kind === "battle" ? "⚔" : "★"}</span><span class="rtx"><b>${esc(e.src)}</b><small>${ago(e.at) === "now" ? "just now" : ago(e.at) + " ago"}</small></span><span class="rch">${chips(e)}</span></div>`).join("")}</div>
+    ${list.length ? `<div class="rwl">${list.map(e => `<div class="rwr"><span class="rk k-${e.kind || "x"}">${e.kind === "plunder" ? "⛏" : e.kind === "battle" ? "⚔" : e.kind === "mats" ? "◈" : "★"}</span><span class="rtx"><b>${esc(e.src)}</b><small>${ago(e.at) === "now" ? "just now" : ago(e.at) + " ago"}</small></span><span class="rch">${chips(e)}</span></div>`).join("")}</div>
       ${(S.rewards || []).length > 6 ? `<button class="btn ghost sm wide" data-act="rwAll">${sub.rwAll ? "Show less" : `Show all ${S.rewards.length}`}</button>` : ""}` : `<p class="note" style="margin:6px 0 0">Raid pirates, destroy Cubes, gather fields and finish directives. Everything you bring home is listed here.</p>`}</div>`;
 }
 function radarCard() {
@@ -11791,6 +11801,7 @@ function shNode() {
   const h = originPlanet(), avail = originAvail(), sel = selected(), plan = haulPlan(n, sel), tt = Object.keys(sel).length && h ? travelMs(h, n, sel) : 0;
   const T = now(), oc = occOf(n.id, T), L = layerOf(n.r);
   const head = `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:${NODE_T[n.res].col}">${RES_N[n.res]} field · Lv.${n.lvl} · [${coordStr(n)}]</div><h2>${esc(n.name)}</h2><p class="note">${n.res === "s" ? "A rare vein of crystallised void. Any fleet can dig it, but it gives up its shards slowly: a dig takes " + ftime(SHARD_DIG_MS) + ", the mine rests a day after your dig, and your mines pay at most " + SHARD_MINE_DAY + " shards a day. " : ""}One gatherer at a time. A rival fleet that arrives while the field is held fights the holder for it: the winner gathers, the loser goes home.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
+  const lpv = n.res === "s" ? "" : lootPreview(LOOT.gather(n.lvl, 60000, n.res), `<p class="note">Per 60K gathered; bigger hauls pay up to 6.</p>`); /* v338 */
   let occ = "";
   if (oc) { const me = oc.uid === G.me, col = me ? "#7fe6f3" : fieldAlly(oc.uid) ? "#7be39a" : colorOf(oc.uid);
     let odds = ""; if (!me && !fieldAlly(oc.uid) && Object.keys(sel).length) { const key = JSON.stringify(sel) + JSON.stringify(oc.n); if (sheet.occKey !== key) { sheet.occKey = key; sheet.occFc = forecast(stacksOf(sel, techOf(null), G.me), stacksOf(oc.n, oc.tech || techOf(oc.uid), oc.uid), {}, 10); } odds = `<dt>Your odds</dt><dd style="color:${sheet.occFc.win >= .6 ? "var(--green)" : sheet.occFc.win >= .35 ? "var(--amber)" : "var(--red)"}">${Math.round(sheet.occFc.win * 100)}% to take the field</dd>`; }
@@ -11798,7 +11809,7 @@ function shNode() {
       <dl class="kv"><dt>Gathering until</dt><dd><span data-end="${oc.until}">${ftime(oc.until - T)}</span></dd><dt>Gatherers</dt><dd>${fmt(sumShips(oc.n))} ships${me ? "" : ` · est. power ${fmt(Math.round(stacksOf(oc.n, oc.tech || {}, oc.uid).reduce((s, x) => s + x.n * (x.atk + x.sh / 4 + x.hull / 10), 0)))}`}</dd>${odds}</dl>
       <p class="note">${me ? "Your fleet holds this field." : fieldAlly(oc.uid) ? "An ally holds this field. Allies never fight over fields." : "Send a stronger fleet to fight them for it. If you win you also seize half of what they've gathered."}</p></div>`; }
   else occ = `<div class="card" style="border-color:#5dffa8"><b style="font-family:var(--f-display);color:#5dffa8">● FREE</b><p class="note">Nobody is gathering here. Rivals that arrive later will have to fight you for it.</p></div>`;
-  const info = `${occ}<dl class="kv">${n.res === "s" ? `<dt>Yield</dt><dd style="color:#c9a6ff">◆${shardYield(n)} per ${ftime(SHARD_DIG_MS)} dig</dd><dt>Mined today</dt><dd>◆${shardMine().got} / ${SHARD_MINE_DAY}${shardLeft() ? "" : " · back tomorrow (00:00 UTC)"}</dd>${shardRest(n) ? `<dt>Resting</dt><dd><span data-end="${shardMine().cd[n.id]}">${ftime(shardRest(n))}</span></dd>` : ""}` : `<dt>Gather rate</dt><dd><span class="r-${n.res}">${fmt(gatherRate(n))} ${RES_N[n.res].toLowerCase()}/min</span></dd>`}<dt>Layer</dt><dd style="color:${L.col}">L${L.n} ${L.name} · fields here are Lv.${L.node}${L.node < 7 ? "-" + (L.node + 1) : ""}</dd>${h ? `<dt>Flight from ${esc(h.name)}</dt><dd>${ftime(travelMs(h, n, { hauler: 1 }))} (Small Cargos)</dd>` : ""}</dl>`;
+  const info = `${occ}${lpv}<dl class="kv">${n.res === "s" ? `<dt>Yield</dt><dd style="color:#c9a6ff">◆${shardYield(n)} per ${ftime(SHARD_DIG_MS)} dig</dd><dt>Mined today</dt><dd>◆${shardMine().got} / ${SHARD_MINE_DAY}${shardLeft() ? "" : " · back tomorrow (00:00 UTC)"}</dd>${shardRest(n) ? `<dt>Resting</dt><dd><span data-end="${shardMine().cd[n.id]}">${ftime(shardRest(n))}</span></dd>` : ""}` : `<dt>Gather rate</dt><dd><span class="r-${n.res}">${fmt(gatherRate(n))} ${RES_N[n.res].toLowerCase()}/min</span></dd>`}<dt>Layer</dt><dd style="color:${L.col}">L${L.n} ${L.name} · fields here are Lv.${L.node}${L.node < 7 ? "-" + (L.node + 1) : ""}</dd>${h ? `<dt>Flight from ${esc(h.name)}</dt><dd>${ftime(travelMs(h, n, { hauler: 1 }))} (Small Cargos)</dd>` : ""}</dl>`;
   let body;
   if (!canPlay()) body = `<p class="note">${G.mode === "connecting" ? connNote() : "You can only watch this galaxy."}</p>`;
   else if (!Object.keys(avail).length) body = `${originBar()}<p class="note">No ships at ${esc(h ? h.name : S.homeName)}. Small Cargos carry the most cargo.</p>${S.b.shipyard ? `<button class="btn wide" data-act="nav" data-v="build" data-s="ships">Open Shipyard</button>` : ""}`;
@@ -11824,16 +11835,16 @@ function shLayers() {
 function shPyramid() {
   const y = YB[sheet.id]; if (!y) return ""; { const q = pos(y, now()); if (!fogSeen(q.x, q.y)) return shUnexplored(y); }
   const T = now(), h = originPlanet(), avail = originAvail(), sel = selected(), down = pyrDown(y), g = pyrGuards(y.lvl), L = pyrLoot(y.lvl), sent = S.fleets.some(f => f.yid === y.id && f.phase === "out");
-  let body = "";
-  if (down > T) body = `<p class="note">You emptied this vault. It refills in <b data-end="${down}">${ftime(down - T)}</b>.</p>`;
-  else if (!canPlay()) body = `<p class="note">${G.mode === "connecting" ? connNote() : "You can only watch this galaxy."}</p>`;
-  else if (sent) body = `<p class="note">An expedition is already on its way.</p>`;
-  else if (!Object.keys(avail).length) body = `${originBar()}<p class="note">No ships at ${esc(h ? h.name : S.homeName)}.</p>`;
+  let body = lootPreview(LOOT.pyramid(y.lvl)); /* v338 */
+  if (down > T) body += `<p class="note">You emptied this vault. It refills in <b data-end="${down}">${ftime(down - T)}</b>.</p>`;
+  else if (!canPlay()) body += `<p class="note">${G.mode === "connecting" ? connNote() : "You can only watch this galaxy."}</p>`;
+  else if (sent) body += `<p class="note">An expedition is already on its way.</p>`;
+  else if (!Object.keys(avail).length) body += `${originBar()}<p class="note">No ships at ${esc(h ? h.name : S.homeName)}.</p>`;
   else { const cap = cargoOf(sel);
-    body = `<h2 class="sec">Expedition</h2>${originBar()}${picker(avail)}${speedBar(y, sel)}<dl class="kv"><dt>Cargo space</dt><dd>${fmt(cap)} / ${fmt(total(L))}</dd></dl>
+    body += `<h2 class="sec">Expedition</h2>${originBar()}${picker(avail)}${speedBar(y, sel)}<dl class="kv"><dt>Cargo space</dt><dd>${fmt(cap)} / ${fmt(total(L))}</dd></dl>
       <button class="btn wide amber" data-act="pyrGo" data-id="${y.id}" ${Object.keys(sel).length && !slotsFull() ? "" : "disabled"}>Explore ${esc(y.name)}</button>`; }
   return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#ffd36b">Pyramid space station · Lv.${y.lvl} · [${coordStr(y)}]</div><h2>▲ ${esc(y.name)}</h2><p class="note">A derelict pyramid station, older than the Void Concord. Its crew is long gone, but its vault isn't${Object.keys(g).length ? ", and something still guards the halls" : ""}.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
-    <dl class="kv"><dt>Vault</dt><dd>${costHTML(L)} + ◆${1 + Math.floor(y.lvl / 2)} · runes · a chance of items${y.lvl >= 5 ? " or a Teleport Ticket" : ""}</dd><dt>Layer</dt><dd>L${layerOf(y.r).n} ${layerOf(y.r).name}</dd>${h ? `<dt>Flight from ${esc(h.name)}</dt><dd>${ftime(travelMs(h, y, { fighter: 1 }))}</dd>` : ""}<dt>Refills</dt><dd>24 hours after you loot it</dd></dl>${cineBtn(y.id)}
+    <dl class="kv"><dt>Vault</dt><dd>${costHTML(L)} + ◆${pyrShards(y.lvl)} · a chance of items${y.lvl >= 5 ? " or a Teleport Ticket" : ""}</dd><dt>Layer</dt><dd>L${layerOf(y.r).n} ${layerOf(y.r).name}</dd>${h ? `<dt>Flight from ${esc(h.name)}</dt><dd>${ftime(travelMs(h, y, { fighter: 1 }))}</dd>` : ""}<dt>Refills</dt><dd>24 hours after you loot it</dd></dl>${cineBtn(y.id)}
     <h2 class="sec">Guardians</h2>${Object.keys(g).length ? unitGrid(g) : '<p class="note">None. The halls are silent.</p>'}${body}`;
 }
 function shPirate() {
@@ -11842,7 +11853,9 @@ function shPirate() {
   const head = x.mon ? `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:${MON[x.mon].col}">Space monster · ${MON[x.mon].n} · Lv.${x.lvl}</div><h2>${MON[x.mon].ic} ${esc(x.name)}</h2><p class="note">${MON[x.mon].d} Slay it for a hoard of resources, Void Shards and ${monAccel(x.lvl).n} ${monAccel(x.lvl).tier} time accelerator${monAccel(x.lvl).n > 1 ? "s" : ""}.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`
     : x.boss ? `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#5dff6a">Boss · Assimilation Cube · Lv.${x.lvl}</div><h2>■ ${esc(x.name)}</h2><p class="note">A city-sized cube of the Collective, laced with green fire. It adapts, it repairs, it does not negotiate. Destroy it for a vault of resources, Void Shards and a guaranteed item.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`
     : `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#ff6b5a">Pirate hideout · Lv.${x.lvl}</div><h2>☠ ${esc(x.name)}</h2><p class="note">Outlaw crews hiding in the dust lanes. Beat them and your holds fill with their stolen cargo.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
-  const info = `<dl class="kv"><dt>Loot on a win</dt><dd>${costHTML(L)} + ◆${x.mon ? 2 + Math.floor(x.lvl / 4) : x.boss ? 3 + Math.floor(x.lvl / 3) : 1 + Math.floor(x.lvl / 6)}${x.boss ? " + an item" : x.mon ? ` + ${monAccel(x.lvl).n}× ${monAccel(x.lvl).tier} accelerator` : ""}</dd>${x.mon ? `<dt>Monster strength</dt><dd>×${(.25 + .15 * x.lvl).toFixed(2)} · ${xForce(x)[x.mon]} in the ${x.mon === "ssquid" ? "pack" : "pod"}</dd>` : x.boss ? `<dt>Teamwork</dt><dd>Too strong alone? Start a joint strike: every commander who joins adds +10% attack and shields, up to +30%.</dd><dt>Cube strength</dt><dd>×${((.5 + .25 * x.lvl) * CUBE_BOSS_K).toFixed(2)} on every unit</dd>` : `<dt>Pirate tech</dt><dd>Weapons, shields and armour ${pirTech(x.lvl).weapons}</dd>`}<dt>Orbit</dt><dd>${Math.round(x.r)} · ${zoneOf(x.r)}</dd>
+  const el = isElite(x), lk = xLootK(x), fk = !(S.fk || {})[lk + ":" + x.lvl] && !trainingPir(x);
+  const lprev = lootPreview(lk === "cube" ? LOOT.cube(x.lvl) : lk === "mon" ? LOOT.monster(x.lvl, el) : LOOT.pirate(x.lvl, el), fk ? `<p class="lfk">First ${lk === "cube" ? "Cube" : lk === "mon" ? "monster" : "pirate"} kill at Lv.${x.lvl}: ◆2 and ${matsText(LOOT.first(lk, x.lvl))}</p>` : "");
+  const info = `${el ? `<div class="elite">★ ELITE · 60% stronger this week · double materials, triple rare chance</div>` : ""}${lprev}<dl class="kv"><dt>Loot on a win</dt><dd>${costHTML(L)}${xShards(x) ? ` + ◆${xShards(x)}` : ""}${x.boss ? " + an item" : x.mon ? ` + ${monAccel(x.lvl).n}× ${monAccel(x.lvl).tier} accelerator` : ""}</dd>${x.mon ? `<dt>Monster strength</dt><dd>×${(.25 + .15 * x.lvl).toFixed(2)} · ${xForce(x)[x.mon]} in the ${x.mon === "ssquid" ? "pack" : "pod"}</dd>` : x.boss ? `<dt>Teamwork</dt><dd>Too strong alone? Start a joint strike: every commander who joins adds +10% attack and shields, up to +30%.</dd><dt>Cube strength</dt><dd>×${((.5 + .25 * x.lvl) * CUBE_BOSS_K).toFixed(2)} on every unit</dd>` : `<dt>Pirate tech</dt><dd>Weapons, shields and armour ${pirTech(x.lvl).weapons}</dd>`}<dt>Orbit</dt><dd>${Math.round(x.r)} · ${zoneOf(x.r)}</dd>
     ${h ? `<dt>Flight from ${esc(h.name)}</dt><dd>${ftime(travelMs(h, x, { fighter: 1 }))}</dd>` : ""}<dt>${x.mon ? "Another surfaces after" : x.boss ? "Rebuilds after defeat" : "Regroups after a raid"}</dt><dd>${ftime(xRegroup(x))}</dd></dl>${x.mon || x.boss ? cineBtn(x.id) : ""}`;
   const scan = `<h2 class="sec">${x.mon ? "The beast" : x.boss ? "Collective forces" : "Crews"}</h2>${down > T ? `<p class="note">${x.mon ? "Slain. Another of its kind drifts in within" : x.boss ? "The Cube is wrecked. It rebuilds in" : "You cleaned this hideout out. The pirates regroup in"} <b data-end="${down}">${ftime(down - T)}</b>.</p>` : unitGrid(force)}`;
   let body;
@@ -12318,7 +12331,22 @@ const fsMatKey = (m, t) => m + clamp(t, 1, 6);
 function fsDrop(list, why, opt) { if (!S) return {}; const f = fsOf(), d = utcDay(); if (!f.day || f.day.d !== d) f.day = { d, n: 0 }; const got = [], nocap = opt && opt.nocap;
   for (const [m, t, n] of list) for (let i = 0; i < n; i++) { if (!nocap && f.day.n >= FS_DAY_CAP && Math.random() > Math.pow(.5, 1 + (f.day.n - FS_DAY_CAP) / 15)) continue; const k = fsMatKey(m, t); f.mats[k] = (f.mats[k] || 0) + 1; if (!nocap) f.day.n++; got.push(k); }
   if (!got.length) return {}; fsBump(); const c = {}; for (const k of got) c[k] = (c[k] || 0) + 1;
-  note(`Flagship materials${why ? ` from ${why}` : ""}: ${Object.entries(c).map(([k, n]) => `${FS_TIER[+k.slice(-1)][0]} ${FS_MATS[k.slice(0, -1)][0]} ×${n}`).join(", ")}.`, "win"); return c; }
+  const msg = `Flagship materials${why ? ` from ${why}` : ""}: ${Object.entries(c).map(([k, n]) => `${FS_TIER[+k.slice(-1)][0]} ${FS_MATS[k.slice(0, -1)][0]} ×${n}`).join(", ")}.`;
+  S.log.unshift({ t: S.t, msg, kind: "win" }); if (S.log.length > 30) S.log.length = 30; changed = true; /* v338: the card below replaces the toast */
+  logReward(why ? `Materials · ${why}` : "Materials", null, { mats: c, kind: "mats" }); if (live) rwCardShow(why, c); return c; }
+/* v338: the reward card. Queued, a few seconds each, tap to dismiss; it never blocks a tap anywhere else */
+function rwCardShow(why, c) { (G.rwq = G.rwq || []).push([why, c]); if (!G.rwOn) rwCardNext(); }
+function rwCardNext() { const it = (G.rwq || []).shift(); let w = $("#rwcard"); if (!it) { G.rwOn = 0; if (w) w.classList.remove("on"); return; } G.rwOn = 1;
+  if (!w) { w = document.createElement("div"); w.id = "rwcard"; w.setAttribute("aria-live", "polite"); w.addEventListener("click", () => { clearTimeout(G.rwT); rwCardNext(); }); document.body.appendChild(w); }
+  const [why, c] = it, ks = Object.keys(c).sort((a, b) => +b.slice(-1) - +a.slice(-1)), top = +(ks[0] || "1").slice(-1), rare = top >= 4;
+  w.className = "on" + (rare ? " rare" : ""); w.style.setProperty("--tc", FS_TIER[top][1]);
+  w.innerHTML = `<small>${rare ? "★ RARE FIND · " : ""}MATERIALS${why ? " · " + esc(why.toUpperCase()) : ""}</small><div class="rwm">${ks.map(k => { const tt = +k.slice(-1), m = FS_MATS[k.slice(0, -1)]; return `<span style="--tc:${FS_TIER[tt][1]}"><i class="fsmi lg fsmat-${k.slice(0, -1)}"></i><b>×${c[k]}</b><em>${FS_TIER[tt][0]}<br>${esc(m[0])}</em></span>`; }).join("")}</div>`;
+  try { (rare ? SFX.fanfare : SFX.rune)(); } catch (e) {}
+  clearTimeout(G.rwT); G.rwT = setTimeout(rwCardNext, rare ? 4800 : 3200); }
+/* v338: a "Possible materials" block for a target card, from the same rolls the fight pays */
+function lootPreview(rolls, extra) { const ev = rolls.filter(r => r[2] > 0); if (!ev.length) return "";
+  const chips = ev.map(([k, tt, n, p, up]) => { const t2 = clamp(tt, 1, 6); return `<span class="lp" style="--tc:${FS_TIER[t2][1]}"><i class="fsmi fsmat-${k === "low" ? "alloy" : k}"></i><b>${k === "low" ? "Material" : esc(FS_MATS[k][0])}</b><em>${FS_TIER[t2][0]} · ${p == null || p >= 1 ? "×" + n : Math.round(p * 100) + "%" + (up ? "*" : "")}</em></span>`; }).join("");
+  return `<div class="lprev"><small>POSSIBLE MATERIALS</small><div>${chips}</div>${extra || ""}${ev.some(r => r[4]) ? `<p class="note">* Rare roll: guaranteed at least once every ${LOOT_PITY} tries.</p>` : ""}</div>`; }
 const fsRoll = p => Math.random() < p;
 /* v338 LOOT: every material source in one place. An entry returns rolls [kind, tier, count, chance?, up?]: count units with the
    given chance (1 if absent); up marks a rare upgrade roll, which the pity counter guarantees after LOOT_PITY misses. The previews on
@@ -14019,6 +14047,7 @@ function guideVisible(el) {
   if (r.bottom < 0 || r.top > innerHeight || r.top + r.height / 2 > innerHeight - 2 || r.top + r.height / 2 < 2) return 2; // off-screen, or half under the edge: scroll to it (v328)
   const top = document.elementFromPoint(clamp(r.left + r.width / 2, 0, innerWidth - 1), clamp(r.top + r.height / 2, 0, innerHeight - 1));
   if (!top) return 0; if (top === el || el.contains(top)) return 1; if (top.closest("#coach")) return 3; // 3: under the Academy panel
+  if (top.closest(".sheet, .scrim") && !el.closest(".sheet")) return 0; /* v338: covered by an open card: never ring it through the card (a ghost box) */
   const cy = r.top + r.height / 2; if (top.closest("#dock") || cy > innerHeight - 160 || cy < 130) return 2; return 0; // tucked under the dock or top bar: scroll it into view
 }
 function guidePick() {
