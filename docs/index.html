@@ -2492,7 +2492,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 350;
+const GAME_V = 351;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9619,7 +9619,7 @@ function glbMark(on) { try { if (on) localStorage.setItem("udfGlbBusy", Date.now
 function glbShrink(tex, px) {
   const im = tex && tex.image; if (!im) return; const w = im.width || 0, h = im.height || 0; if (w <= px && h <= px) return;
   const s = px / Math.max(w, h), c = document.createElement("canvas"); c.width = Math.round(w * s); c.height = Math.round(h * s);
-  c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); if (im.close) try { im.close(); } catch (e) {} tex.image = c; tex.needsUpdate = true;
+  const x2 = c.getContext("2d"); x2.imageSmoothingEnabled = true; x2.imageSmoothingQuality = "high"; x2.drawImage(im, 0, 0, c.width, c.height); if (im.close) try { im.close(); } catch (e) {} tex.image = c; tex.needsUpdate = true;
 }
 function glbNext() {
   if (GLB_RUN || !GLB_Q.length) { if (!GLB_RUN && !GLB_Q.length) { clearTimeout(glbNext.t); glbNext.t = setTimeout(() => { if (!GLB_RUN && !GLB_Q.length) glbMark(false); }, 45000); } return; }
@@ -9627,8 +9627,8 @@ function glbNext() {
   const done = () => { GLB_RUN = 0; setTimeout(glbNext, 120); };
   try {
     new TH.GLTFLoader().load("models/" + k + ".glb?v=" + GAME_V, g => {
-      const s = g.scene, big = MOBILE ? 1024 : 2048, aux = MOBILE ? 512 : 1024;
-      s.traverse(o => { if (o.isMesh) { const m = o.material; if (m && m.isMeshStandardMaterial) { m.envMapIntensity = .9; glbShrink(m.map, big); for (const t of new Set([m.normalMap, m.roughnessMap, m.metalnessMap])) glbShrink(t, aux); if (m.map) m.map.anisotropy = 4; } } });
+      const s = g.scene, big = MOBILE ? (GLB_BLDS.has(k) ? 1536 : 1024) : 2048, aux = MOBILE ? 512 : 1024, an = texAniso();
+      s.traverse(o => { if (o.isMesh) { const m = o.material; if (m && m.isMeshStandardMaterial) { m.envMapIntensity = .9; glbShrink(m.map, big); for (const t of new Set([m.normalMap, m.roughnessMap, m.metalnessMap])) glbShrink(t, aux); for (const t of [m.map, m.normalMap]) if (t) t.anisotropy = an; } } });
       const bb = new TH.Box3().setFromObject(s); s.userData.bb = bb; GLB[k].scene = s; done(); glbReady(k);
     }, undefined, () => { GLB[k].fail = true; done(); });
   } catch (e) { GLB[k].fail = true; done(); }
