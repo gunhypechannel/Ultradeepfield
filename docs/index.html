@@ -2491,7 +2491,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 343;
+const GAME_V = 344;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13799,7 +13799,7 @@ function qbarHTML() {
   return `<div class="qbar" role="group" aria-label="Production queues">${all}${html}</div>`;
 }
 document.addEventListener("pointerdown", unlockAudio, { passive: true });
-document.addEventListener("touchend", unlockAudio, { passive: true });
+document.addEventListener("touchend", unlockAudio, { passive: true }); document.addEventListener("click", unlockAudio, { passive: true }); /* v344: Chrome allows sound from a finished tap, not its start */
 document.addEventListener("keydown", unlockAudio);
 document.addEventListener("visibilitychange", () => { if (!AU.ctx) return; if (document.hidden) { AU.ctx.suspend().catch(() => {}); if (AU.file) AU.file.pause(); } else { AU.ctx.resume().catch(() => {}); applyAudio(); } });
 
@@ -13810,10 +13810,13 @@ const VOICE = { on: true, clips: null, au: null, lastStep: -1, el: null, unl: 0 
    player is unlocked on the first tap (a silent clip) and every line reuses it; a fresh Audio() per line was silently refused. */
 const VOICE_SIL = "data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA";
 function voiceEl() { if (!VOICE.el) { const a = new Audio(); a.preload = "auto"; a.setAttribute("playsinline", ""); VOICE.el = a; } return VOICE.el; }
-function voiceUnlock() { if (VOICE.unl) return; const a = voiceEl(); if (VOICE.au === a && !a.paused) { VOICE.unl = 1; return; }
-  try { a.onplay = a.onended = a.onpause = a.onerror = null; a.muted = true; a.src = VOICE_SIL; const p = a.play(); const ok = () => { VOICE.unl = 1; a.muted = false; ["pointerdown", "touchend", "click", "keydown"].forEach(t => document.removeEventListener(t, voiceUnlock, true)); };
+function voiceUnlock() { if (VOICE.unl || VOICE.pend) return; /* a waiting line unlocks the player itself */ const a = voiceEl(); if (VOICE.au === a && !a.paused) { VOICE.unl = 1; return; }
+  try { a.onplay = a.onended = a.onpause = a.onerror = null; a.muted = true; a.src = VOICE_SIL; const p = a.play(); const ok = () => { VOICE.unl = 1; a.muted = false; ["pointerup", "touchend", "click", "keydown"].forEach(t => document.removeEventListener(t, voiceUnlock, true)); };
     if (p && p.then) p.then(ok).catch(() => { a.muted = false; }); else ok(); } catch (e) {} }
-["pointerdown", "touchend", "click", "keydown"].forEach(t => document.addEventListener(t, voiceUnlock, true));
+["pointerup", "touchend", "click", "keydown"].forEach(t => document.addEventListener(t, voiceUnlock, true));
+/* a line the browser refused (no tap yet) plays on the next tap instead of being lost */
+function voicePendTap() { const p = VOICE.pend; if (!p) return; VOICE.pend = null; if (performance.now() - p.t > 180000 || !VOICE.on || (typeof AU !== "undefined" && AU.muted)) return; const a = VOICE.el; if (a && !a.paused && a.currentTime > .15) return; /* it did start after all */ if ($("#adv") || (advLines && advLines[0] === p.line)) speak(p.line); else advHolo(p.line); /* her hologram comes back with the line */ }
+["pointerup", "touchend", "click", "keydown"].forEach(t => document.addEventListener(t, voicePendTap, true));
 try { VOICE.on = localStorage.getItem("void.voice") !== "0"; } catch (e) {}
 const voiceKey = s => hash(String(s)).toString(36);
 try { fetch("voice/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (j && typeof j === "object") VOICE.clips = j; }).catch(() => {}); } catch (e) {}
@@ -13829,7 +13832,7 @@ function advHolo(line) { if (!line) return; let w = $("#advh"); // v334: her hol
   const a = VOICE.au; if (a && !a.ended) { a.addEventListener("ended", hide, { once: true }); a.addEventListener("error", hide, { once: true }); G.advhT = setTimeout(hide, 30000); } else G.advhT = setTimeout(hide, Math.max(4500, line.length * 65)); }
 function speak(line) { if (!VOICE.on || (typeof AU !== "undefined" && AU.muted) || !line || !VOICE.clips) return; const k = voiceKey(line); if (!VOICE.clips[k]) return; voiceStop();
   try { const a = voiceEl(); a.muted = false; a.src = "voice/" + k + ".mp3?v=" + VOICE.clips[k]; a.volume = Math.min(1, .95 * ((typeof AU !== "undefined" && AU.sfxVol != null) ? Math.max(.4, AU.sfxVol) : 1)); VOICE.au = a;
-    a.onplay = () => voiceTalk(1); a.onended = a.onpause = a.onerror = () => voiceTalk(0); a.play().catch(() => voiceTalk(0)); } catch (e) {} }
+    VOICE.pend = (navigator.userActivation && !navigator.userActivation.hasBeenActive) ? { line, t: performance.now() } : null; /* no tap yet: the browser will refuse or hold it */ a.onplay = () => voiceTalk(1); a.onended = a.onpause = a.onerror = () => voiceTalk(0); a.play().catch(e => { voiceTalk(0); if (e && e.name === "NotAllowedError" && VOICE.au === a) VOICE.pend = { line, t: performance.now() }; }); } catch (e) {} }
 function say(lines) {
   if (!lines.length) return;
   advLines = (advLines || []).concat(lines);
