@@ -341,6 +341,17 @@
       return memo[name];
     }
   };
+  /* v342 premium packs: the catalog, tester claims and grant delivery. Purchases are not wired: only the owner or a store-verifying
+     server function can create a purchase grant; the game only reads, claims tester packs and acknowledges what it applied. */
+  function need() { if (!sb || !me) return Promise.reject(Object.assign(new Error("Sign in first."), { code: "unavailable" })); return Promise.resolve(); }
+  window.udfShop = {
+    packs: function () { return need().then(function () { return run(sb.from("shop_packs").select("id,data,once_per_account,tester_eligible,sort").order("sort")); }); },
+    status: function () { return need().then(function () { return run(sb.rpc("tester_status")); }); },
+    claim: function (id) { return need().then(function () { return run(sb.rpc("claim_tester_pack", { p_pack: id })); }); },
+    mine: function () { return need().then(function () { return run(sb.rpc("my_grants")); }); },
+    ack: function (id) { return need().then(function () { return run(sb.rpc("ack_grant", { p_id: id })); }); },
+    ackRevoke: function (id) { return need().then(function () { return run(sb.rpc("ack_revoke", { p_id: id })); }); }
+  };
   var signingOut = false;
   window.udfAccount = {
     label: function () { return me ? (me.email || nameOf(me) || "Signed in") : "Not signed in"; },
