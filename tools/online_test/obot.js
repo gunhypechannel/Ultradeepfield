@@ -12,18 +12,18 @@ const MAXIT = +process.env.MAXIT || 2600, DEV = process.env.DEV || 'iPhone 15 Pr
   if (process.env.SLOW) await pg.addInitScript(() => { window.__lat = 1500; });
   await pg.goto(URL, { waitUntil: 'commit' }).catch(() => {});
   if (process.env.SCEN === 'switch') { // a phone that already played on another account, then a NEW account signs in on it
-    await signUp('Old Hand', 'old@test.io'); await ready(); console.log('old account in, tut', await pg.evaluate(() => window.__dbg.ev('JSON.stringify(S.tut)')));
+    await signUp('Old Hand', 'old@test.io'); await ready(); await pg.evaluate(() => { window.__botGuide = true; }); /* v339: Missions have no pointer for players; the bot still follows the step paths */ console.log('old account in, tut', await pg.evaluate(() => window.__dbg.ev('JSON.stringify(S.tut)')));
     await pg.evaluate(() => { const b = document.querySelector('.sheet [data-act="facPick"]'); if (b) b.click(); }); await pg.waitForTimeout(4000);
     await pg.evaluate(() => window.__dbg.ev('S.res.m += 5000; S.bld.mMine = 6; S.bld.cMine = 5; S.bld.solar = 6; dirty(); saveNow && saveNow()')).catch(() => {});
     await pg.waitForTimeout(5000); pg.once('dialog', d => d.accept()); await pg.evaluate(() => window.udfAccount.signOut()); await pg.waitForTimeout(6000); }
-  await signUp('Rookie ' + Math.floor(Math.random() * 9000 + 1000), 'new' + Date.now() + '@test.io'); await ready();
+  await signUp('Rookie ' + Math.floor(Math.random() * 9000 + 1000), 'new' + Date.now() + '@test.io'); await ready(); await pg.evaluate(() => { window.__botGuide = true; }); /* v339: Missions have no pointer for players; the bot still follows the step paths */
   await pg.evaluate(() => { window.__toasts = []; window.__seen = { battle: 0, faction: 0 }; new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1 && /toast/.test(n.className || '')) window.__toasts.push(n.textContent.trim().slice(0, 140)); }).observe(document.body, { childList: true, subtree: true }); });
   const E = c => pg.evaluate(c => window.__dbg.ev(c), c);
   const GAL = new Set(); let galN = 0; let hidT = 0, seenOld = 0, seenFac = 0, seenBattle = 0, hidden = 0; let last = -1, stepIt = 0, labels = [], idle = 0, skipped = 0; const report = [], issues = [];
   const tag = s => s.replace(/\s+/g, ' ').slice(0, 110);
   let reloads = 0;
   for (let it = 0; it < MAXIT; it++) {
-    if (process.env.RELOAD && it > 0 && it % +process.env.RELOAD === 0) { const before = await E('JSON.stringify([S.tut.i, S.tut.k])'); await pg.reload({ waitUntil: 'commit' }).catch(() => {}); await ready(); reloads++;
+    if (process.env.RELOAD && it > 0 && it % +process.env.RELOAD === 0) { const before = await E('JSON.stringify([S.tut.i, S.tut.k])'); await pg.reload({ waitUntil: 'commit' }).catch(() => {}); await ready(); await pg.evaluate(() => { window.__botGuide = true; }); /* v339: Missions have no pointer for players; the bot still follows the step paths */ reloads++;
       await pg.evaluate(() => { window.__toasts = window.__toasts || []; }); const after = await E('JSON.stringify([S.tut.i, S.tut.k])'); if (JSON.parse(after)[0] < JSON.parse(before)[0]) issues.push(`RELOAD lost progress: before ${before} after ${after}`); console.log('reload ' + reloads + ' ' + before + ' -> ' + after); }
     const s = JSON.parse(await E(`JSON.stringify((() => { const st = TUT[S.tut.i]; const el = GD.el && GD.el.isConnected ? GD.el : null, r = el && el.getBoundingClientRect();
       return { i: S.tut.i, n: TUT.length, t: st ? st.t : null, ok: st ? !!st.ok(S) : 0, mode: G.ready ? advPick() : 'notready', adv: !!document.querySelector('#adv'), battle: !!battle, cine: !!(G3 && G3.cam && G3.cam.cine), sheet: sheet && sheet.type, view,
