@@ -2695,7 +2695,7 @@ const PX_IMG = { warsphere: 0, shatter: ["Shattered Bastion", "A white fortress 
   tidal: ["Tidal Lock", "Scorched gold plains on one side, black spires and glowing blue cities on the other."],
   aurum: ["Aurum Crown", "A golden world bristling with amber crystals, wrapped in green auroras around a glowing sigil."],
   venom: ["Venom Wilds", "A toxic green world of dark peaks, its valleys glowing yellow."], magma: 0, voidbloom: 0,
-  dragon: ["Dragon Scale", "A burning world in the grip of a bronze dragon."],
+  dragon: ["Dragon Scale", "A molten world in the coils of a red fire dragon, wings spread wide."],
   glacier: ["Frost Wyrm", "A spiked ice-crystal world in the coils of a frost dragon."], spire: 0,
   hellgate: ["Hellgate", "A burning world split by a steel crescent, guarded by a clawed horror."], dread: 0 };
 /* v237: the other 31 skins are painted too (upscaled 4x from your reference sheet) */
@@ -2703,10 +2703,10 @@ for (const k of ["bloom", "ember", "abyss", "aurora", "dune", "forge", "pearl", 
 for (const k in PX_IMG) if (PXS[k]) { PXS[k].img = 1; if (PX_IMG[k]) { PXS[k].n = PX_IMG[k][0]; PXS[k].d = PX_IMG[k][1]; } }
 const PX_DIR = "skins/";
 /* v238: how much of a painting the world fills (its radius over the frame). Ringed skins paint the world smaller so the whole ring fits */
-const PX_RING = { forge: .25, pearl: .25, metropolis: .25, lattice: .25, clockwork: .25, saturn: .25 };
+const PX_RING = { dragon: .28, glacier: .28, /* v339: the dragons' wings need room */ forge: .25, pearl: .25, metropolis: .25, lattice: .25, clockwork: .25, saturn: .25 };
 const pxF = id => (PXS[id] && PXS[id].img && !PXS[id].imgBad && PX_RING[id]) || .34;
 function pxPic(src, ok, bad) { const im = new Image(); im.decoding = "async"; im.onload = () => ok(im); im.onerror = () => bad && bad(); im.src = PX_DIR + src + (PX_FIX[src] ? "?v=" + PX_FIX[src] : ""); }
-const PX_FIX = { "dragon.webp": 2, "hellgate.webp": 2 }; /* v339: dragon's cut-off top now fades out; Hellgate's stray line removed */
+const PX_FIX = { "dragon.webp": 3, "dragon-map.webp": 3, "glacier.webp": 2, "glacier-map.webp": 2, "hellgate.webp": 2 }; /* v339: new Dragon Scale and Frost Wyrm paintings; Hellgate's stray line removed */
 const hex3 = c => { const v = parseInt(c.slice(1), 16); return [v >> 16 & 255, v >> 8 & 255, v & 255]; };
 function pxGen(id, Wd) {
   const s = PXS[id], f = s.f, W = Wd || 512, H = W / 2, r = rnd(hash(id)), fb = pxNoise(hash(id) + 7), fb2 = pxNoise(hash(id) + 19), pal = s.p.map(hex3), pts = [];
@@ -11264,7 +11264,7 @@ function shSkin() {
     <p class="note" style="margin-top:10px">Its look can be changed later: tap your homeworld, then Rename &amp; reskin.</p>`; /* v336 */
   return `<div class="hd"><canvas class="pv" data-skin="${cur}|${cv}|${ct}|${ca}|${cr}|${cc}|${pxSel}"></canvas><div style="flex:1;min-width:0"><div class="chapter">${p.kind === "home" ? "Homeworld" : "Colony"} · customize</div><h2>${esc(nm || p.name)}</h2><p class="note">${pxSel ? `Wearing <b>${esc(PXS[pxSel].n)}</b>: ${pxPerk(PXS[pxSel])}.` : "Names and surfaces are cosmetic. Premium skins add a small production perk."}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
     <h2 class="sec">Name</h2><input class="minput" id="pname" maxlength="20" value="${esc(nm)}" aria-label="Planet name">
-    <h2 class="sec">Premium skins · <span class="shard">◆</span>${fmt(S.shards || 0)}</h2>${pxSel ? `<button class="btn ghost sm" data-act="pxPick" data-k="">Remove premium skin (back to the surface below)</button>` : ""}${pxGrid("sheet")}
+    <h2 class="sec">Premium skins · <span class="shard">◆</span>${fmt(S.shards || 0)}</h2>${pxSel ? `<button class="btn ghost sm" data-act="pxPick" data-k="">Remove premium skin</button>` : ""}${pxGrid("sheet")}
     <h2 class="sec">Surface · ${TYPE_N[cur]}</h2>
     <h2 class="sec">Atmosphere glow</h2><div class="tints">${ATMOS.map((c, i) => `<button class="tn${i === ca ? " on" : ""}" data-act="skinOpt" data-o="at" data-i="${i}" style="--tc:${c || "transparent"}" aria-label="${i ? "Atmosphere colour " + i : "Natural atmosphere"}">${i ? "" : "✕"}</button>`).join("")}</div>
     <h2 class="sec">Rings</h2><div class="segc">${["Automatic", "Always", "None"].map((l, i) => `<button class="${i === cr ? "on" : ""}" data-act="skinOpt" data-o="rg" data-i="${i}">${l}</button>`).join("")}</div>
@@ -13613,7 +13613,15 @@ document.addEventListener("visibilitychange", () => { if (!AU.ctx) return; if (d
 
 /* ---------- advisor ---------- */
 let advLines = null;
-const VOICE = { on: true, clips: null, au: null, lastStep: -1 };
+const VOICE = { on: true, clips: null, au: null, lastStep: -1, el: null, unl: 0 };
+/* v339: iPhones only play sound that starts inside a tap. Her lines start later (after a step, or a beat after a card opens), so one
+   player is unlocked on the first tap (a silent clip) and every line reuses it; a fresh Audio() per line was silently refused. */
+const VOICE_SIL = "data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA";
+function voiceEl() { if (!VOICE.el) { const a = new Audio(); a.preload = "auto"; a.setAttribute("playsinline", ""); VOICE.el = a; } return VOICE.el; }
+function voiceUnlock() { if (VOICE.unl) return; const a = voiceEl(); if (VOICE.au === a && !a.paused) { VOICE.unl = 1; return; }
+  try { a.onplay = a.onended = a.onpause = a.onerror = null; a.muted = true; a.src = VOICE_SIL; const p = a.play(); const ok = () => { VOICE.unl = 1; a.muted = false; ["pointerdown", "touchend", "click", "keydown"].forEach(t => document.removeEventListener(t, voiceUnlock, true)); };
+    if (p && p.then) p.then(ok).catch(() => { a.muted = false; }); else ok(); } catch (e) {} }
+["pointerdown", "touchend", "click", "keydown"].forEach(t => document.addEventListener(t, voiceUnlock, true));
 try { VOICE.on = localStorage.getItem("void.voice") !== "0"; } catch (e) {}
 const voiceKey = s => hash(String(s)).toString(36);
 try { fetch("voice/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (j && typeof j === "object") VOICE.clips = j; }).catch(() => {}); } catch (e) {}
@@ -13628,7 +13636,7 @@ function advHolo(line) { if (!line) return; let w = $("#advh"); // v334: her hol
   const hide = () => { clearTimeout(G.advhT); G.advhT = setTimeout(() => { const x = $("#advh"); if (x) x.classList.remove("on", "talk"); document.body.classList.remove("advtalk"); }, 900); };
   const a = VOICE.au; if (a && !a.ended) { a.addEventListener("ended", hide, { once: true }); a.addEventListener("error", hide, { once: true }); G.advhT = setTimeout(hide, 30000); } else G.advhT = setTimeout(hide, Math.max(4500, line.length * 65)); }
 function speak(line) { if (!VOICE.on || (typeof AU !== "undefined" && AU.muted) || !line || !VOICE.clips) return; const k = voiceKey(line); if (!VOICE.clips[k]) return; voiceStop();
-  try { const a = new Audio("voice/" + k + ".mp3?v=" + VOICE.clips[k]); a.volume = Math.min(1, .95 * ((typeof AU !== "undefined" && AU.sfxVol != null) ? Math.max(.4, AU.sfxVol) : 1)); VOICE.au = a;
+  try { const a = voiceEl(); a.muted = false; a.src = "voice/" + k + ".mp3?v=" + VOICE.clips[k]; a.volume = Math.min(1, .95 * ((typeof AU !== "undefined" && AU.sfxVol != null) ? Math.max(.4, AU.sfxVol) : 1)); VOICE.au = a;
     a.onplay = () => voiceTalk(1); a.onended = a.onpause = a.onerror = () => voiceTalk(0); a.play().catch(() => voiceTalk(0)); } catch (e) {} }
 function say(lines) {
   if (!lines.length) return;
