@@ -2400,7 +2400,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 339;
+const GAME_V = 340;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -2536,7 +2536,7 @@ const PXS = {
   bloom: { n: "Emerald Bloom", cost: 1000, r: "c", b: .08, glow: "#6aff6a", ec: [140, 255, 120], d: "A soft green jelly world with living veins, sprouting leaves toward its sun." },
   watcher: { n: "The Watcher", cost: 800, r: "g", b: .08, glow: "#5fe8ff", ec: [90, 230, 255], d: "A cracked ivory eye that turns with the planet and never stops looking." },
   glacier: { n: "Glacier Shard", cost: 500, r: "c", b: .1, glow: "#9fdcff", ec: [200, 240, 255], d: "Faceted blue ice with frozen crystal spears breaking through the surface." },
-  dread: { n: "Dread Skull", cost: 400, r: "m", b: .08, glow: "#ff3a2a", ec: [255, 50, 30], d: "A bone-white skull world with horns and burning red eyes. Rivals will know who lives here." },
+  dread: { n: "Dread Skull", cost: 400, r: "m", b: .08, glow: "#ff3a2a", ec: [255, 50, 30], d: "A horned skull world of scorched bone and lava, its red eyes burning. Rivals will know who lives here." },
   venom: { n: "Venom Shard", cost: 1000, r: "g", b: .12, glow: "#c8ff4a", ec: [190, 255, 80], d: "A toxic yellow-green world torn open by black crystal, glowing in its wounds." },
   magma: { n: "Magma Egg", cost: 1600, r: "all", b: .12, glow: "#ff8a3a", ec: [255, 110, 30], d: "A pale shell of cracked plates, broken open over a churning heart of lava." },
   spire: { n: "Spiked Aegis", cost: 400, r: "m", b: .04, glow: "#55d6e8", ec: [90, 220, 240], d: "A steel world behind a great shield plate, bristling with spikes." }
@@ -2689,7 +2689,7 @@ const PX_IMG = { warsphere: 0, shatter: ["Shattered Bastion", "A white fortress 
   bonemoon: ["Stone Titan", "The crumbling face of a sleeping stone giant, one eye still burning."],
   garden: ["Celestial Garden", "Floating forest isles, waterfalls and a river of fire under open skies."], nigiri: 0, inferno: 0,
   cyber: ["Cyber Core", "Armoured plating around a blue plasma cannon that never cools."], singular: 0,
-  emerald: ["Emerald Cube", "A blazing green crystal cube in orbit around its own shattered world."],
+  emerald: ["Emerald Cube", "A vast machine cube buried in a world of peaks and waterfalls, ringed in green light."],
   amethyst: ["Twilight Amethyst", "Cracked ivory shell, violet crystal spikes and a golden band around a storm of purple light."], watcher: 0,
   colossus: ["Iron Colossus", "A black battle moon with a burning red eye and a dreadnought docked along its flank."], atoll: 0,
   tidal: ["Tidal Lock", "Scorched gold plains on one side, black spires and glowing blue cities on the other."],
@@ -2706,7 +2706,7 @@ const PX_DIR = "skins/";
 const PX_RING = { dragon: .28, glacier: .28, /* v339: the dragons' wings need room */ forge: .25, pearl: .25, metropolis: .25, lattice: .25, clockwork: .25, saturn: .25 };
 const pxF = id => (PXS[id] && PXS[id].img && !PXS[id].imgBad && PX_RING[id]) || .34;
 function pxPic(src, ok, bad) { const im = new Image(); im.decoding = "async"; im.onload = () => ok(im); im.onerror = () => bad && bad(); im.src = PX_DIR + src + (PX_FIX[src] ? "?v=" + PX_FIX[src] : ""); }
-const PX_FIX = { "dragon.webp": 3, "dragon-map.webp": 3, "glacier.webp": 2, "glacier-map.webp": 2, "hellgate.webp": 2 }; /* v339: new Dragon Scale and Frost Wyrm paintings; Hellgate's stray line removed */
+const PX_FIX = { "dragon.webp": 3, "dragon-map.webp": 3, "glacier.webp": 2, "glacier-map.webp": 2, "hellgate.webp": 2, "singular.webp": 2, "singular-map.webp": 2, "emerald.webp": 2, "emerald-map.webp": 2, "atoll.webp": 2, "atoll-map.webp": 2, "dread.webp": 2, "dread-map.webp": 2 }; /* v340: four more remastered */ /* v339: new Dragon Scale and Frost Wyrm paintings; Hellgate's stray line removed */
 const hex3 = c => { const v = parseInt(c.slice(1), 16); return [v >> 16 & 255, v >> 8 & 255, v & 255]; };
 function pxGen(id, Wd) {
   const s = PXS[id], f = s.f, W = Wd || 512, H = W / 2, r = rnd(hash(id)), fb = pxNoise(hash(id) + 7), fb2 = pxNoise(hash(id) + 19), pal = s.p.map(hex3), pts = [];
@@ -5543,9 +5543,15 @@ function crashCard() { const C = G.lastCrash; if (!C || !C.ev) return ""; const 
 /* v166 when a phone's GPU resets (the white flash), three.js restores the context in place, but on some phone GPUs that left the map
    half-restored: markers drawn huge across the whole galaxy, then a crash. Now the map is rebuilt from scratch instead (the camera is
    kept), and on a phone or tablet the session steps its detail down one notch so the same scene doesn't push the GPU over again. */
+/* v339.1: under memory pressure iPhone Safari empties cached canvases (skin paintings and their maps) and resets the GPU, and the
+   worlds came back black. A skin whose cached canvas reads empty is dropped and loaded again from its file. */
+function pxBlank(c) { try { if (!c || !c.width) return true; const d = c.getContext("2d").getImageData(c.width >> 1, c.height >> 1, 1, 1).data; return d[3] === 0; } catch (e) { return false; } }
+function pxPurge(all) { let n = 0; for (const k in PXC) { const C = PXC[k]; if (!C) continue; if (all || (C.art && pxBlank(C.art)) || (C.surf && pxBlank(C.surf)) || (C.lay && C.lay.front && pxBlank(C.lay.front))) { delete PXC[k]; n++; } }
+  if (n && typeof G3 !== "undefined" && G3) { for (const k in G3.mats) if (k.startsWith("px:")) delete G3.mats[k]; } return n; }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState !== "visible") return; try { if (pxPurge(false) && typeof G3 !== "undefined" && G3 && view === "galaxy") { crumb("skins reloaded after the phone cleared them"); map3DRebuild(); } } catch (e) {} });
 function glWatch(W) {
   const cv = W.renderer.domElement;
-  cv.addEventListener("webglcontextlost", e => { e.preventDefault(); G.glLost = (G.glLost || 0) + 1; if (MOBILE) G.glSafe = 1; crumb("GPU reset (graphics context lost)");
+  cv.addEventListener("webglcontextlost", e => { e.preventDefault(); G.glLost = (G.glLost || 0) + 1; if (MOBILE) G.glSafe = 1; crumb("GPU reset (graphics context lost)"); try { pxPurge(true); } catch (er) {}
     setTimeout(() => { if (G3 === W && W.renderer.getContext().isContextLost()) map3DRebuild(); }, 2500); }, false); // no restore coming: rebuild anyway
   cv.addEventListener("webglcontextrestored", () => { if (G3 === W) setTimeout(map3DRebuild, 30); }, false);
 }
@@ -5866,7 +5872,7 @@ function shieldMat(W) {
 }
 /* a premium skin on the 3D map: its surface map with the glowing parts as an emissive map (a flat tone until it is generated) */
 function pxMat(W, id) {
-  const key = "px:" + id; let mat = W.mats[key]; const C = pxReady(id);
+  const key = "px:" + id; let mat = W.mats[key]; if (PXC[id] && !(mat && mat.userData.ok) && ((PXC[id].art && pxBlank(PXC[id].art)) || (PXC[id].surf && pxBlank(PXC[id].surf)))) { delete PXC[id]; mat = null; delete W.mats[key]; } const C = pxReady(id);
   if (C && C.pic && !C.surf) { if (!C.mapLoading) { C.mapLoading = 1; pxPic(id + "-map.webp", im => { const s = document.createElement("canvas"), e = document.createElement("canvas"); s.width = im.width; s.height = im.height; e.width = im.width >> 2; e.height = im.height >> 2; s.getContext("2d").drawImage(im, 0, 0); const ex = e.getContext("2d"); ex.globalAlpha = .1; ex.drawImage(im, 0, 0, e.width, e.height); /* v258: a quarter-size glow map */ C.surf = s; C.emi = e; C.hd = 1; try { pxMat(W, id); } catch (er) {} }, () => {}); }
     return mat || (W.mats[key] = new TH.MeshStandardMaterial({ color: new TH.Color(PXS[id].glow), roughness: .9 })); } /* v235: painted skins bring their own sphere map */
   if (C && !C.surf && !(mat && mat.userData.ok)) { const g0 = PXS[id].v2 ? pxGen(id, 1024) : pxSurface(id, 1024); C.surf = g0.surf; C.emi = g0.emi; // v65: a 1024 px map texture, with a relief (bump) map from the height field
