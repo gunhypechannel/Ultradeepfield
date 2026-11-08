@@ -369,7 +369,11 @@
     claim: function (id) { return need().then(function () { return run(sb.rpc("claim_tester_pack", { p_pack: id })); }); },
     mine: function () { return need().then(function () { return run(sb.rpc("my_grants")); }); },
     ack: function (id) { return need().then(function () { return run(sb.rpc("ack_grant", { p_id: id })); }); },
-    ackRevoke: function (id) { return need().then(function () { return run(sb.rpc("ack_revoke", { p_id: id })); }); }
+    ackRevoke: function (id) { return need().then(function () { return run(sb.rpc("ack_revoke", { p_id: id })); }); },
+    adminList: function () { return need().then(function () { return run(sb.rpc("admin_list")); }); },
+    adminGrant: function (uid, pack, key, note) { return need().then(function () { return run(sb.rpc("admin_grant", { p_uid: uid, p_pack: pack, p_key: key, p_note: note || null })); }); },
+    adminRevoke: function (id, note) { return need().then(function () { return run(sb.rpc("admin_revoke", { p_id: id, p_note: note || null })); }); },
+    testerSet: function (uid, on, note) { return need().then(function () { return run(sb.rpc("tester_set", { p_uid: uid, p_on: !!on, p_note: note || null })); }); }
   };
   var signingOut = false;
   window.udfAccount = {
