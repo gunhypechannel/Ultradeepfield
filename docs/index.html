@@ -12680,9 +12680,9 @@ const BOSS_HOLO = {
   swhale: "Commander, that's a Void Shark: a cruiser-sized predator with laser turrets bolted to its hide. Bring heavy hulls, and it drops Exotic Tissue for the forge.",
   ssquid: "Commander, Nebula Squids are fast, many-armed and hunt in packs. Bring Cruisers and armour. They drop Exotic Tissue, and sometimes Void Essence.",
   slevi: "Commander, a Star Leviathan. Its jaws can split a battleship, so scout it first and send our heaviest fleet. It guards rare flagship materials.",
-  cube: "Commander, a Cube. One fleet rarely breaks it, so call a joint strike with our allies. Cubes drop Cube Fragments and Void Essence, the rarest materials in the forge.",
+  cube: "Commander, this Cube is a fortress, and one fleet rarely breaks it, so call a joint strike with our allies. Cubes drop Cube Fragments and Void Essence, the rarest materials in the forge.",
   pyramid: "Commander, a derelict pyramid station. Send an expedition to open its vault for shards, resources and rare items. From level 3, something guards the halls.",
-  nexus: "Commander, the Super Cube. From Friday to Sunday, alliances fight to seize and hold it. Every minute our alliance holds it earns glory and rewards for every member." };
+  nexus: "Commander, the Super Cube is the prize of the galaxy. From Friday to Sunday, alliances fight to seize and hold it. Every minute our alliance holds it earns glory and rewards for every member." };
 function bossHolo(s) { if (!s || !S) return; let k = null;
   if (s.type === "pirate") { const x = PB[s.id]; k = x ? (x.mon && BOSS_HOLO[x.mon] ? x.mon : x.boss ? "cube" : null) : null; }
   else if (s.type === "pyramid") k = "pyramid"; else if (s.type === "nexus") k = "nexus";
