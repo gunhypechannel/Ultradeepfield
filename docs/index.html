@@ -2492,7 +2492,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 354;
+const GAME_V = 355;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9644,7 +9644,7 @@ async function glbLights(k, s) {
       const w = clamp((mx - .4) / .3, 0, 1) * clamp((sat - .16) / .3, 0, 1); Wt[i] = w; D[i * 4] *= w; D[i * 4 + 1] *= w; D[i * 4 + 2] *= w; D[i * 4 + 3] = 255; }
     x.putImageData(id, 0, 0);
     let et; if (window.createImageBitmap) { const bm = await createImageBitmap(c); et = new TH.Texture(bm); c.width = c.height = 0; } else et = new TH.CanvasTexture(c);
-    et.flipY = false; et.encoding = TH.sRGBEncoding; et.needsUpdate = true; m.emissiveMap = et; m.emissive.set(0xffffff); m.emissiveIntensity = 2.6; m.envMapIntensity = 1.25; m.needsUpdate = true;
+    et.flipY = false; et.encoding = TH.sRGBEncoding; et.needsUpdate = true; m.emissiveMap = et; m.emissive.set(0xffffff); m.emissiveIntensity = 2.6 * (1 + 1.1 * DN_NIGHT); if (!GLB_EMI.includes(m)) GLB_EMI.push(m); m.envMapIntensity = 1.25; m.needsUpdate = true;
     // lit spots: triangles whose texels glow, clustered
     const g = mesh.geometry, P = g.attributes.position, U = g.attributes.uv, I = g.index; if (!P || !U) return;
     const n = I ? I.count / 3 : P.count / 3, tri = [], bb = new TH.Box3().setFromBufferAttribute(P), size = Math.max(bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z);
@@ -9704,6 +9704,7 @@ function glbBld(k, b, big, small, anim) {
   const fx = src.userData.fx, F = BLD_FX[k] || {}; if (fx && anim && !WEAK) {
     const at = v => new TH.Vector3(v[0] * s + m.position.x, v[1] * s + m.position.y, v[2] * s + m.position.z), span = Math.max(sz.x, sz.z) * s, add = (o, kind, ph) => { b.add(o); anim.push([o, kind, ph || 0]); return o; };
     const spr = (map, col, op) => new TH.Sprite(new TH.SpriteMaterial({ map, color: col || 0xffffff, transparent: true, opacity: op == null ? 1 : op, blending: TH.AdditiveBlending, depthWrite: false }));
+    fx.spots.slice(0, MOBILE ? 4 : 6).forEach(sp => { const pl = new TH.Mesh(POOL_G(), poolMat(sp.c)); const g0 = at(sp.p); pl.position.set(g0.x, .02 - b.position.y, g0.z); pl.scale.setScalar(span * (.55 + .35 * sp.s)); pl.userData.nomini = 1; b.add(pl); anim.push([pl, "still", 0]); }); // v355 their light on the ground
     fx.spots.slice(0, MOBILE ? 5 : 9).forEach((sp, i) => { const o = spr(glowTex(sp.c, 1), 0xffffff, .75 + .25 * sp.s); o.position.copy(at(sp.p)); const sc = span * (.2 + .16 * sp.s); o.scale.setScalar(sc); o.userData.s0 = sc; add(o, "glowP", sp.ph); });
     if (F.smoke) fx.peaks.slice(0, F.n || 1).forEach((pk, j) => { for (let i = 0; i < 4; i++) { const o = new TH.Sprite(new TH.SpriteMaterial({ map: puffTex(F.smoke), transparent: true, opacity: 0, depthWrite: false }));
       o.position.copy(at(pk)); const sc = span * .26; o.scale.setScalar(sc); Object.assign(o.userData, { s0: sc, rise: span * .9, drift: span * .3, op: /^2/.test(F.smoke) ? .7 : .85 }); add(o, "smoke", i / 4 + j * .13); } });
@@ -10375,6 +10376,7 @@ function buildRoads(keys) {
   // street lights: a slim post with a bright lamp head, instanced across the whole base
   const post = new TH.InstancedMesh(new TH.CylinderGeometry(.03, .045, 1.1, 6).translate(0, .55, 0), K.postM, lamps.length), head = new TH.InstancedMesh(new TH.BoxGeometry(.18, .05, .09).translate(0, 1.12, 0), K.lampM, lamps.length), dm = new TH.Object3D();
   lamps.forEach(([x, z], i) => { dm.position.set(x, 0, z); dm.updateMatrix(); post.setMatrixAt(i, dm.matrix); head.setMatrixAt(i, dm.matrix); }); post.castShadow = true; g.add(post, head);
+  { const pool = new TH.InstancedMesh(POOL_G(), poolMat("255,200,140"), lamps.length); lamps.forEach(([x, z], i) => { dm.position.set(x, .025, z); dm.scale.setScalar(1.7); dm.updateMatrix(); pool.setMatrixAt(i, dm.matrix); }); dm.scale.setScalar(1); pool.renderOrder = 2; g.add(pool); } // v355 each lamp's pool of light
   bakeStatic(g, []); g.traverse(o => { if (o.isMesh && o.material === K.deckM) o.receiveShadow = true; }); return g; // every road, lane and crossing merged: one draw per material (they were ~150 separate meshes)
 }
 const TINT = { home: [0xffffff, 0x6d4232, 0x120c09], terran: [0x9ec58a, 0x55684a, 0x0b120c], ocean: [0x86b6d8, 0x3f5a6e, 0x07101a], desert: [0xffe0a8, 0xa07a50, 0x1a1209],
@@ -10613,6 +10615,29 @@ function turretRing(n, mix) {
     const w = new TH.Mesh(new TH.IcosahedronGeometry(R * 1.002, 3), new TH.MeshBasicMaterial({ color: 0x9fe8ff, wireframe: true, transparent: true, opacity: big ? .07 : .045, depthWrite: false, toneMapped: false })); w.scale.y = .42; w.userData.dome = 1; g.add(w); }
   return g;
 }/* v354 bloom for the base: render to a target, pull out the bright parts at 1/4 size, blur at two sizes, add back */
+/* v355 light pools: a soft additive disc lying on the ground; one material per colour, faded together by colDayNight */
+const POOL_MATS = {}; let DN_NIGHT = 0;
+function poolMat(rgb) { rgb = rgb.split(",").map(v => Math.min(255, Math.round(v / 40) * 40)).join(","); if (POOL_MATS[rgb]) return POOL_MATS[rgb]; const m = new TH.MeshBasicMaterial({ map: glowTex(rgb, .9), transparent: true, opacity: .3, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 }); m.userData.op = rgb === "255,200,160" ? .8 : .9; return (POOL_MATS[rgb] = m); }
+const POOL_G = () => POOL_G.g || (POOL_G.g = new TH.PlaneGeometry(1, 1).rotateX(-Math.PI / 2));
+const GLB_EMI = []; // building model materials whose lit windows brighten at night
+/* v355 the base's time of day from the player's clock */
+function colDayNight(W) {
+  const q = /[?&]tod=(\d+(?:\.\d+)?)/.exec(location.search), d = new Date(), hr = q ? +q[1] % 24 : d.getHours() + d.getMinutes() / 60;
+  const up = clamp((hr - 5.5) / 2, 0, 1) * clamp((19.5 - hr) / 2, 0, 1), n = 1 - up, dusk = Math.min(1, up * n * 4), key = Math.round(hr * 60);
+  if (W.dnKey === key && W.dnBg === W.scene.background.getHex()) return;
+  if (!W.L) { W.L = {}; for (const o of W.scene.children) { if (o.isHemisphereLight) W.L.hemi = o; else if (o.isDirectionalLight && o.castShadow !== undefined && o === G.c3sun) W.L.sun = o; else if (o.isDirectionalLight) W.L.rim = o; else if (o.isPointLight) W.L.fill = o; }
+    W.L.sun0 = W.L.sun && W.L.sun.color.clone(); W.L.hemi0 = W.L.hemi && W.L.hemi.color.clone(); }
+  if (W.dnBg !== W.scene.background.getHex() || !W.bg0) { W.bg0 = W.scene.background.clone(); }
+  const L = W.L, moon = new TH.Color(0x8fa8d8), duskC = new TH.Color(0xff9a5a);
+  if (L.sun) { L.sun.intensity = 1.7 * up + .16 * n; L.sun.color.copy(L.sun0).lerp(duskC, dusk * .55).lerp(moon, n); }
+  if (L.hemi) { L.hemi.intensity = .45 * up + .09 * n; L.hemi.color.copy(L.hemi0).lerp(new TH.Color(0x3a4a78), n); }
+  if (L.rim) L.rim.intensity = .6 * up + .22 * n; if (L.fill) L.fill.intensity = .5 + .25 * n;
+  const bg = W.bg0.clone().lerp(new TH.Color(0x03050a), n * .92).lerp(new TH.Color(0x6a3a26), dusk * .25); W.scene.background.copy(bg); if (W.scene.fog) W.scene.fog.color.copy(bg);
+  W.renderer.toneMappingExposure = .78 + .07 * n;
+  for (const m of GLB_EMI) m.emissiveIntensity = 2.6 * (1 + 1.1 * n);
+  for (const k in POOL_MATS) POOL_MATS[k].opacity = POOL_MATS[k].userData.op * (.22 + .78 * n);
+  DN_NIGHT = n; W.dnKey = key; W.dnBg = W.scene.background.getHex();
+}
 function colBloom(W) {
   if (W.bloom !== undefined) return W.bloom; W.bloom = null;
   try {
@@ -10657,7 +10682,7 @@ function drawColony(t) {
     for (const k in W.blds) W.scene.remove(W.blds[k]); W.blds = {}; W.keys = {};
     for (const o of [W.turrets, W.dock, W.roads]) if (o) W.scene.remove(o); W.turrets = W.dock = null; W.tkey = W.dkey = "";
     W.roads = buildRoads(bt.keys); W.scene.add(W.roads);
-    const tn = TINT[bt.type] || TINT.home; W.ground.material.color.set(tn[0]); W.rockM.color.set(tn[1]); W.scene.background.set(tn[2]); if (W.scene.fog) W.scene.fog.color.set(tn[2]);
+    const tn = TINT[bt.type] || TINT.home; W.ground.material.color.set(tn[0]); W.rockM.color.set(tn[1]); W.scene.background.set(tn[2]); if (W.scene.fog) W.scene.fog.color.set(tn[2]); W.bg0 = W.scene.background.clone(); W.dnKey = null; // v355 the day colour
     W.cur = bt.key; W.renderer.shadowMap.needsUpdate = true;
   }
   // build at most 3 structures per frame, so switching planets never freezes a frame: the base assembles over a few frames instead
@@ -10709,6 +10734,7 @@ function drawColony(t) {
     Cy.craft.instanceMatrix.needsUpdate = true; Cy.lights.instanceMatrix.needsUpdate = true; }
   upStep(W, t); // v101: upgrade cinematics
   if (W.prev) { const left = W.prev.until - performance.now(); if (left <= 0 || !W.blds[W.prev.k]) { W.scene.remove(W.prev.h); W.prev = null; } else { W.prev.h.position.y = .05 + Math.sin(t * .003) * .05; HOLO_WIRE().opacity = .35 + .2 * Math.sin(t * .006); } }
+  try { colDayNight(W); } catch (e) {} // v355
   { const B = colBloom(W); let ok = false; if (B) try { B.run(); ok = true; } catch (e) { W.bloom = null; W.renderer.setRenderTarget(null); } if (!ok) W.renderer.render(W.scene, W.cam); } // v354 bloom
   // building tags
   const ctx = fx.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
