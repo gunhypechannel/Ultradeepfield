@@ -2367,7 +2367,9 @@ function cacheGrab(id) {
   if (Math.random() < .35) fsDrop([[Math.random() < .5 ? "alloy" : "crystal", 1, 1]], "a salvage pod"); // v299
   if (c.kind === "shard") { const n = Math.random() < .3 ? 2 : 1; S.shards = (S.shards || 0) + n; return `◆${n} Void Shard${n > 1 ? "s" : ""}`; }
   if (c.kind === "item") { const k = DROPS[(Math.random() * DROPS.length) | 0]; giveItem(k, k === "probe5" ? 5 : 1); return SHOP[k].n; }
-  const amt = Math.round((2500 + score() * 12) * (c.kind === "g" ? .5 : c.kind === "c" ? .75 : 1)); S.res[c.kind] += amt; return `${fmt(amt)} ${RES_N[c.kind].toLowerCase()}`;
+  const amt = Math.round((2500 + score() * 12) * (c.kind === "g" ? .5 : c.kind === "c" ? .75 : 1));
+  const P = actPlanet(); if (P) { settle(P); P.st[c.kind] += amt; try { putPlanet(P); } catch (e) {} return `${fmt(amt)} ${RES_N[c.kind].toLowerCase()} to ${P.name}`; } /* v341: it lands on the world you're on, not always the homeworld */
+  S.res[c.kind] += amt; return `${fmt(amt)} ${RES_N[c.kind].toLowerCase()}`;
 }
 const gatherRate = n => NODE_T[n.res].rate * n.lvl * (1 + .1 * ((S && S.r.logistics) || 0)) * (n.kind === "empty" ? .12 : 1); // per minute; outposts only salvage a trickle
 /* v94: an outpost is held for 6 hours (any ships can hold one); whatever cargo space the fleet has fills with salvage meanwhile */
@@ -2400,7 +2402,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 340;
+const GAME_V = 341;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
