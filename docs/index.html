@@ -4092,8 +4092,8 @@ const vipPts = () => ((S && S.vip) || {}).pts || 0;
 const vipLvl = () => { const p = vipPts(); let L = 1; for (let i = 1; i < VIP_T.length; i++) if (p >= VIP_T[i]) L = i; return L; };
 const vipFree = () => vipEff().free * 60000; // active VIP stretches the free-finish window
 /* v64: every commander can finish any construction or research with 5 minutes or less left, free, on any planet */
-const FREE_FIN = 5 * 60000, freeWin = () => Math.max(FREE_FIN, vipFree());
-const freeQ = q => q === "b" || q === "r" || String(q).startsWith("cb:");
+const FREE_FIN = 5 * 60000, freeWin = () => (typeof S !== "undefined" && S && S.tut && tutOn() ? 864e5 : Math.max(FREE_FIN, vipFree())); // v335: during the Academy everything finishes free (it was ~73 min of waiting)
+const freeQ = q => q === "b" || q === "r" || String(q).startsWith("cb:") || (q === "s" && tutOn()); // v335: Academy ships too
 function vipAdd(n, why) { if (!S || n <= 0) return; const L0 = vipLvl(); S.vip = S.vip || { pts: 0 }; S.vip.pts += Math.round(n); const L1 = vipLvl(); if (L1 > L0) { note(`VIP ${L1} reached${why ? " (" + why + ")" : ""}!${vipOn() ? "" : " Activate VIP in the Void Shop to switch its perks on."}`, "win"); SFX.research(); } }
 const vipPerks = L => vipPerkRows(L).map(([a, b]) => `${a}: ${b}`);
 /* 7-day login calendar: claim once per UTC day; missing a day restarts the streak */
@@ -4847,7 +4847,7 @@ async function connectCloud() {
     ownerCheck(user); // the game's owner has every premium skin unlocked
     try { G.myName = (await user.me()).name || ""; } catch (e) {} if (S && S.cname) G.myName = S.cname;
     try {
-      const snap = await db.doc(`data/users/${uid}/save`).get(); if (!snap.exists && window.udfOld && window.udfOld.available && !(S.uid && S.uid === uid && S.intro)) G.oldWait = 1; // v329
+      const snap = await db.doc(`data/users/${uid}/save`).get(); /* v335: new commanders go straight to their faction and the opening battle; bringing an empire from the old server stays in Menu › Save & data */
       /* v200: which empire wins when you sign in. It used to be "newest savedAt", but every device stamps its save as it plays, so a
          second phone's brand-new planet (saved while you were still typing your password) beat your real empire and then overwrote
          it. Now: an empire on this device that belongs to another account never wins; a device that has synced with this account
@@ -15683,6 +15683,7 @@ function sendFleet(p, n, mission, extra) {
   if (Object.keys(n).some(k => CLASS_OF[k] === "frigate" && n[k] > 0) && typeof reveal === "function") { const q = pos(p, T); reveal(q.x, q.y, 12); } // frigates scout ahead
   if (mission === "attack" && p.owner && p.owner !== G.me && p.kind !== "home") publishInbound(p.owner, f);
   if (mission === "spy" && p.owner && p.owner !== G.me) publishInbound(p.owner, f); // v279: the target's screen flashes red
+  if (tutOn() && !["attack-a-hive-garrison", "tap", "rush", "cine"].includes(TUT[S.tut.i] && TUT[S.tut.i].id)) setTimeout(() => { try { if (S.fleets.includes(f)) ACT.fleetMap({ id: f.id }); } catch (e) {} }, 450); // v335: during the Academy the camera follows what you send (the first attack teaches tapping it yourself)
   return f;
 }
 /* tell the defender's radar that a fleet is coming */
@@ -15897,7 +15898,7 @@ const ACT = {
     else if (q.startsWith("cb:")) { const p = G.byId[q.slice(3)]; if (p && p.cq) { rem = p.cq.e - T; apply = () => { p.cq.e = T; }; } }
     else if (q.startsWith("cs:")) { const p = G.byId[q.slice(3)]; if (p && p.sq) { rem = colSqEnd(p) - T; apply = () => { p.sq.start = T - Math.ceil(p.sq.n / colLines(p)) * p.sq.each; }; } }
     if (!apply || rem <= 0) return;
-    if (freeQ(q) && rem <= freeWin()) { apply(); advance(now()); toast(rem <= FREE_FIN ? "Finished free: under 5 minutes left." : `VIP ${vipLvl()} free finish.`, "win"); return; } // decided at tap time, whichever button was showing
+    if (freeQ(q) && rem <= freeWin()) { apply(); advance(now()); toast(rem <= FREE_FIN ? "Finished free: under 5 minutes left." : tutOn() ? "Flight Academy: finished free." : `VIP ${vipLvl()} free finish.`, "win"); return; } // decided at tap time, whichever button was showing
     const c = shardCost(rem); if (S.shards < c) return toast(`Finishing now needs ◆${c}. You have ◆${S.shards}.`, "warn");
     S.shards -= c; apply(); advance(now()); vipAdd(c * 10); toast(`Finished for ◆${c}.`, "win");
   }),
