@@ -10590,6 +10590,8 @@ function vQuests() {
   return `<div class="gstack questv">
     <div class="advhero"><img src="${ADV_ART}" alt="${ADV}"><div class="advsay"><small>${ADV.toUpperCase()}</small><p>${esc(line)}</p>${act}</div></div>
     ${(() => { const r = [], mN = masteryReady() || 0, soloN = SOLO_TIERS.filter(([need], i) => s.pts >= need && !s.claimed.includes(i)).length, dN = S.daily && S.daily.tasks ? S.daily.tasks.filter(t => !t.claimed && dailyDone(t)).length + (!S.daily.bonus && S.daily.tasks.every(t => t.claimed) ? 1 : 0) : 0; // v334
+      if (td) r.push(`<button class="btn amber" data-act="tutClaim">🎓 Academy reward · collect</button>`); /* v335: these two were counted in the badge but never listed here */
+      if (ok) r.push(`<button class="btn amber" data-act="claim">📜 Directive reward · ${esc(q.t)}</button>`);
       if (!ls.claimed) r.push(`<button class="btn amber" data-act="loginClaim">🎁 Daily login reward · claim</button>`);
       if (dN) r.push(`<button class="btn amber" data-act="qJump" data-ev="qdaily">✓ ${dN} daily mission${dN > 1 ? "s" : ""} ready</button>`);
       if (soloN) r.push(`<button class="btn amber" data-act="qJump" data-ev="daily">★ ${soloN} event reward${soloN > 1 ? "s" : ""} ready</button>`);
