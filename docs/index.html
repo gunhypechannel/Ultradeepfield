@@ -2398,7 +2398,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 336;
+const GAME_V = 337;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13714,6 +13714,53 @@ const tutFleet = () => S.fleets.find(f => f.pid && f.phase === "out" && !f.assau
 const slotWait = () => fleetsUsed() >= maxFleets() ? [DOCKT("fleets", "Every fleet slot is busy. Wait for a fleet to come home")] : null; // v325
 const tutSend = () => S.fleets.some(f => f.pid && f.phase === "out") ? flyWatch("Your fleet is on its way. Watch it fly") : tutWaitShips() || slotWait() || (!own("fighter") ? tutUnit("fighter", 3)() : null) /* v319: none left: build more first */ || [['.sheet [data-act="launch"]', "Send your fighters"], ['.sheet [data-act="jump"][data-to="strike"]', "Tap Attack"], SHOWME];
 const ECON_STORE = ["metalStore", "crystalStore", "gasTank"]; // v336
+/* v337: the first time you open a building's or ship's card, the Advisor's hologram says what it is for and how to use it */
+const HOLO = {
+  metalMine: "The Metal Extractor. Metal pays for almost everything we build, so keep this our highest extractor, about two levels above crystal.",
+  crystalMine: "The Crystal Refinery. Research and better hulls run on crystal. Keep it about two levels behind metal.",
+  gasSynth: "The Gas Synthesizer. Gas fuels every flight and most research. It draws the most power, so raise the Solar Array first.",
+  solar: "The Solar Array powers every extractor. When the Power shortage card turns red, upgrade this before anything else.",
+  metalStore: "The Metal Silo. When it is full, the Metal Extractor stops. Raise it whenever metal sits at the cap.",
+  crystalStore: "The Crystal Vault. A full vault stops the refinery. Keep it ahead of your crystal income.",
+  gasTank: "The Gas Tank. A full tank stops the synthesizer. Raise it as your gas income grows.",
+  robotics: "Drone Works. Every level speeds up all construction on this world. Keep it rising with your economy.",
+  shipyard: "The Shipyard. Its Production tab builds ships, and its Repair tab rebuilds wrecks. Higher levels unlock heavier hulls.",
+  lab: "The Research Center. Its Research tab opens the whole tech tree, and every level speeds research up.",
+  radar: "The Radar Station. Its Warning tab shows enemy fleets on their way. Every level spots them five minutes sooner.",
+  repairYard: "The Repair Yard. Ships wrecked in battle are towed home and rebuilt here, and it puts out fires on our worlds.",
+  missileSilo: "The Missile Silo stores interceptors that shoot down incoming missiles, and ballistic missiles that strike enemy defenses.",
+  fortress: "The Orbital Fortress fights for this world when it is attacked. Build it on the worlds we cannot afford to lose.",
+  fusion: "The Fusion Plant burns gas to make a lot of power. Use it when the Solar Array can't keep up, and watch your gas.",
+  nanite: "The Nanite Assembly halves every build time on this world with each level. It is the biggest speed-up we have.",
+  terraformer: "The Geo-Former opens new ground: five more building fields per level. Build it when a world runs out of room.",
+  allyDepot: "The Coalition Depot fuels allied fleets and cuts the fuel of every flight. Its Fleets tab shows allies stationed here.",
+  lunarBase: "The Lunar Outpost opens building room on this world's moon. Every level adds three moon fields.",
+  phalanx: "The Phalanx Array scans the space around this moon and adds a radar level for every level we build.",
+  flagDock: "The Flagship Dock is where our flagship is commissioned and equipped. Its Flagship tab holds its gear.",
+  jumpGate: "The Warp Gate moves ships instantly between two gated worlds. It recharges after each jump.",
+  fighter: "Light Fighters are cheap, fast and the backbone of an early fleet. Build them in numbers.",
+  hauler: "Small Cargos carry plunder and supplies. Send them with your warships so a win brings the loot home.",
+  heavyFighter: "Heavy Fighters carry real armour and shred Small Cargos. A strong step up from Light Fighters.",
+  heavyCargo: "Large Cargos hold five Small Cargos' worth. Best for pirate raids and for moving resources between worlds.",
+  recycler: "Recyclers collect debris fields at full efficiency. Send them wherever a big battle just ended.",
+  lancer: "Pathfinders are fast long-range raiders with deep holds, deadly against Cruisers and fighters.",
+  ark: "The Colony Ship settles a new world. Send it with warships against a Hive world we can beat, and that world becomes ours.",
+  corvette: "Cruisers are our fastest warships and the counter to any fighter swarm.",
+  battleship: "Battleships are heavy line ships: thick hulls, big guns, and deadly against Pathfinders.",
+  bastion: "Dreadnoughts hunt fleets. They punish lines of Battleships, Cruisers and Heavy Fighters.",
+  bomber: "Bombers break defenses. Send them at fortified worlds full of turrets.",
+  destroyer: "Destroyers are escort killers, best against Dreadnoughts and Laser Turrets.",
+  dreadnought: "The Reaper is the king of the fleet. It hunts capital ships: Battleships, Bombers and Destroyers.",
+  worldbreaker: "The Cube Destroyer is the rarest weapon in the galaxy. Only a very large fleet stands a chance against one.",
+  spyProbe: "Espionage Probes scout before every attack. Send more of them, or raise Espionage Technology, and the report shows more.",
+  tender: "Mender Repair Ships patch up the fleet after every battle, and speed up the Repair Yard while parked at home.",
+  guardian: "The Guardian Heavy Cruiser is a flying shield wall that draws enemy fire away from smaller ships.",
+  escortCarrier: "The Halo Escort Carrier launches fighter wings and protects the fleet. Deadly against fighters.",
+  supercarrier: "The Citadel Supercarrier is a mobile base: it commands fleets and launches squadrons.",
+  eclipse: "The Discovery Class Destroyer is an alliance flagship. One per commander, and its command aura lifts the whole fleet." };
+function holoFirst(kind, k) { if (!S || !HOLO[k] || (kind !== "b" && kind !== "s")) return; S.holoSeen = S.holoSeen || {}; if (S.holoSeen[k]) return;
+  const st = tutOn() ? TUT[S.tut.i] : null, nm = (B[k] || SH[k] || {}).n; if (st && nm && (st.t.includes(nm) || st.say.includes(nm))) return; /* the step's own line covers it; it plays next time */
+  if ($("#advh.on") || advLines || $("#adv")) return; S.holoSeen[k] = 1; dirty(); setTimeout(() => advHolo(HOLO[k]), 400); }
 const tutAt = id => tutOn() && (TUT[S.tut.i] || {}).id === id;
 function tutBld() { const st = tutOn() ? TUT[S.tut.i] : null; if (!st || !/^(Build|Upgrade)/.test(st.t)) return null; let best = null; for (const k in B) if (st.t.includes(B[k].n) && (!best || B[k].n.length > B[best].n.length)) best = k; return best; } // v334
 const tutKey = i => { const s = TUT[i]; return s ? (s.id || s.t) : "done"; }; // v333: steps are recorded by a name that survives renumbering
@@ -13768,6 +13815,10 @@ const TUT = [
   { lv: 2, t: "Build Drone Works", say: "Drone Works speeds up every construction and unlocks the Shipyard. You'll find it under Facility.", ok: s => s.b.robotics >= 1, go: { v: "build", s: "fac" }, path: bPath("robotics", "fac"), rw: { m: 600, c: 300, g: 150 } },
   { lv: 2, t: "Build the Shipyard", say: "No fleet, no empire. Build the Shipyard.", ok: s => s.b.shipyard >= 1, go: { v: "build", s: "fac" }, path: bPath("shipyard", "fac"), rw: { m: 1200, c: 500 } },
   { lv: 2, t: "Build the Research Center", say: "Ships need engines, and engines need research. Build a Research Center under Facility.", ok: s => s.b.lab >= 1, go: { v: "build", s: "fac" }, path: bPath("lab", "fac"), rw: { m: 800, c: 1000, g: 300 } },
+  /* v337: building cards hold more than an upgrade button */
+  { lv: 2, id: "tabs", t: "Explore the Shipyard's tabs", say: "Some building cards hold more than an upgrade. Open the Shipyard: its Repair tab rebuilds ships wrecked in battle, and its Production tab is where every ship is built. The Research Center's Research tab works the same way.", ok: s => ((s.tutTabs || 0) & 3) === 3,
+    path: () => sheet && sheet.type === "detail" && sheet.k === "shipyard" && !sheet.pid ? [(S.tutTabs || 0) & 1 ? ['.sheet [data-act="dtab"][data-i="1"]', "Tap the Production tab: ships are built here"] : ['.sheet [data-act="dtab"][data-i="2"]', "Tap the Repair tab: wrecked ships are rebuilt here"]]
+      : [['article.bn[data-kind="b"][data-k="shipyard"]', "Choose Shipyard: open its card"], ['[data-act="bcat"][data-v="fac"]', "Open Facility"], ['[data-act="sub"][data-g="build"][data-v="bld"]', "Open Structures"], DOCKT("build", "Tap Build")], rw: { m: 600, c: 400, g: 200 } },
   { lv: 3, t: "Research Energy Technology", say: "Energy Technology is the root of the tech tree, and Combustion Drive needs it. Start it now.", ok: s => s.r.energyT >= 1, go: { v: "lab" }, rcat: "Basic", path: rPath("energyT", "Basic"), rw: { m: 2500, c: 1200, g: 700, shards: 1 } },
   { lv: 3, t: "Research Combustion Drive", say: "Combustion Drive powers your first warships. Once it is done, the Shipyard can build Light Fighters.", ok: s => s.r.drive >= 1, go: { v: "lab" }, rcat: "Drive", path: rPath("drive", "Drive"), rw: { m: 3500, c: 1200, g: 300 } },
   { lv: 3, t: "Build 3 Light Fighters", say: "Light Fighters are cheap and fast: perfect for your first raids. Queue three of them. Academy crews build them in a minute each.", ok: () => own("fighter") >= 3, fast: "fighter", go: { v: "build", s: "ships" }, /* v190: academy fighters take a minute each (they took ~10, a half-hour wait mid-tutorial) */
@@ -13835,7 +13886,7 @@ const SHIP_PATH = [["fighter", 5, "Light Fighters are the backbone of every earl
   ["destroyer", 1, "Destroyers are escort killers, best against Dreadnoughts and Laser Turrets. Bring one when the enemy fields Dreadnoughts."],
   ["bomber", 1, "Bombers crack defenses: best against turrets. Send them at fortified worlds once Plasma Technology is ready."],
   ["dreadnought", 1, "The Reaper is the king of the fleet, a towering flagship that hunts capital ships: best against Battleships, Bombers and Destroyers. The top of the fleet path."]];
-const TUT_BASICS = 18; // (v296: 12 + the two naming steps; v318: + launch, tap, rush and film) // the Academy runs alone through its basics (first buildings, research, fighters, the first Hive win), then the Advisor hops
+const TUT_BASICS = 19; /* v337: + the tabs step */ // (v296: 12 + the two naming steps; v318: + launch, tap, rush and film) // the Academy runs alone through its basics (first buildings, research, fighters, the first Hive win), then the Advisor hops
 const RCAT_OF = k => (RCAT.find(([, ks]) => ks.includes(k)) || ["Basic"])[0];
 function reqStep(req, depth) { // the first requirement on the road to req that can be worked on right now
   for (const [k, l] of missing(req)) { const D = B[k] || R[k]; if (!D) continue; const inner = (depth || 0) < 6 && reqStep(D.req, (depth || 0) + 1); if (inner) return inner; return { k, l, n: D.n, cur: lvlOf(k), r: !B[k] }; }
@@ -13984,6 +14035,7 @@ function coachRender(force) {
   if (!S.tutFx) { S.tutFx = 1; if (S.tut.i > 13) S.tut.i = Math.min(TUT.length, S.tut.i + 4); dirty(); } /* v318: four fleet steps before the first Hive win; anyone past it keeps their place */
   if (!S.tutHop) { S.tutHop = 1; if (tutOn()) S.advHop = 0; dirty(); } /* v324: commanders mid-Academy go back to its path */
   if (!S.tutScout) { S.tutScout = 1; if (S.tut.i > 12) S.tut.i = Math.min(TUT.length, S.tut.i + 2); dirty(); } /* v332: two scouting steps before the first attack; anyone past them keeps their place */
+  if (!S.tutTabs0) { S.tutTabs0 = 1; if (!S.tut.k && S.tut.i >= 10) S.tut.i = Math.min(TUT.length, S.tut.i + 1); dirty(); } /* v337: the tabs step; saves that know their step id are placed by it */
   if (!S.tutEcon) { S.tutEcon = 1; if (S.tut.k === "research-astrophysics-lv-2" && (S.r.astro || 0) < 2) S.tut.k = "econ-solar5"; else if (!S.tut.k && S.tut.i >= 29) S.tut.i = Math.min(TUT.length, S.tut.i + 9); dirty(); } /* v336: nine economy steps before Astrophysics Lv.2; anyone waiting on Lv.2 gets them first, anyone past it keeps their place */
   if (!G.tutFound) { G.tutFound = 1; const k = S.tut.k, j = k && k !== "done" ? TUT.findIndex(s => s.id === k) : -1; if (j >= 0 && j !== S.tut.i) { S.tut.i = j; dirty(); } } // v333: back to the step this save was on, wherever it now sits
   { const k = TUT[S.tut.i] ? TUT[S.tut.i].id : "done"; if (S.tut.k !== k) { S.tut.k = k; dirty(); } }
@@ -16286,11 +16338,11 @@ const ACT = {
   speedShop: () => openSheet({ type: "shop", cat: "accel" }), // v335
   openShop2: d => openSheet({ type: "shop", cat: d.v || "boost" }),
   spyOpen: d => openSheet({ type: "spyrep", id: d.id }),
-  detail: d => { if (d.kind === "b") SFX.tapB(d.k); openSheet({ type: "detail", kind: d.kind, k: d.k, qty: (d.kind === "s" && !d.pid && tutQty(d.k)) || 1, tab: 0, pid: d.pid || null }); }, // v319: the Academy's amount, ready to build
+  detail: d => { if (d.kind === "b") SFX.tapB(d.k); holoFirst(d.kind, d.k); openSheet({ type: "detail", kind: d.kind, k: d.k, qty: (d.kind === "s" && !d.pid && tutQty(d.k)) || 1, tab: 0, pid: d.pid || null }); }, // v319: the Academy's amount, ready to build
   bcat: d => { sub.bcat = d.v; sub.build = "bld"; view = "build"; render(true); },
   rcat: d => { sub.rcat = d.v || null; render(); $("#view").scrollTop = 0; },
   ffrom: d => { sub.ffrom = d.v === "all" ? null : d.v; render(); },
-  dtab: d => { if (!sheet) return; const i = +d.i; /* v245: the Research and Production tabs go straight to the research list and the shipyard */
+  dtab: d => { if (!sheet) return; const i = +d.i; if (sheet.type === "detail" && sheet.k === "shipyard" && !sheet.pid && (i === 1 || i === 2)) { S.tutTabs = (S.tutTabs || 0) | (i === 2 ? 1 : 2); dirty(); } /* v337 */ /* v245: the Research and Production tabs go straight to the research list and the shipyard */
     if (sheet.type === "detail" && sheet.kind === "b" && i === 1 && !sheet.pid) { if (sheet.k === "lab" && labTop()) { closeSheet(); return ACT.nav({ v: "build", s: "research" }); } /* v247: the research categories */ if (sheet.k === "shipyard" && S.b.shipyard) return openSheet({ type: "yard", pid: null }); }
     sheet.tab = i; renderSheet(); },
   prodRate: d => { if (!PROD_K.includes(d.k)) return; S.prod = S.prod || {}; const v = Math.round(pf(d.k) * 100); S.prod[d.k] = v <= 0 ? 100 : v - 10; dirty(); renderSheet(); render(); },
