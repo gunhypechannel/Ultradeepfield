@@ -12498,7 +12498,7 @@ function openSheet(s) { { const cp = document.getElementById("cubepanel"); if (c
   G.sheetDir = sheet && sheet !== s ? 1 : 0; if (sheet && sheet !== s && (sheet.type !== s.type || (sheet.id || "") !== (s.id || "") || sheet.k !== s.k)) { sheetStack.push(sheet); if (sheetStack.length > 12) sheetStack.shift(); } sheet = s; renderSheet(); }
 function sheetBack() { if (sheetStack.length) { G.sheetDir = -1; sheet = sheetStack.pop(); G.sel = null; G.selNode = null; renderSheet(); } else closeSheet(); }
 const backBar = () => `<div class="sbk"><button class="sbkb" data-act="back">‹ ${sheetStack.length ? "Back to " + (SHEET_NAME[sheetStack[sheetStack.length - 1].type] || "previous") : "Back"}</button></div>`;
-function closeSheet() { sheetStack = []; if (sheet && sheet.type === "faction" && S && !S.faction) { S.faction = "terran"; dirty(); try { syncPlayer(); } catch (e) {} if (C3) C3.fac = null; toast("You lead the Terran Union. You can change your faction any time from Faction in your profile."); } /* v122: closing the picker without choosing keeps the default, so it never asks again */ if (sheet && sheet.type === "faction" && S && !S.intro) setTimeout(intro, 60);
+function closeSheet() { window.__shutAt = performance.now(); sheetStack = []; if (sheet && sheet.type === "faction" && S && !S.faction) { S.faction = "terran"; dirty(); try { syncPlayer(); } catch (e) {} if (C3) C3.fac = null; toast("You lead the Terran Union. You can change your faction any time from Faction in your profile."); } /* v122: closing the picker without choosing keeps the default, so it never asks again */ if (sheet && sheet.type === "faction" && S && !S.intro) setTimeout(intro, 60);
   if (G.find === "o") { G.find = null; setTimeout(() => { try { mapOverlay(); } catch (e) {} }, 0); } /* v114: Coordinates is a one-shot tool: closing it frees every other marker for tapping again */
   sheet = null; G.sel = null; G.selNode = null; const a = $("#sheetwrap"); if (!a) return;
   if (reduced) { a.remove(); guideNow(); return; } a.id = ""; a.querySelectorAll("[id]").forEach(e => e.removeAttribute("id")); a.classList.add("closing"); a.style.pointerEvents = "none"; guideNow(); setTimeout(() => { a.remove(); guideNow(); }, 210); }
@@ -13995,7 +13995,7 @@ function guideFrame() {
     if (cw.classList.contains("gdhide") !== hide) cw.classList.toggle("gdhide", hide); } }
   if (GD.on !== el) { if (GD.on) GD.on.classList.remove("gdon"); if (el) el.classList.add("gdon"); GD.on = el; } /* v338: what the guide points at stops pulsing */
   if (el) { let op = 1; for (let n = el; n && n.nodeType === 1 && op > .5; n = n.parentElement) { const lp = n.getAnimations && n.getAnimations().some(a => a.effect && a.effect.getTiming && a.effect.getTiming().iterations === Infinity); if (!lp) op *= +getComputedStyle(n).opacity; } /* v338: a looping pulse isn't a fade-in */ if (op < .9) { g.style.display = "none"; return requestAnimationFrame(guideFrame); } } // v334: no frame around a card that's still fading in
-  if (!el) { g.style.display = "none"; return requestAnimationFrame(guideFrame); }
+  if (!el) { if (g.style.display !== "none") window.__gdHideAt = performance.now(); g.style.display = "none"; return requestAnimationFrame(guideFrame); }
   const r = el.getBoundingClientRect(), pad = 6, ring = g.firstChild, hand = g.children[1], tip = g.children[2], low = r.top > innerHeight * .62;
   { const tr = tip.getBoundingClientRect(), hit = (b, q) => q.width && b.right > q.left - 6 && b.left < q.right + 6 && b.bottom > q.top - 6 && b.top < q.bottom + 6; for (const ts of document.querySelectorAll("#toasts .toast")) { const b = ts.getBoundingClientRect(); ts.classList.toggle("gdfade", hit(b, r) || hit(b, tr)); } } // v334; v338: and under the tip
   const nudge = tutOn() && performance.now() - (G.lastIn || performance.now()) > 20000 && !GUIDE_WAIT.test(GD.label || "") && !document.hidden; // v334
@@ -14037,7 +14037,7 @@ function pathHint(q) {
 let coachHtml = "";
 function coachRender(force) {
   if (!S) return; if (!S.tut) S.tut = { i: S.intro && score() > 200 ? TUT.length : 0, open: 1 }; // veterans skip the Academy
-  tutSupply(); try { pathBoostTopUp(); } catch (e) {} /* v338: before the fleet-path branch returns */
+  tutSupply(); document.body.classList.toggle("acadon", tutOn()); try { pathBoostTopUp(); } catch (e) {} /* v338: before the fleet-path branch returns */
   if (!S.tutN2) { S.tutN2 = 1; if (S.tut.i > 0) S.tut.i = Math.min(TUT.length, S.tut.i + 2); dirty(); } /* v296: two steps added at the start; anyone already past the first step keeps their place */
   if (!S.tutAstro) { S.tutAstro = 1; if (S.tut.i >= TUT_V1 && (S.r.astro || 0) >= 2) S.tut.i = TUT.length; else if (S.tut.i >= TUT_V1) S.tut.open = 1; dirty(); } /* v200: finished commanders without Astrophysics Lv.2 get the new steps */
   if (!S.tutFlag) { S.tutFlag = 1; if (S.tut.i >= TUT_V2) { if (fsBuilt() && (S.b.flagDock || 0) >= 1) S.tut.i = TUT.length; else S.tut.open = 1; } dirty(); } /* v299: finished commanders get the Dock and flagship steps */
@@ -16807,7 +16807,7 @@ setTimeout(() => boot((window.claude && window.claude.hot && window.claude.hot.d
 #fbBtn{position:fixed;left:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 72px);z-index:65;display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:18px;border:1px solid rgba(127,230,243,.45);background:rgba(6,18,30,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#bff3fa;font:600 12px "Oxanium",sans-serif;letter-spacing:.06em;text-transform:uppercase;box-shadow:0 4px 14px rgba(0,0,0,.45);opacity:.85;touch-action:manipulation}
 #fbBtn:active{opacity:1}
 .cnrow{display:flex;gap:8px;align-items:stretch}.cnrow .minput{flex:1;min-width:0}.cnrow .btn{flex:none}
-body:has(.sheet) #fbBtn,body:has(#adv) #fbBtn,body:has(#tutguide.acad[style*="block"]) #fbBtn,body:has(#udfAuth) #fbBtn{display:none}
+body:has(.sheet) #fbBtn,body:has(#adv) #fbBtn,body.acadon #fbBtn,body:has(#tutguide.acad[style*="block"]) #fbBtn,body:has(#udfAuth) #fbBtn{display:none}
 #fbW{position:fixed;inset:0;z-index:95;display:none;align-items:flex-end;justify-content:center;background:rgba(2,6,12,.6)}
 #fbW.on{display:flex}
 #fbW form{width:min(480px,100%);background:linear-gradient(180deg,#11202d,#0b1520);border:1px solid #2c5468;border-radius:18px 18px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 16px);display:flex;flex-direction:column;gap:10px;color:#d5e4ec;font-family:"Barlow Semi Condensed",sans-serif}
@@ -16892,7 +16892,7 @@ body:has(.sheet) #fbBtn,body:has(#adv) #fbBtn,body:has(#tutguide.acad[style*="bl
   f.pic.addEventListener("change", () => { const fl = f.pic.files && f.pic.files[0]; f.pic.value = ""; if (!fl) return; const url = URL.createObjectURL(fl), im = new Image(); im.onload = () => { let u = null; try { u = fitJpeg(im, im.naturalWidth, im.naturalHeight); } catch (e) {} URL.revokeObjectURL(url); if (u) setShot(u); else { msg.style.color = "#ff6262"; msg.textContent = "That picture couldn't be read."; } }; im.onerror = () => { URL.revokeObjectURL(url); msg.style.color = "#ff6262"; msg.textContent = "That picture couldn't be read."; }; im.src = url; });
   const open = () => { msg.textContent = ""; msg.style.color = ""; W.classList.add("on"); setTimeout(() => f.t.focus(), 50); };
   const close = () => W.classList.remove("on");
-  document.getElementById("fbBtn").addEventListener("click", e => { e.stopPropagation(); open(); });
+  document.getElementById("fbBtn").addEventListener("click", e => { e.stopPropagation(); if (performance.now() - (window.__shutAt || 0) < 700 || performance.now() - (window.__gdHideAt || 0) < 700) return; open(); }); /* v338: not a tap meant for something that just closed */
   W.querySelector(".fbx").addEventListener("click", e => { e.stopPropagation(); close(); });
   W.addEventListener("click", e => { e.stopPropagation(); if (e.target === W) close(); });
   const screenName = () => { try {
