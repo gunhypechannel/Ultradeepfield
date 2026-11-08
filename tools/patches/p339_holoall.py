@@ -7,7 +7,7 @@ def rep(a,b,n=1):
 rep('dt: "hyper", sz: 1.5, max: 1, ally: 2,','dt: "hyper", sz: 1.5, ally: 2,')
 rep('An alliance flagship for system dominance. One per commander, and only for members of an alliance with a Space Station Lv.2 or higher.','An alliance flagship for system dominance, only for members of an alliance with a Space Station Lv.2 or higher. Build as many as you can afford.')
 rep('eclipse: "The Discovery Class Destroyer is an alliance flagship. One per commander, and its command aura lifts the whole fleet." };',
-'''eclipse: "The Discovery Class Destroyer is an alliance flagship. Build as many as you can afford: its command aura lifts the whole fleet.",
+'''eclipse: "The Discovery Class Destroyer is an alliance flagship, with no limit on how many you build. Its command aura lifts the whole fleet.",
   /* v339 research transmissions */
   energyT: "Energy Technology boosts every solar and fusion plant, and most other research needs it first.",
   laserT: "Laser Technology arms our light weapons. Heavy Lasers and the bigger warships need it.",
