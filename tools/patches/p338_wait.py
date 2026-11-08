@@ -1,0 +1,1 @@
+p='docs/index.html'; t=open(p,encoding='utf-8').read(); a='ready in/i'; t=t.replace('gathering|ready in/i','gathering|ready in|come back in|check back|still missing/i',1); open(p,'w',encoding='utf-8').write(t)

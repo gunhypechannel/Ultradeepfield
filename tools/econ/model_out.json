@@ -1,0 +1,134 @@
+{
+ "casual": {
+  "eq_day": 321,
+  "per_kind": {
+   "alloy": 95,
+   "circuit": 125,
+   "crystal": 52,
+   "bio": 32,
+   "cube": 9,
+   "void": 7
+  },
+  "shards_day": 6,
+  "sets": {
+   "free": {
+    "Rare": 17,
+    "Epic": 87,
+    "Legendary": 434,
+    "Mythic": 2172
+   },
+   "$10/month": {
+    "Rare": 12,
+    "Epic": 59,
+    "Legendary": 293,
+    "Mythic": 1464
+   },
+   "$20/month": {
+    "Rare": 9,
+    "Epic": 44,
+    "Legendary": 219,
+    "Mythic": 1095
+   },
+   "$100/month": {
+    "Rare": 4,
+    "Epic": 18,
+    "Legendary": 88,
+    "Mythic": 442
+   },
+   "$250/month": {
+    "Rare": 2,
+    "Epic": 10,
+    "Legendary": 51,
+    "Mythic": 257
+   }
+  }
+ },
+ "active": {
+  "eq_day": 1095,
+  "per_kind": {
+   "alloy": 193,
+   "circuit": 315,
+   "crystal": 188,
+   "bio": 181,
+   "cube": 153,
+   "void": 64
+  },
+  "shards_day": 14,
+  "sets": {
+   "free": {
+    "Rare": 2,
+    "Epic": 10,
+    "Legendary": 49,
+    "Mythic": 244
+   },
+   "$10/month": {
+    "Rare": 2,
+    "Epic": 9,
+    "Legendary": 46,
+    "Mythic": 230
+   },
+   "$20/month": {
+    "Rare": 2,
+    "Epic": 9,
+    "Legendary": 44,
+    "Mythic": 218
+   },
+   "$100/month": {
+    "Rare": 2,
+    "Epic": 8,
+    "Legendary": 39,
+    "Mythic": 193
+   },
+   "$250/month": {
+    "Rare": 1,
+    "Epic": 7,
+    "Legendary": 33,
+    "Mythic": 163
+   }
+  }
+ },
+ "hardcore": {
+  "eq_day": 3098,
+  "per_kind": {
+   "alloy": 408,
+   "circuit": 471,
+   "crystal": 388,
+   "bio": 981,
+   "cube": 583,
+   "void": 267
+  },
+  "shards_day": 24,
+  "sets": {
+   "free": {
+    "Rare": 1,
+    "Epic": 4,
+    "Legendary": 21,
+    "Mythic": 107
+   },
+   "$10/month": {
+    "Rare": 1,
+    "Epic": 4,
+    "Legendary": 21,
+    "Mythic": 106
+   },
+   "$20/month": {
+    "Rare": 1,
+    "Epic": 4,
+    "Legendary": 21,
+    "Mythic": 105
+   },
+   "$100/month": {
+    "Rare": 1,
+    "Epic": 4,
+    "Legendary": 20,
+    "Mythic": 99
+   },
+   "$250/month": {
+    "Rare": 1,
+    "Epic": 4,
+    "Legendary": 18,
+    "Mythic": 90
+   }
+  }
+ }
+}

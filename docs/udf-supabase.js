@@ -191,7 +191,7 @@
     ".udfa .l{background:none;border:0;color:#55d6e8;padding:6px;font-size:14px;text-decoration:underline}" +
     ".udfa .or{display:flex;align-items:center;gap:10px;color:#7d95a5;font-size:12px;letter-spacing:.14em}.udfa .or:before,.udfa .or:after{content:'';flex:1;height:1px;background:#1d3647}" +
     ".udfa .er{min-height:18px;color:#ff6262;font-size:14px;text-align:center}.udfa .ok{color:#71df90}" +
-    ".udfa .row{display:flex;justify-content:space-between}" +
+    ".udfa .row{display:flex;justify-content:space-between}.udfa .fbrow{justify-content:center}#udfFb{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;background:#02060c;font-family:\x27Barlow Semi Condensed\x27,Arial,sans-serif;color:#d5e4ec}#udfFb textarea{width:100%;box-sizing:border-box;border-radius:10px;border:1px solid rgba(85,214,232,.4);background:rgba(0,0,0,.35);color:#e8f6ff;padding:10px;font:inherit;font-size:15px;resize:vertical;margin-bottom:8px}" +
     ".udfa .pw{position:relative}.udfa .pw input{padding-right:70px}.udfa .pw .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:auto;padding:6px 10px;background:none;border:0;color:#55d6e8;font-size:14px}" +
     /* v263 the title screen: the U.D.F. key art fills the screen (a blurred copy fills the sides on wide screens) and the sign-in sits on
        it as a glass panel with capsule fields and a hexagonal Sign in button, in the art's own blue-steel look */
@@ -233,6 +233,23 @@
     return "Couldn't sign in (" + (m || "error") + ").";
   }
 
+  /* v342: feedback from the sign-in screen, before there is an account (server function login_feedback; it lands in the owner's feedback inbox) */
+  function loginFeedback() {
+    var o = document.createElement("div"); o.id = "udfFb"; o.className = "udfa"; document.body.appendChild(o);
+    var em = lastEmail();
+    o.innerHTML = '<form class="bx" novalidate><h2>Send feedback</h2><p>Tell us what went wrong signing in or creating your account. Add your email if you\'d like a reply.</p>' +
+      '<textarea name="t" rows="5" maxlength="2000" placeholder="What happened?"></textarea><input name="e" type="email" autocomplete="email" inputmode="email" placeholder="Email (optional)" value="' + esc(em) + '">' +
+      '<div class="er" role="alert"></div><button type="submit" class="p">Send</button><button type="button" class="l" data-a="x">Cancel</button></form>';
+    var f = o.querySelector("form"), er = o.querySelector(".er"), busyFb = false;
+    o.addEventListener("click", function (e) { var b = e.target.closest("[data-a=x]"); if (b) { e.preventDefault(); o.remove(); } });
+    f.addEventListener("submit", function (e) { e.preventDefault(); if (busyFb) return; var t = (f.t.value || "").trim(); if (t.length < 3) { er.textContent = "Type a few words first."; return; }
+      busyFb = true; er.className = "er ok"; er.textContent = "Sending…";
+      loadSdk().then(function () { return run(sb.rpc("login_feedback", { p_text: t, p_email: (f.e.value || "").trim(), p_device: navigator.userAgent.slice(0, 200) })); })
+        .then(function () { er.className = "er ok"; er.textContent = "Thanks! Your feedback was sent."; setTimeout(function () { o.remove(); }, 1600); },
+          function (x) { busyFb = false; er.className = "er"; er.textContent = /busy/.test((x && x.message) || "") ? "Lots of feedback right now. Try again in a little while." : "Couldn't send it. Check your connection and try again."; });
+    });
+    setTimeout(function () { try { f.t.focus(); } catch (x) {} }, 50);
+  }
   function signInScreen(startMode) {
     return new Promise(function (resolve) {
       addCss();
@@ -250,7 +267,8 @@
           '<div class="er' + (okMsg ? " ok" : "") + '" role="alert">' + esc(msg || okMsg || "") + '</div>' +
           '<button type="submit" class="p">' + (np ? "Save password" : reset ? "Send reset link" : up ? "Create account" : "Sign in") + '</button>' +
           (np ? "" : '<div class="row">' + (mode === "in" ? '<button type="button" class="l" data-a="up">New here? Create account</button><button type="button" class="l" data-a="reset">Forgot password?</button>' : '<button type="button" class="l" data-a="in">Back to sign in</button>') + '</div>') +
-          (mode === "in" && resendOn ? '<div class="row"><button type="button" class="l" data-a="resend">Resend confirmation email</button></div>' : "") + '</form>';
+          (mode === "in" && resendOn ? '<div class="row"><button type="button" class="l" data-a="resend">Resend confirmation email</button></div>' : "") +
+          (np ? "" : '<div class="row fbrow"><button type="button" class="l" data-a="fb">Trouble signing in? Send feedback</button></div>') + '</form>';
       }
       function say(t, ok) { var el = w.querySelector(".er"); if (!el) return draw(t); el.className = "er" + (ok ? " ok" : ""); el.textContent = t; }
       function done(u) { if (finished) return; finished = true; try { sub && sub.data && sub.data.subscription.unsubscribe(); } catch (x) {} w.remove(); resolve(u); }
@@ -261,6 +279,7 @@
         else if (a === "resend") { var ei = w.querySelector("input[name=e]"), em2 = ei ? (ei.value || "").trim() : lastEmail(); if (!em2) return say("Type your email first.");
           if (busy) return; busy = true; say("…", true);
           sb.auth.resend({ type: "signup", email: em2, options: { emailRedirectTo: HERE } }).then(function (r) { busy = false; if (r && r.error) return say(authMsg(r.error)); say("Sent. Open the newest email from us (check Spam too), tap its link, and you're in.", true); }, function (er) { busy = false; say(authMsg(er)); }); }
+        else if (a === "fb") loginFeedback();
         else if (a === "eye") { var pi = w.querySelector("input[name=p]"); if (pi) { var sh = pi.type === "password"; pi.type = sh ? "text" : "password"; b.textContent = sh ? "Hide" : "Show"; } }
         else { mode = a; draw(); }
       });
@@ -340,6 +359,17 @@
       if (!memo[name]) memo[name] = start().then(function (ok) { return ok ? (name === "db" ? DB : USER) : null; });
       return memo[name];
     }
+  };
+  /* v342 premium packs: the catalog, tester claims and grant delivery. Purchases are not wired: only the owner or a store-verifying
+     server function can create a purchase grant; the game only reads, claims tester packs and acknowledges what it applied. */
+  function need() { if (!sb || !me) return Promise.reject(Object.assign(new Error("Sign in first."), { code: "unavailable" })); return Promise.resolve(); }
+  window.udfShop = {
+    packs: function () { return need().then(function () { return run(sb.from("shop_packs").select("id,data,once_per_account,tester_eligible,sort").order("sort")); }); },
+    status: function () { return need().then(function () { return run(sb.rpc("tester_status")); }); },
+    claim: function (id) { return need().then(function () { return run(sb.rpc("claim_tester_pack", { p_pack: id })); }); },
+    mine: function () { return need().then(function () { return run(sb.rpc("my_grants")); }); },
+    ack: function (id) { return need().then(function () { return run(sb.rpc("ack_grant", { p_id: id })); }); },
+    ackRevoke: function (id) { return need().then(function () { return run(sb.rpc("ack_revoke", { p_id: id })); }); }
   };
   var signingOut = false;
   window.udfAccount = {
