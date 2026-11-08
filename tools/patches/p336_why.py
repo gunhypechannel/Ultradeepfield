@@ -9,6 +9,6 @@ const B_WHY = { metalMine: "metal pays for almost everything", crystalMine: "cry
   metalStore: "room for more metal", crystalStore: "room for more crystal", gasTank: "room for more gas", radar: "it warns you of incoming attacks", robotics: "it speeds up every build",
   shipyard: "it builds your ships", lab: "it unlocks and speeds up research", flagDock: "your flagship is built here" };
 const bGoalTxt = k => { const st = tutOn() ? TUT[S.tut.i] : null, m = st && /Lv\\.(\\d+)/.exec(st.t), goal = m && (st.t.includes(B[k].n) || st.id === "econ-store") ? +m[1] : 0, nx = (S.b[k] || 0) + 1;
-  return goal > nx ? `: Lv.${nx} of ${goal}` : goal === nx && goal > 1 ? `: last level, Lv.${goal}` : ""; };
+  return goal > nx ? `: Lv.${nx} of ${goal}` : goal === nx && goal > 1 ? `: up to Lv.${goal}` : ""; };
 const bPath = (k, cat) =>""")
 open(p, 'w', encoding='utf-8').write(t); print('ok')
