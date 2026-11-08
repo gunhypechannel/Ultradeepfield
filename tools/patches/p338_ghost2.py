@@ -1,0 +1,4 @@
+p='docs/index.html'; t=open(p,encoding='utf-8').read()
+for a,b in [('    <div class="fsrows">${row(okL, acadFlag() && L < FLAG_LV', '    <div class="fsrows fscomm">${row(okL, acadFlag() && L < FLAG_LV'), ('shortPath(FS_BUILD.res) || [[\'.sheet .fsrows\', "Not enough resources yet. Your mines keep working: check back in a few minutes"]] : []), [\'.sheet .fsrows\', "Anything marked ✕ is still missing"], SHOWME]', 'shortPath(FS_BUILD.res) || [[\'.sheet .fsrows.fscomm\', "Not enough resources yet. Your mines keep working: check back in a few minutes"]] : []), [\'.sheet .fsrows.fscomm\', "Anything marked ✕ is still missing"], [\'.sheet [data-act="fsTab"][data-v="over"]\', "Open the Flagship tab to commission it"], SHOWME] /* v338: scoped; .fsrows also matched the forge\'s stat rows */')]:
+    assert t.count(a)==1; t=t.replace(a,b)
+open(p,'w',encoding='utf-8').write(t)
