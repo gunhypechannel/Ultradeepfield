@@ -2492,7 +2492,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 352;
+const GAME_V = 353;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9624,6 +9624,42 @@ function glbShrink(tex, px) {
   /* v352 hand the texture over as an ImageBitmap and free the canvas: iOS Safari caps the canvas memory of a whole page */
   if (window.createImageBitmap) return createImageBitmap(c).then(bm => { tex.image = bm; tex.needsUpdate = true; c.width = c.height = 0; }).catch(() => {});
 }
+/* v353 what each building breathes out: smoke colour (r,g,b), how many chimneys, a beacon, welding flashes */
+const BLD_FX = {
+  metalMine: { smoke: "150,144,138", n: 2, beacon: 1 }, crystalMine: { beacon: 1 }, gasSynth: { smoke: "150,232,165", n: 2 }, solar: { beacon: 1 },
+  shipyard: { weld: 2, beacon: 1 }, metalStore: { beacon: 1 }, crystalStore: {}, gasTank: { smoke: "150,232,165", n: 1 }, robotics: { weld: 1, smoke: "150,146,140", n: 1 },
+  lab: { beacon: 1 }, radar: { beacon: 1 }, fusion: { smoke: "232,238,244", n: 2 }, repairYard: { weld: 2 }, nanite: { smoke: "222,230,238", n: 1, weld: 1 },
+  fortress: { beacon: 1 }, terraformer: { smoke: "232,238,244", n: 1 }, allyDepot: { beacon: 1 }, lunarBase: { beacon: 1 }, phalanx: { beacon: 1 } };
+/* v353 read a building model's own lights: a glow map from its bright coloured texels, the lit spots on its surface, and its highest points */
+async function glbLights(k, s) {
+  try {
+    let mesh = null; s.traverse(o => { if (o.isMesh && !mesh) mesh = o; }); if (!mesh) return;
+    const m = mesh.material, img = m.map && m.map.image; if (!img || !m.isMeshStandardMaterial) return;
+    const A = 512, c = document.createElement("canvas"); c.width = c.height = A; const x = c.getContext("2d"); x.drawImage(img, 0, 0, A, A);
+    const id = x.getImageData(0, 0, A, A), D = id.data, Wt = new Float32Array(A * A);
+    for (let i = 0; i < A * A; i++) { const r = D[i * 4] / 255, g = D[i * 4 + 1] / 255, b = D[i * 4 + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), sat = mx > 0 ? (mx - mn) / mx : 0;
+      const w = clamp((mx - .4) / .3, 0, 1) * clamp((sat - .16) / .3, 0, 1); Wt[i] = w; D[i * 4] *= w; D[i * 4 + 1] *= w; D[i * 4 + 2] *= w; D[i * 4 + 3] = 255; }
+    x.putImageData(id, 0, 0);
+    let et; if (window.createImageBitmap) { const bm = await createImageBitmap(c); et = new TH.Texture(bm); c.width = c.height = 0; } else et = new TH.CanvasTexture(c);
+    et.flipY = false; et.encoding = TH.sRGBEncoding; et.needsUpdate = true; m.emissiveMap = et; m.emissive.set(0xffffff); m.emissiveIntensity = 2.6; m.envMapIntensity = 1.25; m.needsUpdate = true;
+    // lit spots: triangles whose texels glow, clustered
+    const g = mesh.geometry, P = g.attributes.position, U = g.attributes.uv, I = g.index; if (!P || !U) return;
+    const n = I ? I.count / 3 : P.count / 3, tri = [], bb = new TH.Box3().setFromBufferAttribute(P), size = Math.max(bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z);
+    const vi = j => I ? I.getX(j) : j;
+    for (let t = 0; t < n; t++) { const a = vi(t * 3), b = vi(t * 3 + 1), c2 = vi(t * 3 + 2), u = (U.getX(a) + U.getX(b) + U.getX(c2)) / 3, v = (U.getY(a) + U.getY(b) + U.getY(c2)) / 3;
+      const px = clamp(Math.floor(u * A), 0, A - 1), py = clamp(Math.floor(v * A), 0, A - 1), w = Wt[py * A + px]; if (w < .3) continue;
+      tri.push([w, (P.getX(a) + P.getX(b) + P.getX(c2)) / 3, (P.getY(a) + P.getY(b) + P.getY(c2)) / 3, (P.getZ(a) + P.getZ(b) + P.getZ(c2)) / 3, px, py]); }
+    tri.sort((p1, p2) => p2[0] - p1[0]); const spots = [], min = size * .14;
+    for (const t of tri) { if (spots.length >= 9) break; if (spots.some(sp => Math.hypot(sp.p[0] - t[1], sp.p[1] - t[2], sp.p[2] - t[3]) < min)) continue;
+      const o = (t[5] * A + t[4]) * 4, w = Math.max(t[0], .01), r = Math.min(255, D[o] / w), gg = Math.min(255, D[o + 1] / w), bl = Math.min(255, D[o + 2] / w), mx = Math.max(r, gg, bl, 1);
+      spots.push({ p: [t[1], t[2], t[3]], c: [r, gg, bl].map(v => Math.round(140 + 115 * v / mx)).join(","), s: t[0], ph: spots.length * 1.7 }); }
+    // highest points (chimneys, masts)
+    const peaks = [], vs = []; for (let i = 0; i < P.count; i += 3) vs.push([P.getY(i), P.getX(i), P.getZ(i)]); vs.sort((p1, p2) => p2[0] - p1[0]);
+    for (const v of vs.slice(0, Math.max(40, vs.length * .04 | 0))) { if (peaks.length >= 3) break; if (peaks.some(q => Math.hypot(q[0] - v[1], q[2] - v[2]) < size * .2)) continue; peaks.push([v[1], v[0], v[2]]); }
+    s.userData.fx = { spots, peaks };
+  } catch (e) {}
+}
+const PUFFT = {}; const puffTex = col => PUFFT[col] || (PUFFT[col] = new TH.CanvasTexture(puffSprite(col)));
 function glbNext() {
   if (GLB_RUN || !GLB_Q.length) { if (!GLB_RUN && !GLB_Q.length) { clearTimeout(glbNext.t); glbNext.t = setTimeout(() => { if (!GLB_RUN && !GLB_Q.length) glbMark(false); }, 45000); } return; }
   const k = GLB_Q.shift(); GLB_RUN = 1; glbMark(true);
@@ -9632,7 +9668,7 @@ function glbNext() {
     new TH.GLTFLoader().load("models/" + k + ".glb?v=" + GAME_V, g => {
       const s = g.scene, big = MOBILE ? (GLB_BLDS.has(k) && GLB_BN++ < 8 ? 1536 : 1024) : 2048, aux = MOBILE ? 512 : 1024, an = texAniso(), ps = [];
       s.traverse(o => { if (o.isMesh) { const m = o.material; if (m && m.isMeshStandardMaterial) { m.envMapIntensity = .9; ps.push(glbShrink(m.map, big)); for (const t of new Set([m.normalMap, m.roughnessMap, m.metalnessMap])) ps.push(glbShrink(t, aux)); for (const t of [m.map, m.normalMap]) if (t) t.anisotropy = an; } } });
-      Promise.all(ps).then(() => { const bb = new TH.Box3().setFromObject(s); s.userData.bb = bb; GLB[k].scene = s; done(); glbReady(k); });
+      Promise.all(ps).then(() => GLB_BLDS.has(k) ? glbLights(k, s) : null).then(() => { const bb = new TH.Box3().setFromObject(s); s.userData.bb = bb; GLB[k].scene = s; done(); glbReady(k); });
     }, undefined, () => { GLB[k].fail = true; done(); });
   } catch (e) { GLB[k].fail = true; done(); }
 }
@@ -9657,11 +9693,21 @@ function glbShip(k) {
   return g;
 }
 /* a building on its plot: the model scaled to the plot, standing on it */
-function glbBld(k, b, big, small) {
+function glbBld(k, b, big, small, anim) {
   if (!GLB_BLDS.has(k) || WEAK) return false; /* slower Android phones keep the light hand-built buildings */ const src = glbGet(k); if (!src) return false;
   const m = src.clone(true), bb = src.userData.bb, c = bb.getCenter(new TH.Vector3()), sz = bb.getSize(new TH.Vector3());
   const foot = big ? 6.2 : small ? 3.4 : 4.6, hmax = big ? 6 : small ? 3.8 : 5.5, s = Math.min(foot / Math.max(sz.x, sz.z, .01), hmax / Math.max(sz.y, .01)); m.scale.setScalar(s); m.userData.nobake = true; m.position.set(-c.x * s, -bb.min.y * s, -c.z * s);
-  b.add(m); return true;
+  b.add(m);
+  const fx = src.userData.fx, F = BLD_FX[k] || {}; if (fx && anim && !WEAK) {
+    const at = v => new TH.Vector3(v[0] * s + m.position.x, v[1] * s + m.position.y, v[2] * s + m.position.z), span = Math.max(sz.x, sz.z) * s, add = (o, kind, ph) => { b.add(o); anim.push([o, kind, ph || 0]); return o; };
+    const spr = (map, col, op) => new TH.Sprite(new TH.SpriteMaterial({ map, color: col || 0xffffff, transparent: true, opacity: op == null ? 1 : op, blending: TH.AdditiveBlending, depthWrite: false }));
+    fx.spots.slice(0, MOBILE ? 5 : 9).forEach((sp, i) => { const o = spr(glowTex(sp.c, 1), 0xffffff, .75 + .25 * sp.s); o.position.copy(at(sp.p)); const sc = span * (.2 + .16 * sp.s); o.scale.setScalar(sc); o.userData.s0 = sc; add(o, "glowP", sp.ph); });
+    if (F.smoke) fx.peaks.slice(0, F.n || 1).forEach((pk, j) => { for (let i = 0; i < 4; i++) { const o = new TH.Sprite(new TH.SpriteMaterial({ map: puffTex(F.smoke), transparent: true, opacity: 0, depthWrite: false }));
+      o.position.copy(at(pk)); const sc = span * .26; o.scale.setScalar(sc); Object.assign(o.userData, { s0: sc, rise: span * .9, drift: span * .3, op: /^2/.test(F.smoke) ? .7 : .85 }); add(o, "smoke", i / 4 + j * .13); } });
+    if (F.beacon && fx.peaks[0]) { const o = spr(glowTex("255,70,50", 1), 0xffffff, .95); o.position.copy(at(fx.peaks[0])); o.position.y += span * .03; o.scale.setScalar(span * .16); add(o, "blink", hash(k) % 7); }
+    for (let i = 0; i < (F.weld || 0) && i < fx.spots.length; i++) { const o = spr(glowTex("200,230,255", 1), 0xffffff, .95); o.position.copy(at(fx.spots[i].p)); o.position.y += span * .02; const sc = span * .14; o.scale.setScalar(sc); o.userData.s0 = sc; add(o, "flick", i * 2.3); }
+  }
+  return true;
 }
 function bModel(k, L, busy) {
   const C = colMats(), g = new TH.Group(), era = L ? eraOf(L, k) : 0, tier = era, big = k === "shipyard", small = k === "missileSilo" || k === "repairYard", anim = [];
@@ -9669,7 +9715,7 @@ function bModel(k, L, busy) {
   const rim = new TH.Mesh(new TH.TorusGeometry(big ? 3.35 : small ? 1.95 : 2.55, .05, 4, 6), L ? C.cyan : C.holo); rim.rotation.x = Math.PI / 2; rim.position.y = .24; g.add(rim);
   if (!L) { g.add(cbox(2.2, 1.8, 2.2, C.holo, 0, .25, 0)); g.userData.anim = anim; return g; }
   const b = new TH.Group(); b.scale.setScalar(1 + era * .045 + Math.min(4, L - eraAt(k)[era]) * .006); b.position.y = .22; g.add(b); // grows upward through eras, never out into the neighbouring plots
-  if (!glbBld(k, b, big, small) && !artBld(k, b, era, C, anim)) switch (k) { // v177 the card-art buildings have their own models (v345: and the Meshy models before them)
+  if (!glbBld(k, b, big, small, anim) && !artBld(k, b, era, C, anim)) switch (k) { // v177 the card-art buildings have their own models (v345: and the Meshy models before them)
     case "metalMine": {
       b.add(cbox(1.8, 1.1, 1.6, C.steel, -.4, 0, -.2)); b.add(cbox(1.9, .25, 1.7, C.dark, -.4, 1.1, -.2));
       for (let i = 0; i <= Math.min(tier, 2); i++) { const x = .9 - i * .9, z = .9; b.add(ccyl(.18, .18, 2.4 + tier * .3, C.dark, x, 0, z, 8)); const head = new TH.Mesh(new TH.ConeGeometry(.35, .7, 6), C.light); head.position.set(x, 2.6 + tier * .3, z); b.add(head); anim.push([head, "spin", 3]); }
@@ -10580,6 +10626,7 @@ function turretRing(n, mix) {
     else if (kind === "glowP") o.scale.setScalar(o.userData.s0 * (1 + .16 * Math.sin(T * .0025 + p))); // a glow breathing
     else if (kind === "flick") o.scale.setScalar(o.userData.s0 * (.8 + .25 * Math.sin(T * .031 + p) * Math.sin(T * .017 + p * 2) + .15 * Math.random())); // fire, welding, engines
     else if (kind === "slideS") { const u = o.userData; if (u.x0 == null) u.x0 = o.position.x; o.position.x = u.x0 + Math.sin(T * .0009) * p; } // a gantry crane travelling its rails
+    else if (kind === "smoke") { const u = o.userData; if (u.y0 == null) { u.y0 = o.position.y; u.x0 = o.position.x; } const q = (T * .00016 + p) % 1; o.position.y = u.y0 + q * u.rise; o.position.x = u.x0 + q * u.drift; o.scale.setScalar(u.s0 * (.55 + q * 2.4)); o.material.opacity = u.op * Math.sin(Math.PI * Math.min(1, q * 1.15)); o.material.rotation = q * 1.2 + p * 6; } // v353 chimney smoke and steam
     else if (kind === "puff") { const u = o.userData; if (u.y0 == null) u.y0 = o.position.y; const q = (T * .00035 + p * .37) % 1; o.position.y = u.y0 + q * 1.1; o.scale.setScalar(.5 + q * 1.6); } // steam rising
     else if (kind === "through") { const q = (T * .00025 + p) % 1; o.position.z = (q - .5) * 5; o.visible = q > .06 && q < .94; } // a ship crossing the gate
   }
