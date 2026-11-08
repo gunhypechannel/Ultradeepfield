@@ -270,6 +270,7 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 /* v210 fleet path: the hull ladder on the Quests tab and the Advisor's next-step line */
 .fpath{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:8px}.fpn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:12px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025);text-align:center;opacity:.55;min-width:0}.fpn i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:700 11px var(--f-display);font-style:normal;background:#1a252e;color:var(--muted)}.fpn b{font-size:11.5px;color:#e8f2f8;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fpn small{font-size:10px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fpn.done{opacity:.85}.fpn.done i{background:rgba(95,224,138,.2);color:#5fe08a}.fpn.next{opacity:1;border-color:rgba(255,199,106,.7);background:rgba(255,199,106,.08);box-shadow:0 0 14px rgba(255,199,106,.15)}.fpn.next i{background:var(--amber);color:#1a1206}.fpn.next small{color:#ffd66a}
 .road{margin:6px 0;padding:6px 10px;border-radius:8px;background:rgba(85,214,232,.07);display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:#cfe6ef}.road small{flex-basis:100%;color:var(--cyan);letter-spacing:.1em}.road span.ok{color:var(--green)}.road span.nx{color:var(--amber);font-weight:700}.road i{font-style:normal;opacity:.7}.road em{flex-basis:100%;font-style:normal;opacity:.8}
+tr.rqgo{cursor:pointer}tr.rqgo:hover td,tr.rqgo:active td{background:rgba(255,90,90,.12)}tr.rqgo .rqa{margin-left:6px;color:#ff8a8a;font-weight:800}
 .cneed{font-size:12.5px;padding:6px 10px;border-radius:8px;background:rgba(255,199,106,.08);border-left:3px solid var(--amber);color:#e8f2f8}.cneed small{color:var(--muted)}
 /* v210 How to play: counters as a "best against" list */
 .ctrl{display:flex;flex-direction:column;gap:4px;margin:8px 0}.ctrl span{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.035)}.ctrl b{color:#f2f6f8}.ctrl i{font-style:normal;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan)}.ctrl em{font-style:normal;text-align:right;color:#ffd66a}
@@ -3065,7 +3066,7 @@ const colLabs = () => { let n = 0; try { for (const p of myPlanets()) if (p.kind
 const labPower = () => (S.b.lab || 0) + colLabs();
 /* v321: while the Academy runs, jobs take a quarter of the time and never more than 10 minutes (for its first 3 days, so stopping
    short of the last step doesn't keep the speed for good) */
-const acadT = t => { if (!(S && S.tut && tutOn())) return t; if (!S.tutFast) S.tutFast = now(); return now() - S.tutFast < 3 * 864e5 ? Math.min(t * .25, 600000) : t; };
+const acadT = t => { if (!(S && S.tut && acadOn())) return t; if (!S.tutFast) S.tutFast = now(); return now() - S.tutFast < 3 * 864e5 ? Math.min(t * .25, 600000) : t; };
 const uTime = c => acadT(Math.max(1, ((c.m || 0) + (c.c || 0)) * 1.44 / (UNI * (1 + S.b.shipyard)) / Math.pow(2, S.b.nanite || 0)) * 1000); // OGame: (m+c) / (2500 (1+shipyard) 2^nanite) hours
 const RES_SLOW = 3; // v270: research takes 3x as long
 const rTimeL = (k, lvl) => { const c = cost(R[k], lvl); return acadT(Math.max(3, ((c.m || 0) + (c.c || 0)) * 3.6 * RES_SLOW / (UNI * (1 + labPower()))) * 1000 * rTimeMul()); }; // OGame: (m+c) / (1000 (1+lab)) hours
@@ -3857,7 +3858,7 @@ function raidHits() {
   const lvl = S.raid.lvl, at = S.raid.at; S.raid = null;
   const home = {}; for (const k in S.ships) if (S.ships[k]) home[k] = S.ships[k]; for (const k in S.def) if (S.def[k]) home[k] = S.def[k];
   if (S.b.fortress) home.fortress = 1;
-  const aca = tutOn(), raiders = colonyForce(lvl, true); for (const k in raiders) raiders[k] = Math.max(1, Math.round(raiders[k] * (aca ? .35 : .6))); // Hive raids 40% lighter, and lighter still while the Academy is teaching you
+  const aca = acadOn(), raiders = colonyForce(lvl, true); for (const k in raiders) raiders[k] = Math.max(1, Math.round(raiders[k] * (aca ? .35 : .6))); // Hive raids 40% lighter, and lighter still while the Academy is teaching you
   const hp = homePlanet(), res = simulate(stacksOf(intercept(raiders, { hive: lvl }, S.homeName, at, homePlanet()), { hive: lvl }, null), stacksOf(home, techOf(null), G.me, S.b.fortress).concat(hp ? guardStacks(hp) : []));
   const mineLeft = hp && hp.ag ? (res.dByOwn[G.me] || {}) : res.dLeft; // allied guards stationed on the homeworld fight the raid too
   const rep = mkRep({ at, kind: "raid", title: `Hive raid on ${S.homeName} (Lv.${lvl})`, aName: "Hive Raiders", dName: S.homeName, lvl, ptype: hp ? hp.type : "terran", fortL: S.b.fortress, alien: true,
@@ -10601,7 +10602,7 @@ function vQuests() {
       return r.length ? `<section class="qready"><b>Ready to claim</b><div>${r.join("")}</div></section>` : ""; })()}
     ${S.retGift ? `<article class="card quest${S.retGift.at <= T ? " done hi" : ""}"><header>📦 Fleet Command supply convoy</header><p>${S.retGift.at <= T ? "The convoy has landed. Your supplies are waiting." : "On its way from Fleet Command for finishing the Academy."}</p>
       <div class="rw"><span class="cost">${costHTML(S.retGift.rw)} <span class="shard">◆${S.retGift.rw.shards}</span></span>${S.retGift.at <= T ? `<button class="btn amber" data-act="retClaim">Claim</button>` : `<span class="note">Lands in <span data-end="${S.retGift.at}">${ftime(S.retGift.at - T)}</span></span>`}</div></article>` : ""}
-    ${st ? `<h2 class="sec">Flight Academy · step ${S.tut.i + 1} of ${TUT.length}</h2><article class="card quest${td ? " done hi" : ""}"><header>${esc(st.t)}</header><p>${esc(st.say)}</p>
+    ${st ? `<h2 class="sec">${tutCount()}</h2><article class="card quest${td ? " done hi" : ""}"><header>${esc(st.t)}</header><p>${esc(st.say)}</p>
       <div class="rw"><span class="cost">${costHTML(st.rw || {})}${st.rw && st.rw.shards ? ` <span class="shard">◆${st.rw.shards}</span>` : ""}</span>${td ? `<button class="btn amber" data-act="tutClaim">Collect</button>` : `<button class="btn ghost" data-act="tutShow">Show me</button>`}</div></article>` : ""}
     <h2 class="sec">Quests · Chapter ${S.chapter} · ${CHAPTERS[S.chapter]}</h2>
     <article class="card quest${ok ? " done hi" : ""}"><header>Directive ${S.quest + 1}</header><p>${esc(q.t)}</p><div class="rw"><span class="cost">${qrw}</span>${ok ? `<button class="btn amber" data-act="claim">Claim reward</button>` : `<button class="btn ghost" data-act="go">Go there</button>`}</div></article>
@@ -10759,7 +10760,7 @@ function rEffect(k, L) {
     if (k === "plasmaT") return `+${l}% metal, +${(l * .66).toFixed(1)}% crystal production`; if (k === "repairT") return `repairs ${15 * l}% faster, ${Math.min(50, 4 * l)}% cheaper`; return l ? "Unlocked" : "No bonus"; };
   return [at(L), at(L + 1)];
 }
-const reqRows = (req, p) => Object.entries(req || {}).map(([k, l]) => { const have = lvlAt(k, p); return `<tr><td>${esc((ANY[k] || { n: k }).n)}</td><td class="nd">level ${l}</td><td class="hv">level ${have}</td><td>${have >= l || (k === "cmd" && acadFlag()) ? '<i class="ok">✓</i>' : '<i class="no">✕</i>'}</td></tr>`; }).join("");
+const reqRows = (req, p) => Object.entries(req || {}).map(([k, l]) => { const have = lvlAt(k, p), ok = have >= l || (k === "cmd" && acadFlag()), go = !ok && (R[k] || B[k]); return `<tr${go ? ` class="rqgo" data-act="reqGo" data-k="${k}" title="Open ${esc(ANY[k].n)}"` : ""}><td>${esc((ANY[k] || { n: k }).n)}</td><td class="nd">level ${l}</td><td class="hv">level ${have}</td><td>${ok ? '<i class="ok">✓</i>' : `<i class="no">✕</i>${go ? '<b class="rqa">›</b>' : ""}`}</td></tr>`; }).join(""); /* v339: tap a ✕ to go to it */
 const DF_D = { rocket: "A cheap missile battery. Fragile on its own, but massed batteries soak up fire meant for heavier guns.", laser: "A fast-tracking light laser. Better armour, attack and rate of fire than the rocket battery, for very little crystal.",
   heavyLaser: "Better armour, attack and shot speed than the smaller Laser Turret. A solid all-rounder for a growing defense grid.", ion: "Its crystalline lattice makes this the best shielded turret available, though it hits softer than the Heavy Lance Battery.",
   rail: "Fires mass slugs at incredible speed. Deals heavy damage and has a solid structure, so it is particularly good against Cruisers and Battleships.", plasma: "The biggest and most expensive turret, hurling bolts of plasma that can cripple a capital ship in one hit.",
@@ -13765,7 +13766,7 @@ function holoFirst(kind, k) { if (!S || !HOLO[k] || (kind !== "b" && kind !== "s
 const tutAt = id => tutOn() && (TUT[S.tut.i] || {}).id === id;
 function tutBld() { const st = tutOn() ? TUT[S.tut.i] : null; if (!st || !/^(Build|Upgrade)/.test(st.t)) return null; let best = null; for (const k in B) if (st.t.includes(B[k].n) && (!best || B[k].n.length > B[best].n.length)) best = k; return best; } // v334
 const tutKey = i => { const s = TUT[i]; return s ? (s.id || s.t) : "done"; }; // v333: steps are recorded by a name that survives renumbering
-function tutBoostTopUp() { if (!tutOn()) return; const T = now(), w = freeWin(); let need = 0;
+function tutBoostTopUp() { if (!acadOn()) return; const T = now(), w = freeWin(); let need = 0;
   if (S.bq && S.bq.e - T > w) need += Math.ceil((S.bq.e - T - w) / 300000);
   if (S.rq && S.rq.e - T > w) need += Math.ceil((S.rq.e - T - w) / 300000);
   if (S.sq && S.sq[0]) { const rem = sqEnd(S.sq[0]) - T; if (rem > 60000) need += Math.ceil((rem - 60000) / 300000); }
@@ -13876,6 +13877,9 @@ TUT.forEach(s => { if (!s.id) s.id = s.t.toLowerCase().replace(/[^a-z0-9]+/g, "-
 const TUT_V2 = 24; // v299: the Academy's length before the flagship steps
 const TUT_V1 = 19; // (v296: 17 + the two naming steps) // the Academy's length before the Astrophysics steps were added
 const tutOn = () => S && S.tut && !S.tut.off && S.tut.i < TUT.length;
+const ACAD_END = TUT.findIndex(s => s.id === "research-astrophysics-lv-2"), MIS_N = TUT.length - ACAD_END - 1; /* v339 */
+const acadOn = () => tutOn() && S.tut.i <= ACAD_END; // the Academy proper: guide, speed-ups, Academy build times
+const tutCount = () => acadOn() ? `Flight Academy · step ${S.tut.i + 1} of ${ACAD_END + 1}` : `Mission ${S.tut.i - ACAD_END} of ${MIS_N}`;
 const TUT_SNOOZE = 5 * 60000, tutSnoozed = () => !!(S && S.tut && S.tut.snz > now()), guideSnz = () => !tutOn() && (tutSnoozed() || S.pathSnz > now()); // v329
 /* v210 fleet path: one hull class at a time in the order the tech tree opens them, so nobody is left wondering what to build next.
    The Advisor hops between this and the Academy (after its basics) or the quest path; "Show me" leads to the next missing requirement. */
@@ -13896,7 +13900,7 @@ function reqStep(req, depth) { // the first requirement on the road to req that 
 /* v338: everything a hull needs, deepest first: [key, level, have] */
 function reqRoad(req, out, d) { out = out || new Map(); for (const [k, l] of Object.entries(req || {})) { const D = B[k] || R[k]; if (!D) continue; if (D.req && (d || 0) < 6) reqRoad(D.req, out, (d || 0) + 1); if (!out.has(k) || out.get(k) < l) { out.delete(k); out.set(k, l); } } return out; }
 const roadHTML = (k, nextK) => { const r = [...reqRoad(SH[k].req)]; if (!r.length) return ""; return `<div class="road"><small>ROAD TO ${esc(SH[k].n.toUpperCase())}</small>${r.map(([q, l]) => { const have = lvlOf(q), ok = have >= l; return `<span class="${ok ? "ok" : q === nextK ? "nx" : ""}">${ok ? "✓" : q === nextK ? "▸" : "·"} ${esc((B[q] || R[q]).n)} Lv.${l}${ok ? "" : ` <i>(Lv.${have})</i>`}</span>`; }).join("")}<em>${r.every(([q, l]) => lvlOf(q) >= l) ? `Everything on its road is done: ${esc(SH[k].n)}s are unlocked. Build them in the Shipyard.` : "Every stronger hull needs a bigger Shipyard and new research. Build up this road and the hull unlocks."}</em></div>`; };
-function pathBoostTopUp() { if (!S || tutOn()) return; const sp = shipStep(); if (!sp || sp.i > 2) return; const road = new Set([...reqRoad(sp.d.req).keys()]), T = now(), w = freeWin(); let need = 0;
+function pathBoostTopUp() { return; /* v339: off. Free speed-ups end with the Academy */ if (!S || tutOn()) return; const sp = shipStep(); if (!sp || sp.i > 2) return; const road = new Set([...reqRoad(sp.d.req).keys()]), T = now(), w = freeWin(); let need = 0;
   if (S.bq && road.has(S.bq.k) && S.bq.e - T > w) need += Math.ceil((S.bq.e - T - w) / 300000);
   if (S.rq && road.has(S.rq.k) && S.rq.e - T > w) need += Math.ceil((S.rq.e - T - w) / 300000);
   if (S.sq && S.sq[0] && S.sq[0].k === sp.k) { const rem = sqEnd(S.sq[0]) - T; if (rem > 60000) need += Math.ceil((rem - 60000) / 300000); }
@@ -13967,7 +13971,7 @@ function guideVisible(el) {
   const cy = r.top + r.height / 2; if (top.closest("#dock") || cy > innerHeight - 160 || cy < 130) return 2; return 0; // tucked under the dock or top bar: scroll it into view
 }
 function guidePick() {
-  const st = !G.cubeDemo && !(G3 && (G3.cam.siege || G3.cam.cine)) && G.ready && !battle && !advLines && !$("#adv") && !$("#celeb") && !$("#authw") && !(sheet && sheet.type === "faction") && !guideSnz() ? (m => m === "tut" ? TUT[S.tut.i] : m === "ship" ? shipStep() : null)(advPick()) : null;
+  const st = !G.cubeDemo && !(G3 && (G3.cam.siege || G3.cam.cine)) && G.ready && !battle && !advLines && !$("#adv") && !$("#celeb") && !$("#authw") && !(sheet && sheet.type === "faction") && !guideSnz() ? (m => m === "tut" ? (acadOn() || window.__botGuide ? TUT[S.tut.i] : null) : m === "ship" ? shipStep() : null)(advPick()) : null;
   if (!(st && st.fm && !st.ok(S))) { const m = $("#tutfm"); if (m) m.remove(); } if (!st) return null;
   const path = st.ok(S) ? [['#coach [data-act="tutClaim"], #coach [data-act="shipClaim"], #coach .cpill', "Collect your reward"]] : st.path ? st.path() : [SHOWME];
   { const sq = path.find(q => q && /article\.bn\[data-kind="s"\]/.test(q[0])), all = sq && !document.querySelector(sq[0]) && !sheet && $('[data-act="scls"][data-v="all"]:not(.on)'), v = all && guideVisible(all); if (v) return { el: all, label: "Tap All to see every ship", v }; } // v325
@@ -13984,7 +13988,7 @@ const GUIDE_WAIT = /on its way|flying home|Under construction|Researching|in pro
 function guideFrame() {
   let g = $("#tutguide"); if (!g) { g = document.createElement("div"); g.id = "tutguide"; g.innerHTML = '<div class="tg-ring"></div><div class="tg-hand">👆</div><div class="tg-tip"><span class="tgl"></span><button class="tgx" aria-label="Hide the guide for 5 minutes">✕</button></div>'; document.body.appendChild(g);
     g.querySelector(".tgx").addEventListener("click", e => { e.stopPropagation(); e.preventDefault(); const T = now(); if (tutOn()) { S.tut.open = 0; dirty(); coachRender(true); return; } if (S.tut) { S.tut.open = 0; S.tut.snz = T + TUT_SNOOZE; } S.pathSnz = T + TUT_SNOOZE; dirty(); coachRender(true); g.style.display = "none"; toast("Guide hidden for 5 minutes. Open it any time from the Quests tab."); }, true); }
-  g.classList.toggle("acad", tutOn()); // v329: no ✕ during the Academy
+  g.classList.toggle("acad", acadOn()); // v329: no ✕ during the Academy
   const tn = performance.now(); if (tn - GD.t > 140) { GD.t = tn; const p = guidePick(); GD.el = p && p.el; GD.label = p ? p.label : "";
     if (p && p.v === 2 && (GD.scrolled !== p.el || (!GD.again && tn - (GD.st || 0) > 1500))) { GD.again = GD.scrolled === p.el; GD.scrolled = p.el; GD.st = tn; p.el.scrollIntoView({ block: "center", behavior: GD.again ? "auto" : "smooth" }); } /* v324: one retry, so it never fights your own scrolling */
     if (p && p.v === 3 && S.tut.open) { S.tut.open = 0; dirty(); coachRender(true); } }
@@ -14019,8 +14023,14 @@ function tutClaim() {
   fsXP(50, "Academy"); logReward(`Academy · ${st.t}`, rw, { shards: rw.shards || 0, kind: "quest" });
   S.tut.i++; const back = S.tutEconBack && st.id === "econ-radar"; if (back) { S.tut.i = TUT.length; delete S.tutEconBack; S.say.push("That's our homeworld balanced, Commander. Keep this order on every world we settle: power, metal, crystal, gas, storage, radar."); } /* v338: back to where they were */ S.tut.open = 0; dirty(); try { SFX.research(); } catch (e) {} // v81: straight on to the next task; the guide is already pointing at it
   const nx = TUT[S.tut.i]; if (sheet) closeSheet(); // the card that finished this step would only be in the way of the next one
-  if (nx || back) toast(`Academy step done: +${fmt(rw.m || 0)} metal, +${fmt(rw.c || 0)} crystal${rw.g ? `, +${fmt(rw.g)} gas` : ""}${rw.shards ? `, ◆${rw.shards}` : ""}.`, "win");
-  if (!nx && !back) { S.retGift = { at: now() + 8 * 3600e3, rw: { m: 30000, c: 20000, g: 10000, shards: 10 } }; // v328
+  const fin = st.id === "research-astrophysics-lv-2" && !S.acadDone; /* v339 */
+  if (fin) { S.acadDone = 1; if (!S.retGift) S.retGift = { at: now() + 8 * 3600e3, rw: { m: 30000, c: 20000, g: 10000, shards: 10 } };
+    celebrate({ k: "acad", kick: "Flight Academy", t: "Academy Complete", art: "adv", s: "You've built a balanced homeworld, won your first battles and can now hold a second world. From here, Missions carry on with my briefings, but you lead the way.", rw: "Fleet Command is sending a supply convoy: 30K metal, 20K crystal, 10K gas and ◆10. It lands in 8 hours.", chat: 1, go: "Onward, Commander" });
+    S.say.push("That's the Academy done, Commander. From here, missions keep coming with my briefings, but you lead the way: no more pointers, and no more free speed-ups.", "For stronger ships, follow the Fleet Path: every new hull needs a bigger Shipyard and new research, and its card shows the whole road with a tick for each step.", "And Commander: Fleet Command's supply convoy lands in 8 hours. Come back then and claim it on the Quests tab."); flushSay(); }
+  if ((nx || back) && !fin) toast(`${TUT.indexOf(st) > ACAD_END ? "Mission" : "Academy step"} done: +${fmt(rw.m || 0)} metal, +${fmt(rw.c || 0)} crystal${rw.g ? `, +${fmt(rw.g)} gas` : ""}${rw.shards ? `, ◆${rw.shards}` : ""}.`, "win");
+  if (!nx && !back && S.acadDone) { celebrate({ k: "missions", kick: "Missions", t: "Flagship Commissioned", art: "adv", s: "Every mission done: a second world taken from the Hive, pirates raided and our flagship in command. The galaxy is yours to take.", rw: "Your flagship earns experience in every fight. Equip it at the Flagship Dock.", chat: 1, go: "Onward, Commander" });
+    S.say.push("Our flagship is commissioned, Commander. It leads every fleet now, earns experience in every fight, and the Flagship Dock forges its gear.", "Every 2 Astrophysics levels lets us hold another world: build more Colony Ships and send them with escorts to Hive worlds we can beat. I'll keep pointing you at the next directive on your path."); S.pathOpen = 1; flushSay(); }
+  else if (!nx && !back) { S.retGift = { at: now() + 8 * 3600e3, rw: { m: 30000, c: 20000, g: 10000, shards: 10 } }; // v328 (commanders who were past Astrophysics Lv.2 before v339)
     celebrate({ k: "acad", kick: "Flight Academy", t: "Academy Complete", art: "adv", s: "You've built an empire, won your first battles, settled a second world and commissioned a flagship. The galaxy is yours to take.", rw: "Fleet Command is sending a supply convoy: 30K metal, 20K crystal, 10K gas and ◆10. It lands in 8 hours.", chat: 1, go: "Onward, Commander" });
     S.say.push("That's the Academy done, Commander. Our flagship leads the fleet now: it earns experience in every fight, and the Flagship Dock forges its gear.", "Every 2 Astrophysics levels lets us hold another world: build more Colony Ships and send them with escorts to Hive worlds we can beat. I'll keep pointing you at the next directive on your path.", "For stronger ships, follow the Fleet Path: every new hull needs a bigger Shipyard and new research, and its card shows the whole road with a tick for each step.", "And Commander: Fleet Command's supply convoy lands in 8 hours. Come back then and claim it on the Quests tab."); S.pathOpen = 1; flushSay(); }
   coachRender(true);
@@ -14037,7 +14047,7 @@ function pathHint(q) {
 let coachHtml = "";
 function coachRender(force) {
   if (!S) return; if (!S.tut) S.tut = { i: S.intro && score() > 200 ? TUT.length : 0, open: 1 }; // veterans skip the Academy
-  tutSupply(); document.body.classList.toggle("acadon", tutOn()); try { pathBoostTopUp(); } catch (e) {} /* v338: before the fleet-path branch returns */
+  tutSupply(); document.body.classList.toggle("acadon", acadOn()); try { pathBoostTopUp(); } catch (e) {} /* v338: before the fleet-path branch returns */
   if (!S.tutN2) { S.tutN2 = 1; if (S.tut.i > 0) S.tut.i = Math.min(TUT.length, S.tut.i + 2); dirty(); } /* v296: two steps added at the start; anyone already past the first step keeps their place */
   if (!S.tutAstro) { S.tutAstro = 1; if (S.tut.i >= TUT_V1 && (S.r.astro || 0) >= 2) S.tut.i = TUT.length; else if (S.tut.i >= TUT_V1) S.tut.open = 1; dirty(); } /* v200: finished commanders without Astrophysics Lv.2 get the new steps */
   if (!S.tutFlag) { S.tutFlag = 1; if (S.tut.i >= TUT_V2) { if (fsBuilt() && (S.b.flagDock || 0) >= 1) S.tut.i = TUT.length; else S.tut.open = 1; } dirty(); } /* v299: finished commanders get the Dock and flagship steps */
@@ -14075,11 +14085,11 @@ function coachRender(force) {
     if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
     return; }
   const st = TUT[S.tut.i], done = st.ok(S), lv = cmdLevel(score()), open = S.tut.open && !sheet && !advLines;
-  const html = open ? `<div class="cbox${done ? " done" : ""}"><div class="chd"><img class="cav" src="${ADV_BUST}" alt="${ADV}"><div class="cti"><small>ADVISOR · FLIGHT ACADEMY · STEP ${S.tut.i + 1} OF ${TUT.length}</small><b>${esc(st.t)}</b></div><button class="cx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button></div>
+  const html = open ? `<div class="cbox${done ? " done" : ""}"><div class="chd"><img class="cav" src="${ADV_BUST}" alt="${ADV}"><div class="cti"><small>ADVISOR · ${esc(tutCount().toUpperCase())}</small><b>${esc(st.t)}</b></div><button class="cx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button></div>
       <p>${done ? "Done! Collect your reward." : esc(st.say)}</p>
-      <div class="cbar"><i style="width:${Math.min(100, S.tut.i / TUT.length * 100)}%"></i></div><div class="clv">Commander Lv.${lv} · reward ${fmt((st.rw.m || 0) + (st.rw.c || 0) + (st.rw.g || 0))} res${st.rw.shards ? ` · ◆${st.rw.shards}` : ""}</div>
+      <div class="cbar"><i style="width:${Math.min(100, acadOn() ? S.tut.i / (ACAD_END + 1) * 100 : (S.tut.i - ACAD_END - 1) / MIS_N * 100)}%"></i></div><div class="clv">Commander Lv.${lv} · reward ${fmt((st.rw.m || 0) + (st.rw.c || 0) + (st.rw.g || 0))} res${st.rw.shards ? ` · ◆${st.rw.shards}` : ""}</div>
       <div class="cbt">${done ? `<button class="btn amber" data-act="tutClaim">Collect reward</button>` : `<button class="btn" data-act="tutShow">Show me</button>`}${hop}<button class="btn ghost sm" data-act="tutMin">Hide 5 min</button><button class="btn ghost sm" data-act="tutSkip">Skip tutorial</button></div></div>`
-    : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "tutClaim" : "tutOpen"}" aria-label="${done ? "Collect the Academy reward" : "Open the Flight Academy"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : `${S.tut.i + 1}/${TUT.length}`}</span><b class="cpt"><small>${done ? "STEP DONE" : "NEXT TASK"}</small>${done ? "Collect reward ▸" : esc(st.t)}</b></button><button class="cpx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button>`;
+    : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "tutClaim" : acadOn() ? "tutOpen" : "tutShow"}" aria-label="${done ? "Collect the reward" : acadOn() ? "Open the Flight Academy" : "Take me to this mission"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : acadOn() ? `${S.tut.i + 1}/${ACAD_END + 1}` : `M${S.tut.i - ACAD_END}`}</span><b class="cpt"><small>${done ? "STEP DONE" : acadOn() ? "NEXT TASK" : "MISSION"}</small>${done ? "Collect reward ▸" : esc(st.t)}</b></button><button class="cpx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button>`;
   if (!w) { w = document.createElement("div"); w.id = "coach"; $("#app").appendChild(w); force = true; } w.style.display = sheet || view === "quests" ? "none" : ""; /* v123: the Quests tab shows the same step in full */
   if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
   try { tutTrack(); } catch (e) {} try { tutBoostTopUp(); } catch (e) {} try { const h = $("#advh"); if (h && h.classList.contains("on")) { if ($("#adv") || battle || $("#celeb")) { h.classList.remove("on"); document.body.classList.remove("advtalk"); } else advHoloPlace(); } } catch (e) {}
@@ -16351,6 +16361,9 @@ const ACT = {
   spyOpen: d => openSheet({ type: "spyrep", id: d.id }),
   detail: d => { if (d.kind === "b") SFX.tapB(d.k); holoFirst(d.kind, d.k); openSheet({ type: "detail", kind: d.kind, k: d.k, qty: (d.kind === "s" && !d.pid && tutQty(d.k)) || 1, tab: 0, pid: d.pid || null }); }, // v319: the Academy's amount, ready to build
   bcat: d => { sub.bcat = d.v; sub.build = "bld"; view = "build"; render(true); },
+  reqGo: d => { const k = d.k; if (!R[k] && !B[k]) return; closeSheet();
+    if (R[k]) { ACT.nav({ v: "lab" }); sub.rcat = RCAT_OF(k); render(); } else ACT.nav({ v: "build", s: B[k].cat === "fac" ? "fac" : "res" });
+    setTimeout(() => { ACT.detail({ kind: R[k] ? "r" : "b", k }); toast(`${ANY[k].n}: ${R[k] ? "research" : "build"} this next.`, ""); }, 120); }, /* v339 */
   rcat: d => { sub.rcat = d.v || null; render(); $("#view").scrollTop = 0; },
   ffrom: d => { sub.ffrom = d.v === "all" ? null : d.v; render(); },
   dtab: d => { if (!sheet) return; const i = +d.i; if (sheet.type === "detail" && sheet.k === "shipyard" && !sheet.pid && (i === 1 || i === 2)) { S.tutTabs = (S.tutTabs || 0) | (i === 2 ? 1 : 2); dirty(); } /* v337 */ /* v245: the Research and Production tabs go straight to the research list and the shipyard */
@@ -16744,7 +16757,7 @@ function introBattle() {
 function introPlay() { G.advThen = () => { try { S.say.push(...INTRO_POST, ...INTRO); dirty(); playBattle(introBattle()); } catch (e) { S.say.length = 0; say(INTRO); } }; say(INTRO_PRE); }
 function comeback() { if (!S || S.comeback || !tutOn() || !(S.tut.i > 0) || !(G.awayMs >= 864e5)) return; S.comeback = 1; // v331
   const rw = { m: 8000, c: 5000, g: 2500, shards: 5, boosts: 3 }; grantRw(rw, "Welcome back"); dirty();
-  celebrate({ k: "comeback", kick: "Welcome back, Commander", t: "Supplies Have Landed", art: "adv", s: `The Academy is right where you left it: step ${S.tut.i + 1} of ${TUT.length}. Fleet Command sent supplies to get you moving again.`, rw: "8,000 metal, 5,000 crystal, 2,500 gas, ◆5 and ⚡3 boosts. Already in your stores.", go: "Let's go" }); }
+  celebrate({ k: "comeback", kick: "Welcome back, Commander", t: "Supplies Have Landed", art: "adv", s: `Your ${acadOn() ? "Academy" : "missions"} are right where you left them: ${tutCount()}. Fleet Command sent supplies to get you moving again.`, rw: "8,000 metal, 5,000 crystal, 2,500 gas, ◆5 and ⚡3 boosts. Already in your stores.", go: "Let's go" }); }
 function intro() { if (!S.intro) { S.intro = true; dirty(); if (score() > 200) say(INTRO); else introPlay(); } } // veterans just get the briefing
 window.udfBeforeSignOut = async () => { try { if (S) { dirty(); await flush(); } } catch (e) {} }; // v200: the last moves reach your account before you sign out
 function start(data) {
