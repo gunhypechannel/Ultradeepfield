@@ -2492,7 +2492,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 345;
+const GAME_V = 346;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9338,7 +9338,7 @@ function shipArt(k, accent, view) {
     const out = document.createElement("canvas"); out.width = W; out.height = H; const ox = out.getContext("2d"); ox.imageSmoothingQuality = "high"; ox.drawImage(S.cv, 0, 0, W, H); if (hero || FG) hdrBloom(ox, W, H, S.renderer.toneMappingExposure, FG ? .42 : 1);
     if (FG) { ship.updateMatrixWorld(true); out.guns = (ship.userData.guns || []).map(([x, y, z]) => { const v = new TH.Vector3(x, y, z).applyMatrix4(ship.matrixWorld).project(S.camera); return [v.x, -v.y * .5]; }); const pr = (x, y, z) => { const v = new TH.Vector3(x, y, z).applyMatrix4(ship.matrixWorld).project(S.camera); return [v.x, -v.y * .5]; }; out.thr = ship.userData.eng.slice(0, 3).map(e => pr(e[0], e[1], e[2])); out.bow = pr(6.1, -.12, 0); const st = pr(-7, -.12, 0); out.ang = Math.atan2(st[1] - out.bow[1], st[0] - out.bow[0]); } // where each muzzle and nozzle lands on the picture, and the way the hull points /* the battle adds its own bloom to sprites */
     if (view === "side" && kind === "s" && k !== "eclipse" && k !== "flagship" && !ship.userData.glb) { const P = cardPal(k); if (P) cardGrade(out, P, k); } // v78: battle hulls take their card's look (v170: not the Discovery, whose own plating, windows and lights already match its card)
-    S.scene.remove(ship); ship.traverse(o => { if (o.geometry && !ship.userData.glb) o.geometry.dispose(); if (o.isSprite) o.material.dispose(); }); /* v345 a model shares its geometry with the loaded copy */
+    S.scene.remove(ship); ship.traverse(o => { if (o.geometry && !ship.userData.glb) o.geometry.dispose(); if (o.isSprite) o.material.dispose(); if (ship.userData.glb && o.isMesh && o.material) for (const t of [o.material.map, o.material.normalMap, o.material.roughnessMap, o.material.metalnessMap]) if (t) t.dispose(); }); /* v345 a model shares its geometry with the loaded copy */
     return cachePut(S, key, out);
   } catch (e) { return cachePut(S, key, null); }
 }
@@ -9604,16 +9604,37 @@ const ERA_CAT = { metalMine: "prod", crystalMine: "prod", gasSynth: "prod", sola
 const GLB_SHIPS = new Set(["fighter", "heavyFighter", "hauler", "heavyCargo", "recycler", "lancer", "ark", "corvette", "battleship", "bastion", "bomber", "destroyer", "dreadnought", "escortCarrier", "supercarrier", "guardian", "tender", "spyProbe"]);
 const GLB_BLDS = new Set(["metalMine", "crystalMine", "gasSynth", "solar", "shipyard", "metalStore", "crystalStore", "gasTank", "robotics", "lab", "radar"]);
 const GLB = {};
-function glbOn() { return !!(TH && TH.GLTFLoader) && !/[?&]glb=0/.test(location.search); }
-function glbGet(k) {
-  const e = GLB[k]; if (e) return e.scene || null; if (!glbOn()) return null;
-  GLB[k] = {};
+function glbOn() {
+  if (!(TH && TH.GLTFLoader) || /[?&]glb=0/.test(location.search)) return false; if (/[?&]glb=1/.test(location.search)) return true;
+  if (glbOn.v !== undefined) return glbOn.v;
+  let ok = true; try { const busy = +localStorage.getItem("udfGlbBusy") || 0, off = +localStorage.getItem("udfGlbOff") || 0;
+    if (busy && Date.now() - busy < 864e5) { localStorage.setItem("udfGlbOff", Date.now()); localStorage.removeItem("udfGlbBusy"); ok = false; try { crumb("models off: the last session ended while a model was loading"); } catch (e) {} }
+    else if (off && Date.now() - off < 3 * 864e5) ok = false; } catch (e) {}
+  return (glbOn.v = ok);
+}
+const GLB_Q = []; let GLB_RUN = 0;
+function glbMark(on) { try { if (on) localStorage.setItem("udfGlbBusy", Date.now()); else localStorage.removeItem("udfGlbBusy"); } catch (e) {} }
+/* shrink a loaded texture to px (keeps the decoded copy small and the upload small) */
+function glbShrink(tex, px) {
+  const im = tex && tex.image; if (!im) return; const w = im.width || 0, h = im.height || 0; if (w <= px && h <= px) return;
+  const s = px / Math.max(w, h), c = document.createElement("canvas"); c.width = Math.round(w * s); c.height = Math.round(h * s);
+  c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); if (im.close) try { im.close(); } catch (e) {} tex.image = c; tex.needsUpdate = true;
+}
+function glbNext() {
+  if (GLB_RUN || !GLB_Q.length) { if (!GLB_RUN && !GLB_Q.length) { clearTimeout(glbNext.t); glbNext.t = setTimeout(() => { if (!GLB_RUN && !GLB_Q.length) glbMark(false); }, 45000); } return; }
+  const k = GLB_Q.shift(); GLB_RUN = 1; glbMark(true);
+  const done = () => { GLB_RUN = 0; setTimeout(glbNext, 120); };
   try {
     new TH.GLTFLoader().load("models/" + k + ".glb?v=" + GAME_V, g => {
-      const s = g.scene; s.traverse(o => { if (o.isMesh) { const m = o.material; if (m && m.isMeshStandardMaterial) { m.envMapIntensity = .9; if (m.map) m.map.anisotropy = 4; } } });
-      const bb = new TH.Box3().setFromObject(s); s.userData.bb = bb; GLB[k].scene = s; glbReady(k);
-    }, undefined, () => { GLB[k].fail = true; });
-  } catch (e) { GLB[k].fail = true; }
+      const s = g.scene, big = MOBILE ? 1024 : 2048, aux = MOBILE ? 512 : 1024;
+      s.traverse(o => { if (o.isMesh) { const m = o.material; if (m && m.isMeshStandardMaterial) { m.envMapIntensity = .9; glbShrink(m.map, big); for (const t of new Set([m.normalMap, m.roughnessMap, m.metalnessMap])) glbShrink(t, aux); if (m.map) m.map.anisotropy = 4; } } });
+      const bb = new TH.Box3().setFromObject(s); s.userData.bb = bb; GLB[k].scene = s; done(); glbReady(k);
+    }, undefined, () => { GLB[k].fail = true; done(); });
+  } catch (e) { GLB[k].fail = true; done(); }
+}
+function glbGet(k) {
+  const e = GLB[k]; if (e) return e.scene || null; if (!glbOn()) return null;
+  GLB[k] = {}; GLB_Q.push(k); glbNext();
   return null;
 }
 function glbReady(k) {
@@ -9635,7 +9656,7 @@ function glbShip(k) {
 function glbBld(k, b, big, small) {
   if (!GLB_BLDS.has(k) || WEAK) return false; /* slower Android phones keep the light hand-built buildings */ const src = glbGet(k); if (!src) return false;
   const m = src.clone(true), bb = src.userData.bb, c = bb.getCenter(new TH.Vector3()), sz = bb.getSize(new TH.Vector3());
-  const foot = big ? 6.2 : small ? 3.4 : 4.6, s = foot / Math.max(sz.x, sz.z, .01); m.scale.setScalar(s); m.position.set(-c.x * s, -bb.min.y * s, -c.z * s);
+  const foot = big ? 6.2 : small ? 3.4 : 4.6, s = foot / Math.max(sz.x, sz.z, .01); m.scale.setScalar(s); m.userData.nobake = true; m.position.set(-c.x * s, -bb.min.y * s, -c.z * s);
   b.add(m); return true;
 }
 function bModel(k, L, busy) {
@@ -10085,7 +10106,7 @@ function artFx(k, b, e, anim) {
    is hundreds of pieces, and 21 of them on the base would otherwise be thousands of draw calls */
 function bakeStatic(root, anim) {
   const moving = new Set(anim.map(a => a[0])), byMat = new Map(), drop = [], I = new TH.Matrix4();
-  const walk = (o, M) => { for (const c of o.children) { if (moving.has(c) || c.isSprite || c.isPoints || c.isInstancedMesh) continue; c.updateMatrix(); const m = new TH.Matrix4().multiplyMatrices(M, c.matrix);
+  const walk = (o, M) => { for (const c of o.children) { if (moving.has(c) || c.isSprite || c.isPoints || c.isInstancedMesh || c.userData.nobake) continue; /* v346 a loaded model (interleaved attributes) stays as it is */ c.updateMatrix(); const m = new TH.Matrix4().multiplyMatrices(M, c.matrix);
       if (c.isMesh && !c.children.length) { const g = (c.geometry.index ? c.geometry.toNonIndexed() : c.geometry.clone()).applyMatrix4(m); if (!byMat.has(c.material)) byMat.set(c.material, []); byMat.get(c.material).push(g); drop.push(c); }
       else if (!c.isMesh) walk(c, m); } };
   walk(root, I); for (const c of drop) c.parent.remove(c); // (source geometries are left to the GC: some are shared with the moving parts)
@@ -14486,7 +14507,8 @@ function drawBattleFlags(ctx, b, scr, pos, W, H, t, real, T, lo, d) {
       const F = b.fbox || (b.fbox = (() => { let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity; Q.forEach((q, i) => { const s = scr[i]; if (s && pos[i]) { x0 = Math.min(x0, s.x); x1 = Math.max(x1, s.x); y0 = Math.min(y0, s.y); y1 = Math.max(y1, s.y); } }); return isFinite(x0) ? [x0, x1, y0, y1] : [0, W, 0, H]; })());
       const vb = b.vbT > t ? b.vb : (b.vbT = t + 1000, b.vb = (() => { try { const c = ctx.canvas.getBoundingClientRect(), r = s => { const k = $(s); return k && k.offsetParent ? k.getBoundingClientRect() : null; }, A = r("#bhA"), Dd = r("#bhD"), K = r("#bctl");
         const k = H / Math.max(1, c.height); return [(A ? A.bottom - c.top : 0) * k, Math.min(Dd ? Dd.top - c.top : Infinity, K ? K.top - c.top : Infinity, c.height) * k]; } catch (e) { return [0, H]; } })()); /* the open strip between the two fleet panels and the playback bar, in canvas pixels */
-      b.fdir = Math.abs(uy) >= Math.abs(ux) ? "y" : "x"; /* which way the fleets face: the field leaves room behind each one for its flagship (drawBattle) */
+      if (b.fdirF !== b.gf) { b.fdirF = b.gf; const ay = Math.abs(uy), ax = Math.abs(ux), nd = ay >= ax ? "y" : "x"; /* v345: one decision per frame, with hysteresis: near 45 degrees (the Super Cube sits diagonal to its attackers) it flipped every frame and the fleet flickered between two layouts */
+        if (!b.fdir || (nd !== b.fdir && (nd === "y" ? ay > ax * 1.5 : ax > ay * 1.5) && t - (b.fdirT || -1e9) > 2000)) { b.fdir = nd; b.fdirT = t; } } /* which way the fleets face: the field leaves room behind each one for its flagship (drawBattle) */
       const tx = clamp(mx + ux * rear, L0 * .55, W - L0 * .55), ty = clamp(my + uy * rear, vb[0] + L0 * .55, vb[1] - L0 * .5); e.dead = null; if (e.x == null) { e.x = tx; e.y = ty; } const f = reduced ? 1 : Math.min(1, real / 1300); e.x += (tx - e.x) * f; e.y += (ty - e.y) * f; }
     else { if (e.x == null) continue; if (e.dead == null) { e.dead = t; if (!gone) { for (const [ox, oy, big] of [[0, 0, 1], [-.5, .06, 0], [.45, -.05, 0], [-.2, -.08, 0]]) b.booms.push({ x: e.x + ox * L0, y: e.y + oy * L0, t: t + Math.abs(ox) * 260, big }); b.shake = Math.max(b.shake, 8 * d); } } }
     const fade = e.dead == null ? 1 : clamp(1 - (t - e.dead) / (gone ? 500 : 950), 0, 1); if (fade <= 0) continue;
@@ -14682,7 +14704,11 @@ function drawBattle(t) {
   if (!b.paused && !b.done) { if (b.intro > 0) { if ((ART_Q.length || !fbReady()) && (b.introHold || 0) < 4500) b.introHold = (b.introHold || 0) + real; else b.intro -= real; } else b.simT = Math.min(b.end + (b.ending ? 0 : 1.5), b.simT + real / 1000 * b.speed * BATTLE_PACE * (t < b.slowUntil ? .3 : 1)); } // capital kills play in slow motion
   /* v317 with flagships, the field leaves a flagship's length behind each fleet inside the open strip, so every squadron flies ahead of its flagship */
   const fm = b.flags && b.fdir ? Math.min(W, H) * .16 * .95 : 0, fy = fm && b.fdir === "y" && b.vb, fxm = fm && b.fdir === "x" ? fm / W : 0;
-  const top = fy ? Math.max(H * .14, b.vb[0] + fm) : H * .14, bot = fy ? Math.max(top + H * .25, Math.min(H * .79, b.vb[1] - fm)) : H * .79, xl = Math.max(.06, fxm), xr = Math.max(.06, fxm), T = b.simT, Q = b.Q, r = b.r, lo = b.lowFx;
+  const top0 = fy ? Math.max(H * .14, b.vb[0] + fm) : H * .14, bot0 = fy ? Math.max(top0 + H * .25, Math.min(H * .79, b.vb[1] - fm)) : H * .79, xl0 = Math.max(.06, fxm);
+  /* v345 the field margins glide to a new flagship layout instead of snapping (a snap moved every ship at once) */
+  const mg = b.mg && b.mg.W === W && b.mg.H === H ? b.mg : (b.mg = { W, H, top: top0, bot: bot0, xl: xl0 }), mke = reduced ? 1 : Math.min(1, real / 600);
+  mg.top += (top0 - mg.top) * mke; mg.bot += (bot0 - mg.bot) * mke; mg.xl += (xl0 - mg.xl) * mke;
+  const top = mg.top, bot = mg.bot, xl = mg.xl, xr = mg.xl, T = b.simT, Q = b.Q, r = b.r, lo = b.lowFx;
   /* v60 camera: frames the action. It follows the bulk of the fighting (the 5th to 95th percentile of live squadrons) and zooms in
      up to 2x, easing smoothly, so a 10 vs 10 brawl fills the whole screen instead of sitting in a clump in the middle */
   { const F0 = b.R.frames, fs = F0[Math.min(F0.length - 1, Math.max(0, Math.floor(T / b.R.dt)))].s, xs = [], ys = [];
