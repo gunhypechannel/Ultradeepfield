@@ -2397,7 +2397,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 334;
+const GAME_V = 335;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4847,7 +4847,7 @@ async function connectCloud() {
     ownerCheck(user); // the game's owner has every premium skin unlocked
     try { G.myName = (await user.me()).name || ""; } catch (e) {} if (S && S.cname) G.myName = S.cname;
     try {
-      const snap = await db.doc(`data/users/${uid}/save`).get(); if (!snap.exists && window.udfOld && window.udfOld.available && !(S.uid && S.uid === uid && S.intro)) G.oldWait = 1; // v329
+      const snap = await db.doc(`data/users/${uid}/save`).get(); /* v335: new commanders go straight to their faction and the opening battle; bringing an empire from the old server stays in Menu › Save & data */
       /* v200: which empire wins when you sign in. It used to be "newest savedAt", but every device stamps its save as it plays, so a
          second phone's brand-new planet (saved while you were still typing your password) beat your real empire and then overwrote
          it. Now: an empire on this device that belongs to another account never wins; a device that has synced with this account
@@ -10590,6 +10590,8 @@ function vQuests() {
   return `<div class="gstack questv">
     <div class="advhero"><img src="${ADV_ART}" alt="${ADV}"><div class="advsay"><small>${ADV.toUpperCase()}</small><p>${esc(line)}</p>${act}</div></div>
     ${(() => { const r = [], mN = masteryReady() || 0, soloN = SOLO_TIERS.filter(([need], i) => s.pts >= need && !s.claimed.includes(i)).length, dN = S.daily && S.daily.tasks ? S.daily.tasks.filter(t => !t.claimed && dailyDone(t)).length + (!S.daily.bonus && S.daily.tasks.every(t => t.claimed) ? 1 : 0) : 0; // v334
+      if (td) r.push(`<button class="btn amber" data-act="tutClaim">🎓 Academy reward · collect</button>`); /* v335: these two were counted in the badge but never listed here */
+      if (ok) r.push(`<button class="btn amber" data-act="claim">📜 Directive reward · ${esc(q.t)}</button>`);
       if (!ls.claimed) r.push(`<button class="btn amber" data-act="loginClaim">🎁 Daily login reward · claim</button>`);
       if (dN) r.push(`<button class="btn amber" data-act="qJump" data-ev="qdaily">✓ ${dN} daily mission${dN > 1 ? "s" : ""} ready</button>`);
       if (soloN) r.push(`<button class="btn amber" data-act="qJump" data-ev="daily">★ ${soloN} event reward${soloN > 1 ? "s" : ""} ready</button>`);
@@ -10693,7 +10695,7 @@ function toast(msg, kind = "info") {
 function qRow(label, item, idleText, idleGo) {
   if (!item) return `<div class="qrow"><div><div class="lbl">${label}</div><div class="idle">${idleText}</div></div><div class="acts"><button class="btn ghost" data-act="nav" data-v="${idleGo[0]}" data-s="${idleGo[1] || ""}">Open</button></div></div>`;
   return `<div class="qrow"><div><div class="lbl">${label}</div><div class="what">${item.what}</div></div>
-    <div class="acts"><span class="t" data-end="${item.e}">${ftime(item.e - now())}</span>${item.boost ? `<button class="btn amber" data-act="boost" data-q="${item.boost}" ${S.boosts ? "" : "disabled"} aria-label="Use a boost">−5m</button>` : ""}${item.finish && freeQ(item.finish) && item.e - now() <= freeWin() ? `<button class="btn amber" data-act="finish" data-q="${item.finish}" data-free="1" aria-label="Finish now, free">Free</button>` : item.finish ? `<button class="btn ghost" data-act="finish" data-q="${item.finish}"${freeQ(item.finish) ? ` data-freeat="${item.e - freeWin()}"` : ""} aria-label="Finish now with Void Shards" style="border-color:#c9a6ff"><span class="shard">◆${shardCost(item.e - now())}</span></button>` : ""}${item.cancel ? `<button class="btn ghost" data-act="cancel" data-q="${item.cancel}" aria-label="Cancel">✕</button>` : ""}</div>
+    <div class="acts"><span class="t" data-end="${item.e}">${ftime(item.e - now())}</span>${item.boost ? (S.boosts || tutOn() ? `<button class="btn amber" data-act="boost" data-q="${item.boost}" ${S.boosts ? "" : "disabled"} aria-label="Use a boost">−5m</button>` : `<button class="btn ghost" data-act="speedShop" aria-label="Get speed-ups">⚡ Get speed-ups</button>`) : ""}${item.finish && freeQ(item.finish) && item.e - now() <= freeWin() ? `<button class="btn amber" data-act="finish" data-q="${item.finish}" data-free="1" aria-label="Finish now, free">Free</button>` : item.finish ? `<button class="btn ghost" data-act="finish" data-q="${item.finish}"${freeQ(item.finish) ? ` data-freeat="${item.e - freeWin()}"` : ""} aria-label="Finish now with Void Shards" style="border-color:#c9a6ff"><span class="shard">◆${shardCost(item.e - now())}</span></button>` : ""}${item.cancel ? `<button class="btn ghost" data-act="cancel" data-q="${item.cancel}" aria-label="Cancel">✕</button>` : ""}</div>
     <div class="bar"><i data-s="${item.s}" data-e="${item.e}"></i></div></div>`;
 }
 const garrisonCount = p => Object.values(p.garrison || {}).reduce((a, b) => a + b, 0);
@@ -13697,6 +13699,11 @@ const tutSend = () => S.fleets.some(f => f.pid && f.phase === "out") ? flyWatch(
 const tutAt = id => tutOn() && (TUT[S.tut.i] || {}).id === id;
 function tutBld() { const st = tutOn() ? TUT[S.tut.i] : null; if (!st || !/^(Build|Upgrade)/.test(st.t)) return null; let best = null; for (const k in B) if (st.t.includes(B[k].n) && (!best || B[k].n.length > B[best].n.length)) best = k; return best; } // v334
 const tutKey = i => { const s = TUT[i]; return s ? (s.id || s.t) : "done"; }; // v333: steps are recorded by a name that survives renumbering
+function tutBoostTopUp() { if (!tutOn()) return; const T = now(), w = freeWin(); let need = 0;
+  if (S.bq && S.bq.e - T > w) need += Math.ceil((S.bq.e - T - w) / 300000);
+  if (S.rq && S.rq.e - T > w) need += Math.ceil((S.rq.e - T - w) / 300000);
+  if (S.sq && S.sq[0]) { const rem = sqEnd(S.sq[0]) - T; if (rem > 60000) need += Math.ceil((rem - 60000) / 300000); }
+  if (need > (S.boosts || 0)) { const add = need - (S.boosts || 0); S.boosts = need; S.tutBoostGiven = (S.tutBoostGiven || 0) + add; dirty(); note(`Fleet Command sent ${add} ⚡ speed-up${add > 1 ? "s" : ""} for the Academy. Tap −5m to use them.`, "win"); } } // v335
 function tutTrack() { if (!S || !S.tut) return; const k = tutKey(S.tut.i); S.tutT = S.tutT || {}; if (!S.tutT[k]) { S.tutT[k] = now(); dirty(); } }
 /* v319: how many of ship k the Academy step or fleet-path step still wants, so the Shipyard's amount starts there (it started at 1, and
    "Tap Build to make 3" was a stumbling block for young players) */
@@ -13980,7 +13987,7 @@ function coachRender(force) {
     : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "tutClaim" : "tutOpen"}" aria-label="${done ? "Collect the Academy reward" : "Open the Flight Academy"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : `${S.tut.i + 1}/${TUT.length}`}</span><b class="cpt"><small>${done ? "STEP DONE" : "NEXT TASK"}</small>${done ? "Collect reward ▸" : esc(st.t)}</b></button><button class="cpx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button>`;
   if (!w) { w = document.createElement("div"); w.id = "coach"; $("#app").appendChild(w); force = true; } w.style.display = sheet || view === "quests" ? "none" : ""; /* v123: the Quests tab shows the same step in full */
   if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
-  try { tutTrack(); } catch (e) {} try { const h = $("#advh"); if (h && h.classList.contains("on")) { if ($("#adv") || battle || $("#celeb")) { h.classList.remove("on"); document.body.classList.remove("advtalk"); } else advHoloPlace(); } } catch (e) {}
+  try { tutTrack(); } catch (e) {} try { tutBoostTopUp(); } catch (e) {} try { const h = $("#advh"); if (h && h.classList.contains("on")) { if ($("#adv") || battle || $("#celeb")) { h.classList.remove("on"); document.body.classList.remove("advtalk"); } else advHoloPlace(); } } catch (e) {}
   if (open && !done && VOICE.lastStep !== S.tut.i && !advLines && !$("#celeb") && !$("#oldw") && !$("#adv") && !battle && S.intro && !(sheet && sheet.type === "faction") && !(S.say && S.say.length)) { VOICE.lastStep = S.tut.i; advHolo(st.say); } // v331: each new step, read once as it opens
 }
 setInterval(() => { try { coachRender(); } catch (e) {} }, 800);
@@ -15683,6 +15690,7 @@ function sendFleet(p, n, mission, extra) {
   if (Object.keys(n).some(k => CLASS_OF[k] === "frigate" && n[k] > 0) && typeof reveal === "function") { const q = pos(p, T); reveal(q.x, q.y, 12); } // frigates scout ahead
   if (mission === "attack" && p.owner && p.owner !== G.me && p.kind !== "home") publishInbound(p.owner, f);
   if (mission === "spy" && p.owner && p.owner !== G.me) publishInbound(p.owner, f); // v279: the target's screen flashes red
+  if (tutOn() && !["attack-a-hive-garrison", "tap", "rush", "cine"].includes(TUT[S.tut.i] && TUT[S.tut.i].id)) setTimeout(() => { try { if (S.fleets.includes(f)) ACT.fleetMap({ id: f.id }); } catch (e) {} }, 450); // v335: during the Academy the camera follows what you send (the first attack teaches tapping it yourself)
   return f;
 }
 /* tell the defender's radar that a fleet is coming */
@@ -16243,6 +16251,7 @@ const ACT = {
   buy: d => act(() => { const s = SHOP[d.k]; if (!s) return; if ((S.shards || 0) < s.cost) return toast(`That costs ◆${s.cost}.`, "warn"); S.shards -= s.cost; giveItem(d.k, d.k === "probe5" ? 5 : 1); bump("shopBuys"); if (s.cat !== "vip") vipAdd(s.cost * 10); toast(`${s.n} added to your inventory.`, "win"); }),
   useItem: d => act(() => { const s = SHOP[d.k]; if (!s || !s.use || !((S.items || {})[d.k] > 0)) return; S.items[d.k]--; const msg = s.use(); if (!msg) { S.items[d.k]++; return; } toast(msg, "win"); }),
   openShop: () => openSheet({ type: "shop", cat: "boost" }),
+  speedShop: () => openSheet({ type: "shop", cat: "accel" }), // v335
   openShop2: d => openSheet({ type: "shop", cat: d.v || "boost" }),
   spyOpen: d => openSheet({ type: "spyrep", id: d.id }),
   detail: d => { if (d.kind === "b") SFX.tapB(d.k); openSheet({ type: "detail", kind: d.kind, k: d.k, qty: (d.kind === "s" && !d.pid && tutQty(d.k)) || 1, tab: 0, pid: d.pid || null }); }, // v319: the Academy's amount, ready to build

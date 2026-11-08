@@ -144,7 +144,9 @@ create or replace view public.academy_funnel as
 with s as (select split_part(path,'/',3) uid, (data->>'json')::jsonb j from docs where path like 'data/users/%/save' and data ? 'json')
 select s.uid, coalesce(s.j->>'cname', p.data->>'name') commander, (s.j->'tut'->>'i')::int + 1 as step, s.j->>'faction' faction,
   to_timestamp(((pl.data->>'joined')::bigint)/1000) joined, to_timestamp(((pl.data->>'last')::bigint)/1000) last_seen,
-  s.j->'tutT' step_opened, s.j->'tutH' show_me_taps, s.j->'errs' errors, (s.j->>'comeback') comeback, s.j->'tut'->>'k' step_id, s.j->'tutStuck' stuck_hints
+  s.j->'tutT' step_opened, s.j->'tutH' show_me_taps, s.j->'errs' errors, (s.j->>'comeback') comeback, s.j->'tut'->>'k' step_id, s.j->'tutStuck' stuck_hints,
+  ((pl.data->>'last')::bigint - (pl.data->>'joined')::bigint) >= 86400000 back_day1, ((pl.data->>'last')::bigint - (pl.data->>'joined')::bigint) >= 7*86400000 back_day7,
+  (s.j->>'tutBoostGiven')::int boosts_given
 from s left join docs p on p.path='profiles/'||s.uid left join docs pl on pl.path='players/'||s.uid;
 alter view public.academy_funnel set (security_invoker = on);
 revoke all on public.academy_funnel from anon, authenticated;
