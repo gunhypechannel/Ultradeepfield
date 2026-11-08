@@ -2002,8 +2002,10 @@ const pirRegroup = (lvl, boss) => (boss ? 40 + 6 * lvl : 8 + lvl) * 60000; // cr
 const monForce = (k, lvl) => ({ [k]: 1 + Math.floor((lvl - 1) / MON[k].per) });
 const monLoot = lvl => ({ m: Math.round(5000 * lvl ** 1.45), c: Math.round(3200 * lvl ** 1.45), g: Math.round(1500 * lvl ** 1.45) });
 const monAccel = lvl => ({ tier: lvl >= 20 ? "gold" : lvl >= 10 ? "silver" : "bronze", n: 1 + (lvl >= 15 ? 1 : 0) + (lvl >= 25 ? 1 : 0) });
-const xForce = x => trainingPir(x) ? { fighter: 1 } : x.mon ? monForce(x.mon, x.lvl) : pirateForce(x.lvl, x.boss);
-const xLoot = x => x.mon ? monLoot(x.lvl) : pirLoot(x.lvl, x.boss);
+const xForce0 = x => trainingPir(x) ? { fighter: 1 } : x.mon ? monForce(x.mon, x.lvl) : pirateForce(x.lvl, x.boss);
+const xForce = x => { const o = xForce0(x); try { if (isElite(x)) for (const k in o) o[k] = Math.max(1, Math.round(o[k] * 1.6)); } catch (e) {} return o; }; /* v338 elites: ELITE_K.force */
+const xLoot0 = x => x.mon ? monLoot(x.lvl) : pirLoot(x.lvl, x.boss);
+const xLoot = x => { const o = xLoot0(x); try { return isElite(x) ? mul(o, 1.5) : o; } catch (e) { return o; } }; /* v338 elites: ELITE_K.res */
 const xRegroup = x => x.mon ? (25 + 3 * x.lvl) * 60000 : pirRegroup(x.lvl, x.boss);
 const xKind = x => x.mon ? MON[x.mon].n : x.boss ? "Assimilation Cube" : "Pirate hideout";
 
@@ -2363,7 +2365,7 @@ function cacheTick() {
 }
 function cacheGrab(id) {
   const c = (S.caches || []).find(x => x.id === id); if (!c) return null; S.caches = S.caches.filter(x => x !== c); bump("caches");
-  if (Math.random() < .35) fsDrop([[Math.random() < .5 ? "alloy" : "crystal", 1, 1]], "a salvage pod"); // v299
+  fsDrop(lootRoll(LOOT.pod()), "a salvage pod"); // v299; v338: from the LOOT table
   if (c.kind === "shard") { const n = Math.random() < .3 ? 2 : 1; S.shards = (S.shards || 0) + n; return `◆${n} Void Shard${n > 1 ? "s" : ""}`; }
   if (c.kind === "item") { const k = DROPS[(Math.random() * DROPS.length) | 0]; giveItem(k, k === "probe5" ? 5 : 1); return SHOP[k].n; }
   const amt = Math.round((2500 + score() * 12) * (c.kind === "g" ? .5 : c.kind === "c" ? .75 : 1)); S.res[c.kind] += amt; return `${fmt(amt)} ${RES_N[c.kind].toLowerCase()}`;
@@ -3637,7 +3639,7 @@ function pirateArrive(f) {
   if (!x) return;
   if (pirDown(x) > f.arrive) { note(`${x.name} was already empty. Fleet returning.`, "warn"); return; }
   const mine0 = Object.assign({}, f.n), res = simulate(stacksOf(f.n, techVs(x), G.me).concat(allyStacks(f.allies, x.lvl)), xStacks(x));
-  const rep = mkRep({ at: f.arrive, kind: "attack", title: x.mon ? `Hunt: ${x.name} (${MON[x.mon].n} Lv.${x.lvl})` : x.boss ? `Assault on ${x.name} (Cube Lv.${x.lvl})` : `Raid on ${x.name} (Pirates Lv.${x.lvl})`, aUids: [G.me].concat(f.allies || []), aName: S.homeName + " Fleet", dName: x.boss || x.mon ? x.name : `${x.name} Pirates`, boss: !!x.boss, mon: x.mon || null, lvl: x.lvl, ptype: "desert", fortL: 0, alien: !!x.mon, pirate: true,
+  const rep = mkRep({ at: f.arrive, kind: "attack", title: x.mon ? `Hunt: ${isElite(x) ? "Elite " : ""}${x.name} (${MON[x.mon].n} Lv.${x.lvl})` : x.boss ? `Assault on ${x.name} (Cube Lv.${x.lvl})` : `Raid on ${isElite(x) ? "Elite " : ""}${x.name} (Pirates Lv.${x.lvl})`, aUids: [G.me].concat(f.allies || []), aName: S.homeName + " Fleet", dName: x.boss || x.mon ? x.name : `${x.name} Pirates`, boss: !!x.boss, mon: x.mon || null, lvl: x.lvl, ptype: "desert", fortL: 0, alien: !!x.mon, pirate: true,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
   f.n = Object.assign({}, f.allies ? (res.aByOwn[G.me] || {}) : res.aLeft); fieldRepair(f, mine0, rep); repairDocks(rep, lossesOf(mine0, f.n));
   if (x.boss) cubeDebris(x, rep); // v277: win or lose, the wrecks stay at the Cube
@@ -3676,7 +3678,7 @@ function pyramidArrive(f) {
   const sh = Math.max(1, Math.floor(y.lvl / 3)); S.shards = (S.shards || 0) + sh; let extra = `◆${sh}`;
   if (Math.random() < .25 + y.lvl * .06) { const it = DROPS[(Math.random() * DROPS.length) | 0]; giveItem(it); extra += `, ${SHOP[it].n}`; }
   if (y.lvl >= 5 && Math.random() < .05) { giveItem("teleport"); extra += ", a Teleport Ticket"; }
-  /* v79: pyramids no longer drop runes */
+  /* v79: pyramids no longer drop runes */ fsDrop(lootRoll(LOOT.pyramid(y.lvl)), y.name); /* v338: vault materials */
   logReward(`Station vault opened · ${y.name}`, f.loot, { shards: sh, kind: "explore" });
   note(`${y.name} explored: ${ratio < 1 ? "holds full, " : ""}${fmt(f.loot.m)} metal, ${fmt(f.loot.c)} crystal, ${fmt(f.loot.g)} gas on the way home, plus ${extra}.`, "win");
   if (G3) (G3.bursts = G3.bursts || []).push({ p: (() => { const q = P3(y, now()); return new TH.Vector3(q.x, q.y + 2, q.z); })(), t: performance.now(), col: "#ffd36b", txt: "Vault opened!" });
@@ -3711,7 +3713,7 @@ function arrive(f) {
   repairDocks(rep, lossesOf(mine0, f.n)); // only our own losses get towed home
   let captured = false; if (res.winner === "a") guardsAfter(p, res, rep, true);
   if (res.winner === "a") {
-    if (st === "hive") { rep.loot = hiveLoot(p.lvl, cargoOf(f.n), rep.lossD); S.wins++; bump("hiveWins"); S.maxWin = Math.max(S.maxWin, p.lvl); fsXP(8 * p.lvl, "Hive victory"); fsDrop([["alloy", clamp(1 + Math.floor(p.lvl / 6), 1, 4), 1], ["crystal", clamp(1 + Math.floor(p.lvl / 6), 1, 4), p.lvl >= 5 ? 1 : 0]], p.name); }
+    if (st === "hive") { rep.loot = hiveLoot(p.lvl, cargoOf(f.n), rep.lossD); S.wins++; bump("hiveWins"); S.maxWin = Math.max(S.maxWin, p.lvl); fsXP(8 * p.lvl, "Hive victory"); fsDrop(lootRoll(LOOT.hive(p.lvl)), p.name); }
     else {
       if (hadDef) { S.pvpWins++; S.wins++; fsXP(300, "victory over a commander"); }
       // plunder this colony's own stockpile: up to half, limited by cargo
@@ -3876,6 +3878,7 @@ function raidHits() {
     let salv = 0; for (const k in rep.lossA) salv += AL[k].val * rep.lossA[k] * .1;
     rep.loot = { m: Math.floor(salv * .6), c: Math.floor(salv * .4), g: 0 }; S.res.m += rep.loot.m; S.res.c += rep.loot.c; logReward("Hive raid salvage", rep.loot, { shards: res.winner === "d" ? 1 : 0, kind: "battle" });
     if (res.winner === "d" && Math.random() < .25) { S.shards = (S.shards || 0) + 1; }
+    if (res.winner === "d") fsDrop(lootRoll(LOOT.hiveDef(lvl)), "the Hive raiders we beat off"); /* v338 */
     note(res.winner === "d" ? "Raid repelled. Salvage crews are recovering wreckage." : "Raid fought to a standstill. The Hive withdrew.", res.winner === "d" ? "win" : "warn");
   }
   addReport(rep); if (hp) { mapClash(hp, rep); addBurn({ pid: hp.id, at, n: null, win: res.winner === "a", hive: 1, debris: 1 }); battleDebris(hp, rep); }
@@ -4106,16 +4109,19 @@ const loginRw = i => i === 6 && S && !S.d7Bonus ? Object.assign({}, LOGIN_RW[6],
 function loginState() { const L = (S && S.login) || { day: "", streak: 0 }, today = utcDay(), claimed = L.day === today, next = claimed ? L.streak : L.day === yesterday() ? L.streak + 1 : 1; return { claimed, streak: L.streak, next, idx: (next - 1) % 7 }; }
 /* daily solo event: one theme per UTC day, score points by playing, claim three tiers */
 const SOLO = [["build", "Master Builder", "Finish building upgrades. Points = level reached × 10."], ["research", "Breakthrough", "Finish research. Points = level reached × 15."], ["train", "War Machine", "Train ships and defenses. 1 point per 1,000 resources of value."], ["hunt", "Monster Hunt", "Beat pirates (level × 20 points) and Assimilation Cubes (level × 120)."], ["gather", "Harvest", "Gather at resource fields. 1 point per 500 resources."]];
-const SOLO_TIERS = [[300, { m: 30000, c: 18000, g: 6000, shards: 2 }], [1200, { boosts: 3, shards: 4 }], [4000, { shards: 10, item: "pAll_gold", vip: 200 }]];
+const SOLO_TIERS = [[300, { m: 30000, c: 18000, g: 6000, shards: 2 }], [1200, { boosts: 3, shards: 4, mats: () => [["low", fsPT(), 3]] }], [4000, { shards: 10, item: "pAll_gold", vip: 200, mats: () => [["void", fsPT(), 1], ["cube", fsPT(), 1]] }]]; /* v338: event tiers pay materials */
 const soloToday = () => SOLO[Math.floor(Date.now() / 864e5) % SOLO.length]; // one theme per UTC day, rotating
 function soloState() { const day = utcDay(), [type] = soloToday(); if (!S.solo || S.solo.day !== day) S.solo = { day, type, pts: 0, claimed: [] }; return S.solo; }
 function evPts(type, pts) { if (!S || !(pts > 0)) return; const s = soloState(); if (s.type !== type) return; const before = s.pts; s.pts += Math.round(pts); const t = SOLO_TIERS.findIndex(([need]) => before < need && s.pts >= need); if (t >= 0) note(`${soloToday()[1]}: tier ${t + 1} reached! Claim it in Events.`, "win"); }
 function grantRw(rw, src) {
   const res = { m: rw.m || 0, c: rw.c || 0, g: rw.g || 0 }; for (const k of ["m", "c", "g"]) S.res[k] += res[k];
   if (rw.shards) S.shards = (S.shards || 0) + rw.shards; if (rw.boosts) S.boosts += rw.boosts; if (rw.item) giveItem(rw.item); if (rw.vip) vipAdd(rw.vip);
+  if (rw.mats) fsDrop(lootRoll(typeof rw.mats === "function" ? rw.mats() : rw.mats), src, { nocap: 1 }); /* v338 */
   logReward(src, res, { shards: rw.shards || 0, item: rw.item || null, boosts: rw.boosts || 0, kind: "quest" });
 }
-const rwText = rw => [rw.m || rw.c || rw.g ? costHTML({ m: rw.m || 0, c: rw.c || 0, g: rw.g || 0 }) : "", rw.shards ? `<span class="shard">◆${rw.shards}</span>` : "", rw.boosts ? `<span class="rwi">⚡${rw.boosts}</span>` : "", rw.item && SHOP[rw.item] ? `<span class="rwi">🎁 ${esc(SHOP[rw.item].n)}</span>` : "", rw.vip ? `<span class="rwi">VIP +${rw.vip}</span>` : ""].join(" ");
+const rwText = rw => [rw.m || rw.c || rw.g ? costHTML({ m: rw.m || 0, c: rw.c || 0, g: rw.g || 0 }) : "", rw.shards ? `<span class="shard">◆${rw.shards}</span>` : "", rw.boosts ? `<span class="rwi">⚡${rw.boosts}</span>` : "", rw.item && SHOP[rw.item] ? `<span class="rwi">🎁 ${esc(SHOP[rw.item].n)}</span>` : "", rw.vip ? `<span class="rwi">VIP +${rw.vip}</span>` : "", rw.mats ? matsText(typeof rw.mats === "function" ? rw.mats() : rw.mats) : ""].join(" ");
+/* v338: material rewards in a reward line ("2 × Rare material", "Epic Void Essence") */
+const matsText = rolls => rolls.map(([k, tt, n, p]) => { const tn = FS_TIER[clamp(tt, 1, 6)]; return `<span class="rwi" style="color:${tn[1]}">${n > 1 ? n + " × " : ""}${tn[0]} ${k === "low" ? "material" : FS_MATS[k][0]}${p != null && p < 1 ? ` (${Math.round(p * 100)}%)` : ""}</span>`; }).join(" ");
 /* ---------- v88 achievements: tiered goals. Every tier reached is worth Achievement Points and a small reward, claimed once ----------
    [key, name, goal text ({n} = target), progress, tier targets, unit formatter] */
 const stat = k => ((S && S.stats) || {})[k] || 0;
@@ -4137,7 +4143,7 @@ const ACH = [
   ["arch", "Architect", "Finish {n} building upgrades", () => stat("built"), [10, 50, 150, 400, 1000]],
   ["sch", "Scholar", "Finish {n} research levels", () => stat("researched"), [5, 25, 80, 200, 500]]];
 const ACH_SHARD = [1, 1, 2, 3, 5, 8], achAP = t => 10 * (t + 1); // shards stay scarce: a full set of every tier pays ~250 ◆ for the whole game
-const achRw = (key, t) => key === "glory" ? { shards: [3, 5, 8, 12, 20][t] || 20, vip: 100 * (t + 1) } : { m: 15000 * (t + 1) * (t + 1), c: 9000 * (t + 1) * (t + 1), g: 3000 * (t + 1) * (t + 1), shards: ACH_SHARD[t] || 8 };
+const achRw = (key, t) => key === "glory" ? { shards: [3, 5, 8, 12, 20][t] || 20, vip: 100 * (t + 1) } : { m: 15000 * (t + 1) * (t + 1), c: 9000 * (t + 1) * (t + 1), g: 3000 * (t + 1) * (t + 1), shards: ACH_SHARD[t] || 8, mats: [["low", Math.min(6, t + 1), 2]] }; /* v338: each achievement tier pays 2 materials of that rarity */
 const achGot = () => (S.ach = S.ach || {});
 function achPts() { const g = (S && S.ach) || {}; let p = 0; for (const k in g) for (let t = 0; t < g[k]; t++) p += achAP(t); return p; }
 /* where a goal stands: tiers claimed, the next target, progress and whether that tier can be claimed now */
@@ -10574,7 +10580,7 @@ NAVI.cmd = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi
 NAVI.quests = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3h10l3 3v15H6z"/><path d="M16 3v3h3"/><path d="M9 11l2 2 4-4M9 17h7"/></svg>';
 /* v123 the Quests tab: the Advisor's briefing, the Flight Academy step, the current directive, daily missions and the Path to
    Mastery, all in one place (it took the Build tab's spot; Build opens from the top bar and your base) */
-function questsReady() { if (!S) return 0; let n = 0; try { if (quest().ok(S)) n++; if (tutOn() && TUT[S.tut.i].ok(S)) n++; if (!loginState().claimed) n++; const s = soloState(); n += SOLO_TIERS.filter(([need], i) => s.pts >= need && !s.claimed.includes(i)).length; n += masteryReady() || 0; if (S.daily && S.daily.tasks) n += S.daily.tasks.filter(t => !t.claimed && dailyDone(t)).length + (!S.daily.bonus && S.daily.tasks.every(t => t.claimed) ? 1 : 0); /* v195 the daily tasks count here now */ } catch (e) {} return n; }
+function questsReady() { if (!S) return 0; let n = 0; try { if (quest().ok(S)) n++; if (tutOn() && TUT[S.tut.i].ok(S)) n++; if (!loginState().claimed) n++; const s = soloState(); n += SOLO_TIERS.filter(([need], i) => s.pts >= need && !s.claimed.includes(i)).length; n += masteryReady() || 0; n += weeklyReady(); if (S.daily && S.daily.tasks) n += S.daily.tasks.filter(t => !t.claimed && dailyDone(t)).length + (!S.daily.bonus && S.daily.tasks.every(t => t.claimed) ? 1 : 0); /* v195 the daily tasks count here now */ } catch (e) {} return n; }
 /* v195 the daily tasks live in the Quests tab. They used to sit in the old slide-out menu's Quest page, which no screen opens any more,
    so their ready dot showed on the Commander tab with nothing there to claim. */
 function dailyTasksCard(endDay, T) {
@@ -10583,6 +10589,21 @@ function dailyTasksCard(endDay, T) {
     ${S.daily.tasks.map((t, i) => { const def = DAILY.find(x => x.k === t.k), prog = Math.max(0, Math.min(t.n, metric(t.k) - t.base)), d = prog >= t.n; if (!def) return "";
       return `<div class="tier"><span class="tn">${def.t(t.n)}<small>${prog} / ${t.n}</small></span><span class="trw"><span class="xp" style="display:block;min-width:60px"><i style="width:${prog / t.n * 100}%"></i></span></span>${t.claimed ? '<span class="pill ok">Claimed</span>' : `<button class="btn sm${d ? " amber" : " ghost"}" data-act="dailyClaim" data-i="${i}" ${d ? "" : "disabled"}>Claim</button>`}</div>`; }).join("")}
     <div class="tier"><span class="tn">All three done<small>bonus</small></span><span class="trw">+1 Boost</span>${S.daily.bonus ? '<span class="pill ok">Claimed</span>' : `<button class="btn sm${S.daily.tasks.every(t => t.claimed) ? " amber" : " ghost"}" data-act="dailyBonus" ${S.daily.tasks.every(t => t.claimed) ? "" : "disabled"}>Claim</button>`}</div></section>`; }
+const WEEKLY = [
+  { k: "wins", t: n => `Win ${n} battles`, n: 15 }, { k: "hiveWins", t: n => `Defeat ${n} Hive garrisons`, n: 5 }, { k: "gathers", t: n => `Gather from resource fields ${n} times`, n: 8 },
+  { k: "pirates", t: n => `Raid ${n} pirate hideouts`, n: 4 }, { k: "monsters", t: n => `Hunt ${n} space monsters`, n: 3 }, { k: "built", t: n => `Complete ${n} constructions`, n: 12 },
+  { k: "researched", t: n => `Finish ${n} research`, n: 5 }, { k: "shipsBuilt", t: n => `Build ${n} ships or defenses`, n: 60 }];
+const weekEnd = () => Date.UTC(2026, 0, 5) + (weekNo() + 1) * 7 * 864e5;
+function ensureWeekly() { const wk = weekNo(); if (S.weekly && S.weekly.wk === wk) return; const r = rnd(hash("wk" + wk)), pool = WEEKLY.slice(), picks = [];
+  while (picks.length < 3) picks.push(pool.splice((r() * pool.length) | 0, 1)[0]); S.weekly = { wk, bonus: false, tasks: picks.map(d => ({ k: d.k, n: d.n, base: metric(d.k), claimed: false })) }; dirty(); }
+const weeklyRw = () => { const d = dailyReward(); return { m: d.m * 4, c: d.c * 4, g: d.g * 4, shards: 2, mats: LOOT.weekly() }; };
+const WEEKLY_BONUS = () => ({ shards: 5, mats: LOOT.weeklyBonus() });
+const weeklyReady = () => { try { ensureWeekly(); return S.weekly.tasks.filter(t => !t.claimed && dailyDone(t)).length + (!S.weekly.bonus && S.weekly.tasks.every(t => t.claimed) ? 1 : 0); } catch (e) { return 0; } };
+function weeklyTasksCard(T) { ensureWeekly(); const end = weekEnd();
+  return `<section class="evc" data-ev="wtasks"><div class="evh"><b>WEEKLY MISSIONS</b><span class="note">new missions in <b data-end="${end}">${ftime(end - T)}</b></span></div><p class="note">Bigger goals, bigger rewards, and the only regular source of every material. Each pays ${rwText(weeklyRw())}</p>
+    ${S.weekly.tasks.map((w, i) => { const def = WEEKLY.find(x => x.k === w.k), prog = Math.max(0, Math.min(w.n, metric(w.k) - w.base)), d = prog >= w.n; if (!def) return "";
+      return `<div class="tier"><span class="tn">${def.t(w.n)}<small>${prog} / ${w.n}</small></span><span class="trw"><span class="xp" style="display:block;min-width:60px"><i style="width:${prog / w.n * 100}%"></i></span></span>${w.claimed ? '<span class="pill ok">Claimed</span>' : `<button class="btn sm${d ? " amber" : " ghost"}" data-act="weeklyClaim" data-i="${i}" ${d ? "" : "disabled"}>Claim</button>`}</div>`; }).join("")}
+    <div class="tier"><span class="tn">All three done<small>bonus</small></span><span class="trw">${rwText(WEEKLY_BONUS())}</span>${S.weekly.bonus ? '<span class="pill ok">Claimed</span>' : `<button class="btn sm${S.weekly.tasks.every(w => w.claimed) ? " amber" : " ghost"}" data-act="weeklyBonus" ${S.weekly.tasks.every(w => w.claimed) ? "" : "disabled"}>Claim</button>`}</div></section>`; }
 function vQuests() {
   const T = now(), q = quest(), ok = q.ok(S), st = tutOn() ? TUT[S.tut.i] : null, td = st && st.ok(S), ls = loginState(), s = soloState(), [, sname, sdesc] = soloToday(), top = SOLO_TIERS[2][0];
   const endDay = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate() + 1);
@@ -10596,6 +10617,7 @@ function vQuests() {
       if (ok) r.push(`<button class="btn amber" data-act="claim">📜 Directive reward · ${esc(q.t)}</button>`);
       if (!ls.claimed) r.push(`<button class="btn amber" data-act="loginClaim">🎁 Daily login reward · claim</button>`);
       if (dN) r.push(`<button class="btn amber" data-act="qJump" data-ev="qdaily">✓ ${dN} daily mission${dN > 1 ? "s" : ""} ready</button>`);
+      { const wN = weeklyReady(); if (wN) r.push(`<button class="btn amber" data-act="qJump" data-ev="wtasks">✓ ${wN} weekly reward${wN > 1 ? "s" : ""} ready</button>`); } /* v338 */
       if (soloN) r.push(`<button class="btn amber" data-act="qJump" data-ev="daily">★ ${soloN} event reward${soloN > 1 ? "s" : ""} ready</button>`);
       if (mN) r.push(`<button class="btn amber" data-act="mastery">◆ ${mN} Mastery reward${mN > 1 ? "s" : ""} ready</button>`);
       return r.length ? `<section class="qready"><b>Ready to claim</b><div>${r.join("")}</div></section>` : ""; })()}
@@ -10613,7 +10635,7 @@ function vQuests() {
     <section class="evc" data-ev="daily"><div class="evh"><b>TODAY · ${esc(sname.toUpperCase())}</b><span class="note">ends <b data-end="${endDay}">${ftime(endDay - T)}</b></span></div><p class="note">${sdesc}</p>
       <div class="evbar2"><i style="width:${Math.min(100, s.pts / top * 100)}%"></i>${SOLO_TIERS.map(([need]) => `<u style="left:${need / top * 100}%"></u>`).join("")}</div><p class="note" style="margin-top:4px"><b>${fmt(s.pts)}</b> points</p>
       ${SOLO_TIERS.map(([need, rw], i) => { const okT = s.pts >= need, got = s.claimed.includes(i); return `<div class="tier"><span class="tn">Tier ${i + 1}<small>${fmt(need)} pts</small></span><span class="trw">${rwText(rw)}</span>${got ? '<span class="pill ok">Claimed</span>' : `<button class="btn sm${okT ? " amber" : " ghost"}" data-act="soloClaim" data-i="${i}" ${okT ? "" : "disabled"}>Claim</button>`}</div>`; }).join("")}</section>
-    ${dailyTasksCard(endDay, T)}
+    ${dailyTasksCard(endDay, T)}${weeklyTasksCard(T)}
     <h2 class="sec">Plunder & rewards</h2>${rewardsCard()}
     <h2 class="sec">Path to Mastery</h2>${mMastery()}</div>`;
 }
@@ -12293,20 +12315,53 @@ function fsXP(n, why) { if (!S || !fsOn() || !(n > 0)) return; const f = fsOf();
 /* materials: six kinds in six tiers. Drops are counted per day: after FS_DAY_CAP the chance of each further drop halves, so steady play
    always progresses but farming can't flood the economy */
 const fsMatKey = (m, t) => m + clamp(t, 1, 6);
-function fsDrop(list, why) { if (!S) return; const f = fsOf(), d = utcDay(); if (!f.day || f.day.d !== d) f.day = { d, n: 0 }; const got = [];
-  for (const [m, t, n] of list) for (let i = 0; i < n; i++) { if (f.day.n >= FS_DAY_CAP && Math.random() > Math.pow(.5, 1 + (f.day.n - FS_DAY_CAP) / 15)) continue; const k = fsMatKey(m, t); f.mats[k] = (f.mats[k] || 0) + 1; f.day.n++; got.push(k); }
-  if (!got.length) return; fsBump(); const c = {}; for (const k of got) c[k] = (c[k] || 0) + 1;
-  note(`Flagship materials${why ? ` from ${why}` : ""}: ${Object.entries(c).map(([k, n]) => `${FS_TIER[+k.slice(-1)][0]} ${FS_MATS[k.slice(0, -1)][0]} ×${n}`).join(", ")}.`, "win"); }
+function fsDrop(list, why, opt) { if (!S) return {}; const f = fsOf(), d = utcDay(); if (!f.day || f.day.d !== d) f.day = { d, n: 0 }; const got = [], nocap = opt && opt.nocap;
+  for (const [m, t, n] of list) for (let i = 0; i < n; i++) { if (!nocap && f.day.n >= FS_DAY_CAP && Math.random() > Math.pow(.5, 1 + (f.day.n - FS_DAY_CAP) / 15)) continue; const k = fsMatKey(m, t); f.mats[k] = (f.mats[k] || 0) + 1; if (!nocap) f.day.n++; got.push(k); }
+  if (!got.length) return {}; fsBump(); const c = {}; for (const k of got) c[k] = (c[k] || 0) + 1;
+  note(`Flagship materials${why ? ` from ${why}` : ""}: ${Object.entries(c).map(([k, n]) => `${FS_TIER[+k.slice(-1)][0]} ${FS_MATS[k.slice(0, -1)][0]} ×${n}`).join(", ")}.`, "win"); return c; }
 const fsRoll = p => Math.random() < p;
-function fsLootPB(x, rally) { if (!x) return; const L = x.lvl || 1;
-  /* v298 tuning (design/flagship-hero.md, economy model): an active player reaches a full Epic set in about two weeks, Legendary in about two
-     months and Mythic in most of a year; the daily soft cap keeps heavy farming within roughly 3x of that */
-  if (x.boss) { const t = clamp(1 + Math.floor(L / 7), 2, 5); fsXP(40 * L, x.name); fsDrop([["cube", t, 2 + Math.floor(L / 10) + (rally ? 1 : 0)], ["void", t, 1 + (fsRoll(rally ? .5 : .25) ? 1 : 0)], ["cube", t + 1, fsRoll(.1) ? 1 : 0]], x.name); }
-  else if (x.mon) { const t = clamp(1 + Math.floor(L / 8), 1, 5); fsXP(20 * L, x.name); fsDrop([["bio", t, 1 + Math.floor(L / 8)], ["void", t, fsRoll(.35) ? 1 : 0], ["cube", t, fsRoll(.08) ? 1 : 0], ["bio", t + 1, fsRoll(.1) ? 1 : 0]], x.name); }
-  else { const t = clamp(1 + Math.floor(L / 8), 1, 5); fsXP(10 * L, x.name); fsDrop([["circuit", t, 1 + Math.floor(L / 5)], ["alloy", t, 1 + Math.floor(L / 8)], ["circuit", t + 1, fsRoll(.12) ? 1 : 0]], x.name); } }
-function fsLootGather(n, amt) { if (!n || !(amt > 0)) return; fsXP(Math.min(200, amt / 5000), "gathering"); const t = clamp(1 + Math.floor((n.lvl || 1) / 8), 1, 5), c = clamp(Math.ceil(amt / 60000), 1, 6), m = n.res === "c" || n.res === "g" ? "crystal" : "alloy";
-  fsDrop([[m, t, c], [m, t + 1, fsRoll(.12) ? 1 : 0]], n.name); }
-function fsLootSalvage(amt) { if (!(amt > 0) || !fsRoll(.25)) return; fsDrop([["alloy", clamp(1 + Math.floor(Math.log10(1 + amt) - 4), 1, 3), 1]], "salvage"); }
+/* v338 LOOT: every material source in one place. An entry returns rolls [kind, tier, count, chance?, up?]: count units with the
+   given chance (1 if absent); up marks a rare upgrade roll, which the pity counter guarantees after LOOT_PITY misses. The previews on
+   target cards are built from these same rolls, so what a card promises is what the fight pays. Old sources keep their v298 numbers. */
+const LOOT_PITY = 15, ELITE_K = { force: 1.6, loot: 2, up: 3, res: 1.5 };
+const fsTierL = (L, per) => clamp(1 + Math.floor(L / per), 1, 5);
+const fsPT = () => clamp(1 + Math.floor(cmdLevel(score()) / 12), 1, 5); // the player's own tier, for mission and event rewards
+const LOOT = {
+  pirate: (L, el) => { const t = fsTierL(L, 8), k = el ? ELITE_K.loot : 1; return [["circuit", t, (1 + Math.floor(L / 5)) * k], ["alloy", t, (1 + Math.floor(L / 8)) * k], ["circuit", t + 1, 1, Math.min(1, .12 * (el ? ELITE_K.up : 1)), 1]]; },
+  monster: (L, el) => { const t = fsTierL(L, 8), k = el ? ELITE_K.loot : 1; return [["bio", t, (1 + Math.floor(L / 8)) * k], ["void", t, k, .35], ["cube", t, 1, .08], ["bio", t + 1, 1, Math.min(1, .1 * (el ? ELITE_K.up : 1)), 1]]; },
+  cube: (L, rally) => { const t = clamp(1 + Math.floor(L / 7), 2, 5); return [["cube", t, 2 + Math.floor(L / 10) + (rally ? 1 : 0)], ["void", t, 1], ["void", t, 1, rally ? .5 : .25], ["cube", t + 1, 1, .1, 1]]; },
+  gather: (L, amt, res) => { const t = fsTierL(L, 8), m = res === "c" || res === "g" ? "crystal" : "alloy"; return [[m, t, clamp(Math.ceil(amt / 60000), 1, 6)], [m, t + 1, 1, .12, 1]]; },
+  salvage: amt => [["alloy", clamp(1 + Math.floor(Math.log10(1 + amt) - 4), 1, 3), 1, .25]],
+  pod: () => [["alloy", 1, 1, .175], ["crystal", 1, 1, .175]],
+  hive: L => { const t = clamp(1 + Math.floor(L / 6), 1, 4); return [["alloy", t, 1], ["crystal", t, L >= 5 ? 1 : 0], ["bio", t, 1, .25]]; },       // v338: the Hive is biological
+  hiveDef: L => { const t = clamp(1 + Math.floor(L / 6), 1, 4); return [["alloy", t, 1], ["bio", t, 1, .4]]; },                                     // v338: a raid beaten off
+  pyramid: L => { const t = fsTierL(L * 3, 8); return [["crystal", t, 1 + Math.floor(L / 4)], ["circuit", t, 1, .3], ["void", t, 1, .12, 1]]; },     // v338: ancient vaults
+  first: (kind, L) => { const t = Math.min(6, (kind === "cube" ? clamp(1 + Math.floor(L / 7), 2, 5) : fsTierL(L, 8)) + 1), m = kind === "cube" ? "cube" : kind === "mon" ? "bio" : "circuit"; return [[m, t, 2], ["void", t - 1, 1]]; },
+  daily: () => [["low", fsPT(), 1]],
+  dailyBonus: () => [["low", fsPT(), 2], ["void", fsPT(), 1, .3]],
+  weekly: () => [["low", fsPT(), 3]],
+  weeklyBonus: () => [["void", fsPT(), 1], ["cube", fsPT(), 1], ["low", Math.min(6, fsPT() + 1), 1]]
+};
+/* "low": whichever material you hold the fewest of at that tier, so mission rewards fill gaps instead of piling onto what you have */
+const fsLowKind = t => { const f = fsOf(); return Object.keys(FS_MATS).reduce((a, k) => (f.mats[k + t] || 0) < (f.mats[a + t] || 0) ? k : a, "alloy"); };
+function lootRoll(rolls) { const f = fsOf(); f.pity = f.pity && typeof f.pity === "object" ? f.pity : {}; const out = [];
+  for (const [k0, t0, n, p, up] of rolls) { if (!(n > 0) || !(t0 >= 1)) continue; const k = k0 === "low" ? fsLowKind(clamp(t0, 1, 6)) : k0, t = clamp(t0, 1, 6); let ok = p == null || p >= 1 || Math.random() < p;
+    if (up) { if (ok) f.pity[k] = 0; else if ((f.pity[k] = (f.pity[k] || 0) + 1) >= LOOT_PITY) { ok = true; f.pity[k] = 0; } }
+    if (ok) out.push([k, t, n]); }
+  return out; }
+/* expected units per roll, for previews and the balance tests */
+const lootEV = rolls => rolls.filter(r => r[2] > 0).map(([k, t, n, p]) => [k, clamp(t, 1, 6), n * (p == null ? 1 : p)]);
+/* elites: about one pirate crew (Lv.10+) or monster in nine each week hits 60% harder and pays double, with triple the rare roll */
+function weekNo() { return Math.floor((Date.now() - Date.UTC(2026, 0, 5)) / (7 * 864e5)); }
+function isElite(x) { return !!x && !x.boss && !!(x.mon || x.lvl >= 10) && !trainingPir(x) && hash(x.id + ":" + weekNo()) % 9 === 0; }
+const xLootK = x => x.boss ? "cube" : x.mon ? "mon" : "pir";
+function fsLootPB(x, rally) { if (!x) return; const L = x.lvl || 1, el = isElite(x), kind = xLootK(x);
+  fsXP((kind === "cube" ? 40 : kind === "mon" ? 20 : 10) * L * (el ? 1.5 : 1), x.name);
+  fsDrop(lootRoll(kind === "cube" ? LOOT.cube(L, rally) : kind === "mon" ? LOOT.monster(L, el) : LOOT.pirate(L, el)), (el ? "Elite " : "") + x.name);
+  S.fk = S.fk && typeof S.fk === "object" ? S.fk : {}; const fk = kind + ":" + L; /* v338: the first win at each level of each kind pays a bonus once */
+  if (!S.fk[fk]) { S.fk[fk] = 1; S.shards = (S.shards || 0) + 2; fsDrop(lootRoll(LOOT.first(kind, L)), `first ${kind === "cube" ? "Cube" : kind === "mon" ? "monster" : "pirate"} kill at Lv.${L} (+◆2)`, { nocap: 1 }); } }
+function fsLootGather(n, amt) { if (!n || !(amt > 0)) return; fsXP(Math.min(200, amt / 5000), "gathering"); fsDrop(lootRoll(LOOT.gather(n.lvl || 1, amt, n.res)), n.name); }
+function fsLootSalvage(amt) { if (!(amt > 0)) return; fsDrop(lootRoll(LOOT.salvage(amt)), "salvage"); }
 /* combining: five of a tier make one of the next (plus a little metal and crystal, so it never runs for free) */
 const fsCombCost = t => ({ m: 1000 * Math.pow(4, t - 1), c: 600 * Math.pow(4, t - 1), g: 0 });
 /* recipes: a slot, a tier and a set. Primary and secondary materials of that tier, alloy of the tier below for the frame, resources and time grow per tier */
@@ -15855,8 +15910,10 @@ const ACT = {
     toast(`Traded ${fmt(amt)} ${RES_N[from].toLowerCase()} for ${fmt(get)} ${RES_N[to].toLowerCase()}.`, "win");
   }),
   buyBoost: () => act(() => { if (!pay(boostPrice())) return toast("Not enough resources.", "warn"); S.boosts++; S.boostBuys = (S.boostBuys || 0) + 1; toast("Boost added to your inventory.", "win"); }),
-  dailyClaim: d => act(() => { ensureDaily(); const t = S.daily.tasks[+d.i]; if (!t || t.claimed || !dailyDone(t)) return; const r = dailyReward(); for (const k of ["m", "c", "g"]) S.res[k] += r[k]; t.claimed = true; S.shards = (S.shards || 0) + 1; logReward("Daily task", r, { shards: 1, kind: "quest" }); toast("Daily task reward collected, plus ◆1.", "win"); }),
-  dailyBonus: () => act(() => { ensureDaily(); if (S.daily.bonus || !S.daily.tasks.every(t => t.claimed)) return; S.daily.bonus = true; S.boosts++; S.shards = (S.shards || 0) + 3; logReward("Daily bonus", null, { shards: 3, boosts: 1, kind: "quest" }); toast("All daily tasks done. +1 Boost and ◆3.", "win"); }),
+  weeklyClaim: d => act(() => { ensureWeekly(); const w = S.weekly.tasks[+d.i]; if (!w || w.claimed || !dailyDone(w)) return; w.claimed = true; dirty(); grantRw(weeklyRw(), "Weekly mission"); SFX.research(); toast("Weekly mission claimed.", "win"); }), /* v338 */
+  weeklyBonus: () => act(() => { ensureWeekly(); if (S.weekly.bonus || !S.weekly.tasks.every(w => w.claimed)) return; S.weekly.bonus = true; dirty(); grantRw(WEEKLY_BONUS(), "Weekly missions bonus"); SFX.research(); toast("Weekly bonus claimed.", "win"); }),
+  dailyClaim: d => act(() => { ensureDaily(); const t = S.daily.tasks[+d.i]; if (!t || t.claimed || !dailyDone(t)) return; const r = dailyReward(); for (const k of ["m", "c", "g"]) S.res[k] += r[k]; t.claimed = true; S.shards = (S.shards || 0) + 1; logReward("Daily task", r, { shards: 1, kind: "quest" }); fsDrop(lootRoll(LOOT.daily()), "a daily task", { nocap: 1 }); /* v338 */ toast("Daily task reward collected, plus ◆1.", "win"); }),
+  dailyBonus: () => act(() => { ensureDaily(); if (S.daily.bonus || !S.daily.tasks.every(t => t.claimed)) return; S.daily.bonus = true; S.boosts++; fsDrop(lootRoll(LOOT.dailyBonus()), "the daily bonus", { nocap: 1 }); S.shards = (S.shards || 0) + 3; logReward("Daily bonus", null, { shards: 3, boosts: 1, kind: "quest" }); toast("All daily tasks done. +1 Boost and ◆3.", "win"); }),
   nav: d => { let v = d.v, s = d.s;
     if (v === "fleet") { if (s === "rep") { v = "mail"; sub.mail = "battle"; } else { v = "build"; s = "ships"; } }
     else if (v === "lab") { v = "build"; s = "research"; }
