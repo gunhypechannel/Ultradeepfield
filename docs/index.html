@@ -12593,7 +12593,8 @@ function originBar(exclude) {
   const cur = (sheet && sheet.from) || "home", home = homePlanet(), noHome = home && exclude === home.id;
   const opts = (noHome ? [] : [["home", S.homeName, Object.values(S.ships).reduce((a, b) => a + b, 0)]]).concat(myPlanets().filter(p => p.kind !== "home" && p.id !== exclude && garrisonCount(p) > 0).map(p => [p.id, p.name, garrisonCount(p)]));
   if (opts.length < 2 && cur === "home") return "";
-  return `<div class="note">Launch from</div><div class="segc" style="overflow-x:auto">${opts.map(([id, n, c]) => `<button style="flex:none;padding:8px 12px" class="${cur === id ? "on" : ""}" data-act="setFrom" data-id="${id}">${esc(n)} · ${fmt(c)}</button>`).join("")}</div>`;
+  const armN = id => { const g = id === "home" ? S.ships : ((G.byId[id] || {}).garrison || {}); return Object.entries(g).reduce((a, [k, v]) => a + (warK(k) ? v || 0 : 0), 0); }; /* v336 */
+  return `<div class="note">Launch from</div><div class="segc" style="overflow-x:auto">${opts.map(([id, n, c]) => `<button style="flex:none;padding:8px 12px" class="${cur === id ? "on" : ""}" data-act="setFrom" data-id="${id}" data-arm="${armN(id)}">${esc(n)} · ${fmt(c)}</button>`).join("")}</div>`;
 }
 /* speed slider with live flight time and fuel */
 /* v275: after a formation change the camera follows that fleet up close: zoomed out, a fleet is drawn as a single arrow, so the change was invisible */
@@ -13742,7 +13743,7 @@ const tutFlyPath = () => { const f = tutFleet(); if (!f) return tutSend(); if (G
   if (view !== "galaxy") return [DOCKT("galaxy", "Open the Galaxy map to find your fleet")];
   return [tutFleetMark(f.id) ? ["#tutfm", "Tap your fleet to follow it"] : null, [`.fchip[data-id="${f.id}"]`, "Tap your fleet to follow it"], SHOWME].filter(Boolean); };
 /* v321: after settling a colony the warships live there, so a card launching from an empty homeworld points at the world that has them */
-const fromPick = () => { const n = b => parseFloat(b.textContent.split("·").pop()) || 0, on = $('.sheet [data-act="setFrom"].on'); if (!on || n(on) > 0) return null;
+const fromPick = () => { const n = b => b.dataset.arm != null ? +b.dataset.arm : parseFloat(b.textContent.split("·").pop()) || 0, on = $('.sheet [data-act="setFrom"].on'); if (!on || n(on) > 0) return null; /* v336: counts warships, not probes */
   const b = [...document.querySelectorAll('.sheet [data-act="setFrom"]')].sort((x, y) => n(y) - n(x))[0]; return b && n(b) > 0 ? [`.sheet [data-act="setFrom"][data-id="${b.dataset.id}"]`, `Launch from ${b.textContent.split("·")[0].trim()}: your ships are there`] : null; };
 /* v321: a pirate step without 3 armed ships on any one world (some lost in an earlier fight) builds fighters first: one fighter alone
    can't finish even the training crew in time, and with none the guide pointed at nothing */
