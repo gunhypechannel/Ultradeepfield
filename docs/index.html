@@ -4092,8 +4092,8 @@ const vipPts = () => ((S && S.vip) || {}).pts || 0;
 const vipLvl = () => { const p = vipPts(); let L = 1; for (let i = 1; i < VIP_T.length; i++) if (p >= VIP_T[i]) L = i; return L; };
 const vipFree = () => vipEff().free * 60000; // active VIP stretches the free-finish window
 /* v64: every commander can finish any construction or research with 5 minutes or less left, free, on any planet */
-const FREE_FIN = 5 * 60000, freeWin = () => (typeof S !== "undefined" && S && S.tut && tutOn() ? 864e5 : Math.max(FREE_FIN, vipFree())); // v335: during the Academy everything finishes free (it was ~73 min of waiting)
-const freeQ = q => q === "b" || q === "r" || String(q).startsWith("cb:") || (q === "s" && tutOn()); // v335: Academy ships too
+const FREE_FIN = 5 * 60000, freeWin = () => Math.max(FREE_FIN, vipFree());
+const freeQ = q => q === "b" || q === "r" || String(q).startsWith("cb:");
 function vipAdd(n, why) { if (!S || n <= 0) return; const L0 = vipLvl(); S.vip = S.vip || { pts: 0 }; S.vip.pts += Math.round(n); const L1 = vipLvl(); if (L1 > L0) { note(`VIP ${L1} reached${why ? " (" + why + ")" : ""}!${vipOn() ? "" : " Activate VIP in the Void Shop to switch its perks on."}`, "win"); SFX.research(); } }
 const vipPerks = L => vipPerkRows(L).map(([a, b]) => `${a}: ${b}`);
 /* 7-day login calendar: claim once per UTC day; missing a day restarts the streak */
@@ -13697,6 +13697,11 @@ const tutSend = () => S.fleets.some(f => f.pid && f.phase === "out") ? flyWatch(
 const tutAt = id => tutOn() && (TUT[S.tut.i] || {}).id === id;
 function tutBld() { const st = tutOn() ? TUT[S.tut.i] : null; if (!st || !/^(Build|Upgrade)/.test(st.t)) return null; let best = null; for (const k in B) if (st.t.includes(B[k].n) && (!best || B[k].n.length > B[best].n.length)) best = k; return best; } // v334
 const tutKey = i => { const s = TUT[i]; return s ? (s.id || s.t) : "done"; }; // v333: steps are recorded by a name that survives renumbering
+function tutBoostTopUp() { if (!tutOn()) return; const T = now(), w = freeWin(); let need = 0;
+  if (S.bq && S.bq.e - T > w) need += Math.ceil((S.bq.e - T - w) / 300000);
+  if (S.rq && S.rq.e - T > w) need += Math.ceil((S.rq.e - T - w) / 300000);
+  if (S.sq && S.sq[0]) { const rem = sqEnd(S.sq[0]) - T; if (rem > 60000) need += Math.ceil((rem - 60000) / 300000); }
+  if (need > (S.boosts || 0)) { const add = need - (S.boosts || 0); S.boosts = need; S.tutBoostGiven = (S.tutBoostGiven || 0) + add; dirty(); note(`Fleet Command sent ${add} ⚡ speed-up${add > 1 ? "s" : ""} for the Academy. Tap −5m to use them.`, "win"); } } // v335
 function tutTrack() { if (!S || !S.tut) return; const k = tutKey(S.tut.i); S.tutT = S.tutT || {}; if (!S.tutT[k]) { S.tutT[k] = now(); dirty(); } }
 /* v319: how many of ship k the Academy step or fleet-path step still wants, so the Shipyard's amount starts there (it started at 1, and
    "Tap Build to make 3" was a stumbling block for young players) */
@@ -13980,7 +13985,7 @@ function coachRender(force) {
     : `<button class="cpill${done ? " done" : ""}" data-act="${done ? "tutClaim" : "tutOpen"}" aria-label="${done ? "Collect the Academy reward" : "Open the Flight Academy"}"><img class="cav" src="${ADV_BUST}" alt=""><span>${done ? "★" : `${S.tut.i + 1}/${TUT.length}`}</span><b class="cpt"><small>${done ? "STEP DONE" : "NEXT TASK"}</small>${done ? "Collect reward ▸" : esc(st.t)}</b></button><button class="cpx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button>`;
   if (!w) { w = document.createElement("div"); w.id = "coach"; $("#app").appendChild(w); force = true; } w.style.display = sheet || view === "quests" ? "none" : ""; /* v123: the Quests tab shows the same step in full */
   if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
-  try { tutTrack(); } catch (e) {} try { const h = $("#advh"); if (h && h.classList.contains("on")) { if ($("#adv") || battle || $("#celeb")) { h.classList.remove("on"); document.body.classList.remove("advtalk"); } else advHoloPlace(); } } catch (e) {}
+  try { tutTrack(); } catch (e) {} try { tutBoostTopUp(); } catch (e) {} try { const h = $("#advh"); if (h && h.classList.contains("on")) { if ($("#adv") || battle || $("#celeb")) { h.classList.remove("on"); document.body.classList.remove("advtalk"); } else advHoloPlace(); } } catch (e) {}
   if (open && !done && VOICE.lastStep !== S.tut.i && !advLines && !$("#celeb") && !$("#oldw") && !$("#adv") && !battle && S.intro && !(sheet && sheet.type === "faction") && !(S.say && S.say.length)) { VOICE.lastStep = S.tut.i; advHolo(st.say); } // v331: each new step, read once as it opens
 }
 setInterval(() => { try { coachRender(); } catch (e) {} }, 800);
@@ -15898,7 +15903,7 @@ const ACT = {
     else if (q.startsWith("cb:")) { const p = G.byId[q.slice(3)]; if (p && p.cq) { rem = p.cq.e - T; apply = () => { p.cq.e = T; }; } }
     else if (q.startsWith("cs:")) { const p = G.byId[q.slice(3)]; if (p && p.sq) { rem = colSqEnd(p) - T; apply = () => { p.sq.start = T - Math.ceil(p.sq.n / colLines(p)) * p.sq.each; }; } }
     if (!apply || rem <= 0) return;
-    if (freeQ(q) && rem <= freeWin()) { apply(); advance(now()); toast(rem <= FREE_FIN ? "Finished free: under 5 minutes left." : tutOn() ? "Flight Academy: finished free." : `VIP ${vipLvl()} free finish.`, "win"); return; } // decided at tap time, whichever button was showing
+    if (freeQ(q) && rem <= freeWin()) { apply(); advance(now()); toast(rem <= FREE_FIN ? "Finished free: under 5 minutes left." : `VIP ${vipLvl()} free finish.`, "win"); return; } // decided at tap time, whichever button was showing
     const c = shardCost(rem); if (S.shards < c) return toast(`Finishing now needs ◆${c}. You have ◆${S.shards}.`, "warn");
     S.shards -= c; apply(); advance(now()); vipAdd(c * 10); toast(`Finished for ◆${c}.`, "win");
   }),
