@@ -1487,7 +1487,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
 .spys.tourOn{border-color:var(--amber)!important;box-shadow:0 0 0 1px var(--amber),0 0 18px rgba(255,190,80,.25)}.tourtip{margin:8px 0 6px;color:var(--amber);font-size:14px;line-height:1.35}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="lib/GLTFLoader-r128.js"></script>
 
 <div id="app">
   <header class="hud" id="hud"></header>
@@ -2492,7 +2492,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 353;
+const GAME_V = 354;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9609,13 +9609,16 @@ const GLB = {};
 function glbOn() {
   if (!(TH && TH.GLTFLoader) || /[?&]glb=0/.test(location.search)) return false; if (/[?&]glb=1/.test(location.search)) return true;
   if (glbOn.v !== undefined) return glbOn.v;
-  let ok = true; try { const busy = +localStorage.getItem("udfGlbBusy") || 0, off = +localStorage.getItem("udfGlbOff") || 0;
-    if (busy && Date.now() - busy < 864e5) { localStorage.setItem("udfGlbOff", Date.now()); localStorage.removeItem("udfGlbBusy"); ok = false; try { crumb("models off: the last session ended while a model was loading"); } catch (e) {} }
-    else if (off && Date.now() - off < 3 * 864e5) ok = false; } catch (e) {}
+  let ok = true; try { const busy = +localStorage.getItem("udfGlbBusy") || 0, LS = localStorage; let off = {}; try { off = JSON.parse(LS.getItem("udfGlbOff2") || "{}") || {}; } catch (e) {} LS.removeItem("udfGlbOff");
+    if (busy && Date.now() - busy < 864e5) { const n = (+LS.getItem("udfGlbCrash") || 0) + 1; LS.setItem("udfGlbCrash", n); LS.removeItem("udfGlbBusy"); try { crumb("model load cut off (" + n + ")"); } catch (e) {}
+      if (n >= 2) { off = { t: Date.now(), v: GAME_V }; LS.setItem("udfGlbOff2", JSON.stringify(off)); LS.removeItem("udfGlbCrash"); try { crumb("models off for a day: the page died twice while a model loaded"); } catch (e) {} } }
+    if (off.t && off.v === GAME_V && Date.now() - off.t < 864e5) ok = false; } catch (e) {}
   return (glbOn.v = ok);
 }
 const GLB_Q = []; let GLB_RUN = 0;
 function glbMark(on) { try { if (on) localStorage.setItem("udfGlbBusy", Date.now()); else localStorage.removeItem("udfGlbBusy"); } catch (e) {} }
+/* v354 a normal ending (closing, switching away, reloading) is not a crash: clear the note; set it again if loading carries on */
+window.addEventListener("pagehide", () => glbMark(false)); document.addEventListener("visibilitychange", () => { if (document.hidden) glbMark(false); else if (GLB_RUN || GLB_Q.length) glbMark(true); });
 /* shrink a loaded texture to px (keeps the decoded copy small and the upload small) */
 function glbShrink(tex, px) {
   const im = tex && tex.image; if (!im) return; const w = im.width || 0, h = im.height || 0; if (w <= px && h <= px) return;
@@ -9661,8 +9664,8 @@ async function glbLights(k, s) {
 }
 const PUFFT = {}; const puffTex = col => PUFFT[col] || (PUFFT[col] = new TH.CanvasTexture(puffSprite(col)));
 function glbNext() {
-  if (GLB_RUN || !GLB_Q.length) { if (!GLB_RUN && !GLB_Q.length) { clearTimeout(glbNext.t); glbNext.t = setTimeout(() => { if (!GLB_RUN && !GLB_Q.length) glbMark(false); }, 45000); } return; }
-  const k = GLB_Q.shift(); GLB_RUN = 1; glbMark(true);
+  if (GLB_RUN || !GLB_Q.length) { if (!GLB_RUN && !GLB_Q.length) { clearTimeout(glbNext.t); glbNext.t = setTimeout(() => { if (!GLB_RUN && !GLB_Q.length) { glbMark(false); try { localStorage.removeItem("udfGlbCrash"); } catch (e) {} } }, 45000); } return; }
+  const k = GLB_Q.shift(); GLB_RUN = 1; if (!document.hidden) glbMark(true);
   const done = () => { GLB_RUN = 0; setTimeout(glbNext, 120); };
   try {
     new TH.GLTFLoader().load("models/" + k + ".glb?v=" + GAME_V, g => {
@@ -10179,6 +10182,35 @@ function hqModel() {
   const beam = new TH.Mesh(new TH.ConeGeometry(.8, 1, 24, 1, true).translate(0, -.5, 0), new TH.MeshBasicMaterial({ color: 0x55d6e8, transparent: true, opacity: .1, depthWrite: false, blending: TH.AdditiveBlending, side: TH.DoubleSide, toneMapped: false })); beam.position.y = 6.4; beam.scale.set(1, 1.1, 1); g.add(beam);
   g.userData.anim = anim; return g;
 }
+/* v354 a boulder: an icosphere pushed in and out by layered noise (lumpy, with flat-ish fracture faces), smooth shaded */
+function rockGeo(detail, seed) {
+  const g = new TH.IcosahedronGeometry(1, detail), P = g.attributes.position, r = rnd(seed), F = Array.from({ length: 5 }, () => [r() * 2 - 1, r() * 2 - 1, r() * 2 - 1, .6 + r() * .5]).map(([x, y, z, c]) => { const l = Math.hypot(x, y, z) || 1; return [x / l, y / l, z / l, c]; });
+  for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i), n = Math.sin(x * 4.1 + seed) * Math.cos(y * 3.7 - seed) * .09 + Math.sin(z * 7.3 + x * 2.1) * .045 + Math.sin(y * 13 + z * 11) * .02;
+    let s = 1 + n; for (const [a, b, c, d] of F) { const dp = x * a + y * b + z * c; if (dp > d) s = Math.min(s, d / dp + n * .3); } P.setXYZ(i, x * s, y * s * .82, z * s); }
+  g.computeVertexNormals(); return g;
+}
+/* v354 stone: neutral grey-buff grit with darker veins, pits and pale strata (tinted per planet by the material colour) */
+function rockTex() {
+  if (rockTex.T) return rockTex.T; const Z = MOBILE ? 256 : 512, r = rnd(4321), hgt = new Float32Array(Z * Z);
+  const vn = (() => { const P = Array.from({ length: 1024 }, () => r()), at = (x, y) => P[((x & 31) * 32 + (y & 31)) & 1023], sm = q => q * q * (3 - 2 * q); return (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), xf = sm(x - xi), yf = sm(y - yi), a = at(xi, yi), b = at(xi + 1, yi), c = at(xi, yi + 1), d = at(xi + 1, yi + 1); return a + (b - a) * xf + (c - a) * yf + (a - b - c + d) * xf * yf; }; })();
+  for (let y = 0; y < Z; y++) for (let x = 0; x < Z; x++) { const u = x / Z * 32, v = y / Z * 32; let hh = vn(u * .25, v * .25) * .45 + vn(u * .5, v * .5) * .25 + vn(u, v) * .18 + vn(u * 2, v * 2) * .12; const vein = Math.abs(vn(u * .4 + 7, v * .4 + 3) - .5); if (vein < .025) hh -= .25 * (1 - vein / .025); hgt[y * Z + x] = hh; }
+  const map = texCanvas(Z, Z, (x, W, H) => { const img = x.createImageData(W, H), D = img.data; for (let i = 0; i < W * H; i++) { const hh = hgt[i], k = 178 + (hh - .5) * 170, st = Math.sin((Math.floor(i / W) / H) * 40 + hh * 6) > .92 ? 18 : 0; D[i * 4] = clamp(k + st + 6, 0, 255); D[i * 4 + 1] = clamp(k + st, 0, 255); D[i * 4 + 2] = clamp(k + st - 8, 0, 255); D[i * 4 + 3] = 255; } x.putImageData(img, 0, 0);
+    for (let i = 0; i < Z * 2; i++) { x.fillStyle = r() < .6 ? "rgba(30,26,22,.5)" : "rgba(240,232,220,.35)"; x.fillRect(r() * W, r() * H, 1 + r() * 1.5, 1 + r() * 1.5); } });
+  const bump = texCanvas(Z, Z, (x, W, H) => { const img = x.createImageData(W, H), D = img.data; for (let i = 0; i < W * H; i++) { const k = clamp(hgt[i] * 255, 0, 255); D[i * 4] = D[i * 4 + 1] = D[i * 4 + 2] = k; D[i * 4 + 3] = 255; } x.putImageData(img, 0, 0); });
+  for (const t of [map, bump]) { t.wrapS = t.wrapT = TH.RepeatWrapping; t.repeat.set(2, 2); t.anisotropy = 4; } map.encoding = TH.sRGBEncoding;
+  return (rockTex.T = { map, bump });
+}
+/* v354 a habitat dome's skin: panels with seams, glass panes and a few lit windows */
+function domeTex() {
+  if (domeTex.T) return domeTex.T; const r = rnd(2468), Wd = 512, Hd = 256;
+  const map = texCanvas(Wd, Hd, (x, W, H) => { x.fillStyle = "#c9d0d6"; x.fillRect(0, 0, W, H); const cols = 24, rows = 8;
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) { const v = r(), px = i * W / cols, py = j * H / rows; x.fillStyle = v < .07 ? "#5d7184" : `rgb(${200 + v * 22 | 0},${205 + v * 21 | 0},${210 + v * 20 | 0})`; x.fillRect(px + 1, py + 1, W / cols - 2, H / rows - 2); }
+    x.strokeStyle = "rgba(110,120,130,.7)"; x.lineWidth = 1.5; for (let i = 0; i <= cols; i++) { x.beginPath(); x.moveTo(i * W / cols, 0); x.lineTo(i * W / cols, H); x.stroke(); } for (let j = 0; j <= rows; j++) { x.beginPath(); x.moveTo(0, j * H / rows); x.lineTo(W, j * H / rows); x.stroke(); }
+    for (let i = 0; i < 600; i++) { x.fillStyle = `rgba(90,80,70,${r() * .12})`; x.fillRect(r() * W, r() * H, 2 + r() * 6, 1 + r() * 3); } });
+  const emi = texCanvas(Wd, Hd, (x, W, H) => { x.fillStyle = "#000"; x.fillRect(0, 0, W, H); const cols = 24, rows = 8; for (let j = 5; j < rows; j++) for (let i = 0; i < cols; i++) if (r() < .3) { x.fillStyle = r() < .75 ? "rgba(255,190,110,.95)" : "rgba(150,220,255,.9)"; x.fillRect(i * W / cols + 4, j * H / rows + 6, W / cols - 8, H / rows - 12); } });
+  for (const t of [map, emi]) { t.encoding = TH.sRGBEncoding; t.anisotropy = 4; }
+  return (domeTex.T = { map, emi });
+}
 function initColony(host) {
   const cv = host.querySelector("#col3d"); if (!cv) return null;
   let renderer; try { renderer = new TH.WebGLRenderer({ canvas: cv, antialias: GFX_AA || !MOBILE, powerPreference: "high-performance" }); } catch (e) { C3fail = true; return null; }
@@ -10207,8 +10239,8 @@ function initColony(host) {
   const P2 = (() => { const r = rnd(4242), a = new Float32Array(32 * 32); for (let i = 0; i < a.length; i++) a[i] = r(); return a; })();
   const tn2 = (x, y, per) => { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, s = q => q * q * (3 - 2 * q), g = (i, j) => P2[(((i % per) + per) % per) * 32 + (((j % per) + per) % per)];
     const a = g(xi, yi), b = g(xi + 1, yi), c = g(xi, yi + 1), d = g(xi + 1, yi + 1), u = s(xf), v = s(yf); return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; };
-  const RW = 512, hgt = new Float32Array(RW * RW), rg = rnd(77);
-  for (let y = 0; y < RW; y++) for (let x = 0; x < RW; x++) { const u = x / RW, v = y / RW; hgt[y * RW + x] = tn2(u * 8, v * 8, 8) * .5 + tn2(u * 16, v * 16, 16) * .3 + tn2(u * 32, v * 32, 32) * .2 + (rg() - .5) * .08; }
+  const RW = MOBILE ? 512 : 1024, hgt = new Float32Array(RW * RW), rg = rnd(77); // v354 finer on desktop
+  for (let y = 0; y < RW; y++) for (let x = 0; x < RW; x++) { const u = x / RW, v = y / RW; { let hh = tn2(u * 8, v * 8, 8) * .45 + tn2(u * 16, v * 16, 16) * .26 + tn2(u * 32, v * 32, 32) * .17 + tn2(u * 64, v * 64, 32) * .12 + (rg() - .5) * .06; const ck = Math.abs(tn2(u * 6 + 3.3, v * 6 + 1.7, 6) - .5); if (ck < .018) hh -= .22 * (1 - ck / .018); hgt[y * RW + x] = hh; } } // v354 a fourth octave and fine cracks
   const gt = texCanvas(RW, RW, (x, W, H) => { const img = x.createImageData(W, H), D = img.data; for (let i = 0; i < W * H; i++) { const h = hgt[i], k = 120 + h * 110; D[i * 4] = k * 1.02; D[i * 4 + 1] = k * .92; D[i * 4 + 2] = k * .82; D[i * 4 + 3] = 255; } x.putImageData(img, 0, 0);
     for (let i = 0; i < 900; i++) { const px = rg() * W, py = rg() * H, r0 = .6 + rg() * 2.4; x.fillStyle = rg() < .5 ? "rgba(40,30,24,.55)" : "rgba(230,215,195,.35)"; x.beginPath(); x.arc(px, py, r0, 0, TAU); x.fill(); } }); // pebbles and grit
   const gb = texCanvas(RW, RW, (x, W, H) => { const img = x.createImageData(W, H), D = img.data; for (let i = 0; i < W * H; i++) { const k = hgt[i] * 255; D[i * 4] = D[i * 4 + 1] = D[i * 4 + 2] = k; D[i * 4 + 3] = 255; } x.putImageData(img, 0, 0); });
@@ -10229,7 +10261,7 @@ function initColony(host) {
     colArr[i * 3] = band[0] * shade; colArr[i * 3 + 1] = band[1] * shade; colArr[i * 3 + 2] = band[2] * shade;
   }
   gg.setAttribute("color", new TH.BufferAttribute(colArr, 3)); gg.computeVertexNormals();
-  const ground = new TH.Mesh(gg, new TH.MeshStandardMaterial({ map: gt, bumpMap: gb, bumpScale: .06, vertexColors: true, roughness: .97, metalness: 0 })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+  const ground = new TH.Mesh(gg, new TH.MeshStandardMaterial({ map: gt, bumpMap: gb, bumpScale: .11, vertexColors: true, roughness: .97, metalness: 0 })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
   const dt = texCanvas(512, 512, (x, W, H) => { x.fillStyle = "#2b3138"; x.fillRect(0, 0, W, H); const r = rnd(5); for (let i = 0; i < 140; i++) { x.fillStyle = r() < .5 ? "#333b44" : "#262c32"; x.fillRect(((r() * 16) | 0) * 32, ((r() * 16) | 0) * 32, 32, 32); }
     x.strokeStyle = "#1a1f24"; x.lineWidth = 2; for (let i = 0; i <= W; i += 32) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); x.beginPath(); x.moveTo(0, i); x.lineTo(W, i); x.stroke(); }
     x.strokeStyle = "rgba(85,214,232,.14)"; x.lineWidth = 3; for (let i = 0; i <= W; i += 128) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); x.beginPath(); x.moveTo(0, i); x.lineTo(W, i); x.stroke(); } });
@@ -10242,11 +10274,11 @@ function initColony(host) {
     for (const [x, z] of [[-18, -14.5], [18, -14.5], [-18, 14.5], [18, 14.5], [0, -15], [0, 15], [-18.5, 0], [18.5, 0], [-9, -15], [9, 15]]) { const s = new TH.Mesh(new TH.CylinderGeometry(.45, .7, 12, 8), sM); s.position.set(x, -7, z); s.castShadow = true; scene.add(s); } }
   const C = colMats();
   for (const [w, d, x, z] of [[38, .12, 0, 15.5], [38, .12, 0, -15.5], [.12, 31, 19, 0], [.12, 31, -19, 0]]) scene.add(cbox(w, .1, d, C.cyan, x, -.02, z));
-  const rockM = new TH.MeshStandardMaterial({ color: 0x6d4232, roughness: 1, flatShading: true }), rockG = new TH.DodecahedronGeometry(1, 0), r = rnd(44);
+  const rockT = rockTex(), rockM = new TH.MeshStandardMaterial({ color: 0x6d4232, map: rockT.map, bumpMap: rockT.bump, bumpScale: .9, roughness: .96, metalness: 0 }), rockG = rockGeo(2, 44), r = rnd(44); // v354 smooth noise-displaced stone
   for (let i = 0; i < 40; i++) { const a = r() * TAU, d = 44 + r() * 22; const m = new TH.Mesh(rockG, rockM); m.position.set(Math.cos(a) * d * 1.2, 2 + r() * 5, Math.sin(a) * d * 1); m.scale.set(1.5 + r() * 4, 1 + r() * 4, 1.5 + r() * 4); m.rotation.set(r(), r() * 3, r()); m.castShadow = true; scene.add(m); }
   const hq = hqModel(); hq.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(hq);
   // pebbles and boulders around the platform, sharing the tinted rock material
-  { const pg = new TH.DodecahedronGeometry(.28, 0), im = new TH.InstancedMesh(pg, rockM, 520), dm = new TH.Object3D(), pr = rnd(515); let c = 0;
+  { const pg = rockGeo(1, 515).scale(.28, .28, .28), im = new TH.InstancedMesh(pg, rockM, 520), dm = new TH.Object3D(), pr = rnd(515); let c = 0;
     for (let i = 0; i < 4000 && c < 520; i++) { const x = (pr() - .5) * 52, z = (pr() - .5) * 46; if (Math.abs(x) < 19.6 && Math.abs(z) < 16.1) continue; if (Math.hypot(x * .82, z) > 24.5) continue;
       const s = pr() < .08 ? 2 + pr() * 2.5 : .4 + pr() * 1.1; dm.position.set(x, -1.3 + s * .08, z); dm.rotation.set(pr() * 3, pr() * 3, pr() * 3); dm.scale.set(s * (.8 + pr() * .5), s * (.5 + pr() * .4), s * (.8 + pr() * .5)); dm.updateMatrix(); im.setMatrixAt(c++, dm.matrix); }
     im.count = c; im.castShadow = true; im.receiveShadow = true; im.frustumCulled = false; scene.add(im); }
@@ -10263,8 +10295,8 @@ function initColony(host) {
     const towerM = new TH.MeshStandardMaterial({ color: 0x3a4652, emissive: 0xffffff, emissiveMap: winT, emissiveIntensity: 1.1, map: winT, roughness: .35, metalness: .7, envMapIntensity: .9 });
     // domes, not towers: low geodesic habitats (as on the Lunar Outpost and Gas Plant cards) with a band of lit windows round the base,
     // so nothing in the background stands taller than the base or crowds it
-    winT.repeat.set(6, .25); const domeM = new TH.MeshStandardMaterial({ color: 0xdde4ea, roughness: .32, metalness: .45, envMapIntensity: 1, flatShading: true });
-    const towers = new TH.InstancedMesh(new TH.CylinderGeometry(1, 1.03, .3, 18).translate(0, .15, 0), towerM, N), spires = new TH.InstancedMesh(new TH.SphereGeometry(1, 12, 6, 0, TAU, 0, Math.PI / 2).translate(0, .28, 0), domeM, N);
+    winT.repeat.set(6, .25); const DT = domeTex(), domeM = new TH.MeshStandardMaterial({ color: 0xffffff, map: DT.map, emissive: 0xffffff, emissiveMap: DT.emi, emissiveIntensity: 1.3, roughness: .3, metalness: .5, envMapIntensity: 1.1 }); // v354 panelled, smooth
+    const towers = new TH.InstancedMesh(new TH.CylinderGeometry(1, 1.03, .3, 18).translate(0, .15, 0), towerM, N), spires = new TH.InstancedMesh(new TH.SphereGeometry(1, lite ? 28 : 40, lite ? 10 : 14, 0, TAU, 0, Math.PI / 2).translate(0, .28, 0), domeM, N);
     const beacons = new TH.InstancedMesh(new TH.SphereGeometry(.18, 6, 4), new TH.MeshBasicMaterial({ color: 0xff4a3a, toneMapped: false }), N); let c = 0;
     for (let i = 0; i < 4000 && c < N; i++) { const back = cr() < .65, a = back ? Math.PI * (.85 + cr() * .8) : cr() * TAU, d = 33.5 + Math.pow(cr(), 1.7) * 30, x = Math.cos(a) * d / .82, z = Math.sin(a) * d; if (Math.hypot(x, z) < 33 || x + z > 4) continue; // none in front of the base; most stand behind it, beyond the transit ring
       const y = Math.max(-9, hAt(x, z)) - .2, R = 1.4 + Math.pow(cr(), 1.6) * 4.2; dm.position.set(x, y, z); dm.rotation.set(0, cr() * 3, 0); dm.scale.set(R, R, R); dm.updateMatrix(); towers.setMatrixAt(c, dm.matrix); spires.setMatrixAt(c, dm.matrix);
@@ -10580,7 +10612,38 @@ function turretRing(n, mix) {
     d.scale.y = .42; d.userData.dome = 1; g.add(d);
     const w = new TH.Mesh(new TH.IcosahedronGeometry(R * 1.002, 3), new TH.MeshBasicMaterial({ color: 0x9fe8ff, wireframe: true, transparent: true, opacity: big ? .07 : .045, depthWrite: false, toneMapped: false })); w.scale.y = .42; w.userData.dome = 1; g.add(w); }
   return g;
-}function drawColony(t) {
+}/* v354 bloom for the base: render to a target, pull out the bright parts at 1/4 size, blur at two sizes, add back */
+function colBloom(W) {
+  if (W.bloom !== undefined) return W.bloom; W.bloom = null;
+  try {
+    const R = W.renderer; if (!R.capabilities.isWebGL2 || WEAK || gfx("fx") < 1 || /[?&]bloom=0/.test(location.search)) return null;
+    const vs = "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }";
+    const mat = (fs, u) => new TH.ShaderMaterial({ uniforms: u, vertexShader: vs, fragmentShader: fs, depthTest: false, depthWrite: false, toneMapped: false });
+    const bright = mat("uniform sampler2D tD; uniform float th; varying vec2 vUv; void main(){ vec3 c = texture2D(tD, vUv).rgb; float l = max(c.r, max(c.g, c.b)); gl_FragColor = vec4(c * smoothstep(th, th + .22, l), 1.); }", { tD: { value: null }, th: { value: .8 } });
+    const blur = mat("uniform sampler2D tD; uniform vec2 dir; varying vec2 vUv; void main(){ vec3 s = texture2D(tD, vUv).rgb * .227; s += (texture2D(tD, vUv + dir).rgb + texture2D(tD, vUv - dir).rgb) * .195; s += (texture2D(tD, vUv + dir * 2.).rgb + texture2D(tD, vUv - dir * 2.).rgb) * .122; s += (texture2D(tD, vUv + dir * 3.).rgb + texture2D(tD, vUv - dir * 3.).rgb) * .054; s += (texture2D(tD, vUv + dir * 4.).rgb + texture2D(tD, vUv - dir * 4.).rgb) * .016; gl_FragColor = vec4(s, 1.); }", { tD: { value: null }, dir: { value: new TH.Vector2() } });
+    const comp = mat("uniform sampler2D tS; uniform sampler2D tA; uniform sampler2D tB; uniform float k; varying vec2 vUv; void main(){ vec3 c = texture2D(tS, vUv).rgb; vec3 b = texture2D(tA, vUv).rgb * .7 + texture2D(tB, vUv).rgb * .9; gl_FragColor = vec4(c + b * k * (1. - c * .35), 1.); }", { tS: { value: null }, tA: { value: null }, tB: { value: null }, k: { value: MOBILE ? .5 : .62 } });
+    const scene = new TH.Scene(), cam = new TH.OrthographicCamera(-1, 1, 1, -1, 0, 1), quad = new TH.Mesh(new TH.PlaneGeometry(2, 2), bright); quad.frustumCulled = false; scene.add(quad);
+    const rt = (w, h, ms) => { const t = ms ? new TH.WebGLMultisampleRenderTarget(w, h, { format: TH.RGBAFormat }) : new TH.WebGLRenderTarget(w, h, { format: TH.RGBAFormat, minFilter: TH.LinearFilter, magFilter: TH.LinearFilter, depthBuffer: false }); if (ms) t.samples = 4; return t; };
+    const B = { size: [0, 0], ms: GFX_AA || !MOBILE, quad, scene, cam, bright, blur, comp, rt, S: null, A: null, A2: null, C: null, C2: null };
+    B.run = () => {
+      const v = R.getDrawingBufferSize(new TH.Vector2()), w = Math.max(2, v.x | 0), h = Math.max(2, v.y | 0);
+      if (B.size[0] !== w || B.size[1] !== h) { for (const k of ["S", "A", "A2", "C", "C2"]) if (B[k]) B[k].dispose();
+        B.S = rt(w, h, B.ms); B.S.texture.encoding = TH.sRGBEncoding; const qw = Math.max(2, w >> 2), qh = Math.max(2, h >> 2), ew = Math.max(2, w >> 3), eh = Math.max(2, h >> 3);
+        B.A = rt(qw, qh); B.A2 = rt(qw, qh); B.C = rt(ew, eh); B.C2 = rt(ew, eh); B.size = [w, h]; }
+      const pass = (m, to) => { quad.material = m; R.setRenderTarget(to); R.render(scene, cam); };
+      R.setRenderTarget(B.S); R.render(W.scene, W.cam);
+      bright.uniforms.tD.value = B.S.texture; pass(bright, B.A);
+      blur.uniforms.tD.value = B.A.texture; blur.uniforms.dir.value.set(1.2 / B.A.width, 0); pass(blur, B.A2);
+      blur.uniforms.tD.value = B.A2.texture; blur.uniforms.dir.value.set(0, 1.2 / B.A.height); pass(blur, B.A);
+      blur.uniforms.tD.value = B.A.texture; blur.uniforms.dir.value.set(1.6 / B.C.width, 0); pass(blur, B.C2);
+      blur.uniforms.tD.value = B.C2.texture; blur.uniforms.dir.value.set(0, 1.6 / B.C.height); pass(blur, B.C);
+      comp.uniforms.tS.value = B.S.texture; comp.uniforms.tA.value = B.A.texture; comp.uniforms.tB.value = B.C.texture; pass(comp, null);
+    };
+    W.bloom = B;
+  } catch (e) { W.bloom = null; }
+  return W.bloom;
+}
+function drawColony(t) {
   const W = C3; if (!W || !colHost || !colHost.isConnected) return;
   const w = colHost.clientWidth, h = colHost.clientHeight; if (w < 8 || h < 8) return;
   const fx = colHost.querySelector("#colfx"), dpr = DPR();
@@ -10646,7 +10709,7 @@ function turretRing(n, mix) {
     Cy.craft.instanceMatrix.needsUpdate = true; Cy.lights.instanceMatrix.needsUpdate = true; }
   upStep(W, t); // v101: upgrade cinematics
   if (W.prev) { const left = W.prev.until - performance.now(); if (left <= 0 || !W.blds[W.prev.k]) { W.scene.remove(W.prev.h); W.prev = null; } else { W.prev.h.position.y = .05 + Math.sin(t * .003) * .05; HOLO_WIRE().opacity = .35 + .2 * Math.sin(t * .006); } }
-  W.renderer.render(W.scene, W.cam);
+  { const B = colBloom(W); let ok = false; if (B) try { B.run(); ok = true; } catch (e) { W.bloom = null; W.renderer.setRenderTarget(null); } if (!ok) W.renderer.render(W.scene, W.cam); } // v354 bloom
   // building tags
   const ctx = fx.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
   const hits = [], TT = now();
