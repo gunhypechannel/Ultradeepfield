@@ -12676,7 +12676,19 @@ function vGalaxyBelow() {
 /* menus remember where you came from: opening one menu from another stacks it, and Back returns to the previous one */
 let sheetStack = [];
 const SHEET_NAME = { shop: "shop", pack: "pack", packadmin: "owner tools", repshare: "share", fbinbox: "feedback", spysend: "probes", howto: "how to play", planet: "planet", report: "report", settings: "settings", void: "the Void", assault: "attack", targets: "targets", node: "node", bld: "building", nexus: "Cube", skin: "planet looks", find: "search", pirate: "pirates", layers: "layers", tile: "tile", basedet: "base", planets: "planets", yard: "shipyard", labs: "labs", flagship: "Flagship Command", faction: "factions", profile: "profile", ranks: "rankings", friends: "friends", chat: "chat", mastery: "mastery", sound: "sound", shop: "shop", spyrep: "spy report", events: "events", detail: "details" };
-function openSheet(s) { { const cp = document.getElementById("cubepanel"); if (cp) cp.remove(); } /* v111: never cover a panel's buttons */ if (s && s.from === undefined && ["planet", "pirate", "node", "assault", "targets"].includes(s.type)) { const ap = actPlanet(); if (ap && garrisonCount(ap)) s.from = ap.id; } // fleets launch from the planet you're using
+const BOSS_HOLO = {
+  swhale: "Commander, that's a Void Shark: a cruiser-sized predator with laser turrets bolted to its hide. Bring heavy hulls, and it drops Exotic Tissue for the forge.",
+  ssquid: "Commander, Nebula Squids are fast, many-armed and hunt in packs. Bring Cruisers and armour. They drop Exotic Tissue, and sometimes Void Essence.",
+  slevi: "Commander, a Star Leviathan. Its jaws can split a battleship, so scout it first and send our heaviest fleet. It guards rare flagship materials.",
+  cube: "Commander, a Cube. One fleet rarely breaks it, so call a joint strike with our allies. Cubes drop Cube Fragments and Void Essence, the rarest materials in the forge.",
+  pyramid: "Commander, a derelict pyramid station. Send an expedition to open its vault for shards, resources and rare items. From level 3, something guards the halls.",
+  nexus: "Commander, the Super Cube. From Friday to Sunday, alliances fight to seize and hold it. Every minute our alliance holds it earns glory and rewards for every member." };
+function bossHolo(s) { if (!s || !S) return; let k = null;
+  if (s.type === "pirate") { const x = PB[s.id]; k = x ? (x.mon && BOSS_HOLO[x.mon] ? x.mon : x.boss ? "cube" : null) : null; }
+  else if (s.type === "pyramid") k = "pyramid"; else if (s.type === "nexus") k = "nexus";
+  if (!k || advLines || $("#adv")) return; const L = BOSS_HOLO[k], on = $("#advh.on"); if (on && (acadOn() || (on.querySelector(".hsay span") || {}).textContent === L)) return;
+  clearTimeout(G.holoT); G.holoT = setTimeout(() => { if (sheet && sheet.type === s.type && sheet.id === s.id) advHolo(L); }, 500); }
+function openSheet(s) { try { if (!sheet || sheet.type !== (s && s.type) || sheet.id !== (s && s.id)) bossHolo(s); } catch (e) {} { const cp = document.getElementById("cubepanel"); if (cp) cp.remove(); } /* v111: never cover a panel's buttons */ if (s && s.from === undefined && ["planet", "pirate", "node", "assault", "targets"].includes(s.type)) { const ap = actPlanet(); if (ap && garrisonCount(ap)) s.from = ap.id; } // fleets launch from the planet you're using
   G.sheetDir = sheet && sheet !== s ? 1 : 0; if (sheet && sheet !== s && (sheet.type !== s.type || (sheet.id || "") !== (s.id || "") || sheet.k !== s.k)) { sheetStack.push(sheet); if (sheetStack.length > 12) sheetStack.shift(); } sheet = s; renderSheet(); }
 function sheetBack() { if (sheetStack.length) { G.sheetDir = -1; sheet = sheetStack.pop(); G.sel = null; G.selNode = null; renderSheet(); } else closeSheet(); }
 const backBar = () => `<div class="sbk"><button class="sbkb" data-act="back">‹ ${sheetStack.length ? "Back to " + (SHEET_NAME[sheetStack[sheetStack.length - 1].type] || "previous") : "Back"}</button></div>`;
