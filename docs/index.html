@@ -1745,7 +1745,7 @@ Object.assign(SH, {
   guardian:     { n: "Guardian Heavy Cruiser", c: { m: 24000, c: 14000, g: 4000 }, atk: 280, sh: 250, hull: 5200, cargo: 1200, bs: 9000, fu: 320, dt: "impulse", sz: .8, req: { shipyard: 7, impulse: 4, shields: 6, armor: 4 }, d: "A flying shield wall. Draws enemy fire away from the smaller ships it escorts." },
   escortCarrier:{ n: "Halo Escort Carrier", c: { m: 32000, c: 24000, g: 9000 }, atk: 320, sh: 300, hull: 6500, cargo: 3500, bs: 8000, fu: 400, dt: "impulse", sz: .9, req: { shipyard: 8, impulse: 6, shields: 6 }, d: "A versatile support carrier that deploys fighter wings and provides fleet protection. Rapid fire against fighters." },
   supercarrier: { n: "Citadel Supercarrier", c: { m: 110000, c: 90000, g: 35000 }, atk: 1400, sh: 1200, hull: 24000, cargo: 15000, bs: 5000, fu: 1400, dt: "hyper", sz: 1.3, req: { shipyard: 11, hyper: 7, shields: 8 }, d: "The ultimate mobile base. A massive supercarrier that commands fleets, launches squadrons, and dominates the battlefield." },
-  eclipse:      { n: "Discovery Class Destroyer", /* v169: was the Eclipse Titan (key kept, so owned ships and saves carry over) */ c: { m: 2400000, c: 1800000, g: 700000 }, atk: 80000, sh: 30000, hull: 450000, cargo: 400000, bs: 900, fu: 40, dt: "hyper", sz: 1.5, max: 1, ally: 2, req: { shipyard: 12, hyper: 8, command: 3 }, d: "An alliance flagship for system dominance. One per commander, and only for members of an alliance with a Space Station Lv.2 or higher. Its command aura lifts the whole fleet." }
+  eclipse:      { n: "Discovery Class Destroyer", /* v169: was the Eclipse Titan (key kept, so owned ships and saves carry over) */ c: { m: 2400000, c: 1800000, g: 700000 }, atk: 80000, sh: 30000, hull: 450000, cargo: 400000, bs: 900, fu: 40, dt: "hyper", sz: 1.5, ally: 2, req: { shipyard: 12, hyper: 8, command: 3 }, d: "An alliance flagship for system dominance, only for members of an alliance with a Space Station Lv.2 or higher. Build as many as you can afford. Its command aura lifts the whole fleet." }
 });
 Object.assign(RF, {
   guardian: { fighter: 3, lancer: 2, drone: 3 },
@@ -2400,7 +2400,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 338;
+const GAME_V = 339;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -10516,7 +10516,7 @@ function colTap(el, e) {
   for (const h of C3.hits) { const d = Math.min(Math.hypot(h.x - x, h.y - y), Math.hypot(h.tx - x, h.ty - y)); if (d < bd) { bd = d; best = h; } }
   C3.sel = best ? best.k : null; selBar(); if (best && B[best.k]) SFX.tapB(best.k); else SFX.click();
   // v244 tapping a building opens its card (upgrade, cost, requirements); the shipyard and research center cards lead on to ships and research
-  if (best && B[best.k]) { const bt = baseTarget(); openSheet({ type: "detail", kind: "b", k: best.k, qty: 1, tab: 0, pid: bt.key === "home" ? null : bt.key }); }
+  if (best && B[best.k]) { const bt = baseTarget(); holoFirst("b", best.k); openSheet({ type: "detail", kind: "b", k: best.k, qty: 1, tab: 0, pid: bt.key === "home" ? null : bt.key }); }
 }
 function mountColony() {
   const slot = $("#colslot"); if (!slot && !(colHost && colHost.isConnected)) return; // after an in-place patch the base is already mounted
@@ -13759,10 +13759,32 @@ const HOLO = {
   guardian: "The Guardian Heavy Cruiser is a flying shield wall that draws enemy fire away from smaller ships.",
   escortCarrier: "The Halo Escort Carrier launches fighter wings and protects the fleet. Deadly against fighters.",
   supercarrier: "The Citadel Supercarrier is a mobile base: it commands fleets and launches squadrons.",
-  eclipse: "The Discovery Class Destroyer is an alliance flagship. One per commander, and its command aura lifts the whole fleet." };
-function holoFirst(kind, k) { if (!S || !HOLO[k] || (kind !== "b" && kind !== "s")) return; S.holoSeen = S.holoSeen || {}; if (S.holoSeen[k]) return;
+  eclipse: "The Discovery Class Destroyer is an alliance flagship. Build as many as you can afford: its command aura lifts the whole fleet.",
+  /* v339 research transmissions */
+  energyT: "Energy Technology boosts every solar and fusion plant, and most other research needs it first.",
+  laserT: "Laser Technology arms our light weapons. Heavy Lasers and the bigger warships need it.",
+  ionT: "Ion Technology leads to Cruisers, Ion Cannons and Plasma Technology.",
+  hyperT: "Hyperspace Technology adds cargo space, and unlocks the Hyperspace Drive and our heaviest warships.",
+  plasmaT: "Plasma Technology raises mine output a little every level, and unlocks Bombers and Plasma Turrets.",
+  drive: "The Combustion Drive speeds up Light Fighters, cargo ships and Recyclers.",
+  impulse: "The Impulse Drive speeds up Heavy Fighters, Cruisers, Bombers and Colony Ships. Colony Ships need level 3 of it first.",
+  hyper: "The Hyperspace Drive speeds up Battleships and every capital ship. The road to the Reaper runs through it.",
+  espionage: "Espionage Technology decides how much our probes see, and how well we hide from theirs.",
+  computer: "Computer Technology gives us one more fleet slot per level, so more fleets can fly at once.",
+  astro: "Astrophysics lets us hold more planets: one more world for every two levels.",
+  irn: "The Intergalactic Research Network links our labs, so every level makes research faster.",
+  graviton: "Graviton Technology is a capstone research for end-game fleets.",
+  weapons: "Weapons Technology adds ten percent damage to every ship and defense, per level.",
+  shields: "Shielding Technology adds ten percent shield strength to every ship and defense, per level.",
+  armor: "Armour Technology adds ten percent hull strength to every ship and defense, per level.",
+  logistics: "Cargo Logistics adds cargo space, so every raid and trade run carries home more.",
+  command: "Fleet Command lets our joint strikes hold more ships, and brings more allies to answer our calls.",
+  terraform: "Terraforming adds building fields on every planet we hold.",
+  repairT: "Fleet Repair Technology makes repairs faster and cheaper." };
+function holoFirst(kind, k) { if (!S || !HOLO[k] || (kind !== "b" && kind !== "s" && kind !== "r")) return; /* v339: every tap on a building, ship or research plays her transmission */
   const st = tutOn() ? TUT[S.tut.i] : null, nm = (B[k] || SH[k] || {}).n; if (st && nm && (st.t.includes(nm) || st.say.includes(nm))) return; /* the step's own line covers it; it plays next time */
-  if ($("#advh.on") || advLines || $("#adv")) return; S.holoSeen[k] = 1; dirty(); setTimeout(() => advHolo(HOLO[k]), 400); }
+  if (advLines || $("#adv")) return; const on = $("#advh.on"); if (on && (acadOn() || (on.querySelector(".hsay span") || {}).textContent === HOLO[k])) return; /* never cut off an Academy briefing, nor restart the same line */
+  clearTimeout(G.holoT); G.holoT = setTimeout(() => { if (sheet && (sheet.type === "detail" || sheet.type === "bld") && sheet.k === k) advHolo(HOLO[k]); }, 400); }
 const tutAt = id => tutOn() && (TUT[S.tut.i] || {}).id === id;
 function tutBld() { const st = tutOn() ? TUT[S.tut.i] : null; if (!st || !/^(Build|Upgrade)/.test(st.t)) return null; let best = null; for (const k in B) if (st.t.includes(B[k].n) && (!best || B[k].n.length > B[best].n.length)) best = k; return best; } // v334
 const tutKey = i => { const s = TUT[i]; return s ? (s.id || s.t) : "done"; }; // v333: steps are recorded by a name that survives renumbering
@@ -15899,7 +15921,7 @@ const ACT = {
   basedet: () => openSheet({ type: "basedet" }),
   selClear: () => { if (C3) C3.sel = null; selBar(); },
   bldPreview: d => bldPreview(d.k), // v101
-  bldInfo: d => { SFX.tapB(d.k); const bt = baseTarget(); openSheet({ type: "bld", k: d.k, pid: bt.key === "home" ? null : bt.key }); },
+  bldInfo: d => { SFX.tapB(d.k); holoFirst("b", d.k); const bt = baseTarget(); openSheet({ type: "bld", k: d.k, pid: bt.key === "home" ? null : bt.key }); },
   sound: () => { if (!AU.started) audioStart(); AU.muted = !AU.muted; applyAudio(); saveAudioPrefs(); hud(); if (sheet) renderSheet(); },
   musicToggle: () => { if (!AU.started) audioStart(); AU.musicOn = !AU.musicOn; applyAudio(); saveAudioPrefs(); render(true); },
   celebX: () => { const w = $("#celeb"); if (w) w.remove(); G.celebNow = null; voiceStop(); setTimeout(() => { try { flushSay(); coachRender(true); } catch (e) {} }, 60); },
