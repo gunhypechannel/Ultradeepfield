@@ -2524,7 +2524,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 367;
+const GAME_V = 368;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9725,6 +9725,26 @@ function glbWin(k, mesh, D, A) {
         if (Math.abs(wu) < ww / 2 && Math.abs(wv) < wh / 2) f = 1.1 * lit; const dd = Math.hypot(wu / hr, wv / (hr * .8)); if (dd < 1) hh = Math.pow(1 - dd, 2) * .45 * lit;
         if (f || hh) { D[o] = Math.min(255, D[o] + core[0] * f + halo[0] * hh); D[o + 1] = Math.min(255, D[o + 1] + core[1] * f + halo[1] * hh); D[o + 2] = Math.min(255, D[o + 2] + core[2] * f + halo[2] * hh); } } } }
 }
+/* v368 the Metal Extractor's moving conveyors, laid over the model's own belts (model units: from the outer end to the building, width) */
+const MINE_BELTS = [[[.126, .48], [.126, .1], .15], [[.88, .30], [.24, .30], .13]];
+let BELT_M = null;
+function beltMat() { if (BELT_M) return BELT_M; const t = texCanvas(256, 64, (x, W, H) => { const r = rnd(808); x.fillStyle = "#1b1d20"; x.fillRect(0, 0, W, H);
+    for (let i = 0; i < W; i += 16) { x.fillStyle = "#2e3236"; x.fillRect(i, 0, 3, H); } // the slats
+    for (let i = 0; i < 46; i++) { const cx = r() * W, cy = 12 + r() * (H - 24), rr = 3 + r() * 6, g = x.createRadialGradient(cx, cy, 0, cx, cy, rr); const hot = r() < .55;
+      g.addColorStop(0, hot ? "#ffd08a" : "#b58a6a"); g.addColorStop(.6, hot ? "#ff7a2a" : "#6a4a3a"); g.addColorStop(1, "rgba(40,20,10,0)"); x.fillStyle = g; x.beginPath(); x.arc(cx, cy, rr, 0, TAU); x.fill(); }
+    x.fillStyle = "#3a3f45"; x.fillRect(0, 0, W, 4); x.fillRect(0, H - 4, W, 4); }); // the belt's edges
+  t.wrapS = TH.RepeatWrapping; t.encoding = TH.sRGBEncoding;
+  return (BELT_M = new TH.MeshStandardMaterial({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .75, roughness: .7, metalness: .3, polygonOffset: true, polygonOffsetFactor: -2 })); }
+function mineBelts(src, b, at, s, anim) {
+  const rc = new TH.Raycaster(), dn = new TH.Vector3(0, -1, 0), M = beltMat(); src.updateMatrixWorld(true);
+  const yAt = (x, z, prev) => { rc.set(new TH.Vector3(x, 5, z), dn); const hit = rc.intersectObject(src, true)[0]; return hit ? hit.point.y : prev; };
+  for (const [[x0, z0], [x1, z1], w] of MINE_BELTS) { const N = 10, len = Math.hypot(x1 - x0, z1 - z0), ux = (x1 - x0) / len, uz = (z1 - z0) / len, px = -uz * w / 2, pz = ux * w / 2, pos = [], uv = [], idx = []; let y = 0;
+    for (let i = 0; i <= N; i++) { const f = i / N, cx = x0 + (x1 - x0) * f, cz = z0 + (z1 - z0) * f; y = Math.max(yAt(cx + px * .6, cz + pz * .6, y), yAt(cx - px * .6, cz - pz * .6, y)) + .012;
+      for (const sd of [-1, 1]) { const v = at([cx + px * sd, y, cz + pz * sd]); pos.push(v.x, v.y, v.z); uv.push(f * len / w * .5, sd < 0 ? 0 : 1); }
+      if (i < N) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } }
+    const g = new TH.BufferGeometry(); g.setAttribute("position", new TH.Float32BufferAttribute(pos, 3)); g.setAttribute("uv", new TH.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+    const m = new TH.Mesh(g, M); m.receiveShadow = true; m.userData.nobake = true; b.add(m); }
+  anim.push([M, "beltScroll", 1]); }
 /* v367 each building's signature animation, placed round the model: H its height, R its half width */
 function bldUniq(k, b, anim, H, R) {
   const add = (o, kind, ph, u) => { if (u) Object.assign(o.userData, u); b.add(o); anim.push([o, kind, ph || 0]); return o; };
@@ -9914,6 +9934,7 @@ function glbBld(k, b, big, small, anim) {
     if (F.smoke) fx.peaks.slice(0, F.n || 1).forEach((pk, j) => { for (let i = 0; i < 4; i++) { const o = new TH.Sprite(new TH.SpriteMaterial({ map: puffTex(F.smoke), transparent: true, opacity: 0, depthWrite: false }));
       o.position.copy(at(pk)); const sc = span * .26; o.scale.setScalar(sc); Object.assign(o.userData, { s0: sc, rise: span * .9, drift: span * .3, op: /^2/.test(F.smoke) ? .7 : .85 }); add(o, "smoke", i / 4 + j * .13); } });
     try { bldUniq(k, b, anim, sz.y * s, span / 2); } catch (e) {} // v367 the building's own animation
+    if (k === "metalMine") try { mineBelts(src, b, at, s, anim); } catch (e) {} // v368 moving conveyors
     if (F.beacon && fx.peaks[0]) { const o = spr(glowTex("255,70,50", 1), 0xffffff, .95); o.position.copy(at(fx.peaks[0])); o.position.y += span * .03; o.scale.setScalar(span * .16); add(o, "blink", hash(k) % 7); }
     for (let i = 0; i < (F.weld || 0) && i < fx.spots.length; i++) { const o = spr(glowTex("200,230,255", 1), 0xffffff, .95); o.position.copy(at(fx.spots[i].p)); o.position.y += span * .02; const sc = span * .14; o.scale.setScalar(sc); o.userData.s0 = sc; add(o, "flick", i * 2.3); }
   }
@@ -10374,7 +10395,7 @@ function bakeStatic(root, anim) {
   walk(root, I); for (const c of drop) c.parent.remove(c); // (source geometries are left to the GC: some are shared with the moving parts)
   for (const [mat, gs] of byMat) { const m = new TH.Mesh(mergeGeos(gs), mat); gs.forEach(g => g.dispose()); root.add(m); }
   // a moving group (a turning station, a dish, a crane) moves as one piece, so its own static parts merge inside it
-  for (const [o] of anim) if (!o.isMesh && !o.isSprite && o.children.length && !o.userData.baked && o !== root) { o.userData.baked = 1; bakeStatic(o, anim); }
+  for (const [o] of anim) if (o.isObject3D && !o.isMesh && !o.isSprite && o.children.length && !o.userData.baked && o !== root) { o.userData.baked = 1; bakeStatic(o, anim); }
 }
 function hqModel() {
   const C = colMats(), g = new TH.Group(), anim = [];
@@ -10945,6 +10966,7 @@ function drawColony(t) {
     else if (kind === "slideS") { const u = o.userData; if (u.x0 == null) u.x0 = o.position.x; o.position.x = u.x0 + Math.sin(T * .0009) * p; } // a gantry crane travelling its rails
     else if (kind === "smoke") { const u = o.userData; if (u.y0 == null) { u.y0 = o.position.y; u.x0 = o.position.x; } const q = (T * .00016 + p) % 1; o.position.y = u.y0 + q * u.rise; o.position.x = u.x0 + q * u.drift; o.scale.setScalar(u.s0 * (.55 + q * 2.4)); o.material.opacity = u.op * Math.sin(Math.PI * Math.min(1, q * 1.15)); o.material.rotation = q * 1.2 + p * 6; } // v353 chimney smoke and steam
     else if (kind === "puff") { const u = o.userData; if (u.y0 == null) u.y0 = o.position.y; const q = (T * .00035 + p * .37) % 1; o.position.y = u.y0 + q * 1.1; o.scale.setScalar(.5 + q * 1.6); } // steam rising
+    else if (kind === "beltScroll") { if (o.map && o.userData.t !== T) { o.userData.t = T; o.map.offset.x = 1 - (T * .00045 * p) % 1; } } // v368 the conveyors run toward the building
     else if (kind === "orbitF") { const u = o.userData, a = T * .001 * u.w + p; o.position.set(Math.cos(a) * u.r, u.y0 + Math.sin(a * 1.7) * u.tilt, Math.sin(a) * u.r); o.rotation.y = -a; } // v367 orbiting
     else if (kind === "pulseO") { const u = o.userData, w = .5 + .5 * Math.sin(T * .003 + p); o.material.opacity = (u.op || .9) * (.55 + .45 * w); if (u.s0) o.scale.setScalar(u.s0 * (.9 + .2 * w)); }
     else if (kind === "riseL") { const u = o.userData, q = (T * .00035 + p) % 1; o.position.y = u.y0 + q * u.h; o.material.opacity = .8 * Math.sin(Math.PI * q); }
