@@ -2555,7 +2555,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 380;
+const GAME_V = 381;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5793,9 +5793,7 @@ function worldDrop(k, why) { try {
   if (k === "stu" && STU) { const s = STU; G.stuCache = s.cache; STU = null; glFree(s.renderer); }
 } catch (e) { try { crumb("release failed: " + (e && e.message)); } catch (er) {} } }
 const MEM_DIET = IOS;
-if (MEM_DIET) { setInterval(() => { const T = performance.now(); if (view === "galaxy") G.galAt = T; if (view === "base") G.colAt = T;
-    if (G3 && view !== "galaxy" && T - (G.galAt || 0) > 30000) worldDrop("gal", "away 30 s"); if (C3 && view !== "base" && T - (G.colAt || 0) > 30000) worldDrop("col", "away 30 s"); }, 4000);
-  document.addEventListener("visibilitychange", () => { if (document.hidden) { worldDrop("gal", "background"); worldDrop("col", "background"); worldDrop("stu", "background"); } }); }
+if (MEM_DIET) document.addEventListener("visibilitychange", () => { if (document.hidden) worldDrop("stu", "background"); }); /* v381: worlds stay built (rebuilding them froze and crashed); only the studio goes */
 function map3DRebuild() {
   const old = G3; if (!old) return; const cam = old.cam; G3 = null;
   try { old.renderer.dispose(); } catch (e) {}
@@ -9984,7 +9982,7 @@ function glbNext() {
   try {
     GLB[k].t0 = performance.now(); setTimeout(() => { if (GLB[k] && !GLB[k].scene) { GLB[k].slow = true; if (C3 && C3.keys) C3.keys[k] = null; } }, 10000); // v356 too slow: show the plain building
     new TH.GLTFLoader().load("models/" + (MOBILE ? "m/" : "") + k + ".glb?h=" + (GLB_V[k] || GAME_V), g => {
-      const s = g.scene, big = MOBILE ? (GLB_BLDS.has(k) && !IOS && GLB_BN++ < 8 ? 1536 : 1024) : 2048, aux = MOBILE ? 512 : 1024, an = texAniso(), ps = [];
+      const shipIOS = IOS && GLB_SHIPS.has(k), s = g.scene, big = shipIOS ? 512 : MOBILE ? (GLB_BLDS.has(k) && !IOS && GLB_BN++ < 8 ? 1536 : 1024) : 2048, aux = shipIOS ? 256 : MOBILE ? 512 : 1024, /* v381: iPhone ships at a quarter */ an = texAniso(), ps = [];
       s.traverse(o => { if (o.isMesh) { const m = o.material; if (m && m.isMeshStandardMaterial) { m.envMapIntensity = .9; ps.push(glbShrink(m.map, big)); for (const t of new Set([m.normalMap, m.roughnessMap, m.metalnessMap])) ps.push(glbShrink(t, aux)); for (const t of [m.map, m.normalMap]) if (t) t.anisotropy = an; } } });
       Promise.all(ps).then(() => GLB_BLDS.has(k) ? glbLights(k, s) : GLB_SHIPS.has(k) ? glbHull(k, s) : null).then(() => { const bb = new TH.Box3().setFromObject(s); s.userData.bb = bb; GLB[k].scene = s; done(); glbReady(k); });
     }, undefined, () => { GLB[k].fail = true; done(); if (C3 && C3.keys) C3.keys[k] = null; });
@@ -15142,7 +15140,7 @@ function battlePrebake(r) { if (!r || !r.start || battlePrebake[r.id]) return; b
 function gpuNap(on) { for (const W of [G3, C3]) { if (!W || !W.renderer) continue; try { if (on) { W.renderer.setSize(1, 1, false); W.size = [1, 1]; } else W.size = [0, 0]; } catch (e) {} }
   if (on) for (const id of ["#galaxyfx", "#colfx"]) { const c = $(id); if (c) { c.width = 1; c.height = 1; } } }
 function playBattle(r) {
-  if (battle) closeBattle(); crumb("battle replay: " + String((r && r.title) || "battle").slice(0, 40)); if (MEM_DIET) { worldDrop("gal", "battle"); worldDrop("col", "battle"); } gpuNap(true);
+  if (battle) closeBattle(); crumb("battle replay: " + String((r && r.title) || "battle").slice(0, 40)); gpuNap(true);
   const w = document.createElement("div"); w.className = "battle"; w.id = "battle";
   w.innerHTML = `<canvas id="bcv" aria-label="Battle replay"></canvas>
     <div class="bhud top" id="bhA"></div><div class="bhud bot" id="bhD"></div><div class="bev" id="bev" aria-live="polite"></div>
