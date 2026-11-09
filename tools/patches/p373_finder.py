@@ -95,7 +95,5 @@ css = '''
 #ftour .ftnav{display:flex;align-items:center;gap:8px}#ftour .ftdots{flex:1;display:flex;gap:4px}#ftour .ftdots i{width:7px;height:7px;border-radius:50%;background:rgba(127,233,255,.25)}#ftour .ftdots i.on{background:#7fe9ff}
 .sbkb{background:rgba(8,22,34,.94)}
 '''
-rep('</style>', css + '</style>', t.count('</style>')) if t.count('</style>') == 1 else None
-if css not in t:
-    i = t.index('</style>'); t = t[:i] + css + t[i:]
+i = t.index('</style>', t.index('.fshero{')); t = t[:i] + css + t[i:]  # the main stylesheet, not the tiny first one
 open(p, "w").write(t)
