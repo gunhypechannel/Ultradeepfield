@@ -2549,7 +2549,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 374;
+const GAME_V = 375;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13237,13 +13237,10 @@ function vGalaxyBelow() {
   if (t === "targets") {
     const cand = G.list.filter(p => ["hive", "player", "razed"].includes(pStatus(p, T)) && !(p.owner && isAlly(p.owner)) && !isFogged(p, T));
     const dist = p => { if (!h) return p.r; const a = pos(h, T), b = pos(p, T); return Math.hypot(a.x - b.x, a.y - b.y); };
-    const fields = NODES.filter(n => { const q = pos(n, T); return fogSeen(q.x, q.y); }).sort((a, b) => dist(a) - dist(b)).slice(0, 6);
     const live = evActive(T);
     if (!S.fTour && !G.ftQ && !$("#ftour") && !advLines && !$("#adv") && !$("#celeb") && !(tutOn() && (TUT[S.tut.i] || {}).find)) { G.ftQ = 1; setTimeout(() => { G.ftQ = 0; if (sheet && sheet.type === "targets" && sub.gal === "targets" && !S.fTour && !$("#ftour") && !advLines) finderTour(0); }, 700); }
     body = `${finderTiles(T, h)}<h2 class="sec fnear">⭐ Best picks near you</h2><button class="tgt" data-act="layers"><span class="lvl" style="color:#c94ad6;border-color:#c94ad6">6</span><span><span class="nm">Layers of the Void</span><br><span class="sub">Harder and richer toward the Core${h ? ` · you are in ${zoneOf(h.r)}` : ""}</span></span><span class="pill go">Guide</span></button>
       <h2 class="sec">Weekly event</h2><button class="tgt" data-act="nexus"><span class="lvl" style="color:#c9a6ff;border-color:#c9a6ff">★</span><span><span class="nm">The Cube</span><br><span class="sub">${live ? `Battle live · ends in ${ftime(evStart(evWeek(T)) + EV_DUR - T)}` : `Next battle in ${ftime(evStart(evWeek(T) + 1) - T)}`}</span></span><span class="pill ${live ? "bad" : "wait"}">${live ? "Live" : "Closed"}</span></button>
-      <h2 class="sec">Pirate hideouts · fast loot</h2><div class="list">${PIRATES.filter(x => !x.boss && pirDown(x) <= T && !isFogged(x, T)).sort((a, b) => dist(a) - dist(b)).slice(0, 4).map(x => pirRow(x, h, T)).join("")}</div><button class="btn ghost wide" data-act="find" data-r="x">☠ More pirate hideouts ›</button>
-      <h2 class="sec">Resource fields · safe to gather</h2><div class="list">${fields.map(n => `<button class="tgt" data-act="node" data-id="${n.id}"><span class="lvl" style="color:${NODE_T[n.res].col};border-color:${NODE_T[n.res].col}">${n.lvl}</span><span><span class="nm">${esc(n.name)}</span><br><span class="sub">${RES_N[n.res]} · ${fieldRateTxt(n)}${h ? ` · ${ftime(travelMs(h, n, { hauler: 1 }))}` : ""}</span></span><span class="pill ok">Gather</span></button>`).join("")}</div>
       <h2 class="sec">Worlds</h2><p class="note">Nearest to ${esc(S.homeName)} right now. Planets keep orbiting, so distances change.</p><div class="list">${cand.map(p => [p, dist(p)]).sort((a, b) => a[1] - b[1]).slice(0, 14).map(x => planetRow(x[0])).join("")}</div>`;
   } else if (t === "mine") {
     const mine = myPlanets();

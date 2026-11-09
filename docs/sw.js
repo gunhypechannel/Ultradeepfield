@@ -1,7 +1,7 @@
 /* Ultra Deep Field service worker: lets phones install the game and opens it fast.
    The game page is always fetched fresh when online (so updates show up), with the last copy as a fallback offline.
    Galaxy data never goes through here: Firebase handles that itself. */
-const CACHE = "udf-v181";
+const CACHE = "udf-v182";
 const MODELS = "udf-models"; // v356 3D models: fingerprinted file names, kept across updates
 const SHELL = ["./", "./index.html", "./udf-firebase.js", "./firebase-config.js", "./udf-supabase.js", "./udf-install.js", "./art/login.webp", "./supabase-config.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
