@@ -1,4 +1,28 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><meta name="theme-color" content="#05090f"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/favicon-32.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Deep Field"><meta name="description" content="Build an empire across the deep field. Play with friends in a shared galaxy."></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
+/* v373 the Finder */
+.tbtn{display:inline-flex;align-items:center;gap:6px}.tbtn .tbi{font-size:16px;line-height:1}
+.tbtn.fnew{animation:tbPulse 1.6s ease-in-out infinite}@keyframes tbPulse{0%,100%{box-shadow:0 6px 20px rgba(85,214,232,.25),0 0 0 0 rgba(85,214,232,.6)}50%{box-shadow:0 6px 20px rgba(85,214,232,.35),0 0 0 9px rgba(85,214,232,0)}}
+.fhdb{display:flex;gap:6px;flex:none}.sheet .x.fhelp{color:var(--cyan);border-color:var(--cyan);font-family:var(--f-display);font-weight:700}
+.ftiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 6px}@media (min-width:640px){.ftiles{grid-template-columns:repeat(4,1fr)}}
+.ftile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:12px 12px 30px;min-height:112px;border-radius:14px;border:1px solid color-mix(in srgb,var(--fc) 60%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--fc) 20%,#0a1826),#06101b 80%);color:#eaf6ff;text-align:left;cursor:pointer;box-shadow:inset 0 0 18px color-mix(in srgb,var(--fc) 16%,transparent);font:inherit}
+.ftile:active{transform:scale(.97)}.ftile .fi{font-size:28px;line-height:1;color:var(--fc);filter:drop-shadow(0 0 6px color-mix(in srgb,var(--fc) 70%,transparent))}
+.ftile b{font-family:var(--f-display);font-size:16px;letter-spacing:.04em;margin-top:4px}.ftile small{font-size:12.5px;color:#a9c4d6;line-height:1.3}
+.ftile .fb{position:absolute;top:9px;right:9px;font-family:var(--f-display);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid var(--fc);color:var(--fc);background:rgba(4,12,20,.6)}
+.ftile .ftag{position:absolute;left:12px;bottom:9px;font-style:normal;font-family:var(--f-display);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#04121c;background:var(--fc);padding:1px 7px;border-radius:5px}
+#ftour{position:fixed;inset:0;z-index:300;cursor:pointer}
+#ftour .ftspot{position:fixed;border-radius:16px;border:2px solid #7fe9ff;box-shadow:0 0 0 9999px rgba(2,8,16,.72),0 0 22px rgba(127,233,255,.7);transition:left .3s,top .3s,width .3s,height .3s;pointer-events:none;animation:ftGlow 1.4s ease-in-out infinite}
+@keyframes ftGlow{50%{border-color:#fff;box-shadow:0 0 0 9999px rgba(2,8,16,.72),0 0 34px rgba(127,233,255,.95)}}
+#ftour .ftcard{position:fixed;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));margin:0 auto;max-width:520px;display:flex;gap:10px;align-items:flex-end;padding:10px 12px;border-radius:16px;border:1px solid #57dcff;background:linear-gradient(180deg,rgba(14,44,66,.97),rgba(6,20,34,.98));box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 18px rgba(70,200,255,.3);cursor:default}
+#ftour .ftcard img{width:64px;height:84px;object-fit:cover;object-position:50% 12%;border-radius:10px;flex:none;filter:drop-shadow(0 0 8px rgba(90,210,255,.6))}
+#ftour .fttx{flex:1;min-width:0}#ftour .fttx b{font-family:var(--f-display);font-size:12px;letter-spacing:.14em;color:#7fe9ff;text-transform:uppercase}#ftour .fttx p{margin:3px 0 8px;font-size:16px;line-height:1.35;color:#f2fbff}
+#ftour .ftnav{display:flex;align-items:center;gap:8px}#ftour .ftdots{flex:1;display:flex;gap:4px}#ftour .ftdots i{width:7px;height:7px;border-radius:50%;background:rgba(127,233,255,.25)}#ftour .ftdots i.on{background:#7fe9ff}
+.sbkb{background:rgba(8,22,34,.94)}
+
+/* v373 crash & performance page */
+.hsum{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0}.hsum div{border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;background:var(--hull)}.hsum b{display:block;font-family:var(--f-display);font-size:18px;color:#dff4ff}.hsum small{font-size:10.5px;color:var(--muted)}
+.htbl{flex:none;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:6px}.hrow{display:grid;grid-template-columns:var(--hc);gap:6px;padding:7px 10px;font-size:12.5px;border-top:1px solid var(--line)}.hrow:first-child{border-top:0}.hrow.hh{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;background:rgba(85,214,232,.06)}.hrow span{overflow-wrap:anywhere}
+.hcr{flex:none}.hcr summary{cursor:pointer;list-style:none;font-size:13px;line-height:1.4}.hcr pre{white-space:pre-wrap;font-size:11px;max-height:260px;overflow:auto;margin:8px 0 0;user-select:text}
+</style><meta name="theme-color" content="#05090f"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/favicon-32.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Deep Field"><meta name="description" content="Build an empire across the deep field. Play with friends in a shared galaxy."></head><body>
 <title>Ultra Deep Field</title>
 <script>/* v363 Chrome "desktop site" on Android phones: show the game in a phone-width frame */(function () { try {
   var q = location.search, force = /[?&]desktest=1/.test(q); if (window.top !== window.self || /[?&]nodesk=1/.test(q)) return;
@@ -2524,7 +2548,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 372;
+const GAME_V = 373;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5649,6 +5673,32 @@ setInterval(() => { try { const C = G.lastCrash; if (!G.lastCrashFresh || G.cras
 let CRUMBS = (() => { try { return JSON.parse(localStorage.getItem(CRUMB_K) || "null"); } catch (e) { return null; } })();
 G.lastCrash = (() => { try { if (CRUMBS && CRUMBS.open && CRUMBS.ev && CRUMBS.ev.length) { localStorage.setItem(CRUMB_K + ".last", JSON.stringify(CRUMBS)); G.lastCrashFresh = 1; return CRUMBS; } return JSON.parse(localStorage.getItem(CRUMB_K + ".last") || "null"); } catch (e) { return null; } })();
 CRUMBS = { open: true, t0: Date.now(), ev: [] };
+/* v373 health reports: a queue kept on the device (udf.hq) and sent one by one whenever the game is signed in and online */
+const HQ_K = "udf.hq", PF_K = "udf.pf", hqDev = () => navigator.userAgent.slice(0, 200);
+function hqPush(r) { try { const q = JSON.parse(localStorage.getItem(HQ_K) || "[]"); r.id = r.id || r.kind + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); q.push(r); localStorage.setItem(HQ_K, JSON.stringify(q.slice(-14))); } catch (e) {} }
+function hqFlush() { try { if (G.hqBusy || !G.db || !G.me || G.me === "local" || G.mode !== "online") return; const q = JSON.parse(localStorage.getItem(HQ_K) || "[]"); if (!q.length) return; const r = q[0]; G.hqBusy = 1;
+  const id = r.id + "-" + String(G.me).slice(0, 12); G.db.doc("feedback/" + id).set(Object.assign({}, r, { id: undefined, by: G.me, name: String(G.myName || "").slice(0, 60) })).then(() => { G.hqBusy = 0; try { const q2 = JSON.parse(localStorage.getItem(HQ_K) || "[]").filter(x => x.id !== r.id); localStorage.setItem(HQ_K, JSON.stringify(q2)); } catch (e) {} setTimeout(hqFlush, 800); }, () => { G.hqBusy = 0; }); } catch (e) { G.hqBusy = 0; } }
+setInterval(hqFlush, 7000);
+if (G.lastCrashFresh && G.lastCrash && G.lastCrash.ev) { const C = G.lastCrash, b = C.beat || {}, last = C.ev[C.ev.length - 1]; G.crashSent = 1; G.lastCrashFresh = 0; /* queued: the old one-shot sender stands down */
+  hqPush({ kind: "crash", status: "new", at: Date.now(), died: b.t || (last && last[0]) || 0, v: b.v || 0, now: typeof GAME_V !== "undefined" ? GAME_V : 0, text: `Closed unexpectedly${last ? " after: " + last[1] : ""}`.slice(0, 300),
+    beat: JSON.stringify(b).slice(0, 1500), log: C.ev.map(([tt, m]) => new Date(tt).toISOString().slice(11, 19) + " " + m).join("\n").slice(0, 4000), up: Math.round(((b.t || (last && last[0]) || C.t0) - (C.t0 || 0)) / 1000), device: hqDev(), w: innerWidth, h: innerHeight }); G.lastCrashToast = 1; }
+/* v373 frame-rate tracker: every display frame is timed and counted per screen (base, galaxy, battle, with a panel open or not);
+   slow frames (under 30 fps), janky ones (under 20 fps) and freezes (over 0.7 s) are counted. The session's summary is sent when the
+   game goes to the background or closes, and a session that never closed is sent on the next launch, marked as a crash. */
+let PF = { t0: Date.now(), v: typeof GAME_V !== "undefined" ? GAME_V : 0, vw: {}, frz: [] };
+function pfKey() { try { return battle ? "battle" : (view || "?") + (sheet ? "+panel" : ""); } catch (e) { return "?"; } }
+function pfFrame(rd) { if (!(rd > 0) || rd > 20000 || !G.ready || performance.now() - (G.pfOk || (G.pfOk = performance.now())) < 4000) return; /* start-up loading is not play */ const k = pfKey(), s = PF.vw[k] || (PF.vw[k] = [0, 0, 0, 0, 0]); s[0]++; s[1] += rd; if (rd > 34) s[2]++; if (rd > 50) s[3]++; if (rd > s[4]) s[4] = rd;
+  if (rd > 700) { PF.frz.push([Math.round(rd), k, Date.now()]); if (PF.frz.length > 12) PF.frz.shift(); try { crumb(`freeze ${(rd / 1000).toFixed(1)} s on ${k}`); } catch (e) {} } }
+function pfRec(P, end) { const vw = {}; let n = 0, ms = 0; for (const k in P.vw) { const s = P.vw[k]; if (s[0] < 30) continue; vw[k] = [s[0], Math.round(s[1]), s[2], s[3], Math.round(s[4])]; n += s[0]; ms += s[1]; }
+  if (n < 600) return null; let mem = ""; try { if (performance.memory) mem = Math.round(performance.memory.usedJSHeapSize / 1e6) + " MB"; } catch (e) {}
+  return { kind: "perf", status: "log", at: Date.now(), now: P.v, end, dur: Math.round(ms / 1000), fps: Math.round(n * 1000 / ms * 10) / 10, vw: JSON.stringify(vw), frz: JSON.stringify(P.frz || []).slice(0, 900), errs: (P.errs || []).slice(0, 8).join(" | ").slice(0, 900),
+    device: hqDev(), w: innerWidth, h: innerHeight, dpr: devicePixelRatio, gpu: P.gpu || "", preset: P.preset || "", hz: P.hz || 0, mem }; }
+function pfSave() { try { PF.errs = [...ERR_SEEN]; PF.gpu = gfxGpu(); PF.preset = gfxPreset(); PF.hz = gfxHz(); localStorage.setItem(PF_K, JSON.stringify(PF)); } catch (e) {} }
+function pfSend(end) { try { pfSave(); const r = pfRec(PF, end); if (r) hqPush(r); PF = { t0: Date.now(), v: PF.v, vw: {}, frz: [] }; localStorage.removeItem(PF_K); } catch (e) {} }
+try { const old = JSON.parse(localStorage.getItem(PF_K) || "null"); localStorage.removeItem(PF_K); if (old && old.vw) { const r = pfRec(old, G.crashSent ? "crash" : "closed"); if (r) hqPush(r); } } catch (e) {}
+setInterval(() => { if (!document.hidden) pfSave(); }, 15000);
+document.addEventListener("visibilitychange", () => { try { frame.raw = 0; } catch (e) {} if (document.hidden) pfSend("background"); });
+addEventListener("pagehide", () => pfSend("closed"));
 function crumbSave() { try { localStorage.setItem(CRUMB_K, JSON.stringify(CRUMBS)); } catch (e) {} }
 function crumb(msg) { CRUMBS.open = true; CRUMBS.ev.push([Date.now(), String(msg).slice(0, 160)]); /* v178: 160, room for an error's stack line or a stress-test result */ if (CRUMBS.ev.length > 24) CRUMBS.ev.splice(0, CRUMBS.ev.length - 24); crumbSave(); }
 function crumbBeat() { const W = typeof G3 !== "undefined" ? G3 : null, mem = performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1e6) + " MB" : "";
@@ -5661,7 +5711,7 @@ addEventListener("unhandledrejection", e => { if (window.__booted) { const r = e
 setInterval(() => { try { if (!document.hidden) crumbBeat(); } catch (e) {} }, 4000);
 document.addEventListener("visibilitychange", () => { if (document.hidden) { CRUMBS.open = false; crumbSave(); } else { CRUMBS.open = true; crumbSave(); } });
 addEventListener("pagehide", () => { CRUMBS.open = false; crumbSave(); });
-setTimeout(() => { try { if (G.lastCrashFresh) { const L = G.lastCrash.ev[G.lastCrash.ev.length - 1]; toast(`The game closed unexpectedly last time${L ? ` (after: ${L[1]})` : ""}. Details are in Settings › Graphics.`, "warn"); } } catch (e) {} }, 7000);
+setTimeout(() => { try { if (G.lastCrashFresh || G.lastCrashToast) { const L = G.lastCrash.ev[G.lastCrash.ev.length - 1]; toast(`The game closed unexpectedly last time${L ? ` (after: ${L[1]})` : ""}. Details are in Settings › Graphics.`, "warn"); } } catch (e) {} }, 7000);
 /* v181 the kingdom battle stress tests, always one tap away in Settings › Graphics (live event or not), with the last run's result */
 function stressCard() { if (!duelOwner()) return ""; let last = ""; try { last = localStorage.getItem("udf.stress") || ""; } catch (e) {}
   return `<h2 class="sec">Stress test</h2><div class="card"><p class="note">Plays a kingdom battle at the Cube on the map and measures this device while it runs (about 2 to 3 minutes for the stress test). 60 commanders a side, 8 million defenders against 12 million attackers, with reinforcements landing mid-battle and clash after clash until one side breaks. Nothing in your game changes.</p>
@@ -11801,7 +11851,7 @@ function mapShell(use3) {
     <div class="ov tr">${use3 ? '<canvas id="minimap" aria-label="Minimap. Tap or drag to move the camera."></canvas>' : ""}<button class="fab" data-act="zoom" data-d="1" aria-label="Zoom in">+</button>${use3 ? '<input type="range" id="zsl" class="zsl" min="0" max="1000" value="500" aria-label="Zoom: up for your planet, down for the whole galaxy">' : ""}<button class="fab" data-act="zoom" data-d="-1" aria-label="Zoom out">−</button>
       <button class="fab sm" data-act="locate" aria-label="Find my homeworld">◎</button></div>
     ${use3 ? '<div class="tourcap" id="tourcap" data-act="tourSkip" hidden></div>' : ""}
-    <div class="ov bl"><div class="fchips" id="fchips"></div><div class="blrow"><button class="vbtn" id="vbtn" data-act="viewCycle">${vbtnHTML()}</button><button class="tbtn" data-act="targets">Targets</button></div></div></section>`;
+    <div class="ov bl"><div class="fchips" id="fchips"></div><div class="blrow"><button class="vbtn" id="vbtn" data-act="viewCycle">${vbtnHTML()}</button><button class="tbtn${S && S.fTour ? "" : " fnew"}" data-act="targets" aria-label="Finder: find loot, pirates, monsters and treasure"><span class="tbi">🔭</span>Finder</button></div></div></section>`;
 }
 /* one button cycles the map between Planet, System and Galaxy views */
 const VMODES = [["planet", "Planet"], ["system", "System"], ["layer", "Layer"], ["galaxy", "Galaxy"]];
@@ -11864,6 +11914,7 @@ function mapOverlay() {
     return `<button class="glass fchip${f.mission === "attack" && f.phase === "out" ? " atk" : ""}" data-act="fleetFocus" data-id="${f.id}"><span>${lbl} · ${tg ? esc(tg.name) : "fleet"}</span><b ${e ? `data-end="${e}"` : ""}>${e ? ftime(e - T) : "…"}</b></button>`;
   }).join("") + (S.strikes || []).map(s => { const p = G.byId[s.pid]; return `<button class="glass fchip atk" data-act="viewMode" data-m="system" data-id="${s.pid}"><span>Missiles ×${s.n} · ${p ? esc(p.name) : ""}</span><b data-end="${s.at}">${ftime(s.at - T)}</b></button>`; }).join(""));
   updateVbtn();
+  if (S && !S.fTour && !S.fHint && G.ready && !sheet && !battle && !advLines && !$("#adv") && !$("#celeb") && !$("#advh.on") && !tutOn()) { S.fHint = 1; dirty(); setTimeout(() => { if (view === "galaxy" && !sheet && !advLines) advHolo("Tap the Finder button to find loot, pirates, monsters and treasure!"); }, 900); }
 }
 /* rename and reskin any planet you hold */
 function shSkin() {
@@ -11906,7 +11957,7 @@ function shFind() {
         ${open ? `<button class="btn ghost wide" ${open}>View on map ›</button>` : ""}
         ${loc.kind === "empty" ? (free ? `<h3 class="sec" style="margin-top:8px">Teleport a planet here</h3><p class="note">Moves the planet with its buildings, stockpile and garrison. Each planet's jump drive recharges for 24 hours.</p>${tp}` : `<p class="note" style="color:var(--amber)">Another world has already moved into this orbit.</p>`) : `<p class="note">Only open orbits can be teleported into. Try another position in this system.</p>`}</div>`; }
     const sc = openOrbitScan(T, h ? pos(h, T) : { x: 0, y: 0 }, 0, 5);
-    return `<div class="hd"><div><div class="chapter" style="color:#5dffa8">Locator</div><h2>Coordinates</h2><p class="note">Every one of the ${fmt(TILE_N)} locations has an address: <b>Layer : System : Position</b>. Type one in to find it, and teleport into any free open orbit.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
+    return `<div class="hd"><div><div class="chapter" style="color:#5dffa8">🔭 Finder</div><h2>Coordinates</h2><p class="note">Every one of the ${fmt(TILE_N)} locations has an address: <b>Layer : System : Position</b>. Type one in to find it, and teleport into any free open orbit.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
       <div class="cin"><input id="coordin" class="minput" inputmode="text" autocomplete="off" spellcheck="false" placeholder="e.g. 3:82:5" value="${esc(cs)}" aria-label="Coordinates, Layer:System:Position"><button class="btn" data-act="coordGo">Locate</button></div>
       <dl class="kv"><dt>Teleport</dt><dd>Ticket (${tickets} owned) or ◆${TELEPORT_SHARDS} · you have ◆${fmt(shards)}</dd></dl>
       ${res}
@@ -11917,7 +11968,7 @@ function shFind() {
   }
   if (r === "y") { // abandoned pyramids: ready vaults first, nearest first
     const tutY = S.tut && TUT[S.tut.i] && TUT[S.tut.i].find === "y", list = PYRAMIDS.filter(y => !isFogged(y, T)).sort((a, b) => (pyrDown(a) > T) - (pyrDown(b) > T) || (tutY ? (a.lvl >= 3) - (b.lvl >= 3) : 0) || dist(a) - dist(b)).slice(0, 14); /* v235: in the Academy, unguarded vaults first */
-    return `<div class="hd"><div><div class="chapter" style="color:#ffd36b">Locator</div><h2>Pyramid space stations</h2><p class="note">${PYRAMIDS.length} derelict pyramid stations drift across all six layers, their vaults still sealed. Send an expedition to open one: shards, resources, rare items and teleport tickets. From Lv.3 they are guarded, and each vault refills 24 hours after it is opened. Deeper layers hold richer vaults.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
+    return `<div class="hd"><div><div class="chapter" style="color:#ffd36b">🔭 Finder</div><h2>Pyramid space stations</h2><p class="note">${PYRAMIDS.length} derelict pyramid stations drift across all six layers, their vaults still sealed. Send an expedition to open one: shards, resources, rare items and teleport tickets. From Lv.3 they are guarded, and each vault refills 24 hours after it is opened. Deeper layers hold richer vaults.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
       <div class="list">${list.map(y => { const down = pyrDown(y) > T, L = layerOf(y.r); return `<button class="tgt" data-act="pyramid" data-id="${y.id}"><span class="lvl" style="color:#ffd36b;border-color:#ffd36b">${y.lvl}</span><span><span class="nm">▲ ${esc(y.name)}</span><br><span class="sub">[${coordStr(y)}] · L${L.n} ${L.name} · ${Math.round(dist(y))} away${y.lvl >= 3 ? " · guarded" : ""}</span></span>${down ? `<span class="pill">Refills <span data-end="${pyrDown(y)}">${ftime(pyrDown(y) - T)}</span></span>` : '<span class="pill amb">Explore</span>'}</button>`; }).join("") || '<p class="note">No pyramids charted yet. Explore beyond your fog.</p>'}</div>
       <button class="btn ghost wide" data-act="findClear">Clear highlight</button>`;
   }
@@ -11925,26 +11976,26 @@ function shFind() {
     const boss = r === "q", monF = r === "w", bands = boss || monF ? [["1-5", 1, 5], ["6-10", 6, 10], ["11-15", 11, 15], ["16-20", 16, 20], ["21-25", 21, 25], ["26-30", 26, 30]] : [["5", 5, 5], ["10", 10, 10], ["15", 15, 15]];
     const band = bands.find(b => b[0] === G.pirLvl), pool = PIRATES.filter(x => monF ? !!x.mon : !!x.boss === boss && !x.mon);
     const list = pool.filter(x => !isFogged(x, T) && (!band || (x.lvl >= band[1] && x.lvl <= band[2]))).sort((a, b) => (pirDown(a) > T) - (pirDown(b) > T) || dist(a) - dist(b)).slice(0, 14);
-    return `<div class="hd"><div><div class="chapter" style="color:${monF ? "#7fd4ff" : boss ? "#5dff6a" : "#ff6b5a"}">Locator</div><h2>${monF ? "Space monsters" : boss ? "Assimilation Cubes" : "Pirate hideouts"}</h2><p class="note">${monF ? `${pool.length} Space Sharks, Leviathans and Squids drift across every layer: Lv.1-5 on the Rim, up to Lv.26-30 at the Core. Slay them for resources, Void Shards and time accelerators.` : boss ? `${pool.length} boss Cubes: Lv.1-5 on the Rim, rising layer by layer to Lv.26-30 at the Core. They glow green.` : `${pool.length} hideouts: Lv.5 crews in the outer layers, Lv.10 in the middle, Lv.15 near the Core. They glow red.`} Nearest to ${esc(h ? h.name : S.homeName)} first.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
+    return `<div class="hd"><div><div class="chapter" style="color:${monF ? "#7fd4ff" : boss ? "#5dff6a" : "#ff6b5a"}">🔭 Finder</div><h2>${monF ? "Space monsters" : boss ? "Assimilation Cubes" : "Pirate hideouts"}</h2><p class="note">${monF ? `${pool.length} Space Sharks, Leviathans and Squids drift across every layer: Lv.1-5 on the Rim, up to Lv.26-30 at the Core. Slay them for resources, Void Shards and time accelerators.` : boss ? `${pool.length} boss Cubes: Lv.1-5 on the Rim, rising layer by layer to Lv.26-30 at the Core. They glow green.` : `${pool.length} hideouts: Lv.5 crews in the outer layers, Lv.10 in the middle, Lv.15 near the Core. They glow red.`} Nearest to ${esc(h ? h.name : S.homeName)} first.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
       <div class="note">Level</div><div class="segc" style="overflow-x:auto">${bands.map(b => `<button style="flex:none;padding:8px 12px" class="${G.pirLvl === b[0] ? "on" : ""}" data-act="pirLvl" data-v="${b[0]}">${b[0]}</button>`).join("")}</div>
       <div class="list">${list.map(x => pirRow(x, h, T)).join("") || '<p class="note">None in this range.</p>'}</div>
       <button class="btn ghost wide" data-act="findClear">Clear highlight</button>`;
   }
   if (r === "d") { // v135: every known debris field, biggest and nearest first
     const list = G.list.filter(p => p.debris && (p.debris.m || 0) + (p.debris.c || 0) > 0 && !isFogged(p, T)).map(p => ({ p, v: (p.debris.m || 0) + (p.debris.c || 0) })).sort((a, b) => b.v / Math.max(30, dist(b.p)) - a.v / Math.max(30, dist(a.p))).slice(0, 14);
-    return `<div class="hd"><div><div class="chapter" style="color:#9fe8d8">Locator</div><h2>♻ Debris fields</h2><p class="note">Wreckage left by battles, waiting to be recovered. Recyclers collect it. On the map each field has a dashed salvage ring and a ♻ tag.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
+    return `<div class="hd"><div><div class="chapter" style="color:#9fe8d8">🔭 Finder</div><h2>♻ Debris fields</h2><p class="note">Wreckage left by battles, waiting to be recovered. Recyclers collect it. On the map each field has a dashed salvage ring and a ♻ tag.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
       <div class="list">${list.map(x => `<button class="tgt" data-act="planet" data-id="${x.p.id}"><span class="lvl" style="color:#9fe8d8;border-color:#9fe8d8">♻</span><span><span class="nm">${esc(x.p.name)}</span><br><span class="sub">${fmt(x.p.debris.m || 0)} metal · ${fmt(x.p.debris.c || 0)} crystal${h ? ` · ${ftime(travelMs(h, x.p, { recycler: 1 }))} by Recycler` : ""}</span></span><span class="pill ok">Recycle</span></button>`).join("") || '<p class="note">No debris fields charted. They form wherever battles are fought.</p>'}</div>
       <button class="btn ghost wide" data-act="findClear">Clear highlight</button>`; }
   if (r === "s") { // v135: Void Shard Mines
     const mines = NODES.filter(n => n.res === "s"), seen = mines.filter(n => !isFogged(n, T)).sort((a, b) => dist(a) - dist(b)).slice(0, 10);
-    return `<div class="hd"><div><div class="chapter" style="color:${NODE_T.s.col}">Locator</div><h2>Void Shard Mines</h2><p class="note">${mines.length} rare mines across the galaxy, richer toward the Core. A dig takes ${ftime(SHARD_DIG_MS)} and pays ◆1-3; each mine rests a day after your dig, and your mines pay at most ${SHARD_MINE_DAY} shards a day (◆${shardMine().got} mined today). Nearest to ${esc(h ? h.name : S.homeName)} first.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
+    return `<div class="hd"><div><div class="chapter" style="color:${NODE_T.s.col}">🔭 Finder</div><h2>Void Shard Mines</h2><p class="note">${mines.length} rare mines across the galaxy, richer toward the Core. A dig takes ${ftime(SHARD_DIG_MS)} and pays ◆1-3; each mine rests a day after your dig, and your mines pay at most ${SHARD_MINE_DAY} shards a day (◆${shardMine().got} mined today). Nearest to ${esc(h ? h.name : S.homeName)} first.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
       <div class="list">${seen.map(n => `<button class="tgt" data-act="node" data-id="${n.id}"><span class="lvl" style="color:${NODE_T.s.col};border-color:${NODE_T.s.col}">${n.lvl}</span><span><span class="nm">${esc(n.name)}</span><br><span class="sub">${fieldRateTxt(n)}${h ? ` · ${ftime(travelMs(h, n, { hauler: 1 }))}` : ""}</span></span>${shardRest(n) ? `<span class="pill wait">Resting</span>` : '<span class="pill ok">Dig</span>'}</button>`).join("") || '<p class="note">No mine charted yet. Explore: they show once your scouts have seen them.</p>'}</div>
       <button class="btn ghost wide" data-act="findClear">Clear highlight</button>`; }
   const fields = NODES.filter(n => n.res === r && !isFogged(n, T) && !occOf(n.id, T)).sort((a, b) => dist(a) - dist(b)).slice(0, 8); /* v235: only free fields: a held one means a fight (the Academy sent new players into bot crews) */
   const hive = G.list.filter(p => pStatus(p, T) === "hive" && !isFogged(p, T)).map(p => ({ p, v: stock(p.lvl)[r] / 2, s: stock(p.lvl)[r] / 2 / Math.max(30, dist(p)) })).sort((a, b) => b.s - a.s).slice(0, 5);
   const rival = G.list.filter(p => pStatus(p, T) === "player" && !isAlly(p.owner) && !isFogged(p, T)).map(p => ({ p })).sort((a, b) => dist(a.p) - dist(b.p)).slice(0, 5); // v279: what a rival holds only shows in an espionage report
   const row = (act, id, lvl, col, name, sub, pill) => `<button class="tgt" data-act="${act}" data-id="${id}"><span class="lvl" style="color:${col};border-color:${col}">${lvl}</span><span><span class="nm">${esc(name)}</span><br><span class="sub">${sub}</span></span>${pill}</button>`;
-  return `<div class="hd"><div><div class="chapter" style="color:${NODE_T[r].col}">Resource finder</div><h2>${RES_N[r]}</h2><p class="note">Distances from ${esc(h ? h.name : S.homeName)}. Matching fields glow on the map.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
+  return `<div class="hd"><div><div class="chapter" style="color:${NODE_T[r].col}">🔭 Finder · gather</div><h2>${RES_N[r]}</h2><p class="note">Distances from ${esc(h ? h.name : S.homeName)}. Matching fields glow on the map.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
     <h2 class="sec">Neutral fields · safe to gather</h2><div class="list">${fields.map(n => row("node", n.id, n.lvl, NODE_T[n.res].col, n.name, `${fmt(gatherRate(n))}/min · ${h ? ftime(travelMs(h, n, { hauler: 1 })) : "–"} by Small Cargo`, '<span class="pill ok">Gather</span>')).join("")}</div>
     <h2 class="sec">Hive worlds to raid</h2><div class="list">${hive.map(x => row("planet", x.p.id, x.p.lvl, "#f0a945", x.p.name, `Lv.${x.p.lvl} · ${h ? ftime(travelMs(h, x.p, { fighter: 1 })) : "–"} by Light Fighter`, '<span class="pill amb">Hive</span>')).join("") || '<p class="note">None nearby.</p>'}</div>
     <h2 class="sec">Rival colonies to plunder</h2><div class="list">${rival.map(x => row("planet", x.p.id, x.p.lvl, "#ff7aa8", x.p.name, `Lv.${x.p.lvl} · ${esc(nameOf(x.p.owner))}`, '<span class="pill rose">Rival</span>')).join("") || '<p class="note">No rival colonies in charted space.</p>'}</div>
@@ -12377,9 +12428,44 @@ function vAlly() {
     <div class="mcard"><h3>${NAVI.rank.replace("<svg", '<svg style="width:22px;height:22px;color:#ffd36b"')}Top alliances</h3>${ranks.length ? ranks.map((r, i) => `<div class="mrow"><span>${i < 3 ? ["🥇", "🥈", "🥉"][i] : "#" + (i + 1)} ${esc(r.name)}</span><b>${fmt(r.val)}</b></div>`).join("") : '<p class="note">No alliances yet.</p>'}<button class="mbtn" data-act="nav" data-v="rank">Full rankings</button></div>
     ${pactCard()}</div>`;
 }
-function shTargets() {
-  return `<div class="hd"><div><div class="chapter" style="color:var(--cyan)">Galaxy</div><h2>Targets and worlds</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${vGalaxyBelow()}`;
+function shTargets() { const fd = sub.gal === "targets";
+  return `<div class="hd"><div><div class="chapter" style="color:var(--cyan)">${fd ? "🔭 Finder" : "Galaxy"}</div><h2>${fd ? "Everything out in space" : "Targets and worlds"}</h2>${fd ? '<p class="note">Loot, pirates, monsters and treasure. Tap a box to find the closest ones.</p>' : ""}</div><div class="fhdb">${fd ? '<button class="x fhelp" data-act="fTour" aria-label="Show me how the Finder works">?</button>' : ""}<button class="x" data-act="close" aria-label="Close">✕</button></div></div>${vGalaxyBelow()}`;
 }
+/* v373 the Finder's boxes: one per kind of thing to do outside the base, with how many are charted near you */
+function finderTiles(T, h) { const ready = x => !isFogged(x, T);
+  const n = { m: NODES.filter(x => x.res !== "s" && ready(x) && !occOf(x.id, T)).length, x: PIRATES.filter(x => !x.boss && !x.mon && pirDown(x) <= T && ready(x)).length,
+    w: PIRATES.filter(x => x.mon && pirDown(x) <= T && ready(x)).length, y: PYRAMIDS.filter(y => pyrDown(y) <= T && ready(y)).length,
+    q: PIRATES.filter(x => x.boss && !x.mon && pirDown(x) <= T && ready(x)).length, s: NODES.filter(x => x.res === "s" && ready(x) && !shardRest(x)).length,
+    d: G.list.filter(p => p.debris && (p.debris.m || 0) + (p.debris.c || 0) > 0 && ready(p)).length };
+  const L = [["m", "⛏", "Gather", "Free metal, crystal and gas for your base", "#5dff9a", "Easy"], ["x", "☠", "Pirates", "Beat them and keep their loot", "#ff6b5a", "Fight"],
+    ["w", "🦈", "Monsters", "Hunt space beasts for rare treasure", "#7fd4ff", "Tough"], ["y", "▲", "Treasure", "Open old space station vaults", "#ffd36b", "Explore"],
+    ["q", "■", "Boss Cubes", "Giant bosses. Team up with friends", "#5dff6a", "Team"], ["s", "◆", "Shard Mines", "Dig up rare Void Shards", NODE_T.s.col, "Rare"],
+    ["d", "♻", "Salvage", "Scoop up wreckage after battles", "#9fe8d8", "Easy"], ["o", "⌖", "Coordinates", "Find any spot and jump there", "#5dffa8", "Travel"]];
+  return `<div class="ftiles">${L.map(([r, ic, nm, d, c, tag]) => `<button class="ftile" data-ft="${r}" data-act="find" data-r="${r}" style="--fc:${c}"><span class="fi">${ic}</span><b>${nm}</b><small>${d}</small><span class="fb">${n[r] ? `${n[r] > 99 ? "99+" : n[r]} found` : r === "o" ? "Jump" : "Explore"}</span><i class="ftag">${tag}</i></button>`).join("")}</div>`; }
+/* v373 the Advisor's first walk through the Finder: a spotlight on each part, her line beside it, Next or tap anywhere */
+const FTOUR = [[".ftiles", "This is your Finder! Everything you need outside your base is right here."],
+  ['[data-ft="m"]', "Need metal, crystal or gas? Tap Gather. Your cargo ships bring it home for free."],
+  ['[data-ft="x"]', "Pirates hide loot. Beat them and the loot is yours!"],
+  ['[data-ft="w"]', "Space monsters are tough, but they drop rare treasure."],
+  ['[data-ft="y"]', "Old space stations have treasure vaults. Send ships to open them."],
+  ['[data-ft="q"]', "Cubes are giant bosses. Team up with friends to beat one."],
+  [".fnear", "Down here are the best picks near you right now. Tap one and go!"],
+  [".fhelp", "Find the Finder button on the map any time. Tap the question mark to see this again."]];
+function finderTour(i) { let w = $("#ftour");
+  if (i >= FTOUR.length || !sheet || sheet.type !== "targets") { if (w) w.remove(); clearInterval(G.ftI); G.ftI = 0; if (i >= FTOUR.length && S) { S.fTour = 1; dirty(); const b = $(".tbtn"); if (b) b.classList.remove("fnew"); } voiceStop(); return; }
+  if (sub.gal !== "targets") { sub.gal = "targets"; renderSheet(); }
+  const el = $(FTOUR[i][0]); if (!el) return finderTour(i + 1);
+  try { const sc = el.closest(".sheet"); if (sc) { const r = el.getBoundingClientRect(), sr = sc.getBoundingClientRect(); sc.scrollTo({ top: sc.scrollTop + Math.round(r.top + r.height / 2 - (sr.top + sr.height * .42)), behavior: "instant" }); } } catch (e) {} /* only the panel scrolls, never the page */
+  if (!w) { w = document.createElement("div"); w.id = "ftour"; w.setAttribute("data-act", "fTourNext");
+    w.innerHTML = `<div class="ftspot"></div><div class="ftcard" role="dialog" aria-live="polite" aria-label="${ADV} shows you the Finder"><img src="${ADV_ART}" alt=""><div class="fttx"><b>${ADV}</b><p></p><div class="ftnav"><span class="ftdots"></span><button class="btn ghost sm" data-act="fTourSkip">Skip</button><button class="btn sm ftgo" data-act="fTourNext"></button></div></div></div>`;
+    $("#app").appendChild(w); G.ftI = setInterval(ftPlace, 250); }
+  w.dataset.i = i; w.querySelector(".fttx p").textContent = FTOUR[i][1]; w.querySelector(".ftgo").textContent = i === FTOUR.length - 1 ? "Got it!" : "Next ›";
+  w.querySelector(".ftdots").innerHTML = FTOUR.map((_, k) => `<i class="${k === i ? "on" : ""}"></i>`).join(""); speak(FTOUR[i][1]); ftPlace(); setTimeout(ftPlace, 60); }
+function ftPlace() { const w = $("#ftour"); if (!w) { clearInterval(G.ftI); G.ftI = 0; return; } if (!sheet || sheet.type !== "targets") return finderTour(99);
+  const el = $(FTOUR[+w.dataset.i][0]); if (!el) return; const r = el.getBoundingClientRect(), p = 7, s = w.querySelector(".ftspot"), c = w.querySelector(".ftcard"), H = innerHeight, ch = c.offsetHeight;
+  s.style.left = (r.left - p) + "px"; s.style.top = (r.top - p) + "px"; s.style.width = (r.width + 2 * p) + "px"; s.style.height = (r.height + 2 * p) + "px";
+  const below = H - r.bottom - p - 14, above = r.top - p - 14;
+  if (below >= ch) { c.style.top = (r.bottom + p + 12) + "px"; c.style.bottom = "auto"; } else if (above >= ch) { c.style.top = "auto"; c.style.bottom = (H - r.top + p + 12) + "px"; } else { c.style.top = "auto"; c.style.bottom = "calc(14px + env(safe-area-inset-bottom,0px))"; } }
 function shNode() {
   const n = NB[sheet.id]; if (!n) return "";
   const h = originPlanet(), avail = originAvail(), sel = selected(), plan = haulPlan(n, sel), tt = Object.keys(sel).length && h ? travelMs(h, n, sel) : 0;
@@ -13141,7 +13227,7 @@ function vGalaxyBelow() {
   const ms = Object.values(G.assaults).filter(a => (a.members || {})[G.me] && !a.disb && a.status !== "done" && (a.rally ? a.launch : a.arrive) > T);
   const joint = (ms.length ? `<h2 class="sec">⚔ Your joint strikes</h2><div class="list">${ms.map(a => `<div class="rwrap">${rallyRow(a)}${a.leader === G.me ? `<button class="btn red sm" data-act="strikeDisbandQ" data-id="${a.id}" aria-label="Disband">✕</button>` : `<button class="btn ghost sm" data-act="strikeLeave" data-id="${a.id}" aria-label="Leave">↩</button>`}</div>`).join("")}</div>` : "") + (oa.length ? `<h2 class="sec">⚔ Joint strikes you can join</h2><div class="list">${oa.map(rallyRow).join("")}</div>` : "");
   const t = sub.gal;
-  const tabs = `<div class="tabs"><button class="${t === "targets" ? "on" : ""}" data-act="sub" data-g="gal" data-v="targets">Targets</button><button class="${t === "mine" ? "on" : ""}" data-act="sub" data-g="gal" data-v="mine">Mine</button><button class="${t === "fav" ? "on" : ""}" data-act="sub" data-g="gal" data-v="fav">★ Favorites</button><button class="${t === "cmdrs" ? "on" : ""}" data-act="sub" data-g="gal" data-v="cmdrs">Commanders</button></div>`;
+  const tabs = `<div class="tabs"><button class="${t === "targets" ? "on" : ""}" data-act="sub" data-g="gal" data-v="targets">🔭 Finder</button><button class="${t === "mine" ? "on" : ""}" data-act="sub" data-g="gal" data-v="mine">Mine</button><button class="${t === "fav" ? "on" : ""}" data-act="sub" data-g="gal" data-v="fav">★ Favorites</button><button class="${t === "cmdrs" ? "on" : ""}" data-act="sub" data-g="gal" data-v="cmdrs">Commanders</button></div>`;
   let body = "";
   if (t === "fav") {
     const ids = Object.entries(S.fav || {}).sort((a, b) => b[1] - a[1]).map(([id]) => id), rows = ids.map(id => G.byId[id] ? planetRow(G.byId[id]) : PB[id] ? pirRow(PB[id], h, T) : "").join("");
@@ -13152,9 +13238,10 @@ function vGalaxyBelow() {
     const dist = p => { if (!h) return p.r; const a = pos(h, T), b = pos(p, T); return Math.hypot(a.x - b.x, a.y - b.y); };
     const fields = NODES.filter(n => { const q = pos(n, T); return fogSeen(q.x, q.y); }).sort((a, b) => dist(a) - dist(b)).slice(0, 6);
     const live = evActive(T);
-    body = `<button class="tgt" data-act="layers"><span class="lvl" style="color:#c94ad6;border-color:#c94ad6">6</span><span><span class="nm">Layers of the Void</span><br><span class="sub">Harder and richer toward the Core${h ? ` · you are in ${zoneOf(h.r)}` : ""}</span></span><span class="pill go">Guide</span></button>
+    if (!S.fTour && !G.ftQ && !$("#ftour") && !advLines && !$("#adv") && !$("#celeb") && !(tutOn() && (TUT[S.tut.i] || {}).find)) { G.ftQ = 1; setTimeout(() => { G.ftQ = 0; if (sheet && sheet.type === "targets" && sub.gal === "targets" && !S.fTour && !$("#ftour") && !advLines) finderTour(0); }, 700); }
+    body = `${finderTiles(T, h)}<h2 class="sec fnear">⭐ Best picks near you</h2><button class="tgt" data-act="layers"><span class="lvl" style="color:#c94ad6;border-color:#c94ad6">6</span><span><span class="nm">Layers of the Void</span><br><span class="sub">Harder and richer toward the Core${h ? ` · you are in ${zoneOf(h.r)}` : ""}</span></span><span class="pill go">Guide</span></button>
       <h2 class="sec">Weekly event</h2><button class="tgt" data-act="nexus"><span class="lvl" style="color:#c9a6ff;border-color:#c9a6ff">★</span><span><span class="nm">The Cube</span><br><span class="sub">${live ? `Battle live · ends in ${ftime(evStart(evWeek(T)) + EV_DUR - T)}` : `Next battle in ${ftime(evStart(evWeek(T) + 1) - T)}`}</span></span><span class="pill ${live ? "bad" : "wait"}">${live ? "Live" : "Closed"}</span></button>
-      <h2 class="sec">Pirate hideouts · fast loot</h2><div class="list">${PIRATES.filter(x => !x.boss && pirDown(x) <= T && !isFogged(x, T)).sort((a, b) => dist(a) - dist(b)).slice(0, 4).map(x => pirRow(x, h, T)).join("")}</div><button class="btn ghost wide" data-act="find" data-r="x">All pirate hideouts</button>
+      <h2 class="sec">Pirate hideouts · fast loot</h2><div class="list">${PIRATES.filter(x => !x.boss && pirDown(x) <= T && !isFogged(x, T)).sort((a, b) => dist(a) - dist(b)).slice(0, 4).map(x => pirRow(x, h, T)).join("")}</div><button class="btn ghost wide" data-act="find" data-r="x">☠ More pirate hideouts ›</button>
       <h2 class="sec">Resource fields · safe to gather</h2><div class="list">${fields.map(n => `<button class="tgt" data-act="node" data-id="${n.id}"><span class="lvl" style="color:${NODE_T[n.res].col};border-color:${NODE_T[n.res].col}">${n.lvl}</span><span><span class="nm">${esc(n.name)}</span><br><span class="sub">${RES_N[n.res]} · ${fieldRateTxt(n)}${h ? ` · ${ftime(travelMs(h, n, { hauler: 1 }))}` : ""}</span></span><span class="pill ok">Gather</span></button>`).join("")}</div>
       <h2 class="sec">Worlds</h2><p class="note">Nearest to ${esc(S.homeName)} right now. Planets keep orbiting, so distances change.</p><div class="list">${cand.map(p => [p, dist(p)]).sort((a, b) => a[1] - b[1]).slice(0, 14).map(x => planetRow(x[0])).join("")}</div>`;
   } else if (t === "mine") {
@@ -13172,7 +13259,7 @@ function vGalaxyBelow() {
 /* ---------- sheets ---------- */
 /* menus remember where you came from: opening one menu from another stacks it, and Back returns to the previous one */
 let sheetStack = [];
-const SHEET_NAME = { shop: "shop", pack: "pack", packadmin: "owner tools", repshare: "share", fbinbox: "feedback", spysend: "probes", howto: "how to play", planet: "planet", report: "report", settings: "settings", void: "the Void", assault: "attack", targets: "targets", node: "node", bld: "building", nexus: "Cube", skin: "planet looks", find: "search", pirate: "pirates", layers: "layers", tile: "tile", basedet: "base", planets: "planets", yard: "shipyard", labs: "labs", flagship: "Flagship Command", faction: "factions", profile: "profile", ranks: "rankings", friends: "friends", chat: "chat", mastery: "mastery", sound: "sound", shop: "shop", spyrep: "spy report", events: "events", detail: "details" };
+const SHEET_NAME = { shop: "shop", pack: "pack", packadmin: "owner tools", repshare: "share", fbinbox: "feedback", health: "crash & performance", spysend: "probes", howto: "how to play", planet: "planet", report: "report", settings: "settings", void: "the Void", assault: "attack", targets: "Finder", node: "node", bld: "building", nexus: "Cube", skin: "planet looks", find: "Finder", pirate: "pirates", layers: "layers", tile: "tile", basedet: "base", planets: "planets", yard: "shipyard", labs: "labs", flagship: "Flagship Command", faction: "factions", profile: "profile", ranks: "rankings", friends: "friends", chat: "chat", mastery: "mastery", sound: "sound", shop: "shop", spyrep: "spy report", events: "events", detail: "details" };
 const BOSS_HOLO = {
   swhale: "Commander, that's a Void Shark: a cruiser-sized predator with laser turrets bolted to its hide. Bring heavy hulls, and it drops Exotic Tissue for the forge.",
   ssquid: "Commander, Nebula Squids are fast, many-armed and hunt in packs. Bring Cruisers and armour. They drop Exotic Tissue, and sometimes Void Essence.",
@@ -13204,7 +13291,7 @@ function renderSheet() {
   if (G.rangeHeld && sheet) { G.rangeLate = 1; return; }
   let w = $("#sheetwrap");
   let html = ({ planet: shPlanet, report: shReport, settings: shSettings, void: shVoid, assault: shAssault, targets: shTargets, node: shNode, bld: shBld, nexus: shNexus, skin: shSkin, find: shFind, pirate: shPirate, pyramid: shPyramid, matbox: () => { const s = SHOP[sheet.k]; if (!s) return ""; const f = fsOf(), tt = s.mbT; return `<div class="hd"><div><div class="chapter" style="color:${FS_TIER[tt][1]}">Material Selection Box</div><h2>${esc(s.n)}</h2><p class="note">${sheet.all && (S.items || {})[sheet.k] > 1 ? `Pick one for all ${S.items[sheet.k]} boxes: you get ${fmt(MB_N[tt] * S.items[sheet.k])} × ${FS_TIER[tt][0]} of it.` : `Pick one: you get ${MB_N[tt]} × ${FS_TIER[tt][0]} of it.`}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div><div class="fsmb">${Object.keys(FS_MATS).map(m => `<button class="btn" data-act="matboxPick" data-v="${m}" style="--tc:${FS_TIER[tt][1]}"><i class="fsmi lg fsmat-${m}"></i><b>${FS_MATS[m][0]}</b><small>you have ${fmt(f.mats[fsMatKey(m, tt)] || 0)}</small></button>`).join("")}</div>`; }, fctl: shFctl, station: shStation, ally: shAlly, layers: shLayers, tile: shTile, graphics: shGfx, cuberes: shCubeRes, basedet: shBaseDet, planets: shPlanets, fo: shFo, allymem: shAllyMem, altools: () => { const a = myAlly(); return a ? `<div class="hd"><div><div class="chapter">[${esc(a.tag)}] ${esc(a.name)}</div><h2>${allyRank(a, G.me) === "lead" ? "Leader" : "Captain"} tools</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${allyTools(a) || '<p class="note">Only the leader and captains have these tools.</p>'}` : ""; },
-    yard: shYard, labs: shLabs, flagship: shFlag, sound: shSound, shop: shShop, pack: shPack, packadmin: shPackAdmin, vip: shVip, spyrep: shSpyRep, spysend: shSpySend, repshare: shRepShare, howto: shHowTo, fbinbox: shFbInbox, events: shEvents, ach: shAch, avatars: shAvatars, detail: shDetail, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
+    yard: shYard, labs: shLabs, flagship: shFlag, sound: shSound, shop: shShop, pack: shPack, packadmin: shPackAdmin, vip: shVip, spyrep: shSpyRep, spysend: shSpySend, repshare: shRepShare, health: shHealth, howto: shHowTo, fbinbox: shFbInbox, events: shEvents, ach: shAch, avatars: shAvatars, detail: shDetail, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
     mastery: () => `<div class="hd"><div><div class="chapter">Progression</div><h2>Path to Mastery</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${mMastery()}` })[sheet.type]();
   if (!html) { closeSheet(); return; }
   html += sheet.type === "faction" && !S.faction ? "" : backBar(); html = `<div class="grab" aria-hidden="true"></div>` + html;
@@ -13735,7 +13822,7 @@ function vCmd() {
     ${acc("elements", ic(MI.shield, "#e06bd8"), "Elements (Runes)", `${Object.values(S.runes || {}).reduce((a, b) => a + b, 0) ? `<span class="pill amb">${Object.values(S.runes || {}).reduce((a, b) => a + b, 0)} to socket</span>` : ""}`, mElem())}
     ${acc("vshop", ic(MI.tag, "#c9a6ff"), "Void Shop", `<span class="shard">◆ ${fmt(S.shards || 0)}</span>`, mShopVoid())}
     ${acc("depot", ic(MI.tag), "Supply Depot", "", mShop())}
-    ${duelOwner() ? `<button class="btn ghost wide" data-act="fbInbox">💬 Feedback inbox</button>` : ""}
+    ${duelOwner() ? `<button class="btn ghost wide" data-act="fbInbox">💬 Feedback inbox</button><button class="btn ghost wide" data-act="healthOpen">📉 Crash &amp; performance</button>` : ""}
     ${acc("settings", ic(MI.grid), "Settings", "", mSave() + mGame())}</div>`;
 }
 const acc = (k, icon, title, value, body) => { const o = menu.open[k]; return `<section class="acc${o ? " open" : ""}"><button class="acch" data-act="acc" data-k="${k}" aria-expanded="${!!o}"><span class="ai">${icon}</span><span class="at">${title}</span><span class="av">${value}</span><i class="notch"></i></button>${o ? `<div class="accb">${body}</div>` : ""}</section>`; };
@@ -13971,11 +14058,33 @@ function mGame() {
     ${restartBtn()}`;
 }
 /* v289 the owner's feedback inbox: testers' reports with their screenshots (anything in a report is untrusted, so text is escaped and only JPEG data pictures are shown) */
-async function fbLoad() { try { const sn = await G.db.collection("feedback").limit(200).get(); G.fbList = sn.docs.map(d => Object.assign({ id: d.id }, d.data())).filter(r => r && r.kind !== "crash" && r.status !== "done").sort((a, b) => (+b.at || 0) - (+a.at || 0)); } catch (e) { G.fbList = null; G.fbErr = 1; } if (sheet && sheet.type === "fbinbox") renderSheet(); }
+async function fbLoad() { try { const sn = await G.db.collection("feedback").where("status", "==", "new").limit(1000).get(); G.fbList = sn.docs.map(d => Object.assign({ id: d.id }, d.data())).filter(r => r && !["crash", "diag", "perf"].includes(r.kind) && r.status !== "done").sort((a, b) => (+b.at || 0) - (+a.at || 0)); } catch (e) { G.fbList = null; G.fbErr = 1; } if (sheet && sheet.type === "fbinbox") renderSheet(); }
 function shFbInbox() { const L = G.fbList, head = `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">Owner</div><h2>Feedback inbox</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
   if (!G.owner) return head + `<p class="note">The server doesn't list this account as the game's owner yet, so it won't hand over the reports here. Ask Claude to add it to the owners list.</p>`; if (!L) return head + `<p class="note">${G.fbErr ? "Couldn't load the reports." : "Loading…"}</p>`; if (!L.length) return head + `<p class="note">No open reports.</p>`;
   const IC = { bug: "🐞", confusing: "❓", idea: "💡" };
   return head + L.map(r => { const im = typeof r.img === "string" && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(r.img) ? r.img : ""; return `<div class="card" style="margin-bottom:8px"><b>${IC[r.kind] || "💬"} ${esc(String(r.name || "Unnamed commander"))}</b> <small style="color:var(--muted)">${r.at ? (ago(+r.at) === "now" ? "just now" : ago(+r.at) + " ago") : ""}${r.v ? " · v" + okInt(r.v) : ""}</small><p style="margin:6px 0;white-space:pre-wrap;overflow-wrap:anywhere;user-select:text">${esc(String(r.text || ""))}</p><p class="note" style="margin:0 0 6px">${esc(String(r.screen || ""))} · ${okInt(r.w)}×${okInt(r.h)}<br>${esc(String(r.device || "").slice(0, 110))}</p>${im ? `<img src="${im}" alt="Screenshot from this report" style="display:block;max-width:100%;max-height:70vh;margin:0 auto 8px;border-radius:8px;border:1px solid var(--line)">` : ""}<button class="btn ghost sm" data-act="fbDone" data-id="${esc(String(r.id))}">Mark done</button></div>`; }).join(""); }
+/* v373 Crash & performance (owner): every player's crash reports and frame-rate sessions, by device, version and screen */
+const hDev = u => { u = String(u || ""); const io = u.match(/iPhone OS (\d+)_(\d+)/), an = u.match(/Android (\d+)(?:; ([^;)]+))?/); return io ? "iPhone · iOS " + io[1] + "." + io[2] : /iPad/.test(u) ? "iPad" : an ? "Android " + an[1] + (an[2] && an[2] !== "K" ? " · " + an[2].trim() : "") : /Linux/.test(u) ? "Linux / desktop-mode" : /Windows/.test(u) ? "Windows" : /Mac OS X/.test(u) ? "Mac" : "Other"; };
+async function healthLoad() { try { const [c, p] = await Promise.all(["crash", "perf"].map(k => G.db.collection("feedback").where("kind", "==", k).limit(1000).get()));
+  const rows = sn => sn.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => (+b.at || 0) - (+a.at || 0)); G.health = { crash: rows(c), perf: rows(p) }; } catch (e) { G.health = null; G.healthErr = 1; } if (sheet && sheet.type === "health") renderSheet(); }
+function shHealth() { const head = `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">Owner</div><h2>Crash &amp; performance</h2><p class="note">Every player's crashes and frame rates. Phones send them the next time they're online.</p></div><div class="fhdb"><button class="x" data-act="healthOpen" aria-label="Refresh">↻</button><button class="x" data-act="close" aria-label="Close">✕</button></div></div>`;
+  if (!G.owner) return head + `<p class="note">The server doesn't list this account as the game's owner, so it won't hand over the reports.</p>`;
+  const H = G.health; if (!H) return head + `<p class="note">${G.healthErr ? "Couldn't load the reports." : "Loading…"}</p>`;
+  const days = sheet.d || 7, T0 = Date.now() - days * 864e5, C = H.crash.filter(r => (+r.at || 0) > T0), P = H.perf.filter(r => (+r.at || 0) > T0);
+  const agg = () => ({ s: 0, c: 0, n: 0, ms: 0, slow: 0, jank: 0, frz: 0 }), add = (a, r) => { a.s++; let vw = {}; try { vw = JSON.parse(r.vw || "{}"); } catch (e) {} for (const k in vw) { const v = vw[k]; a.n += v[0]; a.ms += v[1]; a.slow += v[2]; a.jank += v[3]; } try { a.frz += JSON.parse(r.frz || "[]").length; } catch (e) {} };
+  const fps = a => a.ms ? (a.n * 1000 / a.ms).toFixed(0) : "–", pct = (x, n) => n ? (x / n * 100).toFixed(1) + "%" : "–";
+  const byDev = {}, byVer = {}, byView = {}, tot = agg();
+  for (const r of P) { add(tot, r); add(byDev[hDev(r.device)] = byDev[hDev(r.device)] || agg(), r); add(byVer[r.now] = byVer[r.now] || agg(), r); let vw = {}; try { vw = JSON.parse(r.vw || "{}"); } catch (e) {} for (const k in vw) { const a = byView[k] = byView[k] || agg(), v = vw[k]; a.s++; a.n += v[0]; a.ms += v[1]; a.slow += v[2]; a.jank += v[3]; } }
+  for (const r of C) { (byDev[hDev(r.device)] = byDev[hDev(r.device)] || agg()).c++; (byVer[r.now] = byVer[r.now] || agg()).c++; }
+  const tbl = (hd, rows) => `<div class="htbl" style="--hc:minmax(0,2fr) repeat(${hd.length - 1},minmax(0,1fr))"><div class="hrow hh">${hd.map(h => `<span>${h}</span>`).join("")}</div>${rows.map(r => `<div class="hrow">${r.map(c => `<span>${c}</span>`).join("")}</div>`).join("") || '<p class="note">Nothing yet.</p>'}</div>`;
+  const beat = r => { try { const b = JSON.parse(r.beat || "{}"); return [b.view && "on " + b.view + (b.battle ? " (battle)" : ""), b.fps && b.fps + " fps", b.mem, b.tex && b.tex + " textures"].filter(Boolean).join(" · "); } catch (e) { return ""; } };
+  return head + `<div class="segc">${[1, 7, 30].map(d => `<button class="${d === days ? "on" : ""}" data-act="healthDays" data-d="${d}">${d === 1 ? "24 hours" : d + " days"}</button>`).join("")}</div>
+    <div class="hsum"><div><b>${C.length}</b><small>crashes</small></div><div><b>${tot.s}</b><small>play runs</small></div><div><b>${fps(tot)}</b><small>avg fps</small></div><div><b>${pct(tot.slow, tot.n)}</b><small>slow frames</small></div><div><b>${tot.frz}</b><small>stalls</small></div></div>
+    <h2 class="sec">By device</h2>${tbl(["Device", "Crash", "Runs", "FPS", "Slow", "Stall"], Object.entries(byDev).sort((a, b) => b[1].c - a[1].c || b[1].s - a[1].s).map(([k, a]) => [esc(k), a.c, a.s, fps(a), pct(a.slow, a.n), a.frz]))}
+    <h2 class="sec">By screen</h2>${tbl(["Screen", "Runs", "FPS", "Slow", "Janky"], Object.entries(byView).sort((a, b) => b[1].n - a[1].n).map(([k, a]) => [esc(k), a.s, fps(a), pct(a.slow, a.n), pct(a.jank, a.n)]))}
+    <h2 class="sec">By version</h2>${tbl(["Version", "Crash", "Runs", "FPS", "Slow"], Object.entries(byVer).sort((a, b) => (+b[0] || 0) - (+a[0] || 0)).slice(0, 10).map(([k, a]) => ["v" + esc(String(k)), a.c, a.s, fps(a), pct(a.slow, a.n)]))}
+    <h2 class="sec">Latest crashes</h2>${C.slice(0, 20).map(r => `<details class="card hcr"><summary><b>${esc(String(r.name || "Unnamed"))}</b> <small>${r.at ? ago(+r.at) + " ago" : ""} · v${okInt(r.now)} · ${esc(hDev(r.device))}</small><br><span>${esc(String(r.text || ""))}</span><br><small class="note">${esc(beat(r))}${r.up ? ` · ${Math.round(r.up / 60)} min into the session` : ""}</small></summary><pre>${esc(String(r.log || ""))}</pre></details>`).join("") || '<p class="note">No crashes in this period.</p>'}
+    <h2 class="sec">Slowest sessions</h2>${tbl(["Player", "Device", "FPS", "Stall", "Errors"], P.filter(r => r.fps).sort((a, b) => a.fps - b.fps).slice(0, 10).map(r => [esc(String(r.name || "?")), esc(hDev(r.device)), r.fps, (() => { try { return JSON.parse(r.frz || "[]").length; } catch (e) { return 0; } })(), esc(String(r.errs || "").slice(0, 60)) || "–"]))}`; }
 function shHowTo() { return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">Etc.</div><h2>How to play</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div><div class="howto">${mEtc()}</div>`; }
 function mEtc() {
   const tip = (h, p) => `<div class="mcard"><h3>${h}</h3><p>${p}</p></div>`;
@@ -15760,7 +15869,7 @@ function perfHud() {
     e.textContent = view !== "galaxy" ? "Map stats: open the galaxy map" : `map ${f.avg} ms avg · p95 ${f.p95} · worst ${f.max} · stutters ${f.stutters}/${f.samples} · near ${G3 && G3.PL ? G3.PL.near.length : 0}`; }, 1000);
 }
 if (MAPPROF.on) setTimeout(perfHud, 3000);
-function startAnim() { if (!rafId) rafId = requestAnimationFrame(frame); }
+function startAnim() { if (!rafId) { frame.raw = 0; rafId = requestAnimationFrame(frame); } } // v373: a restarted loop is not a frozen frame
 /* ---------- v124 graphics settings, display detection and frame pacing (premium PC tablets such as the ROG Flow Z13) ----------
    Three presets plus manual overrides for every setting. "Auto" picks a preset from the GPU the browser reports (and caps at 60 fps
    on battery). The display's refresh rate is measured from the frame clock, so a 120 Hz panel gets 120 fps when the GPU can
@@ -15918,7 +16027,7 @@ function adaptRes(t) {
 function sheetCap() { if (!sheet || battle || (view !== "galaxy" && view !== "base")) return 0; const el = document.querySelector(".sheet"); return !el ? 0 : el.classList.contains("full") ? 12 : 30; }
 function mapErr(e) { mapErr.n = (mapErr.n || 0) + 1; if (mapErr.n === 1 || mapErr.n % 300 === 0) { console.error(e); try { crumb(`map frame error x${mapErr.n}: ${String(e && e.message || e).slice(0, 80)} @ ${String(e && e.stack || "").split("\n").slice(1, 3).join(" | ").replace(/\s+/g, " ").slice(0, 160)}`); } catch (_) {} } }
 function frame(t) {
-  rafId = 0; { const rd = t - (frame.raw || t); hzSample(rd); if (rd > 0 && rd < 200) frame.rawEma = (frame.rawEma || 16.7) * .94 + rd * .06; } frame.raw = t;
+  rafId = 0; { const rd = t - (frame.raw || t); hzSample(rd); pfFrame(rd); if (rd > 0 && rd < 200) frame.rawEma = (frame.rawEma || 16.7) * .94 + rd * .06; } frame.raw = t;
   if (idleSkip(t)) { frame.last = t; rafId = requestAnimationFrame(frame); return; }
   { const cap = gfx("fps"); if (cap && cap < gfxHz() - 3 && !battle && t - (frame.drawn || 0) < 1000 / cap - 1.5) { rafId = requestAnimationFrame(frame); return; } frame.drawn = t; } // v124: optional frame-rate cap
   // v182 a panel open over the map or base (the Cube's page, the event card, a building): the 3D scene behind it is drawn at 30 fps, and at
@@ -16551,11 +16660,16 @@ const ACT = {
   menu: () => ACT.nav({ v: "cmd" }),
   menuClose: () => {},
   howto: () => openSheet({ type: "howto" }), // v279: the Etc. tile
+  healthOpen: () => { if (!duelOwner()) return; G.health = null; G.healthErr = 0; if (!sheet || sheet.type !== "health") openSheet({ type: "health", d: 7 }); else renderSheet(); healthLoad(); },
+  healthDays: d => { if (sheet && sheet.type === "health") { sheet.d = +d.d; renderSheet(); } },
   fbInbox: () => { if (!duelOwner()) return; G.fbList = null; G.fbErr = 0; openSheet({ type: "fbinbox" }); fbLoad(); },
   fbDone: d => { if (!duelOwner() || !G.db) return; G.db.doc("feedback/" + d.id).update({ status: "done" }).then(() => { G.fbList = (G.fbList || []).filter(r => r.id !== d.id); if (sheet && sheet.type === "fbinbox") renderSheet(); }, () => toast("Couldn't update that report.", "warn")); },
   mtab: d => { if (d.k === "msg") return ACT.nav({ v: "mail" }); if (d.k === "etc") return ACT.howto(); closeSheet(); const map = { alliance: "alliance", shop: "depot", inv: "inv", msg: "messages", quest: "quests", game: "settings", save: "settings" }; menu.open[map[d.k] || d.k] = true; view = "cmd"; render(true); },
   acc: d => { menu.open[d.k] = !menu.open[d.k]; if (d.k === "messages" && menu.open[d.k]) { S.unread = 0; dirty(); } render(true); },
   targets: () => { sub.gal = sub.gal || "targets"; openSheet({ type: "targets" }); },
+  fTour: () => { if (S) S.fTour = 0; sub.gal = "targets"; if (!sheet || sheet.type !== "targets") openSheet({ type: "targets" }); finderTour(0); },
+  fTourNext: () => { const w = $("#ftour"); finderTour(w ? +w.dataset.i + 1 : 99); },
+  fTourSkip: () => finderTour(FTOUR.length),
   node: d => { const n = NB[d.id]; if (!n) return; pick = {}; if (S.ships.hauler) pick.hauler = S.ships.hauler; else for (const k in S.ships) if (S.ships[k] && SH[k]) pick[k] = S.ships[k]; G.selNode = n.id; openSheet({ type: "node", id: n.id }); },
   gather: d => act(() => {
     const n = NB[d.id]; if (!n || !canPlay()) return; if (slotsFull()) return;
