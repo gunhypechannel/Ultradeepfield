@@ -3,8 +3,14 @@
 <script>/* v363 Chrome "desktop site" on Android phones: show the game in a phone-width frame */(function () { try {
   var q = location.search, force = /[?&]desktest=1/.test(q); if (window.top !== window.self || /[?&]nodesk=1/.test(q)) return;
   var ua = navigator.userAgent, mm = function (x) { return !!(window.matchMedia && matchMedia(x).matches); };
-  if (!force && !(/Linux/.test(ua) && !/Android|CrOS|Windows|Macintosh|iPhone|iPad/.test(ua) && navigator.maxTouchPoints > 0 && mm("(hover:none)") && mm("(pointer:coarse)"))) return;
-  var zoomFor = function () { var dpr = window.devicePixelRatio || 1, W = innerWidth, T = Math.max(360, W * dpr / 2.6); return W / T; };
+  var touch = navigator.maxTouchPoints > 0 || "ontouchstart" in window, handset = mm("(hover:none)") || mm("(any-hover:none)") || mm("(pointer:coarse)");
+  if (!force && !(/Linux/.test(ua) && !/Android|CrOS|Windows|Macintosh|iPhone|iPad/.test(ua) && touch && handset)) return;
+  var zoomFor = function () { var dpr = window.devicePixelRatio || 1, W = Math.max(innerWidth, document.documentElement.clientWidth || 0), vv = window.visualViewport, c = [];
+    if (screen && screen.width > 200) c.push(innerWidth <= innerHeight ? Math.min(screen.width, screen.height || 1e9) : Math.max(screen.width, screen.height || 0));
+    if (vv && vv.scale > 0 && vv.scale < .95) c.push(W * vv.scale);
+    if (dpr < 1.8 && mm("(hover:none)")) c.push(W * dpr / 2.6);
+    var T = Math.max(320, Math.min.apply(null, c.length ? c : [W])); return W / T; };
+  window.__deskZ = zoomFor();
   if (!force && zoomFor() < 1.3) return;
   window.stop(); window.__deskFrame = 1;
   document.documentElement.innerHTML = '<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#05090f"><title>Ultra Deep Field</title><link rel="manifest" href="manifest.webmanifest">' +
@@ -2514,7 +2520,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 364;
+const GAME_V = 365;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5625,6 +5631,10 @@ const map3DInit = {};
 const CRUMB_K = "udf.crumbs";
 /* v224 crash reports: when a launch finds that the last session was killed, its flight log goes to the server's feedback inbox
    (kind "crash") once you're signed in, so the developer can read what the game was doing when it died. Sent once per crash. */
+setInterval(() => { try { if (G.diagSent || !G.db || !G.me || G.me === "local" || G.mode !== "online") return; const tu = /Linux/.test(navigator.userAgent) && !/Android/.test(navigator.userAgent) && (navigator.maxTouchPoints > 0 || "ontouchstart" in window); G.diagSent = 1;
+  if (!tu || localStorage.getItem("udfDiag365")) return; localStorage.setItem("udfDiag365", "1"); let top = {}; try { const T = window.top; top = { iw: T.innerWidth, ih: T.innerHeight, dpr: T.devicePixelRatio, z: T.__deskZ, fr: T.__deskFrame || 0, vs: T.visualViewport && T.visualViewport.scale }; } catch (e) {}
+  const mq = q => !!(window.matchMedia && matchMedia(q).matches); G.db.doc("feedback/diag-" + String(G.me).slice(0, 36) + "-" + Date.now().toString(36)).set({ kind: "diag", status: "new", by: G.me, at: Date.now(), now: GAME_V, device: navigator.userAgent.slice(0, 200),
+    text: JSON.stringify({ framed: window.top !== window, iw: innerWidth, ih: innerHeight, dpr: devicePixelRatio, sw: screen.width, sh: screen.height, vs: window.visualViewport && visualViewport.scale, mtp: navigator.maxTouchPoints, hoverNone: mq("(hover:none)"), coarse: mq("(pointer:coarse)"), top }).slice(0, 900) }).catch(() => {}); } catch (e) {} }, 15000); // v365
 setInterval(() => { try { const C = G.lastCrash; if (!G.lastCrashFresh || G.crashSent || !C || !C.ev || !G.db || !G.me || G.me === "local" || G.mode !== "online") return; G.crashSent = 1;
   const b = C.beat || {}, last = C.ev[C.ev.length - 1], id = "crash-" + String(G.me).slice(0, 36) + "-" + Date.now().toString(36);
   G.db.doc("feedback/" + id).set({ kind: "crash", status: "new", by: G.me, name: String(G.myName || "").slice(0, 60), at: Date.now(), died: b.t || (last && last[0]) || 0, v: b.v || 0, now: typeof GAME_V !== "undefined" ? GAME_V : 0,
@@ -9722,10 +9732,10 @@ async function glbHull(k, s) {
       .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\n metalnessFactor = .8 + .15 * metalnessFactor;"); };
     m.customProgramCacheKey = () => "hull359"; m.roughness = 1; m.metalness = 1; m.envMapIntensity = 1.45;
     // painted lights: bright, saturated texels (read from a small copy) feed the glow map
-    const A = 1024, E = new Float32Array(A * A * 3), SA = 512, cc = document.createElement("canvas"); cc.width = cc.height = SA; const cx = cc.getContext("2d", { willReadFrequently: true }); cx.drawImage(img, 0, 0, SA, SA);
+    const A = MOBILE ? 512 : 1024, E = new Float32Array(A * A * 3), SA = 512, UP = A / SA, cc = document.createElement("canvas"); cc.width = cc.height = SA; const cx = cc.getContext("2d", { willReadFrequently: true }); cx.drawImage(img, 0, 0, SA, SA);
     const D = cx.getImageData(0, 0, SA, SA).data; cc.width = cc.height = 0;
     for (let y = 0, i = 0; y < SA; y++) for (let x = 0; x < SA; x++, i += 4) { const r = D[i] / 255, g = D[i + 1] / 255, b = D[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), sat = mx > 0 ? (mx - mn) / mx : 0;
-      const w = clamp((mx - .5) / .3, 0, 1) * clamp((sat - .3) / .3, 0, 1); if (w > 0) for (let dy = 0; dy < 2; dy++) for (let dx = 0; dx < 2; dx++) { const o = ((y * 2 + dy) * A + x * 2 + dx) * 3; E[o] += r * w * .7; E[o + 1] += g * w * .7; E[o + 2] += b * w * .7; } }
+      const w = clamp((mx - .5) / .3, 0, 1) * clamp((sat - .3) / .3, 0, 1); if (w > 0) for (let dy = 0; dy < UP; dy++) for (let dx = 0; dx < UP; dx++) { const o = ((y * UP + dy) * A + x * UP + dx) * 3; E[o] += r * w * .7; E[o + 1] += g * w * .7; E[o + 2] += b * w * .7; } }
     // 3) windows: UV islands first (triangles sharing vertices), rasterised, so a row of windows never crosses a texture seam
     const g = mesh.geometry, P = g.attributes.position, U = g.attributes.uv, I = g.index; if (P && U) {
       const nT = I ? I.count / 3 : P.count / 3, vi = j => I ? I.getX(j) : j, par = new Int32Array(P.count); for (let i = 0; i < P.count; i++) par[i] = i;
@@ -9778,7 +9788,7 @@ function glbNext() {
   try {
     GLB[k].t0 = performance.now(); setTimeout(() => { if (GLB[k] && !GLB[k].scene) { GLB[k].slow = true; if (C3 && C3.keys) C3.keys[k] = null; } }, 10000); // v356 too slow: show the plain building
     new TH.GLTFLoader().load("models/" + (MOBILE ? "m/" : "") + k + ".glb?h=" + (GLB_V[k] || GAME_V), g => {
-      const s = g.scene, big = MOBILE ? (GLB_BLDS.has(k) && GLB_BN++ < 8 ? 1536 : 1024) : 2048, aux = MOBILE ? 512 : 1024, an = texAniso(), ps = [];
+      const s = g.scene, big = MOBILE ? (GLB_BLDS.has(k) && !IOS && GLB_BN++ < 8 ? 1536 : 1024) : 2048, aux = MOBILE ? 512 : 1024, an = texAniso(), ps = [];
       s.traverse(o => { if (o.isMesh) { const m = o.material; if (m && m.isMeshStandardMaterial) { m.envMapIntensity = .9; ps.push(glbShrink(m.map, big)); for (const t of new Set([m.normalMap, m.roughnessMap, m.metalnessMap])) ps.push(glbShrink(t, aux)); for (const t of [m.map, m.normalMap]) if (t) t.anisotropy = an; } } });
       Promise.all(ps).then(() => GLB_BLDS.has(k) ? glbLights(k, s) : GLB_SHIPS.has(k) ? glbHull(k, s) : null).then(() => { const bb = new TH.Box3().setFromObject(s); s.userData.bb = bb; GLB[k].scene = s; done(); glbReady(k); });
     }, undefined, () => { GLB[k].fail = true; done(); if (C3 && C3.keys) C3.keys[k] = null; });
