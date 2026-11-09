@@ -2552,7 +2552,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 376;
+const GAME_V = 377;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13241,8 +13241,9 @@ function vGalaxyBelow() {
   const oa = openAssaults();
   const ms = Object.values(G.assaults).filter(a => (a.members || {})[G.me] && !a.disb && a.status !== "done" && (a.rally ? a.launch : a.arrive) > T);
   const joint = (ms.length ? `<h2 class="sec">⚔ Your joint strikes</h2><div class="list">${ms.map(a => `<div class="rwrap">${rallyRow(a)}${a.leader === G.me ? `<button class="btn red sm" data-act="strikeDisbandQ" data-id="${a.id}" aria-label="Disband">✕</button>` : `<button class="btn ghost sm" data-act="strikeLeave" data-id="${a.id}" aria-label="Leave">↩</button>`}</div>`).join("")}</div>` : "") + (oa.length ? `<h2 class="sec">⚔ Joint strikes you can join</h2><div class="list">${oa.map(rallyRow).join("")}</div>` : "");
+  if (!["targets", "mine", "fav"].includes(sub.gal)) sub.gal = "targets";
   const t = sub.gal;
-  const tabs = `<div class="tabs"><button class="${t === "targets" ? "on" : ""}" data-act="sub" data-g="gal" data-v="targets">🔭 Finder</button><button class="${t === "mine" ? "on" : ""}" data-act="sub" data-g="gal" data-v="mine">Mine</button><button class="${t === "fav" ? "on" : ""}" data-act="sub" data-g="gal" data-v="fav">★ Favorites</button><button class="${t === "cmdrs" ? "on" : ""}" data-act="sub" data-g="gal" data-v="cmdrs">Commanders</button></div>`;
+  const tabs = `<div class="tabs"><button class="${t === "targets" ? "on" : ""}" data-act="sub" data-g="gal" data-v="targets">🔭 Finder</button><button class="${t === "mine" ? "on" : ""}" data-act="sub" data-g="gal" data-v="mine">Mine</button><button class="${t === "fav" ? "on" : ""}" data-act="sub" data-g="gal" data-v="fav">★ Favorites</button></div>`;
   let body = "";
   if (t === "fav") {
     const ids = Object.entries(S.fav || {}).sort((a, b) => b[1] - a[1]).map(([id]) => id), rows = ids.map(id => G.byId[id] ? planetRow(G.byId[id]) : PB[id] ? pirRow(PB[id], h, T) : "").join("");
@@ -16741,7 +16742,7 @@ const ACT = {
     view = v; if (v === "build" && s) sub.build = s; closeSheet(); { const m = $("#view"); m.style.scrollBehavior = "auto"; m.scrollTop = 0; render(); m.scrollTop = 0; m.style.scrollBehavior = ""; } }, // v127: a new screen opens at the top at once (it used to smooth-scroll up from the old position: the stutter after "Go there")
   mailNew: () => { chatInit(); openSheet({ type: "chat", ch: "d" }); },
   mailClear: () => { S.log = []; dirty(); render(true); },
-  sub: d => { const ORD = { build: ["bld", "research", "ships"], gal: ["targets", "mine", "fav", "cmdrs"], fleet: ["ships", "def", "rep"], lab: ["list", "tree"] }[d.g] || [], was = ORD.indexOf(sub[d.g]), to = ORD.indexOf(d.v);
+  sub: d => { const ORD = { build: ["bld", "research", "ships"], gal: ["targets", "mine", "fav"], fleet: ["ships", "def", "rep"], lab: ["list", "tree"] }[d.g] || [], was = ORD.indexOf(sub[d.g]), to = ORD.indexOf(d.v);
     sub[d.g] = d.v; if (d.g === "fleet" && d.v === "rep") { S.unread = 0; dirty(); } render(true);
     if (!reduced && was !== to && to >= 0) { const m = $("#view"); m.classList.remove("tabR", "tabL", "fade"); void m.offsetWidth; m.classList.add(to > was ? "tabR" : "tabL"); } },
   go: () => { const q = quest(); if (q.hive) return hiveFind(q.hive); const g = q.go; ACT.nav({ v: g.replace(/(fac|def)$/, ""), s: g.endsWith("fac") ? "fac" : g.endsWith("def") ? "def" : g === "build" ? "res" : g === "fleet" ? "ships" : "" }); },
