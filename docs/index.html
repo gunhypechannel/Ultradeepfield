@@ -2555,7 +2555,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 379;
+const GAME_V = 380;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5804,6 +5804,7 @@ function map3DRebuild() {
   if (G.glSafe && !G.glSafeTold) { G.glSafeTold = 1; toast("The device reset its graphics. Detail is lowered a notch for this session to keep the game stable."); }
 }
 const ORB = new Map(); // per-world orbit constants (period, inclination), cached so 10,000 worlds stay cheap to move
+const PQS = {}; // v380 scratch for the sweeps
 function P3(p, T, out) {
   let c = ORB.get(p.id); if (!c || c[2] !== p.r) { c = [TAU / period(p.r), ((hash(p.id) % 1000) / 1000 - .5) * .14 * p.r, p.r]; ORB.set(p.id, c); }
   const a = p.a0 + T * c[0], o = out || {}; o.x = Math.cos(a) * p.r; o.y = p.kind === "empty" ? 0 : Math.sin(a - p.a0 * 2) * c[1]; o.z = Math.sin(a) * p.r; return o; // open orbits sit on the plane, like their markers
@@ -6208,10 +6209,10 @@ function plSweep(W, T, pxK, CH) {
     M.aCol[j] = mc.r; M.aCol[j + 1] = mc.g; M.aCol[j + 2] = mc.b; M.aCol[j + 3] = fg ? 0 : st === "hive" ? .28 : st === "razed" ? .25 : .85; M.aSz[i] = rad * 3; M.aTy[i] = st === "hive" ? 1 : 0;
     { const tc = fg || !p.owner || st === "hive" || st === "razed" ? null : terrCol(p.owner); // v90 territory: the colour of whoever controls the world (its alliance first)
       if (tc) { TR.aCol[j] = tc.r; TR.aCol[j + 1] = tc.g; TR.aCol[j + 2] = tc.b; TR.aCol[j + 3] = p.kind === "home" ? .26 : .18; TR.aSz[i] = p.kind === "home" ? 18 : 12; } else TR.aCol[j + 3] = 0; }
-    const dc = Math.hypot(x - cp.x, cp.y, z - cp.z), mine = p.owner === G.me || p.id === G.sel;
-    if (mine || (rad / dc * pxK > 1.6 && (FR.s.center.set(x, 0, z), FR.s.radius = Math.max(rad * 3, dc * .25), FR.f.intersectsSphere(FR.s)))) P.cand.push([mine ? -1 : dc, p.id]); }
+    const py = P3(p, T, PQS).y, dc = Math.hypot(x - cp.x, py - cp.y, z - cp.z), mine = p.owner === G.me || p.id === G.sel; /* v380: its real height on its tilted orbit */
+    if (mine || (rad / dc * pxK > 1.6 && (FR.s.center.set(x, py, z), FR.s.radius = Math.max(rad * 3, dc * .25), FR.f.intersectsSphere(FR.s)))) P.cand.push([mine ? -1 : dc, p.id]); }
   orbRange(P.halo, ["aCol", "aSz"], s, e - s); orbRange(P.marks, ["aCol", "aSz", "aTy"], s, e - s); orbRange(P.terr, ["aCol", "aSz"], s, e - s);
-  if (e >= P.n) { P.cur = 0; P.cand.sort((x, y) => x[0] - y[0]); P.near = P.cand.slice(0, Math.round(PERF.nearPl * (W.nearK || 1))).map(c => c[1]); /* v172 W.nearK: adaptive, see adaptRes */ if (G.sel && G.byId[G.sel] && !P.near.includes(G.sel)) P.near.push(G.sel); } else P.cur = e;
+  if (e >= P.n) { P.cur = 0; P.cand.sort((x, y) => x[0] - y[0]); P.near = P.cand.slice(0, Math.round(PERF.nearPl * (W.nearK || 1))).map(c => c[1]); /* v172 W.nearK: adaptive, see adaptRes */ if (G.sel && G.byId[G.sel] && !P.near.includes(G.sel)) P.near.push(G.sel); for (const f of [W.cam && W.cam.cineObj && W.cam.cineObj.id, W.cam && W.cam.follow]) if (f && G.byId[f] && !P.near.includes(f)) P.near.push(f); /* v380: what the camera films or follows is always drawn */ } else P.cur = e;
 }
 /* fields and hideouts: static orbits, dynamic colour (fog, cleared hideouts) and the near set for full models */
 const FIND_CODE = { x: 0, q: 1, m: 2, c: 3, g: 4, y: 5, w: 6, s: 7 };
@@ -6231,10 +6232,11 @@ function mkSweep(W, T, CH) {
   for (let i = s; i < e; i++) { const it = M.all[i], kind = i < M.NN ? 0 : i < M.NX ? 1 : 2, j = i * 4, a = it.a0 + T * TAU / period(it.r), x = Math.cos(a) * it.r, z = Math.sin(a) * it.r, nf = fogSeen(x, z);
     const col = kind === 0 ? colObj(NODE_T[it.res].col) : kind === 1 ? (pirDown(it) > T ? grey : it.mon ? colObj(MON[it.mon].col) : it.boss ? cube : red) : pyrDown(it) > T ? dull : gold; A.aCol[j] = col.r; A.aCol[j + 1] = col.g; A.aCol[j + 2] = col.b;
     A.aCol[j + 3] = !nf || M.near.has(it.id) ? 0 : kind === 0 ? .34 : kind === 1 ? .45 : .5;
-    if (nf) { const dc = Math.hypot(x - cp.x, cp.y, z - cp.z), hl = kind === 0 ? !!G.find && it.res === G.find : kind === 1 ? findHit(it) : G.find === "y"; if (dc < (kind === 0 ? 240 : 280) && (!G.find || G.find === "o" || hl || (kind === 1 && clashAt(it)))) M.cand.push([dc, it.id, kind]); } }
+    if (nf) { const dc = Math.hypot(x - cp.x, P3(it, T, PQS).y - cp.y, z - cp.z), hl = kind === 0 ? !!G.find && it.res === G.find : kind === 1 ? findHit(it) : G.find === "y"; if (dc < (kind === 0 ? 240 : 280) && (!G.find || G.find === "o" || hl || (kind === 1 && clashAt(it)))) M.cand.push([dc, it.id, kind]); } }
   orbRange(M.L, ["aCol"], s, e - s);
   if (e >= M.N) { M.cur = 0; M.cand.sort((x, y) => x[0] - y[0]); const pick = k => M.cand.filter(c => c[2] === k).slice(0, k === 2 ? 14 : k === 1 ? 30 : MOBILE ? 28 : 40); M.near = new Set(pick(0).concat(pick(1), pick(2)).map(c => c[1]));
-    for (const c of G.clashes || []) if (c.loc && PB[c.loc.id]) M.near.add(c.loc.id); } else M.cur = e; // v275: the target of a battle is always drawn
+    for (const c of G.clashes || []) if (c.loc && PB[c.loc.id]) M.near.add(c.loc.id);
+    for (const f of [W.cam && W.cam.cineObj && W.cam.cineObj.id, G.selNode]) if (f && (PB[f] || YB[f] || (f[0] === "r" && NB[f]))) M.near.add(f); /* v380 */ } else M.cur = e; // v275: the target of a battle is always drawn
 }
 /* an abandoned pyramid up close: a stepped sandstone pyramid with a glowing capstone and a slow ring of runes */
 /* a pyramid space station: a gold-and-graphite bipyramid hull of panelled plating with thousands of lit ports, glowing edge
@@ -7951,7 +7953,8 @@ function draw3D(t) {
   for (const L of [P.halo, P.marks, P.terr]) { const U = L.pts.material.uniforms; U.uT.value = T - W.orbT0; U.uTime.value = t; U.uScale.value = pxK * prs; U.uSel.value = G.sel && P.idx.has(G.sel) ? P.idx.get(G.sel) : -1; }
   P.halo.pts.material.uniforms.uMin.value = 2.2;
   // sphere batches sized for the near set only
-  const near = P.near || [], counts = new Map(), info = new Map(), cpos = W.camera.position;
+  let near = P.near || []; { const fz = [W.cam && W.cam.cineObj && W.cam.cineObj.id, W.cam && W.cam.follow, G.sel].filter(f => f && G.byId[f] && !near.includes(f)); if (fz.length) near = near.concat(fz); }
+  const counts = new Map(), info = new Map(), cpos = W.camera.position;
   for (const id of near) { const p = G.byId[id]; if (!p) continue; const k = pxOf(p) ? "px:" + p.px : p.type + p.v; counts.set(k, (counts.get(k) || 0) + 1); if (!info.has(k)) info.set(k, [p.type, p.v, p.px]); }
   const used = new Map(); let gasN = 0; for (const [k, c] of counts) if (k.startsWith("gas")) gasN += c;
   for (const [k, c] of counts) { const [ty, v, px] = info.get(k), mat = k.startsWith("px:") ? pxMat(W, px) : planetMat(W, ty, v); instFor(W, k + "|h", W.sph, mat, c); instFor(W, k + "|l", W.sphLo, mat, c); instFor(W, k + "|u", W.sphU, mat, Math.min(c, 4)); used.set(k + "|h", 0); used.set(k + "|l", 0); used.set(k + "|u", 0); }
@@ -8032,6 +8035,7 @@ function draw3D(t) {
   { mkSweep(W, T, PERF.mkSlice); const M = W.MK, U = M.L.pts.material.uniforms, cp = W.camera.position;
     U.uT.value = T - W.orbT0; U.uTime.value = t; U.uScale.value = pxK * prs; U.uMin.value = (G.find ? 7 : 3) * prs; U.uFind.value = G.find ? (FIND_CODE[G.find] != null ? FIND_CODE[G.find] : 9) : -1;
     W.pyramids = W.pyramids || new Map();
+    for (const f of [W.cam && W.cam.cineObj && W.cam.cineObj.id, G.selNode]) if (f && (PB[f] || YB[f] || (f[0] === "r" && NB[f]))) M.near.add(f); /* v380 at once, not after the sweep */
     for (const id of M.near) { const isN = id[0] === "r", isY = id[0] === "y", it = isN ? NB[id] : isY ? YB[id] : PB[id]; if (!it) continue; const M2 = isN ? W.nodes : isY ? W.pyramids : W.pirates; let o = M2.get(id);
       if (!o) { o = isN ? nodeObj(W, it) : isY ? pyramidObj(W, it) : pirateObj(W, it); M2.set(id, o); }
       const q = P3(it, T, PQ), dc = Math.hypot(q.x - cp.x, q.y - cp.y, q.z - cp.z), nf = fogSeen(q.x, q.z); o.dc = dc; o.fog = !nf; o.grp.visible = nf && !(G.vmode === "planet" && dc < 9 && !W.cam.cine); /* v68: in planet view, a big boss, monster or station drifting past the lens is hidden so it never blocks your world; v144: never while filming (that hid the station or monster being filmed) */ o.grp.position.set(q.x, q.y, q.z);
@@ -8204,7 +8208,7 @@ function draw3D(t) {
   if (cam.cineObj) { const q = cineObjPos(W, T); if (!q) cineEnd(); else { goal = Object.assign({}, goal || {}, { tx: q.x, ty: q.y, tz: q.z }); cam.head = q.yaw != null ? q.yaw : (cam.head || 0) + .0002 * (W.dtk || 1);
       // frame it by its real size once its model is up (a Cube boss is many times larger than a squid)
       if (!cam.cineObj.fit && G.byId[cam.cineObj.id] && W.planets && W.planets.get(cam.cineObj.id)) { const o = W.planets.get(cam.cineObj.id); cam.cineObj.fit = 1; cam.cineObj.r = o.rad; cam.goal = Object.assign({}, cam.goal || {}, { dist: clamp(o.rad * 4.6, 3, 150) }); }
-      if (!cam.cineObj.fit) { const id = cam.cineObj.id, o = (id[0] === "y" ? W.pyramids : W.pirates).get(id); if (o && o.grp.visible) { const sp = new TH.Box3().setFromObject(o.mon && o.body ? o.body : o.grp).getBoundingSphere(new TH.Sphere()); if (sp.radius > 0) { cam.cineObj.fit = 1; cam.cineObj.r = sp.radius; cam.goal = Object.assign({}, cam.goal || {}, { dist: clamp(sp.radius * 2.6, 3, 150) }); } } } } }
+      if (!cam.cineObj.fit) { const id = cam.cineObj.id, o = (id[0] === "y" ? W.pyramids : id[0] === "r" ? W.nodes : W.pirates).get(id); if (o && o.grp.visible) { const sp = new TH.Box3().setFromObject(o.mon && o.body ? o.body : o.grp).getBoundingSphere(new TH.Sphere()); if (sp.radius > 0) { cam.cineObj.fit = 1; cam.cineObj.r = sp.radius; cam.goal = Object.assign({}, cam.goal || {}, { dist: clamp(sp.radius * 2.6, 3, 150) }); } } } } }
   // v93 cinematic: preset angles ease around the fleet as it flies; "free" leaves the angle to your finger
   if (cam.cine && (cam.followFleet || cam.followMv || cam.cineBattle || cam.cineObj)) { const want = cineAngle((cam.cineBattle || cam.cineGather) && cam.cine.m !== "free" ? "orbit" : cam.cine.m, cam.head || 0, cam);
     if (want) { const ce = 1 - Math.pow(.95, W.dtk || 1); let d = want.th - cam.th; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; cam.th += d * ce; cam.ph += (want.ph - cam.ph) * ce; } }
@@ -12533,7 +12537,7 @@ function shNode() {
     ${speedBar(n, sel)}
     <dl class="kv">${n.res === "s" ? `<dt>Dig</dt><dd style="color:#c9a6ff">${plan.amt ? `◆${plan.amt}` : shardRest(n) ? "Resting" : "Today's shards are mined"}</dd><dt>Digging time</dt>` : `<dt>Cargo space</dt><dd>${fmt(cargoOf(sel))}</dd><dt>Haul</dt><dd><span class="r-${n.res}">${fmt(plan.amt)} ${RES_N[n.res].toLowerCase()}</span></dd><dt>Loading time</dt>`}<dd>${Object.keys(sel).length ? ftime(plan.ms) : "–"}</dd><dt>Round trip</dt><dd>${tt ? ftime(travelMs(h, n, sel, S.r, spdPct()) * 2 + plan.ms) : "–"}</dd></dl>
     <button class="btn wide${oc && oc.uid !== G.me && !fieldAlly(oc.uid) ? " red" : ""}" data-act="gather" data-id="${n.id}" ${plan.amt > 0 && !(oc && (oc.uid === G.me || fieldAlly(oc.uid)) && oc.until > T + tt) ? "" : "disabled"}>${oc && oc.uid !== G.me && !fieldAlly(oc.uid) && oc.until > T + tt ? "⚔ Attack and take the field" : "Send to gather"}</button>`;
-  return head + info + body;
+  return head + info + cineBtn(n.id) + body;
 }
 /* the galaxy's six layers: what lives in each, and what you hold there */
 function shLayers() {
@@ -12572,7 +12576,7 @@ function shPirate() {
   const el = isElite(x), lk = xLootK(x), fk = !(S.fk || {})[lk + ":" + x.lvl] && !trainingPir(x);
   const lprev = lootPreview(lk === "cube" ? LOOT.cube(x.lvl) : lk === "mon" ? LOOT.monster(x.lvl, el) : LOOT.pirate(x.lvl, el), fk ? `<p class="lfk">First ${lk === "cube" ? "Cube" : lk === "mon" ? "monster" : "pirate"} kill at Lv.${x.lvl}: ◆2 and ${matsText(LOOT.first(lk, x.lvl))}</p>` : "");
   const info = `${el ? `<div class="elite">★ ELITE · 60% stronger this week · double materials, triple rare chance</div>` : ""}${lprev}<dl class="kv"><dt>Loot on a win</dt><dd>${costHTML(L)}${xShards(x) ? ` + ◆${xShards(x)}` : ""}${x.boss ? " + an item" : x.mon ? ` + ${monAccel(x.lvl).n}× ${monAccel(x.lvl).tier} accelerator` : ""}</dd>${x.mon ? `<dt>Monster strength</dt><dd>×${(.25 + .15 * x.lvl).toFixed(2)} · ${xForce(x)[x.mon]} in the ${x.mon === "ssquid" ? "pack" : "pod"}</dd>` : x.boss ? `<dt>Teamwork</dt><dd>Too strong alone? Start a joint strike: every commander who joins adds +10% attack and shields, up to +30%.</dd><dt>Cube strength</dt><dd>×${((.5 + .25 * x.lvl) * CUBE_BOSS_K).toFixed(2)} on every unit</dd>` : `<dt>Pirate tech</dt><dd>Weapons, shields and armour ${pirTech(x.lvl).weapons}</dd>`}<dt>Orbit</dt><dd>${Math.round(x.r)} · ${zoneOf(x.r)}</dd>
-    ${h ? `<dt>Flight from ${esc(h.name)}</dt><dd>${ftime(travelMs(h, x, { fighter: 1 }))}</dd>` : ""}<dt>${x.mon ? "Another surfaces after" : x.boss ? "Rebuilds after defeat" : "Regroups after a raid"}</dt><dd>${ftime(xRegroup(x))}</dd></dl>${x.mon || x.boss ? cineBtn(x.id) : ""}`;
+    ${h ? `<dt>Flight from ${esc(h.name)}</dt><dd>${ftime(travelMs(h, x, { fighter: 1 }))}</dd>` : ""}<dt>${x.mon ? "Another surfaces after" : x.boss ? "Rebuilds after defeat" : "Regroups after a raid"}</dt><dd>${ftime(xRegroup(x))}</dd></dl>${cineBtn(x.id)}`;
   const scan = `<h2 class="sec">${x.mon ? "The beast" : x.boss ? "Collective forces" : "Crews"}</h2>${down > T ? `<p class="note">${x.mon ? "Slain. Another of its kind drifts in within" : x.boss ? "The Cube is wrecked. It rebuilds in" : "You cleaned this hideout out. The pirates regroup in"} <b data-end="${down}">${ftime(down - T)}</b>.</p>` : unitGrid(force)}`;
   let body;
   if (down > T) body = "";
@@ -12608,13 +12612,13 @@ function cineAngle(m, yaw, c) { const back = Math.atan2(-Math.cos(yaw), -Math.si
 function cineStart(m) { if (!G3 || !(G3.cam.followFleet || G3.cam.followMv)) return toast("Tap a fleet to follow it first.", "warn"); const c = G3.cam; closeSheet(); if (!S.tutCine && S.fleets.some(f => f.id === c.followFleet)) { S.tutCine = 1; dirty(); } c.cine = { m: m || "chase" }; c.goal = { dist: 7 }; $("#app").classList.add("cine"); cineBar(); fleetHud(true); }
 /* v135: film a Cube boss, a pyramid station or a space monster: the camera circles it, with the same angle buttons and free look */
 const cineBtn = id => `<button class="btn ghost wide" style="margin:6px 0" data-act="cineObj" data-id="${esc(id)}">🎥 Cinematic view</button>`;
-function cineObjStart(id, n) { const it = PB[id] || YB[id] || G.byId[id]; if (!it) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); }
+function cineObjStart(id, n) { const it = PB[id] || YB[id] || G.byId[id] || (id[0] === "r" ? NB[id] : null); if (!it) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); }
   if (!G3) { if ((n || 0) < 20) setTimeout(() => cineObjStart(id, (n || 0) + 1), 300); return; }
   const c = G3.cam; if (c.followMv) followMvEnd(G3, 1); c.follow = null; c.followFleet = null; c.vel = null; c.cineObj = { id }; c.cine = { m: "orbit" }; c.head = it.a0 || 0;
   c.goal = { dist: 40 }; $("#app").classList.add("cine"); cineBar(); } // the distance is fitted to the model's real size once it is in view
 /* where the filmed object is now (a monster swims its loop, so its body is tracked when the model exists) */
-function cineObjPos(W, T) { const id = W.cam.cineObj.id, it = PB[id] || YB[id] || G.byId[id]; if (!it) return null;
-  if (G.byId[id] && !PB[id] && !YB[id]) { const o = W.planets && W.planets.get(id); if (o) { const v = o.grp.position; return { x: v.x, y: v.y, z: v.z, yaw: null }; } } const o = (id[0] === "y" ? W.pyramids : W.pirates) && (id[0] === "y" ? W.pyramids : W.pirates).get(id);
+function cineObjPos(W, T) { const id = W.cam.cineObj.id, it = PB[id] || YB[id] || G.byId[id] || (id[0] === "r" ? NB[id] : null); if (!it) return null;
+  if (G.byId[id] && !PB[id] && !YB[id]) { const o = W.planets && W.planets.get(id); if (o) { const v = o.grp.position; return { x: v.x, y: v.y, z: v.z, yaw: null }; } } const M3 = id[0] === "y" ? W.pyramids : id[0] === "r" ? W.nodes : W.pirates, o = M3 && M3.get(id);
   if (o && o.mon && o.body && o.grp.visible) { const v = o.body.getWorldPosition(V3); return { x: v.x, y: v.y, z: v.z, yaw: Math.atan2(Math.cos(o.body.rotation.y), -Math.sin(o.body.rotation.y)) }; } // v144: the heading it swims (the fleets' convention)
   const q = P3(it, T); return { x: q.x, y: q.y, z: q.z, yaw: null }; }
 /* v188 watch a fight on the map in cinematic view: the camera cuts to it and circles it (the existing battle shot, with the angle buttons
@@ -12627,7 +12631,7 @@ function cineBar() { if (!G3 || !G3.cam.cine) return; let el = $("#cinebar"); if
   const m = G3.cam.cine.m; el.innerHTML = `<div class="cb-top"><span class="cb-rec">● CINEMATIC</span><span class="cb-w" id="cbw"></span><button class="cb-shot" data-act="cineShot" aria-label="Take a screenshot">📷</button><button data-act="cineOff" aria-label="Leave cinematic view">✕</button></div>
     <div class="cb-bot"><div class="cb-ang">${CINE_M.map(([k, l]) => `<button class="${k === m ? "on" : ""}" data-act="cineMode" data-m="${k}">${l}</button>`).join("")}</div><small>Drag to look around · pinch to zoom</small></div>`; }
 setInterval(() => { if (G3 && G3.cam.cine && view !== "galaxy") cineEnd(); const w = $("#cbw"); if (!w || !G3) return; const c = G3.cam, T = now();
-  if (c.cineObj) { const it = PB[c.cineObj.id] || YB[c.cineObj.id]; if (it) w.textContent = `${it.mon ? MON[it.mon].ic + " " + MON[it.mon].n : it.boss ? "■ Assimilation Cube" : "▲ Pyramid station"} · ${it.name} · Lv.${it.lvl}`; return; }
+  if (c.cineObj) { const id = c.cineObj.id, it = PB[id] || YB[id] || (id[0] === "r" ? NB[id] : null); if (it) w.textContent = `${it.res ? (it.res === "s" ? "◆ Void Shard mine" : RES_N[it.res] + " field") : it.mon ? MON[it.mon].ic + " " + MON[it.mon].n : it.boss ? "■ Assimilation Cube" : id[0] === "y" ? "▲ Pyramid station" : "☠ Pirate hideout"} · ${it.name} · Lv.${it.lvl}`; else if (G.byId[id]) w.textContent = G.byId[id].name; return; }
   if (c.cineGather && !c.cineBattle) { const f = c.cineGather !== "mv" && S.fleets.find(x => x.id === c.cineGather), n = f ? NB[f.nid] : c.followMv && tgtById(c.followMv.m.t), res = n ? RES_N[n.res || "m"].toLowerCase() : "";
     if (f) { const k = clamp((T - f.arrive) / Math.max(1, f.gend - f.arrive), 0, 1); w.textContent = `⛏ ${n && n.kind === "empty" ? "Salvaging" : "Mining"} ${res} at ${n ? n.name : "the field"} · ${Math.round(k * 100)}% · ${fmt(Math.floor((f.haul || { amt: 0 }).amt * k))} loaded · done in ${ftime(Math.max(0, f.gend - T))}`; }
     else w.textContent = `⛏ ${c.followMv && c.followMv.uid ? fieldName(c.followMv.uid) : "A commander"} mining ${res} at ${n ? n.name : "a field"}`; }
