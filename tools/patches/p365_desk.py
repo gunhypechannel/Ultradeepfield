@@ -13,7 +13,6 @@ rep('''  if (!force && !(/Linux/.test(ua) && !/Android|CrOS|Windows|Macintosh|iP
   var zoomFor = function () { var dpr = window.devicePixelRatio || 1, W = Math.max(innerWidth, document.documentElement.clientWidth || 0), vv = window.visualViewport, c = [];
     if (screen && screen.width > 200) c.push(innerWidth <= innerHeight ? Math.min(screen.width, screen.height || 1e9) : Math.max(screen.width, screen.height || 0));
     if (vv && vv.scale > 0 && vv.scale < .95) c.push(W * vv.scale);
-    if (dpr < 1.8 && mm("(hover:none)")) c.push(W * dpr / 2.6);
     var T = Math.max(320, Math.min.apply(null, c.length ? c : [W])); return W / T; };
   window.__deskZ = zoomFor();''')
 # the diagnostic: once per device, from a touch "Linux" browser (Chrome's desktop mode on Android), what it reports
