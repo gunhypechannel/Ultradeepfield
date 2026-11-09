@@ -12451,7 +12451,7 @@ const FTOUR = [[".ftiles", "This is your Finder! Everything you need outside you
   ['[data-ft="y"]', "Old space stations have treasure vaults. Send ships to open them."],
   ['[data-ft="q"]', "Cubes are giant bosses. Team up with friends to beat one."],
   [".fnear", "Down here are the best picks near you right now. Tap one and go!"],
-  [".fhelp", "Find the Finder button on the map any time. Tap the question mark to see this again."]];
+  [".fhelp", "You can open the Finder from the map any time. Tap the question mark to see this again."]];
 function finderTour(i) { let w = $("#ftour");
   if (i >= FTOUR.length || !sheet || sheet.type !== "targets") { if (w) w.remove(); clearInterval(G.ftI); G.ftI = 0; if (i >= FTOUR.length && S) { S.fTour = 1; dirty(); const b = $(".tbtn"); if (b) b.classList.remove("fnew"); } voiceStop(); return; }
   if (sub.gal !== "targets") { sub.gal = "targets"; renderSheet(); }
