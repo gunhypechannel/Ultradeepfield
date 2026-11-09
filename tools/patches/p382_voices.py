@@ -13,3 +13,7 @@ rep('''s: `Our flag flies over ${p.name}. The empire now spans two worlds, and t
 rep('''Fleet Command sent supplies to get you moving again.`, rw:''',
     '''Fleet Command sent supplies to get you moving again.`, say: acadOn() ? "Welcome back, Commander! Your Academy is right where you left it, and Fleet Command sent supplies to get you moving again." : "Welcome back, Commander! Your missions are right where you left them, and Fleet Command sent supplies to get you moving again.", rw:''')
 open(p, "w").write(t)
+# the voice read "→" out loud ("Structures right arrow Facility")
+t = open(p).read()
+rep('Find it under Structures → Facility."', 'Find it under Structures, in Facility."')
+open(p, "w").write(t)
