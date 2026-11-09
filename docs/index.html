@@ -2524,7 +2524,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 368;
+const GAME_V = 369;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9725,6 +9725,19 @@ function glbWin(k, mesh, D, A) {
         if (Math.abs(wu) < ww / 2 && Math.abs(wv) < wh / 2) f = 1.1 * lit; const dd = Math.hypot(wu / hr, wv / (hr * .8)); if (dd < 1) hh = Math.pow(1 - dd, 2) * .45 * lit;
         if (f || hh) { D[o] = Math.min(255, D[o] + core[0] * f + halo[0] * hh); D[o + 1] = Math.min(255, D[o + 1] + core[1] * f + halo[1] * hh); D[o + 2] = Math.min(255, D[o + 2] + core[2] * f + halo[2] * hh); } } } }
 }
+/* v369 the Crystal Refinery's harvesting lasers (model units): the four arm nozzles, the crystal clusters, and which clusters each arm works */
+const CRY_ARMS = [[.29, -.04, .29], [.29, -.04, -.28], [-.28, -.04, .28], [-.27, -.04, -.28]], CRY_XTL = { e: [.405, -.5, 0], w: [-.42, -.5, 0], n: [0, -.56, -.44], s: [.02, -.6, .456], c: [0, -.5, -.02] };
+const CRY_WORK = [["e", "s", "c"], ["e", "n", "c"], ["w", "s", "c"], ["w", "n", "c"]];
+function crystalLasers(b, at, s, anim) {
+  const neon = c => new TH.MeshBasicMaterial({ color: c, transparent: true, opacity: .95, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false });
+  const glow = (c, sc, op) => { const o = new TH.Sprite(new TH.SpriteMaterial({ map: glowTex(c, 1), transparent: true, opacity: op, blending: TH.AdditiveBlending, depthWrite: false })); o.scale.setScalar(sc); o.userData.s0 = sc; return o; };
+  const xt = {}; for (const k in CRY_XTL) { const g = glow("30,120,255", s * (k === "c" ? .6 : .48), .2); g.position.copy(at(CRY_XTL[k])); g.position.y += s * .06; g.userData.hit = -1e9; b.add(g); anim.push([g, "xtlGlow", 0]); xt[k] = g; }
+  const boltG = new TH.CylinderGeometry(s * .026, s * .026, 1, 6).translate(0, .5, 0), M = neon(0xff5a2a);
+  CRY_ARMS.forEach((a, i) => { const A = at(a), mz = glow("255,150,80", s * .16, 0); mz.position.copy(A); b.add(mz);
+    for (let j = 0; j < 3; j++) { const k = CRY_WORK[i][j], B = xt[k].position.clone(), d = B.clone().sub(A), L = d.length(), o = new TH.Mesh(boltG, M); o.visible = false;
+      o.quaternion.setFromUnitVectors(new TH.Vector3(0, 1, 0), d.clone().normalize()); o.scale.set(1, L * .24, 1); b.add(o);
+      const hd = glow("255,120,60", s * .22, 0); b.add(hd); anim.push([o, "laserBolt", i * .27 + j * .13, null]); Object.assign(o.userData, { A, B, d, L, tgt: xt[k], mz, hd, cyc: -1 }); } });
+}
 /* v368 the Metal Extractor's moving conveyors, laid over the model's own belts (model units: from the outer end to the building, width) */
 const MINE_BELTS = [[[.126, .48], [.126, .1], .15], [[.88, .30], [.24, .30], .13]];
 let BELT_M = null;
@@ -9935,6 +9948,7 @@ function glbBld(k, b, big, small, anim) {
       o.position.copy(at(pk)); const sc = span * .26; o.scale.setScalar(sc); Object.assign(o.userData, { s0: sc, rise: span * .9, drift: span * .3, op: /^2/.test(F.smoke) ? .7 : .85 }); add(o, "smoke", i / 4 + j * .13); } });
     try { bldUniq(k, b, anim, sz.y * s, span / 2); } catch (e) {} // v367 the building's own animation
     if (k === "metalMine") try { mineBelts(src, b, at, s, anim); } catch (e) {} // v368 moving conveyors
+    if (k === "crystalMine") try { crystalLasers(b, at, s, anim); } catch (e) {} // v369 harvesting lasers
     if (F.beacon && fx.peaks[0]) { const o = spr(glowTex("255,70,50", 1), 0xffffff, .95); o.position.copy(at(fx.peaks[0])); o.position.y += span * .03; o.scale.setScalar(span * .16); add(o, "blink", hash(k) % 7); }
     for (let i = 0; i < (F.weld || 0) && i < fx.spots.length; i++) { const o = spr(glowTex("200,230,255", 1), 0xffffff, .95); o.position.copy(at(fx.spots[i].p)); o.position.y += span * .02; const sc = span * .14; o.scale.setScalar(sc); o.userData.s0 = sc; add(o, "flick", i * 2.3); }
   }
@@ -10966,6 +10980,10 @@ function drawColony(t) {
     else if (kind === "slideS") { const u = o.userData; if (u.x0 == null) u.x0 = o.position.x; o.position.x = u.x0 + Math.sin(T * .0009) * p; } // a gantry crane travelling its rails
     else if (kind === "smoke") { const u = o.userData; if (u.y0 == null) { u.y0 = o.position.y; u.x0 = o.position.x; } const q = (T * .00016 + p) % 1; o.position.y = u.y0 + q * u.rise; o.position.x = u.x0 + q * u.drift; o.scale.setScalar(u.s0 * (.55 + q * 2.4)); o.material.opacity = u.op * Math.sin(Math.PI * Math.min(1, q * 1.15)); o.material.rotation = q * 1.2 + p * 6; } // v353 chimney smoke and steam
     else if (kind === "puff") { const u = o.userData; if (u.y0 == null) u.y0 = o.position.y; const q = (T * .00035 + p * .37) % 1; o.position.y = u.y0 + q * 1.1; o.scale.setScalar(.5 + q * 1.6); } // steam rising
+    else if (kind === "laserBolt") { const u = o.userData, z = T * .0011 + p, cyc = Math.floor(z), q = z - cyc, f = q / .13; // v369 a bolt crosses in ~.13 of its cycle
+      if (f < 1) { o.visible = true; o.position.copy(u.A).addScaledVector(u.d, f * .76); u.hd.position.copy(u.A).addScaledVector(u.d, f * .76 + .24); u.hd.material.opacity = 1; u.mz.material.opacity = Math.max(u.mz.material.opacity, .95 * (1 - f)); }
+      else { o.visible = false; u.hd.material.opacity = 0; if (u.cyc !== cyc) { u.cyc = cyc; u.tgt.userData.hit = T; } u.mz.material.opacity *= .9; } }
+    else if (kind === "xtlGlow") { const u = o.userData, k2 = Math.exp(-(T - u.hit) / 380); o.material.opacity = .2 + .55 * k2; o.scale.setScalar(u.s0 * (1 + .9 * k2)); } // flares blue when hit, then fades
     else if (kind === "beltScroll") { if (o.map && o.userData.t !== T) { o.userData.t = T; o.map.offset.x = 1 - (T * .00045 * p) % 1; } } // v368 the conveyors run toward the building
     else if (kind === "orbitF") { const u = o.userData, a = T * .001 * u.w + p; o.position.set(Math.cos(a) * u.r, u.y0 + Math.sin(a * 1.7) * u.tilt, Math.sin(a) * u.r); o.rotation.y = -a; } // v367 orbiting
     else if (kind === "pulseO") { const u = o.userData, w = .5 + .5 * Math.sin(T * .003 + p); o.material.opacity = (u.op || .9) * (.55 + .45 * w); if (u.s0) o.scale.setScalar(u.s0 * (.9 + .2 * w)); }
