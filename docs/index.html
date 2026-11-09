@@ -1535,6 +1535,9 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
 
 /* v376 Finder: wide box, live badge */
 .ftile.fwide{grid-column:1/-1;min-height:84px}.ftile.fhot .fb{background:var(--fc);color:#120a1e;animation:fbHot 1.4s ease-in-out infinite}@keyframes fbHot{50%{box-shadow:0 0 12px var(--fc)}}
+
+/* v378 Map Events */
+.tgt.mev.mlive{border-color:#c9a6ff;box-shadow:0 0 16px rgba(201,166,255,.35)}.mevsoon{flex:none;margin:12px 0;padding:12px 14px;border:1px dashed rgba(201,166,255,.5);border-radius:12px;display:flex;flex-direction:column;gap:3px;background:rgba(201,166,255,.05)}.mevsoon b{font-family:var(--f-display);letter-spacing:.05em;color:#d9c6ff}.mevsoon span{font-size:12.5px;color:var(--muted)}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="lib/GLTFLoader-r128.js"></script>
@@ -2552,7 +2555,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 377;
+const GAME_V = 379;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5683,6 +5686,11 @@ function hqPush(r) { try { const q = JSON.parse(localStorage.getItem(HQ_K) || "[
 function hqFlush() { try { if (G.hqBusy || !G.db || !G.me || G.me === "local" || G.mode !== "online") return; const q = JSON.parse(localStorage.getItem(HQ_K) || "[]"); if (!q.length) return; const r = q[0]; G.hqBusy = 1;
   const id = r.id + "-" + String(G.me).slice(0, 12); G.db.doc("feedback/" + id).set(Object.assign({}, r, { id: undefined, by: G.me, name: String(G.myName || "").slice(0, 60) })).then(() => { G.hqBusy = 0; try { const q2 = JSON.parse(localStorage.getItem(HQ_K) || "[]").filter(x => x.id !== r.id); localStorage.setItem(HQ_K, JSON.stringify(q2)); } catch (e) {} setTimeout(hqFlush, 800); }, () => { G.hqBusy = 0; }); } catch (e) { G.hqBusy = 0; } }
 setInterval(hqFlush, 7000);
+/* v379: the app was in the background and then started fresh: on iPhone that is usually iOS closing it to free memory */
+try { const bg = JSON.parse(localStorage.getItem("udf.bg") || "null"); localStorage.removeItem("udf.bg"); if (bg && bg.t && !(G.lastCrashFresh)) { const gone = Date.now() - bg.t;
+  if (gone < 6 * 3600e3) hqPush({ kind: "crash", status: "new", at: Date.now(), now: typeof GAME_V !== "undefined" ? GAME_V : 0, bg: 1, text: `Restarted after ${Math.round(gone / 60000)} min in the background (on ${bg.view || "?"})`, beat: JSON.stringify(bg).slice(0, 1500), device: hqDev(), w: innerWidth, h: innerHeight }); } } catch (e) {}
+document.addEventListener("visibilitychange", () => { try { if (document.hidden) localStorage.setItem("udf.bg", JSON.stringify(Object.assign({ t: Date.now() }, CRUMBS.beat || {}, { t: Date.now() }))); else localStorage.removeItem("udf.bg"); } catch (e) {} });
+addEventListener("pagehide", e => { try { if (!e.persisted) localStorage.removeItem("udf.bg"); } catch (er) {} });
 if (G.lastCrashFresh && G.lastCrash && G.lastCrash.ev) { const C = G.lastCrash, b = C.beat || {}, last = C.ev[C.ev.length - 1]; G.crashSent = 1; G.lastCrashFresh = 0; /* queued: the old one-shot sender stands down */
   hqPush({ kind: "crash", status: "new", at: Date.now(), died: b.t || (last && last[0]) || 0, v: b.v || 0, now: typeof GAME_V !== "undefined" ? GAME_V : 0, text: `Closed unexpectedly${last ? " after: " + last[1] : ""}`.slice(0, 300),
     beat: JSON.stringify(b).slice(0, 1500), log: C.ev.map(([tt, m]) => new Date(tt).toISOString().slice(11, 19) + " " + m).join("\n").slice(0, 4000), up: Math.round(((b.t || (last && last[0]) || C.t0) - (C.t0 || 0)) / 1000), device: hqDev(), w: innerWidth, h: innerHeight }); G.lastCrashToast = 1; }
@@ -5738,9 +5746,9 @@ function pxPurge(all) { let n = 0; for (const k in PXC) { const C = PXC[k]; if (
 document.addEventListener("visibilitychange", () => { if (document.visibilityState !== "visible") return; try { if (pxPurge(false) && typeof G3 !== "undefined" && G3 && view === "galaxy") { crumb("skins reloaded after the phone cleared them"); map3DRebuild(); } } catch (e) {} });
 function glWatch(W) {
   const cv = W.renderer.domElement;
-  cv.addEventListener("webglcontextlost", e => { e.preventDefault(); G.glLost = (G.glLost || 0) + 1; if (MOBILE) G.glSafe = 1; crumb("GPU reset (graphics context lost)"); try { pxPurge(true); } catch (er) {}
+  cv.addEventListener("webglcontextlost", e => { e.preventDefault(); if (cv._udfFree) return; G.glLost = (G.glLost || 0) + 1; if (MOBILE) G.glSafe = 1; crumb("GPU reset (graphics context lost)"); try { pxPurge(true); } catch (er) {}
     setTimeout(() => { if (G3 === W && W.renderer.getContext().isContextLost()) map3DRebuild(); }, 2500); }, false); // no restore coming: rebuild anyway
-  cv.addEventListener("webglcontextrestored", () => { if (G3 === W) setTimeout(map3DRebuild, 30); }, false);
+  cv.addEventListener("webglcontextrestored", () => { if (!cv._udfFree && G3 === W) setTimeout(map3DRebuild, 30); }, false);
 }
 /* v172 every hull type's map model (and its far stand-in) is built in idle moments after the map opens, for your faction and the
    hostile one, so a 60 vs 60 battle never has to build a dozen hull types in the same frame (the 0.3 s hitches when one began) */
@@ -5776,6 +5784,18 @@ function shipPrewarm(W) {
     const t0 = performance.now(); while (jobs.length && performance.now() - t0 < 8) { const [K, k] = jobs.shift(); if (!K.geo[k]) try { shipGeo(K, k); } catch (e) {} }
     if (jobs.length) idle(step); }), 6000);
 }
+/* v379 release one 3D world's graphics memory; it is built again the next time its view opens */
+function glFree(r) { try { if (r.domElement) r.domElement._udfFree = 1; } catch (e) {} try { r.dispose(); } catch (e) {} try { r.forceContextLoss(); } catch (e) {} try { const c = r.domElement; if (c) { c.width = 1; c.height = 1; } } catch (e) {} }
+function worldDrop(k, why) { try {
+  if (k === "gal" && G3 && view !== "galaxy") { const old = G3, c = old.cam; G.camKeep = c ? { tx: c.tx, ty: c.ty, tz: c.tz, th: c.th, ph: c.ph, dist: c.dist } : G.camKeep; G3 = null; glFree(old.renderer);
+    if (mapHost && mapHost.parentNode) mapHost.parentNode.removeChild(mapHost); mapHost = null; crumb("map released (" + why + ")"); }
+  if (k === "col" && C3 && view !== "base") { const old = C3; C3 = null; glFree(old.renderer); if (colHost && colHost.parentNode) colHost.parentNode.removeChild(colHost); colHost = null; crumb("base released (" + why + ")"); }
+  if (k === "stu" && STU) { const s = STU; G.stuCache = s.cache; STU = null; glFree(s.renderer); }
+} catch (e) { try { crumb("release failed: " + (e && e.message)); } catch (er) {} } }
+const MEM_DIET = IOS;
+if (MEM_DIET) { setInterval(() => { const T = performance.now(); if (view === "galaxy") G.galAt = T; if (view === "base") G.colAt = T;
+    if (G3 && view !== "galaxy" && T - (G.galAt || 0) > 30000) worldDrop("gal", "away 30 s"); if (C3 && view !== "base" && T - (G.colAt || 0) > 30000) worldDrop("col", "away 30 s"); }, 4000);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) { worldDrop("gal", "background"); worldDrop("col", "background"); worldDrop("stu", "background"); } }); }
 function map3DRebuild() {
   const old = G3; if (!old) return; const cam = old.cam; G3 = null;
   try { old.renderer.dispose(); } catch (e) {}
@@ -8604,7 +8624,7 @@ function studio() {
     const fill = new TH.DirectionalLight(0xffc890, .7); fill.position.set(-3, -2, 6); scene.add(fill);
     scene.add(new TH.AmbientLight(0x4a5468, .2));
     key.shadow.mapSize.set(1024, 1024); Object.assign(key.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: .5, far: 40 }); key.shadow.bias = -.0008;
-    STU = { cv, renderer, scene, camera: new TH.PerspectiveCamera(28, 2, .1, 400), cache: {}, tex: null, key };
+    STU = { cv, renderer, scene, camera: new TH.PerspectiveCamera(28, 2, .1, 400), cache: G.stuCache || {}, tex: null, key };
   } catch (e) { STU = false; }
   return STU || null;
 }
@@ -10527,6 +10547,7 @@ function domeTex() {
 function initColony(host) {
   const cv = host.querySelector("#col3d"); if (!cv) return null;
   let renderer; try { renderer = new TH.WebGLRenderer({ canvas: cv, antialias: GFX_AA || !MOBILE, powerPreference: "high-performance" }); } catch (e) { C3fail = true; return null; }
+  cv.addEventListener("webglcontextlost", e => { e.preventDefault(); if (cv._udfFree) return; crumb("base GPU reset"); setTimeout(() => { if (C3 && C3.renderer === renderer) { const old = C3; C3 = null; glFree(old.renderer); if (colHost && colHost.parentNode) colHost.parentNode.removeChild(colHost); colHost = null; if (view === "base") render(); } }, 1500); }, false); /* v379: rebuild instead of staying black */
   renderer.setPixelRatio(Math.min(gfxMaxPR(), mobilePRCap())); // phones: up to 2x (v145) with soft shadows on, tablets by pixel budget (v163)
   renderer.toneMapping = TH.ACESFilmicToneMapping; renderer.toneMappingExposure = .78; renderer.outputEncoding = TH.sRGBEncoding;
   renderer.shadowMap.enabled = gfx("shadows") > 0; renderer.shadowMap.type = TH.PCFSoftShadowMap; // v124: Graphics > Shadows
@@ -11334,7 +11355,7 @@ function render(keepScroll) {
       m.innerHTML = ""; m.appendChild(mapHost);
       if (!mapHost.dataset.init) {
         mapHost.dataset.init = "1";
-        if (TH && !G3fail) { G3 = init3D(mapHost); if (G3) { bind3D($("#galaxyfx")); hoverBind($("#galaxyfx")); }
+        if (TH && !G3fail) { G3 = init3D(mapHost); if (G3) { bind3D($("#galaxyfx")); hoverBind($("#galaxyfx")); if (G.camKeep && G3.cam) { Object.assign(G3.cam, G.camKeep, { goal: null, follow: null, followFleet: null }); G.camKeep = null; } }
           // v108 mobile: three.js restores a lost WebGL context itself; we re-measure after a restore, a resume or a turn of the phone
           if (G3) { const re = () => { if (G3) G3.size = [0, 0]; }; glWatch(G3); shipPrewarm(G3); mapShaderWarm(G3); if (!map3DInit.once) { map3DInit.once = 1; document.addEventListener("visibilitychange", () => { if (!document.hidden) re(); }); addEventListener("orientationchange", () => setTimeout(re, 300)); } } }
         if (!G3) { const tmp = document.createElement("div"); tmp.innerHTML = mapShell(false); m.innerHTML = ""; mapHost = tmp.firstElementChild; mapHost.dataset.init = "1"; m.appendChild(mapHost); bindMap($("#galaxy")); }
@@ -11990,6 +12011,15 @@ function shFind() {
     return `<div class="hd"><div><div class="chapter" style="color:#9fe8d8">🔭 Finder</div><h2>♻ Debris fields</h2><p class="note">Wreckage left by battles, waiting to be recovered. Recyclers collect it. On the map each field has a dashed salvage ring and a ♻ tag.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
       <div class="list">${list.map(x => `<button class="tgt" data-act="planet" data-id="${x.p.id}"><span class="lvl" style="color:#9fe8d8;border-color:#9fe8d8">♻</span><span><span class="nm">${esc(x.p.name)}</span><br><span class="sub">${fmt(x.p.debris.m || 0)} metal · ${fmt(x.p.debris.c || 0)} crystal${h ? ` · ${ftime(travelMs(h, x.p, { recycler: 1 }))} by Recycler` : ""}</span></span><span class="pill ok">Recycle</span></button>`).join("") || '<p class="note">No debris fields charted. They form wherever battles are fought.</p>'}</div>
       <button class="btn ghost wide" data-act="findClear">Clear highlight</button>`; }
+  if (r === "ev") { /* v378 Map Events: things happening out on the map right now. New map events add a row here. */
+    const live = evActive(T), cubeSub = live ? `Live now · ends in ${ftime(evStart(evWeek(T)) + EV_DUR - T)}` : `Next battle in ${ftime(evStart(evWeek(T) + 1) - T)} · every Friday`;
+    const pods = (S.caches || []).filter(c => c.until > T).sort((a, b) => a.until - b.until);
+    return `<div class="hd"><div><div class="chapter" style="color:#c9a6ff">🔭 Finder</div><h2>Map Events</h2><p class="note">Things happening out on the map. Tap one to fly there.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
+      <h2 class="sec">Weekly battle</h2><div class="list"><button class="tgt mev${live ? " mlive" : ""}" data-act="nexus"><span class="lvl" style="color:#c9a6ff;border-color:#c9a6ff">■</span><span><span class="nm">Battle for the Cube</span><br><span class="sub">${cubeSub}</span><br><span class="sub">Alliances fight to hold the giant Cube. Hold it longest to win.</span></span><span class="pill ${live ? "bad" : "go"}">${live ? "Live!" : "Fly there"}</span></button></div>
+      <h2 class="sec">Drifting salvage</h2><div class="list">${pods.map(c => `<button class="tgt" data-act="podGo" data-id="${c.id}"><span class="lvl" style="color:${CACHE_T[c.kind][1]};border-color:${CACHE_T[c.kind][1]}">◇</span><span><span class="nm">${CACHE_T[c.kind][0]}</span><br><span class="sub">Free loot · gone in ${ftime(c.until - T)}</span></span><span class="pill ok">Go</span></button>`).join("") || '<p class="note">No salvage drifting near your worlds right now. New pods turn up every few minutes.</p>'}</div>
+      <div class="mevsoon"><b>More map events are on the way</b><span>When a new one starts, it shows up right here.</span></div>
+      <button class="btn ghost wide" data-act="events">🏆 Event rewards &amp; rankings</button>
+      <button class="btn ghost wide" data-act="findClear">Clear highlight</button>`; }
   if (r === "h") { /* v376 Hive Worlds: planets the Hive holds, nearest first, with what a raid carries home */
     const hv = G.list.filter(p => pStatus(p, T) === "hive" && !isFogged(p, T)).sort((a, b) => dist(a) - dist(b)).slice(0, 12);
     return `<div class="hd"><div><div class="chapter" style="color:#f0a945">🔭 Finder</div><h2>Hive Worlds</h2><p class="note">Planets the Hive took over. Beat the garrison and your ships carry home half of what's stored there. Nearest to ${esc(h ? h.name : S.homeName)} first.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
@@ -12449,10 +12479,11 @@ function finderTiles(T, h) { const ready = x => !isFogged(x, T);
   let evN = 0; try { for (const e of EVS) if (e[0] !== "gifts" || myAlly()) evN += evCount(e[0]) || 0; } catch (e) {} const evLive = (() => { try { return evActive(T) || gwLive(T); } catch (e) { return false; } })();
   const L = [["m", "⛏", "Gather", "Free metal, crystal and gas for your base", "#5dff9a", "Easy"], ["x", "☠", "Pirates", "Beat them and keep their loot", "#ff6b5a", "Fight"],
     ["w", "🦈", "Monsters", "Hunt space beasts for rare treasure", "#7fd4ff", "Tough"], ["y", "▲", "Treasure", "Open old space station vaults", "#ffd36b", "Explore"],
-    ["h", "⬢", "Hive Worlds", "Raid planets the Hive took over", "#f0a945", "Raid"], ["ev", "🏆", "Events", "The Cube and other prize events", "#c9a6ff", "Prizes", "events"],
+    ["h", "⬢", "Hive Worlds", "Raid planets the Hive took over", "#f0a945", "Raid"], ["ev", "🏆", "Events", "The Cube and other map events", "#c9a6ff", "Map"],
     ["q", "■", "Boss Cubes", "Giant bosses. Team up with friends", "#5dff6a", "Team"], ["s", "◆", "Shard Mines", "Dig up rare Void Shards", NODE_T.s.col, "Rare"],
     ["d", "♻", "Salvage", "Scoop up wreckage after battles", "#9fe8d8", "Easy"], ["o", "⌖", "Coordinates", "Find any spot and jump there", "#5dffa8", "Travel"], ["ly", "◎", "Void Layers", `Harder and richer toward the Core${h ? " · you're in " + zoneOf(h.r) : ""}`, "#c94ad6", "Guide", "layers", 1]];
-  const badge = r => r === "ev" ? (evN ? `${evN} to claim` : evLive ? "Live!" : "See all") : r === "ly" ? "Guide" : n[r] ? `${n[r] > 99 ? "99+" : n[r]} found` : r === "o" ? "Jump" : "Explore";
+  const pods = (S.caches || []).filter(c => c.until > T).length;
+  const badge = r => r === "ev" ? (evLive ? "Live!" : pods ? `${pods} pod${pods > 1 ? "s" : ""}` : evN ? `${evN} to claim` : "See all") : r === "ly" ? "Guide" : n[r] ? `${n[r] > 99 ? "99+" : n[r]} found` : r === "o" ? "Jump" : "Explore";
   return `<div class="ftiles">${L.map(([r, ic, nm, d, c, tag, act, wide]) => `<button class="ftile${wide ? " fwide" : ""}${r === "ev" && (evN || evLive) ? " fhot" : ""}" data-ft="${r}" data-act="${act || "find"}" data-r="${r}" style="--fc:${c}"><span class="fi">${ic}</span><b>${nm}</b><small>${d}</small><span class="fb">${badge(r)}</span><i class="ftag">${tag}</i></button>`).join("")}</div>`; }
 /* v373 the Advisor's first walk through the Finder: a spotlight on each part, her line beside it, Next or tap anywhere */
 const FTOUR = [[".ftiles", "This is your Finder! Everything you need outside your base is right here."],
@@ -15107,7 +15138,7 @@ function battlePrebake(r) { if (!r || !r.start || battlePrebake[r.id]) return; b
 function gpuNap(on) { for (const W of [G3, C3]) { if (!W || !W.renderer) continue; try { if (on) { W.renderer.setSize(1, 1, false); W.size = [1, 1]; } else W.size = [0, 0]; } catch (e) {} }
   if (on) for (const id of ["#galaxyfx", "#colfx"]) { const c = $(id); if (c) { c.width = 1; c.height = 1; } } }
 function playBattle(r) {
-  if (battle) closeBattle(); crumb("battle replay: " + String((r && r.title) || "battle").slice(0, 40)); gpuNap(true);
+  if (battle) closeBattle(); crumb("battle replay: " + String((r && r.title) || "battle").slice(0, 40)); if (MEM_DIET) { worldDrop("gal", "battle"); worldDrop("col", "battle"); } gpuNap(true);
   const w = document.createElement("div"); w.className = "battle"; w.id = "battle";
   w.innerHTML = `<canvas id="bcv" aria-label="Battle replay"></canvas>
     <div class="bhud top" id="bhA"></div><div class="bhud bot" id="bhD"></div><div class="bev" id="bev" aria-live="polite"></div>
@@ -17204,6 +17235,9 @@ const ACT = {
   labsAll: d => { sheet.all = d.v === "1"; renderSheet(); },
   musicTrack: d => { const v = d.v === "file" ? "file" : "space"; if (AU.track === v) return; AU.track = v; saveAudioPrefs(); unlockAudio();
     if (AU.ctx) { if (v === "file") startFileTrack(); else genSpace(); applyAudio(); } render(true); },
+  podGo: d => { const c = (S.caches || []).find(x => x.id === d.id); if (!c) { toast("That pod drifted away."); renderSheet(); return; } closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); }
+    let tries = 0; const fly = () => { const o = G3 && G3.cacheO && G3.cacheO.get(d.id); if (!G3 || !G3.cam || !o) { if (tries++ < 40) setTimeout(fly, 100); return; } G3.cam.followFleet = null; G3.cam.follow = null; const q = o.grp.position; G3.cam.goal = { tx: q.x, ty: q.y + 6, tz: q.z, dist: 110 }; };
+    fly(); setTimeout(fly, 300); toast("Tap the glowing pod to haul it in!"); },
   grabCache: d => act(() => { const c = (S.caches || []).find(x => x.id === d.id); if (!c || !canPlay()) return; const got = cacheGrab(d.id); if (!got) return;
     toast(`${CACHE_T[c.kind][0]} recovered: ${got}.`, "win"); if (G3) (G3.bursts = G3.bursts || []).push({ p: new TH.Vector3(c.x, 1.4, c.y), t: performance.now(), col: CACHE_T[c.kind][1], txt: "+" + got }); }),
   /* v65 random jump: any free open orbit in the galaxy, picked at random, then the normal teleport rules apply */
