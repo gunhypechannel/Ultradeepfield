@@ -78,7 +78,7 @@ css = '''
 .htbl{flex:none;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:6px}.hrow{display:grid;grid-template-columns:var(--hc);gap:6px;padding:7px 10px;font-size:12.5px;border-top:1px solid var(--line)}.hrow:first-child{border-top:0}.hrow.hh{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;background:rgba(85,214,232,.06)}.hrow span{overflow-wrap:anywhere}
 .hcr{flex:none}.hcr summary{cursor:pointer;list-style:none;font-size:13px;line-height:1.4}.hcr pre{white-space:pre-wrap;font-size:11px;max-height:260px;overflow:auto;margin:8px 0 0;user-select:text}
 '''
-i = t.index('</style>'); t = t[:i] + css + t[i:]
+i = t.index('</style>', t.index('.fshero{')); t = t[:i] + css + t[i:]  # the main stylesheet, not the tiny first one
 open(p, "w").write(t)
 # the "closed unexpectedly" toast still shows for a crash that went into the queue
 t = open(p).read(); a = 'setTimeout(() => { try { if (G.lastCrashFresh) { const L = G.lastCrash.ev'; assert t.count(a) == 1; t = t.replace(a, 'setTimeout(() => { try { if (G.lastCrashFresh || G.lastCrashToast) { const L = G.lastCrash.ev'); open(p, "w").write(t)

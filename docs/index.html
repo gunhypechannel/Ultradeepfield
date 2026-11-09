@@ -1,28 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
-/* v373 the Finder */
-.tbtn{display:inline-flex;align-items:center;gap:6px}.tbtn .tbi{font-size:16px;line-height:1}
-.tbtn.fnew{animation:tbPulse 1.6s ease-in-out infinite}@keyframes tbPulse{0%,100%{box-shadow:0 6px 20px rgba(85,214,232,.25),0 0 0 0 rgba(85,214,232,.6)}50%{box-shadow:0 6px 20px rgba(85,214,232,.35),0 0 0 9px rgba(85,214,232,0)}}
-.fhdb{display:flex;gap:6px;flex:none}.sheet .x.fhelp{color:var(--cyan);border-color:var(--cyan);font-family:var(--f-display);font-weight:700}
-.ftiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 6px}@media (min-width:640px){.ftiles{grid-template-columns:repeat(4,1fr)}}
-.ftile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:12px 12px 30px;min-height:112px;border-radius:14px;border:1px solid color-mix(in srgb,var(--fc) 60%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--fc) 20%,#0a1826),#06101b 80%);color:#eaf6ff;text-align:left;cursor:pointer;box-shadow:inset 0 0 18px color-mix(in srgb,var(--fc) 16%,transparent);font:inherit}
-.ftile:active{transform:scale(.97)}.ftile .fi{font-size:28px;line-height:1;color:var(--fc);filter:drop-shadow(0 0 6px color-mix(in srgb,var(--fc) 70%,transparent))}
-.ftile b{font-family:var(--f-display);font-size:16px;letter-spacing:.04em;margin-top:4px}.ftile small{font-size:12.5px;color:#a9c4d6;line-height:1.3}
-.ftile .fb{position:absolute;top:9px;right:9px;font-family:var(--f-display);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid var(--fc);color:var(--fc);background:rgba(4,12,20,.6)}
-.ftile .ftag{position:absolute;left:12px;bottom:9px;font-style:normal;font-family:var(--f-display);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#04121c;background:var(--fc);padding:1px 7px;border-radius:5px}
-#ftour{position:fixed;inset:0;z-index:300;cursor:pointer}
-#ftour .ftspot{position:fixed;border-radius:16px;border:2px solid #7fe9ff;box-shadow:0 0 0 9999px rgba(2,8,16,.72),0 0 22px rgba(127,233,255,.7);transition:left .3s,top .3s,width .3s,height .3s;pointer-events:none;animation:ftGlow 1.4s ease-in-out infinite}
-@keyframes ftGlow{50%{border-color:#fff;box-shadow:0 0 0 9999px rgba(2,8,16,.72),0 0 34px rgba(127,233,255,.95)}}
-#ftour .ftcard{position:fixed;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));margin:0 auto;max-width:520px;display:flex;gap:10px;align-items:flex-end;padding:10px 12px;border-radius:16px;border:1px solid #57dcff;background:linear-gradient(180deg,rgba(14,44,66,.97),rgba(6,20,34,.98));box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 18px rgba(70,200,255,.3);cursor:default}
-#ftour .ftcard img{width:64px;height:84px;object-fit:cover;object-position:50% 12%;border-radius:10px;flex:none;filter:drop-shadow(0 0 8px rgba(90,210,255,.6))}
-#ftour .fttx{flex:1;min-width:0}#ftour .fttx b{font-family:var(--f-display);font-size:12px;letter-spacing:.14em;color:#7fe9ff;text-transform:uppercase}#ftour .fttx p{margin:3px 0 8px;font-size:16px;line-height:1.35;color:#f2fbff}
-#ftour .ftnav{display:flex;align-items:center;gap:8px}#ftour .ftdots{flex:1;display:flex;gap:4px}#ftour .ftdots i{width:7px;height:7px;border-radius:50%;background:rgba(127,233,255,.25)}#ftour .ftdots i.on{background:#7fe9ff}
-.sbkb{background:rgba(8,22,34,.94)}
-
-/* v373 crash & performance page */
-.hsum{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0}.hsum div{border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;background:var(--hull)}.hsum b{display:block;font-family:var(--f-display);font-size:18px;color:#dff4ff}.hsum small{font-size:10.5px;color:var(--muted)}
-.htbl{flex:none;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:6px}.hrow{display:grid;grid-template-columns:var(--hc);gap:6px;padding:7px 10px;font-size:12.5px;border-top:1px solid var(--line)}.hrow:first-child{border-top:0}.hrow.hh{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;background:rgba(85,214,232,.06)}.hrow span{overflow-wrap:anywhere}
-.hcr{flex:none}.hcr summary{cursor:pointer;list-style:none;font-size:13px;line-height:1.4}.hcr pre{white-space:pre-wrap;font-size:11px;max-height:260px;overflow:auto;margin:8px 0 0;user-select:text}
-</style><meta name="theme-color" content="#05090f"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/favicon-32.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Deep Field"><meta name="description" content="Build an empire across the deep field. Play with friends in a shared galaxy."></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><meta name="theme-color" content="#05090f"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/favicon-32.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Deep Field"><meta name="description" content="Build an empire across the deep field. Play with friends in a shared galaxy."></head><body>
 <title>Ultra Deep Field</title>
 <script>/* v363 Chrome "desktop site" on Android phones: show the game in a phone-width frame */(function () { try {
   var q = location.search, force = /[?&]desktest=1/.test(q); if (window.top !== window.self || /[?&]nodesk=1/.test(q)) return;
@@ -1531,6 +1507,31 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
 #tutguide .tg-tip{display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,rgba(255,206,105,.42),rgba(226,142,38,.42))!important;border:1px solid rgba(255,221,145,.7);color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 2px rgba(0,0,0,.8);box-shadow:0 4px 12px rgba(0,0,0,.28)}
 #tutguide.acad .tgx{display:none!important}#tutguide .tg-tip .tgl{flex:1 1 auto;min-width:0}#tutguide .tgx{flex:none;margin-left:0;background:rgba(7,16,25,.35);border-color:rgba(255,255,255,.55);color:#fff}
 .spys.tourOn{border-color:var(--amber)!important;box-shadow:0 0 0 1px var(--amber),0 0 18px rgba(255,190,80,.25)}.tourtip{margin:8px 0 6px;color:var(--amber);font-size:14px;line-height:1.35}
+
+/* v373 the Finder */
+.tbtn{display:inline-flex;align-items:center;gap:6px}.tbtn .tbi{font-size:16px;line-height:1}
+.tbtn.fnew{animation:tbPulse 1.6s ease-in-out infinite}@keyframes tbPulse{0%,100%{box-shadow:0 6px 20px rgba(85,214,232,.25),0 0 0 0 rgba(85,214,232,.6)}50%{box-shadow:0 6px 20px rgba(85,214,232,.35),0 0 0 9px rgba(85,214,232,0)}}
+.fhdb{display:flex;gap:6px;flex:none}.sheet .x.fhelp{color:var(--cyan);border-color:var(--cyan);font-family:var(--f-display);font-weight:700}
+.ftiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 6px}@media (min-width:640px){.ftiles{grid-template-columns:repeat(4,1fr)}}
+.ftile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:12px 12px 30px;min-height:112px;border-radius:14px;border:1px solid color-mix(in srgb,var(--fc) 60%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--fc) 20%,#0a1826),#06101b 80%);color:#eaf6ff;text-align:left;cursor:pointer;box-shadow:inset 0 0 18px color-mix(in srgb,var(--fc) 16%,transparent);font:inherit}
+.ftile:active{transform:scale(.97)}.ftile .fi{font-size:28px;line-height:1;color:var(--fc);filter:drop-shadow(0 0 6px color-mix(in srgb,var(--fc) 70%,transparent))}
+.ftile b{font-family:var(--f-display);font-size:16px;letter-spacing:.04em;margin-top:4px}.ftile small{font-size:12.5px;color:#a9c4d6;line-height:1.3}
+.ftile .fb{position:absolute;top:9px;right:9px;font-family:var(--f-display);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid var(--fc);color:var(--fc);background:rgba(4,12,20,.6)}
+.ftile .ftag{position:absolute;left:12px;bottom:9px;font-style:normal;font-family:var(--f-display);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#04121c;background:var(--fc);padding:1px 7px;border-radius:5px}
+#ftour{position:fixed;inset:0;z-index:300;cursor:pointer}
+#ftour .ftspot{position:fixed;border-radius:16px;border:2px solid #7fe9ff;box-shadow:0 0 0 9999px rgba(2,8,16,.72),0 0 22px rgba(127,233,255,.7);transition:left .3s,top .3s,width .3s,height .3s;pointer-events:none;animation:ftGlow 1.4s ease-in-out infinite}
+@keyframes ftGlow{50%{border-color:#fff;box-shadow:0 0 0 9999px rgba(2,8,16,.72),0 0 34px rgba(127,233,255,.95)}}
+#ftour .ftcard{position:fixed;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));margin:0 auto;max-width:520px;display:flex;gap:10px;align-items:flex-end;padding:10px 12px;border-radius:16px;border:1px solid #57dcff;background:linear-gradient(180deg,rgba(14,44,66,.97),rgba(6,20,34,.98));box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 18px rgba(70,200,255,.3);cursor:default}
+#ftour .ftcard img{width:64px;height:84px;object-fit:cover;object-position:50% 12%;border-radius:10px;flex:none;filter:drop-shadow(0 0 8px rgba(90,210,255,.6))}
+#ftour .fttx{flex:1;min-width:0}#ftour .fttx b{font-family:var(--f-display);font-size:12px;letter-spacing:.14em;color:#7fe9ff;text-transform:uppercase}#ftour .fttx p{margin:3px 0 8px;font-size:16px;line-height:1.35;color:#f2fbff}
+#ftour .ftnav{display:flex;align-items:center;gap:8px}#ftour .ftdots{flex:1;display:flex;gap:4px}#ftour .ftdots i{width:7px;height:7px;border-radius:50%;background:rgba(127,233,255,.25)}#ftour .ftdots i.on{background:#7fe9ff}
+.sbkb{background:rgba(8,22,34,.94)}
+
+/* v373 crash & performance page */
+.hsum{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0}.hsum div{border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;background:var(--hull)}.hsum b{display:block;font-family:var(--f-display);font-size:18px;color:#dff4ff}.hsum small{font-size:10.5px;color:var(--muted)}
+.htbl{flex:none;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:6px}.hrow{display:grid;grid-template-columns:var(--hc);gap:6px;padding:7px 10px;font-size:12.5px;border-top:1px solid var(--line)}.hrow:first-child{border-top:0}.hrow.hh{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;background:rgba(85,214,232,.06)}.hrow span{overflow-wrap:anywhere}
+.hcr{flex:none}.hcr summary{cursor:pointer;list-style:none;font-size:13px;line-height:1.4}.hcr pre{white-space:pre-wrap;font-size:11px;max-height:260px;overflow:auto;margin:8px 0 0;user-select:text}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="lib/GLTFLoader-r128.js"></script>
