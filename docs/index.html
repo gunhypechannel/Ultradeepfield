@@ -2524,7 +2524,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 369;
+const GAME_V = 370;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -2830,7 +2830,7 @@ const PX_DIR = "skins/";
 const PX_RING = { dragon: .28, glacier: .28, /* v339: the dragons' wings need room */ forge: .25, pearl: .25, metropolis: .25, lattice: .25, clockwork: .25, saturn: .25 };
 const pxF = id => (PXS[id] && PXS[id].img && !PXS[id].imgBad && PX_RING[id]) || .34;
 function pxPic(src, ok, bad) { const im = new Image(); im.decoding = "async"; im.onload = () => ok(im); im.onerror = () => bad && bad(); im.src = PX_DIR + src + (PX_FIX[src] ? "?v=" + PX_FIX[src] : ""); }
-const PX_FIX = { "dragon.webp": 3, "dragon-map.webp": 3, "glacier.webp": 2, "glacier-map.webp": 2, "hellgate.webp": 2, "singular.webp": 2, "singular-map.webp": 2, "emerald.webp": 2, "emerald-map.webp": 2, "atoll.webp": 2, "atoll-map.webp": 2, "dread.webp": 2, "dread-map.webp": 2 }; /* v340: four more remastered */ /* v339: new Dragon Scale and Frost Wyrm paintings; Hellgate's stray line removed */
+const PX_FIX = { "dragon.webp": 3, "dragon-map.webp": 3, "glacier.webp": 2, "glacier-map.webp": 2, "hellgate.webp": 2, "singular.webp": 2, "singular-map.webp": 2, "emerald.webp": 3, "emerald-map.webp": 2, "atoll.webp": 2, "atoll-map.webp": 2, "dread.webp": 2, "dread-map.webp": 2 }; /* v340: four more remastered */ /* v339: new Dragon Scale and Frost Wyrm paintings; Hellgate's stray line removed */
 const hex3 = c => { const v = parseInt(c.slice(1), 16); return [v >> 16 & 255, v >> 8 & 255, v & 255]; };
 function pxGen(id, Wd) {
   const s = PXS[id], f = s.f, W = Wd || 512, H = W / 2, r = rnd(hash(id)), fb = pxNoise(hash(id) + 7), fb2 = pxNoise(hash(id) + 19), pal = s.p.map(hex3), pts = [];
