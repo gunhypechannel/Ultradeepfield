@@ -2492,7 +2492,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 359;
+const GAME_V = 360;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9654,7 +9654,15 @@ async function glbLights(k, s) {
       const w = clamp((mx - .4) / .3, 0, 1) * clamp((sat - .16) / .3, 0, 1); Wt[i] = w; D[i * 4] *= w; D[i * 4 + 1] *= w; D[i * 4 + 2] *= w; D[i * 4 + 3] = 255; }
     x.putImageData(id, 0, 0);
     let et; if (window.createImageBitmap) { const bm = await createImageBitmap(c); et = new TH.Texture(bm); c.width = c.height = 0; } else et = new TH.CanvasTexture(c);
-    et.flipY = false; et.encoding = TH.sRGBEncoding; et.needsUpdate = true; m.emissiveMap = et; m.emissive.set(0xffffff); m.emissiveIntensity = 2.6 * (1 + 1.1 * DN_NIGHT); if (!GLB_EMI.includes(m)) GLB_EMI.push(m); m.envMapIntensity = 1.25; m.needsUpdate = true;
+    et.flipY = false; et.encoding = TH.sRGBEncoding; et.needsUpdate = true; m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader // v360 polished metal, paint kept
+      .replace("#include <map_fragment>", `#include <map_fragment>
+        { vec3 c = pow(max(diffuseColor.rgb, vec3(0.0)), vec3(1.0 / 2.2)); float L = dot(c, vec3(.2126, .7152, .0722)), mx = max(max(c.r, c.g), c.b), mn = min(min(c.r, c.g), c.b);
+          float sat = mx > 0.0 ? (mx - mn) / mx : 0.0, keep = min(1.0, sat * 2.2), L2 = .24 + .56 * pow(L, .9), f = L > .001 ? L2 / L : 1.0, t = 1.0 - keep * .7;
+          c *= t * f + (1.0 - t); diffuseColor.rgb = pow(clamp(c, 0.0, 1.0), vec3(2.2)); }`)
+      .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n roughnessFactor = .25 + .25 * roughnessFactor;")
+      .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\n metalnessFactor = .7 + .2 * metalnessFactor;"); };
+    m.customProgramCacheKey = () => "bld360"; m.roughness = 1; m.metalness = 1;
+    m.emissiveMap = et; m.emissive.set(0xffffff); m.emissiveIntensity = 2.6 * (1 + 1.1 * DN_NIGHT); if (!GLB_EMI.includes(m)) GLB_EMI.push(m); m.userData.env0 = 1.5; m.envMapIntensity = 1.5 * DN_ENV; m.needsUpdate = true;
     // lit spots: triangles whose texels glow, clustered
     const g = mesh.geometry, P = g.attributes.position, U = g.attributes.uv, I = g.index; if (!P || !U) return;
     const n = I ? I.count / 3 : P.count / 3, tri = [], bb = new TH.Box3().setFromBufferAttribute(P), size = Math.max(bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z);
@@ -10703,6 +10711,15 @@ function poolMat(rgb) { rgb = rgb.split(",").map(v => Math.min(255, Math.round(v
 const POOL_G = () => POOL_G.g || (POOL_G.g = new TH.PlaneGeometry(1, 1).rotateX(-Math.PI / 2));
 const GLB_EMI = []; // building model materials whose lit windows brighten at night
 /* v355 the base's time of day from the player's clock */
+/* v360 everything built on the base reads as metal: plating, decks, rails, lamps, crates, turrets, domes. Each material once; sand, rocks,
+   glass and glow materials are left alone. Runs when the base changes (the shadow map is re-rendered then) and every few seconds. */
+const METAL_DONE = new WeakSet(), METAL_LIST = []; let DN_ENV = 1; // reflections of the (daytime) sky fade at night
+function colMetal(W) {
+  const skip = new Set([W.ground && W.ground.material, W.rockM]);
+  W.scene.traverse(o => { if (!o.isMesh) return; for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+    if (!m || METAL_DONE.has(m)) continue; METAL_DONE.add(m); if (skip.has(m) || !m.isMeshStandardMaterial || m.transparent || m.wireframe || (m.userData && m.userData.nometal) || m.customProgramCacheKey !== TH.Material.prototype.customProgramCacheKey) continue;
+    m.metalness = Math.max(m.metalness, .8); m.roughness = Math.min(m.roughness, .32); m.envMapIntensity = Math.max(m.envMapIntensity || 1, 1.7); m.userData.env0 = m.envMapIntensity; m.envMapIntensity *= DN_ENV; METAL_LIST.push(m); m.needsUpdate = true; } });
+}
 function colDayNight(W) {
   const q = /[?&]tod=(\d+(?:\.\d+)?)/.exec(location.search), d = new Date(), hr = q ? +q[1] % 24 : d.getHours() + d.getMinutes() / 60;
   const up = clamp((hr - 5.5) / 2, 0, 1) * clamp((19.5 - hr) / 2, 0, 1), n = 1 - up, dusk = Math.min(1, up * n * 4), key = Math.round(hr * 60);
@@ -10716,7 +10733,8 @@ function colDayNight(W) {
   if (L.rim) L.rim.intensity = .6 * up + .22 * n; if (L.fill) L.fill.intensity = .5 + .25 * n;
   const bg = W.bg0.clone().lerp(new TH.Color(0x03050a), n * .92).lerp(new TH.Color(0x6a3a26), dusk * .25); W.scene.background.copy(bg); if (W.scene.fog) W.scene.fog.color.copy(bg);
   W.renderer.toneMappingExposure = .78 + .07 * n;
-  for (const m of GLB_EMI) m.emissiveIntensity = 2.6 * (1 + 1.1 * n);
+  for (const m of GLB_EMI) { m.emissiveIntensity = 2.6 * (1 + 1.1 * n); if (m.userData.env0 == null) m.userData.env0 = m.envMapIntensity; m.envMapIntensity = m.userData.env0 * (.22 + .78 * up); }
+  DN_ENV = .22 + .78 * up; for (let i = METAL_LIST.length - 1; i >= 0; i--) METAL_LIST[i].envMapIntensity = METAL_LIST[i].userData.env0 * DN_ENV; // v360 metal stops mirroring the day sky at night
   for (const k in POOL_MATS) POOL_MATS[k].opacity = POOL_MATS[k].userData.op * (.22 + .78 * n);
   DN_NIGHT = n; W.dnKey = key; W.dnBg = W.scene.background.getHex();
 }
@@ -10817,6 +10835,7 @@ function drawColony(t) {
   upStep(W, t); // v101: upgrade cinematics
   if (W.prev) { const left = W.prev.until - performance.now(); if (left <= 0 || !W.blds[W.prev.k]) { W.scene.remove(W.prev.h); W.prev = null; } else { W.prev.h.position.y = .05 + Math.sin(t * .003) * .05; HOLO_WIRE().opacity = .35 + .2 * Math.sin(t * .006); } }
   try { colDayNight(W); } catch (e) {} // v355
+  try { if (W.renderer.shadowMap.needsUpdate || (W.metF = (W.metF || 0) + 1) % 150 === 1) colMetal(W); } catch (e) {} // v360
   { const B = colBloom(W); let ok = false; if (B) try { B.run(); ok = true; } catch (e) { W.bloom = null; W.renderer.setRenderTarget(null); } if (!ok) W.renderer.render(W.scene, W.cam); } // v354 bloom
   // building tags
   const ctx = fx.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
