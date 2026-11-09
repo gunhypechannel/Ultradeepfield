@@ -7,9 +7,9 @@ i=L[0].index('<meta name="theme-color"')
 # rebuild line 0: everything before theme-color, then the part after the website-only head tags
 rest=L[0][i:]; k=rest.find('</head>'); L0=L[0][:i]+(rest[k:] if k>=0 else '')
 assert L[1].startswith('<title>'), L[1][:40]
-cm=[x for x in L[2:8] if x.startswith('<!-- udf-firebase.js -->')]; assert cm
+cm=[x for x in L[2:60] if x.startswith('<!-- udf-firebase.js -->')]; assert cm
 L1=L[1]+cm[0].replace('<!-- udf-firebase.js -->','')
-n=next(idx for idx in range(2,10) if L[idx].startswith('<!-- udf-firebase.js -->'))
+n=next(idx for idx in range(2,60) if L[idx].startswith('<!-- udf-firebase.js -->'))
 body=L[n+1:]
 assert body[-1].startswith('<script>if("serviceWorker"'), body[-1][:40]
 body=body[:-1]+['','','</body></html>']
