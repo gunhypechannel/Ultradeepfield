@@ -255,7 +255,8 @@
       addCss();
       var w = document.createElement("div"); w.id = "udfAuth"; w.className = "udfa"; document.body.appendChild(w);
       var mode = startMode || "in", busy = false, finished = false, resendOn = false; /* v324: the Resend link shows once an email confirmation is in play */
-      function draw(msg, okMsg) {
+      function draw(msg, okMsg) { draw0(msg, okMsg); try { window.udfInstallButton && window.udfInstallButton(w); } catch (x) {} }
+      function draw0(msg, okMsg) {
         var up = mode === "up", reset = mode === "reset", np = mode === "newpw";
         var google = CFG.google && !reset && !np;
         w.innerHTML = '<form class="bx" novalidate><div class="logo"></div><h1>ULTRA DEEP FIELD</h1><p>' + (np ? "Choose a new password." : reset ? "We'll email you a link to set a new password." : up ? "Create your commander account." : "Sign in to join the galaxy.") + '</p>' +

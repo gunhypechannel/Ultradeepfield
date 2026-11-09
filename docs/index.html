@@ -2,6 +2,7 @@
 <title>Ultra Deep Field</title>
 <script src="firebase-config.js"></script>
 <script src="supabase-config.js"></script>
+<script src="udf-install.js"></script>
 <script>/* v206: the game runs on Supabase once supabase-config.js is filled in; until then on the old Firebase server */(function(){var c=window.UDF_SUPABASE||{},on=c.url&&c.anonKey&&String(c.url+c.anonKey).indexOf("PASTE")<0;document.write('<script src="'+(on?"udf-supabase.js":"udf-firebase.js")+'"><\/script>');})();</script>
 <!-- udf-firebase.js --><!-- Ultra Deep Field, formerly Void of War. The old name stays in this note: apps installed before the rename only accept updates that contain it. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2492,7 +2493,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 360;
+const GAME_V = 361;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13767,7 +13768,7 @@ function mGame() {
       <p><b>iPhone and iPad:</b> open the game link in Safari, tap the Share button, then <b>Add to Home Screen</b>. It opens full screen like an app.</p>
       <p><b>Android:</b> open the link in Chrome, tap the ⋮ menu, then <b>Add to Home screen</b>.</p>
       <p>Your empire saves to your account, so you can switch between phone, tablet and computer.${IOS ? " On iPhone, sound follows the silent switch: flip it off to hear music and battles." : ""}</p>
-      ${mrow("This device", IOS ? "iPhone / iPad" : ANDROID ? "Android" : "Computer")}${mrow("Installed", STANDALONE ? "Yes, full screen" : "Running in the browser")}</div>
+      ${mrow("This device", IOS ? "iPhone / iPad" : ANDROID ? "Android" : "Computer")}${mrow("Installed", STANDALONE ? "Yes, full screen" : "Running in the browser")}${!STANDALONE && window.udfInstallGuide ? '<button class="btn amber wide" data-act="instGuide">Show me how</button>' : ""}</div>
     <div class="mcard"><h3>${MI.grid.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Game</h3>${mrow("Galaxy", G.mode === "online" ? "Live" : G.mode === "offline" ? "Solo" : G.mode === "full" ? "Full" : G.mode === "readonly" ? "Watching" : "…")}<p>${net} Other people join when the owner shares this page with them as Editors.</p><div class="mrow"><span>Game version</span><b>v${GAME_V}</b></div>${G.me ? `<div class="mrow"><span>Account ID</span><b style="font-size:11px;word-break:break-all;text-align:right">${esc(G.me)}</b></div><button class="mbtn" data-act="copyId">Copy account ID</button>` : ""}</div>
     <div class="mcard"><h3>${MI.orbit.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Play on Android</h3><p>Open this page in Chrome on your phone, tap the ⋮ menu, then Add to Home screen. It opens like an app, and production keeps running while you're away.</p></div>
     <div class="mcard"><h3>${MI.user.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Briefing</h3><p>Relive the ambush on the way in and hear Admiral Kaskov's opening briefing again.</p><button class="mbtn" data-act="replayIntro">Replay briefing</button></div>
@@ -16352,6 +16353,7 @@ const slotsFull = () => { if (fleetsUsed() >= maxFleets()) { toast(`All ${maxFle
 /* v289: the feedback form is its own script, outside the game's scope: this is what it can see of the game (it could not read the commander's name, or find the 3D views, before) */
 window.UDF_FB = { gl: () => [G3, C3], get g() { return G; }, toast: (m, k) => toast(m, k), v: GAME_V };
 const ACT = {
+  instGuide: () => { try { window.udfInstallGuide && window.udfInstallGuide(); } catch (e) {} }, // v361
   menu: () => ACT.nav({ v: "cmd" }),
   menuClose: () => {},
   howto: () => openSheet({ type: "howto" }), // v279: the Etc. tile
