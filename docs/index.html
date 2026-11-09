@@ -1204,7 +1204,7 @@ main.full{padding:0;overflow:hidden;gap:0}
 .dock button{font-size:9.5px!important;letter-spacing:.02em!important}
 .mbadge.fl{background:#2bc4d6;color:#03141a;box-shadow:0 0 8px rgba(43,196,214,.6)}
 .mbadge{position:absolute;top:3px;left:calc(50% + 6px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#ff4a4a;color:#fff;font:700 10px/16px var(--f-display);letter-spacing:0;box-shadow:0 0 8px rgba(255,74,74,.6)}
-.mallrow{margin:0 0 10px}.mallrow .btn{flex:1}.mailhd{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin:4px 0 8px}.mailhd h2{margin:0;font-size:22px}.mailact{display:flex;gap:6px}
+.mallrow{margin:0 0 10px}.mallrow .btn{flex:1}.mailhd{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:8px;margin:4px 0 8px}.mailhd h2{margin:0;font-size:22px}.mailact{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;flex:1 1 220px;min-width:0}.mailact .btn{white-space:nowrap}
 .mailtabs{overflow-x:auto;scrollbar-width:none}.mailtabs button{flex:none;padding:8px 11px}
 .mlist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .mrowc{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid rgba(127,230,243,.22);background:linear-gradient(160deg,rgba(24,64,96,.32),rgba(4,14,26,.5));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:var(--ink,#e6f2f6);font:inherit;cursor:pointer;position:relative}
@@ -2514,7 +2514,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 363;
+const GAME_V = 364;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
