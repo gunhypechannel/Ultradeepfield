@@ -590,7 +590,7 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 .sitem b{font-size:14px}.sitem small{font-size:12px;color:var(--muted);flex:1;line-height:1.35}
 .sit{display:flex;justify-content:space-between;align-items:center}.sic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:20px;background:rgba(0,0,0,.35);border:1px solid color-mix(in srgb,var(--tc) 60%,transparent);color:var(--tc);text-shadow:0 0 10px var(--tc)}.sic svg{width:22px;height:22px}
 .tier{font-style:normal;font-family:var(--f-display);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--tc);border:1px solid var(--tc);border-radius:6px;padding:1px 6px}
-.sbuy{display:flex;justify-content:space-between;align-items:center;gap:6px}.sbuy .own{font-size:11px;color:var(--cyan)}
+.sbuy{display:flex;justify-content:space-between;align-items:center;gap:6px}.sbuy .own{font-size:11px;color:var(--cyan)}.sbuy .useb{display:flex;gap:6px;margin-left:auto}
 .actives{display:flex;flex-wrap:wrap;gap:6px}.actives .act{font-size:12px;padding:4px 8px;border-radius:8px;background:rgba(85,214,232,.1);border:1px solid rgba(85,214,232,.35);color:#cfefff}.actives .act b{color:var(--cyan)}.actives .act.cls{border-color:rgba(255,207,90,.5);color:#ffe2a0;background:rgba(255,207,90,.08)}
 .rwc .rbh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}.rwc .rbh b{font-family:var(--f-display);letter-spacing:.1em;color:var(--amber)}.rwc .rbh span{font-size:12px;color:var(--muted)}
 .rwt{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.rwt span{display:flex;flex-direction:column;align-items:center;padding:6px;border-radius:10px;background:rgba(0,0,0,.22)}.rwt b{font-family:var(--f-display);font-size:14px}.rwt small{font-size:10.5px;color:var(--muted)}
@@ -2122,6 +2122,9 @@ const runePct = e => S ? Math.round((runeOn(e) * ELEM[e].per * (1 + RING_TK * ri
    +10% on a joint strike against a Lv.10+ Cube. A Lv.25+ core that holds runes holds 2 */
 const runeChance = (lvl, rally) => Math.min(.5, .15 + .015 * ((lvl || 1) - 1)) + (rally && lvl >= 10 ? .1 : 0);
 const cubeRunes = (lvl, rally) => Math.random() < runeChance(lvl, rally) ? (lvl >= 25 ? 2 : 1) : 0;
+/* v367 items whose effect adds up, so using them all at once is safe */
+const USEALL_CAT = new Set(["res", "vip", "boost", "planet", "officer", "legacy", "forge"]);
+const useAllOk = k => { const s = SHOP[k]; return !!(s && s.use && (USEALL_CAT.has(s.cat) || k === "boost5")); };
 function grantRunes(n, why) {
   if (n <= 0) return; S.runes = S.runes || {}; const ks = Object.keys(ELEM), got = [];
   for (let i = 0; i < n; i++) { const e = ks[(Math.random() * ks.length) | 0]; S.runes[e] = (S.runes[e] || 0) + 1; got.push(ELEM[e].n); }
@@ -2462,7 +2465,7 @@ function shShop() {
   const icon = s => s.ic.length === 1 && "mcg".includes(s.ic) ? `<span class="r-${s.ic}">${RI[s.ic]}</span>` : s.ic;
   const card = (k, s) => `<div class="sitem" style="--tc:${s.col || "#55d6e8"}"><div class="sit"><span class="sic">${icon(s)}</span>${s.tier != null ? `<i class="tier">${ITIERS[s.tier][1]}</i>` : ""}</div><b>${esc(s.n)}</b><small>${s.d()}</small>
     <div class="sbuy">${it[k] ? `<span class="own">Owned ×${it[k]}</span>` : "<span></span>"}${s.cost ? `<button class="btn amber sm" data-act="buy" data-k="${k}" ${(S.shards || 0) >= s.cost ? "" : "disabled"}>◆${s.cost}</button>` : `<span class="note">Packs & events</span>`}</div></div>`;
-  const body = cat === "packs" ? packsBody() : cat === "skins" ? `<p class="note">Premium looks for any world you hold. Buy once with Void Shards, then apply from Rename & reskin on the planet. Each adds a small production perk to the world wearing it.</p>${pxGrid("shop")}` : cat === "inv" ? (inv.length ? `<div class="shopgrid">${inv.map(k => { const s = SHOP[k]; return `<div class="sitem" style="--tc:${s.col || "#55d6e8"}"><div class="sit"><span class="sic">${icon(s)}</span>${s.tier != null ? `<i class="tier">${ITIERS[s.tier][1]}</i>` : ""}</div><b>${esc(s.n)} ×${it[k]}</b><small>${s.d()}</small><div class="sbuy"><span></span>${s.use ? `<button class="btn sm" data-act="useItem" data-k="${k}">Use</button>` : `<span class="own">${k === "probe5" ? "Used when you launch probes" : k === "teleport" ? "Use from an empty orbit" : "Use from a planet card"}</span>`}</div></div>`; }).join("")}</div>` : '<p class="note">Your inventory is empty. Items you buy, and spoils from pirate raids, land here.</p>')
+  const body = cat === "packs" ? packsBody() : cat === "skins" ? `<p class="note">Premium looks for any world you hold. Buy once with Void Shards, then apply from Rename & reskin on the planet. Each adds a small production perk to the world wearing it.</p>${pxGrid("shop")}` : cat === "inv" ? (inv.length ? `<div class="shopgrid">${inv.map(k => { const s = SHOP[k]; return `<div class="sitem" style="--tc:${s.col || "#55d6e8"}"><div class="sit"><span class="sic">${icon(s)}</span>${s.tier != null ? `<i class="tier">${ITIERS[s.tier][1]}</i>` : ""}</div><b>${esc(s.n)} ×${it[k]}</b><small>${s.d()}</small><div class="sbuy"><span></span>${s.use ? `<span class="useb">${it[k] > 1 && useAllOk(k) ? `<button class="btn ghost sm" data-act="useAll" data-k="${k}">Use all</button>` : ""}<button class="btn sm" data-act="useItem" data-k="${k}">Use</button></span>` : `<span class="own">${k === "probe5" ? "Used when you launch probes" : k === "teleport" ? "Use from an empty orbit" : "Use from a planet card"}</span>`}</div></div>`; }).join("")}</div>` : '<p class="note">Your inventory is empty. Items you buy, and spoils from pirate raids, land here.</p>')
     : cat === "vip" ? vipShopBody()
     : `<div class="shopgrid">${Object.entries(SHOP).filter(([, s]) => s.cat === cat).map(([k, s]) => card(k, s)).join("")}</div>`;
   return `<div class="hd"><div><div class="chapter">Void Shop</div><h2><span class="shard">◆</span> ${fmt(S.shards || 0)} Void Shards</h2><p class="note">Buy with shards earned from directives, daily tasks, pirate raids and Cube titles. Items wait in your inventory until you use them.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
@@ -2521,7 +2524,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 366;
+const GAME_V = 367;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8474,6 +8477,20 @@ let C3 = null, C3fail = !TH, colHost = null;
 const BPOS = { radar: [5.6, -1.6], metalMine: [-9, -5], crystalMine: [-3.5, -7.5], solar: [3, -7.5], gasSynth: [9, -5], metalStore: [-10, 1.5], crystalStore: [-4.5, -1.5], gasTank: [10, 1.5], robotics: [-4, 5.5], shipyard: [3.5, 5.5], lab: [-10, 7.5], fortress: [10, 7.5], missileSilo: [7.4, -9.2], repairYard: [-11.6, -9.4], fusion: [14.6, -5.5], nanite: [0, 11], terraformer: [-15, -3], allyDepot: [-15, 4.5], phalanx: [15, 3.5], lunarBase: [-7, 11.5], jumpGate: [7.5, 11.5], flagDock: [-0.3, -9.6] };
 /* the base is laid out roomier than it was designed: buildings sit 35% further apart, with walkways between them */
 const BSP = 1.35; for (const k in BPOS) BPOS[k] = [BPOS[k][0] * BSP, BPOS[k][1] * BSP];
+/* v367 the street grid and the block each building stands in */
+const GRID_X = [-15.6, -5.4, 5.4, 15.6], GRID_Z = [-12.8, -4.6, 4.6, 12.8];
+Object.assign(BPOS, { repairYard: [-19, -15.8], crystalMine: [-10.5, -16.7], flagDock: [0, -16.7], gasSynth: [10.5, -16.7], missileSilo: [19, -15.8],
+  terraformer: [-20.05, -8.7], metalMine: [-10.5, -8.7], solar: [0, -8.7], radar: [10.5, -8.7], fusion: [20.05, -8.7],
+  metalStore: [-20.05, 0], crystalStore: [-10.5, 0], gasTank: [10.5, 0], phalanx: [20.05, 0],
+  allyDepot: [-20.05, 8.7], lab: [-10.5, 8.7], robotics: [0, 8.7], shipyard: [10.5, 8.7], fortress: [20.05, 8.7],
+  lunarBase: [-10.5, 16.7], nanite: [0, 16.7], jumpGate: [10.5, 16.7] });
+const onRoad = (x, z, pad) => { pad = pad || 0; const w = .625 + pad; return (GRID_X.some(v => Math.abs(x - v) < w) || GRID_Z.some(v => Math.abs(z - v) < w)) && deckIn(x, z) > .7 - pad; };
+/* v367 the deck outline: an octagon, its corners cut on a circle inside the transit ring. deckPoly(inset) gives its corners, deckIn the distance inside it */
+const DECK = { X: 24.5, Z: 20.6, R: 28.4 };
+function deckPoly(ins) { ins = ins || 0; const X = DECK.X - ins, Z = DECK.Z - ins, R = DECK.R - ins * 1.08, zc = Math.sqrt(Math.max(1, R * R - X * X)), xc = Math.sqrt(Math.max(1, R * R - Z * Z));
+  return [[X, -zc], [X, zc], [xc, Z], [-xc, Z], [-X, zc], [-X, -zc], [-xc, -Z], [xc, -Z]]; }
+function deckIn(x, z) { const P = deckPoly(); let m = 1e9; for (let i = 0; i < 8; i++) { const [ax, az] = P[i], [bx, bz] = P[(i + 1) % 8], ex = bx - ax, ez = bz - az, L = Math.hypot(ex, ez), nx = ez / L, nz = -ex / L;
+    let d = (x - ax) * nx + (z - az) * nz; if (-ax * nx - az * nz < 0) d = -d; m = Math.min(m, d); } return m; }
 let CM = null;
 /* procedural surface textures for realistic hulls: plating, seams, rivets, grime, lit windows */
 function plateTex(base, seam, seed) {
@@ -9672,6 +9689,71 @@ function glbShrink(tex, px) {
   if (window.createImageBitmap) return createImageBitmap(c).then(bm => { tex.image = bm; tex.needsUpdate = true; c.width = c.height = 0; }).catch(() => {});
 }
 /* v353 what each building breathes out: smoke colour (r,g,b), how many chimneys, a beacon, welding flashes */
+/* v367 each building's window light (r,g,b) */
+const BLD_WIN = { metalMine: "255,196,120", crystalMine: "150,220,255", gasSynth: "150,255,190", solar: "255,226,150", metalStore: "255,210,150", crystalStore: "150,215,255",
+  gasTank: "160,255,200", robotics: "255,200,140", shipyard: "255,214,160", lab: "170,205,255", radar: "160,255,210", fusion: "255,170,110", repairYard: "255,200,130",
+  nanite: "205,170,255", fortress: "150,200,255", terraformer: "170,255,170", allyDepot: "255,220,160", lunarBase: "220,230,255", phalanx: "255,140,120" };
+/* v367 rows of lit windows on a building model's walls: horizontal runs on near-vertical faces, each kept on its own UV island */
+function glbWin(k, mesh, D, A) {
+  const g = mesh.geometry, P = g.attributes.position, U = g.attributes.uv, I = g.index; if (!P || !U) return;
+  const WC = (BLD_WIN[k] || "255,210,150").split(",").map(v => +v / 255), core = WC.map(v => 255 * (.5 + .5 * v)), halo = WC.map(v => 255 * v);
+  const nT = I ? I.count / 3 : P.count / 3, vi = j => I ? I.getX(j) : j, par = new Int32Array(P.count); for (let i = 0; i < P.count; i++) par[i] = i;
+  const fd = a => { while (par[a] !== a) a = par[a] = par[par[a]]; return a; };
+  for (let t = 0; t < nT; t++) { const a = fd(vi(t * 3)), b = fd(vi(t * 3 + 1)); par[b] = a; const c = fd(vi(t * 3 + 2)); par[c] = fd(a); }
+  const isl = new Int32Array(A * A).fill(-1), bb = new TH.Box3().setFromBufferAttribute(P), size = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z, .001), hgt = bb.max.y - bb.min.y, tri = []; let tot = 0;
+  for (let t = 0; t < nT; t++) { const ia = vi(t * 3), ib = vi(t * 3 + 1), ic = vi(t * 3 + 2), id = fd(ia);
+    const u0 = U.getX(ia) * A, v0 = U.getY(ia) * A, u1 = U.getX(ib) * A, v1 = U.getY(ib) * A, u2 = U.getX(ic) * A, v2 = U.getY(ic) * A, den = (v1 - v2) * (u0 - u2) + (u2 - u1) * (v0 - v2); if (Math.abs(den) < 1e-9) continue;
+    const x0 = Math.max(0, Math.floor(Math.min(u0, u1, u2))), x1 = Math.min(A - 1, Math.ceil(Math.max(u0, u1, u2))), y0 = Math.max(0, Math.floor(Math.min(v0, v1, v2))), y1 = Math.min(A - 1, Math.ceil(Math.max(v0, v1, v2)));
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { const px = x + .5, py = y + .5, l0 = ((v1 - v2) * (px - u2) + (u2 - u1) * (py - v2)) / den, l1 = ((v2 - v0) * (px - u2) + (u0 - u2) * (py - v2)) / den; if (l0 >= -.02 && l1 >= -.02 && l0 + l1 <= 1.02) isl[y * A + x] = id; }
+    const ax = P.getX(ia), ay = P.getY(ia), az = P.getZ(ia), e1 = [P.getX(ib) - ax, P.getY(ib) - ay, P.getZ(ib) - az], e2 = [P.getX(ic) - ax, P.getY(ic) - ay, P.getZ(ic) - az];
+    const n = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]], ar = Math.hypot(n[0], n[1], n[2]); if (ar < 1e-12) continue; n[0] /= ar; n[1] /= ar; n[2] /= ar;
+    const cy = ay + (e1[1] + e2[1]) / 3; if (Math.abs(n[1]) > .45 || cy - bb.min.y < hgt * .1 || cy > bb.max.y - hgt * .05) continue;
+    tri.push([ar / 2, id, e1, e2, n, u0, v0, u1 - u0, v1 - v0, u2 - u0, v2 - v0]); tot += ar / 2; }
+  const rows = MOBILE ? 70 : 110, pitch = size * .032, rr = rnd(hash(k + "bwin"));
+  for (let r0 = 0; r0 < rows && tot > 0; r0++) { let pick = rr() * tot, T = null; for (const q of tri) { pick -= q[0]; if (pick <= 0) { T = q; break; } } if (!T) T = tri[tri.length - 1];
+    const [, id, e1, e2, n, u0, v0, du1, dv1, du2, dv2] = T;
+    let d = [n[2], 0, -n[0]], dl = Math.hypot(d[0], d[2]); if (dl < .3) continue; d = [d[0] / dl, 0, d[2] / dl]; const hv = [n[1] * d[2] - n[2] * d[1], n[2] * d[0] - n[0] * d[2], n[0] * d[1] - n[1] * d[0]];
+    const g11 = e1[0] * e1[0] + e1[1] * e1[1] + e1[2] * e1[2], g12 = e1[0] * e2[0] + e1[1] * e2[1] + e1[2] * e2[2], g22 = e2[0] * e2[0] + e2[1] * e2[1] + e2[2] * e2[2], gd = g11 * g22 - g12 * g12; if (Math.abs(gd) < 1e-18) continue;
+    const uvOf = w => { const p1 = w[0] * e1[0] + w[1] * e1[1] + w[2] * e1[2], p2 = w[0] * e2[0] + w[1] * e2[1] + w[2] * e2[2], a = (g22 * p1 - g12 * p2) / gd, b = (g11 * p2 - g12 * p1) / gd; return [a * du1 + b * du2, a * dv1 + b * dv2]; };
+    const Ju = uvOf(d), Jv = uvOf(hv), jd = Ju[0] * Jv[1] - Ju[1] * Jv[0]; if (Math.abs(jd) < 1e-9) continue; const ppu = Math.hypot(Ju[0], Ju[1]); if (ppu * pitch < 1.4 || ppu * pitch > A * .06) continue;
+    let a0 = rr(), b0 = rr(); if (a0 + b0 > 1) { a0 = 1 - a0; b0 = 1 - b0; } const c0u = u0 + a0 * du1 + b0 * du2, c0v = v0 + a0 * dv1 + b0 * dv2;
+    const ww = pitch * .55, wh = pitch * .75, hr = pitch * 1.2, nWin = 2 + Math.floor(rr() * 7), st = Math.floor(-nWin / 2), lit = .7 + rr() * .5;
+    for (let wi = st; wi < st + nWin; wi++) { if (rr() < .15) continue; const cu = c0u + Ju[0] * pitch * wi, cv = c0v + Ju[1] * pitch * wi; if (cu < 0 || cv < 0 || cu >= A || cv >= A || isl[Math.floor(cv) * A + Math.floor(cu)] !== id) continue;
+      const R2 = Math.ceil(hr * Math.max(ppu, Math.hypot(Jv[0], Jv[1]))) + 1;
+      for (let y = Math.max(0, Math.floor(cv - R2)); y <= Math.min(A - 1, Math.ceil(cv + R2)); y++) for (let x = Math.max(0, Math.floor(cu - R2)); x <= Math.min(A - 1, Math.ceil(cu + R2)); x++) {
+        const pi = y * A + x; if (isl[pi] !== id) continue; const ox = x + .5 - cu, oy = y + .5 - cv, wu = (ox * Jv[1] - oy * Jv[0]) / jd, wv = (Ju[0] * oy - Ju[1] * ox) / jd, o = pi * 4; let f = 0, hh = 0;
+        if (Math.abs(wu) < ww / 2 && Math.abs(wv) < wh / 2) f = 1.1 * lit; const dd = Math.hypot(wu / hr, wv / (hr * .8)); if (dd < 1) hh = Math.pow(1 - dd, 2) * .45 * lit;
+        if (f || hh) { D[o] = Math.min(255, D[o] + core[0] * f + halo[0] * hh); D[o + 1] = Math.min(255, D[o + 1] + core[1] * f + halo[1] * hh); D[o + 2] = Math.min(255, D[o + 2] + core[2] * f + halo[2] * hh); } } } }
+}
+/* v367 each building's signature animation, placed round the model: H its height, R its half width */
+function bldUniq(k, b, anim, H, R) {
+  const add = (o, kind, ph, u) => { if (u) Object.assign(o.userData, u); b.add(o); anim.push([o, kind, ph || 0]); return o; };
+  const glow = (c, sc, op) => { const o = new TH.Sprite(new TH.SpriteMaterial({ map: glowTex(c, 1), transparent: true, opacity: op == null ? .9 : op, blending: TH.AdditiveBlending, depthWrite: false })); o.scale.setScalar(sc); o.userData.s0 = sc; o.userData.op = o.material.opacity; return o; };
+  const neon = (c, op) => new TH.MeshBasicMaterial({ color: new TH.Color(`rgb(${c})`), transparent: true, opacity: op == null ? .8 : op, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false });
+  const orbit = (o, r, y, w, ph, tilt) => add(o, "orbitF", ph, { r, y0: y, w, tilt: tilt || 0 });
+  const rise = (c, n, r, y0, hh, sc) => { for (let i = 0; i < n; i++) { const o = glow(c, sc, .8); const a = i * 2.4; o.position.set(Math.cos(a) * r * (.4 + (i % 3) * .2), y0, Math.sin(a) * r * (.4 + (i % 3) * .2)); add(o, "riseL", i / n, { y0, h: hh }); } };
+  switch (k) {
+    case "metalMine": { const o = glow("255,150,60", R * .7, .85); o.position.set(R * .3, H * .35, R * .3); add(o, "pulseO", 0); rise("255,170,90", 6, R * .5, H * .4, H * .7, R * .09); break; } // molten ore and sparks
+    case "crystalMine": for (let i = 0; i < 3; i++) { const c = new TH.Mesh(new TH.OctahedronGeometry(R * .12, 0), neon("140,220,255", .85)); c.scale.y = 1.8; orbit(c, R * .55, H + R * .25, .9, i * 2.09, R * .08); c.add(glow("140,220,255", R * .45, .5)); } break; // floating crystals
+    case "gasSynth": { const o = glow("120,255,170", R * .8, .9); o.position.y = H + R * .1; add(o, "pulseO", 0); rise("140,255,180", 7, R * .45, H * .6, H * .9, R * .08); break; }
+    case "solar": { const o = glow("255,236,170", R * .6, .9); orbit(o, R * .6, H * .8, .35, 0, R * .1); const h2 = glow("255,220,140", R * 1.6, .25); h2.position.y = H * .6; add(h2, "pulseO", 1.3); break; } // a sun-tracking glint
+    case "metalStore": { const d = new TH.Group(); d.add(new TH.Mesh(new TH.BoxGeometry(R * .32, R * .18, R * .32), new TH.MeshStandardMaterial({ color: 0x9aa4ae, metalness: .9, roughness: .3 }))); const l = glow("255,80,60", R * .22, .95); l.position.y = R * .14; d.add(l); d.position.set(R * .95, 0, 0); add(d, "lift", 0, { y0: R * .2, h: H * .9 }); break; } // a cargo lifter
+    case "crystalStore": { const t = new TH.Mesh(new TH.TorusGeometry(R * .55, R * .025, 6, 48), neon("80,170,255", .42)); t.rotation.x = Math.PI / 2; const g = new TH.Group(); g.add(t); g.position.y = H + R * .2; add(g, "spin", 1.4); const t2 = t.clone(); t2.scale.setScalar(.7); t2.rotation.x = Math.PI / 2 + .5; g.add(t2); break; } // hologram rings
+    case "gasTank": for (let i = 0; i < 3; i++) { const t = new TH.Mesh(new TH.TorusGeometry(R * .78, R * .03, 6, 48), neon("70,255,150", .42)); t.rotation.x = Math.PI / 2; add(t, "ringRise", i / 3, { y0: H * .08, h: H * .85, op: .42 }); } break; // pressure rings
+    case "robotics": for (let i = 0; i < 2; i++) { const d = new TH.Group(); d.add(new TH.Mesh(new TH.SphereGeometry(R * .08, 10, 8), new TH.MeshStandardMaterial({ color: 0xc8d0d8, metalness: .9, roughness: .25 }))); d.add(glow(i ? "255,190,90" : "120,220,255", R * .3, .9)); orbit(d, R * .95, H * .65 + i * R * .2, i ? -.8 : .6, i * 3.1, R * .12); } break; // drones circling
+    case "shipyard": { const s = new TH.Mesh(new TH.PlaneGeometry(R * 1.6, H * .9), neon("120,220,255", .22)); s.rotation.y = Math.PI / 2; s.position.y = H * .45; add(s, "slideS", R * .7); break; } // a scan beam sweeping the hull
+    case "lab": { const g = new TH.Group(); g.position.y = H + R * .35; for (let i = 0; i < 3; i++) { const t = new TH.Mesh(new TH.TorusGeometry(R * .32, R * .015, 6, 40), neon("110,160,255", .5)); t.rotation.set(Math.PI / 2 + i * 1.05, i * .7, 0); g.add(t); const e = glow("190,220,255", R * .16, 1); e.position.set(R * .32, 0, 0); t.add(e); } g.add(glow("200,225,255", R * .4, .9)); add(g, "atom", 0); break; } // a hologram atom
+    case "radar": { const f = new TH.Mesh(new TH.CircleGeometry(R * 1.6, 24, 0, .5), neon("120,255,190", .22)); f.rotation.x = -Math.PI / 2; const g = new TH.Group(); g.add(f); g.position.y = H * .55; add(g, "spin", 2.2); break; } // a rotating sweep
+    case "fusion": { const c = glow("255,200,120", R * .9, 1); c.position.y = H * .6; add(c, "pulseO", 0); const t = new TH.Mesh(new TH.TorusGeometry(R * .5, R * .035, 6, 48), neon("255,140,60", .55)); t.position.y = H * .6; t.rotation.x = 1.2; add(t, "spinX", 2.5); break; } // the plasma core
+    case "repairYard": { const d = new TH.Group(); d.add(new TH.Mesh(new TH.BoxGeometry(R * .2, R * .08, R * .2), new TH.MeshStandardMaterial({ color: 0xb8c0c8, metalness: .9, roughness: .3 }))); const w = glow("200,230,255", R * .3, 1); w.position.y = -R * .1; w.userData.s0 = R * .3; d.add(w); orbit(d, R * .7, H * .75, .5, 0, R * .15); add(w, "flick", 1.7); break; } // a repair drone
+    case "nanite": { const n = MOBILE ? 14 : 22; for (let i = 0; i < n; i++) { const o = glow(i % 2 ? "205,170,255" : "150,200,255", R * .12, .9); orbit(o, R * (.35 + (i % 5) * .12), H * (.4 + (i % 4) * .15), (i % 2 ? 1 : -1) * (.8 + (i % 3) * .3), i * .9, R * .2); } break; } // a swarm
+    case "fortress": { const d = new TH.Mesh(new TH.SphereGeometry(R * 1.15, 32, 16, 0, TAU, 0, Math.PI / 2), neon("120,190,255", .12)); add(d, "shieldF", 0, { op: .12 }); break; } // a shield dome
+    case "terraformer": { const bm = new TH.Mesh(new TH.CylinderGeometry(R * .06, R * .16, 26, 10, 1, true), neon("150,255,150", .35)); bm.position.y = H + 13; add(bm, "beamF", 0, { op: .35 }); rise("170,255,170", 6, R * .2, H, 6, R * .1); break; } // a beam into the sky
+    case "allyDepot": for (let i = 0; i < 2; i++) { const o = glow("255,210,120", R * .5, .9); orbit(o, R * .25, H + R * .1, 2.4, i * Math.PI, 0); } break; // a lighthouse beacon
+    case "lunarBase": { const mo = new TH.Mesh(new TH.SphereGeometry(R * .2, 20, 14), new TH.MeshStandardMaterial({ color: 0xc8ccd2, roughness: .9, emissive: 0x202630 })); mo.add(glow("210,225,255", R * .7, .35)); orbit(mo, R * 1.1, H + R * .4, .25, 0, R * .25); break; } // a little moon
+    case "phalanx": { const f = new TH.Mesh(new TH.PlaneGeometry(R * 2.2, R * .02), neon("255,90,80", .9)); f.position.set(0, H * .9, 0); add(f, "scanF", 0, { y0: H * .9 }); break; } // a scanning laser fan
+  }
+}
 const BLD_FX = {
   metalMine: { smoke: "150,144,138", n: 2, beacon: 1 }, crystalMine: { beacon: 1 }, gasSynth: { smoke: "150,232,165", n: 2 }, solar: { beacon: 1 },
   shipyard: { weld: 2, beacon: 1 }, metalStore: { beacon: 1 }, crystalStore: {}, gasTank: { smoke: "150,232,165", n: 1 }, robotics: { weld: 1, smoke: "150,146,140", n: 1 },
@@ -9686,6 +9768,7 @@ async function glbLights(k, s) {
     const id = x.getImageData(0, 0, A, A), D = id.data, Wt = new Float32Array(A * A);
     for (let i = 0; i < A * A; i++) { const r = D[i * 4] / 255, g = D[i * 4 + 1] / 255, b = D[i * 4 + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), sat = mx > 0 ? (mx - mn) / mx : 0;
       const w = clamp((mx - .4) / .3, 0, 1) * clamp((sat - .16) / .3, 0, 1); Wt[i] = w; D[i * 4] *= w; D[i * 4 + 1] *= w; D[i * 4 + 2] *= w; D[i * 4 + 3] = 255; }
+    try { glbWin(k, mesh, D, A); } catch (e) {} // v367 lit windows
     x.putImageData(id, 0, 0);
     let et; if (window.createImageBitmap) { const bm = await createImageBitmap(c); et = new TH.Texture(bm); c.width = c.height = 0; } else et = new TH.CanvasTexture(c);
     et.flipY = false; et.encoding = TH.sRGBEncoding; et.needsUpdate = true; m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader // v360 polished metal, paint kept
@@ -9830,6 +9913,7 @@ function glbBld(k, b, big, small, anim) {
     fx.spots.slice(0, MOBILE ? 5 : 9).forEach((sp, i) => { const o = spr(glowTex(sp.c, 1), 0xffffff, .75 + .25 * sp.s); o.position.copy(at(sp.p)); const sc = span * (.2 + .16 * sp.s); o.scale.setScalar(sc); o.userData.s0 = sc; add(o, "glowP", sp.ph); });
     if (F.smoke) fx.peaks.slice(0, F.n || 1).forEach((pk, j) => { for (let i = 0; i < 4; i++) { const o = new TH.Sprite(new TH.SpriteMaterial({ map: puffTex(F.smoke), transparent: true, opacity: 0, depthWrite: false }));
       o.position.copy(at(pk)); const sc = span * .26; o.scale.setScalar(sc); Object.assign(o.userData, { s0: sc, rise: span * .9, drift: span * .3, op: /^2/.test(F.smoke) ? .7 : .85 }); add(o, "smoke", i / 4 + j * .13); } });
+    try { bldUniq(k, b, anim, sz.y * s, span / 2); } catch (e) {} // v367 the building's own animation
     if (F.beacon && fx.peaks[0]) { const o = spr(glowTex("255,70,50", 1), 0xffffff, .95); o.position.copy(at(fx.peaks[0])); o.position.y += span * .03; o.scale.setScalar(span * .16); add(o, "blink", hash(k) % 7); }
     for (let i = 0; i < (F.weld || 0) && i < fx.spots.length; i++) { const o = spr(glowTex("200,230,255", 1), 0xffffff, .95); o.position.copy(at(fx.spots[i].p)); o.position.y += span * .02; const sc = span * .14; o.scale.setScalar(sc); o.userData.s0 = sc; add(o, "flick", i * 2.3); }
   }
@@ -10390,21 +10474,22 @@ function initColony(host) {
   const dt = texCanvas(512, 512, (x, W, H) => { x.fillStyle = "#2b3138"; x.fillRect(0, 0, W, H); const r = rnd(5); for (let i = 0; i < 140; i++) { x.fillStyle = r() < .5 ? "#333b44" : "#262c32"; x.fillRect(((r() * 16) | 0) * 32, ((r() * 16) | 0) * 32, 32, 32); }
     x.strokeStyle = "#1a1f24"; x.lineWidth = 2; for (let i = 0; i <= W; i += 32) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); x.beginPath(); x.moveTo(0, i); x.lineTo(W, i); x.stroke(); }
     x.strokeStyle = "rgba(85,214,232,.14)"; x.lineWidth = 3; for (let i = 0; i <= W; i += 128) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); x.beginPath(); x.moveTo(0, i); x.lineTo(W, i); x.stroke(); } });
-  dt.wrapS = dt.wrapT = TH.RepeatWrapping; dt.repeat.set(2.7, 2.2);
+  dt.wrapS = dt.wrapT = TH.RepeatWrapping; dt.repeat.set(.0711, .0711); // v367 the deck's UVs are in world units
   dt.encoding = TH.sRGBEncoding;
   const side = new TH.MeshStandardMaterial({ color: 0x1f252b, roughness: .7, metalness: .4 }), top = new TH.MeshStandardMaterial({ map: dt, color: 0x8c96a0, roughness: .6, metalness: .45, envMapIntensity: .6 });
-  const deck = new TH.Mesh(new TH.BoxGeometry(38, 1.3, 31), [side, side, top, side, side, side]); deck.position.y = -.65; deck.receiveShadow = true; scene.add(deck);
+  const deckSh = new TH.Shape(deckPoly().map(([x, z]) => new TH.Vector2(x, -z))), deckG = new TH.ExtrudeGeometry(deckSh, { depth: 1.3, bevelEnabled: false }).rotateX(-Math.PI / 2).translate(0, -1.3, 0);
+  const deck = new TH.Mesh(deckG, [top, side]); deck.receiveShadow = true; scene.add(deck); // v367 the octagon deck
   // support struts under the deck edge, down into the canyon
   { const sM = new TH.MeshStandardMaterial({ color: 0x2c333a, metalness: .7, roughness: .45 });
-    for (const [x, z] of [[-18, -14.5], [18, -14.5], [-18, 14.5], [18, 14.5], [0, -15], [0, 15], [-18.5, 0], [18.5, 0], [-9, -15], [9, 15]]) { const s = new TH.Mesh(new TH.CylinderGeometry(.45, .7, 12, 8), sM); s.position.set(x, -7, z); s.castShadow = true; scene.add(s); } }
+    const PV = deckPoly(.8); for (const [x, z] of PV.concat(PV.map((v, i) => [(v[0] + PV[(i + 1) % 8][0]) / 2, (v[1] + PV[(i + 1) % 8][1]) / 2]))) { const s = new TH.Mesh(new TH.CylinderGeometry(.45, .7, 12, 8), sM); s.position.set(x, -7, z); s.castShadow = true; scene.add(s); } }
   const C = colMats();
-  for (const [w, d, x, z] of [[38, .12, 0, 15.5], [38, .12, 0, -15.5], [.12, 31, 19, 0], [.12, 31, -19, 0]]) scene.add(cbox(w, .1, d, C.cyan, x, -.02, z));
+  { const PV = deckPoly(.06); PV.forEach(([ax, az], i) => { const [bx, bz] = PV[(i + 1) % 8], L = Math.hypot(bx - ax, bz - az), m = cbox(L, .1, .12, C.cyan, (ax + bx) / 2, -.02, (az + bz) / 2); m.rotation.y = -Math.atan2(bz - az, bx - ax); scene.add(m); }); } // v367 the border light
   const rockT = rockTex(), rockM = new TH.MeshStandardMaterial({ color: 0x6d4232, map: rockT.map, bumpMap: rockT.bump, bumpScale: .9, roughness: .96, metalness: 0 }), rockG = rockGeo(2, 44), r = rnd(44); // v354 smooth noise-displaced stone
   for (let i = 0; i < 40; i++) { const a = r() * TAU, d = 44 + r() * 22; const m = new TH.Mesh(rockG, rockM); m.position.set(Math.cos(a) * d * 1.2, 2 + r() * 5, Math.sin(a) * d * 1); m.scale.set(1.5 + r() * 4, 1 + r() * 4, 1.5 + r() * 4); m.rotation.set(r(), r() * 3, r()); m.castShadow = true; scene.add(m); }
   const hq = hqModel(); hq.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(hq);
   // pebbles and boulders around the platform, sharing the tinted rock material
   { const pg = rockGeo(1, 515).scale(.28, .28, .28), im = new TH.InstancedMesh(pg, rockM, 520), dm = new TH.Object3D(), pr = rnd(515); let c = 0;
-    for (let i = 0; i < 4000 && c < 520; i++) { const x = (pr() - .5) * 52, z = (pr() - .5) * 46; if (Math.abs(x) < 19.6 && Math.abs(z) < 16.1) continue; if (Math.hypot(x * .82, z) > 24.5) continue;
+    for (let i = 0; i < 4000 && c < 520; i++) { const x = (pr() - .5) * 62, z = (pr() - .5) * 54; if (deckIn(x, z) > -.6) continue; if (Math.hypot(x * .82, z) > 25.5) continue;
       const s = pr() < .08 ? 2 + pr() * 2.5 : .4 + pr() * 1.1; dm.position.set(x, -1.3 + s * .08, z); dm.rotation.set(pr() * 3, pr() * 3, pr() * 3); dm.scale.set(s * (.8 + pr() * .5), s * (.5 + pr() * .4), s * (.8 + pr() * .5)); dm.updateMatrix(); im.setMatrixAt(c++, dm.matrix); }
     im.count = c; im.castShadow = true; im.receiveShadow = true; im.frustumCulled = false; scene.add(im); }
   // drifting dust in the air above the base
@@ -10462,7 +10547,7 @@ function roadKit() {
    round the edge of every plot away from its road and its neighbours. More of them around buildings that have grown. All instanced. */
 function buildProps(bt) {
   const g = new TH.Group(), r = rnd(hash(bt.key) + 77), cont = [], cons = [], bars = [], col = new TH.Color(), dm = new TH.Object3D();
-  const free = (x, z, own) => Math.abs(x) < 17.4 && Math.abs(z) < 13.8 && Math.hypot(x, z) > 4.8 /* clear of the turret ring at the deck edge and of the hub */ && bt.keys.every(k => k === own || Math.hypot(x - BPOS[k][0], z - BPOS[k][1]) > 2.75);
+  const free = (x, z, own) => deckIn(x, z) > 2.4 && !onRoad(x, z, .35) && Math.hypot(x, z) > 4.8 /* clear of the turret ring at the deck edge and of the hub */ && bt.keys.every(k => k === own || Math.hypot(x - BPOS[k][0], z - BPOS[k][1]) > 2.75);
   for (const k of bt.keys) { const L = bt.lv(k), [px, pz] = BPOS[k], aH = Math.atan2(-pz, -px), n = L ? 3 + Math.min(4, eraOf(L, k)) : 1, R0 = k === "shipyard" ? 3.55 : k === "missileSilo" || k === "repairYard" ? 2.35 : 2.95;
     for (let i = 0, tries = 0; i < n && tries < 40; tries++) { const a = r() * TAU; let d = a - aH; d = Math.atan2(Math.sin(d), Math.cos(d)); if (Math.abs(d) < .6) continue; // never on the road in
       const rr = R0 + r() * .45, x = px + Math.cos(a) * rr, z = pz + Math.sin(a) * rr; if (!free(x, z, k)) continue; i++;
@@ -10488,15 +10573,22 @@ function buildProps(bt) {
 const uvScale = (g, su) => { const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * su); return g; };
 function buildRoads(keys) {
   const g = new TH.Group(), K = roadKit(), lamps = [];
-  for (const k of keys) { const [x, z] = BPOS[k], len = Math.hypot(x, z) - 2.5 - 4.3, ang = Math.atan2(z, x), r0 = 4.3, mx = Math.cos(ang) * (len / 2 + r0), mz = Math.sin(ang) * (len / 2 + r0); if (len <= .2) continue;
+  /* v367 the street grid: each avenue runs edge to edge of the deck, lamps along both sides away from buildings and crossings */
+  const segs = []; const inDeck = (x, z) => deckIn(x, z) > 1.1;
+  for (const v of GRID_X) { let a = 0, b = 0; while (inDeck(v, a - .2)) a -= .2; while (inDeck(v, b + .2)) b += .2; segs.push([v, (a + b) / 2, b - a, Math.PI / 2]); }
+  for (const v of GRID_Z) { let a = 0, b = 0; while (inDeck(a - .2, v)) a -= .2; while (inDeck(b + .2, v)) b += .2; segs.push([(a + b) / 2, v, b - a, 0]); }
+  for (const [ax, az] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const r1 = ax ? Math.abs(GRID_X[2]) : Math.abs(GRID_Z[2]), len = r1 - 4.2 + .2; if (len > .1) segs.push([ax * (4.2 + len / 2), az * (4.2 + len / 2), len, ax ? 0 : Math.PI / 2]); } // the HQ ring road to the avenues
+  const nearB = (x, z, r) => keys.some(k => BPOS[k] && Math.hypot(x - BPOS[k][0], z - BPOS[k][1]) < r);
+  for (const [mx, mz, len, ang] of segs) {
     const road = new TH.Mesh(uvScale(new TH.BoxGeometry(len, .05, 1.25), len / 2.5), K.deckM); road.position.set(mx, .025, mz); road.rotation.y = -ang; road.receiveShadow = true; g.add(road);
     const ln = new TH.Mesh(uvScale(new TH.PlaneGeometry(len, .16), len / 2), K.flowM); ln.rotation.set(-Math.PI / 2, 0, -ang); ln.position.set(mx, .06, mz); g.add(ln); // the energy lane, flowing out from the hub
-    for (let d = 1.2; d < len - .6; d += 2.6) for (const s of [-1, 1]) { const px = Math.cos(ang) * (r0 + d) - Math.sin(ang) * s * .78, pz = Math.sin(ang) * (r0 + d) + Math.cos(ang) * s * .78; lamps.push([px, pz]); } }
+    for (let d = -len / 2 + 1.3; d < len / 2 - .6; d += 2.6) for (const s of [-1, 1]) { const px = mx + Math.cos(ang) * d - Math.sin(ang) * s * .78, pz = mz + Math.sin(ang) * d + Math.cos(ang) * s * .78;
+      if (nearB(px, pz, 3.3) || Math.hypot(px, pz) < 4.8 || GRID_X.some(v => Math.abs(px - v) < 1.1) && GRID_Z.some(v => Math.abs(pz - v) < 1.1)) continue; lamps.push([px, pz]); } }
   // the hub ring road round the HQ, with its own energy lane and crossings where the spokes join
   const ring = new TH.Mesh(new TH.RingGeometry(3.4, 4.35, 72, 1), K.deckM); ring.rotation.x = -Math.PI / 2; ring.position.y = .03; ring.receiveShadow = true; g.add(ring);
   const rl = new TH.Mesh(new TH.RingGeometry(3.84, 3.92, 96, 1), new TH.MeshBasicMaterial({ color: 0x55d6e8, transparent: true, opacity: .75, toneMapped: false })); rl.rotation.x = -Math.PI / 2; rl.position.y = .065; g.add(rl); g.userData.ringLane = rl;
   const zebra = new TH.MeshBasicMaterial({ color: 0xf2f4f6, toneMapped: false });
-  for (const k of keys) { const [x, z] = BPOS[k], ang = Math.atan2(z, x); for (let i = -2; i <= 2; i++) { const s = new TH.Mesh(new TH.PlaneGeometry(.5, .12), zebra), r = 4.0; s.rotation.set(-Math.PI / 2, 0, -ang); s.position.set(Math.cos(ang) * r - Math.sin(ang) * i * .22, .07, Math.sin(ang) * r + Math.cos(ang) * i * .22); g.add(s); } }
+  for (const ang of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) { for (let i = -2; i <= 2; i++) { const s = new TH.Mesh(new TH.PlaneGeometry(.5, .12), zebra), r = 4.0; s.rotation.set(-Math.PI / 2, 0, -ang); s.position.set(Math.cos(ang) * r - Math.sin(ang) * i * .22, .07, Math.sin(ang) * r + Math.cos(ang) * i * .22); g.add(s); } }
   // street lights: a slim post with a bright lamp head, instanced across the whole base
   const post = new TH.InstancedMesh(new TH.CylinderGeometry(.03, .045, 1.1, 6).translate(0, .55, 0), K.postM, lamps.length), head = new TH.InstancedMesh(new TH.BoxGeometry(.18, .05, .09).translate(0, 1.12, 0), K.lampM, lamps.length), dm = new TH.Object3D();
   lamps.forEach(([x, z], i) => { dm.position.set(x, 0, z); dm.updateMatrix(); post.setMatrixAt(i, dm.matrix); head.setMatrixAt(i, dm.matrix); }); post.castShadow = true; g.add(post, head);
@@ -10608,7 +10700,7 @@ function folkGrid(W) { if (W.fpGrid) return W.fpGrid; const obs = folkFoot(W), C
   for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) { const x = X0 + i * C, z = Z0 + j * C, n = j * NX + i, rr = Math.hypot(x, z);
     if (rr < 3.25) { blk[n] = 1; continue; } // the HQ
     for (const k in obs) { const o = obs[k]; if (x > o.x0 - PAD && x < o.x1 + PAD && z > o.z0 - PAD && z < o.z1 + PAD) { blk[n] = 2 + Object.keys(obs).indexOf(k); break; } }
-    if (rr >= 3.4 && rr <= 4.35) road[n] = 1; else for (const k in W.keys) { if (!BPOS[k]) continue; const [bx, bz] = BPOS[k], L = Math.hypot(bx, bz), ux = bx / L, uz = bz / L, d = x * ux + z * uz; if (d > 4.3 && d < L - 2.5 && Math.abs(-x * uz + z * ux) < .62) { road[n] = 1; break; } } }
+    if (rr >= 3.4 && rr <= 4.35) road[n] = 1; else if (onRoad(x, z) || (Math.abs(x) < .62 || Math.abs(z) < .62) && rr < 5.5) road[n] = 1; } // v367 the street grid
   return (W.fpGrid = { C, X0, Z0, NX, NZ, blk, road, keys: Object.keys(obs) }); }
 function folkPath(W, k) { folkFoot(W); if (W.fpPaths[k] !== undefined) return W.fpPaths[k]; const G0 = folkGrid(W), { C, X0, Z0, NX, NZ, blk, road } = G0, obs = W.fpObs, o = obs[k];
   const [bx, bz] = BPOS[k], a = Math.atan2(bz, bx), hub = [Math.cos(a) * 3.6, Math.sin(a) * 3.6];
@@ -10718,8 +10810,11 @@ function turretRing(n, mix) {
   const kinds = mix ? Object.keys(DF).filter(k => k !== "dome" && k !== "bigDome" && mix[k] > 0) : [], tot = kinds.reduce((a, k) => a + mix[k], 0), seq = [];
   if (tot) { const want = kinds.map(k => [k, mix[k] / tot * n]); while (seq.length < n) { want.sort((a, b) => b[1] - a[1]); seq.push(want[0][0]); want[0][1] -= 1; } }
   const glowM = C.cyan, coreM = C.amber || C.cyan;
-  for (let i = 0; i < n; i++) { const t = i / n, per = 2 * (26 + 20), d = t * per; let x, z;
-    if (d < 26) { x = (-13 + d) * 1.38; z = -14.6; } else if (d < 46) { x = 18.2; z = (-10 + (d - 26)) * 1.42; } else if (d < 72) { x = (13 - (d - 46)) * 1.38; z = 14.6; } else { x = -18.2; z = (10 - (d - 72)) * 1.42; }
+  const PV = deckPoly(1.1), segL = PV.map((v, i) => Math.hypot(PV[(i + 1) % 8][0] - v[0], PV[(i + 1) % 8][1] - v[1])), per = segL.reduce((a, b) => a + b, 0);
+  const atD = d => { d = ((d % per) + per) % per; for (let s = 0; s < 8; s++) { if (d <= segL[s]) { const [ax, az] = PV[s], [bx, bz] = PV[(s + 1) % 8], f = d / segL[s]; return [ax + (bx - ax) * f, az + (bz - az) * f]; } d -= segL[s]; } return PV[0]; };
+  const clear = (x, z) => Object.values(BPOS).every(([bx, bz]) => Math.hypot(x - bx, z - bz) > 3.7);
+  for (let i = 0; i < n; i++) { let x, z, d0 = (i + .5) / n * per; [x, z] = atD(d0); // v367 along the new deck edge, stepping aside from buildings
+    for (let k = 1; k < 12 && !clear(x, z); k++) [x, z] = atD(d0 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * .7);
     const k = seq[i] || "laser", tg = new TH.Group(); tg.position.set(x, 0, z); tg.add(ccyl(.42, .52, .3, C.dark, 0, 0, 0, 8)); const head = new TH.Group(); head.position.y = .4; tg.add(head); tg.userData.head = head;
     const bar = (len, rad, y, zz) => { const m = new TH.Mesh(new TH.CylinderGeometry(rad, rad * 1.15, len, 10), C.dark); m.rotation.z = -Math.PI / 2; m.position.set(len / 2, y, zz); head.add(m); };
     switch (k) {
@@ -10850,6 +10945,16 @@ function drawColony(t) {
     else if (kind === "slideS") { const u = o.userData; if (u.x0 == null) u.x0 = o.position.x; o.position.x = u.x0 + Math.sin(T * .0009) * p; } // a gantry crane travelling its rails
     else if (kind === "smoke") { const u = o.userData; if (u.y0 == null) { u.y0 = o.position.y; u.x0 = o.position.x; } const q = (T * .00016 + p) % 1; o.position.y = u.y0 + q * u.rise; o.position.x = u.x0 + q * u.drift; o.scale.setScalar(u.s0 * (.55 + q * 2.4)); o.material.opacity = u.op * Math.sin(Math.PI * Math.min(1, q * 1.15)); o.material.rotation = q * 1.2 + p * 6; } // v353 chimney smoke and steam
     else if (kind === "puff") { const u = o.userData; if (u.y0 == null) u.y0 = o.position.y; const q = (T * .00035 + p * .37) % 1; o.position.y = u.y0 + q * 1.1; o.scale.setScalar(.5 + q * 1.6); } // steam rising
+    else if (kind === "orbitF") { const u = o.userData, a = T * .001 * u.w + p; o.position.set(Math.cos(a) * u.r, u.y0 + Math.sin(a * 1.7) * u.tilt, Math.sin(a) * u.r); o.rotation.y = -a; } // v367 orbiting
+    else if (kind === "pulseO") { const u = o.userData, w = .5 + .5 * Math.sin(T * .003 + p); o.material.opacity = (u.op || .9) * (.55 + .45 * w); if (u.s0) o.scale.setScalar(u.s0 * (.9 + .2 * w)); }
+    else if (kind === "riseL") { const u = o.userData, q = (T * .00035 + p) % 1; o.position.y = u.y0 + q * u.h; o.material.opacity = .8 * Math.sin(Math.PI * q); }
+    else if (kind === "lift") { const u = o.userData; o.position.y = u.y0 + (.5 - .5 * Math.cos(T * .0011 + p)) * u.h; }
+    else if (kind === "ringRise") { const u = o.userData, q = (T * .00022 + p) % 1; o.position.y = u.y0 + q * u.h; o.material.opacity = u.op * Math.sin(Math.PI * q); }
+    else if (kind === "atom") { o.rotation.y = T * .0012; o.children.forEach((c, i) => { if (c.geometry && c.geometry.type === "TorusGeometry") c.rotation.z = T * .002 * (i + 1); }); }
+    else if (kind === "spinX") o.rotation.z = T * .001 * p;
+    else if (kind === "shieldF") { const u = o.userData; o.material.opacity = u.op * (.55 + .45 * Math.sin(T * .0018)); o.rotation.y = T * .0002; }
+    else if (kind === "beamF") { const u = o.userData; o.material.opacity = u.op * (.7 + .3 * Math.sin(T * .006)) * (.9 + .1 * Math.random()); }
+    else if (kind === "scanF") { const u = o.userData; o.rotation.y = Math.sin(T * .0011) * 1.2; o.position.y = u.y0 * (.55 + .45 * (.5 + .5 * Math.sin(T * .0007))); }
     else if (kind === "through") { const q = (T * .00025 + p) % 1; o.position.z = (q - .5) * 5; o.visible = q > .06 && q < .94; } // a ship crossing the gate
   }
   if (W.turrets) W.turrets.children.forEach((tg, i) => { if (tg.userData.head) tg.userData.head.rotation.y = Math.sin(T * .0007 + i) * 1.2; else if (tg.userData.dome) tg.material.opacity = (tg.isMesh && tg.material.wireframe ? .05 : .07) + .02 * Math.sin(T * .002); });
@@ -13042,7 +13147,7 @@ function renderSheet() {
   if (!sheet) return; /* v190: a card closed while a redraw was pending */
   if (G.rangeHeld && sheet) { G.rangeLate = 1; return; }
   let w = $("#sheetwrap");
-  let html = ({ planet: shPlanet, report: shReport, settings: shSettings, void: shVoid, assault: shAssault, targets: shTargets, node: shNode, bld: shBld, nexus: shNexus, skin: shSkin, find: shFind, pirate: shPirate, pyramid: shPyramid, matbox: () => { const s = SHOP[sheet.k]; if (!s) return ""; const f = fsOf(), tt = s.mbT; return `<div class="hd"><div><div class="chapter" style="color:${FS_TIER[tt][1]}">Material Selection Box</div><h2>${esc(s.n)}</h2><p class="note">Pick one: you get ${MB_N[tt]} × ${FS_TIER[tt][0]} of it.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div><div class="fsmb">${Object.keys(FS_MATS).map(m => `<button class="btn" data-act="matboxPick" data-v="${m}" style="--tc:${FS_TIER[tt][1]}"><i class="fsmi lg fsmat-${m}"></i><b>${FS_MATS[m][0]}</b><small>you have ${fmt(f.mats[fsMatKey(m, tt)] || 0)}</small></button>`).join("")}</div>`; }, fctl: shFctl, station: shStation, ally: shAlly, layers: shLayers, tile: shTile, graphics: shGfx, cuberes: shCubeRes, basedet: shBaseDet, planets: shPlanets, fo: shFo, allymem: shAllyMem, altools: () => { const a = myAlly(); return a ? `<div class="hd"><div><div class="chapter">[${esc(a.tag)}] ${esc(a.name)}</div><h2>${allyRank(a, G.me) === "lead" ? "Leader" : "Captain"} tools</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${allyTools(a) || '<p class="note">Only the leader and captains have these tools.</p>'}` : ""; },
+  let html = ({ planet: shPlanet, report: shReport, settings: shSettings, void: shVoid, assault: shAssault, targets: shTargets, node: shNode, bld: shBld, nexus: shNexus, skin: shSkin, find: shFind, pirate: shPirate, pyramid: shPyramid, matbox: () => { const s = SHOP[sheet.k]; if (!s) return ""; const f = fsOf(), tt = s.mbT; return `<div class="hd"><div><div class="chapter" style="color:${FS_TIER[tt][1]}">Material Selection Box</div><h2>${esc(s.n)}</h2><p class="note">${sheet.all && (S.items || {})[sheet.k] > 1 ? `Pick one for all ${S.items[sheet.k]} boxes: you get ${fmt(MB_N[tt] * S.items[sheet.k])} × ${FS_TIER[tt][0]} of it.` : `Pick one: you get ${MB_N[tt]} × ${FS_TIER[tt][0]} of it.`}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div><div class="fsmb">${Object.keys(FS_MATS).map(m => `<button class="btn" data-act="matboxPick" data-v="${m}" style="--tc:${FS_TIER[tt][1]}"><i class="fsmi lg fsmat-${m}"></i><b>${FS_MATS[m][0]}</b><small>you have ${fmt(f.mats[fsMatKey(m, tt)] || 0)}</small></button>`).join("")}</div>`; }, fctl: shFctl, station: shStation, ally: shAlly, layers: shLayers, tile: shTile, graphics: shGfx, cuberes: shCubeRes, basedet: shBaseDet, planets: shPlanets, fo: shFo, allymem: shAllyMem, altools: () => { const a = myAlly(); return a ? `<div class="hd"><div><div class="chapter">[${esc(a.tag)}] ${esc(a.name)}</div><h2>${allyRank(a, G.me) === "lead" ? "Leader" : "Captain"} tools</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${allyTools(a) || '<p class="note">Only the leader and captains have these tools.</p>'}` : ""; },
     yard: shYard, labs: shLabs, flagship: shFlag, sound: shSound, shop: shShop, pack: shPack, packadmin: shPackAdmin, vip: shVip, spyrep: shSpyRep, spysend: shSpySend, repshare: shRepShare, howto: shHowTo, fbinbox: shFbInbox, events: shEvents, ach: shAch, avatars: shAvatars, detail: shDetail, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
     mastery: () => `<div class="hd"><div><div class="chapter">Progression</div><h2>Path to Mastery</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${mMastery()}` })[sheet.type]();
   if (!html) { closeSheet(); return; }
@@ -16650,7 +16755,7 @@ const ACT = {
   fsCv: d => { sheet.cv = Object.assign({ a: "alloy", b: "void", t: 1 }, sheet.cv || {}, { [d.k]: d.k === "t" ? +d.v : d.v }); renderSheet(); },
   fsConvert: () => { const f = fsOf(), cv = sheet.cv || { a: "alloy", b: "void", t: 1 }, k = fsMatKey(cv.a, cv.t); if (cv.a === cv.b || (f.mats[k] || 0) < FS_CONV) return; if (!pay(fsConvCost(cv.t))) return toast("Not enough resources.", "warn");
     f.mats[k] -= FS_CONV; if (f.mats[k] <= 0) delete f.mats[k]; const k2 = fsMatKey(cv.b, cv.t); f.mats[k2] = (f.mats[k2] || 0) + 1; fsBump(); toast(`Converted ${FS_CONV} ${FS_TIER[cv.t][0]} ${FS_MATS[cv.a][0]} into 1 ${FS_MATS[cv.b][0]}.`, "win"); renderSheet(); },
-  matboxPick: d => { if (!sheet || sheet.type !== "matbox") return; const k = sheet.k, s = SHOP[k], tt = s && s.mbT; if (!tt || !((S.items || {})[k] > 0) || !FS_MATS[d.v]) return; S.items[k]--; dirty(); closeSheet(); fsDrop([[d.v, tt, MB_N[tt]]], s.n, { nocap: 1 }); },
+  matboxPick: d => { if (!sheet || sheet.type !== "matbox") return; const k = sheet.k, s = SHOP[k], tt = s && s.mbT; if (!tt || !((S.items || {})[k] > 0) || !FS_MATS[d.v]) return; const n = sheet.all ? S.items[k] : 1; S.items[k] -= n; dirty(); closeSheet(); fsDrop([[d.v, tt, MB_N[tt] * n]], n > 1 ? `${n} × ${s.n}` : s.n, { nocap: 1 }); },
   fsTab: d => { sheet.tab = d.v; sheet.it = null; renderSheet(); },
   fsNoop: () => {},
   fsSlot: d => { sheet.tab = "gear"; sheet.sl = d.s; const f = fsOf(); sheet.it = f.eq[d.s] || null; renderSheet(); },
@@ -16936,6 +17041,10 @@ const ACT = {
     closeSheet(); toast(`${p.name} jumped to [${coordStr(e)}] in ${zoneOf(e.r)}.`, "win"); if (G3) { G3.cam.follow = p.id; G3.cam.goal = { dist: 40 }; }
   }),
   buy: d => act(() => { const s = SHOP[d.k]; if (!s || !s.cost) return; if ((S.shards || 0) < s.cost) return toast(`That costs ◆${s.cost}.`, "warn"); S.shards -= s.cost; giveItem(d.k, d.k === "probe5" ? 5 : 1); bump("shopBuys"); if (s.cat !== "vip") vipAdd(s.cost * 10); toast(`${s.n} added to your inventory.`, "win"); }),
+  useAll: d => act(() => { const s = SHOP[d.k]; if (!s || !s.use || !useAllOk(d.k)) return; const n0 = (S.items || {})[d.k] || 0; if (n0 < 1) return; // v367
+    if (s.mbT) return openSheet({ type: "matbox", k: d.k, all: 1 });
+    let n = 0, last = ""; while ((S.items[d.k] || 0) > 0 && n < 9999) { S.items[d.k]--; const msg = s.use(); if (!msg) { S.items[d.k]++; break; } n++; last = msg; }
+    if (n) toast(n > 1 ? `Used ${n} × ${s.n}.` : last, "win"); }),
   useItem: d => act(() => { const s = SHOP[d.k]; if (!s || !s.use || !((S.items || {})[d.k] > 0)) return; S.items[d.k]--; const msg = s.use(); if (!msg) { S.items[d.k]++; return; } toast(msg, "win"); }),
   openShop: () => openSheet({ type: "shop", cat: "boost" }),
   speedShop: () => openSheet({ type: "shop", cat: "accel" }), // v335
