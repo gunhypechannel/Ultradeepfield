@@ -2524,7 +2524,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 370;
+const GAME_V = 371;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -10287,7 +10287,12 @@ function artBld(k, b, e, C, anim) {
       box(X * 2 + .5, .22, .34, C.dark, 0, H - .1, -.2); box(X * 2, .05, .05, C.amber, 0, H - .14, -.02);
       const cr = cbox(.22, .2, .9, A.yellow, -.4, H - .36, .12); b.add(cr); anim.push([cr, "slideS", 1.1]); pipe([-.4, H - .36, .12], [-.4, 1.45, .12], .015, C.dark);
       // the flagship in its cradles
-      const hg = new TH.Group(); hg.position.set(0, .72, hz); b.add(hg); const hm = built ? C.dark : C.holo, hp = built ? C.steel : C.holo, put = m => (hg.add(m), m);
+      let shipM = null; try { const fac = facOf(), F = FACTIONS[fac] || FACTIONS.terran, M0 = shipMats("#" + new TH.Color(F.glow).getHexString() + "@" + fac), M = Object.assign(Object.create(M0), flagMats(M0.fac, 2.9)); Object.defineProperty(M, "fac", { value: M0.fac }); // v371 your own flagship in the cradles, in your faction's plating
+        shipM = buildShip("flagship", M); shipM.traverse(o => { if (o.userData && o.userData.fx) o.visible = false; }); } catch (e) { shipM = null; }
+      if (shipM) { const bb0 = new TH.Box3().setFromObject(shipM), k0 = 3.1 / Math.max(.01, bb0.max.x - bb0.min.x); shipM.scale.multiplyScalar(k0); const bb1 = new TH.Box3().setFromObject(shipM);
+        shipM.position.set(-.05, .42 - bb1.min.y, hz); if (!built) shipM.traverse(o => { if (o.isMesh) { o.material = HOLO_WIRE(); o.castShadow = false; } }); b.add(shipM);
+        if (built) { const g1 = new TH.Sprite(new TH.SpriteMaterial({ map: glowTex("120,200,255", 1), transparent: true, opacity: .8, blending: TH.AdditiveBlending, depthWrite: false })); g1.position.set(-1.65, .42 + (bb1.max.y - bb1.min.y) * .45, hz); g1.scale.setScalar(.7); g1.userData.s0 = .7; b.add(g1); anim.push([g1, "glowP", 0]); } }
+      const hg = new TH.Group(); hg.position.set(0, .72, hz); if (!shipM) b.add(hg); const hm = built ? C.dark : C.holo, hp = built ? C.steel : C.holo, put = m => (hg.add(m), m);
       const hb = (w, h, d, m, x, y, z) => put(cbox(w, h, d, m, x, y, z));
       hb(2.9, .34, .62, hm, -.05, -.17, 0); hb(2.2, .2, .48, hp, -.25, .17, 0); hb(1.1, .16, .34, hm, -.55, .37, 0); hb(.36, .26, .2, hp, -.7, .53, 0); // stepped decks and the bridge tower
       const nose = put(new TH.Mesh(new TH.ConeGeometry(.36, 1.1, 4), hm)); nose.rotation.z = -Math.PI / 2; nose.rotation.x = Math.PI / 4; nose.scale.set(1, 1, .75); nose.position.set(1.95, -.02, 0);
@@ -10302,6 +10307,16 @@ function artBld(k, b, e, C, anim) {
       if (e >= 2) { box(X * 2 + .5, .16, .26, C.dark, 0, H * .62, -.2); const cr2 = cbox(.2, .18, .8, A.yellow, .5, H * .62 - .2, .1); b.add(cr2); anim.push([cr2, "slideS", -.9]); for (const s of [-1, 1]) dot(s * X, H * .62 + .12, .05, C.cyan, 1.4); }
       if (e >= 3) { box(X * 2 + .3, .06, 1.9, C.holo, 0, H + .05, .1); for (const s of [-1, 1]) { box(.32, H * .7, .32, C.steel, s * (X + .5), 0, .6); box(.04, H * .5, .02, C.windows, s * (X + .5), H * .1, .77); dot(s * (X + .5), H * .7 + .05, .6, C.redL, 1.4); } }
       if (e >= 4) { const s2 = dot(-.9, 1.0, -.36, A.white0, 2.2); anim.push([s2, "blink", 2.4]); for (let x = -1.6; x <= 1.6; x += .8) dot(x, .1, 1.32, C.cyan, 1.1); }
+      { // v371 the working dock: window grids on the towers, floodlights sweeping the hull, drones welding round it, energy collars on the arms
+        const wm = new TH.MeshBasicMaterial({ color: 0xffd9a0, transparent: true, opacity: .9, toneMapped: false });
+        for (const s of [-1, 1]) for (let y = .35; y < H - .2; y += .26) for (let i = 0; i < 3; i++) if (hash("dk" + s + y.toFixed(2) + i) % 5) { const w = new TH.Mesh(new TH.PlaneGeometry(.09, .1), wm); w.position.set(s * X - .13 + i * .13, y, -.195); b.add(w); const w2 = w.clone(); w2.position.z = -.705; w2.rotation.y = Math.PI; b.add(w2); }
+        const beamM = new TH.MeshBasicMaterial({ color: 0xffe2b0, transparent: true, opacity: .13, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false });
+        for (const s of [-1, 1]) { const piv = new TH.Group(); piv.position.set(s * X, H - .05, .05); const cone = new TH.Mesh(new TH.ConeGeometry(.42, 1.9, 18, 1, true).translate(0, -.95, 0), beamM); piv.add(cone); piv.rotation.z = s * .55; piv.userData.z0 = s * .55; b.add(piv); anim.push([piv, "flood", s]);
+          const hd = new TH.Sprite(new TH.SpriteMaterial({ map: glowTex("255,226,170", 1), transparent: true, opacity: .9, blending: TH.AdditiveBlending, depthWrite: false })); hd.position.copy(piv.position); hd.scale.setScalar(.45); b.add(hd); }
+        if (built || shipM) for (let i = 0; i < (MOBILE ? 2 : 3); i++) { const d = new TH.Group(); d.add(new TH.Mesh(new TH.BoxGeometry(.12, .05, .12), C.steel)); const wl = new TH.Sprite(new TH.SpriteMaterial({ map: glowTex("200,235,255", 1), transparent: true, opacity: 1, blending: TH.AdditiveBlending, depthWrite: false })); wl.position.y = -.08; wl.scale.setScalar(.22); wl.userData.s0 = .22; d.add(wl); anim.push([wl, "flick", i * 1.9]);
+          b.add(d); anim.push([d, "orbitF", i * 2.1]); Object.assign(d.userData, { r: 1.25 + i * .18, y0: 1.05 + i * .12, w: (i % 2 ? -1 : 1) * (.45 + i * .1), tilt: .12 }); }
+        for (const s of [-1, 1]) for (const f of [.35, .7]) { const t = new TH.Mesh(new TH.TorusGeometry(.075, .014, 6, 20), new TH.MeshBasicMaterial({ color: 0x66ddff, transparent: true, opacity: .8, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false }));
+          const a = [s * (X - .25), 1.6, -.2], c2 = [s * .95, .98, -.1]; t.position.set(a[0] + (c2[0] - a[0]) * f, a[1] + (c2[1] - a[1]) * f, a[2] + (c2[2] - a[2]) * f); t.quaternion.setFromUnitVectors(new TH.Vector3(0, 0, 1), new TH.Vector3(c2[0] - a[0], c2[1] - a[1], c2[2] - a[2]).normalize()); t.userData.op = .8; b.add(t); anim.push([t, "pulseO", f * 4 + s]); } }
       break; }
     case "repairYard": { // a white hull on lit cradles in a dry dock, scaffold towers, a gantry crane and welding sparks
       const L = 1.6 + Math.min(e, 4) * .25, hz = .1;
@@ -10980,6 +10995,7 @@ function drawColony(t) {
     else if (kind === "slideS") { const u = o.userData; if (u.x0 == null) u.x0 = o.position.x; o.position.x = u.x0 + Math.sin(T * .0009) * p; } // a gantry crane travelling its rails
     else if (kind === "smoke") { const u = o.userData; if (u.y0 == null) { u.y0 = o.position.y; u.x0 = o.position.x; } const q = (T * .00016 + p) % 1; o.position.y = u.y0 + q * u.rise; o.position.x = u.x0 + q * u.drift; o.scale.setScalar(u.s0 * (.55 + q * 2.4)); o.material.opacity = u.op * Math.sin(Math.PI * Math.min(1, q * 1.15)); o.material.rotation = q * 1.2 + p * 6; } // v353 chimney smoke and steam
     else if (kind === "puff") { const u = o.userData; if (u.y0 == null) u.y0 = o.position.y; const q = (T * .00035 + p * .37) % 1; o.position.y = u.y0 + q * 1.1; o.scale.setScalar(.5 + q * 1.6); } // steam rising
+    else if (kind === "flood") { o.rotation.z = o.userData.z0 + Math.sin(T * .0007 + p * 1.3) * .28; o.rotation.x = Math.sin(T * .0005 + p) * .2; } // v371 floodlights sweeping the hull
     else if (kind === "laserBolt") { const u = o.userData, z = T * .0011 + p, cyc = Math.floor(z), q = z - cyc, f = q / .13; // v369 a bolt crosses in ~.13 of its cycle
       if (f < 1) { o.visible = true; o.position.copy(u.A).addScaledVector(u.d, f * .76); u.hd.position.copy(u.A).addScaledVector(u.d, f * .76 + .24); u.hd.material.opacity = 1; u.mz.material.opacity = Math.max(u.mz.material.opacity, .95 * (1 - f)); }
       else { o.visible = false; u.hd.material.opacity = 0; if (u.cyc !== cyc) { u.cyc = cyc; u.tgt.userData.hit = T; } u.mz.material.opacity *= .9; } }
