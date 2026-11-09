@@ -2374,6 +2374,7 @@ const PK_FEAT = ["starter_pack", "forge_adv", "ultimate"];
 const pkArt = p => p.family === "shards" ? `art/packs/pack-shards-${p.tier}.webp?v=1` : `art/packs/pack-${p.family}.webp?v=1`;
 function pkState() { const st = G.tstat || {}, tester = !!st.tester, claimed = st.claimed ? (G.packs || []).find(p => p.id === st.claimed) : null; return { st, tester, claimed }; }
 function pkBtn(p, big) { const { tester, claimed } = pkState(), can = tester && !claimed && p.tester;
+  if (G.pkClaiming && G.pkClaimId === p.id) return `<button class="btn amber ${big ? "wide" : "sm"}" disabled>Claiming…</button>`; // v362
   return can ? `<button class="btn amber ${big ? "wide" : "sm"}" data-act="packClaim" data-k="${esc(p.id)}">Claim free</button>` : `<button class="btn ${big ? "wide" : "sm"}" disabled>${tester ? (claimed && claimed.id === p.id ? "Claimed ✓" : "Claimed this week") : "Coming soon"}</button>`; }
 function pkCard(p, feat) { const t = PK_TIER[p.tier] || ["", "#55d6e8"];
   return `<div class="pkcard${feat ? " feat" : ""}" style="--pt:${t[1]}" data-act="packOpen" data-k="${esc(p.id)}" role="button" tabindex="0"><div class="pkart" style="background-image:url(${pkArt(p)})"><span class="pkp">$${Number(p.priceUsd).toFixed(2)}</span>${t[0] ? `<i class="pkt">${t[0]}</i>` : ""}</div>
@@ -2413,14 +2414,20 @@ function shPackAdmin() {
     ${who.filter(([u]) => !T.has(u)).map(([u, n]) => `<div class="pkrow"><span>${esc(n)}</span><button class="btn sm" data-act="pkaTester" data-u="${esc(u)}" data-on="1">Make tester</button></div>`).join("")}</div>`;
 }
 function pkApply(c, sign) { const got = [];
-  if (c.shards) { S.shards = Math.max(0, (S.shards || 0) + sign * c.shards); got.push(`◆${fmt(c.shards)}`); }
+  if (c.shards) { S.shards = Math.max(0, (S.shards || 0) + sign * c.shards); if (SEC.base) SEC.base.sh = Math.max(0, SEC.base.sh + sign * c.shards); got.push(`◆${fmt(c.shards)}`); } // v362 a pack is no cheat
   for (const [k, n] of Object.entries(c.items || {})) { if (k === "boost") S.boosts = Math.max(0, (S.boosts || 0) + sign * n); else if (SHOP[k]) { if (sign > 0) giveItem(k, n); else { S.items = S.items || {}; S.items[k] = Math.max(0, (S.items[k] || 0) - n); } } else continue; got.push(k === "boost" ? `${n} speed-ups` : `${SHOP[k].n}${n > 1 ? ` ×${n}` : ""}`); }
   const mats = c.mats || []; if (mats.length) { if (sign > 0) fsDrop(mats, "a pack", { nocap: true }); else { const f = fsOf(); for (const [m, t, n] of mats) { const key = fsMatKey(m, t); f.mats[key] = Math.max(0, (f.mats[key] || 0) - n); } } }
   return got; }
-async function packsDeliver() { if (!window.udfShop || G.mode !== "online" || !S || G.pkDel) return; G.pkDel = 1;
+/* v362 repair, once: the security check reversed the shards of packs worth over 2,500. Each "jumped" reversal logged within two minutes of a
+   pack delivery is credited back and its strike removed. */
+function packShardFix() { if (!S || S.pkShFix || G.mode !== "online" || !(store && store.ready)) return; S.pkShFix = 1; const inc = (S.sec && S.sec.inc) || [], gt = Object.values(S.grants || {}); let back = 0;
+  for (const x of inc) { if (x.kind !== "shards" || x.fixed) continue; const m = /jumped by ([\d,]+)/.exec(x.txt || ""); if (!m) continue; const n = +m[1].replace(/,/g, "");
+    if (!gt.some(t => Math.abs(t - x.t) < 120000)) continue; S.shards = (S.shards || 0) + n; if (SEC.base) SEC.base.sh += n; back += n; x.fixed = 1; x.fix = "Restored: it was a pack, not a cheat."; S.sec.strikes = Math.max(0, (S.sec.strikes || 0) - 1); }
+  if (back) { note(`Restored ◆${fmt(back)} Void Shards from your pack that the security check had wrongly taken back. Sorry about that!`, "win"); dirty(); } }
+async function packsDeliver() { try { packShardFix(); } catch (e) {} if (!window.udfShop || G.mode !== "online" || !S || G.pkDel) return; G.pkDel = 1;
   try { const L = (await udfShop.mine()) || []; S.grants = S.grants || {}; S.grantsRev = S.grantsRev || {};
     for (const g of L) { const P = (G.packs || []).find(p => p.id === g.pack_id), nm = P ? P.name : g.pack_id;
-      if (g.status === "granted") { if (!S.grants[g.id]) { const got = pkApply(g.contents || {}, 1); S.grants[g.id] = now(); dirty(); await flush(); note(`${nm} delivered: ${got.join(", ")}.`, "win"); try { SFX.fanfare(); } catch (e) {} }
+      if (g.status === "granted") { if (!S.grants[g.id]) { const got = pkApply(g.contents || {}, 1); S.grants[g.id] = now(); dirty(); note(`${nm} delivered: ${got.join(", ")}.`, "win"); try { SFX.fanfare(); } catch (e) {} render(true); if (sheet) renderSheet(); await flush(); } // v362 shown at once, saved right after
         await udfShop.ack(g.id); }
       else if (g.status === "revoked") { if (!S.grantsRev[g.id]) { pkApply(g.contents || {}, -1); S.grantsRev[g.id] = now(); dirty(); await flush(); note(`${nm} was refunded, so its contents were taken back.`, "warn"); }
         await udfShop.ackRevoke(g.id); } }
@@ -2493,7 +2500,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 361;
+const GAME_V = 362;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -17218,10 +17225,14 @@ const ACT = {
     try { await udfShop.adminRevoke(d.id, "owner refund"); toast("Pack taken back.", "win"); } catch (e) { toast("Couldn't take it back.", "warn"); } G.pkAdm = null; pkAdminLoad(); }),
   pkaTester: d => act(async () => { try { await udfShop.testerSet(d.u, d.on === "1"); } catch (e) { toast("Couldn't change the tester list.", "warn"); } G.pkAdm = null; pkAdminLoad(); }),
   packsRetry: () => { G.pkErr = 0; packsLoad(true); renderSheet(); },
-  packClaim: d => act(async () => { const P = (G.packs || []).find(p => p.id === d.k); if (!P || G.pkClaiming) return; G.pkClaiming = 1;
-    try { const r = await udfShop.claim(d.k); if (r && r.ok === false && r.reason === "already_claimed") toast("You've already claimed this week's tester pack.", "warn"); await packsDeliver(); }
+  packClaim: d => act(async () => { const k = d.k, P = (G.packs || []).find(p => p.id === k); if (!P) return; if (G.pkClaiming) return toast("Claiming your pack…"); // the button's data changes when the card redraws: read it first
+    G.pkClaiming = 1; G.pkClaimId = k; if (sheet) renderSheet(); // v362 the tap answers at once
+    try { const r = await udfShop.claim(k);
+      if (r && r.ok === false && r.reason === "already_claimed") toast("You've already claimed this week's tester pack.", "warn");
+      else { G.tstat = Object.assign({}, G.tstat, { claimed: k }); toast(`${P.name} claimed! Adding it to your empire…`, "win"); }
+      G.pkClaiming = 0; if (sheet) renderSheet(); await packsDeliver(); }
     catch (e) { toast(e && e.code === "not_granted" ? "Only testers can claim free packs." : "Couldn't claim the pack. Check your connection and try again.", "warn"); }
-    finally { G.pkClaiming = 0; const keep = G.packs; packsLoad(true); G.packs = keep; } }),
+    finally { G.pkClaiming = 0; G.pkClaimId = null; const keep = G.packs; packsLoad(true); G.packs = keep; if (sheet) renderSheet(); } }),
   dMore: () => { if (sheet) { sheet.dmore = !sheet.dmore; renderSheet(); } },
   soundPanel: () => { if (!AU.started) audioStart(); openSheet({ type: "sound" }); },
   remindToggle: () => { remindPref = !remindPref; try { localStorage.setItem("void.remind", remindPref ? "1" : "0"); } catch (e) {} toast(remindPref ? "Reminders on: you'll get a pop-up when a job finishes." : "Reminders off."); render(true); },
