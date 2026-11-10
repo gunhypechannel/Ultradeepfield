@@ -677,7 +677,7 @@
       well.material.opacity = coil * .9; well.scale.setScalar(fc < 0 ? 1 : 9 - 7 * ss(0, 1, fc)); well.rotation.z = -t * .004;
       bt(t, 1 + coil * 6 + fire * 2); hit(bell(fx, 0, .05, .4, 1), t); };
     const tmpQ = new TH.Quaternion(), tmpQ2 = new TH.Quaternion(), tmp2 = new TH.Object3D();
-    bake(body); return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 15, h: 11 }; }
+    bake(body); return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 15, h: 11, own: [hole, disc, disc2, phR, bhG] }; } // own: its little black hole, hidden where a real one is
 
   /* ---------- Shard Colossus: a golem of dark mine rock and violet and cyan crystal, grown up out of a Void Shard mine. Great
      crystal wings fan from its back round a fractured heart that burns pink-white; a crown of shards, clawed crystal hands, a
