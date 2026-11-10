@@ -3384,7 +3384,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 398;
+const GAME_V = 399;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4722,10 +4722,21 @@ function wbHome(c) { if (!WB_PYR) { WB_PYR = PYRAMIDS.filter(y => { const n = la
 const WB_OFF = { c0: [26, 0], c1: [-26, 0], c2: [0, 26], c3: [0, -26] }; // the conduits stand round the Overlord, in its own frame (outward, along the orbit)
 const WBQ = {}, WBS = {}; // scratch: WBS only inside wbPos (the station), WBQ for callers
 let WB_LANE = null, WB_MINE = null; const WB_WYM = { id: "wb_wymorb", r: 26 * SC, a0: 1.2 + Math.PI };
-function wbPos(key, T, out) { const o = out || {};
+/* v399: no boss overlaps another or the Super Cube. Each has a clear radius (its size on the map; the Overlord's covers its conduits).
+   In a fixed order (the Wyrm holds the centre) each boss that is out steps sideways, smoothly, until it clears the Cube and the ones
+   placed before it. The conduits move with their Overlord. */
+const WB_CLR = { wym: 30, ovl: 50, war: 22, col: 26, brd: 24, dev: 32, tyr: 38 }, WB_CUBE_R = 34, WB_SEP_ORDER = ["wym", "ovl", "war", "col", "brd", "dev", "tyr"];
+let WB_SEPC = null; // a boss that would touch something rises over it (smoothly, as it nears and passes), then settles back
+function wbSep(T) { if (WB_SEPC && WB_SEPC.T === T) return WB_SEPC.o; const o = {}, cq = P3(NEXUS, T, {}), fixed = [{ x: cq.x, y: cq.y, z: cq.z, r: WB_CUBE_R }];
+  for (const k of WB_SEP_ORDER) { if (!wbOn(k, T)) continue; const q = wbPosRaw(k, T, {}); let y = q.y;
+    if (k !== "wym") for (let pass = 0; pass < 3; pass++) for (const f of fixed) { const h = Math.hypot(q.x - f.x, q.z - f.z), need = WB_CLR[k] + f.r + 1, u = h / (1.6 * need); if (u >= 1) continue; y = Math.max(y, f.y + 1.12 * need * (1 - u * u) * (1 - u * u)); } // a gentle rise that starts early and always clears
+    o[k] = y - q.y; fixed.push({ x: q.x, y, z: q.z, r: WB_CLR[k] }); }
+  WB_SEPC = { T, o }; return o; }
+function wbPos(key, T, out) { const o = wbPosRaw(key, T, out), s = wbSep(T)[WB[key] && WB[key].con != null ? "ovl" : key]; if (s) o.y += s; return o; }
+function wbPosRaw(key, T, out) { const o = out || {};
   if (wbG2(key)) { const c2 = wbCyc2(T);
     if (key === "brd") { const L = LAYERS[1], r = L.r0 + (L.r1 - L.r0) * (.3 + .4 * (hash("brd" + c2) % 1000) / 1000), a = (hash("brdA" + c2) % 6283) / 1000 + TAU * T / period(r); o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 3; return o; }
-    if (key === "wym") { o.x = 0; o.z = 0; o.y = (evActive(T) ? 42 : 2) + 1.2 * Math.sin(T / 9e5); return o; } // v391: coiled round the black hole at the centre (risen above it while the Cube sits there)
+    if (key === "wym") { o.x = 0; o.z = 0; o.y = (evActive(T) ? 72 : 2) + 1.2 * Math.sin(T / 9e5); return o; } // v391: coiled round the black hole at the centre (risen above it while the Cube sits there)
     if (key === "col") { if (!WB_MINE) { WB_MINE = NODES.filter(n => n.res === "c" && layerOf(n.r).n === 4); if (!WB_MINE.length) WB_MINE = NODES.slice(0, 50); }
       const q = P3(WB_MINE[hash("col" + c2) % WB_MINE.length], T, WBS), r = Math.hypot(q.x, q.z) || 1; o.x = q.x - q.x / r * 14; o.z = q.z - q.z / r * 14; o.y = q.y; return o; }
     if (!WB_LANE) { WB_LANE = PIRATES.filter(x => x.kind === "pirate" && [3, 4].includes(layerOf(x.r).n)).sort((a, b) => a.a0 - b.a0); if (!WB_LANE.length) WB_LANE = PIRATES.slice(0, 50); }
