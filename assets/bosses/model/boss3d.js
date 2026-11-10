@@ -748,6 +748,39 @@
       shatW(fs < 0 ? -1 : (fs - .2) / .7); stompW(fs < 0 ? -1 : (fs - .62) / .38); bt(t, 1 + burst * 5 + fire * 2 + lift * 2); hit(bell(fx, 0, .05, .4, 1), t); };
     bake(body); return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 14, h: 18 }; }
 
+
+  /* ---------- a pirate hideout, remastered as a scrap space station: a plated hub with an antenna spire, a habitat ring on spokes that
+     turns, docking piers with captured ships, salvaged solar wings, glowing windows and red warning lights. Three layouts. Built
+     once per layout and cloned for every hideout on the map: the hull (one mesh), the lights (one mesh) and the turning ring. ---------- */
+  function station(v = 0) { const grp = new TH.Group(), body = new TH.Group(); grp.add(body); const R = rnd;
+    const PAL = ["#6a2e18", "#5a2a16", "#7a4a22", "#3e4a54", "#5c5850", "#4a3a2c"];
+    const M = hullMat("pst", { rows: 4, cols: 4, pal: PAL, slits: .45, sc: "#ffe2a8", sg: "#ff9a38", rust: 1, metal: .6, rough: .55, rc: [1, .45, .2], ei: 3.2, rep: [2, 1] }); M.envMapIntensity = .6;
+    const AMB = glowMat(0xff9a3a, .55), RED = AMB; // one light colour: the hull, the lights and the turning ring are three draw calls
+    const nArm = [3, 4, 2][v % 3], tall = [1, .8, 1.25][v % 3];
+    // hub: plated drum, flared collars, a lower reactor bulb, a spire with lights
+    body.add(new TH.Mesh(new TH.CylinderGeometry(.55, .62, 1.5 * tall, 10), M));
+    for (const y of [.75 * tall, -.75 * tall]) { const c = new TH.Mesh(new TH.CylinderGeometry(y > 0 ? .35 : .78, y > 0 ? .78 : .35, .35, 10), M); c.position.y = y + (y > 0 ? .17 : -.17); body.add(c); }
+    { const b = new TH.Mesh(new TH.SphereGeometry(.42, 12, 8), M); b.position.y = -1.25 * tall; body.add(b); const g = new TH.Mesh(new TH.TorusGeometry(.46, .045, 6, 20), AMB); g.rotation.x = Math.PI / 2; g.position.y = -1.25 * tall; body.add(g); }
+    { const s = new TH.Mesh(new TH.CylinderGeometry(.04, .09, 1.5, 6), M); s.position.y = 1.65 * tall; body.add(s); const l = new TH.Mesh(new TH.SphereGeometry(.09, 8, 6), RED); l.position.y = 2.42 * tall; body.add(l);
+      for (const k of [0, 1]) { const d = new TH.Mesh(new TH.ConeGeometry(.28, .12, 10, 1, true), M); d.position.set(k ? .22 : -.22, 1.35 * tall + k * .25, 0); d.rotation.z = k ? -1.1 : 1.1; body.add(d); } }
+    { const w = new TH.Mesh(new TH.CylinderGeometry(.565, .565, .08, 14, 1, true), AMB); w.position.y = .2 * tall; body.add(w); const w2 = w.clone(); w2.position.y = -.35 * tall; body.add(w2); }
+    for (let i = 0; i < 14; i++) { const b = box(.12 + R() * .3, .1 + R() * .25, .1 + R() * .2, M), a = R() * TAU; b.position.set(Math.cos(a) * .6, (R() - .5) * 1.3 * tall, Math.sin(a) * .6); b.rotation.y = -a; body.add(b); }
+    // docking piers with a captured ship on each, warning lights at the tips
+    for (let i = 0; i < nArm; i++) { const a = i * TAU / nArm + .4, L = 2.4 + R() * .5, y = -.45 * tall, c = Math.cos(a), s = Math.sin(a);
+      const arm = box(L, .12, .2, M); arm.position.set(c * (.55 + L / 2), y, s * (.55 + L / 2)); arm.rotation.y = -a; body.add(arm);
+      const tr = box(L * .9, .05, .05, M); tr.position.set(c * (.6 + L / 2), y - .12, s * (.6 + L / 2)); tr.rotation.y = -a; body.add(tr);
+      const tip = new TH.Mesh(new TH.SphereGeometry(.07, 8, 6), RED); tip.position.set(c * (.6 + L), y, s * (.6 + L)); body.add(tip);
+      const sh = new TH.Group(); sh.userData.flat = 1; sh.position.set(c * (.55 + L * .6) - s * .32, y - .05, s * (.55 + L * .6) + c * .32); sh.rotation.y = -a; body.add(sh);
+      { const h = box(.9, .2, .26, M); sh.add(h); const n = new TH.Mesh(new TH.ConeGeometry(.13, .35, 4), M); n.rotation.z = -Math.PI / 2; n.position.x = .62; sh.add(n); const e = box(.06, .14, .2, AMB); e.position.x = -.47; sh.add(e); const f = box(.25, .26, .04, M); f.position.set(-.3, .14, 0); sh.add(f); } }
+    // salvaged solar wings on a mast
+    for (const sx of [-1, 1]) { const m = box(1.2, .05, .05, M); m.position.set(sx * .95, .5 * tall, 0); body.add(m); const p = box(.7, .02, .55, M); p.position.set(sx * 1.6, .5 * tall, 0); p.rotation.x = .35 * sx; body.add(p);
+    }
+    // the habitat ring: rim, window band, four spokes; it turns
+    const rg = new TH.Group(); rg.name = "ring"; const rgo = new TH.Group(); rgo.position.y = .15 * tall; rgo.rotation.x = -Math.PI / 2; rgo.add(rg); grp.add(rgo);
+    rg.add(new TH.Mesh(new TH.TorusGeometry(1.9, .17, 8, 40), M));
+    for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2, s = box(1.35, .08, .08, M); s.position.set(Math.cos(a) * 1.22, Math.sin(a) * 1.22, 0); s.rotation.z = a; rg.add(s); }
+    for (let i = 0; i < 8; i++) { const a = i * TAU / 8 + .2, b = box(.34, .3, .26, M); b.position.set(Math.cos(a) * 1.9, Math.sin(a) * 1.9, 0); b.rotation.z = a; rg.add(b); }
+    bake(body); bake(rg); return { grp, ring: rg, r: 2.7 }; }
   // merge each group's static leaf meshes that share a material (same look), so a boss costs tens of draw calls, not hundreds
   function bake(root) { const fl = []; root.traverse(o => { if (o !== root && o.userData.flat && o.parent) fl.push(o); });
     for (const o of fl.reverse()) { o.updateMatrix(); const par = o.parent; for (const c of [...o.children]) { c.applyMatrix4(o.matrix); par.add(c); } par.remove(o); }
@@ -763,5 +796,5 @@
         const mesh = new TH.Mesh(g2, L[0].material); for (const c of L) o.remove(c); o.add(mesh); } } }
   // light the boss's own materials from an environment map (the galaxy scene has none); count its draw calls
   function prep(b, env) { b.grp.traverse(o => { const m = o.material; if (m && m.isMeshStandardMaterial && env) { m.envMap = env; m.needsUpdate = true; } }); return b; }
-  root.BOSS3D = { init(T) { TH = T; }, set lod(v) { LOD = v | 0; }, get lod() { return LOD; }, conduit, warden, overlord, devourer, matriarch, tyrant, wyrm, colossus, prep };
+  root.BOSS3D = { init(T) { TH = T; }, set lod(v) { LOD = v | 0; }, get lod() { return LOD; }, conduit, warden, overlord, devourer, matriarch, tyrant, wyrm, colossus, station, prep };
 })(typeof window !== "undefined" ? window : globalThis);
