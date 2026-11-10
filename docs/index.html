@@ -3384,7 +3384,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 392;
+const GAME_V = 393;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4906,7 +4906,7 @@ function wbScanFx(W, t) { const s = G.wbScan, M = s && W.wbM && W.wbM[s.key]; if
   const k = ((t - s.t0) % 3600) / 3600, Y = WB_YR[WB[s.key].m3]; M.sweep.visible = true; M.sweep.position.y = Y[0] + k * (Y[1] - Y[0]); M.sweep.children[0].material.opacity = .55 * Math.sin(k * Math.PI);
   if (t > s.next) { s.next = t + 5200; const mv = M.b.moves.filter(x => x !== "hit"), n = mv[s.i++ % mv.length]; M.b.act(n); if (!s.seen.includes(n)) s.seen.push(n);
     { const A = (WB_ATT[WB[s.key].con != null ? "con" : s.key] || []).find(x => x[0] === n), a0 = VOICE.au; if (A && !s.said.includes(n) && t - s.t0 > 2500 && !(a0 && !a0.paused && !a0.ended) && !G.holoNext) { s.said.push(n); advHolo(`${A[1]}. ${A[2]}`); } } /* v388: the Advisor explains each attack as it is shown */ for (const p of document.querySelectorAll("#wbscan .ws-att p")) p.classList.toggle("hot", p.dataset.m === n); { const A = (WB_ATT[WB[s.key].con != null ? "con" : s.key] || []).find(x => x[0] === n), el = $("#wsNow"); if (el) el.innerHTML = A ? `<b>⚠ ${A[1]}</b> · ${A[2]}` : `Observing: ${WB_MOVE_N[n] || n}`; } }
-  const base = (WB[s.key].con != null ? 45 : WB[s.key].cam || 105) * WB[s.key].sc; c.goal = Object.assign(c.goal || {}, { dist: base * (1 + .28 * Math.sin((t - s.t0) * .00035)) }); c.head = (c.head || 0) + .0006 * (W.dtk || 1); } // a slow circle that dollies in and out
+  if (s.user) return; const base = (WB[s.key].con != null ? 45 : WB[s.key].cam || 105) * WB[s.key].sc; c.goal = Object.assign(c.goal || {}, { dist: base * (1 + .28 * Math.sin((t - s.t0) * .00035)) }); c.head = (c.head || 0) + .0006 * (W.dtk || 1); } // v393: hands off once you pinch, scroll or drag // a slow circle that dollies in and out
 
 function arrive(f) {
   const p = G.byId[f.pid], tt = f.tt || (f.arrive - f.out); f.phase = "back"; f.back = f.arrive + tt;
@@ -9557,11 +9557,11 @@ function bind3D(el) {
       else if (pts.size === 2) { const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y) || 1, my = (a.y + b.y) / 2, ang = Math.atan2(b.y - a.y, b.x - a.x);
         if (last) { sg.ok = clamp(sg.ok * last.d / d, .3, 3); let da = ang - last.ang; if (da > Math.PI) da -= TAU; if (da < -Math.PI) da += TAU; sg.oth += da; sg.oph -= (my - last.my) * .005; } last = { d, my, ang }; }
       sg.oph = clamp(sg.oph, -1.3, 1.3); return; }
-    if (pts.size === 1 && c.cine) { c.th += dx * .008; c.ph = clamp(c.ph - dy * .006, .12, 1.52); if (c.cine.m !== "free") { c.cine.m = "free"; cineBar(); } } // v93 cinematic: one finger turns the camera around the fleet
+    if (pts.size === 1 && c.cine) { c.th += dx * .008; c.ph = clamp(c.ph - dy * .006, .12, 1.52); if (G.wbScan) G.wbScan.user = 1; if (c.cine.m !== "free") { c.cine.m = "free"; cineBar(); } } // v93 cinematic: one finger turns the camera around the fleet
     else if (pts.size === 1) { if (p.b === 2 || p.sh) { c.th += dx * .006; c.ph = clamp(c.ph - dy * .005, CAM_TILT, 1.5); } else if (moved > 10) { pan(dx, dy); /* a dead zone: finger jitter during a tap no longer pans (or drops the fleet you are following) */ // one finger scrolls across the map; remember the swipe speed for a gentle glide after release
         const tn = performance.now(), dt = Math.max(8, tn - vel.t); vel = { x: vel.x * .5 + dx / dt * 16 * .5, y: vel.y * .5 + dy / dt * 16 * .5, t: tn }; } }
     else if (pts.size === 2) { const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y) || 1, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, ang = Math.atan2(b.y - a.y, b.x - a.x);
-      if (last) { c.dist = clamp(c.dist * last.d / d, c.cine ? 2.5 : CAM_MIN, c.cine ? 160 : 1600); if (c.goal) c.goal.dist = null; let da = ang - last.ang; if (da > Math.PI) da -= TAU; if (da < -Math.PI) da += TAU; c.th += da; c.ph = clamp(c.ph - (my - last.my) * .005, CAM_TILT, 1.5); }
+      if (last) { c.dist = clamp(c.dist * last.d / d, c.cine ? 2.5 : CAM_MIN, c.cine ? cineMaxD(c) : 1600); if (c.goal) c.goal.dist = null; if (G.wbScan) G.wbScan.user = 1; let da = ang - last.ang; if (da > Math.PI) da -= TAU; if (da < -Math.PI) da += TAU; c.th += da; c.ph = clamp(c.ph - (my - last.my) * .005, CAM_TILT, 1.5); }
       last = { d, mx, my, ang }; }
   });
   const up = e => { const one = pts.size === 1, p = pts.get(e.pointerId), tap = one && moved < (e.pointerType === "touch" ? 16 : 8) && e.type === "pointerup"; /* v121: fingers wobble more than a mouse */ pts.delete(e.pointerId); last = null;
@@ -9575,7 +9575,7 @@ function bind3D(el) {
   el.addEventListener("wheel", e => { e.preventDefault(); const c = G3.cam, px = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
     if (c.siege) { c.siege.ok = clamp(c.siege.ok * Math.exp(clamp(px, -300, 300) * .0014), .3, 3); return; } /* v130: zoom the siege film */
     const base = c.goal && c.goal.dist ? c.goal.dist : c.dist; /* v124: smooth, proportional zoom: a mouse notch eases ~15%, a trackpad glides in small steps */
-    c.goal = Object.assign(c.goal || {}, { dist: clamp(base * Math.exp(clamp(px, -300, 300) * .0014), c.cine ? 2.5 : CAM_MIN, c.cine ? 160 : 1600) }); }, { passive: false });
+    c.goal = Object.assign(c.goal || {}, { dist: clamp(base * Math.exp(clamp(px, -300, 300) * .0014), c.cine ? 2.5 : CAM_MIN, c.cine ? cineMaxD(c) : 1600) }); if (G.wbScan) G.wbScan.user = 1; }, { passive: false });
   el.addEventListener("contextmenu", e => e.preventDefault());
   // minimap: tap or drag to fly the camera anywhere in the galaxy
   const mm = el.parentNode && el.parentNode.querySelector("#minimap");
@@ -13746,7 +13746,7 @@ function cineStart(m) { if (!G3 || !(G3.cam.followFleet || G3.cam.followMv)) ret
 const cineBtn = id => `<button class="btn ghost wide" style="margin:6px 0" data-act="cineObj" data-id="${esc(id)}">🎥 Cinematic view</button>`;
 function cineObjStart(id, n) { const it = PB[id] || YB[id] || G.byId[id] || wbById(id) || (id[0] === "r" ? NB[id] : null); if (!it) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); }
   if (!G3) { if ((n || 0) < 20) setTimeout(() => cineObjStart(id, (n || 0) + 1), 300); return; }
-  const c = G3.cam; if (c.followMv) followMvEnd(G3, 1); c.follow = null; c.followFleet = null; c.vel = null; c.cineObj = { id }; c.cine = { m: "orbit" }; c.head = it.a0 || 0; if (it.wb) { c.cineObj.fit = 1; c.goal = { dist: (WB[it.wb].con != null ? 45 : WB[it.wb].cam || 105) * WB[it.wb].sc }; $("#app").classList.add("cine"); cineBar(); wbScanOn(it.wb); return; } /* v384: a world boss gets its scan */
+  const c = G3.cam; if (c.followMv) followMvEnd(G3, 1); c.follow = null; c.followFleet = null; c.vel = null; c.cineObj = { id }; c.cine = { m: "orbit" }; c.head = it.a0 || 0; if (it.wb) { c.cineObj.fit = 1; c.goal = { dist: (WB[it.wb].con != null ? 45 : WB[it.wb].cam || 105) * WB[it.wb].sc }; $("#app").classList.add("cine"); G.wbWide = 0; cineBar(); wbScanOn(it.wb); return; } /* v384: a world boss gets its scan */
   c.goal = { dist: 40 }; $("#app").classList.add("cine"); cineBar(); } // the distance is fitted to the model's real size once it is in view
 /* where the filmed object is now (a monster swims its loop, so its body is tracked when the model exists) */
 function cineObjPos(W, T) { const id = W.cam.cineObj.id, it = PB[id] || YB[id] || G.byId[id] || wbById(id) || (id[0] === "r" ? NB[id] : null); if (it && it.wb) { const q = P3(it, T); return { x: q.x, y: q.y + 6 * WB[it.wb].sc, z: q.z, yaw: null }; } if (!it) return null;
@@ -13759,9 +13759,11 @@ function clashWatch(key) { if (!G3) return; const cl = G.clashes.find(x => x.key
   const c = G3.cam; closeSheet(); if (c.followMv) followMvEnd(G3, 1); c.follow = null; c.followFleet = null; c.cineObj = null; c.vel = null; c.lastTgt = cl.loc; c.cineHold = 1; c.cine = { m: "orbit" }; c.cineBattle = null;
   c.goal = { dist: clamp(cl.o.ga.position.distanceTo(cl.o.gd.position) * 1.2, 15, 90) }; $("#app").classList.add("cine"); cineBar(); }
 function cineEnd() { wbScanOff(); if (!G3 || !G3.cam.cine) return; const c = G3.cam; c.cine = null; c.cineObj = null; if (c.siege) { c.siege = null; c.live = 0; } c.goal = { dist: Math.max(c.dist, 30) }; c.ph = clamp(c.ph, .3, 1.15); const a = $("#app"); if (a) a.classList.remove("cine"); const b = $("#cinebar"); if (b) b.remove(); fleetHud(true); }
+/* v393: filming a world boss you can pull far back to take in its size; Wide frames it at about 3.5x its scan distance */
+const cineMaxD = c => c.cineObj && wbById(c.cineObj.id) ? 700 : 160;
 function cineBar() { if (!G3 || !G3.cam.cine) return; let el = $("#cinebar"); if (!el) { el = document.createElement("div"); el.id = "cinebar"; $("#app").appendChild(el); }
   const m = G3.cam.cine.m; el.innerHTML = `<div class="cb-top"><span class="cb-rec">● CINEMATIC</span><span class="cb-w" id="cbw"></span><button class="cb-shot" data-act="cineShot" aria-label="Take a screenshot">📷</button><button data-act="cineOff" aria-label="Leave cinematic view">✕</button></div>
-    <div class="cb-bot"><div class="cb-ang">${CINE_M.map(([k, l]) => `<button class="${k === m ? "on" : ""}" data-act="cineMode" data-m="${k}">${l}</button>`).join("")}</div><small>Drag to look around · pinch to zoom</small></div>`; }
+    <div class="cb-bot"><div class="cb-ang">${G3.cam.cineObj && wbById(G3.cam.cineObj.id) ? `<button class="${G.wbWide ? "on" : ""}" data-act="cineWide">${G.wbWide ? "Close" : "Wide"}</button>` : ""}${CINE_M.map(([k, l]) => `<button class="${k === m ? "on" : ""}" data-act="cineMode" data-m="${k}">${l}</button>`).join("")}</div><small>Drag to look around · pinch to zoom${G3.cam.cineObj && wbById(G3.cam.cineObj.id) ? " out to take in its size" : ""}</small></div>`; }
 setInterval(() => { if (G3 && G3.cam.cine && view !== "galaxy") cineEnd(); const w = $("#cbw"); if (!w || !G3) return; const c = G3.cam, T = now();
   if (c.cineObj) { const id = c.cineObj.id, it = PB[id] || YB[id] || (id[0] === "r" ? NB[id] : null), wo = wbById(id); if (wo) w.textContent = `${WB[wo.wb].ic} Scanning · ${WB[wo.wb].n} · ${Math.round(wbHp(wo.wb) / WB_SEG * 100)}% hull`; else if (it) w.textContent = `${it.res ? (it.res === "s" ? "◆ Void Shard mine" : RES_N[it.res] + " field") : it.mon ? MON[it.mon].ic + " " + MON[it.mon].n : it.boss ? "■ Assimilation Cube" : id[0] === "y" ? "▲ Pyramid station" : "☠ Pirate hideout"} · ${it.name} · Lv.${it.lvl}`; else if (G.byId[id]) w.textContent = G.byId[id].name; return; }
   if (c.cineGather && !c.cineBattle) { const f = c.cineGather !== "mv" && S.fleets.find(x => x.id === c.cineGather), n = f ? NB[f.nid] : c.followMv && tgtById(c.followMv.m.t), res = n ? RES_N[n.res || "m"].toLowerCase() : "";
@@ -18056,6 +18058,8 @@ const ACT = {
   faq: d => { const n = +d.i, all = FAQ.flatMap(c => c[1]), qa = all[n], b = document.querySelector(`.faqb[data-i="${n}"]`); if (!qa || !b) return; const it = b.closest(".faqi"), open = !it.classList.contains("on");
     for (const x of document.querySelectorAll(".faqi.on")) { x.classList.remove("on"); x.querySelector(".faqb").setAttribute("aria-expanded", "false"); }
     if (open) { it.classList.add("on"); b.setAttribute("aria-expanded", "true"); advHolo(qa[1], true); } else { try { voiceStop(); } catch (e) {} } },
+  cineWide: () => { const c = G3 && G3.cam, o = c && c.cineObj && wbById(c.cineObj.id); if (!o) return; const D = WB[o.wb], base = (D.con != null ? 45 : D.cam || 105) * D.sc; G.wbWide = !G.wbWide; if (G.wbScan) G.wbScan.user = 1;
+    c.goal = Object.assign(c.goal || {}, { dist: base * (G.wbWide ? 3.5 : 1) }); if (G.wbWide) c.ph = Math.max(c.ph, .45); cineBar(); },
   cineMode: d => { if (G3 && G3.cam.cine) { G3.cam.cine.m = d.m; const sg = G3.cam.siege; /* v130: on the siege film the angle buttons set your view on top of the director's shots */
     if (sg) { const P = { chase: [0, 0, 1], side: [Math.PI / 2, 0, 1], front: [Math.PI, 0, 1], top: [0, -1.1, 1.2], orbit: [sg.oth, sg.oph, sg.ok] }[d.m]; if (P) [sg.oth, sg.oph, sg.ok] = P; sg.spin = d.m === "orbit"; }
     cineBar(); } },
