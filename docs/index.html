@@ -3651,7 +3651,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 408;
+const GAME_V = 409;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5243,11 +5243,12 @@ function convTint(W, T) { const a = W.scene && W.scene.userData.amb; if (!a) ret
   a.color.lerp(tgt, .02); }
 function wbMapFree(W) { if (!W || !W.wbM) return; for (const k in W.wbM) { const M = W.wbM[k]; if (!M.b) continue; W.scene.remove(M.b.grp); M.b.grp.traverse(o => { if (o.geometry) o.geometry.dispose(); }); } W.wbM = {}; }
 /* ---------- the boss in the battle report: the full model, rendered live into the replay ---------- */
+const WB_FACE = { devourer: 1 }; // v409: bosses whose main weapon fires from the front face the fleet on wide reports too
 const WBR = {}; const WB_FRONT = { elemental: 0, pentarch: 0, overlord: 0, devourer: -Math.PI / 2, warden: 0, conduit: 0, matriarch: 0, tyrant: -.55, wyrm: 0, colossus: 0 }; const WB_VIEW = { elemental: [-.2, [-8, 4, 62], [0, 0, 0]], pentarch: [0, [-10, 6, 120], [0, 0, 0]], matriarch: [-.55, [-12, 8, 36], [0, 6.5, 0]], tyrant: [.08, [-4, 7, 56], [1, -2.5, 0]], wyrm: [0, [-5, 15, 40], [0, 2.5, 0]], colossus: [-.35, [-8, 8, 37], [0, 8.5, 0]], overlord: [-Math.PI / 2, [-10, 4, 32], [0, -1.5, 0]], devourer: [Math.PI, [-8, 7, 36], [3, 0, 0]], warden: [-Math.PI / 2, [-7, 3, 27], [0, 0, 0]], conduit: [0, [0, 6, 25], [0, 6, 0]] };
 function wbArt(key, w, h, t, b) { if (typeof BOSS3D === "undefined" || !WB[key]) return null;
-  try { if (!WBR.r) { const cv = document.createElement("canvas"); WBR.r = new TH.WebGLRenderer({ canvas: cv, alpha: true, antialias: true }); WBR.r.setPixelRatio(1); WBR.r.outputEncoding = TH.sRGBEncoding; WBR.r.toneMapping = TH.ACESFilmicToneMapping; WBR.r.toneMappingExposure = 1.1; WBR.r.setClearColor(0, 0);
+  try { if (!WBR.r) { const cv = document.createElement("canvas"); WBR.r = glNew({ canvas: cv, alpha: true, antialias: true }); WBR.r.setPixelRatio(1); WBR.r.outputEncoding = TH.sRGBEncoding; WBR.r.toneMapping = TH.ACESFilmicToneMapping; WBR.r.toneMappingExposure = 1.1; WBR.r.setClearColor(0, 0);
       WBR.sc = new TH.Scene(); WBR.sc.add(new TH.AmbientLight(0x5f6a8a, .3)); const d0 = new TH.DirectionalLight(0xfff0e6, 2.1); d0.position.set(-6, 8, 10); WBR.sc.add(d0); const d1 = new TH.DirectionalLight(0x8a50ff, 1.2); d1.position.set(10, 4, -8); WBR.sc.add(d1); WBR.cam = new TH.PerspectiveCamera(36, 2, .1, 500); }
-    if (WBR.key !== key) { if (WBR.b) { WBR.sc.remove(WBR.b.grp); WBR.b.grp.traverse(o => { if (o.geometry) o.geometry.dispose(); }); } BOSS3D.init(TH); BOSS3D.lod = MOBILE ? 2 : 0; const m3 = WB[key].m3, V0 = WB_VIEW[m3], tall = h > w * .75; // phones: simpler tentacles; a portrait replay has the attackers above, so the boss faces the camera
+    if (WBR.key !== key) { if (WBR.b) { WBR.sc.remove(WBR.b.grp); WBR.b.grp.traverse(o => { if (o.geometry) o.geometry.dispose(); }); } BOSS3D.init(TH); BOSS3D.lod = MOBILE ? 2 : 0; const m3 = WB[key].m3, V0 = WB_VIEW[m3], tall = h > w * .75 || !!WB_FACE[m3]; // phones: simpler tentacles; a portrait replay has the attackers above, so the boss faces the camera
       WBR.b = BOSS3D.prep(BOSS3D[m3](WB[key].el || (key === "epx" ? ((battle && battle.r && battle.r.pent) || wbPentAlive(now())) : undefined)), wbEnv(WBR.r)); if (key === "epx") { WBR.b.ground = 16; WBR.shedQ = battle && battle.r && battle.r.shed ? battle.r.shed.map(k => WB[k].el) : null; } WBR.b.grp.rotation.y = tall ? WB_FRONT[m3] : V0[0]; WBR.sc.add(WBR.b.grp); WBR.key = key; WBR.tall = tall; WBR.cam.position.set(...(tall ? [V0[1][0] * .2, V0[1][1] * .6, Math.hypot(V0[1][0], V0[1][2])] : V0[1])); WBR.cam.lookAt(new TH.Vector3(...V0[2])); WBR.hp = null; WBR.next = 0; }
     const W2 = Math.min(MOBILE ? 820 : 1100, Math.round(w)), H2 = Math.round(W2 * h / w); if (WBR.w !== W2 || WBR.h !== H2) { WBR.r.setSize(W2, H2, false); WBR.cam.aspect = W2 / H2; WBR.cam.updateProjectionMatrix(); WBR.w = W2; WBR.h = H2; }
     if (b) { if (WBR.hp != null && b.hp < WBR.hp - .004 && t > (WBR.hitT || 0)) { WBR.b.act("hit"); WBR.hitT = t + 700; } WBR.hp = b.hp;
@@ -7535,7 +7536,7 @@ function init3D(host) {
   if (!TH || G3fail) return null;
   const cv = host.querySelector("#galaxy3d"); if (!cv) return null;
   let renderer;
-  try { renderer = new TH.WebGLRenderer({ canvas: cv, antialias: GFX_AA, powerPreference: "high-performance" }); /* weaker phones skip MSAA; adaptive resolution keeps edges clean */ } catch (e) { G3fail = true; return null; }
+  try { renderer = glNew({ canvas: cv, antialias: GFX_AA, powerPreference: "high-performance" }); /* weaker phones skip MSAA; adaptive resolution keeps edges clean */ } catch (e) { G3fail = true; return null; }
   renderer.setPixelRatio(Math.min(gfxMaxPR(), mobilePRCap())); // phones: up to 2x (v145), tablets by pixel budget (v163); v124: the chosen render scale
   const scene = new TH.Scene(); scene.background = new TH.Color(0x02040a);
   const camera = new TH.PerspectiveCamera(48, 1, .1, 9000);
@@ -10252,7 +10253,7 @@ function studio() {
   if (!TH) return (STU = false);
   try {
     const cv = document.createElement("canvas"); cv.width = 640; cv.height = 320;
-    const renderer = new TH.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, preserveDrawingBuffer: true });
+    const renderer = glNew({ canvas: cv, antialias: true, alpha: true, preserveDrawingBuffer: true });
     renderer.setPixelRatio(1); renderer.setSize(640, 320, false); renderer.setClearColor(0x000000, 0);
     renderer.toneMapping = TH.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.2; renderer.outputEncoding = TH.sRGBEncoding;
     const scene = new TH.Scene();
@@ -12189,7 +12190,7 @@ function domeTex() {
 }
 function initColony(host) {
   const cv = host.querySelector("#col3d"); if (!cv) return null;
-  let renderer; try { renderer = new TH.WebGLRenderer({ canvas: cv, antialias: GFX_AA || !MOBILE, powerPreference: "high-performance" }); } catch (e) { C3fail = true; return null; }
+  let renderer; try { renderer = glNew({ canvas: cv, antialias: GFX_AA || !MOBILE, powerPreference: "high-performance" }); } catch (e) { C3fail = true; return null; }
   cv.addEventListener("webglcontextlost", e => { e.preventDefault(); if (cv._udfFree) return; crumb("base GPU reset"); setTimeout(() => { if (C3 && C3.renderer === renderer) { const old = C3; C3 = null; glFree(old.renderer); if (colHost && colHost.parentNode) colHost.parentNode.removeChild(colHost); colHost = null; if (view === "base") render(); } }, 1500); }, false); /* v379: rebuild instead of staying black */
   renderer.setPixelRatio(Math.min(gfxMaxPR(), mobilePRCap())); // phones: up to 2x (v145) with soft shadows on, tablets by pixel budget (v163)
   renderer.toneMapping = TH.ACESFilmicToneMapping; renderer.toneMappingExposure = .78; renderer.outputEncoding = TH.sRGBEncoding;
@@ -13006,7 +13007,7 @@ function mapMount(m) {
 function mapPrewarm() { if (mapHost || G3 || !TH || G3fail || view === "galaxy" || battle || sheet || document.hidden || !G.ready) return;
   const pk = document.createElement("div"); pk.id = "mappark"; pk.setAttribute("aria-hidden", "true"); { const vr = ($("#view") || document.body).getBoundingClientRect(); /* the map's exact box (view width, full height): a different size would mean a full resize on the first frame */ pk.style.cssText = `position:fixed;left:${vr.left}px;top:0;width:${vr.width}px;height:${innerHeight}px;display:flex;flex-direction:column;visibility:hidden;pointer-events:none;z-index:-1;overflow:hidden`; /* the map box is a flex child */ } document.body.appendChild(pk);
   const t0 = performance.now(); try { mapMount(pk); } catch (e) { try { crumb("map prewarm failed: " + e.message); } catch (er) {} }
-  let n = 0; const step = () => { if (!G3 || view === "galaxy" || !$("#mappark") || !$("#mappark").firstChild) return; try { draw3D(performance.now()); if (n === 6 && !G3.warmed) { G3.warmed = 1; mapWarm(performance.now()); } } catch (e) {} if (++n < 10) setTimeout(() => requestAnimationFrame(step), 300); else try { crumb(`map ready in the background (${Math.round(performance.now() - t0)} ms)`); } catch (e) {} };
+  let n = 0; const step = () => { if (!G3 || view === "galaxy" || !$("#mappark") || !$("#mappark").firstChild) return; if (sheet || battle || document.hidden || performance.now() - (G.lastIn || 0) < 2500) { setTimeout(() => requestAnimationFrame(step), 700); return; } /* v409: each step compiles shaders (a stall); never while a panel is open or the player is tapping */ try { draw3D(performance.now()); if (n === 6 && !G3.warmed) { G3.warmed = 1; mapWarm(performance.now()); } } catch (e) {} if (++n < 10) setTimeout(() => requestAnimationFrame(step), 300); else try { crumb(`map ready in the background (${Math.round(performance.now() - t0)} ms)`); } catch (e) {} };
   requestAnimationFrame(step); }
 setInterval(() => { try { if (mapHost || !G.ready || view !== "base" || sheet || battle || document.hidden || advLines) { G.mpCalm = 0; return; } if (++G.mpCalm >= 3) (window.requestIdleCallback || setTimeout)(mapPrewarm, { timeout: 1500 }); } catch (e) {} }, 2000);
 function render(keepScroll) {
@@ -17813,6 +17814,23 @@ function adaptRes(t) {
    its top stack lines, so a frame that keeps failing (a frozen or blank map) shows up in Settings > Graphics > Last unexpected close */
 function sheetCap() { if (!sheet || battle || (view !== "galaxy" && view !== "base")) return 0; const el = document.querySelector(".sheet"); return !el ? 0 : el.classList.contains("full") ? 12 : 30; }
 function mapErr(e) { mapErr.n = (mapErr.n || 0) + 1; if (mapErr.n === 1 || mapErr.n % 300 === 0) { console.error(e); try { crumb(`map frame error x${mapErr.n}: ${String(e && e.message || e).slice(0, 80)} @ ${String(e && e.stack || "").split("\n").slice(1, 3).join(" | ").replace(/\s+/g, " ").slice(0, 160)}`); } catch (_) {} } }
+document.addEventListener("pointerdown", () => { G.lastIn = performance.now(); }, { capture: true, passive: true }); // v409 the last touch, for mapPrewarm
+/* v409 every 3D renderer is made here: shader error checks only with ?gldebug (they block until each compile finishes) */
+/* v409 the session: where the player was, restored after the phone closes the game in the background */
+const SESS_K = "udf.sess", SESS_VIEWS = ["base", "galaxy", "build", "mail", "quests", "rank", "ally", "cmd"], SESS_SHEETS = ["events", "bld", "wboss", "cubepick", "stress"];
+function sessSave() { try { if (!G.ready || !S || !G.me || G.sessHold || !G.sessDone) return; /* never before the last session was read back */ const o = { t: Date.now(), v: typeof GAME_V !== "undefined" ? GAME_V : 0, me: G.me, view, sub: jcopy(sub) };
+    if (view === "galaxy" && G3 && G3.cam) { const c = G3.cam; if (!c.cine && !c.live && [c.tx, c.tz, c.dist, c.th, c.ph].every(Number.isFinite)) o.cam = { tx: c.tx, ty: c.ty || 0, tz: c.tz, dist: c.dist, th: c.th, ph: c.ph }; }
+    if (G.sel) o.sel = G.sel; if (sheet && SESS_SHEETS.includes(sheet.type)) { try { o.sheet = JSON.parse(JSON.stringify(sheet)); } catch (e) {} }
+    localStorage.setItem(SESS_K, JSON.stringify(o)); } catch (e) {} }
+function sessRestore() { let o = null; try { o = JSON.parse(localStorage.getItem(SESS_K) || "null"); } catch (e) {} G.sessDone = 1;
+  if (!o || o.me !== G.me || Date.now() - o.t > 12 * 3600e3 || !SESS_VIEWS.includes(o.view) || !S || !S.tut || S.tut.k !== "done" || battle) return;
+  try { if (typeof liveIntro === "function" && liveIntro(now())) return; } catch (e) {}
+  G.sessHold = 1; try { if (o.sub) Object.assign(sub, o.sub); if (view !== o.view) { view = o.view; render(); } crumb(`session restored: ${o.view}${o.cam ? " + camera" : ""}${o.sheet ? " + " + o.sheet.type : ""} (${Math.round((Date.now() - o.t) / 60000)} min)`); } catch (e) {}
+  if (o.view === "galaxy" && o.cam) { let n = 0; const go = () => { if (G3 && G3.cam && !G3.cam.cine && !G3.cam.live) { const c = G3.cam; Object.assign(c, o.cam); c.goal = null; c.follow = null; c.followFleet = null; c.vel = null; if (o.sel && G.byId[o.sel]) G.sel = o.sel; G.sessHold = 0; } else if (n++ < 60) setTimeout(go, 250); else G.sessHold = 0; }; go(); } else G.sessHold = 0;
+  if (o.sheet) setTimeout(() => { try { if (!sheet && !battle && !$("#adv")) openSheet(o.sheet); } catch (e) {} }, 1500); }
+document.addEventListener("visibilitychange", () => { if (document.hidden) sessSave(); }); addEventListener("pagehide", sessSave); setInterval(sessSave, 15000);
+setInterval(() => { if (!G.sessDone && G.ready && S && G.me) { try { sessRestore(); } catch (e) { G.sessDone = 1; } } }, 500);
+function glNew(o) { const r = new TH.WebGLRenderer(o); try { r.debug.checkShaderErrors = /[?&]gldebug/.test(location.search); } catch (e) {} return r; }
 function frame(t) {
   rafId = 0; { const rd = t - (frame.raw || t); hzSample(rd); pfFrame(rd); if (rd > 0 && rd < 200) frame.rawEma = (frame.rawEma || 16.7) * .94 + rd * .06; } frame.raw = t;
   if (idleSkip(t)) { frame.last = t; rafId = requestAnimationFrame(frame); return; }
