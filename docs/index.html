@@ -3651,7 +3651,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 405;
+const GAME_V = 406;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9131,6 +9131,9 @@ setInterval(() => { try { const show = view === "galaxy" && G3 && !sheet && !bat
    Cube settling and turning with its tractor beams, a slow pull-back through the wreck field, then the title. Anyone can skip
    it, latecomers join mid-scene, and the event card replays it. */
 const LIVE_D = 82000, LIVE_SHOTS = [[0, "A signal from the heart of the galaxy…"], [14000, "The Cube leaves its orbit"], [30000, "It descends into the gravity well"], [48000, "The Collective takes the Void"], [62000, "Nothing survived the last fleet to stand here"], [74000, ""]];
+const LIVE_SAY = ["Commander, a signal is coming from the heart of the galaxy. Something vast has woken in the dark.", "The Cube is leaving its orbit. Every sensor we have is locked on it.",
+  "It is descending into the gravity well, straight for the Void at the centre of the galaxy.", "The Collective has taken the Void. Its tractor beams are reaching across the wreck field.",
+  "Nothing survived the last fleet that stood here. This time, it will be different.", "The Battle for the Cube has begun. Take it, and hold it for your alliance."]; // v406: the Advisor narrates the film
 const easeIO = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 function liveIntro(T) {
   if (G.liveReplay) { const s = performance.now() - G.liveReplay; if (s < LIVE_D) return { s, rep: 1 }; G.liveReplay = 0; return null; }
@@ -9156,6 +9159,19 @@ function liveCam(W, LI) {
 /* v107 siege camera: a slow, directed film of the Battle for the Cube, cutting every 16 s between a low orbit with ships passing
    the lens, a chase behind a squadron on its attack run, a capital ship's close pass and a wide view through the wreck field */
 const SIEGE_SHOTS = ["Low orbit", "Attack run", "Capital ship", "Wreck field", "Flagship"];
+/* v406 the Advisor's commentary on the Super Cube battle */
+const SIEGE_SAY = { open: "No alliance holds the Cube yet. The first to take it starts the clock.", ours: "Our alliance holds the Cube. Every minute counts. Hold the line, Commander.",
+  theirs: "Another alliance holds the Cube. Rally the fleet, Commander. We can take it back.", finale: "These are the final hours, Commander. Whoever holds the Cube at the end takes the galaxy.",
+  shots: [["Commander, the Cube sits on the Void, and every alliance in the galaxy is closing in.", "There it is, the Cube, anchored over the Void. Nothing in the galaxy is bigger."],
+    ["Squadrons are making their attack runs. Watch the shields flare as they hit.", "Fighters are diving on the Cube in waves. Not all of them will make a second pass."],
+    ["A capital ship is passing the Cube. That is where the real damage is done.", "The heavy ships are trading fire with the Cube now. Hold steady."],
+    ["The wreck field grows by the minute. Every hulk out there was somebody's fleet.", "So much wreckage around the Void. The salvage crews will be busy for weeks."],
+    ["That is a commander's flagship, leading its fleet into the fight.", "A flagship is leading the charge. Commanders are fighting on the front line today."]] };
+function siegeSay(sh) { const T = now(), t = performance.now(), ph = cubePhase(T); if (!ph || !S) return; let h = null; try { h = nexusNow(T).holder || null; } catch (e) {}
+  const changed = G.siegeN && G.siegeHolder !== h; if (!changed && G.siegeSaidAt && t - G.siegeSaidAt < 30000) return;
+  let line; if (!G.siegeN || changed) line = ph.key === "finale" ? SIEGE_SAY.finale : S.ally && h === S.ally ? SIEGE_SAY.ours : h ? SIEGE_SAY.theirs : SIEGE_SAY.open;
+  else { line = (SIEGE_SAY.shots[sh] || []).find(l => !G.siegeUsed.includes(l)); if (!line) return; }
+  G.siegeUsed.push(line); G.siegeHolder = h; G.siegeN = (G.siegeN || 0) + 1; G.siegeSaidAt = t; advHolo(line); }
 function siegeCam(W, t) {
   const c = W.cam, C = W.cwar, np = W.nexus.position, flags = C ? C.sq.filter(q => q.flag && q.g.visible) : [], s = (t - c.siege.t0) / 1000, sh = Math.floor(s / 16) % (flags.length ? 5 : 4), k = (s % 16) / 16; c.follow = null; c.followFleet = null; c.goal = null; c.vel = null; c.live = 1;
   let tx = np.x, ty = np.y, tz = np.z, d = 120, th = c.siege.th0 + s * .02, ph = 1.38;
@@ -9169,13 +9185,13 @@ function siegeCam(W, t) {
   // v130: the viewer's own turn, tilt and zoom ride on top of every shot
   if (c.siege.spin) c.siege.oth += .0025; th += c.siege.oth || 0; ph = clamp(ph + (c.siege.oph || 0), .12, 1.52); d *= c.siege.ok || 1;
   // within a shot the camera glides (squads breathe in and out on their runs, so a hard lock would shake); a new shot is a clean cut
-  if (c.siege.sh !== sh) { c.siege.sh = sh; c.tx = tx; c.ty = ty; c.tz = tz; c.dist = d; c.th = th; c.ph = ph; }
+  if (c.siege.sh !== sh) { c.siege.sh = sh; try { siegeSay(sh); } catch (e) {} c.tx = tx; c.ty = ty; c.tz = tz; c.dist = d; c.th = th; c.ph = ph; }
   else { const e = .06; c.tx += (tx - c.tx) * e; c.ty += (ty - c.ty) * e; c.tz += (tz - c.tz) * e; c.dist += (d - c.dist) * e; let dt = th - c.th; while (dt > Math.PI) dt -= TAU; while (dt < -Math.PI) dt += TAU; c.th += dt * e; c.ph += (ph - c.ph) * e; }
   const ap = $("#app"); if (ap && !ap.classList.contains("cine")) { ap.classList.add("cine"); cineBar(); } // a re-render may have cleared it
   const w = $("#cbw"); if (w) w.textContent = `● LIVE · Battle for the Cube · ${SIEGE_SHOTS[sh]}`;
   if (!cubePhase(now())) siegeEnd(); // films every phase of the event, Arrival to Aftermath
 }
-function siegeStart(n) { closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } if (!G3) { if ((n || 0) < 20) setTimeout(() => siegeStart((n || 0) + 1), 300); return; } const c = G3.cam; c.siege = { t0: performance.now(), th0: c.th || 0, oth: 0, oph: 0, ok: 1 }; c.cine = { m: "free" }; $("#app").classList.add("cine"); cineBar(); }
+function siegeStart(n) { G.siegeN = 0; G.siegeUsed = []; G.siegeSaidAt = 0; G.siegeHolder = undefined; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } if (!G3) { if ((n || 0) < 20) setTimeout(() => siegeStart((n || 0) + 1), 300); return; } const c = G3.cam; c.siege = { t0: performance.now(), th0: c.th || 0, oth: 0, oph: 0, ok: 1 }; c.cine = { m: "free" }; $("#app").classList.add("cine"); cineBar(); }
 function siegeEnd() { if (!G3 || !G3.cam.siege) return; const c = G3.cam; c.siege = null; c.live = 0; cineEnd(); c.tx = W3N().x; c.tz = W3N().z; c.goal = { dist: 160 }; }
 const W3N = () => G3.nexus.position;
 function liveEnd() { const a = $("#app"); if (a) a.classList.remove("cine", "live"); const b = $("#livebar"); if (b) b.remove(); if (G3) { const c = G3.cam; c.live = 0; c.tx = 0; c.ty = 0; c.tz = 0; c.goal = { dist: 300 }; c.ph = 1.05; } }
@@ -9189,7 +9205,7 @@ setInterval(() => { try {
   if (G3 && G3.cam.cine) cineEnd(); closeSheet(); $("#app").classList.add("cine", "live");
   if (!bar) { bar = document.createElement("div"); bar.id = "livebar"; bar.innerHTML = `<div class="lb-top"><span class="lb-live">● LIVE</span><span class="lb-t">BATTLE FOR THE CUBE</span><button data-act="liveSkip">Skip ›</button></div><div class="lb-cap" id="lbcap"></div><div class="lb-title" id="lbtitle"></div><div class="lb-cut" id="lbcut"></div><div class="lb-bot"></div>`; $("#app").appendChild(bar); }
   const sh = liveShot(LI.s), cap = $("#lbcap"), title = $("#lbtitle"), cut = $("#lbcut");
-  if (bar.dataset.sh !== String(sh)) { bar.dataset.sh = sh; cut.classList.remove("on"); void cut.offsetWidth; cut.classList.add("on"); cap.classList.remove("on"); void cap.offsetWidth; cap.textContent = LIVE_SHOTS[sh][1]; if (LIVE_SHOTS[sh][1]) cap.classList.add("on"); }
+  if (bar.dataset.sh !== String(sh)) { bar.dataset.sh = sh; cut.classList.remove("on"); void cut.offsetWidth; cut.classList.add("on"); cap.classList.remove("on"); void cap.offsetWidth; cap.textContent = LIVE_SHOTS[sh][1]; if (LIVE_SHOTS[sh][1]) cap.classList.add("on"); if (LI.s - LIVE_SHOTS[sh][0] < (sh ? 5000 : 8000)) speak(LIVE_SAY[sh]); }
   title.classList.toggle("on", LI.s > 74500); if (LI.s > 74500 && !title.textContent) title.innerHTML = `<small>LIVE EVENT</small>THE BATTLE FOR THE CUBE<br>HAS BEGUN<em>Hold the Cube for your alliance · 48 hours</em>`;
 } catch (e) {} }, 250);
 /* v96 gathering: a fleet working a resource field holds a slow orbit around it, with flickering mining beams reaching down
@@ -18505,7 +18521,7 @@ const ACT = {
   cineOn: () => cineStart("chase"),
   cineOff: () => cineEnd(),
   cineShot: () => { if (G3) G3.snapReq = 1; }, // v96: grabbed on the next drawn frame
-  liveSkip: () => { if (G.liveReplay) G.liveReplay = 0; else S.liveSkip = evWeek(now()); dirty(); liveEnd(); }, // v98
+  liveSkip: () => { if (G.liveReplay) G.liveReplay = 0; else S.liveSkip = evWeek(now()); dirty(); liveEnd(); if (VOICE.au && LIVE_SAY.some(l => voiceKey(l) && VOICE.au.src.includes(voiceKey(l)))) voiceStop(); }, // v98; v406 her line stops with the film
   siegeWatch: () => siegeStart(),
   // v124 graphics settings, keyboard map and the right-click menu
   gfxOpen: () => { G.trayOpen = false; openSheet({ type: "graphics" }); },
