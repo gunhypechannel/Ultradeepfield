@@ -2350,6 +2350,39 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       shatW(fs < 0 ? -1 : (fs - .2) / .7); stompW(fs < 0 ? -1 : (fs - .62) / .38); bt(t, 1 + burst * 5 + fire * 2 + lift * 2); hit(bell(fx, 0, .05, .4, 1), t); };
     bake(body); return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 14, h: 18 }; }
 
+
+  /* ---------- a pirate hideout, remastered as a scrap space station: a plated hub with an antenna spire, a habitat ring on spokes that
+     turns, docking piers with captured ships, salvaged solar wings, glowing windows and red warning lights. Three layouts. Built
+     once per layout and cloned for every hideout on the map: the hull (one mesh), the lights (one mesh) and the turning ring. ---------- */
+  function station(v = 0) { const grp = new TH.Group(), body = new TH.Group(); grp.add(body); const R = rnd;
+    const PAL = ["#6a2e18", "#5a2a16", "#7a4a22", "#3e4a54", "#5c5850", "#4a3a2c"];
+    const M = hullMat("pst", { rows: 4, cols: 4, pal: PAL, slits: .45, sc: "#ffe2a8", sg: "#ff9a38", rust: 1, metal: .6, rough: .55, rc: [1, .45, .2], ei: 3.2, rep: [2, 1] }); M.envMapIntensity = .6;
+    const AMB = glowMat(0xff9a3a, .55), RED = AMB; // one light colour: the hull, the lights and the turning ring are three draw calls
+    const nArm = [3, 4, 2][v % 3], tall = [1, .8, 1.25][v % 3];
+    // hub: plated drum, flared collars, a lower reactor bulb, a spire with lights
+    body.add(new TH.Mesh(new TH.CylinderGeometry(.55, .62, 1.5 * tall, 10), M));
+    for (const y of [.75 * tall, -.75 * tall]) { const c = new TH.Mesh(new TH.CylinderGeometry(y > 0 ? .35 : .78, y > 0 ? .78 : .35, .35, 10), M); c.position.y = y + (y > 0 ? .17 : -.17); body.add(c); }
+    { const b = new TH.Mesh(new TH.SphereGeometry(.42, 12, 8), M); b.position.y = -1.25 * tall; body.add(b); const g = new TH.Mesh(new TH.TorusGeometry(.46, .045, 6, 20), AMB); g.rotation.x = Math.PI / 2; g.position.y = -1.25 * tall; body.add(g); }
+    { const s = new TH.Mesh(new TH.CylinderGeometry(.04, .09, 1.5, 6), M); s.position.y = 1.65 * tall; body.add(s); const l = new TH.Mesh(new TH.SphereGeometry(.09, 8, 6), RED); l.position.y = 2.42 * tall; body.add(l);
+      for (const k of [0, 1]) { const d = new TH.Mesh(new TH.ConeGeometry(.28, .12, 10, 1, true), M); d.position.set(k ? .22 : -.22, 1.35 * tall + k * .25, 0); d.rotation.z = k ? -1.1 : 1.1; body.add(d); } }
+    { const w = new TH.Mesh(new TH.CylinderGeometry(.565, .565, .08, 14, 1, true), AMB); w.position.y = .2 * tall; body.add(w); const w2 = w.clone(); w2.position.y = -.35 * tall; body.add(w2); }
+    for (let i = 0; i < 14; i++) { const b = box(.12 + R() * .3, .1 + R() * .25, .1 + R() * .2, M), a = R() * TAU; b.position.set(Math.cos(a) * .6, (R() - .5) * 1.3 * tall, Math.sin(a) * .6); b.rotation.y = -a; body.add(b); }
+    // docking piers with a captured ship on each, warning lights at the tips
+    for (let i = 0; i < nArm; i++) { const a = i * TAU / nArm + .4, L = 2.4 + R() * .5, y = -.45 * tall, c = Math.cos(a), s = Math.sin(a);
+      const arm = box(L, .12, .2, M); arm.position.set(c * (.55 + L / 2), y, s * (.55 + L / 2)); arm.rotation.y = -a; body.add(arm);
+      const tr = box(L * .9, .05, .05, M); tr.position.set(c * (.6 + L / 2), y - .12, s * (.6 + L / 2)); tr.rotation.y = -a; body.add(tr);
+      const tip = new TH.Mesh(new TH.SphereGeometry(.07, 8, 6), RED); tip.position.set(c * (.6 + L), y, s * (.6 + L)); body.add(tip);
+      const sh = new TH.Group(); sh.userData.flat = 1; sh.position.set(c * (.55 + L * .6) - s * .32, y - .05, s * (.55 + L * .6) + c * .32); sh.rotation.y = -a; body.add(sh);
+      { const h = box(.9, .2, .26, M); sh.add(h); const n = new TH.Mesh(new TH.ConeGeometry(.13, .35, 4), M); n.rotation.z = -Math.PI / 2; n.position.x = .62; sh.add(n); const e = box(.06, .14, .2, AMB); e.position.x = -.47; sh.add(e); const f = box(.25, .26, .04, M); f.position.set(-.3, .14, 0); sh.add(f); } }
+    // salvaged solar wings on a mast
+    for (const sx of [-1, 1]) { const m = box(1.2, .05, .05, M); m.position.set(sx * .95, .5 * tall, 0); body.add(m); const p = box(.7, .02, .55, M); p.position.set(sx * 1.6, .5 * tall, 0); p.rotation.x = .35 * sx; body.add(p);
+    }
+    // the habitat ring: rim, window band, four spokes; it turns
+    const rg = new TH.Group(); rg.name = "ring"; const rgo = new TH.Group(); rgo.position.y = .15 * tall; rgo.rotation.x = -Math.PI / 2; rgo.add(rg); grp.add(rgo);
+    rg.add(new TH.Mesh(new TH.TorusGeometry(1.9, .17, 8, 40), M));
+    for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2, s = box(1.35, .08, .08, M); s.position.set(Math.cos(a) * 1.22, Math.sin(a) * 1.22, 0); s.rotation.z = a; rg.add(s); }
+    for (let i = 0; i < 8; i++) { const a = i * TAU / 8 + .2, b = box(.34, .3, .26, M); b.position.set(Math.cos(a) * 1.9, Math.sin(a) * 1.9, 0); b.rotation.z = a; rg.add(b); }
+    bake(body); bake(rg); return { grp, ring: rg, r: 2.7 }; }
   // merge each group's static leaf meshes that share a material (same look), so a boss costs tens of draw calls, not hundreds
   function bake(root) { const fl = []; root.traverse(o => { if (o !== root && o.userData.flat && o.parent) fl.push(o); });
     for (const o of fl.reverse()) { o.updateMatrix(); const par = o.parent; for (const c of [...o.children]) { c.applyMatrix4(o.matrix); par.add(c); } par.remove(o); }
@@ -2365,7 +2398,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
         const mesh = new TH.Mesh(g2, L[0].material); for (const c of L) o.remove(c); o.add(mesh); } } }
   // light the boss's own materials from an environment map (the galaxy scene has none); count its draw calls
   function prep(b, env) { b.grp.traverse(o => { const m = o.material; if (m && m.isMeshStandardMaterial && env) { m.envMap = env; m.needsUpdate = true; } }); return b; }
-  root.BOSS3D = { init(T) { TH = T; }, set lod(v) { LOD = v | 0; }, get lod() { return LOD; }, conduit, warden, overlord, devourer, matriarch, tyrant, wyrm, colossus, prep };
+  root.BOSS3D = { init(T) { TH = T; }, set lod(v) { LOD = v | 0; }, get lod() { return LOD; }, conduit, warden, overlord, devourer, matriarch, tyrant, wyrm, colossus, station, prep };
 })(typeof window !== "undefined" ? window : globalThis);
 
 </script>
@@ -3384,7 +3417,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 399;
+const GAME_V = 400;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -7628,13 +7661,14 @@ function monsterObj(W, x) {
 function pirateObj(W, x) {
   if (x.mon) return monsterObj(W, x);
   if (x.boss) return cubeObj(W, x);
-  const grp = new TH.Group(), r = rnd(hash(x.id) + 5);
-  const rock = W.mats.pirRock || (W.mats.pirRock = new TH.MeshStandardMaterial({ color: 0x5b524c, roughness: 1, flatShading: true }));
-  const metal = W.mats.pirMetal || (W.mats.pirMetal = new TH.MeshStandardMaterial({ color: 0x8a8f96, metalness: .7, roughness: .4, flatShading: true }));
-  const geo = W.pirGeo || (W.pirGeo = new TH.DodecahedronGeometry(1, 0));
-  const a = new TH.Mesh(geo, rock); a.scale.set(1.5 + r() * .4, 1.1 + r() * .3, 1.3 + r() * .4); a.rotation.set(r() * 3, r() * 3, r() * 3); grp.add(a);
-  const ring = new TH.Mesh(W.pirRing || (W.pirRing = new TH.TorusGeometry(2.2, .12, 6, 28)), metal); ring.rotation.x = Math.PI / 2 + .3; grp.add(ring);
-  const beacon = new TH.Sprite(W.additive(W.glow.pir || (W.glow.pir = glowTex("255,80,60", .95)), 0xffffff, .9)); beacon.position.set(0, 1.6, 0); beacon.scale.setScalar(3.2); grp.add(beacon);
+  /* v400: a pirate hideout is a scrap space station (BOSS3D.station: hub, spire, docking piers with captured ships, solar wings,
+     a habitat ring that turns). One master per layout, cloned per hideout: three draw calls plus the beacon. */
+  W.pirSt = W.pirSt || []; const v = hash(x.id) % 3; let M = W.pirSt[v];
+  if (!M && typeof BOSS3D !== "undefined") { try { BOSS3D.init(TH); const l0 = BOSS3D.lod; BOSS3D.lod = 1; M = W.pirSt[v] = BOSS3D.prep(BOSS3D.station(v), wbEnv(W.renderer)); BOSS3D.lod = l0; } catch (e) { M = null; } }
+  const grp = new TH.Group(); let ring;
+  if (M) { const body = M.grp.clone(); body.scale.setScalar(.82); body.rotation.y = (hash(x.id) % 628) / 100; grp.add(body); ring = body.getObjectByName("ring") || new TH.Object3D(); }
+  else { const rock = W.mats.pirRock || (W.mats.pirRock = new TH.MeshStandardMaterial({ color: 0x5b524c, roughness: 1, flatShading: true })); grp.add(new TH.Mesh(W.pirGeo || (W.pirGeo = new TH.DodecahedronGeometry(1, 0)), rock)); ring = new TH.Object3D(); grp.add(ring); }
+  const beacon = new TH.Sprite(W.additive(W.glow.pir || (W.glow.pir = glowTex("255,80,60", .95)), 0xffffff, .9)); beacon.position.set(0, 2.1, 0); beacon.scale.setScalar(2.6); grp.add(beacon);
   W.scene.add(grp);
   return { grp, ring, beacon };
 }
@@ -7643,22 +7677,27 @@ function pirateObj(W, x) {
    core), gas from luminous nebula clouds of layered noise. Every texture and geometry is shared by all fields. */
 function resKit(W) {
   if (W.resK) return W.resK;
-  const rock = (seed) => { const g = new TH.IcosahedronGeometry(1, 3), P = g.attributes.position, v = new TH.Vector3(), n = fbm2(seed), cr = rnd(seed + 1), craters = Array.from({ length: 9 }, () => [new TH.Vector3(cr() - .5, cr() - .5, cr() - .5).normalize(), .18 + cr() * .3, .08 + cr() * .12]);
+  const rock = (seed) => { const g = new TH.IcosahedronGeometry(1, 4), P = g.attributes.position, v = new TH.Vector3(), n = fbm2(seed), cr = rnd(seed + 1), craters = Array.from({ length: 9 }, () => [new TH.Vector3(cr() - .5, cr() - .5, cr() - .5).normalize(), .18 + cr() * .3, .08 + cr() * .12]);
     for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i).normalize(); let d = .78 + .4 * n((v.x + 2) * 2.2, (v.y + v.z + 4) * 2.2, 64, 4);
       for (const [c, rad, dep] of craters) { const a = v.angleTo(c); if (a < rad) d -= dep * (1 - (a / rad) ** 2); else if (a < rad * 1.25) d += dep * .35 * (1 - (a - rad) / (rad * .25)); }
       v.multiplyScalar(d); v.x *= 1.25; P.setXYZ(i, v.x, v.y, v.z); }
     g.computeVertexNormals(); return g; };
   const noiseTex = (seed, draw) => { const t = texCanvas(256, 256, (x, w, h) => { const n = fbm2(seed), img = x.createImageData(w, h); for (let y = 0; y < h; y++) for (let xx = 0; xx < w; xx++) { const v = n(xx / 32, y / 32, 8, 5), [r, g, b, a] = draw(v, xx, y); const o = (y * w + xx) * 4; img.data[o] = r; img.data[o + 1] = g; img.data[o + 2] = b; img.data[o + 3] = a == null ? 255 : a; } x.putImageData(img, 0, 0); }); t.wrapS = t.wrapT = TH.RepeatWrapping; return t; };
-  const rockC = noiseTex(4401, v => { const k = 60 + v * 120; return [k * 1.05, k * .95, k * .88]; }); rockC.encoding = TH.sRGBEncoding;
-  const oreE = noiseTex(4402, v => { const vein = Math.max(0, 1 - Math.abs(v - .52) * 22); return [255 * vein, 150 * vein, 60 * vein]; });
+  /* v400 HDR remaster: dark basalt split by molten gold ore veins (emissive well past 1, so ACES rolls them into a hot glow), and
+     comet ice cracked with cyan light */
+  const rockC = noiseTex(4401, v => { const k = 34 + v * 92; return [k * 1.08, k * .97, k * .9]; }); rockC.encoding = TH.sRGBEncoding;
+  const oreE = noiseTex(4402, v => { const vein = Math.max(0, 1 - Math.abs(v - .52) * 26), hot = Math.max(0, 1 - Math.abs(v - .52) * 60); return [255 * vein, (120 + 110 * hot) * vein, (30 + 160 * hot) * vein]; });
   const iceC = noiseTex(4403, v => { const k = 150 + v * 100; return [k * .82, k * .92, k]; }); iceC.encoding = TH.sRGBEncoding;
+  const iceE = noiseTex(4407, v => { const c = Math.max(0, 1 - Math.abs(v - .5) * 18); return [60 * c, 200 * c, 255 * c]; });
   const neb = [4404, 4405, 4406].map(s => noiseTex(s, (v, x, y) => { const dx = (x - 128) / 128, dy = (y - 128) / 128, fall = Math.max(0, 1 - Math.hypot(dx, dy)); const a = Math.max(0, (v - .35) * 2.2) * fall * fall; return [255, 255, 255, Math.min(255, a * 255)]; }));
   const tailT = texCanvas(64, 256, (x, w, h) => { const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(.25, "rgba(255,255,255,.55)"); g.addColorStop(1, "rgba(255,255,255,0)"); x.fillStyle = g; x.fillRect(0, 0, w, h);
     const s = x.createLinearGradient(0, 0, w, 0); s.addColorStop(0, "rgba(0,0,0,1)"); s.addColorStop(.5, "rgba(0,0,0,0)"); s.addColorStop(1, "rgba(0,0,0,1)"); x.globalCompositeOperation = "destination-out"; x.fillStyle = s; x.fillRect(0, 0, w, h); });
   return (W.resK = { rocks: [rock(91), rock(92), rock(93)], shard: new TH.OctahedronGeometry(.5, 0), nucleus: rock(94),
-    mRock: new TH.MeshStandardMaterial({ map: rockC, emissiveMap: oreE, emissive: 0xffffff, emissiveIntensity: 1.6, roughness: .82, metalness: .45 }),
-    mIce: new TH.MeshPhysicalMaterial({ map: iceC, roughness: .35, metalness: .05, clearcoat: .8, clearcoatRoughness: .2, emissive: 0x1a4a7a, emissiveIntensity: .35 }),
-    mShard: new TH.MeshPhysicalMaterial({ color: 0x9fe0ff, emissive: 0x3aa8ff, emissiveIntensity: 1.6, roughness: .05, metalness: .1, clearcoat: 1, transparent: true, opacity: .9 }),
+    mRock: new TH.MeshStandardMaterial({ map: rockC, emissiveMap: oreE, emissive: 0xffffff, emissiveIntensity: 2.4, roughness: .62, metalness: .55, envMapIntensity: .8 }),
+    mOre: new TH.MeshStandardMaterial({ color: 0xffc860, emissive: 0xff9a2a, emissiveIntensity: 2.4, metalness: .9, roughness: .18, flatShading: true }),
+    mIce: new TH.MeshPhysicalMaterial({ map: iceC, emissiveMap: iceE, emissive: 0xffffff, emissiveIntensity: 2.2, roughness: .28, metalness: .05, clearcoat: 1, clearcoatRoughness: .12 }),
+    mShard: new TH.MeshPhysicalMaterial({ color: 0xbfeeff, emissive: 0x4ab8ff, emissiveIntensity: 3.4, roughness: .04, metalness: .1, clearcoat: 1, transparent: true, opacity: .92 }),
+    spark: (col) => new TH.PointsMaterial({ color: col, size: .32, opacity: .75, map: glowTex("255,255,255", 1), transparent: true, depthWrite: false, blending: TH.AdditiveBlending, toneMapped: false }),
     neb, tailT, tailGeo: (() => { const g = new TH.PlaneGeometry(1, 1, 1, 8); g.translate(0, -.5, 0); g.rotateX(Math.PI / 2); return g; })() });
 }
 function nodeObj(W, n) {
@@ -7667,17 +7706,24 @@ function nodeObj(W, n) {
     const cnt = 3 + Math.ceil(n.lvl * .8), im = new TH.InstancedMesh(K.rocks[hash(n.id) % 3], K.mRock, cnt), dm = new TH.Object3D(), spin = [];
     for (let i = 0; i < cnt; i++) { const a = r() * TAU, rr = i ? 1.2 + r() * 2.4 : 0, sc = i ? .25 + r() * .45 : .9 + n.lvl * .07; dm.position.set(Math.cos(a) * rr, (r() - .5) * 1.1, Math.sin(a) * rr); dm.scale.set(sc, sc * (.7 + r() * .3), sc); dm.rotation.set(r() * 3, r() * 3, r() * 3); dm.updateMatrix(); im.setMatrixAt(i, dm.matrix); spin.push([dm.position.clone(), dm.scale.clone(), dm.rotation.clone(), (r() - .5) * .0012]); }
     im.instanceMatrix.needsUpdate = true; im.frustumCulled = false; grp.add(im);
-    o.anim = (t) => { if ((W.fr || 0) % 2) return; for (let i = 0; i < cnt; i++) { const [p, s, rot, w] = spin[i]; dm.position.copy(p); dm.scale.copy(s); dm.rotation.set(rot.x + t * w, rot.y + t * w * .7, rot.z); dm.updateMatrix(); im.setMatrixAt(i, dm.matrix); } im.instanceMatrix.needsUpdate = true; };
+    const oc = 5 + Math.ceil(n.lvl * .6), ore = new TH.InstancedMesh(K.shard, K.mOre, oc), dm2 = new TH.Object3D(); // gold ore crystals breaking out of the rocks
+    for (let i = 0; i < oc; i++) { const v = new TH.Vector3(r() - .5, r() - .5, r() - .5).normalize(), base = i % 3 ? spin[1 + (i % Math.max(1, cnt - 1))] : spin[0], k = base[1].x; dm2.position.copy(base[0]).addScaledVector(v, k * .85); dm2.lookAt(dm2.position.clone().add(v)); dm2.rotateX(Math.PI / 2); dm2.scale.set(.14 + r() * .1, .3 + r() * .35, .14 + r() * .1); dm2.scale.multiplyScalar(Math.max(.5, k)); dm2.updateMatrix(); ore.setMatrixAt(i, dm2.matrix); }
+    ore.instanceMatrix.needsUpdate = true; grp.add(ore);
+    { const N = 26, P = new Float32Array(N * 3); for (let i = 0; i < N; i++) { const a = r() * TAU, rr = 2.2 + r() * 2.6; P.set([Math.cos(a) * rr, (r() - .5) * .5, Math.sin(a) * rr], i * 3); } const g = new TH.BufferGeometry(); g.setAttribute("position", new TH.BufferAttribute(P, 3)); const dust = new TH.Points(g, K.mDust || (K.mDust = K.spark(0xffc070))); dust.rotation.x = .25; grp.add(dust); o.dust = dust; }
+    o.anim = (t) => { if (o.dust) o.dust.rotation.y = t * .00012; ore.rotation.y = t * .00005; if ((W.fr || 0) % 2) return; for (let i = 0; i < cnt; i++) { const [p, s, rot, w] = spin[i]; dm.position.copy(p); dm.scale.copy(s); dm.rotation.set(rot.x + t * w, rot.y + t * w * .7, rot.z); dm.updateMatrix(); im.setMatrixAt(i, dm.matrix); } im.instanceMatrix.needsUpdate = true; };
   } else if (n.res === "c") { // a crystal comet
     const nuc = new TH.Mesh(K.nucleus, K.mIce), ns = .8 + n.lvl * .07; nuc.scale.setScalar(ns); grp.add(nuc);
     const sh = new TH.InstancedMesh(K.shard, K.mShard, 10 + n.lvl * 2), dm = new TH.Object3D();
     for (let i = 0; i < sh.count; i++) { const v = new TH.Vector3(r() - .5, r() - .5, r() - .5).normalize(); dm.position.copy(v).multiplyScalar(ns * .85); dm.lookAt(v.clone().multiplyScalar(5)); dm.rotateX(Math.PI / 2); dm.scale.set(.18 + r() * .12, .5 + r() * .7, .18 + r() * .12); dm.updateMatrix(); sh.setMatrixAt(i, dm.matrix); }
     sh.instanceMatrix.needsUpdate = true; grp.add(sh);
-    const coma = new TH.Sprite(W.additive(W.glow.coma || (W.glow.coma = glowTex("170,220,255", .9)), 0xffffff, .85)); coma.scale.setScalar(5 + n.lvl * .5); grp.add(coma);
+    const coma = new TH.Sprite(W.additive(W.glow.coma || (W.glow.coma = glowTex("170,220,255", .9)), 0xffffff, .85)); coma.scale.setScalar(6 + n.lvl * .55); grp.add(coma);
+    const core = new TH.Sprite(W.additive(W.glow.comaHot || (W.glow.comaHot = glowTex("235,250,255", 1)), 0xffffff, .9)); core.scale.setScalar(2.2 + n.lvl * .15); grp.add(core);
     const tail = new TH.Group(); grp.add(tail); const L = 14 + n.lvl * 2.2;
     const mk = (col, wd, len, op) => { const m = new TH.Mesh(K.tailGeo, new TH.MeshBasicMaterial({ map: K.tailT, color: col, transparent: true, opacity: op, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false })); m.scale.set(wd, 1, len); return m; };
-    const ion = mk(0x5ab8ff, 1.2, L * 1.25, .75), dust = mk(0xfff1c8, 2.8, L, .45); dust.rotation.y = .16; const ion2 = ion.clone(); ion2.rotation.z = Math.PI / 2; tail.add(ion, ion2, dust);
-    const away = new TH.Vector3(); o.anim = (t, q) => { nuc.rotation.y = sh.rotation.y = t * .0002; away.set(q.x * 3, q.y, q.z * 3); tail.lookAt(away); tail.rotateY(Math.PI); ion.material.opacity = .6 + .15 * Math.sin(t * .003 + n.a0); };
+    const ion = mk(0x6ac4ff, 1.3, L * 1.35, .95), dust = mk(0xffe6b0, 3, L * 1.05, .55); dust.rotation.y = .16; const ion2 = ion.clone(); ion2.rotation.z = Math.PI / 2; tail.add(ion, ion2, dust);
+    const NS = 40, SP = new Float32Array(NS * 3), sg = new TH.BufferGeometry(); sg.setAttribute("position", new TH.BufferAttribute(SP, 3)); const sparks = new TH.Points(sg, K.mSpark || (K.mSpark = K.spark(0x9fdcff))); tail.add(sparks); const sd = []; for (let i = 0; i < NS; i++) sd.push([r(), (r() - .5) * 1.4, (r() - .5) * 1.4]);
+    const away = new TH.Vector3(); o.anim = (t, q) => { nuc.rotation.y = sh.rotation.y = t * .0002; away.set(q.x * 3, q.y, q.z * 3); tail.lookAt(away); tail.rotateY(Math.PI); ion.material.opacity = .8 + .15 * Math.sin(t * .003 + n.a0); core.material.opacity = .75 + .2 * Math.sin(t * .004 + n.a0);
+      if (!((W.fr || 0) % 2)) { for (let i = 0; i < NS; i++) { const s = sd[i], f = (s[0] + t * .00008) % 1; SP[i * 3] = s[1] * (1 + f * 2); SP[i * 3 + 1] = s[2] * (1 + f * 2); SP[i * 3 + 2] = -f * L * 1.2; } sg.attributes.position.needsUpdate = true; } };
   } else if (n.res === "s") { // v135 a Void Shard Mine: a dark rock split open by glowing violet void crystals, pulsing slowly
     const rm = K.mVoidRock || (K.mVoidRock = new TH.MeshStandardMaterial({ color: 0x2c2836, roughness: .92, metalness: .12, emissive: 0x1a0f2a, emissiveIntensity: .6 }));
     const rock = new TH.Mesh(K.rocks[hash(n.id) % 3], rm), rs = 1 + n.lvl * .06; rock.scale.setScalar(rs); grp.add(rock);
@@ -14464,9 +14510,13 @@ const BOSS_HOLO = {
   wbwym: "Commander, the Event Horizon Wyrm is a serpent of black-hole rings, coiled around the black hole at the centre of the galaxy. Only its glowing segments can be hurt, so strike while they're exposed.",
   wbcol: "Commander, the Shard Colossus is a crystal golem grown out of the crystal fields. Badly hurt, it shatters into fragments that shield it, but it pays Void Shards in bulk.",
   wbcon: "Commander, this Energy Conduit is one of four crystal pylons feeding the Overlord's shield. Bring all four down, and the Overlord takes full damage.",
+  res_m: "Commander, an iron asteroid field. Its rocks are veined with glowing ore, and it's our best source of metal, and of Reinforced Alloy for the forge. Send Haulers to mine it, and keep watch: a rival can attack whoever holds the field.",
+  res_c: "Commander, a crystal comet. Its icy core bristles with crystal, so this is where we mine crystal, and Quantum Crystal for the forge. Send Haulers, and hold it until their holds are full.",
+  res_g: "Commander, a gas cloud. Our Haulers skim it for gas, the fuel every fleet burns in flight. It yields slowly, so send plenty of Haulers and keep them safe.",
   nexus: "Commander, the Super Cube is the prize of the galaxy. From Friday to Sunday, alliances fight to seize and hold it. Every minute our alliance holds it earns glory and rewards for every member." };
 function bossHolo(s) { if (!s || !S) return; let k = null;
   if (s.type === "pirate") { const x = PB[s.id]; k = x ? (x.mon && BOSS_HOLO[x.mon] ? x.mon : x.boss ? "cube" : null) : null; }
+  else if (s.type === "node" && NB[s.id] && BOSS_HOLO["res_" + NB[s.id].res]) { k = "res_" + NB[s.id].res; S.resHolo = S.resHolo || {}; if (S.resHolo[k] === utcDay()) return; S.resHolo[k] = utcDay(); } /* v400: once a day per kind */
   else if (s.type === "pyramid") k = "pyramid"; else if (s.type === "nexus") k = "nexus"; else if (s.type === "wboss" && s.id) k = "wb" + (s.id[0] === "c" ? "con" : s.id);
   if (!k || advLines || $("#adv")) return; const L = BOSS_HOLO[k], on = $("#advh.on"); if (on && (acadOn() || (on.querySelector(".hsay span") || {}).textContent === L)) return;
   clearTimeout(G.holoT); G.holoT = setTimeout(() => { if (sheet && sheet.type === s.type && sheet.id === s.id) advHolo(L); }, 500); }
