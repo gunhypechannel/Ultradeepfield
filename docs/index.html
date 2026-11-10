@@ -753,7 +753,7 @@ canvas.dthumb{display:block}
 @keyframes tiIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
 .dock .menub .mbi{font-size:20px;line-height:22px;height:22px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}.dock .menub.on .mbi{transform:rotate(90deg)}.dock .menub.on{color:var(--cyan)}
 /* global chat banner, right above the bottom menu */
-.strow{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)}.strow.bad b{color:#ff8a6a}.strows{margin-top:8px}.convband{display:flex;align-items:center;gap:8px;width:100%;padding:5px 12px;border:0;border-top:1px solid #4a2a7a;background:linear-gradient(90deg,rgba(180,120,255,.2),rgba(14,8,26,.92) 55%);color:#eadcff;font-size:12px;text-align:left;cursor:pointer}.convband b{font-family:var(--f-display);letter-spacing:.06em;color:#f2e8ff}.convband i{font-style:normal}.cvp{display:flex;gap:3px}.cvp i{width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c)}.cvp i.off{background:#2a2a34;box-shadow:none}#convcard{position:fixed;inset:0;z-index:60;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity 1.1s;background:radial-gradient(rgba(0,0,0,.55),rgba(0,0,0,.2))}#convcard.on{opacity:1}#convcard img{width:min(78vw,420px);border-radius:14px;box-shadow:0 0 60px rgba(200,160,255,.55)}.aimrow{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.aimb{position:relative;overflow:hidden;flex:1 1 30%;min-height:38px;border-radius:10px;border:1px solid var(--c,#b8a8e0);background:rgba(20,14,34,.8);color:#eee;font-size:12px;cursor:pointer}.aimb.on{background:color-mix(in srgb,var(--c,#b8a8e0) 30%,#140e22);box-shadow:0 0 10px var(--c,#b8a8e0)}.aimb span{position:relative;z-index:1}.aimb i{position:absolute;left:0;bottom:0;height:3px;background:var(--c)}.cubeband{display:flex;align-items:center;gap:8px;width:100%;padding:5px 12px;border:0;border-top:1px solid #1f6a2a;background:linear-gradient(90deg,rgba(93,255,106,.16),rgba(6,20,10,.92) 55%);color:#c8ffd0;font-size:12px;text-align:left;cursor:pointer}
+.cubepick{display:grid;gap:8px;margin-top:6px}.strow{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)}.strow.bad b{color:#ff8a6a}.strows{margin-top:8px}.convband{display:flex;align-items:center;gap:8px;width:100%;padding:5px 12px;border:0;border-top:1px solid #4a2a7a;background:linear-gradient(90deg,rgba(180,120,255,.2),rgba(14,8,26,.92) 55%);color:#eadcff;font-size:12px;text-align:left;cursor:pointer}.convband b{font-family:var(--f-display);letter-spacing:.06em;color:#f2e8ff}.convband i{font-style:normal}.cvp{display:flex;gap:3px}.cvp i{width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c)}.cvp i.off{background:#2a2a34;box-shadow:none}#convcard{position:fixed;inset:0;z-index:60;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity 1.1s;background:radial-gradient(rgba(0,0,0,.55),rgba(0,0,0,.2))}#convcard.on{opacity:1}#convcard img{width:min(78vw,420px);border-radius:14px;box-shadow:0 0 60px rgba(200,160,255,.55)}.aimrow{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.aimb{position:relative;overflow:hidden;flex:1 1 30%;min-height:38px;border-radius:10px;border:1px solid var(--c,#b8a8e0);background:rgba(20,14,34,.8);color:#eee;font-size:12px;cursor:pointer}.aimb.on{background:color-mix(in srgb,var(--c,#b8a8e0) 30%,#140e22);box-shadow:0 0 10px var(--c,#b8a8e0)}.aimb span{position:relative;z-index:1}.aimb i{position:absolute;left:0;bottom:0;height:3px;background:var(--c)}.cubeband{display:flex;align-items:center;gap:8px;width:100%;padding:5px 12px;border:0;border-top:1px solid #1f6a2a;background:linear-gradient(90deg,rgba(93,255,106,.16),rgba(6,20,10,.92) 55%);color:#c8ffd0;font-size:12px;text-align:left;cursor:pointer}
 .cubeband b{font-family:var(--f-display);letter-spacing:.1em;color:#7dff86;font-size:11.5px}.cubeband span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;color:#a8e8b0}.cubeband i{font-style:normal;color:#fff}.cubeband .cbq{flex:none;color:#5dff6a;text-shadow:0 0 8px #5dff6a;text-align:left}
 .callband{display:flex;align-items:center;gap:8px;width:100%;padding:5px 6px 5px 12px;border-top:1px solid #6a4a1f;background:linear-gradient(90deg,rgba(255,170,60,.22),rgba(24,14,4,.92) 60%);color:#ffe2b8;font-size:12px}
 .callband.def{border-top-color:#1f4f6a;background:linear-gradient(90deg,rgba(80,180,255,.24),rgba(4,14,24,.92) 60%);color:#cfe9ff}
@@ -3651,7 +3651,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 407;
+const GAME_V = 408;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5036,6 +5036,15 @@ const wbVault = T => 1 + 1.5 * clamp((T - wbStartOf("tyr", T)) / (48 * 3600e3), 
 /* how much tougher a boss is right now: the Overlord's conduits, the Matriarch's swarm, the Wyrm's hidden segments, the Colossus's fragments */
 const WB_RISE = .5, WB_RISE_E = .05; // v405: where a boss starts to rise to meet a fleet, and how gently the fleet's edge grows beyond it
 function wbRiseK(A, Dd) { const pw = st => st.reduce((a, s) => a + s.n * unitPow(s), 0), P = pw(A), B = pw(Dd); if (!(B > 0) || P <= B * WB_RISE) return { F: 1, x: 1 }; const x = P / (B * WB_RISE); return { F: x / Math.pow(x, WB_RISE_E), x }; }
+/* v408 the same for the Cube's Collective Warden: aim one attack at a share of its force (30% rising to 60%); a Warden worn to its
+   limit (integrity 25% or less) can be broken and the Cube seized; frac(res) is the share of the defenders destroyed */
+function riseFight(mkA, mkD, frac, worn) { let { F, x } = wbRiseK(mkA(), mkD()); if (F <= 1 || worn) return { res: simulate(mkA(), mkD()), rise: 1 };
+  const tgt = clamp(.3 + .09 * Math.log10(x), .3, .6); let lo = 1, hi = 0, best = null;
+  for (let i = 0; i < 9; i++) { const A = mkA(), D = mkD(); for (const s of D) { s.atk *= F; s.hull *= F; } const res = simulate(A, D), f = frac(res), err = Math.abs(f - tgt);
+    if (!best || err < best.err) best = { res, F, err }; if (err <= .05) break; if (f > tgt) lo = F; else hi = F; F = hi ? Math.sqrt(Math.max(lo, 1) * hi) : F * Math.max(1.5, Math.pow(f / tgt, 1.6)); if (hi && hi / Math.max(lo, 1) < 1.03) break; }
+  return { res: best.res, rise: best.F }; }
+const cubeKilled = res => { const s0 = Object.values(res.start.d || {}).reduce((a, v) => a + v, 0), s1 = Object.values(res.dLeft || {}).reduce((a, v) => a + Math.max(0, v), 0); return s0 ? 1 - s1 / s0 : 1; };
+function cubeFight(A0, cur) { const D = nexusDefense(cur); if (!D.alien) return { D, res: simulate(A0(), D.stacks), rise: 1 }; const { res, rise } = riseFight(A0, () => nexusDefense(cur).stacks, cubeKilled, cubeIntegrity(cur) <= .25); return { D, res, rise }; }
 /* a fight against a boss that rises to meet the fleet: above the threshold one attack destroys a set share of its full hull, 30% at the
    threshold rising to 60% for the very largest fleets; when a fight overshoots, the boss is made tougher and it is fought again
    (only hull and attack: a shot too weak for a shield is deflected, so scaled shields would make a big fleet harmless) */
@@ -5101,7 +5110,7 @@ function wbNorm(d, c, T = now()) { const c2 = wbCyc2(T), o = d && typeof d === "
   for (const f of ["hp", "dmg", "dead", "last", "hit"]) { o[f] = o[f] && typeof o[f] === "object" ? o[f] : {}; for (const k in WB) if (wbG2(k) ? !s2 : !s1) delete o[f][k]; }
   o.shed = s2 && Array.isArray(o.shed) ? o.shed.filter(k => WB_EL.includes(k)) : []; o.wing = s2 && o.wing && typeof o.wing === "object" ? o.wing : {}; o.cyc = c; o.cyc2 = c2; o.scar = Array.isArray(o.scar) ? o.scar.filter(s => s && now() - s.at < WB_SCAR_MS).slice(-80) : [];
   for (const k in WB) { o.hp[k] = o.hp[k] == null ? WB_SEG : clamp(Math.round(+o.hp[k] || 0), 0, WB_SEG); } return o; }
-function wbState(T = now()) { const src = G.mode === "online" ? G.wb : ((S && S.ldb) || {})["event/wboss"] || null, c = wbCyc(T);
+function wbState(T = now()) { if (G.convSim) return G.convSim.st; const src = G.mode === "online" ? G.wb : ((S && S.ldb) || {})["event/wboss"] || null, c = wbCyc(T);
   if (!WBN || WBN.cyc !== c || WBN.cyc2 !== wbCyc2(T) || WBN_SRC !== src) { WBN = wbNorm(src ? jcopy(src) : null, c, T); WBN_SRC = src; } return WBN; }
 let INFC = null, WB_INF = null; // v390: the worlds round the Brood Matriarch's nest, infected green while she lives
 function wbInfect(T) { if (WB_INF && Math.abs(T - WB_INF.T) < 2000) return WB_INF.v; let v = null; try { if (wbUp("brd", T)) { const q = wbPos("brd", T, {}), R = 45 + 20 * Math.min(3, Math.floor((T - wbStartOf("brd", T)) / (12 * 3600e3))); v = { x: q.x, z: q.z, r2: R * R, R }; if (!INFC) INFC = new TH.Color(.6, 1.75, .3); } } catch (e) {} WB_INF = { T, v }; return v; }
@@ -5279,6 +5288,27 @@ function shStress() { const st = G.stress, out = st ? st.out : [], fails = out.f
   const rows = out.map((r, i) => { const D = WB[r.c.key], pct = r.rep ? Math.round((r.c.n0 - r.left) / WB_SEG * 100) : 0;
     return `<div class="strow${r.ok ? "" : " bad"}"><div style="flex:1;min-width:0"><b>${D.ic} ${esc(D.n)}</b>${r.c.form ? ` <span class="note">${esc(r.c.form)}</span>` : ""}<div class="note">${r.rep ? `${Math.round(r.ms)} ms (replay ${Math.round(r.msR)} ms) · ${r.rounds} ${r.rounds === 1 ? "volley" : "rounds"} · ${r.left ? `${pct}% of its hull destroyed` : "destroyed"} · lost ${fmt(r.lost)} ships${r.cd ? `, ${r.cd} Cube Destroyers` : ""}${r.rise > 1.01 ? ` · it rose ×${fmt(Math.round(r.rise))}` : ""}` : ""}${r.bad && r.bad.length ? `<br><span style="color:#ff8a6a">${esc(r.bad.join("; "))}</span>` : ""}</div></div>${r.rep ? `<button class="btn ghost" data-act="stressPlay" data-i="${i}">▶</button>` : ""}</div>`; }).join("");
   return head + run + sumL + fleet + `<div class="strows">${rows}</div>`; }
+/* v408 tapping the Super Cube */
+function shCubePick() { const T = now(), ph = cubePhase(T), live = evActive(T), cur = nexusNow(T), who = cur.holder ? `Held by ${esc(allyTag(cur.holder))}` : live ? "Unclaimed · the Collective Warden guards it" : `Next battle in ${ftime(evStart(evWeek(T) + 1) - T)}`;
+  return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">${live ? "● LIVE · " : ""}Battle for the Cube</div><h2>The Super Cube</h2><p class="note">${who}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
+    <div class="cubepick"><button class="btn amber wide" data-act="cubeCine">🎬 ${live ? "Watch the battle live" : "Cinematic view"}</button>${live ? "" : `<button class="btn ghost wide" data-act="liveReplay">▶ Watch the Cube's arrival</button>`}
+    <button class="btn wide" data-act="events" data-ev="cube">📅 Events page</button>${ph ? `<button class="btn ghost wide" data-act="cubeScanHere">◎ Scan the Cube</button>` : ""}</div>`; }
+/* v408 the owner's time-lapse of the whole Elemental Convergence, on a local copy of the boss state */
+const CONV_SIM = [[0, "start"], [4000, "say:wb3_new"], [7000, "cam:eic"], [9000, "hit:eic:6"], [14000, "hit:efi:8"], [17000, "cam:eli"], [19000, "hit:eli:14"], [24000, "hit:eli:14"], [27000, "cam:est"], [29000, "hit:est:16"],
+  [33000, "hit:eli:12"], [36000, "hit:est:16"], [40000, "cam:ena"], [42000, "hit:ena:9"], [46000, "hit:est:8"], [50000, "cam:efi"], [52000, "hit:efi:7"], [58000, "say:wb3_soon"], [66000, "fuse"],
+  [116000, "pent:8"], [122000, "pent:9"], [128000, "pent:9"], [134000, "pent:8"], [140000, "pent:6"], [146000, "end"]];
+function convSimStart() { if (!duelOwner()) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } const st = jcopy(wbState(now())); for (const k of [...WB_EL, "epx"]) { st.hp[k] = WB_SEG; st.dead[k] = 0; st.dmg[k] = {}; } st.shed = []; st.wing = {};
+  G.convSim = { t0: performance.now(), st, i: 0 }; G.elePrev = 1; WB_SEPC = null; WB_ZONES = null; WB_INF = null; toast("Owner preview: the whole Elemental Convergence in three minutes. Only you see this."); }
+function convSimTick() { const C = G.convSim; if (!C) return; const s = performance.now() - C.t0, st = C.st;
+  while (C.i < CONV_SIM.length && s >= CONV_SIM[C.i][0]) { const [, ev] = CONV_SIM[C.i++], [a, b, c] = ev.split(":");
+    if (a === "say") advHolo(ADV_NEWS[b]);
+    else if (a === "cam") { try { cineObjStart("wb_" + b); } catch (e) {} }
+    else if (a === "hit") { const n0 = st.hp[b], seg = Math.min(n0, +c); st.hp[b] = n0 - seg; WB_ZONES = null; try { wbFight(b, seg, !st.hp[b]); } catch (e) {} if (!st.hp[b]) { st.dead[b] = now(); advHolo(ADV_NEWS["wb_fall_" + b]); } }
+    else if (a === "fuse") { G.elePrev = 2; G.fuseRep = performance.now(); WB_SEPC = null; WB_ZONES = null; if (G3 && G3.wbM && G3.wbM.epx) G3.wbM.epx.dk = null; try { cineObjStart("wb_epx"); } catch (e) {} advHolo(ADV_NEWS.wb3_fuse); }
+    else if (a === "pent") { const n0 = st.hp.epx, seg = Math.min(n0, +b), left = n0 - seg; st.hp.epx = left; const live = () => wbFusedIn(st).filter(k => !st.shed.includes(k)), due = [.2, .4, .6, .8].filter(x => 1 - left / WB_SEG >= x).length;
+      while (st.shed.length < due && live().length) { const k = live()[0]; st.shed.push(k); advHolo(ADV_NEWS["wb_shed_" + k]); } try { wbFight("epx", seg, !left); } catch (e) {} if (!left) { st.dead.epx = now(); setTimeout(() => advHolo(ADV_NEWS.wb_fall_epx), 2500); setTimeout(() => advHolo(ADV_NEWS.wb3_shards), 9000); } }
+    else if (a === "end") { setTimeout(() => { if (G.convSim === C) { G.convSim = null; G.elePrev = 0; G.fuseRep = 0; WB_SEPC = null; WB_ZONES = null; WB_INF = null; try { cineEnd(); } catch (e) {} toast("The Convergence preview has ended."); } }, 20000); } } }
+setInterval(() => { try { convSimTick(); } catch (e) {} }, 250);
 /* v402 the Pentarch's wings: aim your fleet at one (its damage counts toward breaking that wing) or at the core */
 function epxAimBar(st) { const L = wbPentLive(st), a = L.includes(S.epxAim) ? S.epxAim : null;
   return `<h2 class="sec">Aim</h2><p class="note">Every fifth of its hull tears one element loose. Aim at a wing to break it sooner and silence it.</p><div class="aimrow"><button class="aimb${a ? "" : " on"}" data-act="epxAim" data-k="">✪ Core</button>${L.map(k => { const D = WB[k], w = Math.min(100, Math.round((st.wing[k] || 0) / (WB_SEG * .12) * 100));
@@ -5639,7 +5669,7 @@ async function resolveAssault(f) {
         else if (cur.holder === aly) { // our alliance already holds it: the whole strike reinforces the garrison
           for (const u of uids) { const g = Object.assign({}, cur.garrison[u] || {}), n = cleanShips(a.members[u].n); for (const k in n) g[k] = (g[k] || 0) + n[k]; cur.garrison[u] = g; }
           await nref.set(cur); result = { winner: "a", surv: {}, loot: {}, nx: 1, hold: 1, rep: null }; }
-        else { const D = nexusDefense(cur), res = simulate(A, D.stacks); if (!cur.holder) wardenWear(cur, res);
+        else { const A1 = A.map(s => Object.assign({}, s)), { D, res } = cubeFight(() => A1.map(s => Object.assign({}, s)), cur); if (!cur.holder) wardenWear(cur, res);
           const rep = { at, kind: "attack", title: `${a.rally ? "Joint strike" : "Joint strike"} on the Cube`, aUids: uids, aName: `${allyTag(aly)} joint strike`, dName: cur.holder ? `Cube · ${allyTag(cur.holder)}` : "Collective Warden", lvl: 16, ptype: "gas", fortL: 0, alien: D.alien,
             start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) };
           const surv = {}; for (const u of uids) surv[u] = cleanShips(res.aByOwn[u] || {});
@@ -6222,7 +6252,7 @@ async function resolveNexus(f) {
       const g = Object.assign({}, cur.garrison[G.me] || {}); for (const k in f.n) g[k] = (g[k] || 0) + f.n[k]; cur.garrison[G.me] = g;
       await ref.set(cur); S.fleets = S.fleets.filter(x => x !== f); note(`Ships stationed at the Cube for ${allyTag(S.ally)}. They come home when the battle ends.`, "win"); return;
     }
-    const D = nexusDefense(cur), res = simulate(stacksOf(f.n, techOf(null), G.me), D.stacks);
+    const { D, res, rise } = cubeFight(() => stacksOf(f.n, techOf(null), G.me), cur); if (rise > 1.01) note(`The Collective Warden rose to meet our fleet: ×${fmt(Math.round(rise))} toughness and firepower against a force this size.`, "warn");
     const rep = mkRep({ at, kind: "attack", title: "Assault on the Cube", aUids: [G.me], aName: S.homeName + " Fleet", dName: cur.holder ? `Cube · ${allyTag(cur.holder)}` : "Collective Warden", lvl: 16, ptype: "gas", fortL: 0, alien: D.alien,
       start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
     repairDocks(rep, rep.lossA);
@@ -9234,8 +9264,8 @@ function siegeCam(W, t) {
   if (c.siege.sh !== sh) { c.siege.sh = sh; try { siegeSay(sh); } catch (e) {} c.tx = tx; c.ty = ty; c.tz = tz; c.dist = d; c.th = th; c.ph = ph; }
   else { const e = .06; c.tx += (tx - c.tx) * e; c.ty += (ty - c.ty) * e; c.tz += (tz - c.tz) * e; c.dist += (d - c.dist) * e; let dt = th - c.th; while (dt > Math.PI) dt -= TAU; while (dt < -Math.PI) dt += TAU; c.th += dt * e; c.ph += (ph - c.ph) * e; }
   const ap = $("#app"); if (ap && !ap.classList.contains("cine")) { ap.classList.add("cine"); cineBar(); } // a re-render may have cleared it
-  const w = $("#cbw"); if (w) w.textContent = `● LIVE · Battle for the Cube · ${SIEGE_SHOTS[sh]}`;
-  if (!cubePhase(now())) siegeEnd(); // films every phase of the event, Arrival to Aftermath
+  const w = $("#cbw"); if (w) w.textContent = c.siege.show && !cubePhase(now()) ? `◎ The Super Cube · ${SIEGE_SHOTS[sh]}` : `● LIVE · Battle for the Cube · ${SIEGE_SHOTS[sh]}`;
+  if (!cubePhase(now()) && !c.siege.show) siegeEnd(); // films every phase of the event, Arrival to Aftermath (v408: or the Cube on its own, from its tap menu)
 }
 function siegeStart(n) { G.siegeN = 0; G.siegeUsed = []; G.siegeSaidAt = 0; G.siegeHolder = undefined; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } if (!G3) { if ((n || 0) < 20) setTimeout(() => siegeStart((n || 0) + 1), 300); return; } const c = G3.cam; c.siege = { t0: performance.now(), th0: c.th || 0, oth: 0, oph: 0, ok: 1 }; c.cine = { m: "free" }; $("#app").classList.add("cine"); cineBar(); }
 function siegeEnd() { if (!G3 || !G3.cam.siege) return; const c = G3.cam; c.siege = null; c.live = 0; cineEnd(); c.tx = W3N().x; c.tz = W3N().z; c.goal = { dist: 160 }; }
@@ -10146,7 +10176,7 @@ function tap3(el, e) {
   if (best && best.clash) { if (best.clash !== "-" && S.reports.some(r => r.id === best.clash) && !G.cubeDemo) ACT.report({ id: best.clash }); else clashWatch(best.key); return; } // v188: anyone else's fight (other commanders, bots, the demos) plays in cinematic view
   if (best && best.cache) { ACT.grabCache({ id: best.cache }); return; }
   if (best && best.mineFly) { ACT.gotoMine({ id: best.mineFly }); return; }
-  if (best && best.nexus) { if (cubePhase(now())) { G.cubeScan = performance.now() + 9000; G.cubeOpen = true; const el = $("#cubepanel"); if (el) el._h = ""; } else openSheet({ type: "events", ev: "cube" }); return; } /* v108: during the event, tapping the Cube scans it in place */ // v91: tapping the Cube opens its event card (video, standings, Join)
+  if (best && best.nexus) { openSheet({ type: "cubepick" }); return; } /* v408: tapping the Cube asks what to do */ /* v108: during the event, tapping the Cube scans it in place */ // v91: tapping the Cube opens its event card (video, standings, Join)
   if (best && best.wb) { ACT.wboss({ id: best.wb, nofly: 1 }); return; }
   if (best && best.nid) { ACT.node({ id: best.nid }); return; }
   if (best && best.xid) { ACT.pirate({ id: best.xid, nofly: 1 }); return; }
@@ -14977,7 +15007,7 @@ function renderSheet() {
   if (G.rangeHeld && sheet) { G.rangeLate = 1; return; }
   let w = $("#sheetwrap");
   let html = ({ planet: shPlanet, report: shReport, settings: shSettings, void: shVoid, assault: shAssault, targets: shTargets, node: shNode, bld: shBld, nexus: shNexus, skin: shSkin, find: shFind, pirate: shPirate, pyramid: shPyramid, wboss: shWboss, matbox: () => { const s = SHOP[sheet.k]; if (!s) return ""; const f = fsOf(), tt = s.mbT; return `<div class="hd"><div><div class="chapter" style="color:${FS_TIER[tt][1]}">Material Selection Box</div><h2>${esc(s.n)}</h2><p class="note">${sheet.all && (S.items || {})[sheet.k] > 1 ? `Pick one for all ${S.items[sheet.k]} boxes: you get ${fmt(MB_N[tt] * S.items[sheet.k])} × ${FS_TIER[tt][0]} of it.` : `Pick one: you get ${MB_N[tt]} × ${FS_TIER[tt][0]} of it.`}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div><div class="fsmb">${Object.keys(FS_MATS).map(m => `<button class="btn" data-act="matboxPick" data-v="${m}" style="--tc:${FS_TIER[tt][1]}"><i class="fsmi lg fsmat-${m}"></i><b>${FS_MATS[m][0]}</b><small>you have ${fmt(f.mats[fsMatKey(m, tt)] || 0)}</small></button>`).join("")}</div>`; }, fctl: shFctl, station: shStation, ally: shAlly, layers: shLayers, tile: shTile, graphics: shGfx, cuberes: shCubeRes, basedet: shBaseDet, planets: shPlanets, fo: shFo, allymem: shAllyMem, altools: () => { const a = myAlly(); return a ? `<div class="hd"><div><div class="chapter">[${esc(a.tag)}] ${esc(a.name)}</div><h2>${allyRank(a, G.me) === "lead" ? "Leader" : "Captain"} tools</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${allyTools(a) || '<p class="note">Only the leader and captains have these tools.</p>'}` : ""; },
-    yard: shYard, labs: shLabs, flagship: shFlag, sound: shSound, shop: shShop, pack: shPack, packadmin: shPackAdmin, vip: shVip, spyrep: shSpyRep, spysend: shSpySend, repshare: shRepShare, stress: shStress, health: shHealth, howto: shHowTo, fbinbox: shFbInbox, events: shEvents, ach: shAch, avatars: shAvatars, detail: shDetail, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
+    yard: shYard, labs: shLabs, flagship: shFlag, sound: shSound, shop: shShop, pack: shPack, packadmin: shPackAdmin, vip: shVip, spyrep: shSpyRep, spysend: shSpySend, repshare: shRepShare, stress: shStress, cubepick: shCubePick, health: shHealth, howto: shHowTo, fbinbox: shFbInbox, events: shEvents, ach: shAch, avatars: shAvatars, detail: shDetail, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
     mastery: () => `<div class="hd"><div><div class="chapter">Progression</div><h2>Path to Mastery</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${mMastery()}` })[sheet.type]();
   if (!html) { closeSheet(); return; }
   html += sheet.type === "faction" && !S.faction ? "" : backBar(); html = `<div class="grab" aria-hidden="true"></div>` + html;
@@ -15508,7 +15538,7 @@ function vCmd() {
     ${acc("elements", ic(MI.shield, "#e06bd8"), "Elements (Runes)", `${Object.values(S.runes || {}).reduce((a, b) => a + b, 0) ? `<span class="pill amb">${Object.values(S.runes || {}).reduce((a, b) => a + b, 0)} to socket</span>` : ""}`, mElem())}
     ${acc("vshop", ic(MI.tag, "#c9a6ff"), "Void Shop", `<span class="shard">◆ ${fmt(S.shards || 0)}</span>`, mShopVoid())}
     ${acc("depot", ic(MI.tag), "Supply Depot", "", mShop())}
-    ${duelOwner() ? `<button class="btn ghost wide" data-act="fbInbox">💬 Feedback inbox</button><button class="btn ghost wide" data-act="healthOpen">📉 Crash &amp; performance</button><button class="btn ghost wide" data-act="stressOpen">⚔ Stress-test battles</button><button class="btn ghost wide" data-act="elePrev">✪ Preview the Elemental Convergence: ${["off", "the five Elementals", "the Pentarch"][G.elePrev || 0]}</button>` : ""}
+    ${duelOwner() ? `<button class="btn ghost wide" data-act="fbInbox">💬 Feedback inbox</button><button class="btn ghost wide" data-act="healthOpen">📉 Crash &amp; performance</button><button class="btn ghost wide" data-act="stressOpen">⚔ Stress-test battles</button><button class="btn ghost wide" data-act="${G.convSim ? "convSimStop" : "convSim"}">${G.convSim ? "■ Stop the Convergence preview" : "▶ Watch the whole Elemental Convergence"}</button><button class="btn ghost wide" data-act="elePrev">✪ Preview the Elemental Convergence: ${["off", "the five Elementals", "the Pentarch"][G.elePrev || 0]}</button>` : ""}
     ${acc("settings", ic(MI.grid), "Settings", "", mSave() + mGame())}</div>`;
 }
 const acc = (k, icon, title, value, body) => { const o = menu.open[k]; return `<section class="acc${o ? " open" : ""}"><button class="acch" data-act="acc" data-k="${k}" aria-expanded="${!!o}"><span class="ai">${icon}</span><span class="at">${title}</span><span class="av">${value}</span><i class="notch"></i></button>${o ? `<div class="accb">${body}</div>` : ""}</section>`; };
@@ -18596,6 +18626,10 @@ const ACT = {
   stressOpen: () => { if (!duelOwner()) return; openSheet({ type: "stress" }); },
   stressRun: () => { if (!duelOwner()) return; stressRun(); },
   stressPlay: d => { const r = G.stress && G.stress.out[+d.i]; if (r && r.rep) playBattle(r.rep); },
+  cubeCine: () => { closeSheet(); siegeStart(); const go = n => { if (G3 && G3.cam.siege) G3.cam.siege.show = 1; else if (n < 20) setTimeout(() => go(n + 1), 300); }; go(0); },
+  cubeScanHere: () => { closeSheet(); G.cubeScan = performance.now() + 9000; G.cubeOpen = true; const el = $("#cubepanel"); if (el) el._h = ""; },
+  convSim: () => convSimStart(),
+  convSimStop: () => { if (G.convSim) { G.convSim = null; G.elePrev = 0; G.fuseRep = 0; WB_SEPC = null; WB_ZONES = null; try { cineEnd(); } catch (e) {} toast("Preview stopped."); } if (sheet) renderSheet(); },
   epxAim: d => { S.epxAim = d && d.k ? d.k : null; dirty(); if (sheet) renderSheet(); },
   convReplay: () => { if (!G3) { view = "galaxy"; render(); } G.fuseRep = performance.now(); if (G3 && G3.wbM && G3.wbM.epx) G3.wbM.epx.dk = null; closeSheet(); setTimeout(() => { try { ACT.cineObj({ id: "wb_epx" }); } catch (e) {} }, 400); },
   convShards: () => act(() => { const st = wbState(), c2 = st.cyc2, id = "shards:" + c2; S.wbGot = S.wbGot || {}; if (S.wbGot[id]) return toast("You've already gathered the Pentarch's shards."); if (!st.dead.epx || now() - st.dead.epx > 10 * 60e3) return toast("The shards have faded.");
