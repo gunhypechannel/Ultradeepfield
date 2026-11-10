@@ -1,11 +1,12 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-10 (America/Phoenix). Current game version: **v398** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v205**.
+Last updated: 2026-11-10 (America/Phoenix). Current game version: **v399** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v206**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
 ## Pending work (as of 2026-11-07): start here in a new session
 
+00000000000000000000000000. **v399 (2026-11-10): no boss overlaps another or the Super Cube** (owner). `wbPos` = `wbPosRaw` + a lift from `wbSep(T)`: clear radii `WB_CLR` (Overlord 50 covering its conduits, Tyrant 38, Devourer 32, Wyrm 30, Colossus 26, Matriarch 24, Warden 22; Cube `WB_CUBE_R` 34). In order `WB_SEP_ORDER` (the Wyrm holds the centre) each boss that is out rises over the Cube and the bosses placed before it with a smooth bump, 1.12 x need x (1-u^2)^2 with u = distance / (1.6 x need), which starts early and always clears; conduits share the Overlord's lift. While the Cube sits at the centre the Wyrm rises to y 72. Week sweep (5-min steps): closest gap +1 unit; the biggest lift is ~67 units when the fast inner Cube sweeps past the Devourer, rising over a few minutes.
 00000000000000000000000000. **v398 (2026-11-10): boss card lines describe the boss; the scan does the attack warnings** (owner: the cinematic should say something different). `BOSS_HOLO.wb*` (said when a boss card opens) are now descriptions (what it is, where it lives, how to beat it) with no attack list; `WB_SCAN_SAY` keeps the warnings and the scan adds the short callouts. 8 new clips (`p398_voice.json`).
 00000000000000000000000000. **v397 (2026-11-10): boss-scan zoom-out halved to 350 units** (owner); Wide is capped to it. Callout clips for v396 recorded.
 00000000000000000000000000. **v396 (2026-11-10): short attack callouts in boss scans** (owner: the full sentences were repetitive after her opening line). As each attack is shown she now says just its name ("Tentacle lash!"); the scan card still shows the one-line description. 24 callout clips (`p396_voice.json`); the v388 sentence clips are no longer used.
