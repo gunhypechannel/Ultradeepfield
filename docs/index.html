@@ -3651,7 +3651,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 406;
+const GAME_V = 407;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4979,6 +4979,52 @@ Object.assign(WB, {
 const WB_EL = ["eic", "efi", "eli", "est", "ena"];
 const WB_ATK = { eic: ["nova", "lance", "zero"], efi: ["flare", "rain", "inferno"], eli: ["lance", "halo", "judgement"], est: ["chain", "ion", "clap"], ena: ["thorn", "spore", "growth"], epx: ["converge", "storm", "cataclysm"], ovl: ["beam", "stomp", "summon"], dev: ["bite", "lash", "beam", "roar"], war: ["pulse", "beam", "summon"], c0: ["discharge", "charge"], brd: ["hatch", "acid", "slam"], tyr: ["broadside", "claw", "mines"], wym: ["lens", "coil", "sweep"], col: ["prism", "rain", "shatter"] };
 const wbMoves = key => WB_ATK[key] || WB_ATK.c0;
+const WB_STRIKE = {
+  ovl: { beam: ["beam", .35, .82, 0, 3200], stomp: ["wave", .42, .9, 0, 1700] },
+  dev: { lash: ["bolts", .3, .65, 4, 1600], beam: ["beam", .35, .85, 0, 3000], roar: ["wave", .3, .85, 0, 2400] },
+  war: { pulse: ["wave", .2, .75, 0, 1800], beam: ["beam", .35, .82, 0, 3200] },
+  c0: { discharge: ["bolts", .2, .7, 5, 1800] },
+  brd: { hatch: ["bolts", .4, .92, 7, 3000], acid: ["bolts", .3, .8, 5, 2800], slam: ["wave", .4, .88, 0, 1900] },
+  tyr: { broadside: ["bolts", .25, .82, 10, 2800], claw: ["beam", .42, .72, 0, 2600], mines: ["bolts", .4, .92, 6, 3800] },
+  wym: { lens: ["beam", .35, .85, 0, 3000], sweep: ["sweep", .2, .82, 0, 2200] },
+  col: { prism: ["beam", .35, .85, 0, 3000], rain: ["bolts", .3, .88, 9, 2800], shatter: ["wave", .4, .9, 0, 2800] },
+  eic: { nova: ["wave", .35, .85, 0, 2800], lance: ["bolts", .35, .8, 5, 2800], zero: ["wave", .4, .92, 0, 2800] },
+  efi: { flare: ["wave", .3, .8, 0, 2800], rain: ["bolts", .3, .9, 9, 2800], inferno: ["wave", .4, .92, 0, 2800] },
+  eli: { lance: ["beam", .35, .78, 0, 2800], halo: ["wave", .35, .85, 0, 2800], judgement: ["beam", .4, .9, 0, 2800] },
+  est: { chain: ["chain", .3, .8, 6, 2800], ion: ["bolts", .3, .85, 7, 2800], clap: ["wave", .4, .88, 0, 2800] },
+  ena: { thorn: ["bolts", .3, .8, 8, 2800], spore: ["wave", .3, .9, 0, 2800], growth: ["beam", .4, .88, 0, 2800] },
+  epx: { converge: ["beam", .5, .95, 0, 3400], storm: ["bolts", .2, .9, 12, 3000], cataclysm: ["wave", .45, .95, 0, 3200] } };
+/* v407 a boss's attack on the whole battle field (its 3D picture is drawn in a box round the boss, which clipped its beams halfway) */
+/* the boss picture with its edges faded, so a beam or wave that runs past its box fades out instead of stopping on a hard straight edge */
+function wbSoft(A) { const w = A.width, h = A.height; let c = WBR.soft; if (!c || c.width !== w || c.height !== h) { c = WBR.soft = document.createElement("canvas"); c.width = w; c.height = h; c.m = null; }
+  const x = c.getContext("2d"); x.globalCompositeOperation = "copy"; x.drawImage(A, 0, 0); x.globalCompositeOperation = "destination-in";
+  if (!c.m) { const m = document.createElement("canvas"); m.width = w; m.height = h; const y = m.getContext("2d"), g = y.createRadialGradient(0, 0, 0, 0, 0, 1); for (const [o, v] of [[0, 1], [.62, 1], [.82, .55], [1, 0]]) g.addColorStop(o, `rgba(0,0,0,${v})`); y.setTransform(w / 2, 0, 0, h / 2, w / 2, h / 2); y.fillStyle = g; y.fillRect(-1, -1, 2, 2); c.m = m; }
+  x.drawImage(c.m, 0, 0); x.globalCompositeOperation = "source-over"; return c; }
+function wbStrike(ctx, b, scr, Q, W, H, t, d, lo) { const k = b.r && b.r.wb, M = WBR.mv; if (!k || !M || WBR.key !== k || !b.scC) return;
+  const S = (WB_STRIKE[k] || {})[M.m]; if (!S) return; const f = (t - M.t0) / S[4]; if (f < S[1] || f > S[2]) return; const u = (f - S[1]) / (S[2] - S[1]), env = Math.sin(Math.min(1, u) * Math.PI);
+  const tg = []; Q.forEach((q, i) => { if (q.side !== b.superSide && b.n[i] > 0 && scr[i]) tg.push(i); }); if (!tg.length) return;
+  const els = k === "epx" ? ((b.r.pent && b.r.pent.length ? b.r.pent : ["ice", "fire", "light", "storm", "nature"]).map(e => WB[WB_EL.find(x => WB[x].el === e)].col)) : [WB[k].col], col = j => els[j % els.length];
+  const cx = b.scC.x, cy = b.scC.y, F = M.fx || (M.fx = { hit: {}, snd: 0 }), hit = (x, y, s, key) => { if (F.hit[key]) return; F.hit[key] = 1; b.flashes.push({ x, y, t, r: (26 + s * 30) * d, life: 260 + s * 160, rot: Math.random() * .8 }); b.shake = Math.max(b.shake || 0, (2 + s * 3) * d); };
+  if (!F.snd) { F.snd = 1; try { if (S[0] === "wave") SFX.blast(2.4, 0); else SFX.laser(true); } catch (e) {} }
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
+  const glow = (x, y, r, c, a) => { ctx.globalAlpha = a; ctx.drawImage(glowSprite(c), x - r, y - r, r * 2, r * 2); };
+  if (S[0] === "beam" || S[0] === "sweep") { let ex = 0, ey = 0; for (const i of tg) { ex += scr[i].x; ey += scr[i].y; } ex /= tg.length; ey /= tg.length;
+    if (S[0] === "sweep") ex += Math.sin((u - .5) * Math.PI) * W * .38; // the Wyrm's sweep: across the whole fleet
+    const wide = k === "epx" || M.m === "judgement" ? 1.6 : 1, grow = Math.min(1, u * 5), x1 = cx + (ex - cx) * grow, y1 = cy + (ey - cy) * grow;
+    for (const [lw, a, c] of [[46 * wide, .22, col(0)], [20 * wide, .55, col(0)], [7 * wide, .95, "#ffffff"]]) { ctx.globalAlpha = a * env; ctx.strokeStyle = c; ctx.lineWidth = lw * d * (.7 + .3 * Math.sin(t * .05)); ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x1, y1); ctx.stroke(); }
+    if (k === "epx") els.forEach((c, j) => { const a = t * .004 + j * TAU / els.length, o = 14 * d; ctx.globalAlpha = .7 * env; ctx.strokeStyle = c; ctx.lineWidth = 5 * d; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * o * 3, cy + Math.sin(a) * o * 3); ctx.lineTo(x1 + Math.cos(a) * o, y1 + Math.sin(a) * o); ctx.stroke(); });
+    glow(cx, cy, W * .14 * wide, col(0), .8 * env); if (grow >= 1) { glow(x1, y1, W * .2 * wide, col(0), .9 * env); glow(x1, y1, W * .07 * wide, "#ffffff", env);
+      for (const i of tg) if (Math.hypot(scr[i].x - x1, scr[i].y - y1) < W * .22 * wide) hit(scr[i].x, scr[i].y, 1, "b" + i + (S[0] === "sweep" ? Math.round(u * 6) : "")); } }
+  else if (S[0] === "wave") { const R = u * Math.hypot(W, H) * 1.05, w0 = (30 - 22 * u) * d;
+    for (const [lw, a, c] of [[w0 * 3, .25, col(0)], [w0, .7, col(0)], [w0 * .3, .9, "#ffffff"]]) { ctx.globalAlpha = a * (1 - u * .8); ctx.strokeStyle = c; ctx.lineWidth = lw; ctx.beginPath(); ctx.ellipse(cx, cy, R, R * .82, 0, 0, TAU); ctx.stroke(); }
+    if (u < .3) glow(cx, cy, W * (.25 + u), col(0), (1 - u / .3) * .9);
+    for (const i of tg) { const p = scr[i], r = Math.hypot(p.x - cx, (p.y - cy) / .82); if (r < R) hit(p.x, p.y, .7, "w" + i); } }
+  else { const n = S[3] || 5; for (let j = 0; j < n; j++) { const i = tg[(j * 7 + ((M.t0 / 97) | 0)) % tg.length], p = scr[i], a = (j / n) * .55, v = clamp((u - a) / .35, 0, 1); if (u < a) continue; const c = col(j), sx = cx + Math.cos(j * 2.4) * W * .06, sy = cy + Math.sin(j * 2.4) * W * .04;
+    if (v < 1) { const x = sx + (p.x - sx) * v, y = sy + (p.y - sy) * v + (S[0] === "bolts" && (M.m === "rain" || M.m === "mines" || M.m === "hatch") ? -Math.sin(v * Math.PI) * H * .12 : 0), bx = sx + (p.x - sx) * Math.max(0, v - .14), by = sy + (p.y - sy) * Math.max(0, v - .14);
+      if (S[0] === "chain") { ctx.globalAlpha = .9; ctx.strokeStyle = c; ctx.lineWidth = 3 * d; ctx.beginPath(); ctx.moveTo(sx, sy); for (let s = 1; s <= 8; s++) { const q = s / 8 * v; ctx.lineTo(sx + (p.x - sx) * q + (Math.random() - .5) * 26 * d, sy + (p.y - sy) * q + (Math.random() - .5) * 26 * d); } ctx.stroke(); ctx.globalAlpha = .3; ctx.lineWidth = 12 * d; ctx.stroke(); }
+      else { ctx.globalAlpha = .9; ctx.strokeStyle = c; ctx.lineWidth = 6 * d; ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(x, y); ctx.stroke(); ctx.globalAlpha = .3; ctx.lineWidth = 18 * d; ctx.stroke(); glow(x, y, 16 * d, "#ffffff", .9); } }
+    else { hit(p.x, p.y, .6, "j" + j); const age = (u - a - .35) / .2; if (age < 1) { glow(p.x, p.y, W * .07 * (1 + age), c, .9 * (1 - age)); } } } }
+  ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over"; }
 for (const [k, u] of [["wbOvl", WB.ovl], ["wbDev", WB.dev], ["wbWar", WB.war], ["wbCon", WB.c0], ["wbBrd", WB.brd], ["wbTyr", WB.tyr], ["wbWym", WB.wym], ["wbCol", WB.col], ["wbEic", WB.eic], ["wbEfi", WB.efi], ["wbEli", WB.eli], ["wbEst", WB.est], ["wbEna", WB.ena], ["wbEpx", WB.epx]]) { const hull = Math.round(u.hp * WB_K / WB_SEG); AL[k] = { n: u.n, atk: Math.round(u.atk / WB_SEG), sh: Math.round(hull * .05), hull, val: hull * 2 }; }
 const isWbU = k => typeof k === "string" && k.startsWith("wb") && !!AL[k];
 const wbCyc = T => Math.floor((T - WB_BASE) / WEEK), wbEnd = c => WB_BASE + (c + 1) * WEEK;
@@ -5196,7 +5242,7 @@ function wbArt(key, w, h, t, b) { if (typeof BOSS3D === "undefined" || !WB[key])
       WBR.b = BOSS3D.prep(BOSS3D[m3](WB[key].el || (key === "epx" ? ((battle && battle.r && battle.r.pent) || wbPentAlive(now())) : undefined)), wbEnv(WBR.r)); if (key === "epx") { WBR.b.ground = 16; WBR.shedQ = battle && battle.r && battle.r.shed ? battle.r.shed.map(k => WB[k].el) : null; } WBR.b.grp.rotation.y = tall ? WB_FRONT[m3] : V0[0]; WBR.sc.add(WBR.b.grp); WBR.key = key; WBR.tall = tall; WBR.cam.position.set(...(tall ? [V0[1][0] * .2, V0[1][1] * .6, Math.hypot(V0[1][0], V0[1][2])] : V0[1])); WBR.cam.lookAt(new TH.Vector3(...V0[2])); WBR.hp = null; WBR.next = 0; }
     const W2 = Math.min(MOBILE ? 820 : 1100, Math.round(w)), H2 = Math.round(W2 * h / w); if (WBR.w !== W2 || WBR.h !== H2) { WBR.r.setSize(W2, H2, false); WBR.cam.aspect = W2 / H2; WBR.cam.updateProjectionMatrix(); WBR.w = W2; WBR.h = H2; }
     if (b) { if (WBR.hp != null && b.hp < WBR.hp - .004 && t > (WBR.hitT || 0)) { WBR.b.act("hit"); WBR.hitT = t + 700; } WBR.hp = b.hp;
-      if (b.live && t > WBR.next) { WBR.next = t + 2400 + Math.random() * 1400; const m = wbMoves(key); WBR.b.act(m[(Math.random() * m.length) | 0]); } }
+      if (b.live && t > WBR.next) { WBR.next = t + 2400 + Math.random() * 1400; const m = wbMoves(key), mv = m[(Math.random() * m.length) | 0]; WBR.b.act(mv); WBR.mv = { m: mv, t0: t }; } } /* v407: the move, so its strike plays on the whole field */
     if (WBR.shedQ && b && b.hp < .5) { for (const el of WBR.shedQ) WBR.b.shed(el); WBR.shedQ = null; } /* v402: the wing this fight tore loose breaks mid-battle */
     WBR.b.tick(t); WBR.r.render(WBR.sc, WBR.cam); return WBR.r.domElement; } catch (e) { return null; } }
 function wbArtFree() { if (!WBR.r) return; try { if (WBR.b) WBR.b.grp.traverse(o => { if (o.geometry) o.geometry.dispose(); }); const e = WB_ENV.get(WBR.r); if (e) e.dispose(); WBR.r.dispose(); WBR.r.forceContextLoss(); } catch (e) {} for (const k in WBR) delete WBR[k]; }
@@ -17072,7 +17118,7 @@ function drawBattle(t) {
       const fade = alive.length ? 1 : clamp(1 - (T - lastDead) / 1.6, 0, 1); if (fade <= 0) return;
       const wbk = b.r.wb, art = wbk ? null : shipArtSoon("cube", b.acc[b.superSide], "side"), Lc = Math.min(W, H) * .62, cx = b.scC.x, cy = b.scC.y + Math.sin(t * .0008) * Lc * .01, hp = idx.reduce((s, k) => s + Math.max(0, b.n[k]), 0) / Math.max(1, wbk ? WB_SEG : idx.reduce((s, k) => s + Q[k].n0, 0));
       ctx.save(); ctx.globalAlpha = fade; if (!lo) { ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .35 * fade; ctx.drawImage(glowSprite(wbk ? "rgba(180,92,255,1)" : "rgba(93,255,106,1)"), cx - Lc * 1.1, cy - Lc * .9, Lc * 2.2, Lc * 1.8); ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = fade; }
-      ctx.translate(cx, cy); ctx.rotate(Math.sin(t * .0003) * .04); if (wbk) { const tl = H > W * 1.1, aw = Math.min(Lc * 2.6, W * .96), ah = tl ? aw * .85 : aw / 2; const A = wbArt(wbk, aw, ah, t, { hp, live: alive.length > 0 }); if (A) ctx.drawImage(A, -aw / 2, -ah / 2, aw, ah); } else if (art) ctx.drawImage(art, -Lc, -Lc / 2, Lc * 2, Lc); else drawUnit(ctx, "cube", 0, 0, Lc * .4, SIDE_COL[b.superSide].main, -1); ctx.restore();
+      ctx.translate(cx, cy); ctx.rotate(Math.sin(t * .0003) * .04); if (wbk) { const tl = H > W * 1.1, aw = Math.min(Lc * 2.6, W * .96), ah = tl ? aw * .85 : aw / 2; const A = wbArt(wbk, aw, ah, t, { hp, live: alive.length > 0 }); if (A) ctx.drawImage(wbSoft(A), -aw / 2, -ah / 2, aw, ah); } else if (art) ctx.drawImage(art, -Lc, -Lc / 2, Lc * 2, Lc); else drawUnit(ctx, "cube", 0, 0, Lc * .4, SIDE_COL[b.superSide].main, -1); ctx.restore();
       if (!alive.length && !lo) { ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .9 * fade; const fr = Lc * (1.4 - fade * .6); ctx.drawImage(glowSprite("fire"), cx - fr, cy - fr, fr * 2, fr * 2); ctx.restore(); }
       ctx.save(); ctx.fillStyle = "rgba(0,0,0,.55)"; ctx.fillRect(cx - Lc * .4, cy + Lc * .36, Lc * .8, 6 * d); ctx.fillStyle = wbk ? WB[wbk].col : "#5dff6a"; ctx.fillRect(cx - Lc * .4, cy + Lc * .36, Lc * .8 * clamp(hp, 0, 1), 6 * d); ctx.restore(); ctx.globalAlpha = 1; return; }
     if (busy && tot[i] === -1) return; // merged into a nearby formation of the same type
@@ -17255,6 +17301,7 @@ function drawBattle(t) {
     for (let i = 0; i < s.n; i++) { const o = (i - (s.n - 1) / 2) * 5 * d + Math.sin(i * 12.9 + s.t0) * 2 * d, x0 = sx + nx * o + ux * 6 * d, y0 = sy + ny * o, x1 = x0 + ux * reach, y1 = y0 + uy * reach;
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.strokeStyle = col; ctx.globalAlpha = al * .22 * dim; ctx.lineWidth = w * 7; ctx.stroke(); ctx.globalAlpha = al * .85 * dim; ctx.lineWidth = w * 2.3; ctx.stroke(); ctx.strokeStyle = "#fff"; ctx.globalAlpha = al * dim; ctx.lineWidth = w * .9; ctx.stroke(); }
     const mr = (8 + s.w * 5) * d * al; ctx.globalAlpha = al; ctx.drawImage(glowSprite(col), sx - mr, sy - mr, mr * 2, mr * 2); }
+  try { wbStrike(ctx, b, scr, Q, W, H, t, d, lo); } catch (e) {} // v407 the boss's attack across the whole field
   // mega beams from stations, titans and beam batteries: a charge-up glow, then a roaring column with a blinding impact
   b.beams = b.beams.filter(m => T - m.t0 <= m.charge + m.life);
   for (const m of b.beams) { const age = T - m.t0; if (age < 0) continue; const A = scr[m.s], E = scr[m.e]; if (!A || !E) continue;
