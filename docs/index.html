@@ -3651,7 +3651,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 404;
+const GAME_V = 405;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4988,6 +4988,17 @@ const wbKeys = g => Object.keys(WB).filter(k => (WB[k].g || 1) === g), wbMain = 
 const wymOpen = T => ((T - WB2_BASE) % 3600e3 + 3600e3) % 3600e3 < 20 * 60e3, wymNext = T => { const ph = ((T - WB2_BASE) % 3600e3 + 3600e3) % 3600e3; return ph < 20 * 60e3 ? T - ph + 20 * 60e3 : T - ph + 3600e3; };
 const wbVault = T => 1 + 1.5 * clamp((T - wbStartOf("tyr", T)) / (48 * 3600e3), 0, 1);
 /* how much tougher a boss is right now: the Overlord's conduits, the Matriarch's swarm, the Wyrm's hidden segments, the Colossus's fragments */
+const WB_RISE = .5, WB_RISE_E = .05; // v405: where a boss starts to rise to meet a fleet, and how gently the fleet's edge grows beyond it
+function wbRiseK(A, Dd) { const pw = st => st.reduce((a, s) => a + s.n * unitPow(s), 0), P = pw(A), B = pw(Dd); if (!(B > 0) || P <= B * WB_RISE) return { F: 1, x: 1 }; const x = P / (B * WB_RISE); return { F: x / Math.pow(x, WB_RISE_E), x }; }
+/* a fight against a boss that rises to meet the fleet: above the threshold one attack destroys a set share of its full hull, 30% at the
+   threshold rising to 60% for the very largest fleets; when a fight overshoots, the boss is made tougher and it is fought again
+   (only hull and attack: a shot too weak for a shield is deflected, so scaled shields would make a big fleet harmless) */
+function wbFightRise(mkA, mkD, k, n0) { let { F, x } = wbRiseK(mkA(), mkD()); if (F <= 1) return { res: simulate(mkA(), mkD()), rise: 1 };
+  const tgt = Math.min(n0, Math.round(WB_SEG * clamp(.3 + .09 * Math.log10(x), .3, .6))); let res = null;
+  let lo = 1, hi = 0, best = null; // bisect the boss's factor: too weak (overshoots) raises lo, too strong (falls short) lowers hi
+  for (let i = 0; i < 9; i++) { const A = mkA(), D = mkD(); for (const s of D) { s.atk *= F; s.hull *= F; } res = simulate(A, D); const seg = n0 - clamp(Math.round(((res.dLeft || {})[k]) || 0), 0, n0), err = Math.abs(seg - tgt);
+    if (!best || err < best.err) best = { res, F, err }; if (err <= 2) break; if (seg > tgt) lo = F; else hi = F; F = hi ? Math.sqrt(Math.max(lo, 1) * hi) : F * Math.max(1.5, Math.pow(seg / Math.max(1, tgt), 1.6)); if (hi && hi / Math.max(lo, 1) < 1.03) break; }
+  return { res: best.res, rise: best.F }; }
 function wbShOf(key, st, at) { if (key === "ovl") return 1 + .75 * [0, 1, 2, 3].filter(i => (st.hp["c" + i] | 0) > 0).length;
   if (key === "brd") { const h = Math.max((st.hit || {}).brd || 0, wbStartOf("brd", at)); return 1 + clamp((at - h) / (6 * 3600e3), 0, 1); }
   if (key === "wym") return wymOpen(at) ? 1 : 1.6;
@@ -5089,7 +5100,7 @@ async function wbResolve(f) {
     const snap = await ref.get(), cur = wbNorm(snap.exists ? snap.data() : null, c, at), n0 = cur.hp[key] | 0;
     if (!n0) { note(`The ${D.n} had already fallen when our fleet arrived. Returning.`, "warn"); return home(); }
     const shK = wbShOf(key, cur, at), mine0 = Object.assign({}, f.n);
-    const res = simulate(stacksOf(f.n, techOf(null), G.me), stacksOf({ [D.k]: n0 }, { wbSh: shK }, "wboss"));
+    const { res, rise } = wbFightRise(() => stacksOf(f.n, techOf(null), G.me), () => stacksOf({ [D.k]: n0 }, { wbSh: shK }, "wboss"), D.k, n0);
     const left = clamp(Math.round(((res.dLeft || {})[D.k]) || 0), 0, n0), seg = n0 - left;
     { const q = wbPos(key, at, {}); cur.scar.push({ k: key, at, x: Math.round(q.x * 10) / 10, y: Math.round(q.y * 10) / 10, z: Math.round(q.z * 10) / 10, b: left ? 0 : 1 }); cur.scar = cur.scar.slice(-80); } cur.hit[key] = at; // wreckage stays 48 h; the Matriarch's swarm thins
     cur.hp[key] = left; const dm = cur.dmg[key] = cur.dmg[key] || {}; if (seg) dm[G.me] = (dm[G.me] || 0) + seg; if (!left) { cur.dead[key] = at; cur.last[key] = G.me; }
@@ -5097,7 +5108,7 @@ async function wbResolve(f) {
       for (const k of live()) if ((cur.wing[k] || 0) >= WB_SEG * .12) { cur.shed.push(k); shedNow.push(k); } // a wing everyone aims at breaks sooner
       const due = [.2, .4, .6, .8].filter(x => 1 - left / WB_SEG >= x).length; while (cur.shed.length < due && live().length) { const k = live().sort((a, b) => (cur.wing[b] || 0) - (cur.wing[a] || 0) || WB_EL.indexOf(a) - WB_EL.indexOf(b))[0]; cur.shed.push(k); shedNow.push(k); } }
     await ref.set(cur); if (G.mode === "online") G.wb = cur; WBN = null;
-    const rep = mkRep({ at, kind: "attack", title: `Assault on the ${D.n}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: D.n, wb: key, wbSh: shK, wbSeg: [n0, left], lvl: 25, ptype: "gas", fortL: 0, alien: true,
+    const rep = mkRep({ at, kind: "attack", title: `Assault on the ${D.n}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: D.n, wb: key, wbSh: shK, wbRise: rise > 1.01 ? Math.round(rise * 10) / 10 : undefined, wbSeg: [n0, left], lvl: 25, ptype: "gas", fortL: 0, alien: true,
       start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
     if (shedNow.length) rep.shed = shedNow; if (key === "epx") rep.pent = wbFusedIn(cur).filter(k => !cur.shed.includes(k) || shedNow.includes(k)).map(k => WB[k].el);
     f.n = cleanShips(res.aLeft); repairDocks(rep, lossesOf(mine0, f.n));
@@ -5109,6 +5120,7 @@ async function wbResolve(f) {
       rep.mats = fsDrop(lootRoll(rolls), `the ${D.n}`, { nocap: 1 }); } /* v387: every fight pays materials */
     if (key === "col" && seg) { const xs = seg * 2; S.shards = (S.shards || 0) + xs; rep.shards = (rep.shards || 0) + xs; } /* the Colossus pays shards in bulk */
     if (shedNow.length) note(`${shedNow.map(k => WB[k].n).join(" and ")} torn loose from the Pentarch! ${shedNow.length > 1 ? "Their colours are" : "Its colour is"} gone from the Convergence.`, "win");
+    if (rise > 1.01) note(`The ${D.n} rose to meet our fleet: ×${fmt(Math.round(rise))} toughness and firepower against a force this size.`, "warn");
     if (!left) { bump("bosses"); note(`We brought down the ${D.n}! Everyone who fought it this week can claim the spoils.`, "win"); }
     else note(seg ? `Our fleet tore ${Math.round(seg / WB_SEG * 100)}% of the ${D.n}'s hull away (${Math.round(left / WB_SEG * 100)}% left)${rep.loot ? `. Bounty: ${fmt(rep.loot.m)} metal, ${fmt(rep.loot.c)} crystal, ${fmt(rep.loot.g)} gas on the way home, plus ◆${rep.shards}` : ""}.` : `The ${D.n} shrugged off our attack.`, seg ? "win" : "loss");
     addReport(rep); wbFight(key, seg, !left); wbClaim(); { const pv = jcopy(cur); pv.hp[key] = n0; if (pv.dmg[key]) pv.dmg[key][G.me] = ((pv.dmg[key][G.me] || 0) - seg); if (G.mode !== "online") wbNews(pv, cur); sbFeedAdd(pv, cur); WB_PREV = wbNorm(jcopy(cur), cur.cyc); } home();
@@ -5204,12 +5216,12 @@ function stressCheck(res, fleet, n0, k, F) { const bad = [], fin = v => typeof v
   return bad; }
 async function stressRun() { if (!duelOwner() || (G.stress && G.stress.busy)) return; const C = stressCases(), out = []; G.stress = { busy: true, out, n: C.length, t0: performance.now() }; if (sheet && sheet.type === "stress") renderSheet();
   for (const c of C) { await sleep(40); const D = WB[c.key]; let r = { c, ok: false };
-    try { const t0 = performance.now(), A = stacksOf(STRESS_FLEET, techOf(null), G.me), Dd = stacksOf({ [D.k]: c.n0 }, { wbSh: c.sh }, "wboss"), res = simulate(A, Dd), ms = performance.now() - t0;
+    try { const t0 = performance.now(), { res, rise } = wbFightRise(() => stacksOf(STRESS_FLEET, techOf(null), G.me), () => stacksOf({ [D.k]: c.n0 }, { wbSh: c.sh }, "wboss"), D.k, c.n0), ms = performance.now() - t0;
       const left = clamp(Math.round(((res.dLeft || {})[D.k]) || 0), 0, c.n0), lossA = lossesOf(res.start.a, res.aLeft);
-      const rep = mkRep({ at: now(), kind: "attack", test: 1, title: `Stress test · ${D.n}${c.form ? ` (${c.form})` : ""}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: D.n, wb: c.key, wbSh: c.sh, wbSeg: [c.n0, left], lvl: 25, ptype: "gas", fortL: 0, alien: true,
+      const rep = mkRep({ at: now(), kind: "attack", test: 1, title: `Stress test · ${D.n}${c.form ? ` (${c.form})` : ""}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: D.n, wb: c.key, wbSh: c.sh, wbRise: rise > 1.01 ? Math.round(rise * 10) / 10 : undefined, wbSeg: [c.n0, left], lvl: 25, ptype: "gas", fortL: 0, alien: true,
         start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA, lossD: lossesOf(res.start.d, res.dLeft) }); if (c.pent) rep.pent = c.pent;
       await sleep(20); const t1 = performance.now(), R = battleSim(rep).res.rec, msR = performance.now() - t1, bad = stressCheck(res, STRESS_FLEET, c.n0, D.k, R && R.frames); // the replay re-simulates: check its frames too
-      r = { c, ok: !bad.length, bad, ms, msR, rounds: res.rounds.length, left, lost: vsum(lossA), cd: lossA.worldbreaker || 0, frames: R && R.frames ? R.frames.length : 0, rep }; }
+      r = { c, ok: !bad.length, bad, ms, msR, rise, rounds: res.rounds.length, left, lost: vsum(lossA), cd: lossA.worldbreaker || 0, frames: R && R.frames ? R.frames.length : 0, rep }; }
     catch (e) { r.bad = [String(e && e.message || e).slice(0, 120)]; }
     out.push(r); if (sheet && sheet.type === "stress") renderSheet(); }
   G.stress.busy = false; G.stress.ms = performance.now() - G.stress.t0; if (sheet && sheet.type === "stress") renderSheet(); }
@@ -5219,7 +5231,7 @@ function shStress() { const st = G.stress, out = st ? st.out : [], fails = out.f
   const sumL = st && !st.busy ? `<p class="note">${fails ? `<b style="color:#ff8a6a">${fails} failed</b>` : "<b style=\"color:#7dff9a\">All passed</b>"} · ${out.length} battles in ${(st.ms / 1000).toFixed(1)} s · slowest ${Math.round(Math.max(...out.map(r => r.ms || 0)))} ms</p>` : "";
   const fleet = `<details class="note" style="margin:6px 0"><summary>The fleet</summary>${Object.entries(STRESS_FLEET).map(([k, n]) => `${fmt(n)} ${esc(SH[k].n)}`).join(" · ")}</details>`;
   const rows = out.map((r, i) => { const D = WB[r.c.key], pct = r.rep ? Math.round((r.c.n0 - r.left) / WB_SEG * 100) : 0;
-    return `<div class="strow${r.ok ? "" : " bad"}"><div style="flex:1;min-width:0"><b>${D.ic} ${esc(D.n)}</b>${r.c.form ? ` <span class="note">${esc(r.c.form)}</span>` : ""}<div class="note">${r.rep ? `${Math.round(r.ms)} ms (replay ${Math.round(r.msR)} ms) · ${r.rounds} ${r.rounds === 1 ? "volley" : "rounds"} · ${r.left ? `${pct}% of its hull destroyed` : "destroyed"} · lost ${fmt(r.lost)} ships${r.cd ? `, ${r.cd} Cube Destroyers` : ""}` : ""}${r.bad && r.bad.length ? `<br><span style="color:#ff8a6a">${esc(r.bad.join("; "))}</span>` : ""}</div></div>${r.rep ? `<button class="btn ghost" data-act="stressPlay" data-i="${i}">▶</button>` : ""}</div>`; }).join("");
+    return `<div class="strow${r.ok ? "" : " bad"}"><div style="flex:1;min-width:0"><b>${D.ic} ${esc(D.n)}</b>${r.c.form ? ` <span class="note">${esc(r.c.form)}</span>` : ""}<div class="note">${r.rep ? `${Math.round(r.ms)} ms (replay ${Math.round(r.msR)} ms) · ${r.rounds} ${r.rounds === 1 ? "volley" : "rounds"} · ${r.left ? `${pct}% of its hull destroyed` : "destroyed"} · lost ${fmt(r.lost)} ships${r.cd ? `, ${r.cd} Cube Destroyers` : ""}${r.rise > 1.01 ? ` · it rose ×${fmt(Math.round(r.rise))}` : ""}` : ""}${r.bad && r.bad.length ? `<br><span style="color:#ff8a6a">${esc(r.bad.join("; "))}</span>` : ""}</div></div>${r.rep ? `<button class="btn ghost" data-act="stressPlay" data-i="${i}">▶</button>` : ""}</div>`; }).join("");
   return head + run + sumL + fleet + `<div class="strows">${rows}</div>`; }
 /* v402 the Pentarch's wings: aim your fleet at one (its damage counts toward breaking that wing) or at the core */
 function epxAimBar(st) { const L = wbPentLive(st), a = L.includes(S.epxAim) ? S.epxAim : null;
