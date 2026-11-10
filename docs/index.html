@@ -2276,7 +2276,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       well.material.opacity = coil * .9; well.scale.setScalar(fc < 0 ? 1 : 9 - 7 * ss(0, 1, fc)); well.rotation.z = -t * .004;
       bt(t, 1 + coil * 6 + fire * 2); hit(bell(fx, 0, .05, .4, 1), t); };
     const tmpQ = new TH.Quaternion(), tmpQ2 = new TH.Quaternion(), tmp2 = new TH.Object3D();
-    bake(body); return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 15, h: 11 }; }
+    bake(body); return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 15, h: 11, own: [hole, disc, disc2, phR, bhG] }; } // own: its little black hole, hidden where a real one is
 
   /* ---------- Shard Colossus: a golem of dark mine rock and violet and cyan crystal, grown up out of a Void Shard mine. Great
      crystal wings fan from its back round a fractured heart that burns pink-white; a crown of shards, clawed crystal hands, a
@@ -3381,7 +3381,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 390;
+const GAME_V = 391;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4688,8 +4688,8 @@ Object.assign(WB, {
     d: "The Hive's queen, nesting in the Far Reach; the worlds round her nest turn infected green. Her drone swarm rebuilds while nobody fights her: left alone for six hours it makes her twice as tough. Keep the pressure on." },
   tyr: { k: "wbTyr", n: "Iron Tyrant", ic: "⚓", col: "#ff8a3a", hp: 260000, atk: 190000, m3: "tyrant", sc: .95, bounty: { m: 70000, c: 46000, g: 20000 }, sh: 3, kill: 16, where: "Pirate trade lanes", g: 2, cam: 112,
     d: "A pirate super-dreadnought patched together from stolen hulls, sailing from hideout to hideout. Its vault grows all week: the bounty per hit climbs from ×1 to ×2.5." },
-  wym: { k: "wbWym", n: "Event Horizon Wyrm", ic: "❂", col: "#ffa040", hp: 320000, atk: 240000, m3: "wyrm", sc: 1, bounty: { m: 84000, c: 56000, g: 26000 }, sh: 4, kill: 20, where: "The Core", g: 2, cam: 125,
-    d: "A serpent of black-hole rings coiled in the Core. Only its glowing segments can be hurt: for 20 minutes of every hour they are exposed and it takes full damage; the rest of the time it is far tougher. Time your fleet's arrival." },
+  wym: { k: "wbWym", n: "Event Horizon Wyrm", ic: "❂", col: "#ffa040", hp: 320000, atk: 240000, m3: "wyrm", sc: 1.3, bounty: { m: 84000, c: 56000, g: 26000 }, sh: 4, kill: 20, where: "The black hole at the centre", g: 2, cam: 110,
+    d: "A serpent of black-hole rings coiled round the black hole at the centre of the galaxy. Only its glowing segments can be hurt: for 20 minutes of every hour they are exposed and it takes full damage; the rest of the time it is far tougher. Time your fleet's arrival." },
   col: { k: "wbCol", n: "Shard Colossus", ic: "◈", col: "#c070ff", hp: 200000, atk: 140000, m3: "colossus", sc: 1, bounty: { m: 50000, c: 40000, g: 16000 }, sh: 6, kill: 24, where: "Crystal fields · Middle Reach", g: 2, cam: 110,
     d: "A crystal golem grown out of a crystal field. Below half hull it shatters into fragments that shield it (×1.4, and ×1.8 below a quarter). It pays Void Shards in bulk." } });
 const WB_ATK = { ovl: ["beam", "stomp", "summon"], dev: ["bite", "lash", "beam", "roar"], war: ["pulse", "beam", "summon"], c0: ["discharge", "charge"], brd: ["hatch", "acid", "slam"], tyr: ["broadside", "claw", "mines"], wym: ["lens", "coil", "sweep"], col: ["prism", "rain", "shatter"] };
@@ -4722,7 +4722,7 @@ let WB_LANE = null, WB_MINE = null; const WB_WYM = { id: "wb_wymorb", r: 26 * SC
 function wbPos(key, T, out) { const o = out || {};
   if (wbG2(key)) { const c2 = wbCyc2(T);
     if (key === "brd") { const L = LAYERS[1], r = L.r0 + (L.r1 - L.r0) * (.3 + .4 * (hash("brd" + c2) % 1000) / 1000), a = (hash("brdA" + c2) % 6283) / 1000 + TAU * T / period(r); o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 3; return o; }
-    if (key === "wym") { const q = P3(WB_WYM, T, WBS); o.x = q.x; o.z = q.z; o.y = q.y + 10 + 3 * Math.sin(T / 9e5); return o; } // on the Cube's orbit, half a turn away from it
+    if (key === "wym") { o.x = 0; o.z = 0; o.y = (evActive(T) ? 42 : 2) + 1.2 * Math.sin(T / 9e5); return o; } // v391: coiled round the black hole at the centre (risen above it while the Cube sits there)
     if (key === "col") { if (!WB_MINE) { WB_MINE = NODES.filter(n => n.res === "c" && layerOf(n.r).n === 4); if (!WB_MINE.length) WB_MINE = NODES.slice(0, 50); }
       const q = P3(WB_MINE[hash("col" + c2) % WB_MINE.length], T, WBS), r = Math.hypot(q.x, q.z) || 1; o.x = q.x - q.x / r * 14; o.z = q.z - q.z / r * 14; o.y = q.y; return o; }
     if (!WB_LANE) { WB_LANE = PIRATES.filter(x => x.kind === "pirate" && [3, 4].includes(layerOf(x.r).n)).sort((a, b) => a.a0 - b.a0); if (!WB_LANE.length) WB_LANE = PIRATES.slice(0, 50); }
@@ -4806,7 +4806,7 @@ function wbFight(key, seg, dead) { const W = G3, M = W && W.wbM && W.wbM[key]; i
 function wbMapFx(W, t, T) {
   if (typeof BOSS3D === "undefined") return; const st = wbState(T), cp = W.camera.position; W.wbM = W.wbM || {};
   for (const key in WB) { const D = WB[key], alive = st.hp[key] > 0, q = P3(WBO[key], T, WBQ), d = Math.hypot(q.x - cp.x, q.y - cp.y, q.z - cp.z), near = alive && d < 1400; let M = W.wbM[key];
-    if (!M) { if (!near || W.wbBuilt === t) continue; W.wbBuilt = t; try { BOSS3D.init(TH); BOSS3D.lod = 1; const b = BOSS3D.prep(BOSS3D[D.m3](), wbEnv(W.renderer)); b.grp.scale.setScalar(D.sc * 1.6); W.scene.add(b.grp); M = W.wbM[key] = { b, next: t + 4000 + Math.random() * 6000, q: new TH.Vector3() }; } catch (e) { W.wbM[key] = M = { b: null }; } }
+    if (!M) { if (!near || W.wbBuilt === t) continue; W.wbBuilt = t; try { BOSS3D.init(TH); BOSS3D.lod = 1; const b = BOSS3D.prep(BOSS3D[D.m3](), wbEnv(W.renderer)); b.grp.scale.setScalar(D.sc * 1.6); if (key === "wym" && b.own) for (const o of b.own) o.visible = false; /* v391: over the real black hole */ W.scene.add(b.grp); M = W.wbM[key] = { b, next: t + 4000 + Math.random() * 6000, q: new TH.Vector3() }; } catch (e) { W.wbM[key] = M = { b: null }; } }
     if (!M.b) continue; const g = M.b.grp; g.visible = near; if (!near) continue;
     g.position.set(q.x, q.y, q.z);
     if (key === "dev" || key === "tyr") { const q2 = wbPos(key, T + 60000, {}); g.rotation.y = -Math.atan2(q2.z - q.z, q2.x - q.x); } else if (key === "wym") g.rotation.y = -t * 2e-5; else if (key === "war") g.rotation.y = t * 4e-5; else g.rotation.y = Math.atan2(-q.x, -q.z); // the Overlord and its conduits face the Core
