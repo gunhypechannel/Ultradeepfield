@@ -1580,7 +1580,8 @@ const ANDROID = /Android/i.test(navigator.userAgent) || /Android/i.test((navigat
   || (navigator.maxTouchPoints > 1 && /Linux/.test(navigator.userAgent) && !/Windows|CrOS/.test(navigator.userAgent));
 const STANDALONE = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
 // 2D canvases at most 2x: 3x Retina screens triple the memory for no visible gain, and Safari caps total canvas memory
-const DPR = () => Math.min(window.devicePixelRatio || 1, 2);
+const FZ = () => { try { const f = window.frameElement; return f ? Math.max(1, parseFloat(f.style.zoom) || 1) : 1; } catch (e) { return 1; } }; // v383: the desktop-site frame zooms the page
+const DPR = () => Math.min(window.devicePixelRatio || 1, 2 * FZ());
 (function setupPlatform() {
   try {
     const head = document.head || document.getElementsByTagName("head")[0], meta = (n, c) => { let m = head.querySelector(`meta[name="${n}"]`); if (!m) { m = document.createElement("meta"); m.name = n; head.appendChild(m); } m.content = c; };
@@ -2555,7 +2556,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 382;
+const GAME_V = 383;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5936,6 +5937,7 @@ function init3D(host) {
   const camera = new TH.PerspectiveCamera(48, 1, .1, 9000);
   scene.userData.amb = new TH.AmbientLight(0x5f7fa6, .38); scene.add(scene.userData.amb);
   scene.add(new TH.PointLight(0xffd2a6, 2.1, 0));
+  scene.userData.cubeSun = new TH.PointLight(0xffd0a0, 0, 520, 1.2); scene.add(scene.userData.cubeSun); /* v383: the Cube's key light, always in the scene */
   const add = (o) => (scene.add(o), o);
   const additive = (map, color, opacity) => new TH.SpriteMaterial({ map, color: color || 0xffffff, transparent: true, opacity: opacity == null ? 1 : opacity, depthWrite: false, blending: TH.AdditiveBlending });
   // starfield
@@ -7345,8 +7347,8 @@ function wardenWear(cur, res) { const s0 = sumN(res.start.d || {}), s1 = sumN(cl
   cur.wd = clamp(1 - cubeIntegrity(cur) * left, 0, .8); }
 /* ---------- the event's visuals on the map (all deterministic from the clock) ---------- */
 function cubeLiveFx(W, t, T) {
-  const ph = cubePhase(T); let X = W.cubeX; if (!ph) { if (X) X.grp.visible = false; return; }
-  if (!X) X = W.cubeX = cubeLiveBuild(W); X.grp.visible = true; const lite = FX_LITE(), c = W.nexus.position, en = ph.energy;
+  const ph = cubePhase(T); let X = W.cubeX; if (!ph) { if (X) X.grp.visible = false; if (W.scene.userData.cubeSun) W.scene.userData.cubeSun.intensity = 0; return; }
+  if (!X) X = W.cubeX = cubeLiveBuild(W); X.grp.visible = true; { const L = W.scene.userData.cubeSun; if (L) { L.intensity = 2.4; L.position.set(-80, 70, 30); X.grp.localToWorld(L.position); } } const lite = FX_LITE(), c = W.nexus.position, en = ph.energy;
   // circuit panels on the faces (the green circuitry of the reference cube), brightening as it wakes
   for (const pl of X.panels) pl.material.opacity = (ph.i === 6 ? en : Math.min(1, en * 1.4)) * (.55 + .2 * Math.sin(t * .002 + pl.userData.ph) + .15 * Math.sin(t * .011 + pl.userData.ph * 3));
   // nebula around the Cube: slow, layered, tinted by its energy
@@ -7558,7 +7560,7 @@ function cubeLiveBuild(W) {
     for (let i = 0; i < 1800; i++) { const v = 70 + r() * 70; x.fillStyle = `rgba(${v + 30},${v + 10},${v - 15},.25)`; x.fillRect(r() * w, r() * h, 2 + r() * 6, 2 + r() * 6); }
     for (let i = 0; i < 160; i++) { const px = r() * w, py = r() * h, rr = 2 + Math.pow(r(), 3) * 26; x.fillStyle = "rgba(40,28,18,.55)"; x.beginPath(); x.arc(px, py, rr, 0, TAU); x.fill(); x.strokeStyle = "rgba(190,160,120,.45)"; x.lineWidth = Math.max(1, rr * .18); x.beginPath(); x.arc(px - rr * .15, py - rr * .15, rr, Math.PI * .9, Math.PI * 1.9); x.stroke(); } });
   const rock = add(new TH.Mesh(new TH.SphereGeometry(11, 40, 28), new TH.MeshStandardMaterial({ map: rockT, bumpMap: rockT, bumpScale: 1.2, roughness: .95, metalness: 0, emissive: 0x2a1c10, emissiveMap: rockT, emissiveIntensity: .55 })));
-  rock.position.set(-150, 6, 115); const sun = new TH.PointLight(0xffd0a0, 2.4, 520, 1.2); sun.position.set(-80, 70, 30); grp.add(sun); /* warm key light from the Cube side, as in the reference */
+  rock.position.set(-150, 6, 115); /* v383: its key light is scene.userData.cubeSun (always in the scene), lit by cubeLiveFx */ /* warm key light from the Cube side, as in the reference */
   return { grp, panels, neb, warp, rings, col, beam, hit, rock };
 }
 /* defenders stage at Ironfall during the Approach: loose, layered formation (as in the reference), drifting toward the Cube */
@@ -11347,22 +11349,33 @@ function dock() {
   morph($("#dock"), orb + TABS.filter(([k]) => k !== "base" && k !== "galaxy").map(([k, l]) => `<button class="${view === k ? "on" : ""}" data-act="nav" data-v="${k}" aria-label="${l}">${NAVI[k]}${l}${(k === "mail" && view !== "mail" && mailUnread()) ? `<span class="mbadge">${Math.min(99, mailUnread())}</span>` : k === "fleets" ? fleetBadge() : k === "quests" && questsReady() ? `<span class="mbadge">${Math.min(99, questsReady())}</span>` : ""}</button>`).join("")
     + `<button class="menub${G.trayOpen ? " on" : ""}" data-act="trayToggle" aria-expanded="${!!G.trayOpen}" aria-label="${G.trayOpen ? "Close" : "Open"} the toolbar"><span class="mbi">${G.trayOpen ? "✕" : "☰"}</span>${G.trayOpen ? "Close" : "Menu"}${tb && !G.trayOpen ? '<span class="dot"></span>' : ""}</button>`);
 }
-function render(keepScroll) {
-  const m = $("#view"), st = m.scrollTop, ae = document.activeElement;
-  const typing = ae && ae.tagName === "INPUT" && m.contains(ae);
-  if (view === "galaxy") {
-    m.classList.add("full");
+/* v383 mount the galaxy map in container m (the main view, or the hidden park while it is built in the background) */
+function mapMount(m) {
     if (!mapHost) { const tmp = document.createElement("div"); tmp.innerHTML = mapShell(!!TH && !G3fail); mapHost = tmp.firstElementChild; }
     if (mapHost.parentNode !== m) {
       m.innerHTML = ""; m.appendChild(mapHost);
       if (!mapHost.dataset.init) {
         mapHost.dataset.init = "1";
-        if (TH && !G3fail) { G3 = init3D(mapHost); if (G3) { bind3D($("#galaxyfx")); hoverBind($("#galaxyfx")); if (G.camKeep && G3.cam) { Object.assign(G3.cam, G.camKeep, { goal: null, follow: null, followFleet: null }); G.camKeep = null; } }
+        if (TH && !G3fail) { G3 = init3D(mapHost); if (G3) { try { misKit(G3); } catch (e) {} /* v383: its light exists from the start */ bind3D($("#galaxyfx")); hoverBind($("#galaxyfx")); if (G.camKeep && G3.cam) { Object.assign(G3.cam, G.camKeep, { goal: null, follow: null, followFleet: null }); G.camKeep = null; } }
           // v108 mobile: three.js restores a lost WebGL context itself; we re-measure after a restore, a resume or a turn of the phone
           if (G3) { const re = () => { if (G3) G3.size = [0, 0]; }; glWatch(G3); shipPrewarm(G3); mapShaderWarm(G3); if (!map3DInit.once) { map3DInit.once = 1; document.addEventListener("visibilitychange", () => { if (!document.hidden) re(); }); addEventListener("orientationchange", () => setTimeout(re, 300)); } } }
         if (!G3) { const tmp = document.createElement("div"); tmp.innerHTML = mapShell(false); m.innerHTML = ""; mapHost = tmp.firstElementChild; mapHost.dataset.init = "1"; m.appendChild(mapHost); bindMap($("#galaxy")); }
       }
     }
+}
+/* v383: build the map quietly before the first tap: after 6 s of calm on the base, park it off-screen, build it and draw a few frames */
+function mapPrewarm() { if (mapHost || G3 || !TH || G3fail || view === "galaxy" || battle || sheet || document.hidden || !G.ready) return;
+  const pk = document.createElement("div"); pk.id = "mappark"; pk.setAttribute("aria-hidden", "true"); { const vr = ($("#view") || document.body).getBoundingClientRect(); /* the map's exact box (view width, full height): a different size would mean a full resize on the first frame */ pk.style.cssText = `position:fixed;left:${vr.left}px;top:0;width:${vr.width}px;height:${innerHeight}px;display:flex;flex-direction:column;visibility:hidden;pointer-events:none;z-index:-1;overflow:hidden`; /* the map box is a flex child */ } document.body.appendChild(pk);
+  const t0 = performance.now(); try { mapMount(pk); } catch (e) { try { crumb("map prewarm failed: " + e.message); } catch (er) {} }
+  let n = 0; const step = () => { if (!G3 || view === "galaxy" || !$("#mappark") || !$("#mappark").firstChild) return; try { draw3D(performance.now()); if (n === 6 && !G3.warmed) { G3.warmed = 1; mapWarm(performance.now()); } } catch (e) {} if (++n < 10) setTimeout(() => requestAnimationFrame(step), 300); else try { crumb(`map ready in the background (${Math.round(performance.now() - t0)} ms)`); } catch (e) {} };
+  requestAnimationFrame(step); }
+setInterval(() => { try { if (mapHost || !G.ready || view !== "base" || sheet || battle || document.hidden || advLines) { G.mpCalm = 0; return; } if (++G.mpCalm >= 3) (window.requestIdleCallback || setTimeout)(mapPrewarm, { timeout: 1500 }); } catch (e) {} }, 2000);
+function render(keepScroll) {
+  const m = $("#view"), st = m.scrollTop, ae = document.activeElement;
+  const typing = ae && ae.tagName === "INPUT" && m.contains(ae);
+  if (view === "galaxy") {
+    m.classList.add("full");
+    mapMount(m); { const pk = $("#mappark"); if (pk && !pk.firstChild) pk.remove(); } /* v383: a map built in the background just moves on screen */
     mapOverlay();
     if (render.last !== "galaxy" && !reduced) { m.classList.remove("fade"); void m.offsetWidth; m.classList.add("fade"); }
   } else {
@@ -15936,12 +15949,12 @@ function gfx(k) { if (G.glSafe && (k === "scale" || k === "fx" || k === "detail"
   if (GFX.over && GFX.over[k] != null) return GFX.over[k]; let v = GFX_PRESETS[gfxPreset()][k]; if (k === "fps" && GFX.preset === "auto" && G.batLow && !v) v = 60; /* v165: only with the battery low (it capped every unplugged phone at 60) */ return v; }
 const gfxHz = () => G.hz || 60;
 function gfxAimMs() { const cap = gfx("fps"), aim = GFX_PRESETS[gfxPreset()].aim, hz = gfxHz(); const f = cap ? Math.min(cap, hz) : aim === "max" ? hz : aim === "tgt" ? gfxTarget() : Math.min(aim, hz); return 1000 / f; }
-const gfxMaxPR = () => clamp((window.devicePixelRatio || 1) * gfx("scale"), .6, 2.5);
+const gfxMaxPR = () => clamp((window.devicePixelRatio || 1) * gfx("scale"), .6, 2.5 * FZ());
 /* v163 phones and tablets: the render resolution is capped by how many pixels it draws, not by screen width. Tablets were wider than the
    old phone check (700 px), so they got the desktop setting: 2.5x on an iPad, about 9 million pixels a frame, which heats up and lags.
    The budget (3.4M pixels, 2M on weak devices) leaves phones at 2x and puts tablets near 1.5-1.8x; it follows the window, so rotating
    the tablet or using split screen re-sizes on the next resolution check. */
-const mobilePRCap = () => { if (!MOBILE) return 9; const px = Math.max(1, innerWidth * innerHeight); return clamp(Math.sqrt((WEAK ? 2e6 : G.glSafe ? 2.4e6 : 3.4e6) / px), 1, 2); }; // v166: a smaller budget after a GPU reset
+const mobilePRCap = () => { if (!MOBILE) return 9; const px = Math.max(1, innerWidth * innerHeight); return clamp(Math.sqrt((WEAK ? 2e6 : G.glSafe ? 2.4e6 : 3.4e6) / px), 1, 2 * FZ()); }; // v166: a smaller budget after a GPU reset
 // v164 live, not fixed at launch: a Z Fold is a phone folded and a small tablet unfolded, and it can change mid-game
 const isTablet = () => MOBILE && Math.min(innerWidth, innerHeight) >= 560;
 const isFoldOpen = () => MOBILE && isTablet() && Math.max(innerWidth, innerHeight) / Math.min(innerWidth, innerHeight) < 1.45; // an unfolded foldable is nearly square
