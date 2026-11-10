@@ -1574,6 +1574,15 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
 #wbscan .ws-more{display:none;max-height:44vh;overflow:auto;margin-top:6px}#wbscan .ws-card.open .ws-more{display:block}#wbscan .ws-tap{display:block;margin-top:5px;font-size:10px;color:#7f8cab;text-align:right}#wbscan .ws-card.open .ws-tap::after{content:" ▴"}#wbscan .ws-card:not(.open) .ws-tap::after{content:" ▾"}
 #wbscan dl div,#wbscan .ws-att{animation:none;opacity:1}
 @media (min-width:900px){#wbscan .ws-card{left:16px;right:auto;margin:0}}
+
+/* v387 Super Boss Hunt */
+.sbban{position:relative;min-height:150px;overflow:hidden;background:radial-gradient(120% 90% at 70% 40%,rgba(155,80,255,.35),rgba(6,4,14,.95) 70%)}.sbban img{position:absolute;right:-4%;top:50%;transform:translateY(-50%);width:78%;max-width:none;opacity:.95;pointer-events:none}
+.sbtop{position:relative;display:flex;flex-direction:column;gap:3px;padding:12px 14px;max-width:62%}.sbtop b{font-size:20px;letter-spacing:.04em;text-shadow:0 0 14px rgba(197,139,255,.7)}.sbtop small{color:#cdbff0;font-size:12px}.sbban .evend{position:relative}
+.sbrow{padding:9px 10px;margin:6px 0;border-radius:10px;border:1px solid rgba(201,166,255,.2);background:rgba(201,166,255,.05);display:flex;flex-direction:column;gap:6px}.sbrow.down{opacity:.55}
+.sbrow.hot{border-color:#ff5d7a;box-shadow:0 0 14px rgba(255,77,106,.3)}.sbn{display:flex;justify-content:space-between;align-items:center;gap:8px}.sbst{font:700 10px/1 ui-monospace,monospace;letter-spacing:.1em;color:#9fe0b0}.sbrow.hot .sbst{color:#ff6a82;animation:fbHot 1.2s ease-in-out infinite}.sbrow.down .sbst{color:#8b8fa3}
+.sbm{display:flex;justify-content:space-between;font-size:12px;color:#c9d4ea;font-variant-numeric:tabular-nums}.sbb{display:flex;gap:6px}.sbb .btn{flex:1}
+.sbcons{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0 6px;font-size:12px;color:#a9b4cc}.sbcons span{flex-basis:100%}.sbcon{padding:5px 9px;border-radius:999px;border:1px solid rgba(217,160,255,.45);background:rgba(217,160,255,.08);color:#ecd9ff;font:600 12px/1 inherit;cursor:pointer}.sbcon.down{opacity:.45;text-decoration:line-through}
+.sbfeed{list-style:none;margin:4px 0 8px;padding:0;display:flex;flex-direction:column;gap:4px}.sbfeed li{font-size:12.5px;padding:5px 8px;border-radius:7px;background:rgba(255,77,106,.08)}.sbfeed li span{font-weight:700;color:#ffd0c8}.sbfeed li i{font-style:normal;color:#7f8cab;float:right}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="lib/GLTFLoader-r128.js"></script>
@@ -2980,7 +2989,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 386;
+const GAME_V = 387;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4330,9 +4339,11 @@ async function wbResolve(f) {
       rep.loot = { m: Math.floor(L.m * ratio), c: Math.floor(L.c * ratio), g: Math.floor(L.g * ratio) }; f.loot = rep.loot;
       const sh = Math.max(1, Math.round(seg * D.sh / 4)); S.shards = (S.shards || 0) + sh; rep.shards = sh; evPts("hunt", seg * 40); S.wins++;
       logReward(`Boss bounty · ${D.n}`, rep.loot, { shards: sh, kind: "battle" }); }
+    { const mk = key === "dev" ? "bio" : key === "war" ? "void" : D.con != null ? "crystal" : "alloy", rolls = [[mk, seg >= 4 ? 3 : 2, 1 + Math.floor(seg / 6)]]; if (seg >= 8) rolls.push(["void", 4, 1]); if (!left) rolls.push([D.con != null ? "cube" : "void", D.con != null ? 4 : 5, 1]);
+      rep.mats = fsDrop(lootRoll(rolls), `the ${D.n}`, { nocap: 1 }); } /* v387: every fight pays materials */
     if (!left) { bump("bosses"); note(`We brought down the ${D.n}! Everyone who fought it this week can claim the spoils.`, "win"); }
     else note(seg ? `Our fleet tore ${Math.round(seg / WB_SEG * 100)}% of the ${D.n}'s hull away (${Math.round(left / WB_SEG * 100)}% left)${rep.loot ? `. Bounty: ${fmt(rep.loot.m)} metal, ${fmt(rep.loot.c)} crystal, ${fmt(rep.loot.g)} gas on the way home, plus ◆${rep.shards}` : ""}.` : `The ${D.n} shrugged off our attack.`, seg ? "win" : "loss");
-    addReport(rep); wbFight(key, seg, !left); wbClaim(); if (G.mode !== "online") { const pv = jcopy(cur); pv.hp[key] = n0; wbNews(pv, cur); } home();
+    addReport(rep); wbFight(key, seg, !left); wbClaim(); { const pv = jcopy(cur); pv.hp[key] = n0; if (pv.dmg[key]) pv.dmg[key][G.me] = ((pv.dmg[key][G.me] || 0) - seg); if (G.mode !== "online") wbNews(pv, cur); sbFeedAdd(pv, cur); WB_PREV = wbNorm(jcopy(cur), cur.cyc); } home();
   } catch (e) { note("Lost contact with the boss fight. Fleet returning.", "warn"); home(); }
   finally { G.resolving.delete(f.id); dirty(); progress(); softRender(); }
 }
@@ -4349,7 +4360,7 @@ function wbClaim() { if (!S || !G.ready) return; const st = wbState(), c = st.cy
     note(`The ${D.n} has fallen! Your share (${Math.round(share * 100)}% of the damage): ◆${sh} and ${SHOP[it].n}${extra}.`, "win"); dirty(); } }
 /* someone else hit a boss (the shared record changed): it reacts on the map */
 let WB_PREV = null;
-function wbSeen(d) { try { const st = wbNorm(d ? jcopy(d) : null, wbCyc(now())); if (WB_PREV && WB_PREV.cyc === st.cyc) for (const k in WB) if (st.hp[k] < WB_PREV.hp[k]) wbFight(k, WB_PREV.hp[k] - st.hp[k], !st.hp[k]); wbNews(WB_PREV, st); WB_PREV = st; } catch (e) {} }
+function wbSeen(d) { try { const st = wbNorm(d ? jcopy(d) : null, wbCyc(now())); if (WB_PREV && WB_PREV.cyc === st.cyc) for (const k in WB) if (st.hp[k] < WB_PREV.hp[k]) wbFight(k, WB_PREV.hp[k] - st.hp[k], !st.hp[k]); wbNews(WB_PREV, st); sbFeedAdd(WB_PREV, st); WB_PREV = st; } catch (e) {} }
 /* ---------- the bosses on the map ---------- */
 const WB_ENV = new WeakMap();
 function wbEnv(R) { let e = WB_ENV.get(R); if (e) return e; const es = new TH.Scene(); es.background = new TH.Color(0x08080b);
@@ -4997,16 +5008,17 @@ function gwClaimable(T = now()) { const g = gwState(T), mile = GW_MILE.map(([nee
   const rank = L && !L.ranked && L.pts > 0 ? gwBoard(L.i).findIndex(r => r.me) + 1 : 0; return { mile, rank }; }
 /* events page: banners you switch between, an Overview of the chosen event (time, info, rules, rewards and one Claim button),
    and a Ranking tab, in the same layout as the classic space-strategy event screens */
-const EVS = [["gw", "Galaxy War", "⚔"], ["cube", "Battle for the Cube", "■"], ["builder", "Bonus Builder", "▦"], ["online", "Online Bonus", "◷"], ["lvlb", "Level Bonus", "▲"], ["daily", "Daily Challenge", "★"], ["login", "Daily Login", "▣"], ["ach", "Achievements", "✦"], ["vip", "VIP", "♛"], ["gifts", "Alliance Gifts", "🎁"]];
+const EVS = [["sboss", "Super Boss Hunt", "☠"], ["gw", "Galaxy War", "⚔"], ["cube", "Battle for the Cube", "■"], ["builder", "Bonus Builder", "▦"], ["online", "Online Bonus", "◷"], ["lvlb", "Level Bonus", "▲"], ["daily", "Daily Challenge", "★"], ["login", "Daily Login", "▣"], ["ach", "Achievements", "✦"], ["vip", "VIP", "♛"], ["gifts", "Alliance Gifts", "🎁"]];
 /* v88: the red number on each event card: rewards waiting to be claimed there */
 function evCount(k) { if (!S) return 0; try {
+  if (k === "sboss") return sbReady();
   if (k === "gw") { const c = gwClaimable(); return c.mile.length + (c.rank ? 1 : 0); }
   if (k === "login") return loginState().claimed ? 0 : 1;
   if (k === "daily") { const s = soloState(); return SOLO_TIERS.filter(([need], i) => s.pts >= need && !s.claimed.includes(i)).length; }
   if (k === "gifts") return giftsOpen().length;
   if (k === "ach") return achReady();
   const b = bonusReady(); return k === "builder" ? b.bb : k === "online" ? b.ob : k === "lvlb" ? b.lb : 0; } catch (e) { return 0; } }
-function evBanner(k, T) {
+function evBanner(k, T) { if (k === "sboss") return sbBanner(T);
   const art = { gw: ART.dreadnought || ART.battleship, cube: ART.cube || null, daily: ART.destroyer || null, login: ART.hauler || null, vip: ART.supercarrier || null, gifts: ART.heavyCargo || null, builder: ART.colonyShip || ART.hauler || null, online: ART.cruiser || null, lvlb: ART.battlecruiser || ART.battleship || null, ach: ART.worldbreaker || ART.dreadnought || null }[k];
   let title = (EVS.find(e => e[0] === k) || [0, ""])[1], tail = "";
   if (k === "gw") { const i = gwIdx(T), live = gwLive(T); title = `Galaxy War ${["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][(i % 10 + 10) % 10]}`; tail = live ? `Event ends in: <b data-end="${gwEnd(i)}">${ftime(gwEnd(i) - T)}</b>` : `Next war in: <b data-end="${gwStart(i + 1)}">${ftime(gwStart(i + 1) - T)}</b>`; }
@@ -5047,8 +5059,45 @@ function cubeResultCard(T, r) {
     <p class="note">${GLORY_GIVES[w.bonus] || ""}${w.ms ? ` · held ${fmt(w.ms / 60000)} min` : ""}</p>
     ${rest.map(x => `<div class="cresr">${img(crestNo(x.aid), x.aid, "crestsm")}<span>${x.tag ? `[${esc(x.tag)}] ` : ""}${esc(x.name)}</span><small>${GLORY_T[x.bonus] || ""} · ${GLORY_GIVES[x.bonus] || ""}</small></div>`).join("")}</div>`; }
 function shCubeRes() { return `<div class="hd"><div><div class="chapter" style="color:#ffd36b">Battle for the Cube</div><h2>The Cube has a new master</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${cubeResultCard(now(), sheet.r) || '<p class="note">No result yet.</p>'}<button class="btn wide" data-act="close">Continue</button>`; }
+/* ---------- v387 Super Boss Hunt: the world bosses as a weekly event, tracked live ---------- */
+const SB_W = k => k === "ovl" || k === "dev" ? 3 : k === "war" ? 2 : 1; // Hunt points per hull section (2.5%) torn off
+const SB_MILE = [[1, { shards: 2, mats: [["low", 2, 2]] }], [10, { shards: 5, mats: [["void", 3, 1], ["low", 3, 2]] }], [30, { shards: 10, item: "mb4", mats: [["cube", 4, 1]] }],
+  [60, { shards: 20, mats: [["void", 5, 1], ["cube", 5, 1]] }], [120, { shards: 35, vip: 200, mats: [["void", 6, 1], ["cube", 5, 1]] }]];
+const sbPts = (st, uid) => { let n = 0; for (const k in WB) n += ((st.dmg[k] || {})[uid] || 0) * SB_W(k); return n; };
+function sbBoard(st) { const u = new Set(); for (const k in WB) for (const id in (st.dmg[k] || {})) u.add(id); return [...u].map(id => ({ id, pts: sbPts(st, id), me: id === G.me })).sort((a, b) => b.pts - a.pts); }
+function sbMine(T = now()) { const st = wbState(T); S.sb = S.sb && typeof S.sb === "object" ? S.sb : { cyc: st.cyc, mile: [] };
+  if (S.sb.cyc !== st.cyc) { const last = S.sb; // a new week: anything reached last week and not claimed is paid out now
+    if (last.pts) { let got = 0; SB_MILE.forEach(([need, rw], i) => { if (last.pts >= need && !(last.mile || []).includes(i)) { grantRw(rw, "Super Boss Hunt"); got++; } }); if (got) note(`Super Boss Hunt: ${got} unclaimed milestone reward${got > 1 ? "s" : ""} from last week added to your stores.`, "win"); }
+    S.sb = { cyc: st.cyc, mile: [] }; dirty(); }
+  const pts = sbPts(st, G.me); if (pts !== S.sb.pts) { S.sb.pts = pts; dirty(); } return { st, pts, sb: S.sb }; }
+const sbReady = () => { try { const { pts, sb } = sbMine(); return SB_MILE.filter(([need], i) => pts >= need && !sb.mile.includes(i)).length; } catch (e) { return 0; } };
+/* the live feed: every hit the shared record reveals, newest first */
+G.wbFeed = []; G.wbHitAt = {};
+function sbFeedAdd(prev, st) { if (!prev || prev.cyc !== st.cyc) return; for (const k in WB) { const d0 = prev.dmg[k] || {}, d1 = st.dmg[k] || {};
+    for (const id in d1) { const dd = (d1[id] || 0) - (d0[id] || 0); if (dd <= 0) continue; G.wbHitAt[k] = Date.now(); G.wbFeed.unshift({ t: Date.now(), id, k, pc: Math.round(dd / WB_SEG * 100), kill: !(st.hp[k] > 0) && prev.hp[k] > 0 }); } }
+  G.wbFeed.length = Math.min(G.wbFeed.length, 12); }
+let SB_ART = null, SB_ART_GO = 0;
+function sbArt() { if (SB_ART || SB_ART_GO || typeof BOSS3D === "undefined" || battle) return SB_ART; SB_ART_GO = 1; // the banner: the Overlord, rendered once from its model
+  setTimeout(() => { try { const c = wbArt("ovl", 760, 380, 5200, null); if (c) SB_ART = c.toDataURL("image/webp", .86); } catch (e) {} wbArtFree(); if (SB_ART) softRender(); }, 80); return null; }
+function sbBanner(T) { const st = wbState(T), end = wbEnd(st.cyc), up = ["ovl", "dev", "war"].filter(k => st.hp[k] > 0).length, art = sbArt();
+  return `<div class="evban ev-sboss sbban">${art ? `<img src="${art}" alt="The Pyramid Overlord">` : ""}<div class="sbtop"><span class="vlive on">● LIVE</span><b>Super Boss Hunt</b><small>${up ? `${up} of 3 world bosses still standing` : "Every world boss has fallen this week"}</small></div>
+    <span class="evend">Bosses return in: <b data-end="${end}">${ftime(end - T)}</b></span></div>`; }
+function sbOverview(T) { const { st, pts, sb } = sbMine(T), me = Date.now();
+  const row = k => { const D = WB[k], hp = st.hp[k] | 0, pc = Math.round(hp / WB_SEG * 100), my = ((st.dmg[k] || {})[G.me] || 0), hot = me - (G.wbHitAt[k] || 0) < 90e3;
+    return `<div class="sbrow${hp ? "" : " down"}${hot ? " hot" : ""}"><div class="sbn"><b style="color:${D.col}">${D.ic} ${esc(D.n)}</b><span class="sbst">${hp ? (hot ? "⚔ UNDER ATTACK" : "ALIVE") : "DEFEATED"}</span></div>
+      <div class="wbbar"><i style="width:${pc}%;background:${D.col}"></i></div><div class="sbm"><span>${hp ? `${pc}% hull` : "Down"}${k === "ovl" && hp ? ` · shield ${wbCons(T)}/4` : ""}</span><span>You: ${my ? Math.round(my / WB_SEG * 100) + "%" : "—"}</span></div>
+      ${hp ? `<div class="sbb"><button class="btn sm amber" data-act="wboss" data-id="${k}">⚔ Hunt</button><button class="btn sm ghost" data-act="cineObj" data-id="wb_${k}">◉ Scan</button></div>` : ""}</div>`; };
+  const cons = [0, 1, 2, 3].map(i => { const c = "c" + i, hp = st.hp[c] | 0; return `<button class="sbcon${hp ? "" : " down"}" data-act="wboss" data-id="${c}" aria-label="Energy Conduit ${"ABCD"[i]}">◆ ${"ABCD"[i]} <small>${hp ? Math.round(hp / WB_SEG * 100) + "%" : "✕"}</small></button>`; }).join("");
+  const feed = G.wbFeed.filter(f => me - f.t < 30 * 60e3).slice(0, 6).map(f => `<li><span>${esc(f.id === G.me ? "You" : nameOf(f.id))}</span> ${f.kill ? "destroyed" : `tore ${f.pc}% off`} the ${esc(WB[f.k].n)} <i>${ftime(me - f.t)} ago</i></li>`).join("");
+  return `<div class="evinfo sbinfo"><h4>Live board</h4>${["ovl", "dev", "war"].map(row).join("")}<div class="sbcons"><span>Overlord's conduits</span>${cons}</div>
+    ${feed ? `<h4>Live feed</h4><ul class="sbfeed">${feed}</ul>` : ""}
+    <h4>Your Hunt points</h4><p><b class="evscore">${fmt(pts)}</b> · ${pts ? "every 2.5% of hull you destroy scores 3 on the Overlord or Devourer, 2 on the Warden, 1 on a conduit" : "attack any world boss to start scoring"}</p>
+    <h4>Milestone rewards</h4>${SB_MILE.map(([need, rw], m) => `<div class="tier"><span class="tn">${fmt(need)} pts</span><span class="trw">${rwText(rw)}</span>${sb.mile.includes(m) ? '<span class="pill ok">Claimed</span>' : pts >= need ? '<span class="pill amb">Ready</span>' : '<span class="pill wait">—</span>'}</div>`).join("")}
+    <h4>Event Rules</h4><p>The Pyramid Overlord, the Orbital Devourer and the Void Warden return every Monday at 18:00 UTC. Every attack, win or lose, pays a bounty for the hull it destroys and drops forge materials. Hunt points add up all week. When a boss falls, everyone who damaged it claims a share of its spoils, and milestones you reach but don't claim are paid out when the bosses return.</p></div>`; }
+function sbRanking(T) { const st = wbState(T), rows = sbBoard(st), mi = rows.findIndex(r => r.me), show = rows.slice(0, 50); if (mi >= 50) show.push(rows[mi]);
+  return `<div class="evrank"><div class="evrh"><span>Rank</span><span>Commander</span><span>Hunt points</span></div>${show.map(r => { const pos = rows.indexOf(r) + 1; return `<div class="evrr${r.me ? " me" : ""}"><span>${pos <= 3 ? ["🥇", "🥈", "🥉"][pos - 1] : pos + "."}</span><span>${esc(r.me ? (G.myName || "You") + " (you)" : nameOf(r.id))}</span><span>${fmt(r.pts)}</span></div>`; }).join("") || '<p class="note" style="padding:10px">Nobody has hit a world boss this week yet. Be the first.</p>'}</div>`; }
 function shEvents() {
-  const T = now(), tab = sheet.evTab === "rk" ? "rk" : "ov", k = EVS.some(e => e[0] === sheet.ev) ? sheet.ev : "gw";
+  const T = now(), tab = sheet.evTab === "rk" ? "rk" : "ov", k = EVS.some(e => e[0] === sheet.ev) ? sheet.ev : "sboss";
   const chips = `<div class="evchips evhub">${EVS.filter(e => e[0] !== "gifts" || myAlly()).map(([key, n, ic]) => { const c = evCount(key); return `<button class="evcard ec-${key}${key === k ? " on" : ""}" data-act="evPick" data-v="${key}"><span class="eci">${ic}</span><span class="ecn">${n}</span>${c ? `<i class="ecb">${c}</i>` : ""}</button>`; }).join("")}</div>`;
   const tabs = `<div class="evtabs"><button class="${tab === "ov" ? "on" : ""}" data-act="evTab" data-v="ov">Overview</button><button class="${tab === "rk" ? "on" : ""}" data-act="evTab" data-v="rk">Ranking</button></div>`;
   let body = "", claim = "";
@@ -5066,6 +5115,7 @@ function shEvents() {
     body = tab === "ov" ? `<div class="evinfo"><h4>Event Time:</h4><p>Every Friday 18:00 UTC for 48 hours.</p>${oldEvSection("cube", T)}${nexusRules()}</div>`
       : `<div class="evrank"><div class="evrh"><span>Rank</span><span>Alliance</span><span>Hold time</span></div>${stand.map(([aid, ms], j) => `<div class="evrr${aid === S.ally ? " me" : ""}"><span>${j + 1}.</span><span>${esc(allyTag(aid))}</span><span>${fmt(ms / 60000)} min</span></div>`).join("") || '<p class="note" style="padding:10px">No alliance has held the Cube this week yet.</p>'}</div>`;
     claim = ""; } // v91: Join lives on the video card
+  else if (k === "sboss") { body = tab === "ov" ? sbOverview(T) : sbRanking(T); const n = sbReady(); claim = `<button class="btn ${n ? "amber" : "ghost"} evclaim" data-act="sbClaim" ${n ? "" : "disabled"}>${n ? `Claim · ${n} milestone${n > 1 ? "s" : ""}` : "Claim"}</button>`; }
   else if (k === "builder" || k === "online" || k === "lvlb") body = bonusBody(k, T);
   else if (k === "ach") { body = `<div class="evinfo"><h4>Achievement Points:</h4><p><b class="evscore">${fmt(achPts())}</b> · ${achReady()} tier${achReady() === 1 ? "" : "s"} ready to claim</p><p>Long-term goals for every part of the game: level, PvP, raids, recycling, relocating, speed-ups, ship production and more.</p></div>`;
     claim = `<button class="btn amber evclaim" data-act="achOpen">Open Achievements</button>`; }
@@ -12654,7 +12704,7 @@ function shFind() {
     const live = evActive(T), cubeSub = live ? `Live now · ends in ${ftime(evStart(evWeek(T)) + EV_DUR - T)}` : `Next battle in ${ftime(evStart(evWeek(T) + 1) - T)} · every Friday`;
     const pods = (S.caches || []).filter(c => c.until > T).sort((a, b) => a.until - b.until);
     return `<div class="hd"><div><div class="chapter" style="color:#c9a6ff">🔭 Finder</div><h2>Map Events</h2><p class="note">Things happening out on the map. Tap one to fly there.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
-      <h2 class="sec">World bosses</h2><div class="list">${["ovl", "dev", "war"].map(k => { const D = WB[k], st = wbState(T), hp = st.hp[k] | 0; return `<button class="tgt mev${hp ? " mlive" : ""}" data-act="wboss" data-id="${k}"><span class="lvl" style="color:${D.col};border-color:${D.col}">${D.ic}</span><span><span class="nm">${D.n}</span><br><span class="sub">${hp ? `${Math.round(hp / WB_SEG * 100)}% hull · ${D.where}${k === "ovl" ? ` · shield ${wbCons(T)}/4 conduits` : ""}` : `Defeated · back in ${ftime(wbEnd(st.cyc) - T)}`}</span></span><span class="pill ${hp ? "bad" : "wait"}">${hp ? "Hunt" : "Down"}</span></button>`; }).join("")}</div>
+      <h2 class="sec">World bosses</h2><button class="btn ghost wide" data-act="events" data-ev="sboss" style="margin:0 0 8px">☠ Super Boss Hunt · live board, points and rewards</button><div class="list">${["ovl", "dev", "war"].map(k => { const D = WB[k], st = wbState(T), hp = st.hp[k] | 0; return `<button class="tgt mev${hp ? " mlive" : ""}" data-act="wboss" data-id="${k}"><span class="lvl" style="color:${D.col};border-color:${D.col}">${D.ic}</span><span><span class="nm">${D.n}</span><br><span class="sub">${hp ? `${Math.round(hp / WB_SEG * 100)}% hull · ${D.where}${k === "ovl" ? ` · shield ${wbCons(T)}/4 conduits` : ""}` : `Defeated · back in ${ftime(wbEnd(st.cyc) - T)}`}</span></span><span class="pill ${hp ? "bad" : "wait"}">${hp ? "Hunt" : "Down"}</span></button>`; }).join("")}</div>
       <h2 class="sec">Weekly battle</h2><div class="list"><button class="tgt mev${live ? " mlive" : ""}" data-act="nexus"><span class="lvl" style="color:#c9a6ff;border-color:#c9a6ff">■</span><span><span class="nm">Battle for the Cube</span><br><span class="sub">${cubeSub}</span><br><span class="sub">Alliances fight to hold the giant Cube. Hold it longest to win.</span></span><span class="pill ${live ? "bad" : "go"}">${live ? "Live!" : "Fly there"}</span></button></div>
       <h2 class="sec">Drifting salvage</h2><div class="list">${pods.map(c => `<button class="tgt" data-act="podGo" data-id="${c.id}"><span class="lvl" style="color:${CACHE_T[c.kind][1]};border-color:${CACHE_T[c.kind][1]}">◇</span><span><span class="nm">${CACHE_T[c.kind][0]}</span><br><span class="sub">Free loot · gone in ${ftime(c.until - T)}</span></span><span class="pill ok">Go</span></button>`).join("") || '<p class="note">No salvage drifting near your worlds right now. New pods turn up every few minutes.</p>'}</div>
       <div class="mevsoon"><b>More map events are on the way</b><span>When a new one starts, it shows up right here.</span></div>
@@ -17550,6 +17600,7 @@ const ACT = {
   liveReplay: () => { closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } G.liveRT0 = now(); G.liveReplay = performance.now(); },
   shotSave: () => shotSave(), shotShare: () => shotShare(), shotClose: () => shotClose(),
   cineObj: d => cineObjStart(d.id),
+  sbClaim: () => act(() => { const { pts, sb } = sbMine(); let n = 0; SB_MILE.forEach(([need, rw], i) => { if (pts >= need && !sb.mile.includes(i)) { sb.mile.push(i); grantRw(rw, "Super Boss Hunt"); n++; } }); if (n) toast(`Claimed ${n} Super Boss Hunt milestone${n > 1 ? "s" : ""}.`); }),
   wsMore: () => { const c = $("#wbscan .ws-card"); if (c) c.classList.toggle("open"); },
   faq: d => { const n = +d.i, all = FAQ.flatMap(c => c[1]), qa = all[n], b = document.querySelector(`.faqb[data-i="${n}"]`); if (!qa || !b) return; const it = b.closest(".faqi"), open = !it.classList.contains("on");
     for (const x of document.querySelectorAll(".faqi.on")) { x.classList.remove("on"); x.querySelector(".faqb").setAttribute("aria-expanded", "false"); }
@@ -17959,7 +18010,7 @@ const ACT = {
   prodRate: d => { if (!PROD_K.includes(d.k)) return; S.prod = S.prod || {}; const v = Math.round(pf(d.k) * 100); S.prod[d.k] = v <= 0 ? 100 : v - 10; dirty(); renderSheet(); render(); },
   labs: () => openSheet({ type: "labs" }),
   rankPick: d => { const st = sheet && sheet.type === "ranks" ? sheet : (sub.rk = sub.rk || {}); st.pick = st.pick === d.u ? null : d.u; sheet && sheet.type === "ranks" ? renderSheet() : render(true); },
-  events: () => openSheet({ type: "events" }),
+  events: d => openSheet({ type: "events", ev: d && d.ev ? d.ev : undefined }),
   loginClaim: () => act(() => { const ls = loginState(); if (ls.claimed) return; S.login = { day: utcDay(), streak: ls.next }; grantRw(loginRw(ls.idx), `Daily login · day ${ls.next}`); if (ls.idx === 6) S.d7Bonus = 1; vipAdd(Math.min(7, ls.next) * 50, "daily login"); SFX.research(); toast(`Day ${ls.next} reward claimed.`, "win"); }),
   allyView: d => { sub.allyView = d.v || ""; if (d.v === "list") sub.allyPg = 1; render(); },
   allySearch: () => { sub.allyQ = (($("#allyq") || {}).value || "").trim().slice(0, 24); sub.allyPg = 1; render(true); },
