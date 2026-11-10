@@ -3384,7 +3384,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 397;
+const GAME_V = 398;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -14445,14 +14445,14 @@ const BOSS_HOLO = {
   slevi: "Commander, a Star Leviathan. Its jaws can split a battleship, so scout it first and send our heaviest fleet. It guards rare flagship materials.",
   cube: "Commander, this Cube is a fortress, and one fleet rarely breaks it, so call a joint strike with our allies. Cubes drop Cube Fragments and Void Essence, the rarest materials in the forge.",
   pyramid: "Commander, a derelict pyramid station. Send an expedition to open its vault for shards, resources and rare items. From level 3, something guards the halls.",
-  wbovl: "Commander, the Pyramid Overlord walks the middle layers. Beware its sigil beam, the stomp that shakes everything near it, and the surge from the beam beneath it. Four Energy Conduits feed its shield, so take them down first.",
-  wbdev: "Commander, the Orbital Devourer never stops moving. Beware its snapping claws, the tentacle lash that sweeps through a fleet, and the vortex beam from its maw. Strike it with our heaviest ships.",
-  wbwar: "Commander, the Void Warden guards the deep layers. Beware its void pulse, the core beam, and the satellite storm that rains lightning. Send a strong fleet, and bring our allies.",
-  wbbrd: "Commander, the Brood Matriarch is nesting in the Far Reach. Beware her hatching swarm, the acid she sprays, and the slam of her scythes. Her drones rebuild while she's left alone, so keep up the attack.",
-  wbtyr: "Commander, the Iron Tyrant is sailing the pirate trade lanes. Beware its broadside, the boarding claw that tears into our ships, and the mines it drops behind it. Its vault fills the longer it sails, so the later we hit it, the richer the bounty.",
-  wbwym: "Commander, the Event Horizon Wyrm is coiled in the Core. Beware its gravity coil, the lens beam from its jaws, and the sweep of its tail. Strike while its glowing segments are exposed, or it shrugs off most of our fire.",
-  wbcol: "Commander, the Shard Colossus has woken in the crystal fields. Beware its crystal rain, the prism beam that bounces between our ships, and the shatter when it breaks apart. It pays Void Shards in bulk.",
-  wbcon: "Commander, this conduit feeds the Overlord's shield. Beware its discharge, a lightning column and a shockwave when it overcharges. Destroy all four, and the Overlord takes full damage.",
+  wbovl: "Commander, this is the Pyramid Overlord, a walking pyramid fortress that hunts the middle layers beside its station. Four Energy Conduits feed its shield. Destroy them first, and it takes our full fire.",
+  wbdev: "Commander, the Orbital Devourer is a world-eater that never stops moving. It roams the whole galaxy on its own path, hunting just above the worlds. Catch it where it is, and strike with our heaviest ships.",
+  wbwar: "Commander, the Void Warden is a void core caged in plated rings and horned crescents. It guards the deep layers near the Core. Send a strong fleet, and bring our allies.",
+  wbbrd: "Commander, the Brood Matriarch is the Hive's queen. She nests in the Far Reach, and the worlds around her turn green as her infection spreads. Her swarm rebuilds while she's left alone, so keep up the attack.",
+  wbtyr: "Commander, the Iron Tyrant is a pirate super-dreadnought patched together from stolen hulls. It sails from hideout to hideout, and its vault fills the longer it sails. The later we hit it, the richer the bounty.",
+  wbwym: "Commander, the Event Horizon Wyrm is a serpent of black-hole rings, coiled around the black hole at the centre of the galaxy. Only its glowing segments can be hurt, so strike while they're exposed.",
+  wbcol: "Commander, the Shard Colossus is a crystal golem grown out of the crystal fields. Badly hurt, it shatters into fragments that shield it, but it pays Void Shards in bulk.",
+  wbcon: "Commander, this Energy Conduit is one of four crystal pylons feeding the Overlord's shield. Bring all four down, and the Overlord takes full damage.",
   nexus: "Commander, the Super Cube is the prize of the galaxy. From Friday to Sunday, alliances fight to seize and hold it. Every minute our alliance holds it earns glory and rewards for every member." };
 function bossHolo(s) { if (!s || !S) return; let k = null;
   if (s.type === "pirate") { const x = PB[s.id]; k = x ? (x.mon && BOSS_HOLO[x.mon] ? x.mon : x.boss ? "cube" : null) : null; }
