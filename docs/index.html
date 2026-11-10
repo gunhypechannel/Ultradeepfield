@@ -3651,7 +3651,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 411;
+const GAME_V = 412;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -12278,7 +12278,7 @@ function initColony(host) {
     // domes, not towers: low geodesic habitats (as on the Lunar Outpost and Gas Plant cards) with a band of lit windows round the base,
     // so nothing in the background stands taller than the base or crowds it
     winT.repeat.set(6, .25); const DT = domeTex(), domeM = new TH.MeshStandardMaterial({ color: 0xffffff, map: DT.map, emissive: 0xffffff, emissiveMap: DT.emi, emissiveIntensity: 1.3, roughness: .3, metalness: .5, envMapIntensity: 1.1 }); // v354 panelled, smooth
-    const towers = new TH.InstancedMesh(new TH.CylinderGeometry(1, 1.03, .3, 18).translate(0, .15, 0), towerM, N), spires = new TH.InstancedMesh(new TH.SphereGeometry(1, lite ? 28 : 40, lite ? 10 : 14, 0, TAU, 0, Math.PI / 2).translate(0, .28, 0), domeM, N);
+    const towers = new TH.InstancedMesh(new TH.CylinderGeometry(1, 1.03, .3, 18).translate(0, .15, 0), towerM, N), spires = new TH.InstancedMesh(new TH.SphereGeometry(1, lite ? 18 : 24, lite ? 7 : 9, 0, TAU, 0, Math.PI / 2).translate(0, .28, 0), domeM, N);
     const beacons = new TH.InstancedMesh(new TH.SphereGeometry(.18, 6, 4), new TH.MeshBasicMaterial({ color: 0xff4a3a, toneMapped: false }), N); let c = 0;
     for (let i = 0; i < 4000 && c < N; i++) { const back = cr() < .65, a = back ? Math.PI * (.85 + cr() * .8) : cr() * TAU, d = 33.5 + Math.pow(cr(), 1.7) * 30, x = Math.cos(a) * d / .82, z = Math.sin(a) * d; if (Math.hypot(x, z) < 33 || x + z > 4) continue; // none in front of the base; most stand behind it, beyond the transit ring
       const y = Math.max(-9, hAt(x, z)) - .2, R = 1.4 + Math.pow(cr(), 1.6) * 4.2; dm.position.set(x, y, z); dm.rotation.set(0, cr() * 3, 0); dm.scale.set(R, R, R); dm.updateMatrix(); towers.setMatrixAt(c, dm.matrix); spires.setMatrixAt(c, dm.matrix);
@@ -12753,7 +12753,7 @@ function drawColony(t) {
   if (W.prev) { const left = W.prev.until - performance.now(); if (left <= 0 || !W.blds[W.prev.k]) { W.scene.remove(W.prev.h); W.prev = null; } else { W.prev.h.position.y = .05 + Math.sin(t * .003) * .05; HOLO_WIRE().opacity = .35 + .2 * Math.sin(t * .006); } }
   try { colDayNight(W); } catch (e) {} // v355
   try { if (W.renderer.shadowMap.needsUpdate || (W.metF = (W.metF || 0) + 1) % 150 === 1) colMetal(W); } catch (e) {} // v360
-  { const B = colBloom(W); let ok = false; if (B) try { B.run(); ok = true; } catch (e) { W.bloom = null; W.renderer.setRenderTarget(null); } if (!ok) W.renderer.render(W.scene, W.cam); } // v354 bloom
+  { const B = W.bloomOff ? null : colBloom(W); let ok = false; if (B) try { B.run(); ok = true; } catch (e) { W.bloom = null; W.renderer.setRenderTarget(null); } if (!ok) W.renderer.render(W.scene, W.cam); } // v354 bloom
   // building tags
   const ctx = fx.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
   const hits = [], TT = now();
@@ -17839,6 +17839,8 @@ function adaptRes(t) {
      40% of the detail setting's count, before any resolution is given up; the count grows back when frames have headroom again */
   if (W === G3) { const aim0 = Math.max(gfxAimMs(), 1000 / 125); W.nearK = clamp((W.nearK || 1) * (frame.ema > aim0 * 1.08 ? .85 : frame.ema < aim0 * .8 ? 1.08 : 1), .4, 1); }
   const aim = Math.max(gfxAimMs(), 1000 / 125), A = adaptRes.s /* v165: chases the frame target, 120 on fast screens (it held only 60) */ || (adaptRes.s = { bad: 0, good: 0, at: 0, hold: 4000, up: 0 });
+  if (W === C3 && MOBILE && !capped()) { /* v412: a phone sheds the base's bloom before any resolution */ if (!W.bloomOff && W.bloom && frame.ema > aim * 1.2) { if ((A.bb = (A.bb || 0) + 1) >= 2) { W.bloomOff = t; A.bb = 0; A.bad = 0; crumb("base bloom off (frame " + frame.ema.toFixed(1) + " ms)"); return; } } else A.bb = 0;
+    if (W.bloomOff && frame.ema < aim * .75 && R.getPixelRatio() >= max - .01 && t - W.bloomOff > 30000) { W.bloomOff = 0; crumb("base bloom back"); } }
   // v133: a capable PC or tablet (Balanced/Ultra, not a phone) never drops below 60% of its full resolution, so the map stays crisp
   const dprN = Math.max(1, window.devicePixelRatio || 1), floor = WEAK || gfx("detail") === 0 ? .6 : MOBILE ? Math.min(max, Math.max(1, dprN * .5)) : Math.min(max, dprN); // v145: a phone never drops below half its screen density // v142: a PC or tablet never renders below its screen's native resolution
   if (cur > max) nx = max;
