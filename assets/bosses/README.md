@@ -1,6 +1,8 @@
 # Boss references (from Empire Origins)
 
-Source of truth requested: the "Epic Monster Boss Collection" made on 2026-11-09 (warden.png, overlord.png, devourer.png, pylon.png) and its review packs.
+**Source of truth (2026-11-09, sent by the owner):** `reference/ref-2026-11-09.png` in each folder: Energy Conduit 1199x1312, Orbital Devourer 1672x941, Pyramid Overlord 1672x941, Void Warden 1536x1024.
+
+Earlier request: the "Epic Monster Boss Collection" made on 2026-11-09 (warden.png, overlord.png, devourer.png, pylon.png) and its review packs.
 
 Found (EmpireOrigins repo, commit e2ecff5 v74, 2026-11-09): 640x640 WebP copies of all four, in each folder as `reference/eo-v74-portrait-640.webp`.
 Missing: the original full-size PNGs and the review packs (not in the repo, the connected folders or any artifact).
