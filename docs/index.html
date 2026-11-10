@@ -2157,7 +2157,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
     const trG = new TH.BufferGeometry(), trP = new Float32Array(guns.length * 6), trC = new Float32Array(guns.length * 6); trG.setAttribute("position", new TH.BufferAttribute(trP, 3)); trG.setAttribute("color", new TH.BufferAttribute(trC, 3));
     const tracers = new TH.LineSegments(trG, new TH.LineBasicMaterial({ vertexColors: true, transparent: true, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); tracers.frustumCulled = false; body.add(tracers);
     // the boarding claw: a two-jointed arm on the bow with three hooked fingers
-    const arm = new TH.Group(); arm.position.set(15.5, -.6, 0); arm.scale.setScalar(1.7); body.add(arm); arm.add(box(3, 3, 3.2, MD)); { const r = new TH.Mesh(new TH.TorusGeometry(1.5, .2, 6, 18), glowMat(0xff7a20, .8)); r.position.x = 1.4; r.rotation.y = Math.PI / 2; arm.add(r); }
+    const arm = new TH.Group(); arm.position.set(15.5, -.6, 0); arm.scale.setScalar(1.7); arm.rotation.z = -.62; body.add(arm); arm.add(box(3, 3, 3.2, MD)); { const r = new TH.Mesh(new TH.TorusGeometry(1.5, .2, 6, 18), glowMat(0xff7a20, .8)); r.position.x = 1.4; r.rotation.y = Math.PI / 2; arm.add(r); }
     const a1 = new TH.Group(); a1.position.x = 1; arm.add(a1); a1.add(beam(V(0, 0, 0), V(6, -1.8, 0), 1.7, 1.25, 1.5, MP)); a1.add(strut(V(.4, 1, .9), V(5, -.6, .9), .2, .2, MD, 8)); a1.add(strut(V(.4, 1, -.9), V(5, -.6, -.9), .2, .2, MD, 8));
     const a2 = new TH.Group(); a2.position.set(6, -1.8, 0); a1.add(a2); { const d = new TH.Mesh(new TH.CylinderGeometry(1.1, 1.1, 2.2, 14), MD); d.rotation.x = Math.PI / 2; a2.add(d); } a2.add(beam(V(0, 0, 0), V(5.2, -1.2, 0), 1.3, 1, 1.2, MQ));
     const hand = new TH.Group(); hand.position.set(5.2, -1.2, 0); a2.add(hand); hand.add(box(2, 2, 2, MD)); const fingers = [];
@@ -2187,7 +2187,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
     const tick = t => { const fb = mv.f("broadside", t), fc = mv.f("claw", t), fm = mv.f("mines", t), fx = mv.f("hit", t);
       const reach = bell(fc, 0, .35, .7, 1), open = bell(fc, .1, .3, .45, .55), clamp_ = bell(fc, .5, .6, .85, 1), heat = Math.max(bell(fm, 0, .2, .8, 1), bell(fb, 0, .1, .7, 1) * .5);
       body.rotation.x = Math.sin(t * .0007) * .03 + (fb >= 0 ? Math.sin(fb * 40) * .006 * (1 - fb) : 0); body.rotation.z = Math.sin(t * .0005) * .015; body.position.y = Math.sin(t * .0009) * .2;
-      a1.rotation.z = -.12 + reach * .3 + Math.sin(t * .0011) * .03; a2.rotation.z = .25 - reach * .45; hand.rotation.x = t * .0003 + reach * 1.2; for (const f of fingers) f.rotation.z = .1 + open * .7 - clamp_ * .45 + Math.sin(t * .002) * .03;
+      a1.rotation.z = -.12 + reach * .15 + Math.sin(t * .0011) * .03; a2.rotation.z = .25 - reach * .7; hand.rotation.x = t * .0003 + reach * 1.2; for (const f of fingers) f.rotation.z = .1 + open * .7 - clamp_ * .45 + Math.sin(t * .002) * .03;
       flags.forEach(F => { const P = F.g.attributes.position.array, B = F.b; for (let i = 0; i < P.length; i += 3) { const u = F.vert ? (B[i + 1] - (B[i + 1] - 0)) : B[i]; const along = F.vert ? (F.fw - B[i + 1]) / F.fw : B[i] / F.fw; P[i + 2] = B[i + 2] + Math.sin(t * .006 + along * 6 + F.ph) * .35 * along + Math.sin(t * .011 + B[i + 1] * 2) * .08 * along; } F.g.attributes.position.needsUpdate = true; });
       let fi = 0; stacks.forEach((p, s) => { for (let k = 0; k < 6; k++, fi++) { const a = ((t * .0016 + k / 6 + s * .37) % 1); fire.put(fi, p.x + Math.sin(k * 3 + t * .004) * .3 - a * 1.6, p.y + a * 3, p.z + Math.cos(k * 5 + t * .003) * .3, (2.6 - a * 1.6) * (1.2 + heat * .5), (1 - a) * (.8 + rnd() * .2)); } }); fire.done();
       const NS = smoke.geometry.attributes.aS.count; for (let i = 0; i < NS; i++) { const p = stacks[i % stacks.length], a = ((t * .00022 + i / NS * 3.1) % 1); smoke.put(i, p.x - a * 9 - Math.sin(i) * .5, p.y + 1 + a * 7 + Math.sin(i * 2) * .4, p.z + Math.cos(i * 3) * a * 2, 2 + a * 6, .75 * Math.sin(a * Math.PI) * (a < .1 ? a * 10 : 1)); } smoke.done();
@@ -2280,21 +2280,17 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
 
   /* ---------- Shard Colossus: a golem of dark mine rock and violet and cyan crystal, grown up out of a Void Shard mine. Great
      crystal wings fan from its back round a fractured heart that burns pink-white; a crown of shards, clawed crystal hands, a
-     floating chunk of the mine under its feet with gantries still on it, and a storm of shards circling it.
+     floating chunk of the mine under its feet, and a storm of shards circling it.
      Moves: rain (it raises its arms and shards hail down), prism (a beam from its eyes that splits and bounces), shatter (it bursts
      apart, heart exposed, and pulls back together), hit. ---------- */
   function colossus() { const grp = new TH.Group(), shk = new TH.Group(), body = new TH.Group(); grp.add(shk); shk.add(body);
     const RC = [.62, .3, 1], MR = hullMat("col", { rows: 5, pal: ["#2c2a36", "#22202c", "#34303f", "#1c1a24"], slits: .05, sc: "#e0b0ff", sg: "#b050ff", veins: 18, vc: "#a868ff", metal: .25, rough: .62, rc: RC, ei: 2.6, rep: [2, 2] });
     const CV = crystalMat(); CV.color.setHex(0x3a0c90); CV.emissive.setHex(0x8a30ff); CV.emissiveIntensity = .4; CV.roughness = .1; CV.envMapIntensity = 1.2; const CC = new TH.MeshStandardMaterial({ color: 0x0a3a56, emissive: 0x28c8ff, emissiveIntensity: .42, metalness: .5, roughness: .14, flatShading: true, transparent: true, opacity: .95, envMapIntensity: .8 }); rimOn(CC, .5, [.3, .85, 1]);
-    const MG = hullMat("colg", { rows: 6, pal: ["#5a4a3a", "#6a6058", "#4a4440", "#7a5a2a"], rust: 1, slits: .2, sc: "#ffd890", sg: "#ffa040", metal: .7, rough: .5, rc: [1, .6, .3], ei: 2, rep: [1, 2] });
     const rock = (r, det, sx, sy, sz) => { const g = new TH.IcosahedronGeometry(r, det), P = g.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i), h = Math.sin(Math.round(x * 97) * 12.9898 + Math.round(y * 97) * 78.233 + Math.round(z * 97) * 37.719) * 43758.5453, k = .8 + (h - Math.floor(h)) * .34; P.setXYZ(i, x * k * sx, y * k * sy, z * k * sz); } g.computeVertexNormals(); return new TH.Mesh(g, MR); };
     const cluster = (par, p, n, len, dir, spread, mats) => { for (let i = 0; i < n; i++) { const d = dir.clone().add(V((rnd() - .5) * spread, (rnd() - .5) * spread, (rnd() - .5) * spread)).normalize(), L = len * (.55 + rnd() * .6), c = cry(L * .16, L, mats[rnd() * mats.length | 0]); c.position.copy(p).addScaledVector(d, .2); c.quaternion.setFromUnitVectors(V(0, 1, 0), d); par.add(c); } };
-    // the floating chunk of the mine, crystals breaking through it, and two old gantries
+    // the floating chunk of the mine, crystals breaking through it
     { const pl = rock(8.5, 2, 1, .3, 1); pl.position.y = -1.5; body.add(pl); for (let k = 0; k < 9; k++) { const a = k * TAU / 9 + rnd() * .3, r = 4.5 + rnd() * 3.2; cluster(body, V(Math.cos(a) * r, -.4, Math.sin(a) * r), 3 + (rnd() * 3 | 0), 2 + rnd() * 3, V(Math.cos(a) * .5, 1, Math.sin(a) * .5), .7, [CV, CC]); }
-      for (let k = 0; k < 6; k++) { const a = rnd() * TAU; cluster(body, V(Math.cos(a) * 5, -3.2, Math.sin(a) * 5), 3, 2.5, V(0, -1, 0), .6, [CV, CC]); }
-      for (const [x, z, a] of [[-6.5, -2.5, .4], [5.8, -4, -.6]]) { const g = new TH.Group(); g.position.set(x, 0, z); g.rotation.y = a; body.add(g); for (const [dx, dz] of [[-.8, -.8], [.8, -.8], [-.8, .8], [.8, .8]]) g.add(strut(V(dx, -.2, dz), V(dx * .6, 7.5, dz * .6), .12, .1, MG, 4));
-        for (let y = 1; y < 7.5; y += 1.6) { g.add(box(1.7, .12, .12, MG).translateY(y).translateZ(.75)); g.add(box(1.7, .12, .12, MG).translateY(y).translateZ(-.75)); } const bm = box(6, .4, .4, MG); bm.position.set(2.4, 7.4, 0); bm.rotation.z = -.15; g.add(bm); const cb = box(1.2, 1, 1.2, MG); cb.position.set(0, 7.9, 0); g.add(cb); } }
-    const mineL = puffs(10, 0xffb060); body.add(mineL); [[-6.5, 8, -2.5], [5.8, 8, -4], [-5, 5, -1.8], [6.5, 4, -3.2], [-6.9, 2, -2.7], [5.2, 2, -4.4], [-1.2, 8.6, -3.4], [8.2, 7.1, -2.7], [3, -.3, 6], [-4, -.3, 5]].forEach((p, i) => mineL.put(i, ...p, .9, .9)); mineL.done();
+      for (let k = 0; k < 6; k++) { const a = rnd() * TAU; cluster(body, V(Math.cos(a) * 5, -3.2, Math.sin(a) * 5), 3, 2.5, V(0, -1, 0), .6, [CV, CC]); } }
     // legs
     const parts = [], part = (g, d) => { g.userData.p0 = g.position.clone(); g.userData.d = d.normalize(); parts.push(g); return g; };
     const legs = []; for (const sx of [-1, 1]) { const hip = new TH.Group(); hip.position.set(sx * 2, 6.7, 0); body.add(hip); part(hip, V(sx, -.3, 0));
@@ -3385,7 +3381,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 389;
+const GAME_V = 390;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4689,7 +4685,7 @@ for (let i = 0; i < 4; i++) WB["c" + i] = { k: "wbCon", n: "Energy Conduit", ic:
 /* v388 the Wednesday titans: their own cycle (Wednesdays 18:00 UTC) and a mechanic each (see wbShOf, wbVault) */
 Object.assign(WB, {
   brd: { k: "wbBrd", n: "Brood Matriarch", ic: "☣", col: "#a8ff3a", hp: 220000, atk: 150000, m3: "matriarch", sc: 1, bounty: { m: 56000, c: 38000, g: 18000 }, sh: 3, kill: 14, where: "Hive space · Far Reach", g: 2, cam: 110,
-    d: "The Hive's queen, nesting in the Far Reach. Her drone swarm rebuilds while nobody fights her: left alone for six hours it makes her twice as tough. Keep the pressure on." },
+    d: "The Hive's queen, nesting in the Far Reach; the worlds round her nest turn infected green. Her drone swarm rebuilds while nobody fights her: left alone for six hours it makes her twice as tough. Keep the pressure on." },
   tyr: { k: "wbTyr", n: "Iron Tyrant", ic: "⚓", col: "#ff8a3a", hp: 260000, atk: 190000, m3: "tyrant", sc: .95, bounty: { m: 70000, c: 46000, g: 20000 }, sh: 3, kill: 16, where: "Pirate trade lanes", g: 2, cam: 112,
     d: "A pirate super-dreadnought patched together from stolen hulls, sailing from hideout to hideout. Its vault grows all week: the bounty per hit climbs from ×1 to ×2.5." },
   wym: { k: "wbWym", n: "Event Horizon Wyrm", ic: "❂", col: "#ffa040", hp: 320000, atk: 240000, m3: "wyrm", sc: 1, bounty: { m: 84000, c: 56000, g: 26000 }, sh: 4, kill: 20, where: "The Core", g: 2, cam: 125,
@@ -4722,16 +4718,16 @@ function wbHome(c) { if (!WB_PYR) { WB_PYR = PYRAMIDS.filter(y => { const n = la
   const L5 = LAYERS[4]; return { y: WB_PYR[hash("ovl" + c) % WB_PYR.length], wr: (L5.r0 + L5.r1) / 2, wa: (hash("war" + c) % 6283) / 1000 }; }
 const WB_OFF = { c0: [26, 0], c1: [-26, 0], c2: [0, 26], c3: [0, -26] }; // the conduits stand round the Overlord, in its own frame (outward, along the orbit)
 const WBQ = {}, WBS = {}; // scratch: WBS only inside wbPos (the station), WBQ for callers
-let WB_LANE = null, WB_MINE = null;
+let WB_LANE = null, WB_MINE = null; const WB_WYM = { id: "wb_wymorb", r: 26 * SC, a0: 1.2 + Math.PI };
 function wbPos(key, T, out) { const o = out || {};
   if (wbG2(key)) { const c2 = wbCyc2(T);
     if (key === "brd") { const L = LAYERS[1], r = L.r0 + (L.r1 - L.r0) * (.3 + .4 * (hash("brd" + c2) % 1000) / 1000), a = (hash("brdA" + c2) % 6283) / 1000 + TAU * T / period(r); o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 3; return o; }
-    if (key === "wym") { const r = LAYERS[5].r1 * .86, a = (hash("wym" + c2) % 6283) / 1000 + TAU * (T - WB2_BASE) / (9 * 3600e3); o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 14 + 6 * Math.sin(a * 3); return o; }
+    if (key === "wym") { const q = P3(WB_WYM, T, WBS); o.x = q.x; o.z = q.z; o.y = q.y + 10 + 3 * Math.sin(T / 9e5); return o; } // on the Cube's orbit, half a turn away from it
     if (key === "col") { if (!WB_MINE) { WB_MINE = NODES.filter(n => n.res === "c" && layerOf(n.r).n === 4); if (!WB_MINE.length) WB_MINE = NODES.slice(0, 50); }
       const q = P3(WB_MINE[hash("col" + c2) % WB_MINE.length], T, WBS), r = Math.hypot(q.x, q.z) || 1; o.x = q.x - q.x / r * 14; o.z = q.z - q.z / r * 14; o.y = q.y; return o; }
     if (!WB_LANE) { WB_LANE = PIRATES.filter(x => x.kind === "pirate" && [3, 4].includes(layerOf(x.r).n)).sort((a, b) => a.a0 - b.a0); if (!WB_LANE.length) WB_LANE = PIRATES.slice(0, 50); }
     const LEG = 8 * 3600e3, u = (T - WB2_BASE) / LEG, i = Math.floor(u), f = u - i, n = WB_LANE.length, at = j => WB_LANE[((hash("tyr" + c2) + j * 37) % n + n) % n]; // the Tyrant sails hideout to hideout, 8 hours a leg
-    const A = P3(at(i), T, {}), B = P3(at(i + 1), T, {}), k = f * f * (3 - 2 * f); o.x = A.x + (B.x - A.x) * k; o.z = A.z + (B.z - A.z) * k; o.y = A.y + (B.y - A.y) * k + 4 + Math.sin(f * Math.PI) * 10; return o; }
+    const A = P3(at(i), T, {}), B = P3(at(i + 1), T, {}), k = f * f * (3 - 2 * f); o.x = A.x + (B.x - A.x) * k; o.z = A.z + (B.z - A.z) * k; o.y = A.y + (B.y - A.y) * k + 30 + Math.sin(f * Math.PI) * 6; return o; } // high above the worlds, claw hanging down
   const c = wbCyc(T), H = wbHome(c);
   if (key === "dev") { const w = T / 864e5, r = MAP_R * (.42 + .22 * Math.sin(w * .9 + c)), a = c * 1.7 + w * TAU / 2.2; o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 6 * Math.sin(w * 3); return o; }
   if (key === "war") { const a = H.wa + TAU * T / period(H.wr); o.x = Math.cos(a) * H.wr; o.z = Math.sin(a) * H.wr; o.y = 0; return o; }
@@ -4749,6 +4745,8 @@ function wbNorm(d, c, T = now()) { const c2 = wbCyc2(T), o = d && typeof d === "
   for (const k in WB) { o.hp[k] = o.hp[k] == null ? WB_SEG : clamp(Math.round(+o.hp[k] || 0), 0, WB_SEG); } return o; }
 function wbState(T = now()) { const src = G.mode === "online" ? G.wb : ((S && S.ldb) || {})["event/wboss"] || null, c = wbCyc(T);
   if (!WBN || WBN.cyc !== c || WBN.cyc2 !== wbCyc2(T) || WBN_SRC !== src) { WBN = wbNorm(src ? jcopy(src) : null, c, T); WBN_SRC = src; } return WBN; }
+let INFC = null, WB_INF = null; // v390: the worlds round the Brood Matriarch's nest, infected green while she lives
+function wbInfect(T) { if (WB_INF && Math.abs(T - WB_INF.T) < 2000) return WB_INF.v; let v = null; try { if (wbAlive("brd", T)) { const q = wbPos("brd", T, {}); v = { x: q.x, z: q.z, r2: 60 * 60 }; if (!INFC) INFC = new TH.Color(.6, 1.75, .3); } } catch (e) {} WB_INF = { T, v }; return v; }
 const wbHp = (k, T) => wbState(T).hp[k] | 0, wbAlive = (k, T) => wbHp(k, T) > 0;
 const wbCons = T => [0, 1, 2, 3].filter(i => wbAlive("c" + i, T)).length, wbShield = T => 1 + .75 * wbCons(T);
 const wbSegLoot = (key, T = now()) => { const b = WB[key].bounty, v = key === "tyr" ? wbVault(T) : 1; return { m: Math.round(b.m / 4 * v), c: Math.round(b.c / 4 * v), g: Math.round(b.g / 4 * v) }; };
@@ -9075,6 +9073,7 @@ function draw3D(t) {
      a third of the gap to its neighbour (never below 42% of its size). Worlds with room to spare are untouched. */
   if (!W.fitT || t - W.fitT > 450 || (W.fitN !== near.length && t - W.fitT > 120)) { W.fitT = t; W.fitN = near.length; const L = []; for (const id of near) { const p2 = G.byId[id]; if (p2) L.push([id, P3(p2, T)]); }
     for (let a = 0; a < L.length; a++) { let nn = 1e9; const qa = L[a][1]; for (let b2 = 0; b2 < L.length; b2++) { if (a === b2) continue; const qb = L[b2][1], d2 = (qa.x - qb.x) ** 2 + (qa.y - qb.y) ** 2 + (qa.z - qb.z) ** 2; if (d2 < nn) nn = d2; } const o2 = W.planets.get(L[a][0]); if (o2) o2.nn = Math.sqrt(nn); else (W.nnPend || (W.nnPend = {}))[L[a][0]] = Math.sqrt(nn); } }
+  const INF = wbInfect(T);
   for (const id of near) {
     const p = G.byId[id]; if (!p) continue; seen.add(id); let o = W.planets.get(id);
     if (!o) { o = planetObj(W, p); W.planets.set(id, o); if (W.nnPend && W.nnPend[id]) { o.nn = W.nnPend[id]; delete W.nnPend[id]; } }
@@ -9084,7 +9083,7 @@ function draw3D(t) {
     const dc = cpos.distanceTo(o.grp.position), px = o.rad / dc * pxK, fg = p.owner !== G.me && !fogSeen(q.x, q.z); o.dc = dc; o.fog = fg;
     if (px > 1.6) { // big enough on screen to draw as a sphere; detailed mesh up close, light mesh further out
       let bk = o.key + (dc < 14 ? "|u" : dc < 90 ? "|h" : "|l"); if (bk.endsWith("|u") && !(used.get(bk) < (W.inst.get(bk) || {}).cap)) bk = o.key + "|h"; /* v77: a 128-segment sphere for worlds seen up close, so planet view has a perfectly round limb */ const e = W.inst.get(bk), i = used.get(bk); if (e && i < e.cap) { used.set(bk, i + 1);
-      QE.set(0, t * o.spin, o.tilt); QQ.setFromEuler(QE); SV.setScalar(o.rad); M4.compose(o.grp.position, QQ, SV); e.mesh.setMatrixAt(i, M4); e.mesh.setColorAt(i, fg ? FOGC : p.tn && !pxOf(p) ? tintC(p.tn) : WHITEC); /* v69: a colour tint never dims a premium skin */
+      QE.set(0, t * o.spin, o.tilt); QQ.setFromEuler(QE); SV.setScalar(o.rad); M4.compose(o.grp.position, QQ, SV); e.mesh.setMatrixAt(i, M4); e.mesh.setColorAt(i, INF && !pxOf(p) && (q.x - INF.x) ** 2 + (q.z - INF.z) ** 2 < INF.r2 ? INFC : fg ? FOGC : p.tn && !pxOf(p) ? tintC(p.tn) : WHITEC); /* v69: a colour tint never dims a premium skin */
       if (hasRing(p) && ringI < rings.cap) { const skR = !fg && pxOf(p); rings.mesh.setColorAt(ringI, colObj(skR && !p.rc ? skR.glow : RINGC[p.rc || 0])); rings.mesh.setMatrixAt(ringI++, M4); } } }
     { // v69: from afar a skinned world shows its skin portrait (cracks, rings, spikes and all) at a readable size, so you can spot it at any zoom
       const Cs = !fg && pxOf(p) ? pxReady(p.px) : null;

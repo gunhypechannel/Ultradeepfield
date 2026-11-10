@@ -558,7 +558,7 @@
     const trG = new TH.BufferGeometry(), trP = new Float32Array(guns.length * 6), trC = new Float32Array(guns.length * 6); trG.setAttribute("position", new TH.BufferAttribute(trP, 3)); trG.setAttribute("color", new TH.BufferAttribute(trC, 3));
     const tracers = new TH.LineSegments(trG, new TH.LineBasicMaterial({ vertexColors: true, transparent: true, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); tracers.frustumCulled = false; body.add(tracers);
     // the boarding claw: a two-jointed arm on the bow with three hooked fingers
-    const arm = new TH.Group(); arm.position.set(15.5, -.6, 0); arm.scale.setScalar(1.7); body.add(arm); arm.add(box(3, 3, 3.2, MD)); { const r = new TH.Mesh(new TH.TorusGeometry(1.5, .2, 6, 18), glowMat(0xff7a20, .8)); r.position.x = 1.4; r.rotation.y = Math.PI / 2; arm.add(r); }
+    const arm = new TH.Group(); arm.position.set(15.5, -.6, 0); arm.scale.setScalar(1.7); arm.rotation.z = -.62; body.add(arm); arm.add(box(3, 3, 3.2, MD)); { const r = new TH.Mesh(new TH.TorusGeometry(1.5, .2, 6, 18), glowMat(0xff7a20, .8)); r.position.x = 1.4; r.rotation.y = Math.PI / 2; arm.add(r); }
     const a1 = new TH.Group(); a1.position.x = 1; arm.add(a1); a1.add(beam(V(0, 0, 0), V(6, -1.8, 0), 1.7, 1.25, 1.5, MP)); a1.add(strut(V(.4, 1, .9), V(5, -.6, .9), .2, .2, MD, 8)); a1.add(strut(V(.4, 1, -.9), V(5, -.6, -.9), .2, .2, MD, 8));
     const a2 = new TH.Group(); a2.position.set(6, -1.8, 0); a1.add(a2); { const d = new TH.Mesh(new TH.CylinderGeometry(1.1, 1.1, 2.2, 14), MD); d.rotation.x = Math.PI / 2; a2.add(d); } a2.add(beam(V(0, 0, 0), V(5.2, -1.2, 0), 1.3, 1, 1.2, MQ));
     const hand = new TH.Group(); hand.position.set(5.2, -1.2, 0); a2.add(hand); hand.add(box(2, 2, 2, MD)); const fingers = [];
@@ -588,7 +588,7 @@
     const tick = t => { const fb = mv.f("broadside", t), fc = mv.f("claw", t), fm = mv.f("mines", t), fx = mv.f("hit", t);
       const reach = bell(fc, 0, .35, .7, 1), open = bell(fc, .1, .3, .45, .55), clamp_ = bell(fc, .5, .6, .85, 1), heat = Math.max(bell(fm, 0, .2, .8, 1), bell(fb, 0, .1, .7, 1) * .5);
       body.rotation.x = Math.sin(t * .0007) * .03 + (fb >= 0 ? Math.sin(fb * 40) * .006 * (1 - fb) : 0); body.rotation.z = Math.sin(t * .0005) * .015; body.position.y = Math.sin(t * .0009) * .2;
-      a1.rotation.z = -.12 + reach * .3 + Math.sin(t * .0011) * .03; a2.rotation.z = .25 - reach * .45; hand.rotation.x = t * .0003 + reach * 1.2; for (const f of fingers) f.rotation.z = .1 + open * .7 - clamp_ * .45 + Math.sin(t * .002) * .03;
+      a1.rotation.z = -.12 + reach * .15 + Math.sin(t * .0011) * .03; a2.rotation.z = .25 - reach * .7; hand.rotation.x = t * .0003 + reach * 1.2; for (const f of fingers) f.rotation.z = .1 + open * .7 - clamp_ * .45 + Math.sin(t * .002) * .03;
       flags.forEach(F => { const P = F.g.attributes.position.array, B = F.b; for (let i = 0; i < P.length; i += 3) { const u = F.vert ? (B[i + 1] - (B[i + 1] - 0)) : B[i]; const along = F.vert ? (F.fw - B[i + 1]) / F.fw : B[i] / F.fw; P[i + 2] = B[i + 2] + Math.sin(t * .006 + along * 6 + F.ph) * .35 * along + Math.sin(t * .011 + B[i + 1] * 2) * .08 * along; } F.g.attributes.position.needsUpdate = true; });
       let fi = 0; stacks.forEach((p, s) => { for (let k = 0; k < 6; k++, fi++) { const a = ((t * .0016 + k / 6 + s * .37) % 1); fire.put(fi, p.x + Math.sin(k * 3 + t * .004) * .3 - a * 1.6, p.y + a * 3, p.z + Math.cos(k * 5 + t * .003) * .3, (2.6 - a * 1.6) * (1.2 + heat * .5), (1 - a) * (.8 + rnd() * .2)); } }); fire.done();
       const NS = smoke.geometry.attributes.aS.count; for (let i = 0; i < NS; i++) { const p = stacks[i % stacks.length], a = ((t * .00022 + i / NS * 3.1) % 1); smoke.put(i, p.x - a * 9 - Math.sin(i) * .5, p.y + 1 + a * 7 + Math.sin(i * 2) * .4, p.z + Math.cos(i * 3) * a * 2, 2 + a * 6, .75 * Math.sin(a * Math.PI) * (a < .1 ? a * 10 : 1)); } smoke.done();
@@ -681,21 +681,17 @@
 
   /* ---------- Shard Colossus: a golem of dark mine rock and violet and cyan crystal, grown up out of a Void Shard mine. Great
      crystal wings fan from its back round a fractured heart that burns pink-white; a crown of shards, clawed crystal hands, a
-     floating chunk of the mine under its feet with gantries still on it, and a storm of shards circling it.
+     floating chunk of the mine under its feet, and a storm of shards circling it.
      Moves: rain (it raises its arms and shards hail down), prism (a beam from its eyes that splits and bounces), shatter (it bursts
      apart, heart exposed, and pulls back together), hit. ---------- */
   function colossus() { const grp = new TH.Group(), shk = new TH.Group(), body = new TH.Group(); grp.add(shk); shk.add(body);
     const RC = [.62, .3, 1], MR = hullMat("col", { rows: 5, pal: ["#2c2a36", "#22202c", "#34303f", "#1c1a24"], slits: .05, sc: "#e0b0ff", sg: "#b050ff", veins: 18, vc: "#a868ff", metal: .25, rough: .62, rc: RC, ei: 2.6, rep: [2, 2] });
     const CV = crystalMat(); CV.color.setHex(0x3a0c90); CV.emissive.setHex(0x8a30ff); CV.emissiveIntensity = .4; CV.roughness = .1; CV.envMapIntensity = 1.2; const CC = new TH.MeshStandardMaterial({ color: 0x0a3a56, emissive: 0x28c8ff, emissiveIntensity: .42, metalness: .5, roughness: .14, flatShading: true, transparent: true, opacity: .95, envMapIntensity: .8 }); rimOn(CC, .5, [.3, .85, 1]);
-    const MG = hullMat("colg", { rows: 6, pal: ["#5a4a3a", "#6a6058", "#4a4440", "#7a5a2a"], rust: 1, slits: .2, sc: "#ffd890", sg: "#ffa040", metal: .7, rough: .5, rc: [1, .6, .3], ei: 2, rep: [1, 2] });
     const rock = (r, det, sx, sy, sz) => { const g = new TH.IcosahedronGeometry(r, det), P = g.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i), h = Math.sin(Math.round(x * 97) * 12.9898 + Math.round(y * 97) * 78.233 + Math.round(z * 97) * 37.719) * 43758.5453, k = .8 + (h - Math.floor(h)) * .34; P.setXYZ(i, x * k * sx, y * k * sy, z * k * sz); } g.computeVertexNormals(); return new TH.Mesh(g, MR); };
     const cluster = (par, p, n, len, dir, spread, mats) => { for (let i = 0; i < n; i++) { const d = dir.clone().add(V((rnd() - .5) * spread, (rnd() - .5) * spread, (rnd() - .5) * spread)).normalize(), L = len * (.55 + rnd() * .6), c = cry(L * .16, L, mats[rnd() * mats.length | 0]); c.position.copy(p).addScaledVector(d, .2); c.quaternion.setFromUnitVectors(V(0, 1, 0), d); par.add(c); } };
-    // the floating chunk of the mine, crystals breaking through it, and two old gantries
+    // the floating chunk of the mine, crystals breaking through it
     { const pl = rock(8.5, 2, 1, .3, 1); pl.position.y = -1.5; body.add(pl); for (let k = 0; k < 9; k++) { const a = k * TAU / 9 + rnd() * .3, r = 4.5 + rnd() * 3.2; cluster(body, V(Math.cos(a) * r, -.4, Math.sin(a) * r), 3 + (rnd() * 3 | 0), 2 + rnd() * 3, V(Math.cos(a) * .5, 1, Math.sin(a) * .5), .7, [CV, CC]); }
-      for (let k = 0; k < 6; k++) { const a = rnd() * TAU; cluster(body, V(Math.cos(a) * 5, -3.2, Math.sin(a) * 5), 3, 2.5, V(0, -1, 0), .6, [CV, CC]); }
-      for (const [x, z, a] of [[-6.5, -2.5, .4], [5.8, -4, -.6]]) { const g = new TH.Group(); g.position.set(x, 0, z); g.rotation.y = a; body.add(g); for (const [dx, dz] of [[-.8, -.8], [.8, -.8], [-.8, .8], [.8, .8]]) g.add(strut(V(dx, -.2, dz), V(dx * .6, 7.5, dz * .6), .12, .1, MG, 4));
-        for (let y = 1; y < 7.5; y += 1.6) { g.add(box(1.7, .12, .12, MG).translateY(y).translateZ(.75)); g.add(box(1.7, .12, .12, MG).translateY(y).translateZ(-.75)); } const bm = box(6, .4, .4, MG); bm.position.set(2.4, 7.4, 0); bm.rotation.z = -.15; g.add(bm); const cb = box(1.2, 1, 1.2, MG); cb.position.set(0, 7.9, 0); g.add(cb); } }
-    const mineL = puffs(10, 0xffb060); body.add(mineL); [[-6.5, 8, -2.5], [5.8, 8, -4], [-5, 5, -1.8], [6.5, 4, -3.2], [-6.9, 2, -2.7], [5.2, 2, -4.4], [-1.2, 8.6, -3.4], [8.2, 7.1, -2.7], [3, -.3, 6], [-4, -.3, 5]].forEach((p, i) => mineL.put(i, ...p, .9, .9)); mineL.done();
+      for (let k = 0; k < 6; k++) { const a = rnd() * TAU; cluster(body, V(Math.cos(a) * 5, -3.2, Math.sin(a) * 5), 3, 2.5, V(0, -1, 0), .6, [CV, CC]); } }
     // legs
     const parts = [], part = (g, d) => { g.userData.p0 = g.position.clone(); g.userData.d = d.normalize(); parts.push(g); return g; };
     const legs = []; for (const sx of [-1, 1]) { const hip = new TH.Group(); hip.position.set(sx * 2, 6.7, 0); body.add(hip); part(hip, V(sx, -.3, 0));
