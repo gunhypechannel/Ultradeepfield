@@ -3384,7 +3384,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 393;
+const GAME_V = 394;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4732,7 +4732,7 @@ function wbPos(key, T, out) { const o = out || {};
     const LEG = 8 * 3600e3, u = (T - WB2_BASE) / LEG, i = Math.floor(u), f = u - i, n = WB_LANE.length, at = j => WB_LANE[((hash("tyr" + c2) + j * 37) % n + n) % n]; // the Tyrant sails hideout to hideout, 8 hours a leg
     const A = P3(at(i), T, {}), B = P3(at(i + 1), T, {}), k = f * f * (3 - 2 * f); o.x = A.x + (B.x - A.x) * k; o.z = A.z + (B.z - A.z) * k; o.y = A.y + (B.y - A.y) * k + 30 + Math.sin(f * Math.PI) * 6; return o; } // high above the worlds, claw hanging down
   const c = wbCyc(T), H = wbHome(c);
-  if (key === "dev") { const w = T / 864e5, r = MAP_R * (.42 + .22 * Math.sin(w * .9 + c)), a = c * 1.7 + w * TAU / 2.2; o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 6 * Math.sin(w * 3); return o; }
+  if (key === "dev") { const w = T / 864e5, r = MAP_R * (.42 + .22 * Math.sin(w * .9 + c)), a = c * 1.7 + w * TAU / 2.2; o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 24 + 3 * Math.sin(w * 3); return o; } // v394: it hunts from just above the worlds
   if (key === "war") { const a = H.wa + TAU * T / period(H.wr); o.x = Math.cos(a) * H.wr; o.z = Math.sin(a) * H.wr; o.y = 0; return o; }
   const q = P3(H.y, T, WBS), r = Math.hypot(q.x, q.z) || 1, ux = q.x / r, uz = q.z / r; o.x = q.x + ux * 16; o.z = q.z + uz * 16; o.y = q.y + 2; // the Overlord stands just outside its station
   if (WB[key].con != null) { const f = WB_OFF[key]; o.x += ux * f[0] - uz * f[1]; o.z += uz * f[0] + ux * f[1]; }
@@ -4813,7 +4813,7 @@ function wbMapFx(W, t, T) {
     if (!M) { if (!near || W.wbBuilt === t) continue; W.wbBuilt = t; try { BOSS3D.init(TH); BOSS3D.lod = 1; const b = BOSS3D.prep(BOSS3D[D.m3](), wbEnv(W.renderer)); b.grp.scale.setScalar(D.sc * 1.6); if (key === "wym" && b.own) for (const o of b.own) o.visible = false; /* v391: over the real black hole */ W.scene.add(b.grp); M = W.wbM[key] = { b, next: t + 4000 + Math.random() * 6000, q: new TH.Vector3() }; } catch (e) { W.wbM[key] = M = { b: null }; } }
     if (!M.b) continue; const g = M.b.grp; g.visible = near; if (!near) continue;
     g.position.set(q.x, q.y, q.z);
-    if (key === "dev" || key === "tyr") { const q2 = wbPos(key, T + 60000, {}); g.rotation.y = -Math.atan2(q2.z - q.z, q2.x - q.x); } else if (key === "wym") g.rotation.y = -t * 2e-5; else if (key === "war") g.rotation.y = t * 4e-5; else g.rotation.y = Math.atan2(-q.x, -q.z); // the Overlord and its conduits face the Core
+    if (key === "dev" || key === "tyr") { const q2 = wbPos(key, T + 60000, {}); g.rotation.y = -Math.atan2(q2.z - q.z, q2.x - q.x); if (key === "dev") g.rotation.z = -.16 - .04 * Math.sin(t * .0004); } // the Devourer noses down at the worlds below, maw first else if (key === "wym") g.rotation.y = -t * 2e-5; else if (key === "war") g.rotation.y = t * 4e-5; else g.rotation.y = Math.atan2(-q.x, -q.z); // the Overlord and its conduits face the Core
     if (t > M.next) { M.next = t + 9000 + Math.random() * 10000; const m = M.b.moves.filter(x => x !== "hit" && x !== "link"); M.b.act(m[(Math.random() * m.length) | 0]); } // alive: a move every few seconds
     if (D.con != null) { const on = st.hp.ovl > 0; M.b.feed = on ? 1 : 0; if (on) { const tq = P3(WBO.ovl, T, {}), s = g.scale.x, lk = M.b.link; // the feed beam runs to the Overlord's crown
       const dx = tq.x - q.x, dz = tq.z - q.z, dy = (tq.y + 5 * WB.ovl.sc * 1.6) - (q.y + 9 * s), yaw = Math.atan2(dz, dx); lk.rotation.set(0, -yaw - g.rotation.y, Math.atan2(dy, Math.hypot(dx, dz))); lk.userData.len = Math.hypot(dx, dy, dz) / s; } }
