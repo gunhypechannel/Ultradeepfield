@@ -3651,7 +3651,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 409;
+const GAME_V = 410;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13563,7 +13563,14 @@ function zslSync(W) { const el = $("#zsl"); if (!el || performance.now() - zsDra
 document.addEventListener("input", e => { if (e.target && e.target.id === "zsl" && G3) { zsDrag = performance.now(); const c = G3.cam; c.goal = Object.assign({}, c.goal || {}, { dist: zsDist(+e.target.value) }); setTimeout(updateVbtn, 300); } });
 /* v90 map tour: the camera flies from your homeworld out to the whole galaxy, one caption per step */
 let tourT = null;
-function tourStop() { clearTimeout(tourT); tourT = null; const el = $("#tourcap"); if (el) el.hidden = true; }
+const TOUR_SAY = ["This is your homeworld, Commander. Everything you build starts here.",
+  "These are your neighbours, the worlds orbiting closest to you. Some will be friends. Some will be targets.",
+  "This is your layer of the galaxy. Every layer further in is richer, and more dangerous.",
+  "And this is the whole galaxy. The colour around each world shows which alliance controls it.",
+  "At the very heart lies the Void, and the Cube that every alliance fights for each weekend.",
+  "Tap any world to spy on it, attack it, send it cargo, or add it to your favourites. The galaxy is yours to take, Commander."]; // v410 the Advisor narrates the tour
+const tourVoiceOn = () => { const a = VOICE.au; return !!(a && !a.paused && !a.ended && TOUR_SAY.some(l => a.src.includes(voiceKey(l)))); };
+function tourStop() { clearTimeout(tourT); tourT = null; const el = $("#tourcap"); if (el) el.hidden = true; if (tourVoiceOn()) voiceStop(); }
 function tourRun(i) {
   const h = homePlanet(), el = $("#tourcap"); if (!h || !el || !G3 || view !== "galaxy") return tourStop(); const L = layerOf(h.r);
   const steps = [[() => { ACT.viewMode({ m: "planet", id: h.id }); const c = G3.cam; c.goal = Object.assign({}, c.goal || {}, { dist: ((c.goal && c.goal.dist) || c.dist) * 1.5 }); }, `This is your homeworld, <b>${esc(h.name)}</b>.`],
@@ -13574,7 +13581,9 @@ function tourRun(i) {
     [() => ACT.viewMode({ m: "system", id: h.id }), `Tap any world to <b>spy</b>, <b>attack</b>, <b>transport</b> or add it to your <b>favourites</b>.`]];
   if (i >= steps.length) { tourStop(); G.hudT = performance.now() - 15001; G.hudIdle = true; const a = $("#app"); if (a && !sheet && !battle) a.classList.add("hudidle"); return; } // v292: tour done, the HUD fades at once
   steps[i][0](); el.innerHTML = `<span>${steps[i][1]}</span><small>${i + 1} / ${steps.length} · tap to skip</small>`; el.hidden = false;
-  tourT = setTimeout(() => tourRun(i + 1), i === 3 ? 4800 : 4000);
+  try { speak(TOUR_SAY[i]); } catch (e) {} const t0 = performance.now(); let heard = 0;
+  const wait = () => { if (tourVoiceOn() && performance.now() - t0 < 14000) { heard = 1; tourT = setTimeout(wait, 250); } else tourT = setTimeout(() => tourRun(i + 1), heard ? 450 : 0); }; // v410: the camera moves on when she has finished
+  tourT = setTimeout(wait, i === 3 ? 4800 : 4000);
 }
 function updateVbtn() { const b = $("#vbtn"); if (b) { const h = vbtnHTML(); if (b.dataset.h !== h) { b.dataset.h = h; b.innerHTML = h; b.setAttribute("aria-label", `View: ${vmodeNow()}. Tap to switch between planet, system and galaxy views.`); } } }
 function findFabs() {
@@ -16978,7 +16987,7 @@ function spawnVolley(b, v) {
     for (let i = 0; i < (lo ? 1 : 3); i++) b.fx.push({ t0: v.t + .1 + i * .12, t1: v.t + .1 + i * .12 + TRAVEL.plasma * 1.05, v, last: false, first: false, n: 1, mis: false, ic: false, side, off: (i - 1) * .15, hv: 1, sz, j: 100 + i, fk: 1, col: "#ff3b30" });
     return; }
   if (lo || v.bounce) return;
-  if (q.k === "worldbreaker") { b.beams = b.beams.filter(m => m.s !== v.s); b.beams.push({ t0: v.t, s: v.s, e: v.e, side, w: 12, charge: .32, life: .55, wb: 1 }); return; } // the Cube Destroyer always fires its red beam, never dropped by the beam limit
+  if (q.k === "worldbreaker") { b.beams = b.beams.filter(m => m.s !== v.s || m.ht); b.beams.push({ t0: v.t, s: v.s, e: v.e, side, w: 12, charge: .5, life: .7, wb: 1 }); return; } // the Cube Destroyer always fires its red beam, never dropped by the beam limit
   if (wk === "beam" && sz < 2 && q.role !== "station" && q.role !== "titan") { /* v357 small beam ships (the Pathfinder): quick thin twin beams that stop on the target */
     if (b.beams.filter(m => m.sb).length < (b.Q.length > 60 ? 4 : 10)) for (let i = 0; i < 2; i++) b.beams.push({ t0: v.t + i * .07, s: v.s, e: v.e, side, w: clamp(.9 + Math.log10(1 + many) * .35, .9, 1.6), charge: .06, life: .18, lance: 1, sb: 1, tri: i ? .5 : -.5, wk }); return; }
   if (wk === "beam" || q.role === "station" || q.role === "titan") { if (b.beams.filter(m => !m.wb && !m.lance).length < 3) b.beams.push({ t0: v.t, s: v.s, e: v.e, side, w: clamp(3 + Math.log10(1 + many * (q.pow || 1)) * 1.4, 3, 12), charge: .3, life: .45 }); }
@@ -17334,8 +17343,36 @@ function drawBattle(t) {
     const mr = (8 + s.w * 5) * d * al; ctx.globalAlpha = al; ctx.drawImage(glowSprite(col), sx - mr, sy - mr, mr * 2, mr * 2); }
   try { wbStrike(ctx, b, scr, Q, W, H, t, d, lo); } catch (e) {} // v407 the boss's attack across the whole field
   // mega beams from stations, titans and beam batteries: a charge-up glow, then a roaring column with a blinding impact
-  b.beams = b.beams.filter(m => T - m.t0 <= m.charge + m.life);
-  for (const m of b.beams) { const age = T - m.t0; if (age < 0) continue; const A = scr[m.s], E = scr[m.e]; if (!A || !E) continue;
+  b.beams = b.beams.filter(m => T - m.t0 <= m.charge + m.life + (m.wb ? 1 : 0)); // v410: the Cube Destroyer's splash outlives its beam
+  for (const m of b.beams) { const age = T - m.t0; if (age < 0) continue;
+    if (m.wb) { /* v410 the Cube Destroyer: charge in the dish, beam from its core, a wide splash */ const S0 = scr[m.s], E0 = scr[m.e], g = b.geo && b.geo[m.s], ok = g && g.f === b.gf;
+      if (S0 && b.n[m.s] > 0 && !m.ht) { const Lg = ok ? g.L : Math.min(W * .1 * bLen("worldbreaker") * S0.s, W * .55 * S0.s), fc = ok ? g.face : (b.face[m.s] || 1); m.ox = S0.x + fc * Lg * .47; m.oy = S0.y + Lg * .152; m.L = Lg; }
+      if (m.ox == null || (!E0 && m.ix == null)) continue;
+      const ox = m.ox, oy = m.oy, Lg = m.L, ex = E0 ? E0.x : m.ix, ey = E0 ? E0.y : m.iy, R0 = Lg * .16, red = "#ff2a1a";
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      if (age < m.charge) { const k = age / m.charge; if (!m.cs) { m.cs = 1; try { SFX.charge(sp(ox, oy)); } catch (e) {} }
+        ctx.strokeStyle = red; for (let r = 0; r < 3; r++) { const u = (k * 1.6 + r / 3) % 1, rr = R0 * (2.4 - 1.9 * u); ctx.globalAlpha = .3 + .6 * u; ctx.lineWidth = (1.5 + 2.5 * u) * d; ctx.beginPath(); ctx.ellipse(ox, oy, rr * .62, rr, 0, 0, TAU); ctx.stroke(); }
+        for (let j = 0; j < (lo ? 3 : 9); j++) { const a = j * 2.4 + m.s * 1.3, u = (k * 2 + j * .137) % 1, rr = R0 * (3.2 - 2.9 * u), px = ox + Math.cos(a) * rr * .7, py = oy + Math.sin(a) * rr; ctx.globalAlpha = u * .9; ctx.drawImage(glowSprite(red), px - 3 * d, py - 3 * d, 6 * d, 6 * d); }
+        const cr = R0 * (.4 + 1.1 * k); ctx.globalAlpha = .6 + .4 * k; ctx.drawImage(glowSprite(red), ox - cr * 2, oy - cr * 2, cr * 4, cr * 4); ctx.drawImage(glowSprite("#ffffff"), ox - cr * .5, oy - cr * .5, cr, cr);
+        ctx.restore(); continue; }
+      const k = (age - m.charge) / m.life;
+      if (k < 1) { const al = k < .06 ? k / .06 : Math.pow(Math.max(0, 1 - (k - .06) / .94), 1.4), reach = Math.min(1, k * 7), x1 = ox + (ex - ox) * reach, y1 = oy + (ey - oy) * reach, w = Math.max(5 * d, Lg * .09) * (.85 + .15 * Math.sin(t * .08));
+        if (!m.fs) { m.fs = 1; try { SFX.megaBeam(sp(ox, oy)); } catch (e) {} b.shake = Math.max(b.shake, 12 * d); b.flash = Math.max(b.flash, .3); }
+        for (const [lw, a, c2] of [[6, .12, red], [3, .35, red], [1.5, .85, "#ff8a6a"], [.6, 1, "#ffffff"]]) { ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(x1, y1); ctx.strokeStyle = c2; ctx.globalAlpha = al * a * (.5 + .5 * dim); ctx.lineWidth = w * lw; ctx.stroke(); }
+        if (!lo) { const dx = x1 - ox, dy = y1 - oy, Ln = Math.hypot(dx, dy) || 1, nx = -dy / Ln, ny = dx / Ln, n = Math.max(8, Ln / (6 * d) | 0);
+          for (const ph of [0, Math.PI]) { ctx.beginPath(); for (let s = 0; s <= n; s++) { const f = s / n, a2 = f * Ln / (14 * d) - t * .03 + ph, amp = w * 1.3 * Math.min(1, f * 4), px = ox + dx * f + nx * Math.sin(a2) * amp, py = oy + dy * f + ny * Math.sin(a2) * amp; if (s) ctx.lineTo(px, py); else ctx.moveTo(px, py); } ctx.strokeStyle = red; ctx.globalAlpha = al * .6; ctx.lineWidth = 1.6 * d; ctx.stroke(); } }
+        const mr = R0 * (1.3 + .25 * Math.sin(t * .05)); ctx.globalAlpha = al; ctx.drawImage(glowSprite(red), ox - mr * 2, oy - mr * 2, mr * 4, mr * 4); ctx.drawImage(starSprite(red), ox - mr * 1.6, oy - mr * 1.6, mr * 3.2, mr * 3.2); ctx.drawImage(glowSprite("#ffffff"), ox - mr * .5, oy - mr * .5, mr, mr);
+        ctx.strokeStyle = red; ctx.lineWidth = 2.5 * d; ctx.globalAlpha = al * .8; ctx.beginPath(); ctx.ellipse(ox, oy, R0 * .62, R0, 0, 0, TAU); ctx.stroke();
+        if (reach >= 1 && !m.ht) { m.ht = T || 1e-6; m.ix = ex; m.iy = ey; } }
+      if (m.ht) { const u = (T - m.ht) / .9; if (u < 1) { const Rs = Math.max(W, H) * .2, e1 = 1 - Math.pow(1 - u, 3), ix = m.ix, iy = m.iy;
+        if (!m.hs) { m.hs = 1; try { SFX.blast(2.4, 0); } catch (e) {} b.shake = Math.max(b.shake, 16 * d); b.flash = Math.max(b.flash, .35); b.flashes.push({ x: ix, y: iy, t, r: Rs * .5, life: 420, rot: Math.random() * .8 });
+          if (!lo) for (let j = 0; j < 40 && b.sparks.length < 420; j++) { const a = Math.random() * TAU, v = (.2 + Math.random() * .6) * d; b.sparks.push({ x: ix, y: iy, vx: Math.cos(a) * v, vy: Math.sin(a) * v * .7, t, life: 400 + Math.random() * 500 }); }
+          const sd = (Q[m.s] || {}).side; Q.forEach((q, i) => { const p = scr[i]; if (q.side !== sd && b.n[i] > 0 && p && Math.hypot(p.x - ix, (p.y - iy) / .6) < Rs) b.flashes.push({ x: p.x, y: p.y, t: t + 60 + Math.random() * 160, r: (30 + Math.random() * 20) * d, life: 320, rot: Math.random() * .8 }); }); }
+        const fr = Rs * (.25 + .45 * e1); ctx.globalAlpha = (1 - u) * .9; ctx.drawImage(glowSprite("fire"), ix - fr, iy - fr * .7, fr * 2, fr * 1.4); ctx.globalAlpha = (1 - u) * .7; ctx.drawImage(glowSprite(red), ix - fr * 1.3, iy - fr * .9, fr * 2.6, fr * 1.8);
+        if (u < .25) { const wr = Rs * .25 * (1 - u / .25); ctx.globalAlpha = 1 - u / .25; ctx.drawImage(glowSprite("#ffffff"), ix - wr, iy - wr, wr * 2, wr * 2); }
+        for (const [dl, c2, lw] of [[0, red, 9], [.12, "#ff9a5a", 5], [.24, "#ffffff", 2.5]]) { const v = (u - dl) / (1 - dl); if (v <= 0) continue; const R = Rs * (1 - Math.pow(1 - v, 2.4)); ctx.globalAlpha = (1 - v) * .9; ctx.strokeStyle = c2; ctx.lineWidth = lw * d * (1 - v * .6); ctx.beginPath(); ctx.ellipse(ix, iy, R, R * .6, 0, 0, TAU); ctx.stroke(); } } }
+      ctx.restore(); ctx.globalAlpha = 1; continue; }
+    const A = scr[m.s], E = scr[m.e]; if (!A || !E) continue;
     const sx = A.x + (m.wb ? (b.face[m.s] || 1) * Math.min(W * .1 * bLen("worldbreaker") * A.s, W * .55 * A.s) * .62 : 0), sy = A.y + (m.wb ? Math.min(W * .1 * bLen("worldbreaker") * A.s, W * .55 * A.s) * .07 : 0) + (m.tri || 0) * 12 * d * Math.max(.6, A.s), ex = E.x, ey = E.y + (m.tri || 0) * 6 * d, dx = ex - sx, dy = ey - sy, L2 = Math.hypot(dx, dy) || 1, ux = dx / L2, uy = dy / L2, col = (Q[m.s] || {}).k === "worldbreaker" ? "#ff2a1a" : SHOT_COL[(Q[m.s] || {}).k] ? SHOT_COL[(Q[m.s] || {}).k] : m.wk === "ion" ? "#c3b2ff" : m.wk === "acid" ? "#a6ff6a" : m.side === "a" ? "#6fe4ff" : "#ff7a5a"; // the Cube Destroyer always fires its red laser
     if (m.lance) { /* v201 heavy lance from a capital hull: a quick charge at a hardpoint, then a thick beam that ends in a burst on the target */
       const [hx, hy0] = hp(m.s, m.t0 + .4, 1), [tx, ty] = hp(m.e, m.t0 + .7, 0), hy = hy0 + (m.sb ? m.tri * 7 * d * Math.max(.6, A.s) : 0), lx = tx - hx, ly = ty - hy;
