@@ -642,7 +642,7 @@
     const maw = new TH.Mesh(new TH.CircleGeometry(1.6, 32), accM()); maw.position.set(0, .35, 1.1); maw.userData.dyn = 1; hd.add(maw); const mawS = sprite(5, "rgba(255,230,190,1)", "hot3"); mawS.position.set(0, .35, 1.6); hd.add(mawS);
     const eye = new TH.Group(); eye.position.set(0, 2.3, .6); hd.add(eye); eye.add(new TH.Mesh(new TH.SphereGeometry(.75, 20, 14), new TH.MeshBasicMaterial({ color: 0 }))); const eD = new TH.Mesh(new TH.RingGeometry(.9, 2.3, 48), accM()); eD.rotation.x = -1.2; eD.userData.dyn = 1; eye.add(eD); const eP = photon(3.6); eye.add(eP);
     // the lens beam and its travelling halo rings
-    const lens = new TH.Group(); lens.position.set(0, .35, 7.4); hd.add(lens); lens.visible = false; for (const [r, o, c] of [[1.2, .35, ORA], [.35, .85, 0xfff2d8]]) { const g = new TH.CylinderGeometry(r * .7, r, 50, 20, 1, true); g.translate(0, 25, 0); g.rotateX(Math.PI / 2); const m = new TH.Mesh(g, glowMat(c, o)); m.userData.dyn = 1; lens.add(m); }
+    const mouth = new TH.Object3D(); mouth.position.set(0, .33, 2.6); hd.add(mouth); const lens = new TH.Group(); lens.position.set(0, .35, 7.4); hd.add(lens); lens.visible = false; for (const [r, o, c] of [[1.2, .35, ORA], [.35, .85, 0xfff2d8]]) { const g = new TH.CylinderGeometry(r * .7, r, 50, 20, 1, true); g.translate(0, 25, 0); g.rotateX(Math.PI / 2); const m = new TH.Mesh(g, glowMat(c, o)); m.userData.dyn = 1; lens.add(m); }
     const halos = []; for (let k = 0; k < 4; k++) { const h = new TH.Mesh(new TH.TorusGeometry(2.2, .1, 6, 40), glowMat(0xffe0b0, .8)); h.userData.dyn = 1; lens.add(h); halos.push(h); } const lensS = sprite(5, "rgba(255,240,210,1)", "hot2"); lens.add(lensS);
     // the tail blade
     const tail = new TH.Group(); body.add(tail); { const b = new TH.Mesh(bladeGeo(8, 2.6, .35), MA); b.rotation.set(Math.PI / 2, 0, -Math.PI / 2 + .3); tail.add(b); const e = new TH.Mesh(bladeGeo(8, 2.6, .06), glowMat(ORA, .7)); e.rotation.copy(b.rotation); e.scale.set(1.01, 1.03, 1.5); tail.add(e); const s = sprite(4, "rgba(255,170,90,1)", "gorange"); tail.add(s); }
@@ -677,7 +677,7 @@
       well.material.opacity = coil * .9; well.scale.setScalar(fc < 0 ? 1 : 9 - 7 * ss(0, 1, fc)); well.rotation.z = -t * .004;
       bt(t, 1 + coil * 6 + fire * 2); hit(bell(fx, 0, .05, .4, 1), t); };
     const tmpQ = new TH.Quaternion(), tmpQ2 = new TH.Quaternion(), tmp2 = new TH.Object3D();
-    bake(body); return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 15, h: 11, own: [hole, disc, disc2, phR, bhG] }; } // own: its little black hole, hidden where a real one is
+    bake(body); return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 15, h: 11, own: [hole, disc, disc2, phR, bhG], mouth, lens }; } // own: its little black hole, hidden where a real one is
 
   /* ---------- Shard Colossus: a golem of dark mine rock and violet and cyan crystal, grown up out of a Void Shard mine. Great
      crystal wings fan from its back round a fractured heart that burns pink-white; a crown of shards, clawed crystal hands, a
