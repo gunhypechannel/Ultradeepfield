@@ -3,14 +3,14 @@
    faceted violet crystal, living lightning, moving parts. Each build returns { grp, tick(t), r } with r = bounding radius. */
 (function (root) {
   const TAU = Math.PI * 2;
-  let TH = null; const cache = {};
+  let TH = null; const cache = {}; let LOD = 0; // 0 = close-up (viewer, desktop report), 1 = galaxy map (smaller textures, simpler tentacles), 2 = phone report (full textures, simpler tentacles)
   const rnd = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(9137);
   const VIO = 0xb45cff, VIO2 = 0xd9a0ff, CORE = 0xf3dcff;
 
   /* ---------- shared textures ---------- */
   function cv(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
   function plateTex(key, opt = {}) { // panel plating: colour map + emissive map (violet slits) + roughness
-    if (cache[key]) return cache[key]; const N = opt.n || 512, c = cv(N, N), e = cv(N, N), r = cv(N, N), x = c.getContext("2d"), y = e.getContext("2d"), z = r.getContext("2d");
+    key += "@" + LOD; if (cache[key]) return cache[key]; const N = opt.n || (LOD === 1 ? 256 : 512), c = cv(N, N), e = cv(N, N), r = cv(N, N), x = c.getContext("2d", { willReadFrequently: true }), y = e.getContext("2d"), z = r.getContext("2d");
     x.fillStyle = opt.base || "#44424b"; x.fillRect(0, 0, N, N); y.fillStyle = "#000"; y.fillRect(0, 0, N, N); z.fillStyle = "#6a6a6a"; z.fillRect(0, 0, N, N);
     const rows = opt.rows || 6; let yy = 0;
     for (let i = 0; i < rows; i++) { const hh = N / rows; let xx = 0;
@@ -24,7 +24,7 @@
         xx += ww; }
       x.fillStyle = "rgba(10,8,18,.9)"; x.fillRect(0, yy, N, 2); yy += N / rows; }
     // relief: panels raised, seams and light slits sunk; a Sobel pass turns it into a normal map
-    { const hc = cv(N, N), hx = hc.getContext("2d"); hx.drawImage(c, 0, 0); const d = hx.getImageData(0, 0, N, N).data, H = new Float32Array(N * N);
+    { const d = x.getImageData(0, 0, N, N).data, H = new Float32Array(N * N);
       for (let i = 0; i < N * N; i++) H[i] = (d[i * 4] + d[i * 4 + 1] + d[i * 4 + 2]) / 765;
       const nc = cv(N, N), nx = nc.getContext("2d"), nd = nx.createImageData(N, N), s = opt.relief ?? 3.2;
       for (let yy2 = 0; yy2 < N; yy2++) for (let xx2 = 0; xx2 < N; xx2++) { const at = (a, b) => H[((b + N) % N) * N + ((a + N) % N)];
@@ -57,17 +57,19 @@
     const geo = new TH.LatheGeometry(p, sub, 0, each - gap); for (let i = 0; i < n; i++) { const m = new TH.Mesh(geo, mat); m.rotation.y = phi0 + i * each; g.add(m); }
     // a raised armour cap on every second segment
     const cap = new TH.BoxGeometry(w * .55, h * .25, Math.min(1.2, each * R * .55)); for (let i = 0; i < n; i += 2) { const a = phi0 + (i + .5) * each, m = new TH.Mesh(cap, mat); m.position.set(Math.sin(a) * R, h * .55, Math.cos(a) * R); m.rotation.y = a; g.add(m); }
-    return g; }
+    g.userData.flat = 1; return g; }
   function bandGlow(R, h, phi0 = 0, phiL = TAU, c = VIO2) { const g = new TH.Group(); g.add(new TH.Mesh(new TH.CylinderGeometry(R, R, h, 96, 1, true, phi0, phiL), glowMat(c, .95)));
-    g.add(new TH.Mesh(new TH.CylinderGeometry(R, R, h * 2.0, 96, 1, true, phi0, phiL), glowMat(VIO, .1))); return g; }
+    g.add(new TH.Mesh(new TH.CylinderGeometry(R, R, h * 2.0, 96, 1, true, phi0, phiL), glowMat(VIO, .1))); g.userData.flat = 1; return g; }
   function crystal(prof, sides = 6) { return new TH.Mesh(new TH.LatheGeometry(prof.map(([r, y]) => new TH.Vector2(r, y)), sides), crystalMat()); }
   function shard(r, h, mat) { const g = new TH.ConeGeometry(r, h, 4); g.translate(0, h / 2, 0); return new TH.Mesh(g, mat); }
   // lightning: jagged lines between point pairs, re-struck several times a second
-  function bolts(grp, n, pick, col = VIO2) { const L = []; for (let i = 0; i < n; i++) { const g = new TH.BufferGeometry(); g.setAttribute("position", new TH.Float32BufferAttribute(new Float32Array(14 * 3), 3));
-      const m = new TH.LineBasicMaterial({ color: col, transparent: true, opacity: .9, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false }), l = new TH.Line(g, m); l.frustumCulled = false; l.userData.next = 0; grp.add(l); L.push(l); }
-    return (t, rate = 1) => { for (const l of L) { if (t < l.userData.next) continue; l.userData.next = t + (60 + rnd() * 220) / rate; const [a, b] = pick(), p = l.geometry.attributes.position, d = a.distanceTo(b);
-        for (let k = 0; k < 14; k++) { const f = k / 13, j = (k === 0 || k === 13) ? 0 : d * .09; p.setXYZ(k, a.x + (b.x - a.x) * f + (rnd() - .5) * j, a.y + (b.y - a.y) * f + (rnd() - .5) * j, a.z + (b.z - a.z) * f + (rnd() - .5) * j); }
-        p.needsUpdate = true; l.material.opacity = rnd() < .25 ? 0 : .55 + rnd() * .45; } }; }
+  function bolts(grp, n, pick, col = VIO2) { const S = 13, g = new TH.BufferGeometry(), P = new Float32Array(n * S * 6), C = new Float32Array(n * S * 6), c0 = new TH.Color(col), nx = new Float32Array(n);
+    g.setAttribute("position", new TH.BufferAttribute(P, 3)); g.setAttribute("color", new TH.BufferAttribute(C, 3));
+    const l = new TH.LineSegments(g, new TH.LineBasicMaterial({ vertexColors: true, transparent: true, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); l.frustumCulled = false; grp.add(l); const q = [];
+    return (t, rate = 1) => { let up = false; for (let i = 0; i < n; i++) { if (t < nx[i]) continue; nx[i] = t + (60 + rnd() * 220) / rate; up = true; const [a, b] = pick(), d = a.distanceTo(b), on = rnd() < .25 ? 0 : .55 + rnd() * .45;
+        for (let k = 0; k < 14; k++) { const f = k / 13, j = (k === 0 || k === 13) ? 0 : d * .09; q[k * 3] = a.x + (b.x - a.x) * f + (rnd() - .5) * j; q[k * 3 + 1] = a.y + (b.y - a.y) * f + (rnd() - .5) * j; q[k * 3 + 2] = a.z + (b.z - a.z) * f + (rnd() - .5) * j; }
+        for (let k = 0; k < S; k++) { const o = (i * S + k) * 6; for (let e = 0; e < 3; e++) { P[o + e] = q[k * 3 + e]; P[o + 3 + e] = q[k * 3 + 3 + e]; } for (let e = 0; e < 2; e++) { C[o + e * 3] = c0.r * on; C[o + e * 3 + 1] = c0.g * on; C[o + e * 3 + 2] = c0.b * on; } } }
+      if (up) { g.attributes.position.needsUpdate = true; g.attributes.color.needsUpdate = true; } }; }
   const V = (x, y, z) => new TH.Vector3(x, y, z);
   function box(w, h, d, mat) { return new TH.Mesh(new TH.BoxGeometry(w, h, d), mat); }
   // a strut from a to b, with a square (4-sided) tapering section
@@ -87,7 +89,7 @@
   const bell = (f, a, b, c, d) => f < 0 ? 0 : ss(a, b, f) * (1 - ss(c, d, f));
   function moves(dur) { const S = {}; return { dur, play(n) { if (dur[n]) S[n] = { t0: -1, d: dur[n] }; }, f(n, t) { const s = S[n]; if (!s) return -1; if (s.t0 < 0) s.t0 = t; const f = (t - s.t0) / s.d; if (f >= 1) { delete S[n]; return -1; } return f; }, busy() { return Object.keys(S).length > 0; } }; }
   // an expanding shockwave ring (flat) or shell (sphere)
-  function wave(par, R, sphere, col = VIO2) { const m = new TH.Mesh(sphere ? new TH.SphereGeometry(R, 32, 16) : new TH.RingGeometry(R * .9, R, 96), glowMat(col, 0)); if (!sphere) m.rotation.x = -Math.PI / 2; m.visible = false; par.add(m);
+  function wave(par, R, sphere, col = VIO2) { const m = new TH.Mesh(sphere ? new TH.SphereGeometry(R, 32, 16) : new TH.RingGeometry(R * .9, R, 96), glowMat(col, 0)); m.userData.dyn = 1; if (!sphere) m.rotation.x = -Math.PI / 2; m.visible = false; par.add(m);
     return f => { m.visible = f > 0 && f < 1; if (!m.visible) return; m.scale.setScalar(.2 + f * 2.6); m.material.opacity = (1 - f) * (sphere ? .16 : .9); }; }
   // hit reaction: every hull material flares its rim and the model shudders
   function hitKit(grp, mover = grp) { const mats = new Set(); grp.traverse(o => { if (o.material && o.material.userData && o.material.userData.P) mats.add(o.material); });
@@ -106,8 +108,8 @@
     // front spine: a tall plated blade down the middle of the plinth
     { const sp = box(.55, 2.6, .35, M); sp.position.set(0, 1.4, 2.0); grp.add(sp); const sg = box(.12, 2.2, .05, glowMat(VIO2)); sg.position.set(0, 1.45, 2.19); grp.add(sg); }
     // the crystal: one long faceted shard from the plinth to the crown
-    const cr = crystal([[0, 0], [.75, .5], [1.25, 2.6], [1.5, 4.7], [1.3, 6.4], [.75, 7.9], [0, 10.2]], 6); cr.position.y = 1.9; grp.add(cr);
-    const inner = crystal([[0, 0], [.4, .6], [.7, 4.4], [.35, 7.6], [0, 9.2]], 6); inner.material = glowMat(0x9a40ff, .22); inner.position.y = 2.0; grp.add(inner);
+    const cr = crystal([[0, 0], [.75, .5], [1.25, 2.6], [1.5, 4.7], [1.3, 6.4], [.75, 7.9], [0, 10.2]], 6); cr.position.y = 1.9; cr.userData.dyn = 1; grp.add(cr);
+    const inner = crystal([[0, 0], [.4, .6], [.7, 4.4], [.35, 7.6], [0, 9.2]], 6); inner.material = glowMat(0x9a40ff, .22); inner.userData.dyn = 1; inner.position.y = 2.0; grp.add(inner);
     // shard collars: low (round the crystal's foot), mid (an emblem), crown
     const collar = (y, n, R, h, lean) => { for (let k = 0; k < n; k++) { const a = k * TAU / n, s = shard(.22, h, M); s.position.set(Math.cos(a) * R, y, Math.sin(a) * R); s.rotation.set(Math.sin(a) * lean, 0, -Math.cos(a) * lean); grp.add(s); } };
     collar(2.0, 8, 1.3, 1.9, .18); collar(5.0, 6, 1.15, 1.5, .1); collar(7.1, 6, 1.0, 1.6, .14);
@@ -123,7 +125,7 @@
     // detail: conduit cables from each leg foot into the plinth, and vent greebles on every tier
     for (let k = 0; k < 4; k++) { const a = k * TAU / 4 + TAU / 8 + .32, c = Math.cos(a), s = Math.sin(a), pts = [V(c * 4.4, .1, s * 4.4), V(c * 3.9, .6, s * 3.9), V(c * 3.2, .5, s * 3.2), V(c * 2.6, 1.2, s * 2.6)];
       grp.add(new TH.Mesh(new TH.TubeGeometry(new TH.CatmullRomCurve3(pts), 16, .12, 6), M2)); const gl = new TH.Mesh(new TH.TubeGeometry(new TH.CatmullRomCurve3(pts.map(p => p.clone().add(V(0, .13, 0)))), 16, .03, 4), glowMat(VIO2, .8)); grp.add(gl); }
-    [[3.45, .28], [2.8, .83], [2.12, 1.38]].forEach(([r, y]) => { for (let k = 0; k < 4; k++) for (let j = -1; j <= 1; j++) { const F = new TH.Group(); F.rotation.y = k * Math.PI / 2; const v = box(.45, .22, .16, M); v.position.set(j * r * .5, y, r * Math.SQRT1_2 + .04); F.add(v); const vg = box(.3, .05, .04, glowMat(VIO2, .9)); vg.position.set(j * r * .5, y, r * Math.SQRT1_2 + .13); F.add(vg); grp.add(F); } });
+    [[3.45, .28], [2.8, .83], [2.12, 1.38]].forEach(([r, y]) => { for (let k = 0; k < 4; k++) for (let j = -1; j <= 1; j++) { const F = new TH.Group(); F.userData.flat = 1; F.rotation.y = k * Math.PI / 2; const v = box(.45, .22, .16, M); v.position.set(j * r * .5, y, r * Math.SQRT1_2 + .04); F.add(v); const vg = box(.3, .05, .04, glowMat(VIO2, .9)); vg.position.set(j * r * .5, y, r * Math.SQRT1_2 + .13); F.add(vg); grp.add(F); } });
     // light
     const core = sprite(7, "rgba(190,110,255,1)"); core.position.y = 5; grp.add(core); const base = sprite(6, "rgba(190,100,255,1)"); base.position.y = 1.2; grp.add(base);
     const crPts = () => { const y = 2.5 + rnd() * 6.5, a = rnd() * TAU; return V(Math.cos(a) * .9, y, Math.sin(a) * .9); };
@@ -132,9 +134,9 @@
     // moves: charge (rings spin up and spread, the crown opens), discharge (a bolt up from the tip, a ring shockwave),
     // link (a feed beam out along +x: the Overlord's shield), hit
     const shk = new TH.Group(), body = new TH.Group(); body.add(...grp.children); shk.add(body); grp.add(shk);
-    const up1 = new TH.Mesh(new TH.CylinderGeometry(.25, .7, 40, 16, 1, true), glowMat(0xd090ff, .6)), up2 = new TH.Mesh(new TH.CylinderGeometry(.1, .25, 40, 12, 1, true), glowMat(0xf6e6ff, .95)); for (const b of [up1, up2]) { b.position.y = 12.1 + 20; b.visible = false; body.add(b); }
+    const up1 = new TH.Mesh(new TH.CylinderGeometry(.25, .7, 40, 16, 1, true), glowMat(0xd090ff, .6)), up2 = new TH.Mesh(new TH.CylinderGeometry(.1, .25, 40, 12, 1, true), glowMat(0xf6e6ff, .95)); for (const b of [up1, up2]) { b.position.y = 12.1 + 20; b.visible = false; b.userData.dyn = 1; body.add(b); }
     const tipS = sprite(5, "rgba(240,210,255,1)", "hot2"); tipS.position.y = 12; body.add(tipS);
-    const lnk = new TH.Group(); lnk.position.y = 9; body.add(lnk); const lb = new TH.Mesh(new TH.CylinderGeometry(.18, .18, 1, 10, 1, true), glowMat(0xd090ff, .7)); lb.rotation.z = -Math.PI / 2; lb.geometry.translate(0, .5, 0); lnk.add(lb); lnk.visible = false; lnk.userData.len = 30;
+    const lnk = new TH.Group(); lnk.position.y = 9; body.add(lnk); const lb = new TH.Mesh(new TH.CylinderGeometry(.18, .18, 1, 10, 1, true), glowMat(0xd090ff, .7)); lb.rotation.z = -Math.PI / 2; lb.userData.dyn = 1; lb.geometry.translate(0, .5, 0); lnk.add(lb); lnk.visible = false; lnk.userData.len = 30;
     const sw = wave(body, 5, false); body.children[body.children.length - 1].position.y = 5;
     const mv = moves({ charge: 2600, discharge: 1800, link: 4000, hit: 520 }), hit = hitKit(body, shk);
     const tick = t => { const fc = mv.f("charge", t), fd = mv.f("discharge", t), fl = mv.f("link", t), fh = mv.f("hit", t), ch = Math.max(bell(fc, 0, .7, .9, 1), bell(fd, 0, .01, .2, .5));
@@ -144,15 +146,15 @@
       const hov = Math.sin(t * .0012) * .15 + ch * .5; cr.position.y = 1.9 + hov; inner.position.y = 2.0 + hov; cr.rotation.y = t * .0002 + ch * t * .002;
       const p = .85 + Math.sin(t * .004) * .15 + ch * .9; cr.material.emissiveIntensity = .8 * p + .15; inner.material.opacity = Math.min(.9, .2 * p); core.material.opacity = Math.min(1, .35 * p); core.scale.setScalar(7 * (1 + ch * .5));
       const fire = bell(fd, .15, .2, .55, .9); for (const b of [up1, up2]) b.visible = fire > .01; up1.material.opacity = .6 * fire * (.8 + rnd() * .2); up2.material.opacity = fire; tipS.material.opacity = .3 + ch * .7; tipS.scale.setScalar(5 * (1 + fire * 1.5)); sw(fd < 0 ? -1 : (fd - .18) / .6);
-      const lk = bell(fl, 0, .1, .9, 1); lnk.visible = lk > .01; if (lnk.visible) { lb.scale.set(1 + Math.sin(t * .03) * .25, lnk.userData.len * ss(0, .15, fl), 1 + Math.sin(t * .03) * .25); lb.material.opacity = .75 * lk; }
+      const lk = Math.max(bell(fl, 0, .1, .9, 1), api.feed ? .7 : 0); lnk.visible = lk > .01; if (lnk.visible) { lb.scale.set(1 + Math.sin(t * .03) * .25, lnk.userData.len * (fl >= 0 ? ss(0, .15, fl) : 1), 1 + Math.sin(t * .03) * .25); lb.material.opacity = .75 * lk * (.8 + Math.sin(t * .02) * .2); }
       bt(t, 1 + ch * 5 + lk * 2); hit(bell(fh, 0, .05, .4, 1), t); };
-    return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), link: lnk, r: 6.5, h: 11.5 }; }
+    const api = { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), link: lnk, feed: 0, r: 6.5, h: 11.5 }; bake(body); return api; }
 
   /* ---------- Void Warden: a black, crackling void sphere inside a gyroscope of plated rings (one carved with glyphs),
      two great horned crescents left and right, crystal pylons above and below, and small ring-satellites ---------- */
   function warden() { const grp = new TH.Group(), M = hullMat("ward", { rows: 5, bronze: .22, rep: [18, 1] }), MG = hullMat("wardg", { rows: 1, cols: 16, slits: 0, glyphs: 1, bronze: .3, rep: [3, 1] });
-    const core = new TH.Mesh(new TH.SphereGeometry(2.0, 48, 32), new TH.MeshBasicMaterial({ color: 0x07000f })); grp.add(core); const cor = new TH.Mesh(new TH.RingGeometry(2.0, 3.1, 64), new TH.MeshBasicMaterial({ map: radial("corona", [[0, "rgba(255,255,255,0)"], [.62, "rgba(255,255,255,0)"], [.66, "rgba(230,170,255,1)"], [.75, "rgba(170,70,255,.7)"], [1, "rgba(90,20,200,0)"]]), transparent: true, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); grp.add(cor);
-    const shell = new TH.Mesh(new TH.SphereGeometry(2.15, 48, 32), new TH.MeshBasicMaterial({ map: swirlTex(), transparent: true, opacity: .95, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); grp.add(shell);
+    const core = new TH.Mesh(new TH.SphereGeometry(2.0, 48, 32), new TH.MeshBasicMaterial({ color: 0x07000f })); core.userData.dyn = 1; grp.add(core); const cor = new TH.Mesh(new TH.RingGeometry(2.0, 3.1, 64), new TH.MeshBasicMaterial({ map: radial("corona", [[0, "rgba(255,255,255,0)"], [.62, "rgba(255,255,255,0)"], [.66, "rgba(230,170,255,1)"], [.75, "rgba(170,70,255,.7)"], [1, "rgba(90,20,200,0)"]]), transparent: true, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); cor.userData.dyn = 1; grp.add(cor);
+    const shell = new TH.Mesh(new TH.SphereGeometry(2.15, 48, 32), new TH.MeshBasicMaterial({ map: swirlTex(), transparent: true, opacity: .95, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); shell.userData.dyn = 1; grp.add(shell);
     const shell2 = shell.clone(); shell2.material = shell.material.clone(); shell2.scale.setScalar(1.12); shell2.material.opacity = .5; grp.add(shell2);
     const halo = sprite(10, "rgba(200,110,255,1)"); grp.add(halo);
     const gyro = [];
@@ -178,7 +180,7 @@
     // forward along +z), summon (the satellites fly wide and rain lightning), hit
     const shk = new TH.Group(), body = new TH.Group(); body.add(...grp.children); shk.add(body); grp.add(shk);
     const vw = wave(body, 4, true, 0x9a40ff), vw2 = wave(body, 6, false);
-    const b1 = new TH.Mesh(new TH.CylinderGeometry(1.2, 1.6, 44, 24, 1, true), glowMat(0xb060ff, .5)), b2 = new TH.Mesh(new TH.CylinderGeometry(.35, .5, 44, 16, 1, true), glowMat(0xf6e6ff, .9)); for (const b of [b1, b2]) { b.rotation.x = Math.PI / 2; b.position.z = 22; b.visible = false; body.add(b); }
+    const b1 = new TH.Mesh(new TH.CylinderGeometry(1.2, 1.6, 44, 24, 1, true), glowMat(0xb060ff, .5)), b2 = new TH.Mesh(new TH.CylinderGeometry(.35, .5, 44, 16, 1, true), glowMat(0xf6e6ff, .9)); for (const b of [b1, b2]) { b.rotation.x = Math.PI / 2; b.position.z = 22; b.visible = false; b.userData.dyn = 1; body.add(b); }
     const gy0 = gyro.map(g => g.rotation.clone()), ga = gyro.map(() => 0);
     const mv = moves({ pulse: 1800, beam: 3200, summon: 3000, hit: 520 }), hit = hitKit(body, shk);
     const tick = t => { const fp = mv.f("pulse", t), fb = mv.f("beam", t), fs = mv.f("summon", t), fh = mv.f("hit", t);
@@ -192,7 +194,7 @@
       for (const b of [b1, b2]) b.visible = fire > .01; b1.material.opacity = .5 * fire * (.85 + rnd() * .15); b2.material.opacity = .9 * fire; b1.scale.set(1 + fire * .25, 1, 1 + fire * .25);
       sats.forEach((g, k) => { const a = t * (.00018 + wide * .0006) + k * TAU / 3, R = 9.2 + wide * 5; g.position.set(Math.cos(a) * R, Math.sin(a * 1.7 + k) * 1.5 + wide * Math.sin(k * 2) * 3, Math.sin(a) * R); g.rotation.y = t * .001; g.scale.setScalar(1 + wide * .4); });
       bt(t, 1 + clench * 4 + fire * 3 + wide * 3); hit(bell(fh, 0, .05, .4, 1), t); };
-    return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 10, h: 15 }; }
+    bake(body); return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 10, h: 15 }; }
 
   /* ---------- Pyramid Overlord: a monumental pyramid of layered armour plates on six walking legs. Each face carries the
      ring-and-diamond sigil with a light channel down to the apex; the stepped underbelly pours a violet beam.
@@ -203,7 +205,7 @@
     const B = 4.3, H = 5.8, y0 = .45, Ls = Math.hypot(B, H), phi = Math.atan2(B, H);
     const core = new TH.Mesh(new TH.ConeGeometry(B * Math.SQRT2, H, 4, 1), MD); core.rotation.y = Math.PI / 4; core.position.y = y0 + H / 2; body.add(core);
     const sigils = [];
-    for (let k = 0; k < 4; k++) { const F = new TH.Group(); F.rotation.y = k * Math.PI / 2; body.add(F); const S = new TH.Group(); S.position.set(0, y0, B); S.rotation.x = -phi; F.add(S);
+    for (let k = 0; k < 4; k++) { const F = new TH.Group(); F.userData.flat = 1; F.rotation.y = k * Math.PI / 2; body.add(F); const S = new TH.Group(); S.userData.flat = 1; S.position.set(0, y0, B); S.rotation.x = -phi; F.add(S);
       // nine rows of armour plates, thicker every other row, clipped to the face's taper
       const nR = 9; for (let i = 0; i < nR; i++) { const s0 = Ls * i / nR, s1 = Ls * (i + 1) / nR, hwT = B * (1 - s1 / Ls) - .1, hwB = B * (1 - s0 / Ls) - .1; if (hwT < .2) break;
         const np = Math.max(1, Math.round(hwB * 2 / 1.25)), pw = hwB * 2 / np;
@@ -231,14 +233,14 @@
     // armoured skirt round the base with vents and a light band
     { const sk = new TH.Mesh(new TH.CylinderGeometry(B * Math.SQRT2 * 1.03, B * Math.SQRT2 * .93, 1.0, 4, 1), ML); sk.rotation.y = Math.PI / 4; sk.position.y = y0 - .5; body.add(sk);
       const sg = new TH.Mesh(new TH.CylinderGeometry(B * Math.SQRT2 * 1.0, B * Math.SQRT2 * .98, .1, 4, 1, true), glowMat(VIO2)); sg.rotation.y = Math.PI / 4; sg.position.y = y0 - .55; body.add(sg);
-      for (let k = 0; k < 4; k++) for (let j = -3; j <= 3; j++) { const F = new TH.Group(); F.rotation.y = k * Math.PI / 2; const v = box(.7, .35, .25, M); v.position.set(j * 1.15, y0 - .25, B * 1.0 + .08); F.add(v); body.add(F); } }
+      for (let k = 0; k < 4; k++) for (let j = -3; j <= 3; j++) { const F = new TH.Group(); F.userData.flat = 1; F.rotation.y = k * Math.PI / 2; const v = box(.7, .35, .25, M); v.position.set(j * 1.15, y0 - .25, B * 1.0 + .08); F.add(v); body.add(F); } }
     // stepped underbelly, emitter rings, eight hanging claws, and the beam
-    const belly = new TH.Group(); body.add(belly);
+    const belly = new TH.Group(); belly.userData.flat = 1; body.add(belly);
     [[3.9, 3.3, .6, -.45], [3.1, 2.4, .6, -1.05], [2.3, 1.6, .5, -1.6]].forEach(([a, b, h, y]) => { const m = new TH.Mesh(new TH.CylinderGeometry(a, b, h, 8), ML); m.position.y = y; belly.add(m); const g = new TH.Mesh(new TH.CylinderGeometry(b * 1.01, b * 1.01, .06, 8, 1, true), glowMat(VIO2)); g.position.y = y - h / 2 + .04; belly.add(g); });
     const emit = new TH.Group(); emit.position.y = -1.9; belly.add(emit); for (const [R, w] of [[1.5, .09], [1.05, .07], [.6, .06]]) { const r = new TH.Mesh(new TH.TorusGeometry(R, w, 8, 48), glowMat(VIO2)); r.rotation.x = Math.PI / 2; emit.add(r); }
     const claws = []; for (let k = 0; k < 8; k++) { const a = k * TAU / 8 + TAU / 16, h = new TH.Group(); h.position.set(Math.cos(a) * 2.6, -1.4, Math.sin(a) * 2.6); h.rotation.y = -a; const c = horn(1.6, .5, .16, M); c.rotation.z = -Math.PI / 2 - .25; h.add(c); belly.add(h); claws.push(h); }
-    const bm = new TH.Mesh(new TH.CylinderGeometry(.35, 1.1, 9, 24, 1, true), glowMat(0xc070ff, .45)); bm.position.y = -6.4; belly.add(bm);
-    const bm2 = new TH.Mesh(new TH.CylinderGeometry(.12, .32, 9, 16, 1, true), glowMat(0xf0d8ff, .8)); bm2.position.y = -6.4; belly.add(bm2); const em = sprite(4.5); em.position.y = -2.0; belly.add(em);
+    const bm = new TH.Mesh(new TH.CylinderGeometry(.35, 1.1, 9, 24, 1, true), glowMat(0xc070ff, .45)); bm.position.y = -6.4; bm.userData.dyn = 1; belly.add(bm);
+    const bm2 = new TH.Mesh(new TH.CylinderGeometry(.12, .32, 9, 16, 1, true), glowMat(0xf0d8ff, .8)); bm2.position.y = -6.4; bm2.userData.dyn = 1; belly.add(bm2); const em = sprite(4.5); em.position.y = -2.0; belly.add(em);
     // six legs: hip drum, armoured femur rising to a peaked knee, a long blade-shin plunging to a three-claw foot
     const legs = [];
     for (let k = 0; k < 6; k++) { const a = k * TAU / 6, L = new TH.Group(); L.position.set(Math.cos(a) * 3.9, -.55, Math.sin(a) * 3.9); L.rotation.y = -a; body.add(L);
@@ -258,7 +260,7 @@
     const bt = bolts(body, 8, () => [V((rnd() - .5) * 1.6, -2, (rnd() - .5) * 1.6), V((rnd() - .5) * 3.4, -6 - rnd() * 5, (rnd() - .5) * 3.4)]);
     // attack fx: the forward sigil beam and the ground shockwave
     const fBeam = new TH.Group(); fBeam.visible = false; body.add(fBeam); { const sg = sigils[0].sg; sg.updateWorldMatrix(true, false); }
-    const fb1 = new TH.Mesh(new TH.CylinderGeometry(.9, .55, 40, 24, 1, true), glowMat(0xc070ff, .5)), fb2 = new TH.Mesh(new TH.CylinderGeometry(.3, .2, 40, 16, 1, true), glowMat(0xf6e6ff, .9)); for (const b of [fb1, fb2]) { b.rotation.x = Math.PI / 2; b.position.z = 20; fBeam.add(b); }
+    const fb1 = new TH.Mesh(new TH.CylinderGeometry(.9, .55, 40, 24, 1, true), glowMat(0xc070ff, .5)), fb2 = new TH.Mesh(new TH.CylinderGeometry(.3, .2, 40, 16, 1, true), glowMat(0xf6e6ff, .9)); for (const b of [fb1, fb2]) { b.rotation.x = Math.PI / 2; b.position.z = 20; b.userData.dyn = 1; fBeam.add(b); }
     const fbS = sprite(7, "rgba(240,210,255,1)", "hot2"); fBeam.add(fbS);
     const groundY = -.55 + 2.8 - 8.4 - .4, quake = wave(grp, 9, false); grp.children[grp.children.length - 1].position.y = groundY;
     const mv = moves({ walk: 6000, beam: 3200, stomp: 1700, summon: 2600, hit: 520 }), hit = hitKit(body, shk);
@@ -276,7 +278,7 @@
       const surge = bell(fsu, 0, .2, .75, 1); for (const c of claws) c.rotation.z = -surge * .7 + Math.sin(t * .002) * .04;
       const f = (.8 + Math.sin(t * .006) * .12 + (rnd() < .05 ? .15 : 0)) * (1 + surge * .8); bm.material.opacity = .4 * f; bm2.material.opacity = .75 * Math.min(1.3, f); bm.scale.set(1 + surge * .6, 1, 1 + surge * .6); em.material.opacity = Math.min(1, f);
       bt(t, 1 + surge * 4 + fire * 2); hit(bell(fh, 0, .05, .4, 1), t); };
-    return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 12, h: 16 }; }
+    bake(body); return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 12, h: 16 }; }
 
   /* ---------- Orbital Devourer: a long hull of overlapping chitin scales tapering to a lance tail, scythe blades sweeping
      back, a maw of eight hinged claws round a crackling vortex, and many jointed tentacles that never stop moving.
@@ -298,7 +300,7 @@
       const g = new TH.ExtrudeGeometry(s, { depth: .14, bevelEnabled: true, bevelThickness: .05, bevelSize: .05, bevelSegments: 1, curveSegments: 12 }); g.translate(0, 0, -.07); return g; };
     const blades = [];
     for (let i = 0; i < 34; i++) { const x = 2.4 - i * .34, R = rad(x) + .1, a = [0, .7, -.7, 1.5, -1.5, 2.3, -2.3][i % 7] + (rnd() - .5) * .3, len = (3.0 + rnd() * 3.2) * (x > -2 ? 1.5 : 1.1);
-      const h = new TH.Group(); h.rotation.x = a; h.position.x = x; const m = new TH.Mesh(scy(len, 1.0 + rnd() * .8), MB); m.position.y = R - .2; m.rotation.z = Math.PI - (.35 + rnd() * .35); m.scale.y = -1; h.add(m); body.add(h); blades.push({ h, m, ph: rnd() * TAU, z0: m.rotation.z }); }
+      const h = new TH.Group(); h.rotation.x = a; h.position.x = x; const m = new TH.Mesh(scy(len, 1.0 + rnd() * .8), MB); m.position.y = R - .2; m.rotation.z = Math.PI - (.35 + rnd() * .35); m.scale.y = -1; m.userData.dyn = 1; h.add(m); body.add(h); blades.push({ h, m, ph: rnd() * TAU, z0: m.rotation.z }); }
     for (let i = 0; i < 14; i++) { const x = 2.0 - i * .72, sp = shard(.24, 1.3 + rnd() * 1.1, MB); sp.position.set(x, rad(x) + .1, 0); sp.rotation.z = .7; body.add(sp); }
     // the lance tail
     { const t1 = horn(3.4, .3, .32, MB); t1.rotation.z = Math.PI; t1.position.x = -11.0; body.add(t1); const tg = sprite(1.6); tg.position.x = -11; body.add(tg); }
@@ -310,9 +312,9 @@
       const gl = strut(V(.2, -.25, 0), V(3.6, -1.4, 0), .05, .02, glowMat(VIO2, .8)); hg.add(gl); claws.push({ hg, ph: k * .7 }); }
     for (let k = 0; k < 18; k++) { const a = k * TAU / 18, s = shard(.14, .7, MB); s.position.set(.05, Math.cos(a) * 2.25, Math.sin(a) * 2.25); s.lookAt(s.position.clone().add(V(.6, -Math.cos(a), -Math.sin(a)))); s.rotateX(Math.PI / 2); maw.add(s); }
     const vmat = new TH.MeshBasicMaterial({ map: swirlTex(), transparent: true, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false, side: TH.DoubleSide });
-    const vort = new TH.Mesh(new TH.CircleGeometry(2.4, 48), vmat); vort.rotation.y = Math.PI / 2; maw.add(vort); const vort2 = new TH.Mesh(vort.geometry, vmat.clone()); vort2.material.opacity = .6; vort2.rotation.y = Math.PI / 2; vort2.scale.setScalar(.72); vort2.position.x = .15; maw.add(vort2);
+    const vort = new TH.Mesh(new TH.CircleGeometry(2.4, 48), vmat); vort.userData.dyn = 1; vort.rotation.y = Math.PI / 2; maw.add(vort); const vort2 = new TH.Mesh(vort.geometry, vmat.clone()); vort2.userData.dyn = 1; vort2.material.opacity = .6; vort2.rotation.y = Math.PI / 2; vort2.scale.setScalar(.72); vort2.position.x = .15; maw.add(vort2);
     const hot = sprite(4.2, "rgba(250,225,255,1)", "hot"); hot.position.x = .4; maw.add(hot); const glow = sprite(9); glow.position.x = .2; maw.add(glow);
-    const mb1 = new TH.Mesh(new TH.CylinderGeometry(1.4, 1.9, 44, 24, 1, true), glowMat(0xc070ff, .5)), mb2 = new TH.Mesh(new TH.CylinderGeometry(.45, .6, 44, 16, 1, true), glowMat(0xf6e6ff, .9)); for (const b of [mb1, mb2]) { b.rotation.z = -Math.PI / 2; b.position.x = 22; b.visible = false; maw.add(b); }
+    const mb1 = new TH.Mesh(new TH.CylinderGeometry(1.4, 1.9, 44, 24, 1, true), glowMat(0xc070ff, .5)), mb2 = new TH.Mesh(new TH.CylinderGeometry(.45, .6, 44, 16, 1, true), glowMat(0xf6e6ff, .9)); for (const b of [mb1, mb2]) { b.rotation.z = -Math.PI / 2; b.position.x = 22; b.visible = false; b.userData.dyn = 1; maw.add(b); }
     // jointed tentacles: chains of plated segments with light rings at every joint and spurs along the length
     const TM = hullMat("tent", { rows: 3, cols: 4, bronze: .1, slits: .22, rep: [1, 1], ei: 2.4, base: "#34323c", rim: .6 });
     const tents = [];
@@ -325,8 +327,21 @@
       const tip = horn(len / n * 1.6, .4, Math.max(.06, r0 * .2), MB); tip.rotation.z = Math.PI / 2; tip.position.y = prevL; par.add(tip);
       const R = rad(x0) * .88; root.position.set(x0, dir.y * R, dir.z * R); const d = V(dir.x, dir.y, dir.z).normalize(); root.quaternion.setFromUnitVectors(V(0, 1, 0), d); root.rotateY(rnd() * TAU);
       body.add(root); tents.push({ root, base, J, curl, ph: rnd() * TAU, w: .0009 + rnd() * .0006, front }); };
-    for (let k = 0; k < 8; k++) { const a = k * TAU / 8 + .3, x0 = 1.6 - (k % 4) * 1.9; tent(12 + rnd() * 6, 15, .85 + rnd() * .2, x0, V(-1.1, Math.cos(a) - .35, Math.sin(a)), (rnd() < .5 ? 1 : -1) * (.1 + rnd() * .09), false); }
-    for (let k = 0; k < 6; k++) { const a = k * TAU / 6, x0 = 2.9; tent(4.5 + rnd() * 2, 9, .42, x0, V(.55, Math.cos(a), Math.sin(a)), (rnd() < .5 ? 1 : -1) * (.12 + rnd() * .08), true); }
+    // galaxy-map build: each tentacle is one tapered tube that writhes in the vertex shader (lash and splay drive its amplitude)
+    const TW = { t: 0, amp: 1, lash: 0 };
+    if (LOD) { const TL = hullMat("tent", { rows: 3, cols: 4, bronze: .1, slits: .22, rep: [1, 1], ei: 2.4, base: "#34323c", rim: .6 }); TL.side = TH.DoubleSide; const rim = TL.onBeforeCompile; TL.customProgramCacheKey = () => "bossrim-tent"; TL.onBeforeCompile = sh => { rim(sh); sh.uniforms.uT = { value: 0 }; sh.uniforms.uA = { value: 1 }; sh.uniforms.uL = { value: 0 }; TL.userData.sh = sh;
+        sh.vertexShader = "uniform float uT, uA, uL; attribute float aPh;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n float s = uv.x; transformed += vec3(uL * s * s * 6.0, sin(uT * 1.1 + s * 6.0 + aPh) * uA, cos(uT * .9 + s * 5.0 + aPh * 1.3) * uA) * s * s * 1.6;"); };
+      const tube = (x0, dir, len, r0, k) => { const pts = [], d = V(dir.x, dir.y, dir.z).normalize(), side = V(0, -d.z, d.y).normalize(), R = rad(x0) * .88, o = V(x0, dir.y * R, dir.z * R), curl = (rnd() < .5 ? 1 : -1) * (2 + rnd() * 2);
+        for (let i = 0; i <= 12; i++) { const f = i / 12, p = o.clone().addScaledVector(d, f * len).addScaledVector(side, Math.sin(f * curl) * len * .18); p.x -= f * f * len * .25; pts.push(p); }
+        const g = new TH.TubeGeometry(new TH.CatmullRomCurve3(pts), 48, r0, 9, false), P = g.attributes.position;
+        for (let i = 0; i <= 48; i++) { let cx = 0, cy = 0, cz = 0; for (let j = 0; j < 10; j++) { const q = i * 10 + j; cx += P.getX(q); cy += P.getY(q); cz += P.getZ(q); } cx /= 10; cy /= 10; cz /= 10;
+          const sc = 1 - .85 * (i / 48); for (let j = 0; j < 10; j++) { const q = i * 10 + j; P.setXYZ(q, cx + (P.getX(q) - cx) * sc, cy + (P.getY(q) - cy) * sc, cz + (P.getZ(q) - cz) * sc); } }
+        g.computeVertexNormals(); g.setAttribute("aPh", new TH.BufferAttribute(new Float32Array(P.count).fill(k * 1.7), 1)); const m = new TH.Mesh(g, TL); m.userData.dyn = 1; m.frustumCulled = false; body.add(m); };
+      for (let k = 0; k < 8; k++) { const a = k * TAU / 8 + .3; tube(1.6 - (k % 4) * 1.9, V(-1.1, Math.cos(a) - .35, Math.sin(a)), 13 + rnd() * 5, .9, k); }
+      for (let k = 0; k < 6; k++) { const a = k * TAU / 6; tube(2.9, V(.55, Math.cos(a), Math.sin(a)), 5 + rnd() * 2, .42, k + 8); }
+      TW.mat = TL; }
+    else for (let k = 0; k < 8; k++) { const a = k * TAU / 8 + .3, x0 = 1.6 - (k % 4) * 1.9; tent(12 + rnd() * 6, 15, .85 + rnd() * .2, x0, V(-1.1, Math.cos(a) - .35, Math.sin(a)), (rnd() < .5 ? 1 : -1) * (.1 + rnd() * .09), false); }
+    if (!LOD) for (let k = 0; k < 6; k++) { const a = k * TAU / 6, x0 = 2.9; tent(4.5 + rnd() * 2, 9, .42, x0, V(.55, Math.cos(a), Math.sin(a)), (rnd() < .5 ? 1 : -1) * (.12 + rnd() * .08), true); }
     const bt = bolts(maw, 10, () => { const a = rnd() * TAU, b = a + (rnd() - .5) * 2; return [V(.3, 0, 0), V(.1, Math.cos(b) * 1.9, Math.sin(b) * 1.9)]; }, 0xf0d0ff);
     const roarW = wave(maw, 3.5, true);
     const mv = moves({ bite: 1100, lash: 1600, beam: 3000, roar: 2400, hit: 520 }), hit = hitKit(body, shk);
@@ -345,10 +360,26 @@
           if (T.front) z += Math.sin(t * .006 + i + T.ph) * .08 * (gapeB + flare);
           j.rotation.set(x, 0, z); });
         T.base.rotation.z = -splay * .45 * Math.sign(T.curl) + (whip ? -bell(fl, 0, .2, .3, .6) * .4 + bell(fl, .3, .45, .6, 1) * .9 : 0); }
+      if (TW.mat && TW.mat.userData.sh) { const u = TW.mat.userData.sh.uniforms; u.uT.value = t * .001; u.uA.value = 1 + splay * .8 + (fl >= 0 ? bell(fl, .1, .3, .5, .9) * 1.2 : 0); u.uL.value = fl >= 0 ? -bell(fl, 0, .15, .2, .4) * .4 + bell(fl, .25, .4, .55, .9) : 0; }
       vort.rotation.x = -t * (.0012 + fire * .01); vort2.rotation.x = t * (.002 + fire * .012); hot.material.opacity = .8 + Math.sin(t * .007) * .2; hot.scale.setScalar(4.2 * (1 + fire * 1.4 + gapeM * .3)); glow.material.opacity = .7 + fire * .3;
       for (const b of [mb1, mb2]) b.visible = fire > .01; mb1.material.opacity = .5 * fire * (.85 + rnd() * .15); mb2.material.opacity = .9 * fire; mb1.scale.set(1 + fire * .25, 1, 1 + fire * .25);
       roarW(fr < 0 ? -1 : fr * 1.3); bt(t, 1 + flare * 5 + fire * 3); hit(bell(fh, 0, .05, .4, 1), t); };
-    return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 15, h: 18 }; }
+    bake(body); return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 15, h: 18 }; }
 
-  root.BOSS3D = { init(T) { TH = T; }, conduit, warden, overlord, devourer };
+  // merge each group's static leaf meshes that share a material (same look), so a boss costs tens of draw calls, not hundreds
+  function bake(root) { const fl = []; root.traverse(o => { if (o !== root && o.userData.flat && o.parent) fl.push(o); });
+    for (const o of fl.reverse()) { o.updateMatrix(); const par = o.parent; for (const c of [...o.children]) { c.applyMatrix4(o.matrix); par.add(c); } par.remove(o); }
+    const work = []; root.traverse(o => { if (o.children && o.children.length) work.push(o); });
+    for (const o of work) { const G = new Map();
+      for (const c of o.children) { if (!c.isMesh || c.userData.dyn || c.children.length || !c.geometry || !c.geometry.attributes.position) continue; const m = c.material;
+        const k = m.isMeshBasicMaterial && !m.map ? `b${m.color.getHex()}|${m.opacity}|${m.blending}|${m.side}` : m.uuid; if (!G.has(k)) G.set(k, []); G.get(k).push(c); }
+      for (const [, L] of G) { if (L.length < 2) continue; let n = 0; const parts = L.map(c => { c.updateMatrix(); const g = c.geometry.index ? c.geometry.toNonIndexed() : c.geometry.clone(); g.applyMatrix4(c.matrix);
+          if (!g.attributes.normal) g.computeVertexNormals(); if (!g.attributes.uv) g.setAttribute("uv", new TH.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2)); n += g.attributes.position.count; return g; });
+        const P = new Float32Array(n * 3), N = new Float32Array(n * 3), U = new Float32Array(n * 2); let q = 0;
+        for (const g of parts) { P.set(g.attributes.position.array, q * 3); N.set(g.attributes.normal.array, q * 3); U.set(g.attributes.uv.array, q * 2); q += g.attributes.position.count; g.dispose(); }
+        const g2 = new TH.BufferGeometry(); g2.setAttribute("position", new TH.BufferAttribute(P, 3)); g2.setAttribute("normal", new TH.BufferAttribute(N, 3)); g2.setAttribute("uv", new TH.BufferAttribute(U, 2)); g2.computeBoundingSphere();
+        const mesh = new TH.Mesh(g2, L[0].material); for (const c of L) o.remove(c); o.add(mesh); } } }
+  // light the boss's own materials from an environment map (the galaxy scene has none); count its draw calls
+  function prep(b, env) { b.grp.traverse(o => { const m = o.material; if (m && m.isMeshStandardMaterial && env) { m.envMap = env; m.needsUpdate = true; } }); return b; }
+  root.BOSS3D = { init(T) { TH = T; }, set lod(v) { LOD = v | 0; }, get lod() { return LOD; }, conduit, warden, overlord, devourer, prep };
 })(typeof window !== "undefined" ? window : globalThis);
