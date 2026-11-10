@@ -1563,6 +1563,17 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
 #wbscan .ws-att{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,122,106,.3);opacity:0;animation:wsIn .4s ease forwards;animation-delay:var(--d)}#wbscan .ws-att h5{margin:0 0 5px;font:700 10px/1 ui-monospace,monospace;letter-spacing:.14em;color:#ff7a6a}
 #wbscan .ws-att p{margin:0 0 5px;padding:4px 6px;border-radius:6px;display:flex;flex-direction:column;gap:1px;transition:background .3s}#wbscan .ws-att b{font-size:12px;color:#ffd0c8}#wbscan .ws-att span{font-size:11px;color:#a9b4cc;line-height:1.3}
 #wbscan .ws-att p.hot{background:rgba(255,77,106,.22);box-shadow:inset 3px 0 0 #ff4d6a}#wbscan .ws-att p.hot b::before{content:"⚠ ";color:#ff4d6a}
+
+/* v386 decluttered cinematic and boss scan */
+#app.cine #coach,#app.cine ~ #fbBtn,body:has(#app.cine) #fbBtn{opacity:0;visibility:hidden;pointer-events:none}
+#wbscan .ws-c{display:none}#wbscan .ws-ret{width:120px;height:120px;margin:-60px 0 0 -60px;opacity:.6}
+#wbscan .ws-card{top:calc(env(safe-area-inset-top,0px) + 62px);left:12px;right:12px;margin:0 auto;bottom:auto;width:auto;max-width:430px;padding:9px 12px 10px;pointer-events:auto;cursor:pointer;background:rgba(6,8,18,.72)}
+#wbscan .ws-card small{font-size:9px}#wbscan .ws-card>b{margin:3px 0 5px;font-size:15px}
+#wbscan .ws-sum{display:flex;flex-wrap:wrap;gap:4px 12px;font:600 11px/1.3 ui-monospace,monospace;color:#c9d4ea}#wbscan .ws-sum em{font-style:normal;color:#ff7a6a}
+#wbscan .ws-now{margin-top:6px;padding:5px 8px;border-radius:6px;background:rgba(255,77,106,.16);box-shadow:inset 3px 0 0 #ff4d6a;font-size:12px;line-height:1.35}#wbscan .ws-now b{color:#ffd0c8}
+#wbscan .ws-more{display:none;max-height:44vh;overflow:auto;margin-top:6px}#wbscan .ws-card.open .ws-more{display:block}#wbscan .ws-tap{display:block;margin-top:5px;font-size:10px;color:#7f8cab;text-align:right}#wbscan .ws-card.open .ws-tap::after{content:" ▴"}#wbscan .ws-card:not(.open) .ws-tap::after{content:" ▾"}
+#wbscan dl div,#wbscan .ws-att{animation:none;opacity:1}
+@media (min-width:900px){#wbscan .ws-card{left:16px;right:auto;margin:0}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="lib/GLTFLoader-r128.js"></script>
@@ -2969,7 +2980,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 385;
+const GAME_V = 386;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4429,21 +4440,21 @@ const WB_INTEL = { ovl: ["Siege walker · monumental", "Its shield runs on four 
   war: ["Void sentinel · deep layers", "The core flares just before each pulse.", "SEVERE"], con: ["Power pylon", "The crystal overheats while it charges.", "MODERATE"] };
 function wbScanOn(key) { const D = WB[key]; if (!D) return; wbScanOff(); const I = WB_INTEL[D.con != null ? "con" : key], el = document.createElement("div"); el.id = "wbscan"; el.style.setProperty("--sc", D.col);
   el.innerHTML = `<i class="ws-c tl"></i><i class="ws-c tr"></i><i class="ws-c bl"></i><i class="ws-c br"></i><i class="ws-line"></i><i class="ws-ret"></i>
-    <div class="ws-card"><small>SCANNING · WORLD BOSS</small><b>${D.ic} ${esc(D.n)}</b><dl>
+    <div class="ws-card" data-act="wsMore"><small>SCANNING · WORLD BOSS</small><b>${D.ic} ${esc(D.n)}</b><div class="ws-sum"><span id="wsHullS">…</span><span>Threat <em>${I[2]}</em></span>${key === "ovl" ? `<span id="wsShS">…</span>` : ""}</div><div class="ws-now" id="wsNow">Watching…</div><div class="ws-more"><dl>
       <div style="--d:.4s"><dt>Class</dt><dd>${I[0]}</dd></div><div style="--d:.9s"><dt>Hull</dt><dd id="wsHull">…</dd></div>${key === "ovl" ? `<div style="--d:1.4s"><dt>Shield</dt><dd id="wsSh">…</dd></div>` : ""}
       <div style="--d:1.9s"><dt>Firepower</dt><dd>${fmt(D.atk)} per round</dd></div><div style="--d:2.4s"><dt>Threat</dt><dd class="ws-th">${I[2]}</dd></div>
-      <div style="--d:2.9s"><dt>Weak point</dt><dd>${I[1]}</dd></div></dl><div class="ws-att" style="--d:3.4s"><h5>⚠ Beware</h5>${(WB_ATT[D.con != null ? "con" : key] || []).map(([m, n, d]) => `<p data-m="${m}"><b>${n}</b><span>${d}</span></p>`).join("")}</div></div>`;
+      <div style="--d:2.9s"><dt>Weak point</dt><dd>${I[1]}</dd></div></dl><div class="ws-att" style="--d:3.4s"><h5>⚠ Beware</h5>${(WB_ATT[D.con != null ? "con" : key] || []).map(([m, n, d]) => `<p data-m="${m}"><b>${n}</b><span>${d}</span></p>`).join("")}</div></div><span class="ws-tap">Full analysis</span></div>`;
   $("#app").appendChild(el); G.wbScan = { key, t0: performance.now(), seen: [], next: 0, i: 0 }; wbScanTick(); setTimeout(() => { if (G.wbScan && G.wbScan.key === key) advHolo(WB_SCAN_SAY[D.con != null ? "con" : key]); }, 900); }
 function wbScanOff() { const el = $("#wbscan"); if (el) el.remove(); G.wbScan = null; }
 function wbScanTick() { const s = G.wbScan; if (!s) return; const st = wbState(), hp = st.hp[s.key] | 0, a = $("#wsHull"), b = $("#wsSh"), m = $("#wsMv");
-  if (a) a.textContent = hp ? `${Math.round(hp / WB_SEG * 100)}% · ${fmt(Math.round(hp / WB_SEG * WB[s.key].hp))} HP` : "Destroyed"; if (b) b.textContent = wbCons() ? `Up · ${wbCons()}/4 conduits` : "Down";
+  if (a) a.textContent = hp ? `${Math.round(hp / WB_SEG * 100)}% · ${fmt(Math.round(hp / WB_SEG * WB[s.key].hp))} HP` : "Destroyed"; { const x = $("#wsHullS"), y = $("#wsShS"); if (x) x.textContent = hp ? `Hull ${Math.round(hp / WB_SEG * 100)}%` : "Destroyed"; if (y) y.textContent = wbCons() ? `Shield ${wbCons()}/4` : "Shield down"; } if (b) b.textContent = wbCons() ? `Up · ${wbCons()}/4 conduits` : "Down";
   if (m) m.textContent = s.seen.length ? s.seen.map(k => WB_MOVE_N[k] || k).join(" · ") : "Watching…"; }
 setInterval(() => { try { if (G.wbScan && !(G3 && G3.cam.cineObj && G3.cam.cineObj.id === "wb_" + G.wbScan.key)) wbScanOff(); else wbScanTick(); } catch (e) {} }, 500);
 function wbScanFx(W, t) { const s = G.wbScan, M = s && W.wbM && W.wbM[s.key]; if (!M || !M.b) return; const g = M.b.grp, c = W.cam;
   if (!M.sweep) { const sw = new TH.Group(), R = M.b.r * 1.15; sw.add(new TH.Mesh(new TH.CylinderGeometry(R, R, .25, 64, 1, true), new TH.MeshBasicMaterial({ color: 0x9ff3ff, transparent: true, opacity: .55, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false })));
     sw.add(new TH.Mesh(new TH.CylinderGeometry(R, R, 2.6, 64, 1, true), new TH.MeshBasicMaterial({ color: 0x5fd8ff, transparent: true, opacity: .12, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false }))); M.sweep = sw; M.b.grp.add(sw); }
   const k = ((t - s.t0) % 3600) / 3600, Y = WB_YR[WB[s.key].m3]; M.sweep.visible = true; M.sweep.position.y = Y[0] + k * (Y[1] - Y[0]); M.sweep.children[0].material.opacity = .55 * Math.sin(k * Math.PI);
-  if (t > s.next) { s.next = t + 4500; const mv = M.b.moves.filter(x => x !== "hit"), n = mv[s.i++ % mv.length]; M.b.act(n); if (!s.seen.includes(n)) s.seen.push(n); for (const p of document.querySelectorAll("#wbscan .ws-att p")) p.classList.toggle("hot", p.dataset.m === n); }
+  if (t > s.next) { s.next = t + 4500; const mv = M.b.moves.filter(x => x !== "hit"), n = mv[s.i++ % mv.length]; M.b.act(n); if (!s.seen.includes(n)) s.seen.push(n); for (const p of document.querySelectorAll("#wbscan .ws-att p")) p.classList.toggle("hot", p.dataset.m === n); { const A = (WB_ATT[WB[s.key].con != null ? "con" : s.key] || []).find(x => x[0] === n), el = $("#wsNow"); if (el) el.innerHTML = A ? `<b>⚠ ${A[1]}</b> · ${A[2]}` : `Observing: ${WB_MOVE_N[n] || n}`; } }
   const base = (WB[s.key].con != null ? 45 : 105) * WB[s.key].sc; c.goal = Object.assign(c.goal || {}, { dist: base * (1 + .28 * Math.sin((t - s.t0) * .00035)) }); c.head = (c.head || 0) + .0006 * (W.dtk || 1); } // a slow circle that dollies in and out
 
 function arrive(f) {
@@ -8928,22 +8939,23 @@ function overlay3D(W, fx, w, h, dpr, t, T) {
   { if (!W.mvT || t - W.mvT > 500) { W.mvT = t; W.mvL = mvVisible(T); } const mv = []; G3.moves = mv; const P = (x, z) => proj(V3B.set(x, 0, z));
     const siege = !!cubePhase(T) && W.cam.dist < 320, nc = W.nexus.position; // v107: keep the Cube battle clean of map markers up close
     for (const v of W.mvL || []) { const p = mvPos(v.m, T); if (!p) continue; if (siege && (Math.hypot(p[0] - nc.x, p[1] - nc.z) < 230 || Math.hypot(p[0] + 150, p[1] - 115) < 120)) continue; const s = P(p[0], p[1]); if (!s || s[0] < -40 || s[1] < -40 || s[0] > w + 40 || s[1] > h + 40) continue;
-      const own = v.uid && isBot(v.uid) ? "#ff9a8a" : v.ally ? "#7be39a" : colorOf(v.uid), rk = p[6] ? "gather" : T >= v.m.arrive ? "back" : MV_ROUTE(v.m.m), col = ROUTE_CSS[rk], sz = 4 + Math.min(7, Math.log2(1 + v.m.n) * .9);
+      const own = v.uid && isBot(v.uid) ? "#ff9a8a" : v.ally ? "#7be39a" : colorOf(v.uid), rk = p[6] ? "gather" : T >= v.m.arrive ? "back" : MV_ROUTE(v.m.m), col = ROUTE_CSS[rk], zk = clamp(280 / Math.max(1, W.cam.dist), .45, 1), sz = (2.6 + Math.min(4, Math.log2(1 + v.m.n) * .5)) * zk; /* v386: smaller, and smaller still zoomed out */
       ctx.save(); ctx.strokeStyle = col; ctx.fillStyle = col;
       if (!p[6]) { const a = P(p[2], p[3]), b = P(p[4], p[5]);
         if (a) { const g = ctx.createLinearGradient(a[0], a[1], s[0], s[1]); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, col); ctx.strokeStyle = g; ctx.lineWidth = 2; ctx.setLineDash([2, 5]); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(s[0], s[1]); ctx.stroke(); ctx.setLineDash([]); ctx.strokeStyle = col; }
         if (b) { ctx.globalAlpha = .55; ctx.setLineDash([2, 6]); ctx.lineDashOffset = -t * .02; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(s[0], s[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
           const ang = Math.atan2(b[1] - s[1], b[0] - s[0]); ctx.translate(s[0], s[1]); ctx.rotate(ang);
           // v150: the glow is a wider, faint chevron behind the solid one (a canvas shadowBlur costs a GPU blur pass per fleet, every frame)
-          for (const [k, a] of [[1.7, .18], [1, 1]]) { ctx.globalAlpha = a; ctx.beginPath(); ctx.moveTo(sz * 1.6 * k, 0); ctx.lineTo(-sz * k, -sz * k); ctx.lineTo(-sz * .4 * k, 0); ctx.lineTo(-sz * k, sz * k); ctx.closePath(); ctx.fill(); } } }
+          for (const [k, a] of [[1.6, .1], [1, .72]]) { ctx.globalAlpha = a; ctx.beginPath(); ctx.moveTo(sz * 1.6 * k, 0); ctx.lineTo(-sz * k, -sz * k); ctx.lineTo(-sz * .4 * k, 0); ctx.lineTo(-sz * k, sz * k); ctx.closePath(); ctx.fill(); } } }
       else { ctx.globalAlpha = .6 + .3 * Math.sin(t * .005); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(s[0], s[1], sz + 3, 0, TAU); ctx.stroke(); }
       ctx.restore();
       mv.push({ uid: v.uid, n: v.m.n, m: v.m.m, arrive: p[6] ? (v.m.gend || v.m.arrive) : now() < v.m.arrive ? v.m.arrive : v.m.back, sx: s[0], sy: s[1], own: false, ref: v });
       if (W.cam.followMv && W.cam.followMv.m === v.m) { ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 1.6; const rr = sz * 2.6 * (1 + .08 * Math.sin(t * .006)); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4; ctx.beginPath(); ctx.arc(s[0], s[1], rr, a - .35, a + .35); ctx.stroke(); } ctx.restore(); }
-      lbl(-4 - Math.log2(1 + v.m.n) * .5, `${v.m.m === "w" ? "⚔ " : ""}${isBot(v.uid) ? BOT_BY[v.uid].name : nameOf(v.uid)} · ${fmt(v.m.n)}`, s[0], s[1] - sz - 8, own); } }
+      if (W.cam.dist < 650 || (W.cam.followMv && W.cam.followMv.m === v.m)) lbl(-4 - Math.log2(1 + v.m.n) * .5, `${v.m.m === "w" ? "⚔ " : ""}${isBot(v.uid) ? BOT_BY[v.uid].name : nameOf(v.uid)} · ${fmt(v.m.n)}`, s[0], s[1] - sz - 8, own); } }
   { const st = wbState(T); for (const key in WB) { if (!(st.hp[key] > 0)) continue; const D = WB[key], q = P3(WBO[key], T, WBQ); V3B.set(q.x, q.y + (D.con != null ? 6 : 10) * D.sc * 1.6, q.z); const dd = cp.distanceTo(V3B), s = proj(V3B); if (!s) continue; /* v384 world bosses */
       const sr = (D.con != null ? 6 : 16) * D.sc * 1.6 / dd * k; hits.push({ wb: key, x: s[0], y: s[1], sr: Math.max(sr, 14) });
-      if (D.con == null || sr > 5) lbl(D.con == null ? -1e8 : -sr - 3, `${D.ic} ${D.n} · ${Math.round(st.hp[key] / WB_SEG * 100)}%${key === "ovl" && wbCons(T) ? " · shielded" : ""}`, s[0], s[1] - Math.max(sr, 12) - 8, D.col); } }
+      if (sr < 2.2 && G.find !== "ev") { ctx.save(); ctx.globalAlpha = .85; ctx.fillStyle = D.col; ctx.beginPath(); ctx.arc(s[0], s[1], D.con != null ? 2.2 : 3.6, 0, TAU); ctx.fill(); ctx.globalAlpha = .25; ctx.beginPath(); ctx.arc(s[0], s[1], D.con != null ? 5 : 8, 0, TAU); ctx.fill(); ctx.restore(); continue; } /* v386: far away, a small marker */
+      if (D.con == null || sr > 5) lbl(-sr - 3, `${D.ic} ${D.n} · ${Math.round(st.hp[key] / WB_SEG * 100)}%${key === "ovl" && wbCons(T) ? " · shielded" : ""}`, s[0], s[1] - Math.max(sr, 12) - 8, D.col); } }
   for (const [yid0, o] of W.pyramids || []) { const y = YB[yid0]; if (!y || o.fog || !o.grp.visible || (G.find && G.find !== "y")) continue; const s = proj(o.grp.position); if (!s) continue;
     const sr = (1.6 + y.lvl * .2) / cp.distanceTo(o.grp.position) * k, down = pyrDown(y) > T, col = down ? "#a89470" : "#ffd36b"; hits.push({ yid: y.id, x: s[0], y: s[1], sr: Math.max(sr, 8) });
     if (sr > 9 || G.selNode === y.id || G.find === "y") lbl(G.selNode === y.id ? -1e9 : -sr - 2, `▲ ${y.name} · Lv.${y.lvl}${down ? " · looted" : ""}`, s[0], s[1] + Math.max(sr * 1.6, 10) + 12, col);
@@ -15132,7 +15144,11 @@ function voiceStop() { voiceTalk(0); try { if (VOICE.au) { VOICE.au.pause(); VOI
 function advHoloPlace() { const w = $("#advh"); if (!w || !w.classList.contains("on")) return; const el = GD.el && GD.el.isConnected ? GD.el : null, r = el && el.getBoundingClientRect(), dock = $("#dock"), db = dock ? dock.getBoundingClientRect().top : innerHeight;
   const cw = $("#coach"), inCoach = el && cw && cw.contains(el), top = r && !inCoach ? r.top + r.height / 2 > innerHeight * .5 : false; w.style.top = top ? "max(86px, calc(env(safe-area-inset-top,0px) + 86px))" : "auto"; w.style.bottom = top ? "auto" : (innerHeight - db + 64) + "px";
   const dr = !el && $(".sheet.full .dres"); if (dr) { w.style.top = "auto"; w.style.bottom = Math.max(8, innerHeight - dr.getBoundingClientRect().top + 16) + "px"; } /* v339: on a card she stands above the costs, never over Requirements or Build */ }
-function advHolo(line) { if (!line) return; let w = $("#advh"); // v334: her hologram for every spoken step line
+function advHolo(line, force) { if (!line) return; const T0 = Date.now(); G.holoSaid = G.holoSaid || {}; for (const k in G.holoSaid) if (T0 - G.holoSaid[k] > 60000) delete G.holoSaid[k];
+  if (!force && G.holoSaid[line] && T0 - G.holoSaid[line] < 30000) return; // v386: not the same thing again within 30 s
+  { const a0 = VOICE.au; if (!force && a0 && !a0.paused && !a0.ended && G.holoCur && G.holoCur !== line && $("#advh.on")) { G.holoNext = { line, at: T0 }; // she finishes her sentence first
+      if (!a0._q) { a0._q = 1; const go = () => { a0._q = 0; const n = G.holoNext; G.holoNext = null; if (n && Date.now() - n.at < 12000) setTimeout(() => advHolo(n.line), 400); }; a0.addEventListener("ended", go, { once: true }); a0.addEventListener("error", go, { once: true }); } return; } }
+  G.holoSaid[line] = T0; G.holoCur = line; let w = $("#advh"); // v334: her hologram for every spoken step line
   if (!w) { w = document.createElement("div"); w.id = "advh"; w.setAttribute("aria-live", "polite"); w.innerHTML = `<div class="holo"><img class="advimg" src="${ADV_ART}" alt=""><i class="hscan"></i><i class="hbeam"></i></div><div class="hsay"><b>${ADV}</b><span></span></div>`; $("#app").appendChild(w); }
   w.querySelector(".hsay span").textContent = line; for (const im of w.querySelectorAll(".advimg,.hscan")) { im.style.animation = "none"; void im.offsetWidth; im.style.animation = ""; } w.classList.add("on"); document.body.classList.add("advtalk"); /* she materializes each time; the Academy card steps aside while she talks */ advHoloPlace(); clearTimeout(G.advhT); speak(line);
   const hide = () => { clearTimeout(G.advhT); G.advhT = setTimeout(() => { const x = $("#advh"); if (x) x.classList.remove("on", "talk"); document.body.classList.remove("advtalk"); }, 900); };
@@ -17534,9 +17550,10 @@ const ACT = {
   liveReplay: () => { closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } G.liveRT0 = now(); G.liveReplay = performance.now(); },
   shotSave: () => shotSave(), shotShare: () => shotShare(), shotClose: () => shotClose(),
   cineObj: d => cineObjStart(d.id),
+  wsMore: () => { const c = $("#wbscan .ws-card"); if (c) c.classList.toggle("open"); },
   faq: d => { const n = +d.i, all = FAQ.flatMap(c => c[1]), qa = all[n], b = document.querySelector(`.faqb[data-i="${n}"]`); if (!qa || !b) return; const it = b.closest(".faqi"), open = !it.classList.contains("on");
     for (const x of document.querySelectorAll(".faqi.on")) { x.classList.remove("on"); x.querySelector(".faqb").setAttribute("aria-expanded", "false"); }
-    if (open) { it.classList.add("on"); b.setAttribute("aria-expanded", "true"); advHolo(qa[1]); } else { try { voiceStop(); } catch (e) {} } },
+    if (open) { it.classList.add("on"); b.setAttribute("aria-expanded", "true"); advHolo(qa[1], true); } else { try { voiceStop(); } catch (e) {} } },
   cineMode: d => { if (G3 && G3.cam.cine) { G3.cam.cine.m = d.m; const sg = G3.cam.siege; /* v130: on the siege film the angle buttons set your view on top of the director's shots */
     if (sg) { const P = { chase: [0, 0, 1], side: [Math.PI / 2, 0, 1], front: [Math.PI, 0, 1], top: [0, -1.1, 1.2], orbit: [sg.oth, sg.oph, sg.ok] }[d.m]; if (P) [sg.oth, sg.oph, sg.ok] = P; sg.spin = d.m === "orbit"; }
     cineBar(); } },
