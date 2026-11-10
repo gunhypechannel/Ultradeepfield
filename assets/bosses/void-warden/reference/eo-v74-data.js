@@ -1,0 +1,2 @@
+// Empire Origins v77 (index.html), boss definition as shipped. Units are EO troops/resources, not UDF ships.
+{id:"warden",name:"Void Warden",rig:"ring",scale:1,desc:"A floating entity that bends gravity. Its fields slow and crush armies.",hp:7e4,respawn:4800,biomes:[O.TUNDRA,O.HILLS,O.PLATEAU],radius:3,phases:[{at:1,name:"Drift",atk:2e3,armor:{mounted:1.4},prefers:"siege",attack:"Gravity Well"},{at:.5,name:"Collapse",atk:3600,armor:{},shield:.45,prefers:"largest",attack:"Singularity"}],reward:{res:{food:7e3,stone:7e3,metal:3e3},items:{ancient_blueprint:1},prestige:50}}
