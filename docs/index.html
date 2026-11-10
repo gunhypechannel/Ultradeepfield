@@ -3384,7 +3384,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 395;
+const GAME_V = 396;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4905,7 +4905,7 @@ function wbScanFx(W, t) { const s = G.wbScan, M = s && W.wbM && W.wbM[s.key]; if
     sw.add(new TH.Mesh(new TH.CylinderGeometry(R, R, 2.6, 64, 1, true), new TH.MeshBasicMaterial({ color: 0x5fd8ff, transparent: true, opacity: .12, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false }))); M.sweep = sw; M.b.grp.add(sw); }
   const k = ((t - s.t0) % 3600) / 3600, Y = WB_YR[WB[s.key].m3]; M.sweep.visible = true; M.sweep.position.y = Y[0] + k * (Y[1] - Y[0]); M.sweep.children[0].material.opacity = .55 * Math.sin(k * Math.PI);
   if (t > s.next) { s.next = t + 5200; const mv = M.b.moves.filter(x => x !== "hit"), n = mv[s.i++ % mv.length]; M.b.act(n); if (!s.seen.includes(n)) s.seen.push(n);
-    { const A = (WB_ATT[WB[s.key].con != null ? "con" : s.key] || []).find(x => x[0] === n), a0 = VOICE.au; if (A && !s.said.includes(n) && t - s.t0 > 2500 && !(a0 && !a0.paused && !a0.ended) && !G.holoNext) { s.said.push(n); advHolo(`${A[1]}. ${A[2]}`); } } /* v388: the Advisor explains each attack as it is shown */ for (const p of document.querySelectorAll("#wbscan .ws-att p")) p.classList.toggle("hot", p.dataset.m === n); { const A = (WB_ATT[WB[s.key].con != null ? "con" : s.key] || []).find(x => x[0] === n), el = $("#wsNow"); if (el) el.innerHTML = A ? `<b>⚠ ${A[1]}</b> · ${A[2]}` : `Observing: ${WB_MOVE_N[n] || n}`; } }
+    { const A = (WB_ATT[WB[s.key].con != null ? "con" : s.key] || []).find(x => x[0] === n), a0 = VOICE.au; if (A && !s.said.includes(n) && t - s.t0 > 2500 && !(a0 && !a0.paused && !a0.ended) && !G.holoNext) { s.said.push(n); advHolo(`${A[1]}!`); } } /* v396: a short callout as each attack is shown (her opening line already describes them) */ for (const p of document.querySelectorAll("#wbscan .ws-att p")) p.classList.toggle("hot", p.dataset.m === n); { const A = (WB_ATT[WB[s.key].con != null ? "con" : s.key] || []).find(x => x[0] === n), el = $("#wsNow"); if (el) el.innerHTML = A ? `<b>⚠ ${A[1]}</b> · ${A[2]}` : `Observing: ${WB_MOVE_N[n] || n}`; } }
   if (s.user) return; const base = (WB[s.key].con != null ? 45 : WB[s.key].cam || 105) * WB[s.key].sc; c.goal = Object.assign(c.goal || {}, { dist: base * (1 + .28 * Math.sin((t - s.t0) * .00035)) }); c.head = (c.head || 0) + .0006 * (W.dtk || 1); } // v393: hands off once you pinch, scroll or drag // a slow circle that dollies in and out
 
 function arrive(f) {
