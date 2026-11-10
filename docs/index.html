@@ -3384,7 +3384,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 396;
+const GAME_V = 397;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13760,7 +13760,7 @@ function clashWatch(key) { if (!G3) return; const cl = G.clashes.find(x => x.key
   c.goal = { dist: clamp(cl.o.ga.position.distanceTo(cl.o.gd.position) * 1.2, 15, 90) }; $("#app").classList.add("cine"); cineBar(); }
 function cineEnd() { wbScanOff(); if (!G3 || !G3.cam.cine) return; const c = G3.cam; c.cine = null; c.cineObj = null; if (c.siege) { c.siege = null; c.live = 0; } c.goal = { dist: Math.max(c.dist, 30) }; c.ph = clamp(c.ph, .3, 1.15); const a = $("#app"); if (a) a.classList.remove("cine"); const b = $("#cinebar"); if (b) b.remove(); fleetHud(true); }
 /* v393: filming a world boss you can pull far back to take in its size; Wide frames it at about 3.5x its scan distance */
-const cineMaxD = c => c.cineObj && wbById(c.cineObj.id) ? 700 : 160;
+const cineMaxD = c => c.cineObj && wbById(c.cineObj.id) ? 350 : 160; // v397: half of v393's 700
 function cineBar() { if (!G3 || !G3.cam.cine) return; let el = $("#cinebar"); if (!el) { el = document.createElement("div"); el.id = "cinebar"; $("#app").appendChild(el); }
   const m = G3.cam.cine.m; el.innerHTML = `<div class="cb-top"><span class="cb-rec">● CINEMATIC</span><span class="cb-w" id="cbw"></span><button class="cb-shot" data-act="cineShot" aria-label="Take a screenshot">📷</button><button data-act="cineOff" aria-label="Leave cinematic view">✕</button></div>
     <div class="cb-bot"><div class="cb-ang">${G3.cam.cineObj && wbById(G3.cam.cineObj.id) ? `<button class="${G.wbWide ? "on" : ""}" data-act="cineWide">${G.wbWide ? "Close" : "Wide"}</button>` : ""}${CINE_M.map(([k, l]) => `<button class="${k === m ? "on" : ""}" data-act="cineMode" data-m="${k}">${l}</button>`).join("")}</div><small>Drag to look around · pinch to zoom${G3.cam.cineObj && wbById(G3.cam.cineObj.id) ? " out to take in its size" : ""}</small></div>`; }
@@ -18059,7 +18059,7 @@ const ACT = {
     for (const x of document.querySelectorAll(".faqi.on")) { x.classList.remove("on"); x.querySelector(".faqb").setAttribute("aria-expanded", "false"); }
     if (open) { it.classList.add("on"); b.setAttribute("aria-expanded", "true"); advHolo(qa[1], true); } else { try { voiceStop(); } catch (e) {} } },
   cineWide: () => { const c = G3 && G3.cam, o = c && c.cineObj && wbById(c.cineObj.id); if (!o) return; const D = WB[o.wb], base = (D.con != null ? 45 : D.cam || 105) * D.sc; G.wbWide = !G.wbWide; if (G.wbScan) G.wbScan.user = 1;
-    c.goal = Object.assign(c.goal || {}, { dist: base * (G.wbWide ? 3.5 : 1) }); if (G.wbWide) c.ph = Math.max(c.ph, .45); cineBar(); },
+    c.goal = Object.assign(c.goal || {}, { dist: Math.min(cineMaxD(c), base * (G.wbWide ? 3.5 : 1)) }); if (G.wbWide) c.ph = Math.max(c.ph, .45); cineBar(); },
   cineMode: d => { if (G3 && G3.cam.cine) { G3.cam.cine.m = d.m; const sg = G3.cam.siege; /* v130: on the siege film the angle buttons set your view on top of the director's shots */
     if (sg) { const P = { chase: [0, 0, 1], side: [Math.PI / 2, 0, 1], front: [Math.PI, 0, 1], top: [0, -1.1, 1.2], orbit: [sg.oth, sg.oph, sg.ok] }[d.m]; if (P) [sg.oth, sg.oph, sg.ok] = P; sg.spin = d.m === "orbit"; }
     cineBar(); } },

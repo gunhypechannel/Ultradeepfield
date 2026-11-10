@@ -1,11 +1,12 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-10 (America/Phoenix). Current game version: **v396** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v203**.
+Last updated: 2026-11-10 (America/Phoenix). Current game version: **v397** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v204**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
 ## Pending work (as of 2026-11-07): start here in a new session
 
+00000000000000000000000000. **v397 (2026-11-10): boss-scan zoom-out halved to 350 units** (owner); Wide is capped to it. Callout clips for v396 recorded.
 00000000000000000000000000. **v396 (2026-11-10): short attack callouts in boss scans** (owner: the full sentences were repetitive after her opening line). As each attack is shown she now says just its name ("Tentacle lash!"); the scan card still shows the one-line description. 24 callout clips (`p396_voice.json`); the v388 sentence clips are no longer used.
 00000000000000000000000000. **v395 (2026-11-10): the Monday bosses hover just above the worlds too** (owner). Pyramid Overlord and its conduits at y 24 (a fixed height, since pyramid stations sit up to ~10 units either side of the plane), Void Warden at y 22, alongside the Devourer (24), Tyrant (~30 over its lane) and Matriarch.
 00000000000000000000000000. **v394 (2026-11-10): the Orbital Devourer hunts from just above the worlds** (owner). `wbPos("dev")` y 24 (+-3) instead of 0 (+-6); on the map it pitches its maw down about 9-11 degrees (`g.rotation.z` in `wbMapFx`), as if diving at the planets below. Battle report unchanged.
