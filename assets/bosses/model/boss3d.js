@@ -781,6 +781,166 @@
     for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2, s = box(1.35, .08, .08, M); s.position.set(Math.cos(a) * 1.22, Math.sin(a) * 1.22, 0); s.rotation.z = a; rg.add(s); }
     for (let i = 0; i < 8; i++) { const a = i * TAU / 8 + .2, b = box(.34, .3, .26, M); b.position.set(Math.cos(a) * 1.9, Math.sin(a) * 1.9, 0); b.rotation.z = a; rg.add(b); }
     bake(body); bake(rg); return { grp, ring: rg, r: 2.7 }; }
+
+  /* ---------- the five Elementals and the Pentarch (owner's concept art, assets/bosses/elementals/reference/ref-2026-11-10.png) ----------
+     Symmetric alien totems of liquid metal and light, each wrapped in rune circles of its own colour and its own element in HDR:
+     Glacius (ice: a silver-blue stack of orbs between two great crescents, frost glitter), Ignis (fire: a horned crown over a fanged
+     bowl of horns, embers and a lava fall), Solara (light: a golden compass of diamonds and claws, halo rings, light rays), Voltaris
+     (storm: stacked violet crescents and storm wings, lightning everywhere) and Verdanth (nature: a star of green thorn blades round
+     an eye, spores and a beam). Each has a special glow: a fresnel aura shell round the body in its colour, a great halo, a white-hot
+     core and light running along every blade edge. At the Convergence the survivors fuse into the Pentarch. */
+  const EL = {
+    ice:    { c1: 0x4ab0ff, c2: 0xe6f6ff, c3: 0x2a5cff, pal: ["#d8e2f0", "#9ab4d8", "#1e3c8c", "#f2f6fc"], vc: "#ffffff", sg: "#6ac4ff", rc: [.45, .8, 1], spark: 0xcfeeff, aura: 0x58b8ff, rgb: "120,200,255" },
+    fire:   { c1: 0xff5212, c2: 0xffd27a, c3: 0xff2a00, pal: ["#6a2a12", "#9a3c16", "#d06a22", "#2a1006"], vc: "#ffc060", sg: "#ff7020", rc: [1, .45, .1], spark: 0xffa040, aura: 0xff5a1a, rgb: "255,120,40" },
+    light:  { c1: 0xffc634, c2: 0xfff4c6, c3: 0xffa000, pal: ["#b08a2a", "#e0b84c", "#6a5016", "#f6dc94"], vc: "#fff2b8", sg: "#ffd050", rc: [1, .85, .4], spark: 0xfff0b0, aura: 0xffc840, rgb: "255,210,90" },
+    storm:  { c1: 0xa456ff, c2: 0xead0ff, c3: 0x6a20ff, pal: ["#3c1a70", "#5e2ca0", "#1a0a3c", "#8050cc"], vc: "#e6b8ff", sg: "#b868ff", rc: [.7, .38, 1], spark: 0xe0b0ff, aura: 0xa050ff, rgb: "190,120,255" },
+    nature: { c1: 0x78ff36, c2: 0xe0ffb4, c3: 0x2aff60, pal: ["#16340f", "#285818", "#0c1c06", "#3c6c24"], vc: "#b4ff6a", sg: "#80ff34", rc: [.5, 1, .25], spark: 0xc8ff90, aura: 0x6aff30, rgb: "150,255,90" } };
+  // runes: a ring of procedural glyphs between two circles (planar ring UVs), drawn white and tinted by the material
+  const runeTex = () => paint("rune", 512, (x, N) => { x.translate(N / 2, N / 2); x.strokeStyle = "#fff"; x.fillStyle = "#fff"; x.lineCap = "round";
+    for (const [r, w] of [[.48, 3], [.455, 1.5], [.36, 2.5], [.335, 1.2]]) { x.lineWidth = w; x.beginPath(); x.arc(0, 0, N * r, 0, TAU); x.stroke(); }
+    const n = 28; for (let i = 0; i < n; i++) { x.save(); x.rotate(i / n * TAU); x.translate(0, -N * .405); x.lineWidth = 2.6; const s = N * .028;
+      for (let k = 0; k < 3 + (rnd() * 3 | 0); k++) { x.beginPath(); const a = [(rnd() - .5) * 2 * s, (rnd() - .5) * 2.4 * s], b = [(rnd() - .5) * 2 * s, (rnd() - .5) * 2.4 * s]; x.moveTo(...a); rnd() < .5 ? x.lineTo(...b) : x.quadraticCurveTo(0, 0, ...b); x.stroke(); }
+      if (rnd() < .4) { x.beginPath(); x.arc(0, 0, s * .35, 0, TAU); x.fill(); } x.restore(); }
+    for (let i = 0; i < 6; i++) { x.save(); x.rotate(i / 6 * TAU); x.beginPath(); x.moveTo(0, -N * .335); x.lineTo(N * .06, -N * .25); x.lineTo(-N * .06, -N * .25); x.closePath(); x.lineWidth = 2; x.stroke(); x.restore(); } }, false);
+  function runeRing(R, col, op = .9) { const m = new TH.Mesh(new TH.RingGeometry(R * .66, R * 1.02, 96, 1), new TH.MeshBasicMaterial({ map: runeTex(), color: col, transparent: true, opacity: op, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false })); m.userData.dyn = 1; return m; }
+  // a crescent blade (horns toward +y), extruded and bevelled
+  function crescentGeo(R, th, span = 1.25, d = .6) { const s = new TH.Shape(), n = 24; for (let i = 0; i <= n; i++) { const a = -span + 2 * span * i / n; s[i ? "lineTo" : "moveTo"](Math.sin(a) * R, -Math.cos(a) * R); }
+    for (let i = n; i >= 0; i--) { const a = -span * .92 + 2 * span * .92 * i / n; s.lineTo(Math.sin(a) * (R - th), -Math.cos(a) * (R - th) - th * .55); }
+    const g = new TH.ExtrudeGeometry(s, { depth: d, bevelEnabled: true, bevelThickness: d * .3, bevelSize: th * .18, bevelSegments: 2, curveSegments: 4 }); g.translate(0, 0, -d / 2); return g; }
+  // a fresnel aura: an additive shell that glows at its silhouette in the element's colour (the "special glow")
+  function auraMat(col, k = 1) { return new TH.ShaderMaterial({ uniforms: { uC: { value: new TH.Color(col) }, uK: { value: k } }, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, side: TH.FrontSide,
+    vertexShader: "varying vec3 vN, vV; void main() { vec4 mv = modelViewMatrix * vec4(position, 1.); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }",
+    fragmentShader: "uniform vec3 uC; uniform float uK; varying vec3 vN, vV; void main() { float e = 1. - abs(dot(vN, vV)), f = pow(e, 3.) * smoothstep(1., .82, e); gl_FragColor = vec4(uC * f * 1.4 * uK, f * uK); }" }); }
+  function elemMats(kind) { const E = EL[kind], key = "el" + kind;
+    // liquid metal: one smooth shade per material, split by glowing veins of the element (no panel seams)
+    const M = hullMat(key, { rows: 1, cols: 1, pal: [E.pal[0]], slits: 0, sg: E.sg, veins: 22, vc: E.vc, metal: .97, rough: .12, rc: E.rc, ei: 3.2, rep: [1, 1], relief: 1.2 }); M.envMapIntensity = 1.7;
+    const MD = hullMat(key + "d", { rows: 1, cols: 1, pal: [E.pal[1]], slits: 0, sg: E.sg, veins: 18, vc: E.vc, metal: .95, rough: .16, rc: E.rc, ei: 2.8, rep: [1, 1], relief: 1.2, side: 1 }); MD.envMapIntensity = 1.5;
+    const CORE = new TH.MeshBasicMaterial({ color: E.c2, toneMapped: false }), G1 = glowMat(E.c1, .85), G2 = glowMat(E.c2, .9);
+    return { E, M, MD, CORE, G1, G2 }; }
+
+  function elemental(kind) { const grp = new TH.Group(), shk = new TH.Group(), body = new TH.Group(); grp.add(shk); shk.add(body);
+    const { E, M, MD, CORE, G1, G2 } = elemMats(kind), parts = { cres: [], orbs: [], dias: [], blades: [], rings: [] };
+    const orb = (r, y, withRing = true) => { const g = new TH.Group(); g.position.y = y; const s = new TH.Mesh(new TH.SphereGeometry(r, 28, 18), M); g.add(s);
+      const band = new TH.Mesh(new TH.TorusGeometry(r * 1.02, r * .07, 6, 36), G2); band.rotation.x = Math.PI / 2; g.add(band);
+      const eye = new TH.Mesh(new TH.CircleGeometry(r * .32, 24), CORE); eye.position.z = r * 1.005; g.add(eye); const iris = new TH.Mesh(new TH.RingGeometry(r * .36, r * .44, 24), G1); iris.position.z = r * 1.01; g.add(iris);
+      if (withRing) { const rr = new TH.Mesh(new TH.TorusGeometry(r * 1.55, r * .05, 6, 40), G1); rr.rotation.x = Math.PI / 2 - .25; rr.userData.dyn = 1; g.add(rr); g.userData.ring = rr; } return g; };
+    const cres = (R, th, span, d, mat = MD) => { th *= 1.45; d *= 1.6; const g = new TH.Group(), m = new TH.Mesh(crescentGeo(R, th, span, d), mat); g.add(m); const e = new TH.Mesh(crescentGeo(R, th * .12, span, d * 1.25), G2); e.scale.setScalar(1.005); g.add(e); return g; };
+    const dia = (w, h, mat = M) => { const g = new TH.OctahedronGeometry(1, 0); g.scale(w, h, w * .7); const m = new TH.Mesh(g, mat); return m; };
+    // the heart: a white-hot core with an iris, inside a liquid-metal shell
+    const core = new TH.Group(); body.add(core); { const s = new TH.Mesh(new TH.SphereGeometry(1.9, 32, 20), M); core.add(s); const e = new TH.Mesh(new TH.CircleGeometry(.95, 32), CORE); e.position.z = 1.92; core.add(e);
+      const ir = new TH.Mesh(new TH.RingGeometry(1.0, 1.25, 32), G1); ir.position.z = 1.93; core.add(ir); const rim = new TH.Mesh(new TH.TorusGeometry(1.95, .14, 8, 48), G2); rim.rotation.x = Math.PI / 2; core.add(rim); }
+    const coreS = sprite(11, `rgba(${E.rgb},1)`, "gel" + kind); body.add(coreS); const hot = sprite(4.5, "rgba(255,255,255,1)", "hotel"); hot.position.z = 2; body.add(hot);
+    let beamDown = null;
+    if (kind === "ice") { // a vertical stack of orbs and hourglass waists between two great crescents; a crown and a claw; four ringed satellites
+      for (const [r, y] of [[1.5, 7.2], [1.7, -6.8]]) { const o = orb(r, y); body.add(o); parts.orbs.push(o); }
+      for (const y of [3.8, -3.6]) { const w = new TH.Mesh(new TH.CylinderGeometry(1.2, .45, 2.6, 16), M); w.position.y = y; w.rotation.x = y > 0 ? Math.PI : 0; body.add(w); const w2 = w.clone(); w2.position.y = y + (y > 0 ? -1.3 : 1.3) * 0; body.add(w2); }
+      { const c = cres(3, .9, 1.1, .7); c.position.y = 12.2; c.rotation.z = Math.PI; body.add(c); parts.cres.push({ g: c, base: c.position.clone(), r0: c.rotation.clone(), dir: new TH.Vector3(0, 1, 0) }); }
+      { const c = cres(3.4, 1.1, 1.15, .7); c.position.y = -12.6; body.add(c); parts.cres.push({ g: c, base: c.position.clone(), r0: c.rotation.clone(), dir: new TH.Vector3(0, -1, 0) }); }
+      for (const sx of [-1, 1]) { const c = cres(12, 2.2, .78, 1.1); c.rotation.z = sx * Math.PI / 2; c.position.x = -sx * 2.5; body.add(c); parts.cres.push({ g: c, base: c.position.clone(), r0: c.rotation.clone(), dir: new TH.Vector3(sx, 0, 0), big: 1 }); }
+      for (const [x, y] of [[-12, 10], [12, 10], [-12, -11], [12, -11]]) { const o = orb(1.15, 0); o.position.set(x, y, 0); body.add(o); parts.orbs.push(o); }
+      for (const [R, tl] of [[9, .25], [7.5, -.3]]) { const r = new TH.Mesh(new TH.TorusGeometry(R, .09, 6, 72), G2); r.rotation.x = Math.PI / 2 + tl; r.scale.y = .35; r.userData.dyn = 1; body.add(r); parts.rings.push(r); }
+    } else if (kind === "fire") { // a horned crown over a diamond heart, four great sweeping horns, a fanged bowl beneath, a lava fall
+      { const c = cres(4.2, 1.4, 1.2, 1.1); c.position.y = 13; c.rotation.z = Math.PI; body.add(c); parts.cres.push({ g: c, base: c.position.clone(), r0: c.rotation.clone(), dir: new TH.Vector3(0, 1, 0) }); }
+      { const d = dia(2.6, 3.6); d.position.y = 3.2; body.add(d); parts.dias.push(d); }
+      for (const sx of [-1, 1]) for (const [y, R, sp] of [[6, 9, .95], [0, 11, 1.0]]) { const c = cres(R, 1.9, sp, 1.2); c.rotation.z = sx * (Math.PI / 2 + .35); c.position.set(sx * 2, y, 0); body.add(c); parts.cres.push({ g: c, base: c.position.clone(), r0: c.rotation.clone(), dir: new TH.Vector3(sx, .3, 0), big: 1 }); }
+      { const bowl = new TH.Group(); bowl.position.y = -4.5; body.add(bowl); const b = new TH.Mesh(new TH.TorusGeometry(7, 1.1, 10, 48, Math.PI), MD); b.rotation.z = Math.PI; b.scale.y = .55; bowl.add(b);
+        for (let i = 0; i < 15; i++) { const a = Math.PI + (i + .5) / 15 * Math.PI, s = shard(.45, 2.2 + (i % 3) * .6, MD); s.position.set(Math.cos(a) * 7, Math.sin(a) * 7 * .55 + .4, .3); s.rotation.z = a + Math.PI / 2 + Math.PI; bowl.add(s); } parts.bowl = bowl; }
+      for (const [x, y] of [[-12, 9], [12, 9], [-11, -8], [11, -8]]) { const o = orb(1.3, 0, false); o.position.set(x, y, 0); body.add(o); parts.orbs.push(o); }
+      { const r = new TH.Mesh(new TH.TorusGeometry(10, .14, 6, 72), G1); r.rotation.x = Math.PI / 2 + .1; r.scale.y = .3; r.position.y = -2; r.userData.dyn = 1; body.add(r); parts.rings.push(r); }
+      beamDown = new TH.Group(); body.add(beamDown); for (const [r0, r1, o, c] of [[1.4, .5, .55, E.c1], [.5, .18, .9, E.c2]]) { const g = new TH.CylinderGeometry(r1, r0, 22, 16, 1, true); g.translate(0, -11 - 6, 0); const m = new TH.Mesh(g, glowMat(c, o)); m.userData.dyn = 1; beamDown.add(m); }
+    } else if (kind === "light") { // a golden compass: diamonds at the four points, four claws between, halo rings, a pillar of light
+      for (const [x, y, s] of [[0, 13, 1.25], [0, -13, 1.25], [-12, 0, 1], [12, 0, 1]]) { const d = dia(1.5 * s, 2.6 * s); d.position.set(x, y, 0); d.rotation.z = x ? Math.PI / 2 : 0; body.add(d); parts.dias.push(d);
+        const st = new TH.Mesh(new TH.CylinderGeometry(.18, .18, (x ? Math.abs(x) : Math.abs(y)) - 2.5, 8), G2); st.position.set(x / 2, y / 2, 0); st.rotation.z = x ? Math.PI / 2 : 0; body.add(st); }
+      for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + i * Math.PI / 2, c = cres(4.2, 1.5, 1.1, 1.0); c.position.set(Math.cos(a) * 5.4, Math.sin(a) * 5.4, 0); c.rotation.z = a + Math.PI / 2; body.add(c); parts.cres.push({ g: c, base: c.position.clone(), r0: c.rotation.clone(), dir: new TH.Vector3(Math.cos(a), Math.sin(a), 0) }); }
+      { const r = new TH.Mesh(new TH.TorusGeometry(3.1, .35, 10, 48), M); body.add(r); const r2 = new TH.Mesh(new TH.TorusGeometry(3.1, .08, 6, 48), G2); r2.position.z = .4; body.add(r2); }
+      for (const [R, y, tl] of [[11, 8, .3], [11, -8, -.3], [7.5, 0, .1]]) { const r = new TH.Mesh(new TH.TorusGeometry(R, .12, 6, 80), G2); r.rotation.x = Math.PI / 2 + tl; r.scale.y = .3; r.position.y = y; r.userData.dyn = 1; body.add(r); parts.rings.push(r); }
+      beamDown = new TH.Group(); body.add(beamDown); for (const [r0, o, c] of [[.9, .45, E.c1], [.3, .9, E.c2]]) { const g = new TH.CylinderGeometry(r0, r0, 60, 16, 1, true); const m = new TH.Mesh(g, glowMat(c, o)); m.userData.dyn = 1; beamDown.add(m); }
+    } else if (kind === "storm") { // stacked violet crescent moons, a storm orb, great crescent wings, a vortex behind
+      for (const [y, R, flip] of [[12.5, 3.6, 1], [-6.5, 3.4, 1], [-13, 3.8, 0]]) { const c = cres(R, 1.3, 1.25, 1); c.position.y = y; if (flip) c.rotation.z = Math.PI; body.add(c); parts.cres.push({ g: c, base: c.position.clone(), r0: c.rotation.clone(), dir: new TH.Vector3(0, Math.sign(y), 0) }); }
+      for (const sx of [-1, 1]) { const c = cres(11, 2.4, .85, 1.2); c.rotation.z = sx * Math.PI / 2 + sx * .25; c.position.set(-sx * 1.5, 2, 0); body.add(c); parts.cres.push({ g: c, base: c.position.clone(), r0: c.rotation.clone(), dir: new TH.Vector3(sx, 0, 0), big: 1 });
+        const w2 = cres(7.5, 1.6, .8, .9); w2.rotation.z = sx * Math.PI / 2 - sx * .5; w2.position.set(sx * 3, -5, -.5); body.add(w2); parts.cres.push({ g: w2, base: w2.position.clone(), r0: w2.rotation.clone(), dir: new TH.Vector3(sx, -.4, 0), big: 1 }); }
+      { const v = new TH.Mesh(new TH.CircleGeometry(13, 48), new TH.MeshBasicMaterial({ map: swirlTex(), color: E.c1, transparent: true, opacity: .55, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); v.position.z = -3; v.userData.dyn = 1; body.add(v); parts.vortex = v; }
+      { const r = new TH.Mesh(new TH.TorusGeometry(9.5, .12, 6, 72), G2); r.rotation.x = Math.PI / 2 - .15; r.scale.y = .35; r.position.y = -9; r.userData.dyn = 1; body.add(r); parts.rings.push(r); }
+    } else { // nature: a star of thorn blades round an eye, a crescent crown, a diamond root, tendril orbs, a green beam
+      for (let i = 0; i < 10; i++) { const a = i / 10 * TAU + Math.PI / 10, L = i % 2 ? 9 : 12.5, b = new TH.Mesh(bladeGeo(L, L * .28, .5), MD); b.rotation.z = a; b.position.set(Math.cos(a) * 1.4, Math.sin(a) * 1.4, 0); const e = new TH.Mesh(bladeGeo(L, L * .28, .06), G2); e.rotation.copy(b.rotation); e.position.copy(b.position); e.scale.set(1.01, 1.04, 1.4); body.add(b); body.add(e); parts.blades.push({ b, e, a }); }
+      { const c = cres(3.6, 1.2, 1.2, 1); c.position.y = 13; c.rotation.z = Math.PI; body.add(c); parts.cres.push({ g: c, base: c.position.clone(), r0: c.rotation.clone(), dir: new TH.Vector3(0, 1, 0) }); }
+      { const d = dia(1.6, 2.8); d.position.y = -11.5; body.add(d); parts.dias.push(d); }
+      for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + i * Math.PI / 2, o = orb(.85, 0, false); o.position.set(Math.cos(a) * 12, Math.sin(a) * 12, 0); body.add(o); parts.orbs.push(o);
+        body.add(new TH.Mesh(taper([V(Math.cos(a) * 2.5, Math.sin(a) * 2.5, 0), V(Math.cos(a + .3) * 7, Math.sin(a + .3) * 7, .8), V(Math.cos(a) * 11.2, Math.sin(a) * 11.2, 0)], .32, 16, 6, .3), MD)); }
+      beamDown = new TH.Group(); body.add(beamDown); for (const [r0, o, c] of [[1, .5, E.c1], [.32, .9, E.c2]]) { const g = new TH.CylinderGeometry(r0, r0, 60, 16, 1, true); const m = new TH.Mesh(g, glowMat(c, o)); m.userData.dyn = 1; beamDown.add(m); }
+    }
+    // runes: three tilted circles of glyphs turning at their own speeds
+    const runes = []; for (const [R, rx, y, sp] of [[19, Math.PI / 2 - .35, -2, .00012], [13.5, Math.PI / 2 + .3, 3, -.0002], [9, .12, 0, .0003], [22, .02, 0, -.00006]]) { const m = runeRing(R, E.c1, .85); m.rotation.x = rx; m.position.y = y; body.add(m); runes.push({ m, sp }); }
+    // the special glow: a fresnel aura shell round the body, a great halo, and an outer haze
+    const aura = new TH.Mesh(new TH.SphereGeometry(13.5, 36, 24), auraMat(E.aura, .3)); aura.scale.set(1, 1.15, .45); aura.userData.dyn = 1; body.add(aura);
+    const halo = sprite(44, `rgba(${E.rgb},1)`, "hel" + kind); halo.material.opacity = .32; body.add(halo);
+    // the element itself: particles that move the way that element moves
+    const NP = LOD === 1 ? 70 : 150, fx = puffs(NP, E.spark); body.add(fx); const pd = []; for (let i = 0; i < NP; i++) pd.push([rnd(), rnd(), rnd(), rnd()]);
+    const bt = kind === "storm" || kind === "ice" ? bolts(body, kind === "storm" ? 16 : 6, () => { const a = rnd() * TAU, b = rnd() * TAU; return [V(Math.cos(a) * 2, Math.sin(a) * 2, 0), V(Math.cos(b) * (8 + rnd() * 6), Math.sin(b) * (8 + rnd() * 6), (rnd() - .5) * 3)]; }, E.c2) : null;
+    // attacks: a forward beam from the core, a shockwave shell and ring
+    const fbeam = new TH.Group(); fbeam.visible = false; body.add(fbeam); for (const [r, o, c] of [[1.6, .45, E.c1], [.5, .95, E.c2]]) { const g = new TH.CylinderGeometry(r * .7, r, 60, 20, 1, true); g.translate(0, 30, 0); g.rotateX(Math.PI / 2); const m = new TH.Mesh(g, glowMat(c, o)); m.userData.dyn = 1; fbeam.add(m); }
+    const sw = wave(body, 10, true, E.c1), sw2 = wave(body, 14, false, E.c2);
+    const MOVES = { ice: ["nova", "lance", "zero"], fire: ["flare", "rain", "inferno"], light: ["lance", "halo", "judgement"], storm: ["chain", "ion", "clap"], nature: ["thorn", "spore", "growth"] }[kind];
+    const dur = {}; for (const m of MOVES) dur[m] = 2800; dur.hit = 520; const mv = moves(dur), hit = hitKit(body, shk);
+    const tick = t => { const f = MOVES.map(m => mv.f(m, t)), fx0 = mv.f("hit", t);
+      const A = bell(f[0], 0, .3, .6, 1), B = bell(f[1], 0, .25, .75, 1), C = bell(f[2], 0, .3, .7, 1), burstA = bell(f[0], .35, .45, .6, .95), fireB = bell(f[1], .25, .32, .8, .95), boomC = bell(f[2], .4, .5, .6, .9);
+      const br = Math.sin(t * .0012); body.position.y = br * .5; body.rotation.y = Math.sin(t * .0004) * .18;
+      // the special glow breathes and flares with every attack
+      const glow = 1 + .15 * Math.sin(t * .002) + A * .6 + B * .5 + C * .8; aura.material.uniforms.uK.value = .28 * glow; halo.material.opacity = .26 * glow; coreS.scale.setScalar(11 * (1 + .1 * br + C * .5 + burstA * .4)); hot.material.opacity = Math.min(1, .7 * glow);
+      core.rotation.z = t * .0004; core.scale.setScalar(1 + A * .12 + boomC * .2);
+      for (const R of runes) { R.m.rotation.z = t * R.sp * (1 + (A + B + C) * 6); R.m.material.opacity = Math.min(1, .7 * glow); }
+      for (const r of parts.rings) r.rotation.z = t * .0005 * (1 + C * 5);
+      for (const c of parts.cres) { const k = (c.big ? 1.6 : 1) * (A * (kind === "ice" || kind === "storm" ? -1.2 : 1.2) + burstA * 2.2 + C * .8); c.g.position.copy(c.base).addScaledVector(c.dir, k + Math.sin(t * .0011 + c.base.y) * .25); c.g.rotation.z = c.r0.z + (c.big ? Math.sin(t * .0008) * .04 : 0) + (kind === "fire" ? -C * .2 * Math.sign(c.dir.x || 1) : 0); }
+      parts.orbs.forEach((o, i) => { if (o.userData.ring) o.userData.ring.rotation.z = t * .001 * (1 + B * 4); o.position.z = Math.sin(t * .0013 + i) * .5 + B * 2.5; o.rotation.y = t * .0006; });
+      parts.dias.forEach((d, i) => { d.rotation.y = t * .0008 * (i % 2 ? -1 : 1) * (1 + B * 4); d.scale.setScalar(1 + C * .15); });
+      parts.blades.forEach((p, i) => { const s = 1 + A * .35 + Math.sin(t * .0015 + i) * .03; p.b.scale.set(s, 1 + A * .2, 1); p.e.scale.set(s * 1.01, (1 + A * .2) * 1.04, 1.4); p.b.rotation.z = p.e.rotation.z = p.a + Math.sin(t * .0007 + i) * .04 + C * .12; });
+      if (parts.bowl) parts.bowl.position.y = -4.5 - C * 1.2 + Math.sin(t * .0016) * .2;
+      if (parts.vortex) { parts.vortex.rotation.z = -t * (.0008 + B * .006); parts.vortex.material.opacity = .45 + B * .4; }
+      if (beamDown) { beamDown.children.forEach((m, i) => { m.material.opacity = (i ? .85 : .4) * (.75 + .25 * Math.sin(t * .006)) * (1 + B * .6 + C * .6); }); beamDown.scale.set(1 + B * .8 + C * .6, 1, 1 + B * .8 + C * .6); }
+      fbeam.visible = fireB > .01; if (fbeam.visible) { fbeam.children[0].material.opacity = .45 * fireB * (.85 + rnd() * .15); fbeam.children[1].material.opacity = .95 * fireB; }
+      sw(f[2] < 0 ? -1 : (f[2] - .4) / .6); sw2(f[0] < 0 ? -1 : (f[0] - .35) / .65);
+      // element particles: frost glitter drifting, embers rising, light motes spiralling up, storm sparks orbiting fast, spores floating out
+      for (let i = 0; i < NP; i++) { const p = pd[i]; let x, y, z, s = .9, a = 1;
+        if (kind === "fire") { const k = (p[0] + t * .00012 * (1 + p[1])) % 1; x = (p[2] - .5) * 22 * (1 - k * .4); y = -12 + k * 30; z = (p[3] - .5) * 8; s = 1.2 * (1 - k) + .3; a = Math.sin(k * Math.PI) * (1 + C); }
+        else if (kind === "light") { const k = (p[0] + t * .00006) % 1, an = p[1] * TAU + k * 6; x = Math.cos(an) * (4 + p[2] * 12); y = -14 + k * 28; z = Math.sin(an) * (4 + p[2] * 12) * .4; s = 1; a = Math.sin(k * Math.PI) * (1 + B); }
+        else if (kind === "storm") { const an = p[1] * TAU + t * .001 * (1 + p[2] * 2) * (1 + B * 2), R = 9 + p[3] * 8; x = Math.cos(an) * R; y = (p[0] - .5) * 26; z = Math.sin(an) * R * .4; s = .7; a = .5 + .5 * Math.sin(t * .02 + i); }
+        else if (kind === "nature") { const k = (p[0] + t * .00005) % 1, an = p[1] * TAU; x = Math.cos(an) * (3 + k * 18) * (1 + A * .5); y = Math.sin(an) * (3 + k * 18) + Math.sin(t * .001 + i) * 1.5; z = (p[3] - .5) * 6; s = 1.1; a = Math.sin(k * Math.PI); }
+        else { const k = (p[0] + t * .00004) % 1, an = p[1] * TAU + t * .0002; x = Math.cos(an) * (6 + p[2] * 12); y = 14 - k * 28; z = Math.sin(an) * (6 + p[2] * 12) * .4; s = .8; a = Math.sin(k * Math.PI) * (.6 + .4 * Math.sin(t * .01 + i)) * (1 + C); }
+        fx.put(i, x, y, z, s * (1 + C * .5), Math.min(1.5, a)); } fx.done();
+      if (bt) bt(t, 1 + (A + B + C) * 6); hit(bell(fx0, 0, .05, .4, 1), t); };
+    bake(body); return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 16, h: 30, kind }; }
+
+  /* the Pentarch: the survivors fused round a blinding five-coloured heart above the Void. Each aspect is its Elemental, smaller, on a
+     pentagon round the heart, joined to it by a beam of its colour; a vast rune wheel of every colour behind. form (0..1) draws the
+     aspects in from far away (the fusion); an aspect slain before the fusion is missing. Moves: converge (every aspect fires into the
+     heart, then the heart fires), storm (the aspects whirl round it), cataclysm (the heart detonates in a shockwave). */
+  function pentarch(alive) { const ORDER = ["ice", "fire", "light", "storm", "nature"], live = alive && alive.length ? alive : ORDER;
+    const grp = new TH.Group(), shk = new TH.Group(), body = new TH.Group(); grp.add(shk); shk.add(body);
+    const heart = new TH.Group(); body.add(heart); const hm = new TH.Mesh(new TH.IcosahedronGeometry(4.2, 2), new TH.MeshBasicMaterial({ color: 0xffffff, toneMapped: false })); heart.add(hm);
+    const prism = new TH.Mesh(new TH.IcosahedronGeometry(5.6, 0), auraMat(0xffffff, .8)); heart.add(prism);
+    const hs = [sprite(26, "rgba(255,255,255,1)", "hotel"), sprite(60, "rgba(220,200,255,1)", "gpent")]; hs[1].material.opacity = .35; hs.forEach(s => body.add(s));
+    const asp = []; ORDER.forEach((k, i) => { if (!live.includes(k)) return; const e = elemental(k); e.grp.scale.setScalar(.48); const a = -Math.PI / 2 + i * TAU / 5; const holder = new TH.Group(); holder.add(e.grp); body.add(holder);
+      const bm = new TH.Mesh(new TH.CylinderGeometry(.45, .45, 1, 12, 1, true).translate(0, .5, 0), glowMat(EL[k].c1, .8)); bm.userData.dyn = 1; body.add(bm); asp.push({ e, holder, a, k, bm }); });
+    const wheel = []; ORDER.forEach((k, i) => { const m = runeRing(28 - i * 1.6, EL[k].c1, .7); m.position.z = -4 - i * .3; body.add(m); wheel.push(m); });
+    const crown = new TH.Group(); body.add(crown); for (let i = 0; i < 5; i++) { const a = i / 5 * TAU, c = new TH.Mesh(crescentGeo(4, 1.2, 1.1, .8), elemMats(ORDER[i]).MD); c.position.set(Math.cos(a) * 9, Math.sin(a) * 9, -1); c.rotation.z = a - Math.PI / 2; crown.add(c); }
+    const fb = new TH.Group(); fb.visible = false; body.add(fb); for (const [r, o, c] of [[3.2, .4, 0xd8c8ff], [1.1, .95, 0xffffff]]) { const g = new TH.CylinderGeometry(r * .7, r, 90, 24, 1, true); g.translate(0, 45, 0); g.rotateX(Math.PI / 2); const m = new TH.Mesh(g, glowMat(c, o)); m.userData.dyn = 1; fb.add(m); }
+    const down = new TH.Group(); body.add(down); live.forEach((k, i) => { const g = new TH.CylinderGeometry(.6, 1.6, 70, 12, 1, true); g.translate(0, -35, 0); const m = new TH.Mesh(g, glowMat(EL[k].c1, .35)); m.rotation.z = (i - (live.length - 1) / 2) * .08; m.userData.dyn = 1; down.add(m); }); // the Void below, torn by every element
+    const sw = wave(body, 18, true, 0xe8d8ff), sw2 = wave(body, 26, false, 0xffffff);
+    const mv = moves({ converge: 3400, storm: 3000, cataclysm: 3200, hit: 520 }), hit = hitKit(body, shk); const S = scr(), tmp = new TH.Object3D();
+    const api = { grp, form: 1, r: 34, h: 50, moves: Object.keys(mv.dur), act: n => mv.play(n), alive: live, tick: null };
+    api.tick = t => { const fc = mv.f("converge", t), fs = mv.f("storm", t), fk = mv.f("cataclysm", t), fh = mv.f("hit", t), form = api.form;
+      const pull = bell(fc, 0, .3, .55, .65), fire = bell(fc, .5, .58, .85, .97), whirl = bell(fs, 0, .25, .75, 1), boom = bell(fk, .4, .5, .6, .95), crouch = bell(fk, 0, .35, .4, .5);
+      const R = 15 + (1 - form) * 140 + whirl * 4 - crouch * 4, spin = t * .00015 + whirl * fs * 4;
+      asp.forEach((p, i) => { const a = p.a + spin; p.holder.position.set(Math.cos(a) * R, Math.sin(a) * R, Math.sin(t * .001 + i) * 1.5 + (1 - form) * 30 * Math.sin(i * 2.3)); p.holder.rotation.z = a + Math.PI / 2; p.e.tick(t + i * 777);
+        const L = aimAt(tmp, p.holder.position, V(0, 0, 0)); p.bm.position.copy(tmp.position); p.bm.quaternion.copy(tmp.quaternion); p.bm.scale.set(1 + pull, L, 1 + pull); p.bm.material.opacity = (.35 + pull * .6) * form * (.85 + .15 * Math.sin(t * .01 + i)); });
+      const hb = (1 + .06 * Math.sin(t * .003) + pull * .25 + boom * .6) * (.4 + .6 * form); heart.scale.setScalar(hb); heart.rotation.y = t * .0005; prism.rotation.x = t * .0003;
+      hs[0].scale.setScalar(26 * hb * (1 + fire * .6)); hs[1].material.opacity = .3 + pull * .3 + boom * .4; hs[1].scale.setScalar(60 * (1 + boom * .5));
+      wheel.forEach((m, i) => { m.rotation.z = t * .00008 * (i % 2 ? -1 : 1) * (1 + whirl * 8); m.material.opacity = .6 * form + boom * .3; });
+      crown.rotation.z = -t * .0002; crown.scale.setScalar(1 + boom * .3);
+      fb.visible = fire > .01; if (fb.visible) { fb.children[0].material.opacity = .4 * fire; fb.children[1].material.opacity = .95 * fire; }
+      down.children.forEach((m, i) => { m.material.opacity = .3 * form * (.8 + .2 * Math.sin(t * .004 + i)); });
+      sw(fk < 0 ? -1 : (fk - .45) / .55); sw2(fk < 0 ? -1 : (fk - .48) / .52); hit(bell(fh, 0, .05, .4, 1), t); body.position.y = Math.sin(t * .0009) * 1.2 - crouch * 2; };
+    return api; }
   // merge each group's static leaf meshes that share a material (same look), so a boss costs tens of draw calls, not hundreds
   function bake(root) { const fl = []; root.traverse(o => { if (o !== root && o.userData.flat && o.parent) fl.push(o); });
     for (const o of fl.reverse()) { o.updateMatrix(); const par = o.parent; for (const c of [...o.children]) { c.applyMatrix4(o.matrix); par.add(c); } par.remove(o); }
@@ -796,5 +956,5 @@
         const mesh = new TH.Mesh(g2, L[0].material); for (const c of L) o.remove(c); o.add(mesh); } } }
   // light the boss's own materials from an environment map (the galaxy scene has none); count its draw calls
   function prep(b, env) { b.grp.traverse(o => { const m = o.material; if (m && m.isMeshStandardMaterial && env) { m.envMap = env; m.needsUpdate = true; } }); return b; }
-  root.BOSS3D = { init(T) { TH = T; }, set lod(v) { LOD = v | 0; }, get lod() { return LOD; }, conduit, warden, overlord, devourer, matriarch, tyrant, wyrm, colossus, station, prep };
+  root.BOSS3D = { init(T) { TH = T; }, set lod(v) { LOD = v | 0; }, get lod() { return LOD; }, conduit, warden, overlord, devourer, matriarch, tyrant, wyrm, colossus, station, elemental, pentarch, EL, prep };
 })(typeof window !== "undefined" ? window : globalThis);
