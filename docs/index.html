@@ -2624,6 +2624,287 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       fb.visible = fire > .01; if (fb.visible) { fb.children[0].material.opacity = .4 * fire; fb.children[1].material.opacity = .95 * fire; }
       sw(fk < 0 ? -1 : (fk - .45) / .55); sw2(fk < 0 ? -1 : (fk - .48) / .52); hit(bell(fh, 0, .05, .4, 1), t); body.position.y = Math.sin(t * .0009) * 1.2 - crouch * 2; };
     return api; }
+  /* ---------- Vaelthar, the Celestial Ruin (owner's art, assets/bosses/vaelthar/ref): a cosmic dragon deity in obsidian-violet scale
+     with ornate gold plating and glowing violet sigils, great wings of luminous energy membrane, a radiant core in its chest, and behind
+     its back an enormous celestial wheel: a gold outer ring with six stabilizer nodes, counter-rotating inner rings of engraved runes,
+     spokes, floating glyph shards and a central focusing aperture, tied to the dragon by violet lightning.
+     Moves: claw (Astral Claw), wing (Divine Wingstorm), judge (Celestial Judgment: rune circles fire bolts), seal (Golden Seal),
+     rebirth (Celestial Rebirth), annihilate (Divine Annihilation, the full sequence: warning, rune ignition, accumulation, alignment,
+     the beam, aftermath), hit. drive(name, f) pins a move to a progress (the galaxy map plays the event from the shared clock);
+     stab[i] = 0 disables a stabilizer; crack (0..1) fractures the wheel (Final Eclipse). ---------- */
+  function vaelthar() { const grp = new TH.Group(), shk = new TH.Group(), body = new TH.Group(); grp.add(shk); shk.add(body);
+    const LO = LOD === 1, RC = [.75, .35, 1], GOLD = 0xffcf6a, VIOL = 0xa05cff;
+    const MA = hullMat("vae", { rows: 7, pal: ["#140e1d", "#1b1326", "#100b17", "#22172e", "#181022"], slits: .18, sc: "#e8c8ff", sg: "#b45cff", veins: 10, vc: "#9a5cff", metal: .86, rough: .3, rc: RC, ei: 2.4, rep: [3, 1] });
+    const MS = hullMat("vaes", { rows: 4, pal: ["#170f21", "#1f152b", "#120c1a"], slits: .1, sc: "#e8c8ff", sg: "#b45cff", veins: 6, vc: "#9a5cff", metal: .88, rough: .28, rc: RC, ei: 2.0, rep: [1, 1], side: 1 });
+    const MG = hullMat("vaeg", { rows: 3, pal: ["#b88a2a", "#d6ad4c", "#a07a22", "#e2bd5c"], bronze: 0, slits: .22, sc: "#fff2c8", sg: "#ffc65a", metal: 1, rough: .2, rc: [1, .78, .4], ei: 1.6, rep: [2, 1] }); MG.envMapIntensity = 1.6;
+    const MGd = hullMat("vaegd", { rows: 2, pal: ["#7a5a18", "#8f6c22", "#5f460f"], bronze: 0, slits: .3, sc: "#ffe0a0", sg: "#d070ff", metal: 1, rough: .26, rc: [1, .7, .4], ei: 2.2, rep: [4, 1], glyphs: 1 }); MGd.envMapIntensity = 1.3;
+    const CORE = new TH.MeshBasicMaterial({ color: 0xf6e8ff, toneMapped: false });
+    /* ---- the spine: torso, neck and tail are chains of armoured scale rings with gold collars, violet seams and gold dorsal blades ---- */
+    const NT = 7, NN = LO ? 9 : 12, NL = LO ? 18 : 28, N = NT + NN + NL;
+    const scG = new TH.LatheGeometry([[0, -.62], [.82, -.66], [1.04, -.28], [1.0, .3], [.76, .58], [0, .64]].map(([r, y]) => new TH.Vector2(r, y)), LO ? 10 : 14); scG.rotateX(Math.PI / 2);
+    const segs = inst(scG, MA, N), colG = new TH.TorusGeometry(1.0, .055, 4, LO ? 18 : 28), cols = inst(colG, MG, N), seamM = new TH.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false }), seams = inst(new TH.TorusGeometry(1.03, .045, 4, LO ? 18 : 30), seamM, N);
+    const finG = new TH.ConeGeometry(.22, 1.5, 4); finG.translate(0, 1.5 / 2 + .8, 0); finG.scale(.6, 1, 1.6); const fins = inst(finG, MG, N);
+    for (const m of [segs, cols, seams, fins]) body.add(m); for (let i = 0; i < N; i++) seams.setColorAt(i, new TH.Color(.6, .3, 1));
+    const P = []; for (let i = 0; i <= N + 1; i++) P.push(V(0, 0, 0)); const SC = new Float32Array(N + 2);
+    const st = { lift: 0, sway: 0, coil: 0, curl: 0, spread: 0, beat: 0, recoil: 0, claw: 0, clawS: 1, gape: 0, look: 0 };
+    // the chain: neck tip (head) at i = 0, down the neck to the chest, the torso to the hips, then the tail; s = scale of each ring
+    const spine = t => { const T = t * .001;
+      for (let i = 0; i < NN; i++) { const u = i / (NN - 1), up = 1 - u; // 0 head end .. 1 chest
+        const lx = Math.sin(T * .55 + u * 1.6) * .9 * up * (1 - st.lift * .6) + st.sway * up * 2.2, ly = 7.6 + up * (6.2 + st.lift * 2.4) - Math.pow(up, 2) * 1.4 * (1 - st.lift), lz = 2.1 + up * (4.6 - st.lift * 1.7) - st.recoil * up * up * 1.8 + st.look * up * 1.2;
+        P[i].set(lx, ly, lz); SC[i] = 1.35 + u * 1.15; }
+      for (let i = 0; i < NT; i++) { const u = i / (NT - 1), k = NN + i; P[k].set(Math.sin(T * .4) * .15 * (1 - u), 6.6 - u * 8.2 + Math.sin(T * .7) * .12, 1.7 - u * 2.9 + st.beat * .15); SC[k] = 3.0 + Math.sin(u * Math.PI) * 1.3 - u * .4; }
+      for (let i = 0; i < NL; i++) { const u = (i + 1) / NL, k = NN + NT + i, a = u * (3.3 + st.curl * 1.4) + Math.sin(T * .6 + u * 4) * .35 * u + st.coil * u * 1.2, R = 3.4 + u * 6.5;
+        P[k].set(Math.sin(T * .5 + u * 5) * u * 2.4 + Math.sin(a) * u * 4.5, -2.0 - Math.sin(a) * R * .55 - u * 2, -1.6 - (1 - Math.cos(a)) * R * .6 - u * 1.5); SC[k] = 2.5 * (1 - u * .86); }
+      P[N].copy(P[N - 1]).multiplyScalar(2).sub(P[N - 2]); };
+    /* ---- the head: a long armoured skull, gold crown of swept horns and a forehead blade, a hinged jaw full of teeth, violet-white eyes ---- */
+    const head = new TH.Group(); body.add(head); const hd = new TH.Group(); head.add(hd); hd.scale.setScalar(1.25);
+    { const sk = new TH.Mesh(new TH.LatheGeometry([[.15, -1.6], [1.15, -1.25], [1.45, -.1], [1.25, 1.3], [.92, 2.6], [.5, 3.6], [.12, 4.1]].map(([r, y]) => new TH.Vector2(r, y)), 14), MA); sk.rotation.x = Math.PI / 2; sk.scale.set(1, 1, .62); sk.position.set(0, .45, 0); hd.add(sk);
+      const brow = new TH.Mesh(new TH.LatheGeometry([[.1, -1.0], [1.05, -.6], [1.15, .5], [.8, 1.6], [.2, 2.2]].map(([r, y]) => new TH.Vector2(r, y)), 10, 0, Math.PI), MG); brow.rotation.set(Math.PI / 2, 0, Math.PI / 2); brow.scale.set(1, 1, .5); brow.position.set(0, .95, -.2); hd.add(brow);
+      const crest = new TH.Mesh(bladeGeo(5.2, 1.4, .18), MG); crest.rotation.set(0, Math.PI / 2, Math.PI - .35); crest.position.set(0, 1.35, 1.4); hd.add(crest);
+      for (const sx of [-1, 1]) { for (let j = 0; j < 4; j++) { const h = new TH.Mesh(taper([V(sx * .7, .9, -.4 - j * .35), V(sx * (1.6 + j * .5), 1.7 + j * .25 - (j > 1 ? .8 : 0), -2.2 - j * .6), V(sx * (2.0 + j * .9), 2.6 + j * .1 - (j > 1 ? 1.9 : 0), -4.8 - j * .9 + (j > 2 ? 1.6 : 0))], .36 - j * .05, 16, 6), j ? MG : MGd); hd.add(h); }
+        const ch = beam(V(sx * 1.05, .1, -.6), V(sx * .55, .05, 2.9), .55, .2, .22, MG); hd.add(ch); const ey = new TH.Mesh(new TH.SphereGeometry(.2, 10, 8), CORE); ey.position.set(sx * .78, .62, 1.05); hd.add(ey); } }
+    const eyes = []; for (const sx of [-1, 1]) { const e = sprite(1.6, "rgba(225,190,255,1)", "vae_eye"); e.position.set(sx * .8, .64, 1.15); hd.add(e); eyes.push(e); }
+    const jaw = new TH.Group(); jaw.position.set(0, -.15, -.9); hd.add(jaw);
+    { const lj = new TH.Mesh(new TH.LatheGeometry([[1.05, 0], [.95, 1.5], [.62, 3.0], [.2, 3.9]].map(([r, y]) => new TH.Vector2(r, y)), 12, Math.PI / 2, Math.PI), MS); lj.rotation.x = Math.PI / 2; lj.scale.set(1, 1, .5); jaw.add(lj);
+      for (let q = 0; q < 7; q++) for (const sx of [-1, 1]) { const f = shard(.11, .55 - q * .03, MG); f.position.set(sx * (.86 - q * .1), .02, .6 + q * .48); f.rotation.z = sx * .2; jaw.add(f); }
+      for (const sx of [-1, 1]) { const g = beam(V(sx * .9, -.2, .2), V(sx * .3, -.25, 3.6), .4, .15, .18, MG); jaw.add(g); } }
+    for (let q = 0; q < 7; q++) for (const sx of [-1, 1]) { const f = shard(.1, .5 - q * .03, MG); f.position.set(sx * (.86 - q * .1), -.05, .6 + q * .48); f.rotation.set(Math.PI, 0, -sx * .2); hd.add(f); }
+    const mouth = new TH.Object3D(); mouth.position.set(0, .05, 3.3); hd.add(mouth);
+    const orb = new TH.Mesh(new TH.SphereGeometry(1, 20, 14), glowMat(0xe6c8ff, .0)); orb.userData.dyn = 1; mouth.add(orb); const orbS = sprite(6, "rgba(235,215,255,1)", "vae_orb"); mouth.add(orbS); orbS.material.opacity = 0;
+    // the beam (in the model's own frame, used by the close-up viewer; the galaxy map draws its own at world scale)
+    const lens = new TH.Group(); mouth.add(lens); lens.visible = false; const bm = [];
+    for (const [r, o, c] of [[2.4, .2, 0x8a40ff], [1.3, .42, 0xc890ff], [.5, .8, 0xf4e8ff]]) { const g = new TH.CylinderGeometry(r * .8, r, 80, 18, 1, true); g.translate(0, 40, 0); g.rotateX(Math.PI / 2); const m = new TH.Mesh(g, glowMat(c, o)); m.userData.dyn = 1; lens.add(m); bm.push([m, o]); }
+    const halos = []; for (let k = 0; k < 5; k++) { const h = new TH.Mesh(new TH.TorusGeometry(1.9, .05, 5, 36), glowMat(0xe8d0ff, .6)); h.userData.dyn = 1; lens.add(h); halos.push(h); }
+    /* ---- the chest core and the forelimbs: gold pauldrons, armoured arms, gold vambraces, four-taloned claws ---- */
+    const core = new TH.Group(); core.position.set(0, 4.4, 3.45); body.add(core);
+    { const c = new TH.Mesh(new TH.SphereGeometry(.85, 18, 12), CORE); core.add(c); const rr = runeRing(1.9, 0xd8a0ff, .85); core.add(rr); core.userData.rr = rr; const ring = new TH.Mesh(new TH.TorusGeometry(1.25, .16, 6, 32), MG); core.add(ring);
+      for (let k = 0; k < 8; k++) { const s = shard(.18, .9, MG); const a = k / 8 * TAU; s.position.set(Math.cos(a) * 1.35, Math.sin(a) * 1.35, 0); s.rotation.z = a - Math.PI / 2; core.add(s); } }
+    { const bp = new TH.Mesh(new TH.LatheGeometry([[.2, -2.6], [2.2, -2.2], [2.9, -.6], [2.8, 1.2], [2.2, 2.6], [.6, 3.2]].map(([r, y]) => new TH.Vector2(r, y)), 16, -Math.PI * .45, Math.PI * .9), MS); bp.position.set(0, 4.2, 1.0); bp.scale.set(1.05, 1, .82); body.add(bp);
+      for (const sx of [-1, 1]) { body.add(beam(V(sx * 2.5, 6.6, 2.0), V(sx * .4, 1.6, 3.4), .5, .25, .3, MG)); body.add(beam(V(sx * 2.7, 6.8, 1.6), V(sx * 1.2, 7.6, 3.0), .5, .3, .3, MG)); }
+      for (let k = 0; k < 7; k++) { const y = 1.4 - k * 1.25, w = 2.6 - k * .22, pl = box(w, .85, .5, k % 2 ? MS : MG); pl.position.set(0, y, 2.55 - k * .5); pl.rotation.x = .35 + k * .05; body.add(pl); } }
+    const coreS = sprite(7, "rgba(230,200,255,1)", "vae_core"); core.add(coreS);
+    const arms = []; for (const sx of [-1, 1]) { const sh = new TH.Group(); sh.position.set(sx * 2.3, 5.2, 2.0); body.add(sh); const up = new TH.Group(); sh.add(up);
+      up.add(strut(V(0, 0, 0), V(sx * 1.4, -2.6, 1.6), 1.0, .75, MA, 7)); const pd = new TH.Mesh(crescentGeo(1.9, .7, 1.1, .5), MG); pd.position.set(sx * .3, .5, -.1); pd.rotation.set(-.4, sx * .5, sx * -.9); up.add(pd);
+      for (let k = 0; k < 3; k++) { const s = shard(.2, 1.4 - k * .25, MG); s.position.set(sx * (.4 + k * .3), .9, -.3 - k * .3); s.rotation.set(-.6, 0, sx * -.5); up.add(s); }
+      const el = new TH.Group(); el.position.set(sx * 1.4, -2.6, 1.6); up.add(el); el.add(strut(V(0, 0, 0), V(-sx * .4, -1.4, 3.0), .75, .55, MA, 7)); el.add(beam(V(-sx * .1, -.3, .5), V(-sx * .35, -1.2, 2.7), .9, .6, .55, MG));
+      const hand = new TH.Group(); hand.position.set(-sx * .4, -1.4, 3.0); el.add(hand); hand.add(new TH.Mesh(new TH.SphereGeometry(.6, 10, 8), MA));
+      for (let k = 0; k < 4; k++) { const tl = horn(1.9, .9, .2, k === 3 ? MGd : MG, 12); tl.rotation.set(0, -Math.PI / 2 + (k - 1.5) * .32 * sx, -.6 - (k === 3 ? .8 : 0)); if (k === 3) tl.rotation.y += sx * 1.2; hand.add(tl); }
+      const trail = sprite(4, "rgba(200,150,255,1)", "vae_claw"); trail.material.opacity = 0; hand.add(trail); arms.push({ sx, sh, up, el, hand, trail }); }
+    /* ---- the wings: gold bones and spars, dark spikes at the joints, membranes of luminous violet energy ---- */
+    const memT = paint("vae_mem", 256, (x, N2) => { const g = x.createLinearGradient(0, 0, N2, N2); g.addColorStop(0, "#2a0b4a"); g.addColorStop(.6, "#4a1a86"); g.addColorStop(1, "#8e5cff"); x.fillStyle = g; x.fillRect(0, 0, N2, N2);
+      x.strokeStyle = "#e0c0ff"; for (let i = 0; i < 70; i++) { let px = rnd() * N2, py = rnd() * N2, a = rnd() * TAU; x.globalAlpha = .25 + rnd() * .55; x.lineWidth = .6 + rnd() * 1.8; x.beginPath(); x.moveTo(px, py); for (let k = 0; k < 24; k++) { a += (rnd() - .5) * .7; px += Math.cos(a) * 7; py += Math.sin(a) * 7; x.lineTo(px, py); } x.stroke(); }
+      x.globalAlpha = 1; for (let i = 0; i < 160; i++) { x.fillStyle = `rgba(255,${200 + rnd() * 55 | 0},255,${.3 + rnd() * .6})`; x.fillRect(rnd() * N2, rnd() * N2, 1.2, 1.2); } });
+    const memM = new TH.MeshBasicMaterial({ map: memT, color: 0xffffff, transparent: true, opacity: .45, side: TH.DoubleSide, depthWrite: false, blending: TH.AdditiveBlending, toneMapped: false });
+    const wings = []; for (const sx of [-1, 1]) { const root = new TH.Group(); root.position.set(sx * 1.8, 6.6, -.4); body.add(root); const w = new TH.Group(); root.add(w);
+      const J = [V(0, 0, 0), V(sx * 6, 6.5, -.8), V(sx * 11.5, 11.5, -1.6)], tips = [V(sx * 19, 20, -2.6), V(sx * 24, 13, -3), V(sx * 24, 5, -2.6), V(sx * 20, -1, -2), V(sx * 12, -4.5, -1.2)];
+      w.add(strut(J[0], J[1], .55, .42, MG, 6)); w.add(strut(J[1], J[2], .42, .32, MG, 6)); for (const tp of tips) w.add(strut(J[2], tp, .26, .06, MG, 5));
+      for (const j of [J[1], J[2]]) { const s = shard(.35, 2.2, MS); s.position.copy(j); s.rotation.set(-.5, 0, sx * -.6); w.add(s); const k = new TH.Mesh(new TH.SphereGeometry(.5, 8, 6), MG); k.position.copy(j); w.add(k); }
+      for (let k = 0; k < 6; k++) { const f = k / 5, s = shard(.12, .9, MG); s.position.lerpVectors(J[0], J[1], f); s.position.y += .45; s.rotation.z = sx * -.3; w.add(s); }
+      // membrane: a fan from the wrist between consecutive tips, and a panel from the root along the arm to the last tip and back to the flank
+      const pts = [J[2], ...tips], pos = [], uv = [], uvOf = p => [.5 + p.x / 46 * sx, .5 + p.y / 30];
+      for (let k = 0; k < tips.length - 1; k++) { const a = J[2], b = tips[k], c = tips[k + 1], m1 = b.clone().lerp(c, .5).lerp(a, .18); for (const tri of [[a, b, m1], [a, m1, c]]) for (const p of tri) { pos.push(p.x, p.y, p.z); uv.push(...uvOf(p)); } }
+      { const fl = V(sx * .4, -5.5, .3); for (const tri of [[J[0], J[1], tips[4]], [J[1], J[2], tips[4]], [J[0], tips[4], fl]]) for (const p of tri) { pos.push(p.x, p.y, p.z); uv.push(...uvOf(p)); } }
+      const mg = new TH.BufferGeometry(); mg.setAttribute("position", new TH.Float32BufferAttribute(pos, 3)); mg.setAttribute("uv", new TH.Float32BufferAttribute(uv, 2)); mg.computeVertexNormals(); const mem = new TH.Mesh(mg, memM); mem.userData.dyn = 1; w.add(mem);
+      wings.push({ sx, root, w, tips: tips.map(p => p.clone()), J }); }
+    /* ---- the celestial wheel ---- */
+    const wheel = new TH.Group(); wheel.position.set(0, 11, -11); wheel.rotation.y = .12; body.add(wheel); const WR = 14.5;
+    const runeShader = (R, col, op, w0 = .64) => { const m = new TH.ShaderMaterial({ uniforms: { map: { value: runeTex() }, uC: { value: new TH.Color(col) }, uO: { value: op }, uSw: { value: 0 }, uHot: { value: 0 } }, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, side: TH.DoubleSide,
+        vertexShader: "varying vec2 vU; varying vec2 vP; void main() { vU = uv; vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+        fragmentShader: "uniform sampler2D map; uniform vec3 uC; uniform float uO, uSw, uHot; varying vec2 vU; varying vec2 vP; void main() { float a = fract(atan(vP.x, vP.y) / 6.2831853 + 1.), lit = smoothstep(uSw, uSw - .04, a) * step(.001, uSw); vec4 t = texture2D(map, vU); float k = uO * (.35 + .65 * lit) * (1. + uHot * 1.6); gl_FragColor = vec4(mix(uC, vec3(1.), lit * .35 + uHot * .3) * t.a * k, t.a * k); }" });
+      const g = new TH.RingGeometry(R * w0, R * 1.02, 128, 1); const me = new TH.Mesh(g, m); me.userData.dyn = 1; return me; };
+    const ringsW = []; const mkRing = (R, wd, th, mat, rc, rop, segs) => { const r = new TH.Group(); wheel.add(r); const b = band(R, wd, th, mat, 0, TAU, LO ? 64 : 120, segs); b.rotation.x = Math.PI / 2; r.add(b);
+      const rr = runeShader(R * 1.0, rc, rop); rr.position.z = th * .5 + .05; rr.scale.setScalar(1); r.add(rr); const rr2 = runeShader(R, rc, rop * .6); rr2.position.z = -th * .5 - .05; r.add(rr2);
+      const ch = new TH.Mesh(new TH.TorusGeometry(R - wd * .55, .08, 4, LO ? 64 : 110), glowMat(0xb070ff, .85)); ch.userData.dyn = 1; r.add(ch); const o = { r, b, rr: [rr, rr2], ch, R, ang: 0 }; ringsW.push(o); return o; };
+    const R0 = mkRing(WR, 1.6, 1.1, MG, GOLD, .75, 28), R1 = mkRing(WR * .76, 1.1, .8, MGd, 0xc890ff, .85, 22), R2 = mkRing(WR * .54, .9, .7, MG, GOLD, .8, 16), R3 = mkRing(WR * .3, .7, .9, MGd, 0xe0b0ff, .9, 10);
+    R1.r.rotation.x = .0; R2.r.rotation.y = .0;
+    // the outer ring carries a toothed gold crown and six stabilizer nodes (gold cages round violet cores)
+    { const teeth = new TH.Group(); R0.r.add(teeth); for (let k = 0; k < 36; k++) { const a = k / 36 * TAU, s = shard(.32, k % 3 ? .9 : 1.7, MG); s.position.set(Math.sin(a) * (WR + .9), Math.cos(a) * (WR + .9), 0); s.rotation.z = -a; teeth.add(s); } teeth.userData.flat = 1; }
+    const frags = []; for (let k = 0; k < 7; k++) { const a = k / 7 * TAU + .2, g = box(1.4, .9, 1.0, MG); g.position.set(Math.sin(a) * WR, Math.cos(a) * WR, 0); g.userData.o = g.position.clone(); g.userData.dyn = 1; g.visible = false; R0.r.add(g); frags.push(g); }
+    const stabs = []; for (let k = 0; k < 6; k++) { const a = k / 6 * TAU + TAU / 12, n = new TH.Group(); n.position.set(Math.sin(a) * (WR + .3), Math.cos(a) * (WR + .3), 0); R0.r.add(n);
+      const cg = new TH.Group(); n.add(cg); for (const [rx, ry] of [[0, 0], [Math.PI / 2, 0], [0, Math.PI / 2]]) { const t = new TH.Mesh(new TH.TorusGeometry(1.25, .11, 5, 26), MG); t.rotation.set(rx, ry, 0); cg.add(t); }
+      const c = new TH.Mesh(new TH.SphereGeometry(.75, 16, 12), CORE); c.userData.dyn = 1; n.add(c); const s = sprite(4.2, "rgba(210,160,255,1)", "vae_stab"); n.add(s); stabs.push({ n, cg, c, s, a }); }
+    // spokes between the inner and outer rings, on their own slow ring
+    const spk = new TH.Group(); wheel.add(spk); for (let k = 0; k < 8; k++) { const a = k / 8 * TAU, b = beam(V(Math.sin(a) * WR * .33, Math.cos(a) * WR * .33, 0), V(Math.sin(a) * WR * .95, Math.cos(a) * WR * .95, 0), .5, .26, .3, MGd); spk.add(b); const gl = new TH.Mesh(new TH.CylinderGeometry(.06, .06, WR * .6, 4, 1, true), glowMat(0xc890ff, .7)); gl.position.set(Math.sin(a) * WR * .64, Math.cos(a) * WR * .64, .2); gl.rotation.z = -a; gl.userData.dyn = 1; spk.add(gl); }
+    // the aperture: a swirling disc of light in the hub, its rim, and the focus point
+    const ap = new TH.Mesh(new TH.CircleGeometry(WR * .26, 48), new TH.MeshBasicMaterial({ map: swirlTex(), transparent: true, opacity: .55, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false })); ap.userData.dyn = 1; wheel.add(ap);
+    const apS = sprite(9, "rgba(240,220,255,1)", "vae_ap"); wheel.add(apS); const field = new TH.Mesh(new TH.CircleGeometry(WR * 1.25, 64), new TH.MeshBasicMaterial({ map: swirlTex(), transparent: true, opacity: 0, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false })); field.position.z = -1.2; field.userData.dyn = 1; wheel.add(field);
+    // floating glyph shards orbiting the wheel, and the particles it drinks in while charging
+    const NG = LO ? 24 : 40, glyphs = inst(new TH.PlaneGeometry(1.1, 1.1), new TH.MeshBasicMaterial({ map: runeTex(), color: 0xffd890, transparent: true, opacity: .8, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false }), NG); wheel.add(glyphs);
+    const gD = []; for (let k = 0; k < NG; k++) gD.push({ a: rnd() * TAU, r: WR * (1.12 + rnd() * .35), z: (rnd() - .5) * 3, w: (rnd() < .5 ? -1 : 1) * (.0001 + rnd() * .0002), s: .5 + rnd() * .8 });
+    const NP = LO ? 70 : 120, motes = puffs(NP, 0xd8b0ff); wheel.add(motes); const mD = []; for (let k = 0; k < NP; k++) mD.push({ a: rnd() * TAU, r0: WR * (1.4 + rnd() * 1.6), ph: rnd(), w: .00006 + rnd() * .00008 });
+    const tetherA = stabs.map(s => s.n), backPts = [3, 5, 7].map(k => k); const tmpV = V(0, 0, 0), tmpV2 = V(0, 0, 0);
+    const bt = bolts(body, 10, () => { const s = stabs[(rnd() * 6) | 0], a = s.n.getWorldPosition(tmpV).clone(), b = P[NN + backPts[(rnd() * 3) | 0]].clone().add(V(0, 1.6, -.4)); body.worldToLocal(a); return [a, b]; }, 0xc890ff);
+    const btW = bolts(wheel, 8, () => { const a = (rnd() * 4) | 0, ra = ringsW[a].R, rb = ringsW[Math.min(3, a + 1)].R, an = rnd() * TAU; return [V(Math.sin(an) * ra, Math.cos(an) * ra, .4), V(Math.sin(an + .3) * rb, Math.cos(an + .3) * rb, .4)]; }, 0xe0c0ff);
+    // waves: a wing shockwave, the seal circles, judgment circles, the beam's shockwave rings
+    const wingWave = wave(body, 12, false, 0xc890ff), sealC = runeShader(9, GOLD, .9, .5); sealC.rotation.x = -Math.PI / 2; sealC.position.set(0, -7, 16); sealC.visible = false; body.add(sealC);
+    const judges = []; for (let k = 0; k < 4; k++) { const j = runeShader(2.2, GOLD, .95, .45); j.visible = false; wheel.add(j); const p = sprite(2.4, "rgba(255,225,160,1)", "vae_jp"); p.visible = false; body.add(p); judges.push({ j, p }); }
+    const shocks = []; for (let k = 0; k < 3; k++) { const m = new TH.Mesh(new TH.TorusGeometry(2.4, .08, 5, 48), glowMat(0xe8d0ff, 0)); m.userData.dyn = 1; m.visible = false; lens.add(m); shocks.push(m); }
+    const mv = moves({ claw: 1500, wing: 2400, judge: 3200, seal: 3600, rebirth: 3400, annihilate: 18000, hit: 520 }), hit = hitKit(body, shk), drv = {};
+    const S = scr(), c1 = new TH.Color(), Q = new TH.Quaternion(), tmpO = new TH.Object3D();
+    const f = (n, t) => drv[n] != null ? drv[n] : mv.f(n, t);
+    const out = { grp, r: 20, h: 16, mouth, lens, wheel, stab: [1, 1, 1, 1, 1, 1], crack: 0, ph: "idle", dark: 0, act: n => mv.play(n), drive: (n, v) => { if (v == null || v < 0) delete drv[n]; else drv[n] = v; }, moves: ["claw", "wing", "judge", "seal", "rebirth", "annihilate"] };
+    const tick = t => { const fc = f("claw", t), fw = f("wing", t), fj = f("judge", t), fs = f("seal", t), fr = f("rebirth", t), fa = f("annihilate", t), fx = f("hit", t);
+      /* Divine Annihilation, stage by stage: warning .00-.12, runes .12-.35, accumulation .35-.55, alignment .55-.66, beam .66-.86, aftermath .86-1 */
+      const A = fa < 0 ? -1 : fa, warn = bell(A, 0, .06, .9, .97), runes = A < 0 ? 0 : ss(.12, .35, A), acc = bell(A, .35, .55, .7, .74), align = bell(A, .55, .64, .86, .92), fire = bell(A, .66, .685, .84, .88), after = bell(A, .86, .9, .97, 1);
+      out.ph = A < 0 ? "idle" : A < .12 ? "warning" : A < .35 ? "runes" : A < .55 ? "accumulate" : A < .66 ? "align" : A < .86 ? "beam" : "aftermath"; out.dark = align * (1 - fire * .5) * .6;
+      const spin = 1 + warn * 2 + runes * 3 + acc * 4 + align * 2 - after * 2.5, wob = out.stab.filter(x => !x).length;
+      st.spread = Math.max(warn, bell(fw, 0, .2, .8, 1)); st.beat = fw < 0 ? 0 : Math.sin(fw * Math.PI * 3) * (1 - fw); st.lift = Math.max(acc, align) * .9 * (1 - fire * .7) + fire * .15 - after * .2; st.recoil = fire * (.8 + Math.sin(t * .03) * .1); st.sway = fire * Math.sin((A - .66) / .2 * Math.PI * 1.2 - .6) * .35;
+      st.coil = bell(fr, 0, .2, .8, 1) * .6 + warn * .2; st.curl = Math.sin(t * .0003) * .4; st.gape = Math.max(acc * .6, align * .85, fire, bell(fc, .2, .4, .7, .9) * .4, bell(fw, .3, .45, .6, .8) * .5);
+      spine(t);
+      for (let i = 0; i < N; i++) { const a = P[i], b = P[i + 1] || P[i]; S.v.subVectors(i < N ? P[i + 1] : P[i], i ? P[i - 1] : P[i]).normalize(); S.q.setFromUnitVectors(S.Z, S.v); const s = SC[i];
+        S.s.set(s, s * .9, s * 1.45); S.m.compose(a, S.q, S.s); segs.setMatrixAt(i, S.m); S.p.copy(a).addScaledVector(S.v, s * .62); S.s.set(s * 1.01, s * .91, s).multiplyScalar(i % 2 ? .001 : 1); S.m.compose(S.p, S.q, S.s); cols.setMatrixAt(i, S.m); S.s.set(s * 1.0, s * .9, s);
+        S.p.copy(a).addScaledVector(S.v, -s * .55); S.m.compose(S.p, S.q, S.s); seams.setMatrixAt(i, S.m);
+        S.w.set(0, 1, 0).addScaledVector(S.v, -S.v.y).normalize(); Q.setFromUnitVectors(S.Y, S.w); if (i >= NN && i < NN + NT) Q.setFromUnitVectors(S.Y, tmpV.set(0, .2, -1).normalize()); S.s.setScalar(s * .75); S.p.copy(a).addScaledVector(S.w, s * .25); S.m.compose(S.p, Q, S.s); fins.setMatrixAt(i, S.m);
+        let hot = 0; for (let k = 0; k < 2; k++) { const c = ((t * .00007 + k / 2) % 1) * N; hot = Math.max(hot, 1 - Math.min(1, Math.abs(i - c) / 2)); }
+        const g = .08 + hot * .7 + acc * .35 + fire * .5 + bell(fr, 0, .3, .7, 1) * .5; c1.setRGB(g * .62, g * .32, g * 1.0); seams.setColorAt(i, c1); }
+      for (const m of [segs, cols, seams, fins]) m.instanceMatrix.needsUpdate = true; seams.instanceColor.needsUpdate = true;
+      head.position.copy(P[0]); body.updateMatrixWorld(); tmpV.copy(P[0]).add(tmpV2.set(st.sway * .9 + Math.sin(t * .0005) * .08, -.28 + st.lift * .75 - st.recoil * .12, 1)); body.localToWorld(tmpV); head.lookAt(tmpV); head.rotateZ(Math.sin(t * .0007) * .06);
+      jaw.rotation.x = .08 + st.gape * .62 + Math.sin(t * .002) * .02;
+      const eyeK = .55 + warn * .5 + align * 1.2 + fire * .6 + .1 * Math.sin(t * .004); eyes.forEach(e => { e.material.opacity = Math.min(1, eyeK); e.scale.setScalar(1.6 * (1 + align * 1.2 + fire * .6)); });
+      const og = Math.max(acc * .55, align, fire * .8, after * .3 * (1 - after)); orb.material.opacity = og * .9; orb.scale.setScalar(.2 + og * 1.4 + fire * Math.sin(t * .05) * .15); orbS.material.opacity = og; orbS.scale.setScalar(3 + og * 7 + fire * 3);
+      lens.visible = fire > .01; if (lens.visible) { bm.forEach(([m, o], k) => { m.material.opacity = o * fire * (.85 + rnd() * .15); m.scale.set(1 + Math.sin(t * .04 + k) * .06, 1 + Math.sin(t * .05 + k) * .06, Math.min(1, (A - .66) / .02)); });
+        halos.forEach((h, k) => { const z = ((t * .05 + k * 16) % 80); h.position.z = z; h.scale.setScalar(1 + z * .012); h.material.opacity = .55 * fire * (1 - z / 80); });
+        shocks.forEach((m, k) => { const q = ((t * .0016 + k / 3) % 1); m.visible = true; m.position.z = 1 + q * 6; m.scale.setScalar(1 + q * 2.6); m.material.opacity = (1 - q) * fire * .5; }); }
+      core.userData.rr.rotation.z = t * .0008; coreS.material.opacity = .55 + .25 * Math.sin(t * .003) + acc * .4 + bell(fr, 0, .3, .7, 1) * .5; coreS.scale.setScalar(7 * (1 + acc * .4 + fire * .3));
+      // arms: idle breathing; the claw rakes forward and down, alternating
+      const cl = fc < 0 ? 0 : fc; arms.forEach((a, k) => { const sw = k === (Math.floor(t / 4000) % 2) ? cl : 0, rake = Math.sin(ss(.15, .55, sw) * Math.PI) * 1.0 + bell(sw, .1, .3, .5, .8) * .4;
+        a.up.rotation.set(-.15 + Math.sin(t * .0011 + k) * .06 - rake * 1.1 + align * .3, a.sx * (.1 - rake * .25), a.sx * (.15 + st.spread * .1)); a.el.rotation.set(.2 - rake * .6 + Math.sin(t * .0013 + k) * .05, 0, 0); a.hand.rotation.set(-.2 + rake * .9, 0, 0);
+        a.trail.material.opacity = bell(sw, .2, .35, .55, .75); a.trail.scale.setScalar(4 + rake * 6); });
+      // wings: folded half open at rest, flung wide for the warning and the wingstorm, beating in the storm
+      wings.forEach(W => { const sp = .35 + st.spread * .65; W.root.rotation.set(-.1 + st.beat * .25 + Math.sin(t * .0009) * .04, W.sx * (.55 - sp * .5), W.sx * (-.1 + st.beat * .5 - sp * .1)); W.w.scale.set(.75 + sp * .25, .85 + sp * .15, 1); });
+      memM.opacity = .36 + st.spread * .16 + acc * .12 + fire * .15; wingWave(fw < 0 ? -1 : ss(.35, 1, fw));
+      // the wheel: majestic idle turn; it spins up through the charge, the rings counter-rotate, the runes ignite in sequence, then align
+      const dt = Math.min(64, t - (out.lt || t)); out.lt = t; const crack = out.crack;
+      ringsW.forEach((o, k) => { const dir = k % 2 ? -1 : 1, base = [.00009, .00014, .0002, .0003][k] * dir * (1 + wob * .15);
+        o.ang += base * dt * spin; if (align > .01) { const snap = Math.round(o.ang / (TAU / 8)) * (TAU / 8); o.ang += (snap - o.ang) * Math.min(1, align * dt * .006); }
+        o.r.rotation.z = o.ang + (crack > 0 && k === 0 ? Math.sin(t * .007) * crack * .05 : 0) + (wob ? Math.sin(t * .003 + k) * .01 * wob : 0);
+        const sw = A < 0 ? (fj >= 0 ? bell(fj, 0, .2, .8, 1) : 0) : ss(.12 + k * .05, .3 + k * .05, A) * (1 - after); o.rr.forEach(r => { r.material.uniforms.uSw.value = sw > .001 ? Math.min(1.04, sw * 1.04) : 0; r.material.uniforms.uHot.value = (align + fire * .8) * .5; });
+        o.ch.material.opacity = .45 + .2 * Math.sin(t * .003 + k) + acc * .4 + align * .5; });
+      spk.rotation.z = -R0.ang * .5; ap.rotation.z = -t * (.0008 + acc * .006 + align * .01); ap.material.opacity = .45 + acc * .4 + align * .5; apS.material.opacity = .5 + acc * .5; apS.scale.setScalar(8 * (1 + acc * .5 + align * .8 + fire * .3));
+      field.material.opacity = (acc * .25 + align * .45 + fire * .3) * (1 - after); field.rotation.z = t * .001; field.scale.setScalar(1 + align * .15);
+      R0.r.scale.setScalar(1 + crack * .02 * Math.sin(t * .011)); R0.ch.material.opacity *= crack > 0 && rnd() < crack * .3 ? .2 : 1; frags.forEach((g, k) => { g.visible = crack > .05; if (g.visible) { const d = crack * (1.5 + k % 3) + Math.sin(t * .001 + k) * .3; g.position.copy(g.userData.o).multiplyScalar(1 + d * .06); g.rotation.set(t * .0004 * (k + 1), t * .0003, k); } });
+      stabs.forEach((s, k) => { const on = out.stab[k]; s.cg.rotation.set(t * .0011 * (k % 2 ? -1 : 1), t * .0007, 0); s.c.material.color.setRGB(on ? 1 : .15, on ? .9 : .08, on ? 1 : .2); s.s.material.opacity = on ? .7 + acc * .3 + align * .4 + Math.sin(t * .004 + k) * .1 : (rnd() < .05 ? .6 : 0); s.s.scale.setScalar(4.2 * (1 + align * .6)); });
+      for (let k = 0; k < NG; k++) { const g = gD[k]; g.a += g.w * dt * spin; const r = g.r * (1 - acc * .25 - align * .2); S.p.set(Math.sin(g.a) * r, Math.cos(g.a) * r, g.z + Math.sin(t * .001 + k) * .4); S.e.set(0, 0, -g.a + Math.sin(t * .002 + k)); S.q.setFromEuler(S.e); S.s.setScalar(g.s * (1 + runes * .3)); S.m.compose(S.p, S.q, S.s); glyphs.setMatrixAt(k, S.m); } glyphs.instanceMatrix.needsUpdate = true; glyphs.material.opacity = .45 + runes * .4 + align * .2;
+      const draw = Math.max(warn * .4, acc, align * .6); for (let k = 0; k < NP; k++) { const m = mD[k], ph = (m.ph + t * m.w * (1 + draw * 6)) % 1, r = m.r0 * (1 - ph), a = m.a + ph * 4; motes.put(k, Math.sin(a) * r, Math.cos(a) * r, (1 - ph) * 3, .9 + (1 - ph) * .6, draw * (ph < .1 ? ph * 10 : 1) * (.5 + .5 * ph)); } motes.done();
+      bt(t, .4 + acc * 4 + align * 6 + fire * 3 + bell(fr, 0, .2, .8, 1) * 3); btW(t, .3 + runes * 2 + align * 3 + crack * 3);
+      // Celestial Judgment: rune circles bloom on the wheel and fire bolts forward; Golden Seal: a gold rune circle forms ahead
+      judges.forEach((J, k) => { const on = fj >= 0, a = k / 4 * TAU + .4, open = bell(fj, k * .08, .2 + k * .08, .8, .95), shot = fj < 0 ? -1 : (fj - .35 - k * .1) / .3;
+        J.j.visible = on && open > .01; if (J.j.visible) { J.j.position.set(Math.sin(a) * WR * .62, Math.cos(a) * WR * .62, 1.5); J.j.scale.setScalar(.2 + open); J.j.rotation.z = t * .004; J.j.material.uniforms.uSw.value = 1.04; J.j.material.uniforms.uO.value = .95 * open; }
+        J.p.visible = shot > 0 && shot < 1; if (J.p.visible) { J.j.getWorldPosition(tmpV); body.worldToLocal(tmpV); J.p.position.copy(tmpV).lerp(tmpV2.set(tmpV.x * .2, -2, 40), shot); J.p.material.opacity = 1 - shot * .3; } });
+      sealC.visible = fs >= 0; if (sealC.visible) { const k = bell(fs, 0, .25, .8, 1); sealC.material.uniforms.uSw.value = Math.min(1.04, ss(0, .45, fs) * 1.04); sealC.material.uniforms.uO.value = k; sealC.rotation.z = t * .0006; sealC.scale.setScalar(1 + ss(0, .3, fs) * .4); }
+      hit(bell(fx, 0, .05, .4, 1), t); };
+    out.tick = tick; tick(0); bake(body); return out; }
+  /* ---------- Aexion, the Warform Sovereign (owner's art, assets/bosses/aexion/ref): one rigged machine with two poses. As a ship it is a
+     long silver-and-gunmetal dreadnought: a split prow, flank cannons, deck turrets, a rune halo standing on its deck, swept rear wings and
+     great engines at its stern. Every part of it is a part of the mech: the stern is its legs (the engines are in its heels, firing down
+     once it stands), the flank cannons its forearms, the prow its shoulder armour, the deck turrets its shoulder cannons, the halo rises
+     behind its head, the wings become the V behind its shoulders, and the hull plates close round the reactor in its chest.
+     transform (0..1) moves every joint from the ship pose to the mech pose in stages (activation, hull separation, limb deployment, core
+     alignment, weapons, reveal): nothing is swapped or hidden. Moves: broadside, missiles, rail, aegis, blade, lance, overdrive, hit.
+     form is 0 (ship) .. 1 (Warform); drive(name, f) pins a move to a progress, as on Vaelthar. ---------- */
+  function aexion() { const grp = new TH.Group(), shk = new TH.Group(), body = new TH.Group(); grp.add(shk); shk.add(body);
+    const LO = LOD === 1, RC = [.3, .62, 1], BLUE = 0x58b8ff;
+    const MA = hullMat("aex", { rows: 3, pal: ["#7c8592", "#6c7482", "#8e97a4", "#5e6672", "#868e9a"], bronze: 0, slits: .42, sc: "#d8f4ff", sg: "#3aa8ff", metal: .92, rough: .3, rc: RC, ei: 3.4, rep: [.14, .14], relief: 2.2 }); MA.envMapIntensity = .85;
+    const MD = hullMat("aexd", { rows: 4, pal: ["#141a25", "#1a2130", "#10151e", "#222a38"], bronze: 0, slits: .55, sc: "#cfefff", sg: "#2a90ff", metal: .9, rough: .34, rc: RC, ei: 3.6, rep: [.16, .16] });
+    const MR = hullMat("aexr", { rows: 4, cols: 6, pal: ["#20242c"], bronze: 0, slits: 1, sc: "#ffd0c0", sg: "#ff4a3a", metal: .9, rough: .3, rc: [1, .4, .3], ei: 3.2, rep: [.4, .4] });
+    const CORE = new TH.MeshBasicMaterial({ color: 0xe8f6ff, toneMapped: false }), GL = glowMat(BLUE, .85), GW = glowMat(0xcfeeff, .95);
+    // angular armour: a chamfered slab, and a pointed blade
+    const slab = (w, h, d, mat, ch = .35, tp = 1) => { const s = new TH.Shape(), x = w / 2, y = h / 2, c = Math.min(ch, x * .45, y * .45), xb = x * tp; s.moveTo(-xb + c, -y); s.lineTo(xb - c, -y); s.lineTo(xb, -y + c); s.lineTo(x, y - c); s.lineTo(x - c, y); s.lineTo(-x + c, y); s.lineTo(-x, y - c); s.lineTo(-xb, -y + c); s.closePath();
+      const g = new TH.ExtrudeGeometry(s, { depth: d, bevelEnabled: true, bevelThickness: Math.min(.14, d * .2), bevelSize: Math.min(.14, c * .5), bevelSegments: 1 }); g.translate(0, 0, -d / 2); return new TH.Mesh(g, mat); };
+    const spike = (w, h, d, mat) => { const s = new TH.Shape(); s.moveTo(-w / 2, 0); s.lineTo(w / 2, 0); s.lineTo(w * .22, h * .72); s.lineTo(0, h); s.lineTo(-w * .22, h * .72); s.closePath(); const g = new TH.ExtrudeGeometry(s, { depth: d, bevelEnabled: true, bevelThickness: Math.min(.12, d * .25), bevelSize: Math.min(.12, w * .08), bevelSegments: 1 }); g.translate(0, 0, -d / 2); return new TH.Mesh(g, mat); };
+    const glowBar = (w, h, d, mat = GL) => { const m = new TH.Mesh(new TH.BoxGeometry(w, h, d), mat); return m; };
+    const put = (par, m, p, r) => { m.position.set(...p); if (r) m.rotation.set(...r); par.add(m); return m; };
+    // the rig: each joint has a pivot, a ship pose, a mech pose and the stage window in which it moves
+    const joints = [], E = (x, y, z) => new TH.Quaternion().setFromEuler(new TH.Euler(x, y, z));
+    const J = (par, mechP, shipP, mechR, shipR, a, b, ease = 1) => { const g = new TH.Group(); par.add(g); const j = { g, mp: V(...mechP), sp: V(...(shipP || mechP)), mq: E(...(mechR || [0, 0, 0])), sq: E(...(shipR || mechR || [0, 0, 0])), a, b, ease }; joints.push(j); return g; };
+    /* the pelvis is the root: lying along the keel as a ship (torso forward, back up), upright as the mech */
+    const root = J(body, [0, 0, 0], [0, 1.5, 6], [0, 0, 0], [Math.PI / 2, 0, 0], .16, .5);
+    put(root, slab(5.2, 2.6, 3.4, MD), [0, 0, 0]); put(root, slab(3.4, 1.4, 3.8, MA), [0, -1.1, .2]); for (const sx of [-1, 1]) { put(root, slab(2.3, 3.6, .55, MA), [sx * 2.5, -1.8, 1.4], [.22, 0, sx * .12]); put(root, glowBar(.12, 2.6, .1), [sx * 2.5, -1.8, 1.75], [.22, 0, sx * .12]); }
+    const chest = J(root, [0, 1.6, 0], [0, 1.6, 0], [-.04, 0, 0], [0, 0, 0], .3, .6);
+    put(chest, slab(8.0, 6.4, 4.4, MD, .6, .62), [0, 3.5, 0]); put(chest, slab(4.0, 2.6, 3.2, MD, .35, .8), [0, .5, 0]); put(chest, slab(6.4, 1.3, 3.2, MA), [0, 6.7, -.2]); put(chest, slab(6.8, 5.2, 1.2, MA), [0, 4.0, -2.4]);
+    for (const sx of [-1, 1]) { put(chest, slab(3.8, 5.4, 1.1, MA, .5, .55), [sx * 2.3, 4.0, 2.05], [0, sx * -.28, 0]); put(chest, glowBar(.14, 4.4, .12), [sx * 1.15, 3.9, 2.45]); put(chest, slab(2.0, 1.8, 1.0, MA), [sx * 1.2, 1.2, 1.8], [.2, 0, 0]); put(chest, spike(1.2, 2.4, .5, MA), [sx * 3.4, 6.9, .4], [0, 0, sx * -.5]); }
+    put(chest, spike(1.6, 2.2, .6, MA), [0, 6.2, 2.1], [Math.PI, 0, 0]);
+    // the reactor, and the two hull plates that slide over it as the mech forms (open on the ship's belly)
+    const core = put(chest, new TH.Group(), [0, 4.3, 2.25]); { core.add(new TH.Mesh(new TH.SphereGeometry(.9, 18, 12), CORE)); const r = new TH.Mesh(new TH.TorusGeometry(1.25, .14, 6, 32), MA); core.add(r); const g = new TH.Mesh(new TH.TorusGeometry(1.55, .06, 4, 40), GL); g.userData.dyn = 1; core.add(g); core.userData.g = g; }
+    const coreS = sprite(6, "rgba(190,230,255,1)", "aex_core"); coreS.position.copy(core.position).add(V(0, 0, .6)); chest.add(coreS);
+    const plates = [-1, 1].map(sx => { const p = J(chest, [sx * 1.15, 4.3, 2.35], [sx * 2.9, 4.3, 2.0], [0, 0, 0], [0, sx * .55, 0], .58, .7); put(p, slab(2.1, 3.2, .55, MA), [0, 0, 0]); put(p, glowBar(.1, 2.6, .1), [-sx * .95, 0, .3]); return p; });
+    /* the head rises out of the chest; the prow halves cover it as a ship and swing out over the shoulders */
+    const head = J(chest, [0, 7.2, .2], [0, 4.7, -.4], [0, 0, 0], [0, 0, 0], .5, .66);
+    put(head, slab(2.0, 2.3, 2.3, MA), [0, 1.1, 0]); put(head, slab(1.4, .5, .5, GW), [0, 1.25, 1.2]); put(head, spike(.9, 3.4, .45, MA), [0, 2.0, -.2]);
+    for (const sx of [-1, 1]) { const h = put(head, spike(.8, 2.8, .4, MA), [sx * .9, 1.8, -.3], [0, 0, sx * -.7]); const c = put(head, new TH.Mesh(crescentGeo(1.6, .35, 1.0, .3), MA), [sx * .2, 2.6, -.4], [0, 0, 0]); c.scale.setScalar(.8); }
+    const eyes = [-1, 1].map(sx => { const e = sprite(1.4, "rgba(200,235,255,1)", "aex_eye"); e.position.set(sx * .42, 1.3, 1.25); head.add(e); return e; });
+    const prow = [-1, 1].map(sx => { const p = J(chest, [sx * 2.4, 6.8, .8], [sx * 1.0, 6.9, .9], [-.35, 0, sx * -2.25], [0, 0, sx * .1], .12, .32);
+      put(p, spike(3.2, 11, 1.3, MA), [-sx * .35, 0, 0], [0, 0, 0]); put(p, glowBar(.12, 7, .1), [-sx * .35, 3.4, .72]); put(p, slab(2.6, 2, 1.0, MD), [0, .6, -.2]); return p; });
+    /* arms: raised along the hull as the ship's flank cannons, lowered to the mech's sides */
+    const arms = [-1, 1].map(sx => { const sh = J(chest, [sx * 5.3, 5.6, 0], [sx * 4.2, 5.6, .2], [0, 0, sx * .2], [0, 0, sx * (Math.PI - .08)], .3, .56);
+      put(sh, slab(4.2, 3.0, 4.4, MA), [sx * 1.0, .7, 0]); put(sh, spike(1.4, 3.2, .6, MA), [sx * 1.9, 1.8, 0], [0, 0, sx * -.9]); put(sh, slab(2.2, 5.4, 2.4, MD, .35, .8), [0, -3.0, 0]); put(sh, slab(2.8, 3.0, 2.9, MA, .5, .8), [0, -2.0, .1]);
+      const el = J(sh, [0, -6, 0], [0, -6, 0], [-.4, 0, 0], [0, 0, 0], .45, .6);
+      put(el, slab(3.3, 6.2, 3.2, MA, .6, .72), [0, -3.0, .2]); put(el, slab(2.0, 4.2, 2.2, MD), [0, -3.2, -.5]); put(el, glowBar(.12, 4.4, .12), [sx * 1.5, -3.0, .4]); put(el, glowBar(.1, 3.6, .1), [-sx * 1.2, -3.2, 1.75]); put(el, glowBar(1.4, .1, .1), [0, -1.4, 1.85]);
+      const bar = []; for (const dx of [-.55, .55]) { const b = new TH.Mesh(new TH.CylinderGeometry(.3, .38, 5.4, 10), MD); b.position.set(sx * 1.55 + dx * .5, -3.8, 1.5 + (dx > 0 ? 0 : .02)); el.add(b); const m = new TH.Mesh(new TH.TorusGeometry(.34, .07, 5, 14), GL); m.rotation.x = Math.PI / 2; m.position.set(b.position.x, -6.5, b.position.z); m.userData.dyn = 1; el.add(m); const f = sprite(2.4, "rgba(170,220,255,1)", "aex_mz"); f.position.set(b.position.x, -7.0, b.position.z); f.material.opacity = 0; el.add(f); bar.push(f); }
+      const hand = J(el, [0, -6.3, .2], [0, -6.3, .2], [0, 0, 0], [0, 0, 0], .55, .62); put(hand, slab(1.9, 1.9, 1.9, MD), [0, -.9, 0]); for (let k = 0; k < 4; k++) put(hand, slab(.38, 1.3, .5, MA), [(k - 1.5) * .45, -2.0, .4], [.5, 0, 0]);
+      return { sx, sh, el, hand, bar }; });
+    // the Judgment Blade (right hand) and the Holographic Aegis (left forearm)
+    const RH = arms[1].hand, LF = arms[0].el; const sword = new TH.Group(); sword.position.set(0, -1.6, .2); sword.rotation.x = Math.PI / 2 + .25; RH.add(sword);
+    put(sword, new TH.Mesh(new TH.CylinderGeometry(.24, .24, 2.6, 8), MD), [0, 0, 0]); put(sword, slab(2.6, .4, .6, MA), [0, 1.3, 0]);
+    const blade = new TH.Group(); blade.position.y = 1.5; sword.add(blade); { const g1 = new TH.Mesh(new TH.BoxGeometry(.28, 1, 1.0), GW), g2 = new TH.Mesh(new TH.BoxGeometry(.9, 1.05, 2.0), glowMat(0x58b8ff, .45)), g3 = new TH.Mesh(new TH.BoxGeometry(1.8, 1.1, 3.4), glowMat(0x3a7aff, .16)); for (const g of [g1, g2, g3]) { g.geometry.translate(0, .5, 0); g.userData.dyn = 1; blade.add(g); } const tip = spike(1.0, 1.6, .3, GW); tip.position.y = 1; blade.add(tip); }
+    blade.scale.set(1, .001, 1); const bladeS = sprite(4, "rgba(190,230,255,1)", "aex_bl"); sword.add(bladeS); bladeS.position.y = 1.5;
+    const hexM = new TH.ShaderMaterial({ uniforms: { uC: { value: new TH.Color(0x6ac8ff) }, uO: { value: .0 }, uT: { value: 0 }, uHit: { value: new TH.Vector3(0, 0, -9) } }, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, side: TH.DoubleSide,
+      vertexShader: "varying vec2 vP; void main() { vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+      fragmentShader: "uniform vec3 uC; uniform float uO, uT; uniform vec3 uHit; varying vec2 vP; float hx(vec2 p) { p /= .9; vec2 q = vec2(p.x * 1.1547, p.y + p.x * .57735); vec2 i = floor(q), f = fract(q); float a = mod(i.x + i.y, 3.); vec2 c = a < 1. ? vec2(0.) : a < 2. ? vec2(1.) : vec2(step(f.y, f.x), step(f.x, f.y)); vec2 d = f - c; return length(vec2(d.x - d.y * .5, d.y * .866)); }\n void main() { float r = length(vP), e = smoothstep(6., 5.6, r), h = smoothstep(.36, .5, hx(vP)), d = length(vP - uHit.xy), w = uHit.z > 0. ? exp(-pow((d - uHit.z * 6.) / .8, 2.)) * (1. - uHit.z) : 0.; float rim = smoothstep(5.2, 5.9, r) * e;\n float k = uO * e * (.08 + h * .5 + rim * .9 + w * 1.6 + .06 * sin(uT * .004 + r * 2.)); gl_FragColor = vec4(uC * k + vec3(w * .6), k); }" });
+    const shield = new TH.Mesh(new TH.CircleGeometry(6, 48), hexM); shield.userData.dyn = 1; shield.position.set(-2.4, -3.2, .3); shield.rotation.y = -Math.PI / 2 + .2; LF.add(shield);
+    /* legs: the stern of the ship; the engines are in the heels */
+    const legs = [-1, 1].map(sx => { const hip = J(root, [sx * 2.3, -1.3, 0], [sx * 2.0, -1.3, 0], [-.12, 0, sx * .07], [0, 0, sx * .02], .22, .5);
+      put(hip, slab(3.3, 7.0, 3.2, MA, .6, .74), [0, -3.4, 0]); put(hip, slab(2.0, 5.4, 2.2, MD), [0, -3.5, -.6]); put(hip, glowBar(.12, 5, .12), [sx * 1.5, -3.4, .5]); put(hip, glowBar(.1, 4.4, .1), [0, -3.6, 1.68]);
+      const kn = J(hip, [0, -7, 0], [0, -7, 0], [.3, 0, 0], [0, 0, 0], .35, .55); put(kn, spike(2.0, 3.0, 1.0, MA), [0, -.2, 1.6], [-.15, 0, 0]); put(kn, slab(3.5, 7.8, 3.6, MA, .7, .66), [0, -3.9, 0]); put(kn, slab(2.2, 5.6, 1.4, MD), [0, -4.2, -1.6]); for (const dy of [-2.4, -4.4]) put(kn, glowBar(1.6, .12, .12), [0, dy, -2.35]);
+      const an = J(kn, [0, -7.9, 0], [0, -7.9, 0], [-.18, 0, 0], [-Math.PI / 2, 0, 0], .45, .62); put(an, slab(3.1, 1.4, 5.2, MD), [0, -.8, 1.3]); put(an, spike(2.6, 2.4, .9, MA), [0, -.9, 3.4], [Math.PI / 2, 0, 0]);
+      const eng = put(an, new TH.Group(), [0, -1.2, -1.5]); put(eng, slab(2.8, 2.4, 2.8, MD), [0, .5, 0]); const fl = []; for (const dx of [-.7, .7]) { const n = new TH.Mesh(new TH.CylinderGeometry(.55, .8, 1.0, 12, 1, true), MA); n.position.set(dx, -.9, 0); eng.add(n); const g = new TH.Mesh(new TH.CircleGeometry(.5, 16), GW); g.rotation.x = Math.PI / 2; g.position.set(dx, -1.35, 0); g.userData.dyn = 1; eng.add(g); const f = sprite(3, "rgba(150,210,255,1)", "aex_fl"); f.position.set(dx, -2.4, 0); eng.add(f); fl.push(f); }
+      return { sx, hip, kn, an, fl }; });
+    /* the wings, the halo and the deck turrets, all on the back */
+    const wings = [-1, 1].map(sx => { const w = J(chest, [sx * 2.6, 5.6, -2.6], [sx * 2.4, 5.0, -2.5], [.35, 0, sx * (Math.PI - .75)], [-.05, 0, sx * .22], .35, .6);
+      [[0, 12, 1.4], [.32, 10, 1.1], [.62, 7.5, .9]].forEach(([a, L, wd], k) => { put(w, spike(wd, L, .45, MA), [sx * k * .5, 0, -k * .25], [0, 0, Math.PI + sx * a]); put(w, glowBar(.1, L * .6, .1), [sx * (k * .5 + Math.sin(a) * L * .3), -Math.cos(a) * L * .3, -k * .25 + .3], [0, 0, sx * a]); }); return w; });
+    const halo = J(chest, [0, 7.4, -3.4], [0, 5.6, -3.2], [0, 0, 0], [-Math.PI / 2, 0, 0], .6, .76); { const b = band(5.2, .55, .5, MA, 0, TAU, 72, 24); b.rotation.x = Math.PI / 2; halo.add(b); const rr = runeRing(5.0, 0x7ac8ff, .9); halo.add(rr); halo.userData.rr = rr; for (let k = 0; k < 4; k++) { const a = k / 4 * TAU; const o = new TH.Mesh(new TH.SphereGeometry(.45, 10, 8), CORE); o.position.set(Math.sin(a) * 5.4, Math.cos(a) * 5.4, 0); halo.add(o); } const top = spike(1.2, 3, .5, MA); top.position.y = 5.2; halo.add(top); }
+    const cannons = [-1, 1].map(sx => { const c = J(chest, [sx * 2.4, 7.0, -2.8], [sx * 2.0, 6.0, -2.9], [Math.PI / 2 - .1, 0, 0], [0, 0, 0], .7, .82); put(c, slab(2.2, 2.0, 2.2, MD), [0, .4, 0]); const mz = []; for (const dx of [-.45, .45]) { const b = new TH.Mesh(new TH.CylinderGeometry(.22, .26, 4.4, 8), MA); b.position.set(dx, 3.0, 0); c.add(b); const f = sprite(2.2, "rgba(170,220,255,1)", "aex_mz"); f.position.set(dx, 5.5, 0); f.material.opacity = 0; c.add(f); mz.push(f); } return { c, mz }; });
+    const pods = [-1, 1].map(sx => { const p = put(chest, new TH.Group(), [sx * 3.9, 7.2, .5]); put(p, slab(2.4, 1.4, 2.8, MR), [0, 0, 0]); const lid = J(p, [0, .75, -1.4], [0, .75, -1.4], [-1.25, 0, 0], [0, 0, 0], .72, .84); put(lid, slab(2.5, .3, 2.9, MA), [0, 0, 1.45]); return { p, lid }; });
+    // effects: missiles, the rail slug, the lance, the blade's arc, the reveal shockwave, the unlock flashes
+    const NM = LO ? 16 : 28, mis = puffs(NM, 0xbfe4ff); body.add(mis); const mD = []; for (let k = 0; k < NM; k++) mD.push({ s: k % 2, a: rnd() * TAU, d: .3 + rnd() * .5, h: rnd() });
+    const rail = new TH.Mesh(new TH.CylinderGeometry(.25, .25, 1, 8, 1, true), GW); rail.geometry.translate(0, .5, 0); rail.userData.dyn = 1; rail.visible = false; arms[1].el.add(rail); rail.position.set(1.55, -6.5, 1.5); rail.rotation.x = Math.PI;
+    const lance = new TH.Group(); core.add(lance); lance.visible = false; for (const [r, o, c] of [[1.2, .3, 0x3a7aff], [.5, .9, 0xe8f6ff]]) { const g = new TH.CylinderGeometry(r * .8, r, 60, 14, 1, true); g.translate(0, 30, 0); g.rotateX(Math.PI / 2); const m = new TH.Mesh(g, glowMat(c, o)); m.userData.dyn = 1; lance.add(m); }
+    const arcM = new TH.Mesh(new TH.RingGeometry(14, 17, 48, 1, 0, Math.PI * .9), glowMat(0x9ad8ff, 0)); arcM.userData.dyn = 1; arcM.visible = false; body.add(arcM);
+    const reveal = wave(body, 18, false, 0x9ad8ff), seams = []; body.traverse(o => { if (o.isMesh && o.material === GL) seams.push(o); });
+    const bt = bolts(body, 8, () => { const a = joints[(rnd() * joints.length) | 0].g.getWorldPosition(V(0, 0, 0)), b = joints[(rnd() * joints.length) | 0].g.getWorldPosition(V(0, 0, 0)); body.worldToLocal(a); body.worldToLocal(b); return [a, b]; }, 0x9ad8ff);
+    const mv = moves({ transform: 20000, broadside: 2200, missiles: 3000, rail: 2600, aegis: 2400, blade: 2600, lance: 2800, overdrive: 4200, hit: 520 }), hit = hitKit(body, shk), drv = {};
+    const f = (n, t) => drv[n] != null ? drv[n] : mv.f(n, t), q0 = new TH.Quaternion(), S = scr();
+    const out = { grp, r: 22, h: 30, form: 0, ph: "ship", act: n => { if (n === "transform" && out.form > .99) return; mv.play(n); }, drive: (n, v) => { if (v == null || v < 0) delete drv[n]; else drv[n] = v; },
+      moves: ["broadside", "missiles", "rail", "aegis", "blade", "lance", "overdrive"], mouth: core, lens: null, reactor: core };
+    const tick = t => { const ft = f("transform", t); if (ft >= 0) out.form = ft; else if (out.ftL > .9) out.form = 1; out.ftL = ft; const u = out.form;
+      out.ph = u <= 0 ? "ship" : u < .12 ? "activation" : u < .32 ? "separation" : u < .5 ? "limbs" : u < .7 ? "core" : u < .88 ? "weapons" : u < 1 ? "reveal" : "warform";
+      const wake = u > 0 && u < 1 ? bell(u, 0, .05, .9, 1) : 0, unlock = bell(u, .02, .06, .1, .14);
+      for (const j of joints) { const k = j.ease ? ss(j.a, j.b, u) : Math.min(1, Math.max(0, (u - j.a) / (j.b - j.a))); j.g.position.lerpVectors(j.sp, j.mp, k); j.g.quaternion.slerpQuaternions(j.sq, j.mq, k);
+        if (unlock > 0) j.g.position.y += Math.sin(t * .05 + j.a * 40) * .05 * unlock; }
+      // the ship drifts nose-on; the mech breathes in its stance
+      const mech = ss(.88, 1, u); body.position.y = Math.sin(t * .0008) * (.4 + mech * .2); body.rotation.z = Math.sin(t * .0005) * .02 * (1 - mech);
+      const fo = f("overdrive", t), od = bell(fo, 0, .15, .85, 1), fb = f("blade", t), fa = f("aegis", t), fl = f("lance", t), fr = f("rail", t), fm = f("missiles", t), fbs = f("broadside", t), fx = f("hit", t);
+      // the blade swing: the right arm sweeps across, the arc trails it
+      if (fb >= 0 && u > .99) { const sw = ss(.25, .6, fb), back = bell(fb, 0, .2, .3, .45); arms[1].sh.rotation.x += -back * 1.6 + sw * 1.2; arms[1].sh.rotation.z += back * .5 - sw * 1.1; arms[1].el.rotation.x -= back * .4; }
+      arcM.visible = fb >= 0 && u > .99; if (arcM.visible) { const k = bell(fb, .3, .4, .6, .85); arcM.material.opacity = k * .8; arcM.position.set(0, 4, 6); arcM.rotation.set(-Math.PI / 2 + .3, 0, -.6 + ss(.3, .6, fb) * 1.4); arcM.scale.setScalar(.6 + ss(.3, .9, fb) * .7); }
+      const bl = u > .99 ? 1 : ss(.74, .88, u); blade.scale.set(1, .001 + bl * 17 * (1 + od * .15), 1); blade.visible = bl > .01; bladeS.material.opacity = bl * (.5 + .3 * Math.sin(t * .02)); bladeS.scale.setScalar(3 + bl * 3 + bell(fb, .3, .4, .6, .8) * 6);
+      const sh = Math.max(ss(.7, .85, u) * .5, bell(fa, 0, .15, .8, 1), od * .6); hexM.uniforms.uO.value = u < .99 ? sh : .5 + bell(fa, 0, .15, .8, 1) * .7 + od * .4; hexM.uniforms.uT.value = t; shield.scale.setScalar(u < .7 ? .55 : .55 + ss(.7, .85, u) * .45);
+      const hq = fa >= 0 ? (fa * 3) % 1 : -1; hexM.uniforms.uHit.value.set(Math.sin(t * .001) * 2.5, Math.cos(t * .0013) * 2, hq);
+      // reactor, eyes, seams: the awakening lights the hull; the reveal and overdrive flare them
+      const glow = .45 + wake * .6 + bell(u, .58, .66, .9, 1) * .8 + od * 1.2 + bell(fl, 0, .2, .8, 1) * .6; coreS.material.opacity = Math.min(1, glow * .7); coreS.scale.setScalar(5 + glow * 3 + od * Math.sin(t * .04) * 1.5); core.userData.g.rotation.z = t * .002;
+      eyes.forEach(e => { const k = u < .6 ? 0 : ss(.6, .66, u) * (.7 + bell(u, .88, .92, .96, 1) * .8) + od * .4; e.material.opacity = Math.min(1, k); e.scale.setScalar(1.4 * (1 + bell(u, .88, .92, .96, 1) * 1.5)); });
+      seams.forEach((m, k) => { m.material.opacity = Math.min(1, .55 + wake * .3 + od * (.4 + .3 * Math.sin(t * .03 + k)) + unlock * .4 * Math.sin(t * .06 + k)); }); halo.userData.rr.rotation.z = t * (.0005 + wake * .002 + od * .004);
+      // engines: the ship's stern thrust; they flare through the awakening and fire beneath the mech at the reveal
+      legs.forEach(L => L.fl.forEach((s, k) => { const th = (u <= 0 ? .75 : 0) + wake * .9 + bell(u, .86, .9, .97, 1) * 1.2 + .35 * mech + od * .5; s.material.opacity = Math.min(1, th * (.8 + .2 * Math.sin(t * .05 + k))); s.scale.setScalar(2.4 + th * 3.2); }));
+      // weapons: broadside flashes from the flank/forearm cannons and the deck turrets, missiles from the pods, the rail slug, the lance
+      const fire = (fbs >= 0 ? Math.max(0, Math.sin(fbs * Math.PI * 7)) * (1 - fbs) : 0) + od * (rnd() < .3 ? 1 : 0); arms.forEach((A, k) => A.bar.forEach((s, i) => { s.material.opacity = fire * (((i + k) % 2) ? 1 : .7); s.scale.setScalar(2 + fire * 3); })); cannons.forEach(C => C.mz.forEach(s => { s.material.opacity = fire * .9; s.scale.setScalar(2 + fire * 2.5); }));
+      const open = Math.max(fm >= 0 ? bell(fm, 0, .1, .85, 1) : 0, od); if (u > .99) pods.forEach(P => P.lid.rotation.set(-1.25 - open * .5, 0, 0));
+      for (let k = 0; k < NM; k++) { const m = mD[k], q = fm < 0 ? -1 : (fm - m.h * .4) / .5; if (q > 0 && q < 1) { const P = pods[m.s].p.getWorldPosition(S.p); body.worldToLocal(P); mis.put(k, P.x + Math.sin(m.a) * q * 6, P.y + q * 6 - q * q * 4 + Math.cos(m.a) * q * 2, P.z + q * 34 * m.d + q * 8, 1.6, 1 - q * .3); } else mis.put(k, 0, 0, 0, 0, 0); } mis.done();
+      rail.visible = fr >= 0 && fr > .55 && fr < .75; if (rail.visible) { rail.scale.set(1 + (1 - (fr - .55) / .2), 70 * ss(.55, .6, fr), 1); rail.material.opacity = 1 - (fr - .55) / .2; } if (fr >= 0) arms[1].bar.forEach(s => { s.material.opacity = Math.max(s.material.opacity, bell(fr, 0, .5, .55, .6)); s.scale.setScalar(2 + bell(fr, 0, .5, .55, .6) * 3); });
+      lance.visible = fl >= 0 && fl > .3 && fl < .85; if (lance.visible) { const k = bell(fl, .3, .36, .75, .85); lance.children.forEach((m, i) => { m.material.opacity = (i ? .9 : .3) * k; m.scale.set(1 + Math.sin(t * .05) * .05, 1 + Math.sin(t * .06) * .05, ss(.3, .4, fl)); }); }
+      reveal(u > .88 && u < 1 ? ss(.9, 1, u) : -1); bt(t, wake * 3 + od * 5 + unlock * 6);
+      hit(bell(fx, 0, .05, .4, 1) + od * .15, t); };
+    out.tick = tick; tick(0); bake(body); return out; }
   // merge each group's static leaf meshes that share a material (same look), so a boss costs tens of draw calls, not hundreds
   function bake(root) { const fl = []; root.traverse(o => { if (o !== root && o.userData.flat && o.parent) fl.push(o); });
     for (const o of fl.reverse()) { o.updateMatrix(); const par = o.parent; for (const c of [...o.children]) { c.applyMatrix4(o.matrix); par.add(c); } par.remove(o); }
@@ -2639,7 +2920,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
         const mesh = new TH.Mesh(g2, L[0].material); for (const c of L) o.remove(c); o.add(mesh); } } }
   // light the boss's own materials from an environment map (the galaxy scene has none); count its draw calls
   function prep(b, env) { b.grp.traverse(o => { const m = o.material; if (m && m.isMeshStandardMaterial && env) { m.envMap = env; m.needsUpdate = true; } }); return b; }
-  root.BOSS3D = { init(T) { TH = T; }, set lod(v) { LOD = v | 0; }, get lod() { return LOD; }, conduit, warden, overlord, devourer, matriarch, tyrant, wyrm, colossus, station, elemental, pentarch, EL, prep };
+  root.BOSS3D = { init(T) { TH = T; }, set lod(v) { LOD = v | 0; }, get lod() { return LOD; }, conduit, warden, overlord, devourer, matriarch, tyrant, wyrm, colossus, station, elemental, pentarch, vaelthar, aexion, EL, prep };
 })(typeof window !== "undefined" ? window : globalThis);
 
 </script>
@@ -3659,7 +3940,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 447;
+const GAME_V = 450;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5610,7 +5891,7 @@ function dvCdDraw(C, t, T, dt) { const g = C.g, CW = DVM.CW, CH = DVM.CH, GS = C
   for (const q of C.arc) { const j = ((t / 40) | 0) + q.sd, pts = [[q.a.cx, q.a.cy]]; for (let k = 1; k <= 8; k++) { const f = k / 8; pts.push([q.a.cx + (q.b.cx - q.a.cx) * f + (k < 8 ? Math.sin(j * 12.9 + k * 78.2) * 12 : 0), q.a.cy + (q.b.cy - q.a.cy) * f + (k < 8 ? Math.cos(j * 4.1 + k * 31.7) * 12 : 0)]); }
     for (const [w, al, col] of [[7, .25, "#38ff6a"], [2.4, .95, "#e2ffe9"]]) { g.globalAlpha = al; g.strokeStyle = col; g.lineWidth = w; g.beginPath(); pts.forEach(([x, y], k) => k ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); } }
   g.globalAlpha = 1; }
-function dvCountdown(W, t, T, live) { const show = !live && view === "galaxy";
+function dvCountdown(W, t, T, live) { const show = !live && view === "galaxy" && !G.sbSim;
   if (!show) { if (W.dvCd) { W.dvCd.grp.visible = false; W.dvCd.hid = 1; } return; } const C = W.dvCd || dvCdBuild(W); C.grp.visible = true;
   { const cp = W.camera.position, tg = (W.cam && W.cam.tx != null) ? W.cam : { tx: 0, tz: 0 }; let dx = tg.tx - cp.x, dz = tg.tz - cp.z, l = Math.hypot(dx, dz);
     if (l < 1) { const u = new TH.Vector3(0, 1, 0).applyQuaternion(W.camera.quaternion); dx = u.x; dz = u.z; l = Math.hypot(dx, dz) || 1; }
@@ -5697,6 +5978,114 @@ setInterval(() => { try { omBand(); omClaim(); } catch (e) {} }, 1000);
 function dvSimStart() { if (!duelOwner()) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } G.dvP = null; G.dvF = null; G.dvSim = { t0: performance.now(), s0: Math.floor(now() / 60000) * 60000 };
   toast("Owner preview: Cube Devastation in five minutes, the fight included. Only you see this."); try { const c = G3 && G3.cam; if (c) { c.follow = null; c.followFleet = null; c.goal = { tx: 0, ty: DV_Y, tz: 0, dist: 760, th: .6 }; } } catch (e) {} }
 function dvSimStop(done) { if (!G.dvSim) return; G.dvSim = null; G.dvP = null; toast(done ? "Preview over: the cubes are home." : "Preview stopped."); }
+/* v450 the Ultimate Super Bosses on the galaxy map: the owner's previews of Vaelthar and Aexion. Each tears in through a rift at its own
+   place past the Rim, a fleet formation of our own ships takes station in front of it and opens fire, and the whole encounter plays on
+   a script, with the camera directing: for Vaelthar its attacks, Divine Annihilation (the beam really cuts through the ships in its
+   path), the stabilizers falling, Final Eclipse and its defeat, leaving a relic; for Aexion the Dreadnought Assault, the transformation,
+   the Warform's blade, shield, missiles, rail and lance, Reactor Overdrive and its fall. On this device only. */
+const SBX = {
+  vae: { n: "Vaelthar", t: "The Celestial Ruin", m3: "vaelthar", p: [-340, 60, 250], sc: 4.4, dur: 100, col: "#c890ff", look: 11 },
+  aex: { n: "Aexion", t: "The Warform Sovereign", m3: "aexion", p: [360, 40, -250], sc: 4.3, dur: 98, col: "#7ac8ff", look: 4 } };
+const SBX_FT = [["battleship", 12], ["destroyer", 16], ["corvette", 26], ["dreadnought", 4], ["supercarrier", 2]];
+function sbSimStart(key) { if (!duelOwner() || !SBX[key]) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } try { if (G.dvSim) dvSimStop(); } catch (e) {}
+  G.sbSim = { key, t0: performance.now(), said: {} }; toast(`Owner preview: ${SBX[key].n}, ${SBX[key].t}. About a minute and a half; only you see this.`); }
+function sbSimStop(done) { if (!G.sbSim) return; G.sbSim = null; try { if (G3) sbFree(G3); } catch (e) {} toast(done ? "Preview over." : "Preview stopped."); }
+function sbFree(W) { const X = W.sb; if (!X) return; W.scene.remove(X.grp); X.grp.traverse(o => { if (o.userData && o.userData.keep) return; try { if (o.geometry) o.geometry.dispose(); if (o.material && o.material.dispose) o.material.dispose(); } catch (e) {} });
+  if (X.exp != null) W.renderer.toneMappingExposure = X.exp; W.sb = null; if (W.cam) W.cam.goal = null; }
+function sbBuild(W, key) { const D = SBX[key], X = { key, grp: new TH.Group(), V: new TH.Vector3(), V2: new TH.Vector3(), D3: new TH.Object3D(), exp: W.renderer.toneMappingExposure }; W.scene.add(X.grp);
+  BOSS3D.init(TH); BOSS3D.lod = MOBILE ? 1 : 0; X.b = BOSS3D.prep(BOSS3D[D.m3](), wbEnv(W.renderer)); X.B = new TH.Vector3(...D.p); X.F = new TH.Vector3(-D.p[0], 0, -D.p[2]).normalize(); X.R = new TH.Vector3(X.F.z, 0, -X.F.x);
+  X.b.grp.position.copy(X.B); X.b.grp.rotation.y = Math.atan2(X.F.x, X.F.z); X.b.grp.scale.setScalar(.001); X.grp.add(X.b.grp);
+  // the rift it comes through, and the flash of its arrival and its fall
+  X.rift = new TH.Mesh(new TH.RingGeometry(.6, 1, 96), new TH.MeshBasicMaterial({ color: new TH.Color(D.col), transparent: true, opacity: 0, side: TH.DoubleSide, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); X.rift.position.copy(X.B); X.rift.lookAt(X.B.clone().add(X.F)); X.grp.add(X.rift);
+  X.flash = new TH.Sprite(W.additive(W.glow.wh || (W.glow.wh = glowTex("255,255,255", .85)), new TH.Color(D.col), 0)); X.flash.position.copy(X.B); X.grp.add(X.flash);
+  // the fleet: our own ship models, instanced, in an arc in front of it, every hull facing it
+  const K = fleetKit(W, "terran"); X.ships = []; X.types = [];
+  if (K) SBX_FT.forEach(([k, n], ti) => { const G0 = shipGeo(K, k), cap = MOBILE ? Math.ceil(n * .6) : n, T = { body: null, glow: null, n: 0 };
+    if (G0.midB) { T.body = new TH.InstancedMesh(G0.midB, midMat(K, 0), cap); T.body.setColorAt(0, new TH.Color(1, 1, 1)); } if (G0.midG) T.glow = new TH.InstancedMesh(G0.midG, midMat(K, 1), cap);
+    for (const m of [T.body, T.glow]) if (m) { m.frustumCulled = false; m.count = 0; m.userData.keep = 1; X.grp.add(m); } X.types.push(T);
+    const r = cwRnd(hash(key + k)); for (let i = 0; i < cap; i++) { const a = (r() - .5) * 1.25, d = 190 + r() * 150 + (ti === 3 || ti === 4 ? 70 : 0), p = X.B.clone().addScaledVector(X.F, Math.cos(a) * d).addScaledVector(X.R, Math.sin(a) * d); p.y += (r() - .5) * 90 + 10;
+      X.ships.push({ ti, p, dead: -1, dr: new TH.Vector3(r() - .5, r() - .5, r() - .5).normalize(), rs: [r() - .5, r() - .5, r() - .5], arr: r() * 4 }); } });
+  const NS = 120, lg = new TH.BufferGeometry(); lg.setAttribute("position", new TH.BufferAttribute(new Float32Array(NS * 6), 3)); lg.setAttribute("color", new TH.BufferAttribute(new Float32Array(NS * 6), 3));
+  X.bolts = new TH.LineSegments(lg, new TH.LineBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, toneMapped: false })); X.bolts.frustumCulled = false; X.grp.add(X.bolts); X.NS = NS;
+  X.booms = []; for (let i = 0; i < (MOBILE ? 16 : 30); i++) { const s = new TH.Sprite(W.additive(W.glow.fire || (W.glow.fire = glowTex("255,190,120", .8)), 0xffd0a0, 0)); s.visible = false; X.grp.add(s); X.booms.push({ s, t: -1e9, sz: 30 }); } X.bi = 0;
+  X.dark = new TH.Color(.14, .1, .1); X.white = new TH.Color(1, 1, 1); return (W.sb = X); }
+function sbBoom(X, p, t, sz) { const B = X.booms[X.bi++ % X.booms.length]; B.t = t; B.sz = sz || 30; B.s.position.copy(p); }
+function sbKill(X, s, t, sz) { if (s.dead >= 0) return; s.dead = t; sbBoom(X, s.p, t, sz || 34); }
+function sbKillN(X, n, t, near) { const L = X.ships.filter(s => s.dead < 0); if (near) L.sort((a, b) => a.p.distanceTo(X.B) - b.p.distanceTo(X.B)); else L.sort(() => Math.random() - .5); for (const s of L.slice(0, n)) sbKill(X, s, t + Math.random() * 600); }
+/* kill every ship within a beam: from point o along unit dir d, radius w, length L */
+function sbBeamKill(X, o, d, w, L, t) { for (const s of X.ships) { if (s.dead >= 0) continue; X.V.subVectors(s.p, o); const al = X.V.dot(d); if (al < 0 || al > L) continue; X.V.addScaledVector(d, -al); if (X.V.length() < w) sbKill(X, s, t + al * 2, 40); } }
+const SBX_CAM = (X, W, s, dt, K) => { const c = W.cam; if (!c) return; c.goal = null; c.follow = null; c.followFleet = null; const e = 1 - Math.pow(.96, (dt || 16) / 16.7);
+  const tx = K.tx != null ? K.tx : X.B.x, ty = K.ty != null ? K.ty : X.B.y + K.y, tz = K.tz != null ? K.tz : X.B.z; c.tx += (tx - c.tx) * e; c.ty += (ty - c.ty) * e; c.tz += (tz - c.tz) * e; c.dist += (K.d - c.dist) * e; c.ph += (Math.PI / 2 - K.th - c.ph) * e; /* K.th: height above the horizon; K.ph: angle round from straight in front of the boss */
+  let dp = Math.atan2(X.F.z, X.F.x) + K.ph - c.th; while (dp > Math.PI) dp -= TAU; while (dp < -Math.PI) dp += TAU; c.th += dp * e; };
+function sbTick(W, t) { const P = G.sbSim; if (!P) { if (W.sb) sbFree(W); return; } const D = SBX[P.key]; if (W.sb && W.sb.key !== P.key) sbFree(W); const X = W.sb || sbBuild(W, P.key), b = X.b, s = (performance.now() - P.t0) / 1000;
+  if (s > D.dur) { sbSimStop(true); return; } const dt = Math.min(64, t - (X.lt || t)); X.lt = t; const say = (k, line) => { if (P.said[k]) return; P.said[k] = 1; try { advHolo(line, 1); } catch (e) { toast(line); } };
+  const yaw = Math.atan2(X.F.x, X.F.z), side = yaw + Math.PI / 2; // the camera's azimuth is measured round the target; ph = yaw puts it in front of the boss
+  /* arrival: the rift opens, it pushes through and grows to full size */
+  const arr = clamp((s - 1.5) / 4, 0, 1), k = 1 - Math.pow(1 - arr, 3); X.rift.material.opacity = bell01(s, .2, 1.5, 5, 8) * .9; X.rift.scale.setScalar(4 + D.sc * 22 * clamp(s / 3, 0, 1) * (1 - clamp((s - 6) / 3, 0, 1) * .4)); X.rift.rotation.z += dt * .0006;
+  X.flash.material.opacity = Math.max(bell01(s, 1.2, 1.8, 2.4, 4.5), X.fall ? bell01(s, X.fall, X.fall + .4, X.fall + 1.2, X.fall + 4) : 0); X.flash.scale.setScalar(D.sc * 60 * (1 + (X.fall ? clamp(s - X.fall, 0, 3) : 0)));
+  let scl = D.sc * Math.max(.001, k); if (X.fall && s > X.fall) scl *= P.key === "vae" ? Math.max(.001, 1 - clamp((s - X.fall - .6) / 2.5, 0, 1)) : 1; b.grp.scale.setScalar(scl);
+  if (P.key === "vae") sbVae(X, W, b, s, t, dt, say, yaw, side); else sbAex(X, W, b, s, t, dt, say, yaw, side);
+  b.tick(t);
+  /* the fleet: warps in, fires on the boss, and dies where the attacks really reach it */
+  const n = X.types.map(() => 0), D3 = X.D3, look = X.V2.copy(X.B).add(new TH.Vector3(0, D.look * D.sc, 0)), bp = X.bolts.geometry.attributes.position.array, bc = X.bolts.geometry.attributes.color.array; let nb = 0;
+  for (const sh of X.ships) { const T = X.types[sh.ti], i = n[sh.ti]++, u = clamp((s - 3 - sh.arr) / 2.5, 0, 1), w = 1 - Math.pow(1 - u, 3), dead = sh.dead >= 0 && t >= sh.dead;
+    D3.position.copy(sh.p).addScaledVector(X.F, (1 - w) * 260); if (dead) { const a = (t - sh.dead) / 1000; D3.position.addScaledVector(sh.dr, a * 9); } D3.lookAt(look); if (dead) { const a = (t - sh.dead) / 1000; D3.rotateX(sh.rs[0] * a); D3.rotateY(sh.rs[1] * a); D3.rotateZ(sh.rs[2] * a); }
+    D3.scale.setScalar(DV_SHIPK * (u > 0 ? 1 : 0)); D3.updateMatrix(); if (T.body) { T.body.setMatrixAt(i, D3.matrix); T.body.setColorAt(i, dead ? X.dark : X.white); } if (T.glow) { if (dead) D3.scale.setScalar(0), D3.updateMatrix(); T.glow.setMatrixAt(i, D3.matrix); }
+    if (!dead && u >= 1 && !X.quiet && nb < X.NS && Math.random() < .035) { const o = nb * 6, tg = X.V.copy(look).add(new TH.Vector3((Math.random() - .5) * 14 * D.sc, (Math.random() - .5) * 10 * D.sc, (Math.random() - .5) * 8 * D.sc)); bp.set([sh.p.x, sh.p.y, sh.p.z, tg.x, tg.y, tg.z], o); bc.set([.5, .8, 1, 1, .7, .4], o); nb++; } }
+  for (const T of X.types) for (const m of [T.body, T.glow]) if (m) { m.count = T === X.types[0] ? n[0] : n[X.types.indexOf(T)]; m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; }
+  X.bolts.geometry.setDrawRange(0, nb * 2); X.bolts.geometry.attributes.position.needsUpdate = true; X.bolts.geometry.attributes.color.needsUpdate = true; X.bolts.material.opacity = .6 + Math.random() * .4;
+  for (const B of X.booms) { const a = (t - B.t) / 900; B.s.visible = a >= 0 && a < 1; if (B.s.visible) { B.s.material.opacity = (1 - a) * .95; B.s.scale.setScalar(B.sz * (.4 + a * 1.4)); } }
+  W.renderer.toneMappingExposure = X.exp * (1 - (b.dark || 0) * .55); }
+const bell01 = (x, a, b, c, d) => x <= a || x >= d ? 0 : x < b ? (x - a) / (b - a) : x <= c ? 1 : 1 - (x - c) / (d - c);
+/* Vaelthar's encounter, 100 s */
+function sbVae(X, W, b, s, t, dt, say, yaw, side) { const sc = SBX.vae.sc;
+  if (s < 1) say("v0", "WARNING: a celestial anomaly is tearing open beyond the Rim.");
+  if (s > 6) say("v1", "Vaelthar, the Celestial Ruin. Its wheel turns the light of dying stars. All fleets, engage!");
+  // phase 1, Celestial Guardian: claw, wingstorm, judgment and the seal, each felt by the fleet
+  for (const [at, mv, kn] of [[9, "claw", 2], [13, "wing", 4], [18, "judge", 3], [24, "seal", 0], [28, "claw", 2]]) if (s > at && !X["m" + at]) { X["m" + at] = 1; b.act(mv); if (kn) setTimeout(() => { try { sbKillN(X, kn, performance.now(), mv !== "judge"); } catch (e) {} }, mv === "judge" ? 1600 : 900); }
+  if (s > 24) say("v2", "A golden seal is forming. Our fleets are slowed inside the circle.");
+  // phase 3, Divine Judgment: the full sequence, 22 s, the beam cutting the formation
+  const A0 = 33, AL = 22, fa = (s - A0) / AL; b.drive("annihilate", fa >= 0 && fa < 1 ? fa : -1);
+  if (fa >= 0 && fa < 1) { X.quiet = fa > .55 && fa < .9; if (fa > .0) say("v3", "WARNING: CATASTROPHIC CELESTIAL ENERGY SIGNATURE DETECTED."); if (fa > .4) say("v4", "The wheel is aligning. Brace for impact!");
+    if (b.lens && b.lens.visible) { b.mouth.getWorldPosition(X.V); const o = X.V.clone(), d = new TH.Vector3(0, 0, 1).applyQuaternion(b.lens.getWorldQuaternion(new TH.Quaternion())); sbBeamKill(X, o, d, 4.2 * sc, 80 * sc, t); } }
+  else X.quiet = false;
+  if (s > A0 + AL) say("v5", "We survived the blast. Now hit the wheel's stabilizers before it charges again!");
+  // phase 4: the stabilizers fall one by one, the wheel fractures: Final Eclipse
+  for (let k = 0; k < 6; k++) { const at = 58 + k * 2.6; if (s > at && b.stab[k]) { b.stab[k] = 0; b.wheel.updateMatrixWorld(); const p = X.V.copy(b.wheel.position); b.grp.localToWorld(p); sbBoom(X, p.clone().add(new TH.Vector3((Math.random() - .5) * 40 * sc / 4, (Math.random() - .5) * 40 * sc / 4, 0)), t, 60); b.act("hit"); } }
+  if (s > 58) say("v6", "Stabilizer down! The wheel is losing its balance!"); b.crack = clamp((s - 66) / 14, 0, 1); if (s > 72) say("v7", "Final Eclipse! The wheel is fracturing. Its core is exposed!");
+  if (s > 74 && !X.mw) { X.mw = 1; b.act("wing"); } if (s > 78 && !X.mr) { X.mr = 1; b.act("rebirth"); }
+  // its fall: a last roar, the wheel collapses inward, a great shockwave; a relic of the wheel stays
+  if (s > 84 && !X.fall) { X.fall = s; say("v8", "Vaelthar has fallen! The wheel collapses. A celestial relic drifts where it died."); }
+  if (X.fall && !X.relic && s > X.fall + 2) { X.relic = new TH.Group(); const r = new TH.Mesh(new TH.TorusGeometry(18, 2.2, 8, 40, Math.PI * 1.3), new TH.MeshStandardMaterial({ color: 0xc9a24a, metalness: 1, roughness: .25, emissive: 0x6a3aa0, emissiveIntensity: .6 })); X.relic.add(r); const g = new TH.Sprite(W.additive(W.glow.wh, new TH.Color("#c890ff"), .6)); g.scale.setScalar(70); X.relic.add(g); X.relic.position.copy(X.B).add(new TH.Vector3(0, 40, 0)); X.grp.add(X.relic); }
+  if (X.relic) { X.relic.rotation.set(t * .0002, t * .0003, t * .0001); }
+  // the camera: wide arrival, around the fight, slowly round the dragon as it charges, beside the beam, on the wheel, wide for the fall
+  const K = s < 8 ? { y: 40, d: 900, th: .5, ph: .25 } : s < 33 ? { y: 50, d: 620 + Math.sin(s * .2) * 60, th: .55, ph: .35 + Math.sin((s - 8) * .08) * .25 } : s < A0 + AL * .35 ? { y: 60, d: 430, th: .35, ph: .5 + (s - A0) * .03 }
+    : s < A0 + AL * .66 ? { y: 55, d: 360, th: .28, ph: .8 + (s - A0 - AL * .35) * .04 } : s < A0 + AL * .9 ? { y: 30, d: 760, th: .42, ph: Math.PI / 2 + .55, tx: X.B.x + X.F.x * 160, tz: X.B.z + X.F.z * 160 } : s < 58 ? { y: 40, d: 700, th: .5, ph: .3 }
+    : s < 84 ? { y: 70, d: 460, th: .3, ph: -.45 + (s - 58) * .02 } : { y: 40, d: 1000, th: .55, ph: .3 };
+  SBX_CAM(X, W, s, dt, K); }
+/* Aexion's encounter, 98 s */
+function sbAex(X, W, b, s, t, dt, say, yaw, side) { const sc = SBX.aex.sc;
+  if (s < 1) say("a0", "WARNING: a dreadnought-class signature is dropping out of warp.");
+  if (s > 6) say("a1", "Aexion, the Warform Sovereign. Target its stern engines and shield emitters. Open fire!");
+  // phase 1, Dreadnought Assault: it creeps forward broadside on, guns, missiles, the Railbreaker
+  const creep = clamp(s / 22, 0, 1); b.grp.position.copy(X.B).addScaledVector(X.F, creep * 40);
+  for (const [at, mv, kn] of [[8, "broadside", 3], [12.5, "missiles", 5], [17, "rail", 1], [20, "broadside", 2]]) if (s > at && !X["m" + at]) { X["m" + at] = 1; b.act(mv); setTimeout(() => { try { sbKillN(X, kn, performance.now(), mv === "rail"); } catch (e) {} }, mv === "missiles" ? 1400 : mv === "rail" ? 1500 : 500); }
+  // phase 2, Warform Awakening: the transformation, 24 s, the fleet holding fire to watch
+  const T0 = 24, TL = 24, ft = (s - T0) / TL; if (ft >= 0) b.drive("transform", Math.min(1, ft)); X.quiet = ft > .05 && ft < .95;
+  if (ft > 0) say("a2", "WARNING: Aexion is transforming! Its hull is splitting apart!"); if (ft > .5) say("a3", "It's standing up. That thing is a Warform!");
+  // phase 3, Sovereign Warform: shield, blade (a travelling shockwave through the line), missiles, lance
+  for (const [at, mv, kn, near] of [[50, "aegis", 0], [54, "blade", 7, 1], [59, "missiles", 6], [63.5, "lance", 0], [68, "blade", 6, 1]]) if (s > at && !X["w" + at]) { X["w" + at] = 1; b.act(mv); if (kn) setTimeout(() => { try { sbKillN(X, kn, performance.now(), near); } catch (e) {} }, 1200); }
+  if (s > 50) say("a4", "Its holographic shield is soaking our fire. Wait for the blade, then strike!");
+  if (s > 63.5 && s < 66.5 && b.reactor) { const o = b.reactor.getWorldPosition(X.V).clone(), d = X.F.clone(); sbBeamKill(X, o, d, 3.5 * sc, 70 * sc, t); }
+  // phase 4, Reactor Overdrive: everything at once; its reactor is exposed
+  const od = (s - 72) / 10; if (od >= 0 && od < 1) { b.drive("overdrive", (od * 2.4) % 1); if (Math.random() < .03) sbKillN(X, 1, t); } else b.drive("overdrive", -1);
+  if (s > 72) say("a5", "Reactor Overdrive! Its core is exposed. Everything we have, now!");
+  // its fall: the weapons fail, the shield collapses, it topples back in a last discharge; the wreck stays
+  if (s > 84 && !X.fall) { X.fall = s; say("a6", "Aexion is down! Its reactor has burned out. The Warform is a wreck."); }
+  if (X.fall) { const f = clamp((s - X.fall) / 5, 0, 1); b.grp.rotation.x = -f * .9; b.grp.position.y = X.B.y - f * 40; b.drive("overdrive", f < .4 ? (f * 6) % 1 : -1); }
+  const K = s < 8 ? { y: 30, d: 620, th: .45, ph: .6 } : s < T0 ? { y: 20, d: 380, th: .4, ph: Math.PI / 2 + .3 + (s - 8) * .02, tx: b.grp.position.x, tz: b.grp.position.z } : s < T0 + TL * .5 ? { y: 15 + ft * 60, d: 260, th: .25, ph: 1.1 + (s - T0) * .05, tx: b.grp.position.x, tz: b.grp.position.z }
+    : s < T0 + TL ? { y: 40, d: 330 + ft * 90, th: .18, ph: .35, tx: b.grp.position.x, tz: b.grp.position.z } : s < 84 ? { y: 50, d: 420, th: .32, ph: .6 + Math.sin(s * .08) * .5, tx: b.grp.position.x, tz: b.grp.position.z } : { y: 20, d: 640, th: .45, ph: .8 };
+  SBX_CAM(X, W, s, dt, K); }
 /* v408 tapping the Super Cube */
 function shCubePick() { const T = now(), ph = cubePhase(T), live = evActive(T), cur = nexusNow(T), who = cur.holder ? `Held by ${esc(allyTag(cur.holder))}` : live ? "Unclaimed · the Collective Warden guards it" : `Next battle in ${ftime(evStart(evWeek(T) + 1) - T)}`;
   return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">${live ? "● LIVE · " : ""}Battle for the Cube</div><h2>The Super Cube</h2><p class="note">${who}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
@@ -5850,6 +6239,7 @@ function wbWakeTrail(W, t, T) { const X = W.wbTr || (W.wbTr = { slots: [], at: 0
   for (const s of X.slots) if (!used.has(s)) { s.holder.visible = false; s.id = null; } X.slots = X.slots.filter(s => { if (used.has(s) || t - (s.seen || t) < 45000) { s.seen = s.seen || t; return true; } wreckDispose(s.holder); return false; }); } /* v426 */
 function wbScarFx(W, t, T) {
   try { dvTick(W, t, T); } catch (e) { mapErr(e); } // v430 Cube Devastation
+  try { sbTick(W, t); } catch (e) { mapErr(e); } // v450 the super boss previews
   try { wbWrecks(W, t, T); } catch (e) { mapErr(e); } // v415
   try { wbWakeTrail(W, t, T); } catch (e) { mapErr(e); } // v421
   let X = W.wbScar; if (!X) { const N = 1400, P = 4200;
@@ -16082,7 +16472,7 @@ function vCmd() {
     ${acc("elements", ic(MI.shield, "#e06bd8"), "Elements (Runes)", `${Object.values(S.runes || {}).reduce((a, b) => a + b, 0) ? `<span class="pill amb">${Object.values(S.runes || {}).reduce((a, b) => a + b, 0)} to socket</span>` : ""}`, mElem())}
     ${acc("vshop", ic(MI.tag, "#c9a6ff"), "Void Shop", `<span class="shard">◆ ${fmt(S.shards || 0)}</span>`, mShopVoid())}
     ${acc("depot", ic(MI.tag), "Supply Depot", "", mShop())}
-    ${duelOwner() ? `<button class="btn ghost wide" data-act="fbInbox">💬 Feedback inbox</button><button class="btn ghost wide" data-act="healthOpen">📉 Crash &amp; performance</button><button class="btn ghost wide" data-act="stressOpen">⚔ Stress-test battles</button><button class="btn ghost wide" data-act="${G.convSim ? "convSimStop" : "convSim"}">${G.convSim ? "■ Stop the Convergence preview" : "▶ Watch the whole Elemental Convergence"}</button><button class="btn ghost wide" data-act="${G.dvSim ? "dvSimStop" : "dvSim"}">${G.dvSim ? "■ Stop the Cube Devastation preview" : "▶ Watch Cube Devastation (Omega Cube)"}</button><button class="btn ghost wide" data-act="elePrev">✪ Preview the Elemental Convergence: ${["off", "the five Elementals", "the Pentarch"][G.elePrev || 0]}</button>` : ""}
+    ${duelOwner() ? `<button class="btn ghost wide" data-act="fbInbox">💬 Feedback inbox</button><button class="btn ghost wide" data-act="healthOpen">📉 Crash &amp; performance</button><button class="btn ghost wide" data-act="stressOpen">⚔ Stress-test battles</button><button class="btn ghost wide" data-act="${G.convSim ? "convSimStop" : "convSim"}">${G.convSim ? "■ Stop the Convergence preview" : "▶ Watch the whole Elemental Convergence"}</button><button class="btn ghost wide" data-act="${G.dvSim ? "dvSimStop" : "dvSim"}">${G.dvSim ? "■ Stop the Cube Devastation preview" : "▶ Watch Cube Devastation (Omega Cube)"}</button><button class="btn ghost wide" data-act="${G.sbSim && G.sbSim.key === "vae" ? "sbStop" : "sbVae"}">${G.sbSim && G.sbSim.key === "vae" ? "■ Stop the Vaelthar preview" : "▶ Watch Vaelthar, the Celestial Ruin"}</button><button class="btn ghost wide" data-act="${G.sbSim && G.sbSim.key === "aex" ? "sbStop" : "sbAex"}">${G.sbSim && G.sbSim.key === "aex" ? "■ Stop the Aexion preview" : "▶ Watch Aexion, the Warform Sovereign"}</button><button class="btn ghost wide" data-act="elePrev">✪ Preview the Elemental Convergence: ${["off", "the five Elementals", "the Pentarch"][G.elePrev || 0]}</button>` : ""}
     ${acc("settings", ic(MI.grid), "Settings", "", mSave() + mGame())}</div>`;
 }
 const acc = (k, icon, title, value, body) => { const o = menu.open[k]; return `<section class="acc${o ? " open" : ""}"><button class="acch" data-act="acc" data-k="${k}" aria-expanded="${!!o}"><span class="ai">${icon}</span><span class="at">${title}</span><span class="av">${value}</span><i class="notch"></i></button>${o ? `<div class="accb">${body}</div>` : ""}</section>`; };
@@ -19266,6 +19656,7 @@ const ACT = {
   cubeCine: () => { closeSheet(); siegeStart(); const go = n => { if (G3 && G3.cam.siege) G3.cam.siege.show = 1; else if (n < 20) setTimeout(() => go(n + 1), 300); }; go(0); },
   cubeScanHere: () => { closeSheet(); G.cubeScan = performance.now() + 9000; G.cubeOpen = true; const el = $("#cubepanel"); if (el) el._h = ""; },
   convSim: () => convSimStart(),
+  sbVae: () => sbSimStart("vae"), sbAex: () => sbSimStart("aex"), sbStop: () => { sbSimStop(); if (sheet) renderSheet(); }, /* v450 */
   dvSim: () => dvSimStart(), dvSimStop: () => { dvSimStop(); if (sheet) renderSheet(); }, /* v430 */
   convSimStop: () => { if (G.convSim) { G.convSim = null; G.elePrev = 0; G.fuseRep = 0; WB_SEPC = null; WB_ZONES = null; try { cineEnd(); } catch (e) {} toast("Preview stopped."); } if (sheet) renderSheet(); },
   epxAim: d => { S.epxAim = d && d.k ? d.k : null; dirty(); if (sheet) renderSheet(); },
