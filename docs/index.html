@@ -3658,7 +3658,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 442;
+const GAME_V = 443;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5626,14 +5626,14 @@ async function omResolve(f) {
     addReport(rep); omClaim(); home();
   } catch (e) { note("Lost contact with the Omega Cube fight. Fleet returning.", "warn"); home(); }
   finally { G.resolving.delete(f.id); dirty(); progress(); softRender(); } }
-/* it fell: everyone who broke a section claims once: shards by share, Omega Core Fragments (more for the top ten, the top damage and the
+/* it fell: everyone who broke a section claims once: shards by share, elemental runes (2, +1 for the top ten, +1 the top damage, +1 the
    final blow), an item, and a Teleport Ticket for the top damage */
 function omClaim() { if (!S || !G.ready || G.dvSim) return; const T = now(); if (T < DV_FIRST) return; const s0 = dvStartOf(T), st = omState(s0), my = st.dmg[G.me] || 0;
   if (st.hp > 0 || !my || S.omGot === s0) return; S.omGot = s0; const rank = Object.entries(st.dmg).sort((a, b) => b[1] - a[1]).map(x => x[0]), tot = Object.values(st.dmg).reduce((a, b) => a + b, 0) || 1, share = my / tot, i = rank.indexOf(G.me);
-  const sh = 20 + Math.round(160 * Math.min(1, share * 4)), frag = 1 + (i < 10 ? 1 : 0) + (i === 0 ? 1 : 0) + (st.last === G.me ? 1 : 0), it = DROPS[(Math.random() * DROPS.length) | 0];
-  S.shards = (S.shards || 0) + sh; S.omegaFrag = (S.omegaFrag || 0) + frag; giveItem(it); if (i === 0) giveItem("teleport");
-  logReward("Omega Cube destroyed", null, { shards: sh, item: it, kind: "battle" });
-  note(`The Omega Cube is destroyed! Your share: ◆${sh}, ${frag} Omega Core Fragment${frag > 1 ? "s" : ""}, ${SHOP[it].n}${i === 0 ? " and a Teleport Ticket for top damage" : ""}.`, "win"); dirty(); }
+  const sh = 20 + Math.round(160 * Math.min(1, share * 4)), frag = 2 + (i < 10 ? 1 : 0) + (i === 0 ? 1 : 0) + (st.last === G.me ? 1 : 0), it = DROPS[(Math.random() * DROPS.length) | 0];
+  S.shards = (S.shards || 0) + sh; grantRunes(frag, "Omega Cube core"); giveItem(it); if (i === 0) giveItem("teleport");
+  logReward("Omega Cube destroyed", null, { shards: sh, item: it, runes: frag, kind: "battle" });
+  note(`The Omega Cube is destroyed! Your share: ◆${sh}, ${frag} elemental runes, ${SHOP[it].n}${i === 0 ? " and a Teleport Ticket for top damage" : ""}.`, "win"); dirty(); }
 /* the attack panel */
 function shOmega() { const T = now(); if (T < DV_FIRST && !G.dvSim) return `<div class="hd"><h2>The Omega Cube</h2></div><p class="note">It has not formed yet.</p>`;
   const s0 = dvStartOf(T), st = omState(s0), hp = st.hp, pc = Math.round(hp / OM_SEG * 100), end = s0 + omRB(s0), on = omOn(T), my = st.dmg[G.me] || 0, h = originPlanet(), avail = originAvail(), sel = selected(), sent = S.fleets.some(f => f.om && f.phase === "out");
@@ -5645,7 +5645,7 @@ function shOmega() { const T = now(); if (T < DV_FIRST && !G.dvSim) return `<div
   else body = `<h2 class="sec">Attack</h2>${originBar()}${picker(avail)}${speedBar(OMO, sel)}<button class="btn wide amber" data-act="omGo" ${Object.keys(sel).length && !slotsFull() ? "" : "disabled"}>⚔ Attack the Omega Cube</button>`;
   return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">${on ? "● LIVE · " : ""}Cube Devastation</div><h2>The Omega Cube</h2><p class="note">A hundred Assimilation Cubes locked round the Super Cube. Every section our fleets destroy breaks a cube off the machine. Bring it down before it disperses.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
     <div class="wbhp"><div class="wbbar"><i style="width:${pc}%;background:#5dff6a"></i></div><span>${hp ? `${hp} of ${OM_SEG} sections · ${pc}%` : "Destroyed"}</span></div>
-    <dl class="kv"><dt>Bounty per section</dt><dd>${costHTML({ m: 40000, c: 26000, g: 12000 })} + ◆3</dd><dt>Your sections</dt><dd>${my || "None yet"}</dd><dt>${on ? "Disperses in" : "Status"}</dt><dd>${on ? `<b data-end="${end}">${ftime(end - T)}</b>` : hp ? "Not attackable" : "Fallen"}</dd><dt>When it falls</dt><dd>◆ shards by share, Omega Core Fragments, an item; the top damage a Teleport Ticket</dd></dl>
+    <dl class="kv"><dt>Bounty per section</dt><dd>${costHTML({ m: 40000, c: 26000, g: 12000 })} + ◆3</dd><dt>Your sections</dt><dd>${my || "None yet"}</dd><dt>${on ? "Disperses in" : "Status"}</dt><dd>${on ? `<b data-end="${end}">${ftime(end - T)}</b>` : hp ? "Not attackable" : "Fallen"}</dd><dt>When it falls</dt><dd>◆ shards by share, 2–5 elemental runes, an item; the top damage a Teleport Ticket</dd></dl>
     ${lead ? `<h2 class="sec">Top damage</h2><ol class="wblead">${lead}</ol>` : ""}${body}`; }
 /* the band over the map while it can be fought */
 function omBand() { const on = omOn(), b = $("#omband"); if (!on || view !== "galaxy") { if (b) b.remove(); return; } const st = omState(dvStartOf(now()));
@@ -16084,7 +16084,7 @@ function mElem() {
     <div class="runes"><span class="rpl p1"></span><span class="rpl p2"></span><span class="rpl p3"></span>${["fire", "water", "spirit", "earth", "air"].map(runeWheel).join("")}<div class="rsum">Summary</div></div>
     <div class="rsumb">${sum}</div>
     <h3 style="margin-top:8px">Ring workshop</h3>${shop}
-    <p class="note">Elemental runes are rare: they are torn from the cores of Collective Cubes. Only some Cube cores hold one: a ${Math.round(runeChance(1) * 100)}% chance at Lv.1, rising to ${Math.round(runeChance(30) * 100)}% at Lv.25+, where a lucky core holds 2. A joint strike on a Lv.10+ Cube adds +10%.</p></div>`;
+    <p class="note">Elemental runes are rare: they are torn from the cores of Collective Cubes. Only some Cube cores hold one: a ${Math.round(runeChance(1) * 100)}% chance at Lv.1, rising to ${Math.round(runeChance(30) * 100)}% at Lv.25+, where a lucky core holds 2. A joint strike on a Lv.10+ Cube adds +10%. The Omega Cube, on the 15th of every month, gives 2 to 5 to everyone who breaks a section off it.</p></div>`;
 }
 function mSave() {
   return `<div class="mcard"><h3>${MI.save.replace("<svg", '<svg style="width:24px;height:24px"')}Save</h3>
