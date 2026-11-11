@@ -3659,7 +3659,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 446;
+const GAME_V = 447;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5547,43 +5547,78 @@ function dvBoom(F, x, y, z, t, k, col) { const b = F.booms[F.bi++ % F.booms.leng
 const DVC_SEG = { a: [0, 1, 1, 0], b: [1, .5, 0, 1], c: [1, -.5, 0, 1], d: [0, -1, 1, 0], e: [-1, -.5, 0, 1], f: [-1, .5, 0, 1], g: [0, 0, 1, 0] };
 const DVC_DIG = ["abcdef", "bc", "abdeg", "abcdg", "bcfg", "acdfg", "acdefg", "abc", "abcdefg", "abcdfg"];
 function dvNext(T) { let s = Math.max(DV_FIRST, dvStartOf(T)); if (T >= s) { const d = new Date(s); s = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 15, 18); } return s; }
-function dvCdBuild(W) { const C = { grp: new TH.Group(), segs: [] }, DW = 10, DH = 9, TH0 = 1.9, GAP = 15.5, COL = 7; let x = 0;
-  const lay = []; for (let i = 0; i < 4; i++) { for (let k = 0; k < 2; k++) { lay.push({ d: i * 2 + k, x }); x += GAP; } if (i < 3) { lay.push({ colon: 1, x: x - GAP / 2 + COL / 2 - 1 }); x += COL; } }
-  const x0 = (x - GAP) / 2; C.lay = lay;
-  for (const L of lay) { if (L.colon) { for (const y of [-4.5, 4.5]) C.segs.push({ x: L.x - x0, y, sx: 2.6, sy: 2.6, colon: 1 }); continue; }
-    for (const s in DVC_SEG) { const [ox, oy, hz] = DVC_SEG[s]; C.segs.push({ d: L.d, s, x: L.x - x0 + ox * DW / 2, y: oy * DH, sx: hz ? DW - 1.4 : TH0, sy: hz ? TH0 : DH - 1.4 }); } }
-  const n = C.segs.length; C.box = new TH.InstancedMesh(new TH.BoxGeometry(1, 1, 1.6), new TH.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }), n);
-  C.halo = new TH.InstancedMesh(new TH.PlaneGeometry(1, 1), new TH.MeshBasicMaterial({ map: W.glow.dv || (W.glow.dv = glowTex("93,255,106", .85)), color: 0xffffff, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, toneMapped: false }), n);
-  const D3 = new TH.Object3D(); C.segs.forEach((s, i) => { D3.position.set(s.x, s.y, 0); D3.scale.set(s.sx, s.sy, 1); D3.updateMatrix(); C.box.setMatrixAt(i, D3.matrix); D3.scale.set(s.sx * 2.6 + 6, s.sy * 2.6 + 6, 1); D3.position.z = -1; D3.updateMatrix(); C.halo.setMatrixAt(i, D3.matrix); C.box.setColorAt(i, new TH.Color(0, 0, 0)); C.halo.setColorAt(i, new TH.Color(0, 0, 0)); });
-  for (const m of [C.box, C.halo]) { m.frustumCulled = false; C.grp.add(m); }
-  const ag = new TH.BufferGeometry(); ag.setAttribute("position", new TH.BufferAttribute(new Float32Array(16 * 10 * 6), 3)); C.arcs = new TH.LineSegments(ag, new TH.LineBasicMaterial({ color: 0xb8ffc8, transparent: true, opacity: .95, depthWrite: false, blending: TH.AdditiveBlending, toneMapped: false })); C.arcs.frustumCulled = false; C.grp.add(C.arcs); C.arc = [];
-  /* the title above the clock and the unit names under it, on one plate as wide as the clock (the canvas keeps the plate's shape) */
-  const PW = x + 10, PH = 64, cv = document.createElement("canvas"); cv.width = 1024; cv.height = Math.round(1024 * PH / PW); const g = cv.getContext("2d"), sx = 1024 / PW, Y = y => (PH / 2 - y) * sx;
-  g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#c9ffd2"; g.shadowColor = "#38ff6a"; g.shadowBlur = 26; g.font = `800 ${Math.round(9.5 * sx)}px ${cssFont()}`; g.fillText("CUBE DEVASTATION", 512, Y(21));
-  g.shadowBlur = 12; g.fillStyle = "#7dffa0"; g.font = `700 ${Math.round(3.6 * sx)}px ${cssFont()}`; ["DAYS", "HRS", "MIN", "SEC"].forEach((w, i) => g.fillText(w, 512 + (lay[i * 3].x + GAP / 2 - x0) * sx, Y(-15)));
-  C.title = new TH.Mesh(new TH.PlaneGeometry(PW, PH), new TH.MeshBasicMaterial({ map: new TH.CanvasTexture(cv), transparent: true, depthWrite: false, toneMapped: false })); C.title.position.z = -.5; C.title.renderOrder = 5; C.grp.add(C.title); C.w = x;
+/* v447 the countdown is a revolving rune clock (owner: "a glyph clock that showed days, hours, minutes, seconds in a revolving style glyph
+   rune clock", and "in and out, matrix style, glyphs and then time"). Four concentric rings of the elemental rune marks turn like an
+   astrolabe: seconds (outer, turning smoothly), minutes, hours, days (inner), each clicking round as its unit changes, the current rune
+   under a marker at the top. Across the middle the time reads in large glowing digits that, every 14 s, scramble into runes and decode
+   back, with power surges and green lightning. One canvas on one textured plane: only the real digits are drawn (v440's per-segment
+   instance colours did not take on some iPhones, which lit every digit as 8). */
+const DVM = { CW: 1024, CH: 1024, P: 14000, IN: 2600, RG: [["SEC", 60, 432], ["MIN", 60, 362], ["HRS", 24, 292], ["DAYS", 30, 222]] };
+function dvCdBuild(W) { const C = { grp: new TH.Group(), arc: [] }, cv = document.createElement("canvas"); cv.width = DVM.CW; cv.height = DVM.CH; C.g = cv.getContext("2d");
+  C.tex = new TH.CanvasTexture(cv); C.tex.minFilter = TH.LinearFilter; C.tex.generateMipmaps = false;
+  const PW = 150, PH = PW * DVM.CH / DVM.CW; C.mesh = new TH.Mesh(new TH.PlaneGeometry(PW, PH), new TH.MeshBasicMaterial({ map: C.tex, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, toneMapped: false }));
+  C.mesh.renderOrder = 5; C.mesh.frustumCulled = false; C.grp.add(C.mesh);
+  /* the glyph atlas: the rune marks of the elemental rings and hex code, each in three brightnesses (head, body, tail) */
+  const GS = 28, kinds = RUNE_G.length + 16, at = document.createElement("canvas"); at.width = GS * kinds; at.height = GS * 3; const a = at.getContext("2d"), cols = ["#f0fff4", "#5dff7e", "#1f8f3c"];
+  a.lineCap = "round"; a.lineJoin = "round"; a.textAlign = "center"; a.textBaseline = "middle"; a.font = `700 ${Math.round(GS * .78)}px ui-monospace, Menlo, Consolas, monospace`;
+  for (let r = 0; r < 3; r++) for (let k = 0; k < kinds; k++) { const x = k * GS + GS / 2, y = r * GS + GS / 2; a.strokeStyle = a.fillStyle = cols[r];
+    if (k < RUNE_G.length) { a.save(); a.translate(x, y); a.scale(GS / 24, GS / 24); a.lineWidth = 2.2; try { a.stroke(new Path2D(RUNE_G[k])); } catch (e) {} a.restore(); } else a.fillText("0123456789ABCDEF"[k - RUNE_G.length], x, y + 1); }
+  C.at = at; C.GS = GS; C.kinds = kinds; C.ang = [0, 0, 0, 0];
+  /* the digits: 8 seven-segment cells and 3 colons */
+  const DW = 70, DH = 118, T = 12, cy = 524; C.cy = cy; C.cells = []; let x = 118, d = 0;
+  for (const it of "DDCDDCDDCDD") { if (it === "C") { C.cells.push({ colon: 1, x: x + 18 }); x += 48; continue; }
+    const cx = x + DW / 2, L = cx - DW / 2 + T / 2, R = cx + DW / 2 - T / 2, Tp = cy - DH / 2 + T / 2, Bt = cy + DH / 2 - T / 2;
+    const H = yc => ({ x: cx - DW / 2 + T, y: yc - T / 2, w: DW - 2 * T, h: T }), V = (xc, y0, y1) => ({ x: xc - T / 2, y: y0 + T * .5, w: T, h: y1 - y0 - T });
+    const seg = { a: H(Tp), g: H(cy), d: H(Bt), b: V(R, Tp, cy), c: V(R, cy, Bt), f: V(L, Tp, cy), e: V(L, cy, Bt) }; for (const k in seg) { seg[k].cx = seg[k].x + seg[k].w / 2; seg[k].cy = seg[k].y + seg[k].h / 2; }
+    C.cells.push({ d: d++, x: cx, seg }); x += DW + 12; }
+  /* the fixed plate: title, unit names and the faint ghost of every segment, drawn once */
+  const pl = document.createElement("canvas"); pl.width = DVM.CW; pl.height = DVM.CH; const p = pl.getContext("2d"); p.textAlign = "center"; p.textBaseline = "middle";
+  const O = DVM.CW / 2; p.fillStyle = "#c9ffd2"; p.shadowColor = "#38ff6a"; p.shadowBlur = 20; p.font = `800 46px ${cssFont()}`; { const txt = "CUBE DEVASTATION", R = 486, sp = .068; let a = -Math.PI / 2 - sp * (txt.length - 1) / 2;
+    for (const ch of txt) { p.save(); p.translate(O + Math.cos(a) * R, O + Math.sin(a) * R); p.rotate(a + Math.PI / 2); p.fillText(ch, 0, 0); p.restore(); a += sp; } }
+  p.shadowBlur = 8; p.lineWidth = 2; for (const [, , R] of DVM.RG) for (const r of [R - 30, R + 30]) { p.strokeStyle = "rgba(93,255,130,.28)"; p.beginPath(); p.arc(O, O, r, 0, Math.PI * 2); p.stroke(); }
+  p.shadowBlur = 0; p.fillStyle = "rgba(70,255,120,.07)"; const dc = C.cells.filter(c => !c.colon); for (const c of dc) for (const k in c.seg) { const r = c.seg[k]; p.fillRect(r.x, r.y, r.w, r.h); } C.plate = pl;
   C.grp.scale.setScalar(1.55); W.scene.add(C.grp); return (W.dvCd = C); }
+function dvCdDraw(C, t, T, dt) { const g = C.g, CW = DVM.CW, CH = DVM.CH, GS = C.GS, A = C.at, IN = DVM.IN, OUT = DVM.P - 3000, h = n => Math.abs(Math.sin(n * 127.1 + 311.7) * 43758.5453) % 1;
+  const left = Math.max(0, dvNext(T) - T), sec = Math.floor(left / 1000), v = [Math.min(99, Math.floor(sec / 86400)), Math.floor(sec / 3600) % 24, Math.floor(sec / 60) % 60, sec % 60], dg = v.flatMap(q => [Math.floor(q / 10), q % 10]);
+  const u = reduced ? 5000 : t % DVM.P, rain = reduced ? 0 : u < IN ? 1 - .72 * u / IN : u > OUT ? .28 + .72 * Math.min(1, (u - OUT) / 1400) : .28, sw = ((t / 2600) % 1) * (CW + 300) - 150;
+  g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.clearRect(0, 0, CW, CH); g.globalCompositeOperation = "lighter";
+  const glyph = (k, row, x, y, s, al) => { if (al <= .01) return; g.globalAlpha = Math.min(1, al); g.drawImage(A, (Math.abs(k | 0) % C.kinds) * GS, row * GS, GS, GS, x - s / 2, y - s / 2, s, s); };
+  const rr = (x, y, w, hh, q) => { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, hh, q); else g.rect(x, y, w, hh); g.fill(); };
+  const seg = (r, k) => { g.globalAlpha = Math.min(1, .16 * k); g.fillStyle = "#38ff6a"; rr(r.x - 7, r.y - 7, r.w + 14, r.h + 14, 9); g.globalAlpha = Math.min(1, .3 * k); g.fillStyle = "#5dff86"; rr(r.x - 3, r.y - 3, r.w + 6, r.h + 6, 6);
+    g.globalAlpha = Math.min(1, .55 + .3 * k); g.fillStyle = k > 1.6 ? "#ffffff" : "#c8ffd6"; rr(r.x, r.y, r.w, r.h, 4); };
+  /* the rings: each turns so its current value sits under the marker at the top; seconds glide, the rest click round and settle */
+  const O = CW / 2, cur = [reduced ? sec % 60 : (left / 1000) % 60, v[2], v[1], v[0]];
+  DVM.RG.forEach(([nm, N, R], ri) => { const tgt = cur[ri], dA = tgt - C.ang[ri], wrap = ((dA % N) + N * 1.5) % N - N / 2; C.ang[ri] = ri === 0 || reduced ? tgt : C.ang[ri] + wrap * (1 - Math.exp(-dt / 220));
+    const st = Math.PI * 2 / N, sz = ri === 0 ? 30 : 36;
+    for (let k = 0; k < N; k++) { const a = -Math.PI / 2 + (k - C.ang[ri]) * st, x = O + Math.cos(a) * R, y = O + Math.sin(a) * R, top = Math.cos(a + Math.PI / 2), near = Math.max(0, top), band = Math.abs(y - C.cy) < 86 ? .25 : 1;
+      const dk = ((k - C.ang[ri]) % N + N) % N, on = dk < .5 || dk > N - .5; if (dk >= .5 && dk < 1.6) continue; /* the label's window */ glyph((k * 7 + ri * 13) % RUNE_G.length, on ? 0 : near > .9 ? 1 : 2, x, y, on ? sz * 1.35 : sz, band * (on ? 1 : .35 + .55 * near * near)); }
+    g.globalAlpha = .9; g.strokeStyle = "#9dffb4"; g.lineWidth = 3; g.beginPath(); g.moveTo(O - 26, O - R - 34); g.lineTo(O, O - R - 22); g.lineTo(O + 26, O - R - 34); g.stroke();
+    g.fillStyle = "#7dffa0"; g.font = `700 20px ${cssFont()}`; g.textAlign = "left"; g.textBaseline = "middle"; g.globalAlpha = .85; g.fillText(nm, O + 30, O - R); });
+  g.globalAlpha = .95; g.drawImage(C.plate, 0, 0);
+  /* the digits decode in, hold, and dissolve */
+  const lit = []; for (const c of C.cells) {
+    if (c.colon) { if (reduced || (u >= IN - 500 && u < OUT + 400)) { const k = .7 + .3 * Math.sin(t * .006); for (const y of [-28, 28]) seg({ x: c.x - 7, y: C.cy + y - 7, w: 14, h: 14 }, k); } continue; }
+    const i = c.d, lockT = 450 + i * 230, outT = OUT + i * 170, val = dg[i];
+    if (c.v !== val) { if (c.v != null && u > lockT && u < outT) c.sh = t; c.v = val; }
+    if (!reduced && u >= outT) { const q = (u - outT) / 900; if (q < 1) { const k = Math.floor(t / 70) + i * 7; glyph(k, 0, c.x, C.cy - 30 + q * 110, 64, 1 - q); glyph(k + 5, 1, c.x, C.cy + 30 + q * 140, 56, (1 - q) * .75); } continue; }
+    if (!reduced && (u < lockT || t - (c.sh || -1e9) < 120)) { const k = Math.floor(t / 70) + i * 7; glyph(k, 0, c.x, C.cy - 34, 62, .95); glyph(k + 3, 1, c.x, C.cy + 34, 62, .8); continue; }
+    const fl = !reduced && u < lockT + 500 ? 1 + 1.6 * Math.exp(-(u - lockT) / 160) : 1, tk = i >= 6 ? .5 * Math.exp(-(t % 1000) / 180) : 0;
+    for (const s of DVC_DIG[val]) { const r = c.seg[s]; seg(r, fl * (1 + 1.4 * Math.exp(-Math.pow((r.cx - sw) / 60, 2)) + tk)); lit.push(r); } }
+  /* green lightning between lit segments */
+  if (!reduced && lit.length > 1 && Math.random() < .3 && C.arc.length < 6) { const a = lit[(Math.random() * lit.length) | 0], b = lit[(Math.random() * lit.length) | 0]; if (a !== b && Math.abs(a.cx - b.cx) < 260) C.arc.push({ a, b, t0: t, life: 90 + Math.random() * 180, sd: Math.random() * 1e4 }); }
+  C.arc = C.arc.filter(q => t - q.t0 < q.life); g.lineCap = "round"; g.lineJoin = "round";
+  for (const q of C.arc) { const j = ((t / 40) | 0) + q.sd, pts = [[q.a.cx, q.a.cy]]; for (let k = 1; k <= 8; k++) { const f = k / 8; pts.push([q.a.cx + (q.b.cx - q.a.cx) * f + (k < 8 ? Math.sin(j * 12.9 + k * 78.2) * 12 : 0), q.a.cy + (q.b.cy - q.a.cy) * f + (k < 8 ? Math.cos(j * 4.1 + k * 31.7) * 12 : 0)]); }
+    for (const [w, al, col] of [[7, .25, "#38ff6a"], [2.4, .95, "#e2ffe9"]]) { g.globalAlpha = al; g.strokeStyle = col; g.lineWidth = w; g.beginPath(); pts.forEach(([x, y], k) => k ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); } }
+  g.globalAlpha = 1; }
 function dvCountdown(W, t, T, live) { const show = !live && view === "galaxy";
   if (!show) { if (W.dvCd) { W.dvCd.grp.visible = false; W.dvCd.hid = 1; } return; } const C = W.dvCd || dvCdBuild(W); C.grp.visible = true;
-  const left = Math.max(0, dvNext(T) - T), sec = Math.floor(left / 1000), v = [Math.min(99, Math.floor(sec / 86400)), Math.floor(sec / 3600) % 24, Math.floor(sec / 60) % 60, sec % 60], dg = v.flatMap(q => [Math.floor(q / 10), q % 10]);
   { const cp = W.camera.position, tg = (W.cam && W.cam.tx != null) ? W.cam : { tx: 0, tz: 0 }; let dx = tg.tx - cp.x, dz = tg.tz - cp.z, l = Math.hypot(dx, dz);
     if (l < 1) { const u = new TH.Vector3(0, 1, 0).applyQuaternion(W.camera.quaternion); dx = u.x; dz = u.z; l = Math.hypot(dx, dz) || 1; }
     const a = Math.atan2(dz / l, dx / l), da = C.a == null ? 9 : Math.atan2(Math.sin(a - C.a), Math.cos(a - C.a)), dt = Math.min(500, Math.max(0, t - (C.tl || t))); C.tl = t;
     C.a = Math.abs(da) > 1.2 || C.hid ? a : C.a + da * (1 - Math.exp(-dt / 350)); /* glides after the camera; a big swing (or coming back to the map) puts it straight there */
     const R = MAP_R + 70; C.hid = 0; C.grp.position.set(Math.cos(C.a) * R, 95 + Math.sin(t * .0006) * 2, Math.sin(C.a) * R); }
   C.grp.quaternion.copy(W.camera.quaternion);
-  /* the power surge: a bright front sweeps the clock every few seconds; every second a ripple runs out from the seconds */
-  const sw = ((t / 2600) % 1) * (C.w + 60) - C.w / 2 - 30, rip = (t % 1000) / 1000, tick = Math.exp(-rip * 5), col = new TH.Color(), hcol = new TH.Color(); const lit = [];
-  C.segs.forEach((s, i) => { const on = s.colon ? 1 : (DVC_DIG[dg[s.d]].includes(s.s) ? 1 : 0), su = Math.exp(-Math.pow((s.x - sw) / 9, 2)), tk = s.d >= 6 ? tick * .6 : 0, fl = reduced ? 1 : .88 + .12 * Math.sin(t * .02 + i * 1.7);
-    const k = on ? (s.colon ? .7 + .3 * Math.sin(t * .006) : 1) * fl * (1 + 1.6 * su + tk) : .035 + .05 * su; col.setRGB(.25 * k + .5 * su * on, 1 * k, .42 * k + .3 * su * on); hcol.setRGB(.2 * k, .9 * k, .35 * k).multiplyScalar(on ? .55 : .2);
-    C.box.setColorAt(i, col); C.halo.setColorAt(i, hcol); if (on && !s.colon) lit.push(s); });
-  C.box.instanceColor.needsUpdate = C.halo.instanceColor.needsUpdate = true;
-  /* green lightning: short jagged arcs leap between lit segments, a few at a time, each for a heartbeat */
-  if (!reduced && Math.random() < .35 && C.arc.length < 10 && lit.length > 1) { const a = lit[(Math.random() * lit.length) | 0], b = lit[(Math.random() * lit.length) | 0]; if (a !== b && Math.abs(a.x - b.x) < 40) C.arc.push({ a: [a.x, a.y], b: [b.x, b.y], t0: t, life: 90 + Math.random() * 180, sd: Math.random() * 1e4 }); }
-  C.arc = C.arc.filter(A => t - A.t0 < A.life); const P = C.arcs.geometry.attributes.position.array; let n = 0;
-  for (const A of C.arc) { let px = A.a[0], py = A.a[1]; const steps = 8, j = ((t / 40) | 0) + A.sd;
-    for (let k = 1; k <= steps; k++) { const u = k / steps, nx = A.a[0] + (A.b[0] - A.a[0]) * u + (k < steps ? Math.sin(j * 12.9 + k * 78.2) * 3.2 : 0), ny = A.a[1] + (A.b[1] - A.a[1]) * u + (k < steps ? Math.cos(j * 4.1 + k * 31.7) * 3.2 : 0); P.set([px, py, 1.2, nx, ny, 1.2], n * 6); n++; px = nx; py = ny; } }
-  C.arcs.geometry.setDrawRange(0, n * 2); C.arcs.geometry.attributes.position.needsUpdate = true; C.arcs.material.opacity = .7 + .3 * Math.random(); }
+  if (C.drawn && t - C.drawn < (reduced ? 1000 : MOBILE ? 60 : 33)) return; const dt = Math.min(200, t - (C.drawn || t)); C.drawn = t; dvCdDraw(C, t, T, dt); C.tex.needsUpdate = true; }
 /* v442 THE OMEGA CUBE FIGHT. After the Last Stand the Omega Cube stays over the Void for 36 hours, and every commander can attack it.
    Its hull is 100 sections, one per Assimilation Cube in it: every section a fleet destroys breaks that cube off the machine (it goes
    dark and drifts away, for everyone to see), the topmost first. If the galaxy brings it down, it shatters; if the 36 hours run out
