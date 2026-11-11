@@ -1945,11 +1945,6 @@
   "line": "The Brood Matriarch is under attack right now. Watch it live."
  },
  {
-  "key": "1kzc1hu",
-  "where": "News · wb_live_tyr",
-  "line": "Someone has engaged the Iron Tyrant! Those broadsides are worth seeing."
- },
- {
   "key": "1khgvp0",
   "where": "News · wb_live_wym",
   "line": "A fleet is taking on the Event Horizon Wyrm right now. Want to see it?"
@@ -1963,11 +1958,6 @@
   "key": "5n6q7k",
   "where": "News · wb_fall_brd",
   "line": "The Brood Matriarch is dead! Her swarm is leaderless, and everyone who fought her can claim the spoils."
- },
- {
-  "key": "vsjjtq",
-  "where": "News · wb_fall_tyr",
-  "line": "The Iron Tyrant has been sunk! Its vault is open, and every fleet that fought it gets a share."
  },
  {
   "key": "1fxhmu9",
@@ -2000,11 +1990,6 @@
   "line": "The Brood Matriarch, the Hive's queen. She nests in the Far Reach, and the worlds around her turn green as her infection spreads. Her swarm rebuilds whenever she's left alone, so keep the pressure on."
  },
  {
-  "key": "a75p0k",
-  "where": "Boss card · wbtyr",
-  "line": "The Iron Tyrant: a pirate super-dreadnought patched together from stolen hulls. It sails from hideout to hideout, and its vault fills the longer it sails. The later we strike, the richer the bounty."
- },
- {
   "key": "tyvaap",
   "where": "Boss card · wbwym",
   "line": "The Event Horizon Wyrm, a serpent of dark rings coiled around the black hole at the heart of the galaxy. Only its glowing segments can be hurt, so strike while they're exposed."
@@ -2033,11 +2018,6 @@
   "key": "1dnw698",
   "where": "Boss scan · eic",
   "line": "Scanning Glacius. Frost nova, ice lances from its orbs, and absolute zero once its rings spin up."
- },
- {
-  "key": "msl1jb",
-  "where": "Boss scan · efi",
-  "line": "Ignis on scan. Solar flares from its horns, magma rain, and an inferno when its core blazes."
  },
  {
   "key": "n69sl9",
@@ -2103,5 +2083,25 @@
   "key": "c6t2f3",
   "where": "Convergence · wb3_fuse",
   "line": "The survivors have reached the Void and fused. The Pentarch is tearing at the black hole. Everything we have, Commander: now!"
+ },
+ {
+  "key": "1j2m9bz",
+  "where": "News · wb_live_tyr",
+  "line": "A fleet has engaged the Iron Tyrant, and those broadsides are worth seeing."
+ },
+ {
+  "key": "6jsj0m",
+  "where": "News · wb_fall_tyr",
+  "line": "We've sunk the Iron Tyrant! Its vault is open, and every fleet that fought it gets a share."
+ },
+ {
+  "key": "184nnz",
+  "where": "Boss card · wbtyr",
+  "line": "Meet the Iron Tyrant: a pirate super-dreadnought patched together from stolen hulls. It sails from hideout to hideout, and its vault fills the longer it sails. The later we strike, the richer the bounty."
+ },
+ {
+  "key": "kot0nu",
+  "where": "Boss scan · efi",
+  "line": "Scanning Ignis now. Solar flares from its horns, magma rain, and an inferno when its core blazes."
  }
 ]
