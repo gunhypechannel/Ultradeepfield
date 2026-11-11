@@ -3657,7 +3657,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 426;
+const GAME_V = 427;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4658,7 +4658,7 @@ function simulate(A, D, o = {}) {
   const pack = arr => arr.filter(s => s.n > 0).map(s => [s.k, Math.floor(s.n), +(+s.atk).toFixed(2), +(+s.sh).toFixed(2), +(+s.hull).toFixed(2), s.own == null ? null : s.own, +(s.ab || 0)]);
   const sim = { v: V5 ? 5 : V4 ? 4 : 3, seed, doc: o.doc && DOCTRINES[o.doc] ? o.doc : null, quick: !!o.quick, A: pack(A), D: pack(D), dur: Math.round(t * 100) / 100, docA, docD, ev, stats: st, wpn: wst, pow: { a0: pow0.a, d0: pow0.d, a1: Math.round(powOf("a") + sq.reduce((a, s) => a + (s.side === "a" && s.esc ? s.n * unitPow(s) * (.35 + .65 * (1 - s.wd)) : 0), 0)), d1: Math.round(powOf("d")) } };
   const out = { start, rounds, winner, aLeft: snap("a"), dLeft: snap("d"), aByOwn: byOwn("a"), dByOwn: byOwn("d"), sim };
-  if (o.rec) out.rec = { dt: quick ? .5 : .5, frames, vols, rocks, squads: sq.map(s => ({ id: s.id, side: s.side, k: s.k, own: s.own, role: s.role, wp: s.wp, n0: s.n0, hull: s.hull, sh: s.sh, shPer: s.shPer, atk: s.atk, pow: unitPow(s) })) };
+  if (o.rec) out.rec = { dt: quick ? .5 : .5, frames, vols, rocks, squads: sq.map(s => ({ id: s.id, side: s.side, k: s.k, own: s.own, shr: s.src && s.src.shares, role: s.role, wp: s.wp, n0: s.n0, hull: s.hull, sh: s.sh, shPer: s.shPer, atk: s.atk, pow: unitPow(s) })) };
   return out;
 }
 const lossesOf = (s, l) => { const o = {}; for (const k in s) { const x = s[k] - (l[k] || 0); if (x > 0) o[k] = x; } return o; };
@@ -8571,7 +8571,7 @@ const FLAG_SLOT = {
   phalanx: (i, N, sp, F) => { let c = Math.ceil(Math.sqrt(N - 1)); if (c % 2) c++; const e = i - 1, x = e % c, r = Math.floor(e / c), X = (x - (c - 1) / 2) * sp * .85; return [X + Math.sign(X) * (F.wid * .5 + sp * .1), (r % 2) * .35, F.len * .1 - r * sp * .8]; },
   swarm: (i, N, sp) => { const p = swarmAt(i, sp, 0); return [p[0], p[1], p[2]]; } };
 /* v250 which faction a commander flies: their published choice (bots and pirates have none, so bots fly the Terran look) */
-const playerFac = uid => uid === G.me ? facOf() : (G.players[uid] && FACTIONS[G.players[uid].fac] ? G.players[uid].fac : "terran");
+const playerFac = uid => uid === G.me ? facOf() : (G.players[uid] && FACTIONS[G.players[uid].fac] ? G.players[uid].fac : isBot(uid) ? DEMO_FAC[hash(uid) % 4] : "terran"); /* v427 a bot flies the same faction in battle as on the map (it was always Terran) */
 /* v264 a commander earns their faction's flagship at commander level 15: until then their fleets fly without one, on the map and in battle replays */
 /* v299: from commander Lv.10, once it has been commissioned at the Flagship Dock. Other commanders publish whether theirs is built
    (tech.fl); a commander on an older version publishes nothing and keeps the old rule (Lv.15). Bots fly one from Lv.10. */
@@ -16938,7 +16938,8 @@ function battleAcc(r) { const mine = r.kind === "defense" || r.kind === "raid" ?
 function battleFlags(r, Q) { const mineS = r.kind === "defense" || r.kind === "raid" ? "d" : "a", out = { a: [], d: [] }, lab = r.id === LAB_ID || r.id === DUEL_ID;
   const pf = u => typeof u === "string" && u !== "pirates" && u !== "cube" && (u === G.me || G.players[u] || isBot(u)) && flagOK(u) ? playerFac(u) : null;
   for (const sd of ["a", "d"]) { const groups = new Map(); let any = 0;
-    Q.forEach((q, i) => { if (q.side !== sd) return; any = 1; const f = pf(q.own); if (!f) return; const g = groups.get(q.own) || { f, idx: [], w: 0 }; g.idx.push(i); g.w += Math.sqrt(Math.max(1, q.n0 * (q.pow || 1))); groups.set(q.own, g); });
+    Q.forEach((q, i) => { if (q.side !== sd) return; any = 1; const sh = q.shr && Object.keys(q.shr).length ? q.shr : { [q.own]: q.n0 }, tot = Object.values(sh).reduce((a, b) => a + b, 0) || 1; /* v427 every commander with ships in a merged stack */
+      for (const u in sh) { const f = pf(u); if (!f) continue; const g = groups.get(u) || { f, idx: [], w: 0 }; g.idx.push(i); g.w += Math.sqrt(Math.max(1, q.n0 * sh[u] / tot * (q.pow || 1))); groups.set(u, g); } });
     if (!any) continue; let L = [...groups.values()].sort((x, y) => y.w - x.w).slice(0, 3);
     if (!L.length && !(r.kind === "raid" && sd === "a")) { const u = sd === "a" ? (r.aUids || [])[0] : r.dUid, f = lab ? (sd === mineS ? facOf() : DEMO_FAC.find(x => x !== facOf())) : pf(u) || (sd === mineS && !u && flagOK(G.me) ? facOf() : null); if (f) L = [{ f, idx: Q.map((q, i) => q.side === sd ? i : -1).filter(i => i >= 0) }]; }
     out[sd] = L.map(e => ({ f: e.f, idx: e.idx, acc: facAcc(e.f), col: FLAG_GLOW[e.f], rgba: `rgba(${FLAG_GLOW[e.f] >> 16},${FLAG_GLOW[e.f] >> 8 & 255},${FLAG_GLOW[e.f] & 255},1)` })); }
@@ -16956,7 +16957,11 @@ function drawBattleFlags(ctx, b, scr, pos, W, H, t, real, T, lo, d) {
         const k = H / Math.max(1, c.height); return [(A ? A.bottom - c.top : 0) * k, Math.min(Dd ? Dd.top - c.top : Infinity, K ? K.top - c.top : Infinity, c.height) * k]; } catch (e) { return [0, H]; } })()); /* the open strip between the two fleet panels and the playback bar, in canvas pixels */
       if (b.fdirF !== b.gf) { b.fdirF = b.gf; const ay = Math.abs(uy), ax = Math.abs(ux), nd = ay >= ax ? "y" : "x"; /* v345: one decision per frame, with hysteresis: near 45 degrees (the Super Cube sits diagonal to its attackers) it flipped every frame and the fleet flickered between two layouts */
         if (!b.fdir || (nd !== b.fdir && (nd === "y" ? ay > ax * 1.5 : ax > ay * 1.5) && t - (b.fdirT || -1e9) > 2000)) { b.fdir = nd; b.fdirT = t; } } /* which way the fleets face: the field leaves room behind each one for its flagship (drawBattle) */
-      const tx = clamp(mx + ux * rear, L0 * .55, W - L0 * .55), ty = clamp(my + uy * rear, vb[0] + L0 * .55, vb[1] - L0 * .5); e.dead = null; if (e.x == null) { e.x = tx; e.y = ty; } const f = reduced ? 1 : Math.min(1, real / 1300); e.x += (tx - e.x) * f; e.y += (ty - e.y) * f; }
+      const nS = b.flags[sd].length, kS = b.flags[sd].indexOf(e), stp = L0 * (Math.abs(uy) > Math.abs(ux) ? 1.9 : .9), o = (kS - (nS - 1) / 2) * stp, half = (nS - 1) / 2 * stp, ex = Math.abs(uy) * half, ey = Math.abs(ux) * half; /* v427 a side's flagships fly abreast */
+      let tx = clamp(mx + ux * rear, L0 * .55 + ex, W - L0 * .55 - ex) - uy * o, ty = clamp(my + uy * rear, vb[0] + L0 * .55 + ey, vb[1] - L0 * .5 - ey) + ux * o;
+      const vt = Math.abs(uy) > Math.abs(ux), gx = L0 * 1.75, gy = L0 * .8; for (const q of b.flags[sd]) { if (q === e || q.x == null || q.dead != null) continue; const dx = tx - q.x, dy = ty - q.y; /* v427 two flagships never settle on each other: this one aims aside, across the line of fire */
+        if (Math.abs(dx) < gx && Math.abs(dy) < gy) { const sg = (vt ? dx : dy) > 0 || ((vt ? dx : dy) === 0 && kS > b.flags[sd].indexOf(q)) ? 1 : -1; if (vt) tx = clamp(q.x + sg * gx, L0 * .55, W - L0 * .55); else ty = clamp(q.y + sg * gy, vb[0] + L0 * .55, vb[1] - L0 * .5); } }
+      e.dead = null; if (e.x == null) { e.x = tx; e.y = ty; } const f = reduced ? 1 : Math.min(1, real / 1300); e.x += (tx - e.x) * f; e.y += (ty - e.y) * f; }
     else { if (e.x == null) continue; if (e.dead == null) { e.dead = t; if (!gone) { for (const [ox, oy, big] of [[0, 0, 1], [-.5, .06, 0], [.45, -.05, 0], [-.2, -.08, 0]]) b.booms.push({ x: e.x + ox * L0, y: e.y + oy * L0, t: t + Math.abs(ox) * 260, big }); b.shake = Math.max(b.shake, 8 * d); } } }
     const fade = e.dead == null ? 1 : clamp(1 - (t - e.dead) / (gone ? 500 : 950), 0, 1); if (fade <= 0) continue;
     if (e.fa == null) e.fa = foeW ? (foeX / foeW >= e.x ? 1 : -1) : sd === "a" ? 1 : -1; const face = e.fa, fsc = face, ppx = e.px == null ? e.x : e.px; e.px = e.x; /* v255 it holds its heading and backs up on retros instead of flipping */ e.vx = (e.vx || 0) + ((e.x - ppx) / Math.max(1, real) - (e.vx || 0)) * Math.min(1, real / 300); e.rv = (e.rv || 0) + ((e.vx * face < -.0025 * L0 / 100 ? 1 : 0) - (e.rv || 0)) * Math.min(1, real / 420); const frv = e.rv;
