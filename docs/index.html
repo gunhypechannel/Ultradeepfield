@@ -15918,24 +15918,11 @@ function genSpace() {
    your own track, and each element's layer drops out when that element falls. */
 function convWant() { if (!AU.ctx || !AU.musicOn || AU.muted || document.hidden) return null; const k = G.wbScan && G.wbScan.key, rb = typeof battle !== "undefined" && battle && battle.r && battle.r.wb;
   if (!(G.fuseRep || (k && wbG3(k)) || (rb && wbG3(rb)))) return null; const st = wbState(), T = now(); return wbOn("epx", T) || k === "epx" || rb === "epx" || G.fuseRep ? (wbPentLive(st).length || G.elePrev ? (G.elePrev && !wbFusedIn(st).length ? WB_EL : wbPentLive(st)) : []) : WB_EL.filter(x => st.hp[x] > 0 || G.elePrev); }
-function convTheme() { const want = convWant(), c = AU.ctx; if (!c) return;
-  if (!want) { if (AU.conv) { const C = AU.conv; AU.conv = null; C.out.gain.setTargetAtTime(0, c.currentTime, .6); setTimeout(() => { clearInterval(C.iv); C.stop.forEach(o => { try { o.stop(); } catch (e) {} }); try { C.out.disconnect(); } catch (e) {} }, 3000); AU.cduck = 1; applyAudio(); } return; }
-  if (!AU.conv) { const out = c.createGain(); out.gain.value = 0; out.connect(AU.master); const L = {}, stop = []; for (const k of WB_EL) { L[k] = c.createGain(); L[k].gain.value = 0; L[k].connect(out); }
-    const base = c.createGain(); base.gain.value = 1; base.connect(out); const mt = m => 440 * Math.pow(2, (m - 69) / 12);
-    const dr = c.createOscillator(); dr.frequency.value = mt(26); const dg = c.createGain(); dg.gain.value = .16; dr.connect(dg); dg.connect(base); dr.start(); stop.push(dr);
-    const ch = [62, 65, 69, 74].map(m => { const o = c.createOscillator(), g = c.createGain(); o.type = "sine"; o.frequency.value = mt(m + 12); g.gain.value = .035; o.connect(g); g.connect(L.eli); o.start(); stop.push(o); return o; }); // the choir of light: a held high chord
-    const blip = (dest, type, f, v, d, t, f2) => { const o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(g); g.connect(dest); o.start(t); o.stop(t + d + .05); };
-    let s = 0; const scale = [50, 53, 57, 60, 62, 65, 69, 72];
-    const iv = setInterval(() => { if (document.hidden) return; const t = c.currentTime + .05, b = s % 16;
-      if (b % 4 === 0) blip(base, "sine", 110, .5, .35, t, 40); if (b === 14) blip(base, "sine", 160, .3, .25, t, 70); // the drum
-      if (b === 0 && s % 32 === 0) [38, 45].forEach(m => blip(L.efi, "sawtooth", mt(m), .09, 1.6, t)); if (b === 8) blip(L.efi, "sawtooth", mt(41), .07, .9, t);
-      if (b % 2 === 1) blip(L.eic, "sine", mt(scale[(s * 5) % 8] + 24), .05, 1.4, t);
-      blip(L.est, "square", mt(scale[(s * 3) % 8] + 12), .025, .14, t); if (b % 2 === 0) blip(L.est, "square", mt(scale[(s * 3 + 2) % 8] + 12), .02, .12, t + .15);
-      if ([0, 3, 6, 10, 12].includes(b)) blip(L.ena, "triangle", mt(scale[(s + b) % 8]), .09, .45, t);
-      s++; }, 300);
-    AU.conv = { out, L, iv, stop }; out.gain.setTargetAtTime(.15, c.currentTime, 1.2); AU.cduck = .2; applyAudio(); }
-  const C = AU.conv, t = c.currentTime, v = AU.musicOn && !AU.muted ? gainOf(AU.mv) / gainOf(50) : 0; C.out.gain.setTargetAtTime(.15 * v, t, .8);
-  for (const k of WB_EL) C.L[k].gain.setTargetAtTime(want.includes(k) ? 1 : 0, t, 1.2); }
+function convTheme() { const want = convWant(), c = AU.ctx; if (!c) return; /* v414 the game's song, reworked deeper and cinematic */
+  if (!want) { if (AU.conv) { const C = AU.conv; AU.conv = null; C.out.gain.setTargetAtTime(0, c.currentTime, .8); setTimeout(() => { try { C.src.stop(); } catch (e) {} try { C.out.disconnect(); } catch (e) {} }, 4000); AU.cduck = 1; applyAudio(); } return; }
+  if (!AU.convBuf) { if (!AU.convLd) { AU.convLd = 1; fetch("music_conv.mp3").then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); }).then(b => c.decodeAudioData(b)).then(b => { AU.convBuf = b; }, () => { setTimeout(() => { AU.convLd = 0; }, 60000); }); } return; }
+  if (!AU.conv) { const out = c.createGain(); out.gain.value = 0; out.connect(AU.master); const src = c.createBufferSource(); src.buffer = AU.convBuf; src.loop = true; src.connect(out); src.start(); AU.conv = { out, src }; AU.cduck = 0; applyAudio(); }
+  AU.conv.out.gain.setTargetAtTime(AU.musicOn && !AU.muted ? .12 * gainOf(AU.mv) / gainOf(50) * (AU.duck || 1) : 0, c.currentTime, AU.conv.on ? .3 : 2); AU.conv.on = 1; }
 setInterval(() => { try { convTheme(); } catch (e) {} }, 1000);
 function applyAudio() {
   if (!AU.ctx) return; const t = AU.ctx.currentTime;

@@ -1,11 +1,11 @@
--- v413: live updates by topic (Realtime Broadcast from the database) instead of postgres_changes on the whole table.
+-- v414 (applied 2026-11-10): live updates by topic (Realtime Broadcast from the database) instead of postgres_changes on the whole table.
 -- postgres_changes checks every subscriber's read rule for every change (load grows with players squared). Now each change to a shared
 -- record is broadcast once to its topic; a player's right to a topic is checked once, when they join it.
 --   udf:pub         planets, occ, alliances, assaults, chat, event, galaxy, players, profiles (everyone signed in may read these)
 --   udf:u:<uid>     that player's inbox, and every DM they take part in
 --   udf:in:<uid>    that player's inbound fleets (readable by any signed-in player, as before: allies watch them)
 -- Player saves (data), feedback and _locks are never broadcast. The docs table stays in the supabase_realtime publication for now so
--- clients older than v413 keep working; remove it once they have updated.
+-- clients older than v414 keep working; remove it once they have updated.
 create or replace function public.udf_broadcast() returns trigger
 language plpgsql security definer set search_path = public, realtime as $$
 declare r record; u text;
