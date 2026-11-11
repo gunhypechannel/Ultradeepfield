@@ -3655,7 +3655,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 419;
+const GAME_V = 420;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5399,14 +5399,16 @@ function wbWreckSet(W, kill, seed, type, purple) { const LITE = MOBILE || FX_LIT
   // torn hull plates and girders drifting through the site
   const nP = LITE ? 18 : 40; S.plates = DK.geos.slice(0, 3).map(geo => { const im = new TH.InstancedMesh(geo, DK.mat, Math.ceil(nP / 3)); im.frustumCulled = false; grp.add(im); return im; }); S.pl = [];
   S.plates.forEach(im => { for (let j = 0; j < im.count; j++) { const a = r() * TAU, rr = 6 + Math.sqrt(r()) * 30; S.pl.push({ im, j, p: new TH.Vector3(Math.cos(a) * rr, -6 + r() * 12, Math.sin(a) * rr), e: [r() * TAU, r() * TAU, r() * TAU], s: [(r() - .5) * 3e-4, (r() - .5) * 3e-4, (r() - .5) * 2e-4], k: .35 + r() * r() * 1.3 }); } });
+  grp.traverse(o => { if (o.isMesh) o.frustumCulled = false; }); /* v420 cut, cloned and instanced hulls: their bounds no longer match */
   return S; }
 function wbWrecks(W, t, T) { const X = W.wbWk || (W.wbWk = { sets: [], at: 0, pick: [] }), cam = W.camera.position;
-  if (t - X.at > 1000) { X.at = t; const L = wbScars(T).filter(s => (!s.a || s.k === "dev") && Math.hypot(s.x - cam.x, s.y - cam.y, s.z - cam.z) < (MOBILE ? 450 : 700)); L.sort((a, b) => (b.b || 0) - (a.b || 0) || (a.a || 0) - (b.a || 0) || Math.hypot(a.x - cam.x, a.z - cam.z) - Math.hypot(b.x - cam.x, b.z - cam.z));
+  if (t - X.at > 1000) { X.at = t; X.built = 0; const lim = MOBILE ? 450 : 700, held = new Set(X.sets.filter(S => S.site).map(S => S.site)), dist = s => Math.hypot(s.x - cam.x, s.y - cam.y, s.z - cam.z), key = s => (s.b ? 0 : s.a ? 2 : 1) * 1000 + dist(s) - (held.has(s.k + s.at) ? 250 : 0); /* v420 a shown site keeps its set */
+    const L = wbScars(T).filter(s => (!s.a || s.k === "dev") && dist(s) < (held.has(s.k + s.at) ? lim * 1.3 : lim)); L.sort((a, b) => key(a) - key(b));
     const NS = MOBILE ? 1 : FX_LITE() ? 2 : 3; X.pick = L.slice(0, NS); }
   if (reduced || !X.pick.length) { for (const S of X.sets) S.grp.visible = false; return; }
   const used = new Set();
   for (const s of X.pick) { const ty = s.b ? "kill" : s.a ? "wake" : "fight", pu = s.k === "dev"; let S = X.sets.find(S => !used.has(S) && S.site === s.k + s.at) || X.sets.find(S => !used.has(S) && S.type === ty && S.purple === pu && !X.pick.some(q => q.k + q.at === S.site));
-    if (!S && X.sets.length < (MOBILE ? 3 : 6)) { S = wbWreckSet(W, !!s.b, 1 + hash(s.k + ":" + s.at) % 99991, ty, pu); X.sets.push(S); }
+    if (!S && X.sets.length < (MOBILE ? 3 : 6) && !X.built) { X.built = 1; S = wbWreckSet(W, !!s.b, 1 + hash(s.k + ":" + s.at) % 99991, ty, pu); X.sets.push(S); } /* v420 one new set per second */
     if (!S) continue; used.add(S); S.site = s.k + s.at;
     const age = clamp((T - s.at) / WB_SCAR_MS, 0, 1), heat = clamp(1 - (T - s.at) / (12 * 3600e3), .15, 1), V = S.V; S.grp.visible = true; S.grp.position.set(s.x, s.y, s.z); S.grp.updateMatrixWorld();
     for (const d of S.ders) { d.g.position.copy(d.p); d.g.rotation.set(d.e[0] + T * d.s[0], d.e[1] + T * d.s[1], d.e[2] + T * d.s[2]); d.g.scale.setScalar(d.k); wreckTick(d, t, T, v => S.grp.worldToLocal(v));
@@ -8860,7 +8862,7 @@ function cwBuild(W) { const LITE = MOBILE || FX_LITE(); // phones and the Lite e
     d.fs = Math.max(sz.x, sz.y, sz.z) * .22;
     // battle damage: charred, darkened plating with punched holes whose edges still glow (each derelict gets its own materials)
     d.g.userData.noBatch = 1; /* v172 charred wrecks keep their own meshes (the shared map batches are clean hulls) */ const done = new Map(); d.g.traverse(o => { if (o.isMesh && o.material && o.material.isMeshBasicMaterial) { o.visible = false; return; } /* v419 */ if (!o.isMesh || !o.material || Array.isArray(o.material) || o.material.emissive === undefined) return;
-      let m = done.get(o.material); if (!m) { m = o.material.clone(); m.color.multiplyScalar(.42); m.roughness = Math.min(1, (m.roughness || .5) + .25); m.emissive.set(0xffffff); m.emissiveMap = DK.emi; m.emissiveIntensity = 1.3; done.set(o.material, m); } o.material = m; }); d.brk = wreckBreak(W, d.g, r, null, false, grp, DK); /* v419 */ }
+      let m = done.get(o.material); if (!m) { m = o.material.clone(); m.color.multiplyScalar(.42); m.roughness = Math.min(1, (m.roughness || .5) + .25); m.emissive.set(0xffffff); m.emissiveMap = DK.emi; m.emissiveIntensity = 1.3; done.set(o.material, m); } o.material = m; }); d.brk = wreckBreak(W, d.g, r, null, false, grp, DK); d.g.traverse(o => { if (o.isMesh) o.frustumCulled = false; }); /* v419, v420 */ }
   const deb = { ims: [], items: [], fires: [] }, per = Math.ceil((LITE ? 110 : 300) / DK.geos.length);
   DK.geos.forEach(geo => { const im = new TH.InstancedMesh(geo, DK.mat, per); im.frustumCulled = false; grp.add(im); deb.ims.push(im);
     for (let j = 0; j < per; j++) { const a = r() * TAU, rr = 24 + Math.pow(r(), .7) * 60; deb.items.push({ im, j, p: new TH.Vector3(Math.cos(a) * rr, -8 + r() * 24, Math.sin(a) * rr), e: [r() * TAU, r() * TAU, r() * TAU], s: [(r() - .5) * 4e-4, (r() - .5) * 4e-4, (r() - .5) * 3e-4], k: .55 + r() * r() * 2.2, orb: TAU / (600000 + r() * 900000) * (r() < .5 ? 1 : -1) }); } });
