@@ -3651,7 +3651,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 412;
+const GAME_V = 413;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -17031,6 +17031,10 @@ function settleBattle(b) { // jump to the end: apply every remaining volley so t
   for (; b.vi < b.R.vols.length; b.vi++) applyVolley(b, b.R.vols[b.vi]);
   b.fx = []; b.salvos = []; b.beams = []; b.pend = []; b.slowUntil = 0; b.simT = b.end;
 }
+/* v413 how far a Cube Destroyer formation has turned so its dish (0.47 L forward, 0.152 L down on the sprite) faces the target it is firing at */
+function cdTurn(b, i, cx, cy, face, scr, T, real) { const A = b.cdRot || (b.cdRot = {}), m = (b.beams || []).find(m => m.wb && m.s === i && T - m.t0 > -.3 && T - m.t0 < m.charge + m.life);
+  let want = 0; if (m) { const E = scr[m.e] || (m.ix != null ? { x: m.ix, y: m.iy } : null); if (E) { const a0 = Math.atan2(.152, face * .47); want = Math.atan2(E.y - cy, E.x - cx) - a0; want = Math.atan2(Math.sin(want), Math.cos(want)); } }
+  const cur = A[i] || 0, d = Math.atan2(Math.sin(want - cur), Math.cos(want - cur)); A[i] = cur + d * Math.min(1, (real || 16) / 200); return A[i]; }
 function drawBattle(t) {
   const b = battle, cv = $("#bcv"); if (!cv) return;
   /* v66 adaptive quality: phones start at 1.5x resolution (not 2x); if frames run long the battle steps down to 1.25x then 1x */
@@ -17200,7 +17204,7 @@ function drawBattle(t) {
       if (!lo && BOSSK[q.k] && !dying) { const gc = BOSS_GLOW[q.k] || "120,255,150", pr = .78 + .22 * Math.sin(t * .0021 + i); ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .42 * pr; ctx.drawImage(glowSprite(`rgba(${gc},1)`), cx - L * 1.35, cy - L * .85, L * 2.7, L * 1.7); ctx.globalAlpha = .18 * pr; ctx.drawImage(glowSprite("#ffffff"), cx - L * .5, cy - L * .3, L, L * .6); ctx.restore(); } /* v86: a boss looms in a pulsing aura of its own colour */
       for (let j = vc - 1; j >= 0; j--) { const o = OFFS[j], sz = L * (j ? .8 : 1), sx = cx - face * o[0] * L * .62 + (dying ? (j - 1) * dk * L * .35 : 0), sy = cy + o[1] * L * .5 + wv(j) + (dying ? dk * L * (.12 + j * .08) : 0);
         if (dying) { ctx.save(); ctx.translate(sx, sy); ctx.rotate(dk * (j % 2 ? .9 : -.7)); ctx.translate(-sx, -sy); }
-        ctx.save(); { const ba = bang + (small ? Math.cos(t * .0024 + i * 1.7 + j * 2.3) * .2 * face : 0); if (ba) { ctx.translate(sx, sy); ctx.rotate(ba); ctx.translate(-sx, -sy); } }
+        ctx.save(); { const ba = bang + (small ? Math.cos(t * .0024 + i * 1.7 + j * 2.3) * .2 * face : 0) + (q.k === "worldbreaker" ? (j ? (b.cdRot || {})[i] || 0 : cdTurn(b, i, cx, cy, face, scr, T, real)) : 0); if (!j && q.k === "worldbreaker") (b.cdAng || (b.cdAng = {}))[i] = ba; if (ba) { ctx.translate(sx, sy); ctx.rotate(ba); ctx.translate(-sx, -sy); } }
         if (!lo && !(busy && j > 1)) { /* v83: big fights give plumes to the front two hulls only. v75 engines: a tapered plume with a white-hot core that flickers, longer under thrust */ const ex0 = sx - face * sz * .48, fl = 1 + .22 * Math.sin(t * .031 + i * 2.1 + j), pl = sz * (moving ? .7 : .32) * fl * (1 - rv * .78), pw = sz * (moving ? .09 : .07) * (1 - rv * .35);
           ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha *= .9; ctx.drawImage(glowSprite(col.gk || (col.gk = `rgba(${col.glow},1)`)), face > 0 ? ex0 - pl * 1.6 : ex0 - pl * .4, sy - pw * 1.6, pl * 2, pw * 3.2);
           ctx.drawImage(glowSprite("#ffffff"), ex0 - pw * 1.3, sy - pw * 1.3, pw * 2.6, pw * 2.6);
@@ -17349,7 +17353,7 @@ function drawBattle(t) {
   b.beams = b.beams.filter(m => T - m.t0 <= m.charge + m.life + (m.wb ? 1 : 0)); // v410: the Cube Destroyer's splash outlives its beam
   for (const m of b.beams) { const age = T - m.t0; if (age < 0) continue;
     if (m.wb) { /* v410 the Cube Destroyer: charge in the dish, beam from its core, a wide splash */ const S0 = scr[m.s], E0 = scr[m.e], g = b.geo && b.geo[m.s], ok = g && g.f === b.gf;
-      if (S0 && b.n[m.s] > 0 && !m.ht) { const Lg = ok ? g.L : Math.min(W * .1 * bLen("worldbreaker") * S0.s, W * .55 * S0.s), fc = ok ? g.face : (b.face[m.s] || 1); m.ox = S0.x + fc * Lg * .47; m.oy = S0.y + Lg * .152; m.L = Lg; }
+      if (S0 && b.n[m.s] > 0 && !m.ht) { const Lg = ok ? g.L : Math.min(W * .1 * bLen("worldbreaker") * S0.s, W * .55 * S0.s), fc = ok ? g.face : (b.face[m.s] || 1); const ra = (b.cdAng || {})[m.s] || 0, dx0 = fc * Lg * .47, dy0 = Lg * .152; m.ox = S0.x + Math.cos(ra) * dx0 - Math.sin(ra) * dy0; m.oy = S0.y + Math.sin(ra) * dx0 + Math.cos(ra) * dy0; /* v413 the dish turns with the hull */ m.L = Lg; }
       if (m.ox == null || (!E0 && m.ix == null)) continue;
       const ox = m.ox, oy = m.oy, Lg = m.L, ex = E0 ? E0.x : m.ix, ey = E0 ? E0.y : m.iy, R0 = Lg * .16, red = "#ff2a1a";
       ctx.save(); ctx.globalCompositeOperation = "lighter";
