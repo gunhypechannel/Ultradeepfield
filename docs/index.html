@@ -3659,7 +3659,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 445;
+const GAME_V = 446;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -7885,6 +7885,7 @@ function bgDiet(on) { try {
   if (on) { if (G.bgDiet) return; G.bgDiet = 1; let n = 0;
     for (const W of [G3, C3]) { if (!W || !W.renderer) continue; try { W.renderer.setSize(1, 1, false); W.size = [1, 1]; n++; const B = W.bloom; if (B) { for (const k of ["S", "A", "A2", "C", "C2"]) if (B[k]) { B[k].dispose(); B[k] = null; } B.size = [0, 0]; } } catch (e) {} }
     try { wbArtFree(); } catch (e) {}
+    if (MOBILE && G3) { try { const X = G3.wbWk; if (X) { for (const S of X.sets) wreckDispose(S.grp); X.sets = []; X.at = 0; } } catch (e) {} try { if (G3.dv && !G.dvSim && !dvNow(now())) dvFree(G3); } catch (e) {} } /* v446 */
     if (MOBILE) { try { worldDrop("stu", "background"); } catch (e) {} if (!battle && G.stuCache) for (const k in G.stuCache) if (/\|side$/.test(k)) delete G.stuCache[k]; }
     try { crumb("background: " + n + " drawing buffers released"); } catch (e) {} }
   else if (G.bgDiet) { G.bgDiet = 0; for (const W of [G3, C3]) if (W) W.size = [0, 0]; if (battle) try { gpuNap(true); } catch (e) {} try { startAnim(); } catch (e) {} }
