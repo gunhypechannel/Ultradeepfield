@@ -3657,7 +3657,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 428;
+const GAME_V = 429;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8571,7 +8571,9 @@ const FLAG_SLOT = {
   phalanx: (i, N, sp, F) => { let c = Math.ceil(Math.sqrt(N - 1)); if (c % 2) c++; const e = i - 1, x = e % c, r = Math.floor(e / c), X = (x - (c - 1) / 2) * sp * .85; return [X + Math.sign(X) * (F.wid * .5 + sp * .1), (r % 2) * .35, F.len * .1 - r * sp * .8]; },
   swarm: (i, N, sp) => { const p = swarmAt(i, sp, 0); return [p[0], p[1], p[2]]; } };
 /* v250 which faction a commander flies: their published choice (bots and pirates have none, so bots fly the Terran look) */
-const playerFac = uid => uid === G.me ? facOf() : (G.players[uid] && FACTIONS[G.players[uid].fac] ? G.players[uid].fac : isBot(uid) ? DEMO_FAC[hash(uid) % 4] : "terran"); /* v427 a bot flies the same faction in battle as on the map (it was always Terran) */
+/* v429 the faction war's eight commanders (fac4Battle) */
+const FAC4_F = ["terran", "solar", "nyx", "verdant"], FAC4_U = {}; for (const sd of ["a", "d"]) FAC4_F.forEach((f, i) => FAC4_U["p4" + sd + i] = f);
+const playerFac = uid => uid === G.me ? facOf() : FAC4_U[uid] ? FAC4_U[uid] : (G.players[uid] && FACTIONS[G.players[uid].fac] ? G.players[uid].fac : isBot(uid) ? DEMO_FAC[hash(uid) % 4] : "terran"); /* v427 a bot flies the same faction in battle as on the map (it was always Terran) */
 /* v264 a commander earns their faction's flagship at commander level 15: until then their fleets fly without one, on the map and in battle replays */
 /* v299: from commander Lv.10, once it has been commissioned at the Flagship Dock. Other commanders publish whether theirs is built
    (tech.fl); a commander on an older version publishes nothing and keeps the old rule (Lv.15). Bots fly one from Lv.10. */
@@ -15861,24 +15863,39 @@ function duelBattle() {
   for (let i = 0; i < 5; i++) { res = simulate(stacksOf(fleet(), { weapons: tA, shields: tA, armor: tA }, "pduelA"), stacksOf(fleet(), { weapons: 15, shields: 15, armor: 15 }, "pduelD"), { seed: 31337 + i }); if (res.winner === "a" || res.winner === "d") break; tA += 2; } // one winner, never a draw
   return (G.duelRep = Object.assign(mkRep({ at: S.duelMail ? S.duelMail.t : now(), kind: "attack", title: `Duel · 1 vs 1 · ${n.toLocaleString("en-US")} units`, aUids: [], aName: G.names.pduelA, dName: G.names.pduelD, lvl: 30, ptype: "gas", fortL: 0, alien: false,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) }), { id: DUEL_ID, recDone: 1 }));
-}/* ---------- Mail: one inbox for battle reports, espionage reports, direct messages and every alert ---------- */
+}/* v429 the owner's faction war: 4 vs 4, one commander of every faction a side, 10 million mixed units */
+const FAC4_ID = "lab-fac4v4", FAC4_N = { a: ["High Admiral Seren Vale", "Sunlord Idris Kaan", "Matriarch Vey Solenne", "Warden Thal Orrin"], d: ["Fleet Marshal Dax Corwen", "Solarch Mira Teve", "Shadow Regent Kael Vros", "Grovemaster Ysra Lune"] };
+function fac4Battle() {
+  if (G.fac4Rep) return G.fac4Rep;
+  const base = { fighter: 375000, heavyFighter: 250000, lancer: 200000, corvette: 150000, bomber: 75000, guardian: 50000, battleship: 50000, bastion: 31250, destroyer: 31250, dreadnought: 18750, escortCarrier: 12500, supercarrier: 5000, eclipse: 750, worldbreaker: 500 }; /* 1,250,000 a commander */
+  const mix = i => { const o = Object.assign({}, base), k = ["lancer", "corvette", "bomber", "destroyer"][i]; o.fighter -= 60000 * i; o[k] += 60000 * i; for (const x in o) if (!SH[x]) { o.fighter += o[x]; delete o[x]; } return o; }; /* each faction leans on a different class; the total stays the same */
+  const side = (sd, tech) => { let L = []; FAC4_F.forEach((f, i) => { const u = "p4" + sd + i; G.names[u] = FAC4_N[sd][i]; L = L.concat(stacksOf(mix(sd === "a" ? i : (i + 2) % 4), { weapons: tech + i % 2, shields: tech + (i + 1) % 2, armor: tech }, u)); }); return L; };
+  let n = 0; for (let i = 0; i < 4; i++) for (const k in mix(i)) n += mix(i)[k] * 2;
+  const res = simulate(side("a", 16), side("d", 15), { seed: 4444 }); /* at this size the titans outlast the 8 rounds, so it ends with both fleets disengaging */
+  if (!S.fac4Mail) { S.fac4Mail = { t: now() }; dirty(); }
+  return (G.fac4Rep = Object.assign(mkRep({ at: S.fac4Mail.t, kind: "attack", title: `Faction war · 4 vs 4 · ${n.toLocaleString("en-US")} units`, aUids: [], aName: "Coalition of the Four", dName: "Concord of the Four", lvl: 30, ptype: "lava", fortL: 0, alien: false,
+    start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) }), { id: FAC4_ID, recDone: 1 }));
+}
+/* ---------- Mail: one inbox for battle reports, espionage reports, direct messages and every alert ---------- */
 const MAIL_F = [["all", "All"], ["battle", "Battles"], ["saved", "★ Saved"], ["spy", "Espionage"], ["dm", "Direct"], ["alert", "Alerts"]];
 function mailItems() {
   const blocked = new Set(S.blocked || []), seen = S.chatSeen || {};
   const dms = Object.values(CHAT.dms || {}).filter(c => !blocked.has(c.with) && c.m.length).map(c => { const lm = c.m[c.m.length - 1]; return { t: lm.t, f: "dm", dm: c, un: c.m.filter(m => m.u !== G.me && m.t > (seen["d:" + c.id] || 0)).length }; });
   if (duelOwner() && !S.duelMail) { S.duelMail = { t: now() }; dirty(); } // v212: the owner's duel
+  if (duelOwner() && !S.fac4Mail) { S.fac4Mail = { t: now() }; dirty(); } // v429 the faction war
   if (duelOwner() && !S.labMail) { S.labMail = { t: now() }; dirty(); } // the 10 vs 10 simulator test battle, delivered once so it can be watched on any device
   const inRecent = new Set(S.reports.map(r => r.id));
-  return S.reports.filter(r => r.id !== LAB_ID).map(r => ({ t: r.t || r.at, f: "battle", rep: r })).concat((S.savedReps || []).filter(r => !inRecent.has(r.id)).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))).concat(duelOwner() && S.labMail ? [{ t: S.labMail.t, f: "battle", lab: 1 }] : [], duelOwner() && S.duelMail ? [{ t: S.duelMail.t, f: "battle", duel: 1 }] : [], (S.spyReps || []).map(s => ({ t: s.at, f: "spy", spy: s })), dms, S.log.map(l => ({ t: l.t, f: "alert", log: l }))).sort((a, b) => b.t - a.t);
+  return S.reports.filter(r => r.id !== LAB_ID).map(r => ({ t: r.t || r.at, f: "battle", rep: r })).concat((S.savedReps || []).filter(r => !inRecent.has(r.id)).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))).concat(duelOwner() && S.labMail ? [{ t: S.labMail.t, f: "battle", lab: 1 }] : [], duelOwner() && S.duelMail ? [{ t: S.duelMail.t, f: "battle", duel: 1 }] : [], duelOwner() && S.fac4Mail ? [{ t: S.fac4Mail.t, f: "battle", fac4: 1 }] : [], (S.spyReps || []).map(s => ({ t: s.at, f: "spy", spy: s })), dms, S.log.map(l => ({ t: l.t, f: "alert", log: l }))).sort((a, b) => b.t - a.t);
 }
 const mailUnread = () => { const t0 = S.mailSeen || 0; let n = 0; try { for (const x of mailItems()) n += x.f === "dm" ? x.un : x.t > t0 ? 1 : 0; } catch (e) {} return n; };
 function vMail() {
   const f = MAIL_F.some(x => x[0] === sub.mail) ? sub.mail : (sub.mail = "all"), all = mailItems(), prev = G.mailPrev || 0, cnt = k => all.filter(x => x.f === k && (x.f === "dm" ? x.un : x.t > prev)).length;
-  const list = f === "saved" ? (duelOwner() && S.duelMail && S.duelSaved !== 0 ? [{ t: S.duelMail.t, f: "battle", duel: 1 }] : []).concat(duelOwner() && S.labSaved ? [{ t: S.labMail ? S.labMail.t : now(), f: "battle", lab: 1 }] : []).concat((S.savedReps || []).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))) : all.filter(x => f === "all" || x.f === f).slice(0, 80);
+  const list = f === "saved" ? (duelOwner() && S.fac4Mail ? [{ t: S.fac4Mail.t, f: "battle", fac4: 1 }] : []).concat(duelOwner() && S.duelMail && S.duelSaved !== 0 ? [{ t: S.duelMail.t, f: "battle", duel: 1 }] : []).concat(duelOwner() && S.labSaved ? [{ t: S.labMail ? S.labMail.t : now(), f: "battle", lab: 1 }] : []).concat((S.savedReps || []).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))) : all.filter(x => f === "all" || x.f === f).slice(0, 80);
   const tabs = `<div class="segc mailtabs">${MAIL_F.map(([k, l]) => { const n = k === "all" ? 0 : cnt(k); return `<button class="${f === k ? "on" : ""}" data-act="sub" data-g="mail" data-v="${k}">${l}${n ? ` <i class="cbadge">${n}</i>` : ""}</button>`; }).join("")}</div>`;
   const row = x => { const nw = x.f === "dm" ? x.un > 0 : x.t > prev, tag = nw ? '<i class="mnew">NEW</i>' : "", when = `${ago(x.t)} ago`;
     if (x.spy) { const s = x.spy; return `<button class="mrowc spy${nw ? " unread" : ""}" data-act="spyOpen" data-id="${s.id}"><span class="mi">${AI.spy}</span><span class="mt"><b>Espionage report · ${esc(s.name)}</b><small>${s.res ? fmt(total(s.res)) + " resources · " : ""}${spySum(s)}</small></span><span class="mw">${tag}<time>${when}</time></span></button>`; }
     if (x.rep) { const r = x.rep, win = repWin(r); return `<button class="mrowc ${win ? "good" : "bad"}${nw ? " unread" : ""}" data-act="mreport" data-id="${r.id}"><span class="mi">${MI.swords}</span><span class="mt"><b>${esc(r.title)}</b><small>${r.captured ? (r.kind === "defense" ? "Planet lost" : "Planet captured") : win ? "Victory" : r.winner === "draw" ? "Draw" : "Defeat"}${r.loot && total(r.loot) ? ` · plunder ${fmt(total(r.loot))}` : ""}</small></span><span class="mw">${tag}<time>${when}</time></span></button>`; }
+    if (x.fac4) return `<button class="mrowc good lab" data-act="fac4Battle"><span class="mi">⚔</span><span class="mt"><b>Faction war · 4 vs 4 · 10 million units</b><small>Your private test: Terran Union, Solar Dominion, Nyx Syndicate and Verdant Collective on both sides, 1.25 million mixed warships per commander, every flagship in the fight. Tap to build it and watch (it takes a moment).</small></span><span class="mw"><time>${ago(x.t)} ago</time></span></button>`;
     if (x.duel) return `<button class="mrowc good lab" data-act="duelBattle"><span class="mi">👑</span><span class="mt"><b>Duel · 1 vs 1 · 3 million of every warship a side</b><small>${DUEL_ALL ? "The big stress test:" : "Your private stress test:"} two commanders, every class from Light Fighters to Cube Destroyers, plus 12 million escort carriers and 9 million Citadel Supercarriers each. Tap to build it and watch (it takes a moment).</small></span><span class="mw"><time>${ago(x.t)} ago</time></span></button>`;
     if (x.lab) return `<button class="mrowc good lab${nw ? " unread" : ""}" data-act="labBattle"><span class="mi">📽</span><span class="mt"><b>Simulator test · 10 vs 10 commanders · 20,658,867 units</b><small>The stress-test battle. Tap to rebuild it on this device and watch the full replay (a few seconds to load).</small></span><span class="mw">${tag}<time>${when}</time></span></button><button class="btn ${S.labSaved ? "amber" : "ghost"} sm labsv" data-act="labSave">${S.labSaved ? "★ Saved" : "☆ Save to favourites"}</button>`;
     if (x.dm) { const c = x.dm, lm = c.m[c.m.length - 1]; return `<button class="mrowc dm${nw ? " unread" : ""}" data-act="dmOpen" data-u="${esc(c.with)}"><span class="mi av">${avCanvas(c.with)}</span><span class="mt"><b>${esc(nameOf(c.with))}${x.un ? ` <i class="cbadge">${x.un}</i>` : ""}</b><small>${lm.u === G.me ? "You: " : ""}${esc(lm.x.slice(0, 70))}</small></span><span class="mw"><time>${when}</time></span></button>`; }
@@ -16936,11 +16953,11 @@ function battleAcc(r) { const mine = r.kind === "defense" || r.kind === "raid" ?
 /* v250 flagships in the battle replay: a picture only, the simulation and its result are untouched. Each commander in the fight gets their faction's
    flagship (up to 3 a side), which flies at the heart of their squadrons, fires its own tracers, and goes down when the last of them falls. Pirates, Hives and the Cube have none. */
 function battleFlags(r, Q) { const mineS = r.kind === "defense" || r.kind === "raid" ? "d" : "a", out = { a: [], d: [] }, lab = r.id === LAB_ID || r.id === DUEL_ID;
-  const pf = u => typeof u === "string" && u !== "pirates" && u !== "cube" && (u === G.me || G.players[u] || isBot(u)) && flagOK(u) ? playerFac(u) : null;
+  const f4 = r.id === FAC4_ID, pf = u => f4 ? FAC4_U[u] || null : typeof u === "string" && u !== "pirates" && u !== "cube" && (u === G.me || G.players[u] || isBot(u)) && flagOK(u) ? playerFac(u) : null;
   for (const sd of ["a", "d"]) { const groups = new Map(); let any = 0;
     Q.forEach((q, i) => { if (q.side !== sd) return; any = 1; const sh = q.shr && Object.keys(q.shr).length ? q.shr : { [q.own]: q.n0 }, tot = Object.values(sh).reduce((a, b) => a + b, 0) || 1; /* v427 every commander with ships in a merged stack */
       for (const u in sh) { const f = pf(u); if (!f) continue; const g = groups.get(u) || { f, idx: [], w: 0 }; g.idx.push(i); g.w += Math.sqrt(Math.max(1, q.n0 * sh[u] / tot * (q.pow || 1))); groups.set(u, g); } });
-    if (!any) continue; let L = [...groups.values()].sort((x, y) => y.w - x.w).slice(0, 3);
+    if (!any) continue; let L = [...groups.values()].sort((x, y) => y.w - x.w).slice(0, f4 ? 4 : 3); /* v429 the faction war shows all four */
     if (!L.length && !(r.kind === "raid" && sd === "a")) { const u = sd === "a" ? (r.aUids || [])[0] : r.dUid, f = lab ? (sd === mineS ? facOf() : DEMO_FAC.find(x => x !== facOf())) : pf(u) || (sd === mineS && !u && flagOK(G.me) ? facOf() : null); if (f) L = [{ f, idx: Q.map((q, i) => q.side === sd ? i : -1).filter(i => i >= 0) }]; }
     out[sd] = L.map(e => ({ f: e.f, idx: e.idx, acc: facAcc(e.f), col: FLAG_GLOW[e.f], rgba: `rgba(${FLAG_GLOW[e.f] >> 16},${FLAG_GLOW[e.f] >> 8 & 255},${FLAG_GLOW[e.f] & 255},1)` })); }
   return out; }
@@ -17023,7 +17040,7 @@ function playBattle(r) {
   battle.acc = battleAcc(r);
   { const own = R.squads.map(q => q.own).filter(u => typeof u === "string" && u !== "pirates" && u !== "cube" && (u === G.me || G.players[u] || isBot(u))); battle.notMine = own.length > 0 && !own.includes(G.me); } /* a friend's shared report: nobody in it is "you" */
   /* v341: every commander's squadrons fly in their own flagship's glow colour (a friend's or an ally's report shows their colours, not yours) */
-  for (const q of R.squads) { const u = q.own; if (typeof u === "string" && u !== "pirates" && u !== "cube" && (u === G.me || G.players[u] || isBot(u))) { const f = playerFac(u); if (FLAG_GLOW[f] != null) Object.defineProperty(q, "acc", { value: "#" + FLAG_GLOW[f].toString(16).padStart(6, "0") + "@" + f, enumerable: false, writable: true, configurable: true }); } }
+  for (const q of R.squads) { const u = q.own; if (typeof u === "string" && u !== "pirates" && u !== "cube" && (u === G.me || G.players[u] || isBot(u) || FAC4_U[u])) { const f = playerFac(u); if (FLAG_GLOW[f] != null) Object.defineProperty(q, "acc", { value: "#" + FLAG_GLOW[f].toString(16).padStart(6, "0") + "@" + f, enumerable: false, writable: true, configurable: true }); } }
   fbBake(); battle.flags = battleFlags(r, R.squads); for (const sd of ["a", "d"]) for (const e of battle.flags[sd]) shipArtSoon("flagship", e.acc, "side"); // v250
   battle.superSide = r.wb ? "d" : r.dName === "Collective Warden" ? "d" : r.aName === "The Cube" ? "a" : null; // v109: the Super Cube fights as one grand Cube
   /* v401: your fleet is always nearest you. When you attack, the field is mirrored top to bottom (the recorded frames, once per record) and the two panels swap, so your ships and their panel sit at the bottom and the defender is across the field */
@@ -19253,6 +19270,7 @@ const ACT = {
   allySearch: () => { sub.allyQ = (($("#allyq") || {}).value || "").trim().slice(0, 24); sub.allyPg = 1; render(true); },
   allyPg: d => { sub.allyPg = Math.max(1, +d.v || 1); render(true); },
   allyOpen2: d => openSheet({ type: "ally", id: d.id }),
+  fac4Battle: () => { if (!duelOwner()) return; toast("Building the 4 vs 4 faction war…"); setTimeout(() => { try { playBattle(fac4Battle()); } catch (e) { toast("Couldn't build the faction war on this device.", "warn"); } }, 60); }, /* v429 */
   labBattle: () => { if (!duelOwner()) return; toast("Building the 10 vs 10 battle…"); setTimeout(() => { try { const rep = labBattle(); dirty(); playBattle(rep); } catch (e) { toast("Couldn't build the test battle on this device.", "warn"); } }, 60); },
   evPick: d => { sheet.ev = d.v; renderSheet(); },
   evTab: d => { sheet.evTab = d.v; renderSheet(); },
