@@ -3655,7 +3655,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 418;
+const GAME_V = 419;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5349,17 +5349,33 @@ function wbScars(T) { const st = wbState(T), out = [];
   for (const key of ["ovl", "dev", "war", "brd", "tyr", "wym", "col"]) { const step = (key === "dev" || key === "tyr" ? 3 : 4) * 3600e3;
     for (let tk = Math.ceil((T - WB_SCAR_MS) / step) * step; tk <= T; tk += step) { if (!wbOn(key, tk) || (wbCycOf(key, tk) === stCyc(st, key) && st.dead[key] && st.dead[key] < tk)) continue; const q = wbPos(key, tk, {}); out.push({ k: key, at: tk, x: q.x, y: q.y, z: q.z, a: 1 }); } }
   return out; }
+/* v419 a wreck's destruction pattern: split in half, bow snapped off, stern blown off, or gutted (null) */
+function wreckBreak(W, g, r, kind, purple, grp, DK) { const pats = ["split", "bow", "stern", "gutted", "split", "bow"]; kind = kind || pats[(r() * pats.length) | 0]; if (kind === "gutted") return null;
+  try { W.renderer.localClippingEnabled = true; } catch (e) { return null; }
+  g.updateMatrixWorld(true); const bb = new TH.Box3().setFromObject(g), sz = bb.getSize(new TH.Vector3()), ax = sz.x >= sz.y && sz.x >= sz.z ? 0 : sz.z >= sz.y ? 2 : 1, lo = bb.min.getComponent(ax), L = sz.getComponent(ax); if (!(L > 0)) return null;
+  const f = kind === "split" ? .42 + r() * .16 : kind === "bow" ? .7 + r() * .1 : .2 + r() * .1, c = lo + L * f, n = new TH.Vector3().setComponent(ax, 1);
+  const B = g.clone(true), cm = new Map(); B.traverse(o => { if (o.isMesh && o.material && !Array.isArray(o.material)) { let m = cm.get(o.material); if (!m) { m = o.material.clone(); cm.set(o.material, m); } o.material = m; } });
+  const cut = (obj, high) => { const l = new TH.Plane(high ? n.clone() : n.clone().negate(), high ? -c : c), w = l.clone(); obj.traverse(o => { if (o.isMesh && o.material && !Array.isArray(o.material)) { o.material.clippingPlanes = [w]; o.material.side = TH.DoubleSide; o.material.needsUpdate = true; } }); return { obj, l, w }; };
+  const P = [cut(g, false), cut(B, true)], ctr = bb.getCenter(new TH.Vector3()).setComponent(ax, c), piv = new TH.Group(), gap = L * (kind === "split" ? .12 + r() * .12 : .18 + r() * .2);
+  piv.position.copy(ctr).add(n.clone().multiplyScalar(gap)); B.position.copy(ctr).negate(); piv.add(B); g.add(piv); piv.userData.r0 = new TH.Euler((r() - .5) * .6, (r() - .5) * .6, (r() - .5) * .6); piv.userData.sp = [(r() - .5) * 3e-5, (r() - .5) * 3e-5, (r() - .5) * 3e-5];
+  const cross = Math.max(sz.getComponent((ax + 1) % 3), sz.getComponent((ax + 2) % 3)), gt = glowTex(purple ? "200,120,255" : "255,140,60", 1), col = purple ? 0xc77dff : 0xff8a40;
+  for (const o of [g, B]) { const s = new TH.Sprite(W.additive(gt, col, .85)); s.position.copy(ctr); s.scale.setScalar(cross * 1.2); o.add(s); } // the fracture glows
+  const fr = []; for (let i = 0; i < 3; i++) { const s = fireSprite(W, grp, DK); if (purple) s.material.color.set(0xe8c2ff); fr.push({ s, o: i % 2 ? B : g, p: ctr.clone().add(new TH.Vector3((r() - .5) * cross * .7, (r() - .5) * cross * .7, (r() - .5) * cross * .7).setComponent(ax, c)) }); }
+  return { P, piv, fr, sz: cross * .45, kind }; }
+function wreckTick(d, t, T, toLocal) { const K = d.brk; if (!K) return; const u = K.piv.userData; K.piv.rotation.set(u.r0.x + T * u.sp[0], u.r0.y + T * u.sp[1], u.r0.z + T * u.sp[2]); d.g.updateMatrixWorld(true);
+  for (const p of K.P) p.w.copy(p.l).applyMatrix4(p.obj.matrixWorld); const V = wreckTick.V || (wreckTick.V = new TH.Vector3());
+  for (const f of K.fr) fireTick(f.s, t, toLocal(f.o.localToWorld(V.copy(f.p))), Math.min(2.6, K.sz * d.k * .55)); }
 /* v415 boss wreck sites: real hulls, a destroyed Cube Destroyer and a shattered planetoid */
 function wbWreckSet(W, kill, seed, type, purple) { const LITE = MOBILE || FX_LITE(), DK = debrisKit(W), r = cwRnd(seed), grp = new TH.Group(); grp.visible = false; W.add(grp); type = type || (kill ? "kill" : "fight");
   const S = { grp, kill, type, purple: !!purple, ders: [], fires: [], spin: [], V: new TH.Vector3(), site: null }; const wake = type === "wake"; /* v417 the Devourer's wake; its sites glow purple */
-  const char = g => { g.userData.noBatch = 1; const done = new Map(); g.traverse(o => { if (!o.isMesh || !o.material || Array.isArray(o.material) || o.material.emissive === undefined) return;
+  const char = g => { g.userData.noBatch = 1; const done = new Map(); g.traverse(o => { if (o.isMesh && o.material && o.material.isMeshBasicMaterial) { o.visible = false; return; } /* v419 a wreck's engines and lights are dead */ if (!o.isMesh || !o.material || Array.isArray(o.material) || o.material.emissive === undefined) return;
     let m = done.get(o.material); if (!m) { m = o.material.clone(); m.color.multiplyScalar(.4); m.roughness = Math.min(1, (m.roughness || .5) + .25); m.emissive.set(purple ? 0xc77dff : 0xffffff); m.emissiveMap = DK.emi; m.emissiveIntensity = purple ? 1.9 : 1.4; m.envMapIntensity = (m.envMapIntensity == null ? 1 : m.envMapIntensity) * .3; if (m.metalness != null) m.metalness *= .55; if (m.clearcoat) m.clearcoat = 0; done.set(o.material, m); } o.material = m; }); };
   const kinds = ["battleship", "dreadnought", "supercarrier", "destroyer", "bastion", "escortCarrier", "lancer", "corvette"], nd = kill ? (LITE ? 2 : 3) : (LITE ? 1 : 2);
   const hull = (k, p, sc, nf) => { let g; if (k === "worldbreaker") { const sh = buildShip(k, shipMats("#ff3b30")); sh.traverse(c => { if (c.userData && c.userData.fx) c.visible = false; }); const b0 = new TH.Box3().setFromObject(sh), s0 = b0.getSize(new TH.Vector3()); g = new TH.Group(); sh.scale.setScalar(2 / Math.max(s0.x, s0.y, s0.z)); sh.position.copy(b0.getCenter(new TH.Vector3())).multiplyScalar(-sh.scale.x); g.add(sh); }
     else { g = k === "flagship" ? fleet3D(W, { battleship: 1 }, 0x3a2a20, false, false, false, DEMO_FAC[seed % DEMO_FAC.length]) : fleet3D(W, { [k]: 1 }, 0x3a2a20, false); if (g.userData.eng) g.userData.eng.visible = false; } char(g); grp.add(g); g.updateMatrixWorld(true);
     const bb = new TH.Box3().setFromObject(g), sz = bb.getSize(new TH.Vector3()), d = { g, p, e: [r() * TAU, r() * TAU, r() * TAU], s: [(r() - .5) * 4e-5, (r() - .5) * 3e-5, (r() - .5) * 2e-5], k: sc, fl: [], fires: [], fs: Math.max(sz.x, sz.y, sz.z) * .22 };
     for (let i = 0; i < nf; i++) { const q = new TH.Vector3(bb.min.x + r() * sz.x, bb.min.y + r() * sz.y, bb.min.z + r() * sz.z), ax = (r() * 3) | 0; q.setComponent(ax, r() < .5 ? bb.min.getComponent(ax) : bb.max.getComponent(ax)); d.fl.push(q); const f = fireSprite(W, grp, DK); if (purple) f.material.color.set(0xe8c2ff); d.fires.push(f); }
-    S.ders.push(d); return d; };
+    if (k !== "worldbreaker") d.brk = wreckBreak(W, g, r, null, purple, grp, DK); /* v419 */ S.ders.push(d); return d; };
   if (wake) { const a = r() * TAU; hull("flagship", new TH.Vector3(Math.cos(a) * 8, 0, Math.sin(a) * 8), 3.6, LITE ? 3 : 6); }
   else for (let i = 0; i < nd; i++) { const a = r() * TAU, rr = 10 + r() * 16; hull(kinds[(seed + i * 3) % kinds.length], new TH.Vector3(Math.cos(a) * rr, -3 + r() * 8, Math.sin(a) * rr), 3.4 + r() * 1.4, LITE ? 2 : 4); }
   if (kill || wake) { const a = r() * TAU; if (kill) { // a destroyed Cube Destroyer: charred, a slab of its shell blown off, its core glowing through the wound
@@ -5392,8 +5408,8 @@ function wbWrecks(W, t, T) { const X = W.wbWk || (W.wbWk = { sets: [], at: 0, pi
   for (const s of X.pick) { const ty = s.b ? "kill" : s.a ? "wake" : "fight", pu = s.k === "dev"; let S = X.sets.find(S => !used.has(S) && S.site === s.k + s.at) || X.sets.find(S => !used.has(S) && S.type === ty && S.purple === pu && !X.pick.some(q => q.k + q.at === S.site));
     if (!S && X.sets.length < (MOBILE ? 3 : 6)) { S = wbWreckSet(W, !!s.b, 1 + hash(s.k + ":" + s.at) % 99991, ty, pu); X.sets.push(S); }
     if (!S) continue; used.add(S); S.site = s.k + s.at;
-    const age = clamp((T - s.at) / WB_SCAR_MS, 0, 1), heat = clamp(1 - (T - s.at) / (12 * 3600e3), .15, 1), V = S.V; S.grp.visible = true; S.grp.position.set(s.x, s.y, s.z);
-    for (const d of S.ders) { d.g.position.copy(d.p); d.g.rotation.set(d.e[0] + T * d.s[0], d.e[1] + T * d.s[1], d.e[2] + T * d.s[2]); d.g.scale.setScalar(d.k);
+    const age = clamp((T - s.at) / WB_SCAR_MS, 0, 1), heat = clamp(1 - (T - s.at) / (12 * 3600e3), .15, 1), V = S.V; S.grp.visible = true; S.grp.position.set(s.x, s.y, s.z); S.grp.updateMatrixWorld();
+    for (const d of S.ders) { d.g.position.copy(d.p); d.g.rotation.set(d.e[0] + T * d.s[0], d.e[1] + T * d.s[1], d.e[2] + T * d.s[2]); d.g.scale.setScalar(d.k); wreckTick(d, t, T, v => S.grp.worldToLocal(v));
       d.g.updateMatrix(); d.fl.forEach((lp, k) => { if (k / d.fl.length > heat + .2) { d.fires[k].visible = false; return; } fireTick(d.fires[k], t, V.copy(lp).applyMatrix4(d.g.matrix), Math.min(2.6, d.fs * d.k * (.35 + .3 * heat))); });
       if (d.slab) { const u = ((T - s.at) / 3600e3) % 1e3; d.slab.position.copy(d.slab.userData.off).multiplyScalar(1 + Math.min(.6, u * .02)); d.core.material.opacity = (.5 + .45 * heat) * (.85 + .15 * Math.sin(t * .005)); } }
     if (S.planet) { S.planet.rotation.y += S.pspin * 16; const P = S.planet.position, m4 = S.m4 || (S.m4 = new TH.Matrix4()), q = S.q || (S.q = new TH.Quaternion()), e = S.e || (S.e = new TH.Euler()), sc = S.sc || (S.sc = new TH.Vector3());
@@ -8843,8 +8859,8 @@ function cwBuild(W) { const LITE = MOBILE || FX_LITE(); // phones and the Lite e
     for (let k = 0; k < (LITE ? 3 : 5); k++) { const p = new TH.Vector3(bb.min.x + r() * sz.x, bb.min.y + r() * sz.y, bb.min.z + r() * sz.z), ax = (r() * 3) | 0; p.setComponent(ax, r() < .5 ? bb.min.getComponent(ax) : bb.max.getComponent(ax)); d.fl.push(p); d.fires.push(fireSprite(W, grp, DK)); }
     d.fs = Math.max(sz.x, sz.y, sz.z) * .22;
     // battle damage: charred, darkened plating with punched holes whose edges still glow (each derelict gets its own materials)
-    d.g.userData.noBatch = 1; /* v172 charred wrecks keep their own meshes (the shared map batches are clean hulls) */ const done = new Map(); d.g.traverse(o => { if (!o.isMesh || !o.material || Array.isArray(o.material) || o.material.emissive === undefined) return;
-      let m = done.get(o.material); if (!m) { m = o.material.clone(); m.color.multiplyScalar(.42); m.roughness = Math.min(1, (m.roughness || .5) + .25); m.emissive.set(0xffffff); m.emissiveMap = DK.emi; m.emissiveIntensity = 1.3; done.set(o.material, m); } o.material = m; }); }
+    d.g.userData.noBatch = 1; /* v172 charred wrecks keep their own meshes (the shared map batches are clean hulls) */ const done = new Map(); d.g.traverse(o => { if (o.isMesh && o.material && o.material.isMeshBasicMaterial) { o.visible = false; return; } /* v419 */ if (!o.isMesh || !o.material || Array.isArray(o.material) || o.material.emissive === undefined) return;
+      let m = done.get(o.material); if (!m) { m = o.material.clone(); m.color.multiplyScalar(.42); m.roughness = Math.min(1, (m.roughness || .5) + .25); m.emissive.set(0xffffff); m.emissiveMap = DK.emi; m.emissiveIntensity = 1.3; done.set(o.material, m); } o.material = m; }); d.brk = wreckBreak(W, d.g, r, null, false, grp, DK); /* v419 */ }
   const deb = { ims: [], items: [], fires: [] }, per = Math.ceil((LITE ? 110 : 300) / DK.geos.length);
   DK.geos.forEach(geo => { const im = new TH.InstancedMesh(geo, DK.mat, per); im.frustumCulled = false; grp.add(im); deb.ims.push(im);
     for (let j = 0; j < per; j++) { const a = r() * TAU, rr = 24 + Math.pow(r(), .7) * 60; deb.items.push({ im, j, p: new TH.Vector3(Math.cos(a) * rr, -8 + r() * 24, Math.sin(a) * rr), e: [r() * TAU, r() * TAU, r() * TAU], s: [(r() - .5) * 4e-4, (r() - .5) * 4e-4, (r() - .5) * 3e-4], k: .55 + r() * r() * 2.2, orb: TAU / (600000 + r() * 900000) * (r() < .5 ? 1 : -1) }); } });
@@ -8955,7 +8971,7 @@ function drawCubeWar(W, t, T) {
       for (const im of C.deb.ims) im.instanceMatrix.needsUpdate = true; }
     for (const f of C.deb.fires) { if (!vis || !f.it.wp) { f.s.visible = false; continue; } fireTick(f.s, t, f.it.wp, f.it.k * 1.15); } }
   for (const d of C.ders) { d.g.visible = W.wreck.grp.visible; if (!d.g.visible) { d.f.visible = d.v.visible = false; for (const s of d.fires) s.visible = false; continue; } d.g.position.copy(d.p); d.g.rotation.set(d.e[0] + T * d.s[0], d.e[1] + T * d.s[1], d.e[2] + T * d.s[2]); d.g.scale.setScalar(d.k);
-    d.g.updateMatrixWorld(); d.fl.forEach((lp, k) => fireTick(d.fires[k], t, d.g.localToWorld(V2.copy(lp)), d.fs * d.k)); // small fires burning across the hull
+    d.g.updateMatrixWorld(); wreckTick(d, t, T, v => v); d.fl.forEach((lp, k) => fireTick(d.fires[k], t, d.g.localToWorld(V2.copy(lp)), d.fs * d.k)); // small fires burning across the hull
     d.f.visible = d.v.visible = true; d.f.position.copy(d.p).add(V.set(.6, .3, 0).multiplyScalar(d.k)); d.f.scale.setScalar(d.k * (1.8 + .6 * Math.sin(t * .006 + d.ph) * Math.sin(t * .0023 + d.ph))); d.f.material.opacity = .55 + .35 * Math.abs(Math.sin(t * .004 + d.ph));
     const vk = ((t * .00025 + d.ph) % 1); d.v.position.copy(d.p).add(V.set(-.4 - vk * 3, .2 + vk * 1.5, .3).multiplyScalar(d.k)); d.v.scale.setScalar(d.k * (.6 + vk * 3)); d.v.material.opacity = .35 * (1 - vk); } // a slow plume of venting atmosphere
   // the crowning: a golden crown over the Cube for the alliance that held it at the end
