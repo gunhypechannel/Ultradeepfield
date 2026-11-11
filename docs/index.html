@@ -3655,7 +3655,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 420;
+const GAME_V = 421;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5376,7 +5376,7 @@ function wbWreckSet(W, kill, seed, type, purple) { const LITE = MOBILE || FX_LIT
     const bb = new TH.Box3().setFromObject(g), sz = bb.getSize(new TH.Vector3()), d = { g, p, e: [r() * TAU, r() * TAU, r() * TAU], s: [(r() - .5) * 4e-5, (r() - .5) * 3e-5, (r() - .5) * 2e-5], k: sc, fl: [], fires: [], fs: Math.max(sz.x, sz.y, sz.z) * .22 };
     for (let i = 0; i < nf; i++) { const q = new TH.Vector3(bb.min.x + r() * sz.x, bb.min.y + r() * sz.y, bb.min.z + r() * sz.z), ax = (r() * 3) | 0; q.setComponent(ax, r() < .5 ? bb.min.getComponent(ax) : bb.max.getComponent(ax)); d.fl.push(q); const f = fireSprite(W, grp, DK); if (purple) f.material.color.set(0xe8c2ff); d.fires.push(f); }
     if (k !== "worldbreaker") d.brk = wreckBreak(W, g, r, null, purple, grp, DK); /* v419 */ S.ders.push(d); return d; };
-  if (wake) { const a = r() * TAU; hull("flagship", new TH.Vector3(Math.cos(a) * 8, 0, Math.sin(a) * 8), 3.6, LITE ? 3 : 6); }
+  if (wake) { /* v421 its ships string out along the trail (wbWakeTrail) */ }
   else for (let i = 0; i < nd; i++) { const a = r() * TAU, rr = 10 + r() * 16; hull(kinds[(seed + i * 3) % kinds.length], new TH.Vector3(Math.cos(a) * rr, -3 + r() * 8, Math.sin(a) * rr), 3.4 + r() * 1.4, LITE ? 2 : 4); }
   if (kill || wake) { const a = r() * TAU; if (kill) { // a destroyed Cube Destroyer: charred, a slab of its shell blown off, its core glowing through the wound
     const a = r() * TAU, d = hull("worldbreaker", new TH.Vector3(Math.cos(a) * 16, 3, Math.sin(a) * 16), 5.5, LITE ? 3 : 6); d.g.updateMatrixWorld(true); const bb = new TH.Box3().setFromObject(d.g), R = Math.max(bb.max.x - bb.min.x, bb.max.y - bb.min.y) * .5;
@@ -5419,8 +5419,35 @@ function wbWrecks(W, t, T) { const X = W.wbWk || (W.wbWk = { sets: [], at: 0, pi
     if (!S.plT || t - S.plT > 80) { S.plT = t; const m4 = S.m4 || (S.m4 = new TH.Matrix4()), q = S.q || (S.q = new TH.Quaternion()), e = S.e || (S.e = new TH.Euler()), sc = S.sc || (S.sc = new TH.Vector3());
       for (const o of S.pl) { q.setFromEuler(e.set(o.e[0] + T * o.s[0], o.e[1] + T * o.s[1], o.e[2] + T * o.s[2])); sc.setScalar(o.k); m4.compose(o.p, q, sc); o.im.setMatrixAt(o.j, m4); } S.plates.forEach(im => im.instanceMatrix.needsUpdate = true); } }
   for (const S of X.sets) if (!used.has(S)) { S.grp.visible = false; S.site = null; } }
+/* v421 one wrecked hull of the Devourer's destruction trail */
+function wakeHull(W, k, purple, seed) { const DK = debrisKit(W), r = cwRnd(seed), LITE = MOBILE || FX_LITE();
+  const g = k === "flagship" ? fleet3D(W, { battleship: 1 }, 0x3a2a20, false, false, false, DEMO_FAC[seed % DEMO_FAC.length]) : fleet3D(W, { [k]: 1 }, 0x3a2a20, false); if (g.userData.eng) g.userData.eng.visible = false;
+  g.userData.noBatch = 1; const done = new Map(); g.traverse(o => { if (o.isMesh && o.material && o.material.isMeshBasicMaterial) { o.visible = false; return; } if (!o.isMesh || !o.material || Array.isArray(o.material) || o.material.emissive === undefined) return;
+    let m = done.get(o.material); if (!m) { m = o.material.clone(); m.color.multiplyScalar(.4); m.roughness = Math.min(1, (m.roughness || .5) + .25); m.emissive.set(purple ? 0xc77dff : 0xffffff); m.emissiveMap = DK.emi; m.emissiveIntensity = purple ? 1.9 : 1.4; m.envMapIntensity = (m.envMapIntensity == null ? 1 : m.envMapIntensity) * .3; if (m.metalness != null) m.metalness *= .55; done.set(o.material, m); } o.material = m; });
+  const holder = new TH.Group(); holder.visible = false; W.add(holder); holder.add(g); g.updateMatrixWorld(true);
+  const bb = new TH.Box3().setFromObject(g), sz = bb.getSize(new TH.Vector3()), d = { g, holder, fl: [], fires: [], fs: Math.max(sz.x, sz.y, sz.z) * .22, k: 3.2 + r() * 1.3, e: [(r() - .5) * .9, (r() - .5) * 1.2, (r() - .5) * .9], s: [(r() - .5) * 3e-5, (r() - .5) * 2e-5, (r() - .5) * 2e-5], id: null };
+  for (let i = 0; i < (LITE ? 2 : 3); i++) { const q = new TH.Vector3(bb.min.x + r() * sz.x, bb.min.y + r() * sz.y, bb.min.z + r() * sz.z), ax = (r() * 3) | 0; q.setComponent(ax, r() < .5 ? bb.min.getComponent(ax) : bb.max.getComponent(ax)); d.fl.push(q); const f = fireSprite(W, holder, DK); if (purple) f.material.color.set(0xe8c2ff); d.fires.push(f); }
+  d.brk = wreckBreak(W, g, r, null, purple, holder, DK); holder.traverse(o => { if (o.isMesh) o.frustumCulled = false; }); return d; }
+/* v421 the Devourer's destruction trail: wrecks strung along its path, the stretch nearest the camera */
+function wbWakeTrail(W, t, T) { const X = W.wbTr || (W.wbTr = { slots: [], at: 0, pick: [] }), cam = W.camera.position, V = X.V || (X.V = new TH.Vector3());
+  if (t - X.at > 1000) { X.at = t; X.built = 0; const st = wbState(T), step = 15 * 60e3, lim = MOBILE ? 450 : 700, N = MOBILE ? 4 : FX_LITE() ? 6 : 10, held = new Set(X.slots.filter(s => s.id).map(s => s.id)), out = [];
+    for (let tk = Math.ceil((T - WB_SCAR_MS) / step) * step; tk <= T - 20 * 60e3; tk += step) { const rr = cwRnd(hash("tr" + tk)); if (rr() < .35) continue;
+      if (!wbOn("dev", tk) || (wbCycOf("dev", tk) === stCyc(st, "dev") && st.dead.dev && st.dead.dev < tk)) continue;
+      const q = wbPos("dev", tk, {}), q2 = wbPos("dev", tk + 60e3, {}), dx = q2.x - q.x, dz = q2.z - q.z, L = Math.hypot(dx, dz) || 1, side = rr() < .5 ? -1 : 1, off = 5 + rr() * 18, p = { x: q.x - dz / L * off * side, y: q.y + (rr() - .5) * 10, z: q.z + dx / L * off * side };
+      const ds = Math.hypot(p.x - cam.x, p.y - cam.y, p.z - cam.z); if (ds > (held.has(tk) ? lim * 1.3 : lim)) continue; out.push({ id: tk, p, yaw: Math.atan2(dx, dz) + (rr() - .5) * .9, ds: ds - (held.has(tk) ? 120 : 0) }); }
+    out.sort((a, b) => a.ds - b.ds); X.pick = reduced ? [] : out.slice(0, N); }
+  const used = new Set();
+  for (const pk of X.pick) { let s = X.slots.find(s => s.id === pk.id) || X.slots.find(s => !used.has(s) && !X.pick.some(q => q.id === s.id));
+    if (!s && X.slots.length < (MOBILE ? 4 : FX_LITE() ? 6 : 10) && !X.built) { X.built = 1; const kinds = ["battleship", "flagship", "destroyer", "dreadnought", "escortCarrier", "lancer", "supercarrier", "bastion", "corvette", "battleship"]; s = wakeHull(W, kinds[X.slots.length % kinds.length], true, 101 + X.slots.length * 37); X.slots.push(s); }
+    if (!s) continue; used.add(s); s.id = pk.id; const heat = clamp(1 - (T - pk.id) / (12 * 3600e3), .15, 1);
+    s.holder.visible = true; s.holder.position.set(pk.p.x, pk.p.y, pk.p.z); s.holder.updateMatrixWorld();
+    s.g.rotation.set(s.e[0] + T * s.s[0], pk.yaw + s.e[1] + T * s.s[1], s.e[2] + T * s.s[2]); s.g.scale.setScalar(s.k);
+    wreckTick(s, t, T, v => s.holder.worldToLocal(v)); s.g.updateMatrix();
+    s.fl.forEach((lp, k) => { if (k / s.fl.length > heat + .2) { s.fires[k].visible = false; return; } fireTick(s.fires[k], t, V.copy(lp).applyMatrix4(s.g.matrix), Math.min(2.6, s.fs * s.k * (.35 + .3 * heat))); }); }
+  for (const s of X.slots) if (!used.has(s)) { s.holder.visible = false; s.id = null; } }
 function wbScarFx(W, t, T) {
   try { wbWrecks(W, t, T); } catch (e) { mapErr(e); } // v415
+  try { wbWakeTrail(W, t, T); } catch (e) { mapErr(e); } // v421
   let X = W.wbScar; if (!X) { const N = 1400, P = 4200;
     const mesh = new TH.InstancedMesh(debrisKit(W).geos[0], new TH.MeshStandardMaterial({ color: 0xffffff, roughness: .75, metalness: .55, flatShading: true, envMap: wbEnv(W.renderer), envMapIntensity: .6 }), N); mesh.count = 0; mesh.frustumCulled = false;
     mesh.instanceColor = new TH.InstancedBufferAttribute(new Float32Array(N * 3), 3); W.scene.add(mesh);
