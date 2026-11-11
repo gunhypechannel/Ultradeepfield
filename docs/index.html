@@ -3657,7 +3657,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 438;
+const GAME_V = 439;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -16218,7 +16218,7 @@ function convWant() { if (!AU.ctx || !AU.musicOn || AU.muted || document.hidden)
   if (!(G.fuseRep || (k && wbG3(k)) || (rb && wbG3(rb)))) return null; const st = wbState(), T = now(); return wbOn("epx", T) || k === "epx" || rb === "epx" || G.fuseRep ? (wbPentLive(st).length || G.elePrev ? (G.elePrev && !wbFusedIn(st).length ? WB_EL : wbPentLive(st)) : []) : WB_EL.filter(x => st.hp[x] > 0 || G.elePrev); }
 function convTheme() { const want = convWant(), c = AU.ctx; if (!c) return; /* v414 the game's song, reworked deeper and cinematic */
   if (!want) { if (AU.conv) { const C = AU.conv; AU.conv = null; C.out.gain.setTargetAtTime(0, c.currentTime, .8); setTimeout(() => { try { if (!(AU.conv && AU.conv.el === C.el)) C.el.pause(); } catch (e) {} try { C.out.disconnect(); } catch (e) {} }, 4000); AU.cduck = 1; applyAudio(); } return; }
-  if (!AU.conv) { let el = AU.convEl; if (!el) { el = AU.convEl = new Audio("music_conv.mp3?v=438"); el.loop = true; el.preload = "auto"; try { AU.convSrc = c.createMediaElementSource(el); } catch (e) { AU.convSrc = null; } } /* v425 streamed, not decoded into memory */
+  if (!AU.conv) { let el = AU.convEl; if (!el) { el = AU.convEl = new Audio("music_conv.mp3?v=439"); el.loop = true; el.preload = "auto"; try { AU.convSrc = c.createMediaElementSource(el); } catch (e) { AU.convSrc = null; } } /* v425 streamed, not decoded into memory */
     const out = c.createGain(); out.gain.value = 0; out.connect(AU.master); if (AU.convSrc) { try { AU.convSrc.disconnect(); } catch (e) {} AU.convSrc.connect(out); } try { el.currentTime = 0; } catch (e) {} el.play().catch(() => {}); AU.conv = { out, el }; AU.cduck = 0; applyAudio(); }
   const vv = AU.musicOn && !AU.muted ? .12 * gainOf(AU.mv) / gainOf(50) * (AU.duck || 1) : 0; AU.conv.out.gain.setTargetAtTime(vv, c.currentTime, AU.conv.on ? .3 : 2); if (!AU.convSrc) AU.conv.el.volume = clamp(vv * 8, 0, 1); AU.conv.on = 1; }
 setInterval(() => { try { convTheme(); } catch (e) {} }, 1000);
