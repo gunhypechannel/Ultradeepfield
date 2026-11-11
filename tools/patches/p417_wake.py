@@ -1,0 +1,37 @@
+# v417: wrecks along the Orbital Devourer's wake, and the Devourer's wrecks glow purple. The path marks it leaves every 3 hours (wbScars
+# entries with .a) now get wake sets too: a destroyed flagship (the map's faction flagship model, from fleet3D's flag) escorted by a
+# wrecked battleship, a devoured planetoid with a bite torn out, and torn plates. Every Devourer site (wake, fight or kill) is themed in
+# its colour: violet glow in the burning holes, magenta fires, a purple wound in the planetoid. Sets are pooled per type and theme.
+p = "docs/index.html"; t = open(p).read()
+def rep(a, b, n=1):
+    global t; assert t.count(a) == n, (t.count(a), a[:100]); t = t.replace(a, b)
+rep("function wbWreckSet(W, kill, seed) { const LITE = MOBILE || FX_LITE(), DK = debrisKit(W), r = cwRnd(seed), grp = new TH.Group(); grp.visible = false; W.add(grp);\n  const S = { grp, kill, ders: [], fires: [], spin: [], V: new TH.Vector3(), site: null };",
+    "function wbWreckSet(W, kill, seed, type, purple) { const LITE = MOBILE || FX_LITE(), DK = debrisKit(W), r = cwRnd(seed), grp = new TH.Group(); grp.visible = false; W.add(grp); type = type || (kill ? \"kill\" : \"fight\");\n  const S = { grp, kill, type, purple: !!purple, ders: [], fires: [], spin: [], V: new TH.Vector3(), site: null }; const wake = type === \"wake\"; /* v417 the Devourer's wake; its sites glow purple */")
+rep("let m = done.get(o.material); if (!m) { m = o.material.clone(); m.color.multiplyScalar(.4); m.roughness = Math.min(1, (m.roughness || .5) + .25); m.emissive.set(0xffffff); m.emissiveMap = DK.emi; m.emissiveIntensity = 1.4; done.set(o.material, m); } o.material = m; }); };\n  const kinds",
+    "let m = done.get(o.material); if (!m) { m = o.material.clone(); m.color.multiplyScalar(.4); m.roughness = Math.min(1, (m.roughness || .5) + .25); m.emissive.set(purple ? 0xc77dff : 0xffffff); m.emissiveMap = DK.emi; m.emissiveIntensity = purple ? 1.9 : 1.4; m.envMapIntensity = (m.envMapIntensity == null ? 1 : m.envMapIntensity) * .3; if (m.metalness != null) m.metalness *= .55; if (m.clearcoat) m.clearcoat = 0; done.set(o.material, m); } o.material = m; }); };\n  const kinds")
+rep("""    else { g = fleet3D(W, { [k]: 1 }, 0x3a2a20, false); if (g.userData.eng) g.userData.eng.visible = false; } char(g); grp.add(g); g.updateMatrixWorld(true);""",
+    """    else { g = k === "flagship" ? fleet3D(W, { battleship: 1 }, 0x3a2a20, false, false, false, DEMO_FAC[seed % DEMO_FAC.length]) : fleet3D(W, { [k]: 1 }, 0x3a2a20, false); if (g.userData.eng) g.userData.eng.visible = false; } char(g); grp.add(g); g.updateMatrixWorld(true);""")
+rep("""    for (let i = 0; i < nf; i++) { const q = new TH.Vector3(bb.min.x + r() * sz.x, bb.min.y + r() * sz.y, bb.min.z + r() * sz.z), ax = (r() * 3) | 0; q.setComponent(ax, r() < .5 ? bb.min.getComponent(ax) : bb.max.getComponent(ax)); d.fl.push(q); d.fires.push(fireSprite(W, grp, DK)); }""",
+    """    for (let i = 0; i < nf; i++) { const q = new TH.Vector3(bb.min.x + r() * sz.x, bb.min.y + r() * sz.y, bb.min.z + r() * sz.z), ax = (r() * 3) | 0; q.setComponent(ax, r() < .5 ? bb.min.getComponent(ax) : bb.max.getComponent(ax)); d.fl.push(q); const f = fireSprite(W, grp, DK); if (purple) f.material.color.set(0xe8c2ff); d.fires.push(f); }""")
+rep("""  for (let i = 0; i < nd; i++) { const a = r() * TAU, rr = 10 + r() * 16; hull(kinds[(seed + i * 3) % kinds.length], new TH.Vector3(Math.cos(a) * rr, -3 + r() * 8, Math.sin(a) * rr), 3.4 + r() * 1.4, LITE ? 2 : 4); }
+  if (kill) {""", """  if (wake) { const a = r() * TAU; hull("flagship", new TH.Vector3(Math.cos(a) * 8, 0, Math.sin(a) * 8), 3.6, LITE ? 3 : 6); }
+  else for (let i = 0; i < nd; i++) { const a = r() * TAU, rr = 10 + r() * 16; hull(kinds[(seed + i * 3) % kinds.length], new TH.Vector3(Math.cos(a) * rr, -3 + r() * 8, Math.sin(a) * rr), 3.4 + r() * 1.4, LITE ? 2 : 4); }
+  if (kill || wake) { const a = r() * TAU; if (kill) {""")
+rep("""    const core = new TH.Sprite(W.additive(glowTex("255,110,40", 1), 0xff7a30, .95)); core.scale.setScalar(R * 1.6); core.position.set(R * .35, R * .15, R * .2); d.g.add(core); d.core = core; d.R = R;""",
+    """    const core = new TH.Sprite(W.additive(glowTex(purple ? "200,110,255" : "255,110,40", 1), purple ? 0xc77dff : 0xff7a30, .95)); core.scale.setScalar(R * 1.6); core.position.set(R * .35, R * .15, R * .2); d.g.add(core); d.core = core; d.R = R; }""")
+rep("""      const hot = clamp((c - .18) / .12, 0, 1), k = .2 + .08 * Math.sin(11 * v.x + 5 * v.z); cols[i * 3] = k + hot * .5; cols[i * 3 + 1] = k * .9 + hot * .12; cols[i * 3 + 2] = k * .85; }""",
+    """      const hot = clamp((c - .18) / .12, 0, 1), k = .2 + .08 * Math.sin(11 * v.x + 5 * v.z); cols[i * 3] = k + hot * (purple ? .35 : .5); cols[i * 3 + 1] = k * .9 + hot * (purple ? .05 : .12); cols[i * 3 + 2] = k * .85 + (purple ? hot * .55 : 0); }""")
+rep("""    const lava = texCanvas(256, 256, x => { const g = x.createRadialGradient(128, 128, 6, 128, 128, 128); g.addColorStop(0, "rgba(255,240,190,1)"); g.addColorStop(.3, "rgba(255,150,40,1)"); g.addColorStop(.7, "rgba(200,40,10,.95)"); g.addColorStop(1, "rgba(60,8,4,0)");""",
+    """    const lava = texCanvas(256, 256, x => { const g = x.createRadialGradient(128, 128, 6, 128, 128, 128); g.addColorStop(0, purple ? "rgba(250,230,255,1)" : "rgba(255,240,190,1)"); g.addColorStop(.3, purple ? "rgba(205,120,255,1)" : "rgba(255,150,40,1)"); g.addColorStop(.7, purple ? "rgba(120,30,200,.95)" : "rgba(200,40,10,.95)"); g.addColorStop(1, purple ? "rgba(40,6,70,0)" : "rgba(60,8,4,0)");""")
+rep("""    const halo = new TH.Sprite(W.additive(glowTex("255,120,50", 1), 0xff7a30, .55));""", """    const halo = new TH.Sprite(W.additive(glowTex(purple ? "190,100,255" : "255,120,50", 1), purple ? 0xb45cff : 0xff7a30, .55));""")
+rep("""    const pr = 7 + r() * 2, b2 = a + Math.PI * (.7 + r() * .6);""", """    const pr = wake ? 5 + r() * 2 : 7 + r() * 2, b2 = a + Math.PI * (.7 + r() * .6);""")
+# picking: Devourer wake marks join; sets pooled per type and theme
+rep("""const L = wbScars(T).filter(s => !s.a && Math.hypot(""", """const L = wbScars(T).filter(s => (!s.a || s.k === "dev") && Math.hypot(""")
+rep("""L.sort((a, b) => (b.b || 0) - (a.b || 0) || Math.hypot(""", """L.sort((a, b) => (b.b || 0) - (a.b || 0) || (a.a || 0) - (b.a || 0) || Math.hypot(""")
+rep("""  for (const s of X.pick) { let S = X.sets.find(S => !used.has(S) && S.site === s.k + s.at) || X.sets.find(S => !used.has(S) && S.kill === !!s.b && !X.pick.some(q => q.k + q.at === S.site));
+    if (!S && X.sets.length < (MOBILE ? 2 : FX_LITE() ? 2 : 3)) { S = wbWreckSet(W, !!s.b, 1 + hash(s.k + ":" + s.at) % 99991); X.sets.push(S); }""",
+    """  for (const s of X.pick) { const ty = s.b ? "kill" : s.a ? "wake" : "fight", pu = s.k === "dev"; let S = X.sets.find(S => !used.has(S) && S.site === s.k + s.at) || X.sets.find(S => !used.has(S) && S.type === ty && S.purple === pu && !X.pick.some(q => q.k + q.at === S.site));
+    if (!S && X.sets.length < (MOBILE ? 3 : 6)) { S = wbWreckSet(W, !!s.b, 1 + hash(s.k + ":" + s.at) % 99991, ty, pu); X.sets.push(S); }""")
+rep("fireTick(d.fires[k], t, V.copy(lp).applyMatrix4(d.g.matrix), d.fs * d.k * (.35 + .3 * heat));", "fireTick(d.fires[k], t, V.copy(lp).applyMatrix4(d.g.matrix), Math.min(2.6, d.fs * d.k * (.35 + .3 * heat)));") # no balloon-sized flames on big hulls
+t = t.replace("const GAME_V = 416;", "const GAME_V = 417;")
+open(p, "w").write(t); print("ok")
