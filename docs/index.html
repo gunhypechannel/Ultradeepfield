@@ -3655,7 +3655,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 416;
+const GAME_V = 417;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5350,33 +5350,34 @@ function wbScars(T) { const st = wbState(T), out = [];
     for (let tk = Math.ceil((T - WB_SCAR_MS) / step) * step; tk <= T; tk += step) { if (!wbOn(key, tk) || (wbCycOf(key, tk) === stCyc(st, key) && st.dead[key] && st.dead[key] < tk)) continue; const q = wbPos(key, tk, {}); out.push({ k: key, at: tk, x: q.x, y: q.y, z: q.z, a: 1 }); } }
   return out; }
 /* v415 boss wreck sites: real hulls, a destroyed Cube Destroyer and a shattered planetoid */
-function wbWreckSet(W, kill, seed) { const LITE = MOBILE || FX_LITE(), DK = debrisKit(W), r = cwRnd(seed), grp = new TH.Group(); grp.visible = false; W.add(grp);
-  const S = { grp, kill, ders: [], fires: [], spin: [], V: new TH.Vector3(), site: null };
+function wbWreckSet(W, kill, seed, type, purple) { const LITE = MOBILE || FX_LITE(), DK = debrisKit(W), r = cwRnd(seed), grp = new TH.Group(); grp.visible = false; W.add(grp); type = type || (kill ? "kill" : "fight");
+  const S = { grp, kill, type, purple: !!purple, ders: [], fires: [], spin: [], V: new TH.Vector3(), site: null }; const wake = type === "wake"; /* v417 the Devourer's wake; its sites glow purple */
   const char = g => { g.userData.noBatch = 1; const done = new Map(); g.traverse(o => { if (!o.isMesh || !o.material || Array.isArray(o.material) || o.material.emissive === undefined) return;
-    let m = done.get(o.material); if (!m) { m = o.material.clone(); m.color.multiplyScalar(.4); m.roughness = Math.min(1, (m.roughness || .5) + .25); m.emissive.set(0xffffff); m.emissiveMap = DK.emi; m.emissiveIntensity = 1.4; done.set(o.material, m); } o.material = m; }); };
+    let m = done.get(o.material); if (!m) { m = o.material.clone(); m.color.multiplyScalar(.4); m.roughness = Math.min(1, (m.roughness || .5) + .25); m.emissive.set(purple ? 0xc77dff : 0xffffff); m.emissiveMap = DK.emi; m.emissiveIntensity = purple ? 1.9 : 1.4; m.envMapIntensity = (m.envMapIntensity == null ? 1 : m.envMapIntensity) * .3; if (m.metalness != null) m.metalness *= .55; if (m.clearcoat) m.clearcoat = 0; done.set(o.material, m); } o.material = m; }); };
   const kinds = ["battleship", "dreadnought", "supercarrier", "destroyer", "bastion", "escortCarrier", "lancer", "corvette"], nd = kill ? (LITE ? 2 : 3) : (LITE ? 1 : 2);
   const hull = (k, p, sc, nf) => { let g; if (k === "worldbreaker") { const sh = buildShip(k, shipMats("#ff3b30")); sh.traverse(c => { if (c.userData && c.userData.fx) c.visible = false; }); const b0 = new TH.Box3().setFromObject(sh), s0 = b0.getSize(new TH.Vector3()); g = new TH.Group(); sh.scale.setScalar(2 / Math.max(s0.x, s0.y, s0.z)); sh.position.copy(b0.getCenter(new TH.Vector3())).multiplyScalar(-sh.scale.x); g.add(sh); }
-    else { g = fleet3D(W, { [k]: 1 }, 0x3a2a20, false); if (g.userData.eng) g.userData.eng.visible = false; } char(g); grp.add(g); g.updateMatrixWorld(true);
+    else { g = k === "flagship" ? fleet3D(W, { battleship: 1 }, 0x3a2a20, false, false, false, DEMO_FAC[seed % DEMO_FAC.length]) : fleet3D(W, { [k]: 1 }, 0x3a2a20, false); if (g.userData.eng) g.userData.eng.visible = false; } char(g); grp.add(g); g.updateMatrixWorld(true);
     const bb = new TH.Box3().setFromObject(g), sz = bb.getSize(new TH.Vector3()), d = { g, p, e: [r() * TAU, r() * TAU, r() * TAU], s: [(r() - .5) * 4e-5, (r() - .5) * 3e-5, (r() - .5) * 2e-5], k: sc, fl: [], fires: [], fs: Math.max(sz.x, sz.y, sz.z) * .22 };
-    for (let i = 0; i < nf; i++) { const q = new TH.Vector3(bb.min.x + r() * sz.x, bb.min.y + r() * sz.y, bb.min.z + r() * sz.z), ax = (r() * 3) | 0; q.setComponent(ax, r() < .5 ? bb.min.getComponent(ax) : bb.max.getComponent(ax)); d.fl.push(q); d.fires.push(fireSprite(W, grp, DK)); }
+    for (let i = 0; i < nf; i++) { const q = new TH.Vector3(bb.min.x + r() * sz.x, bb.min.y + r() * sz.y, bb.min.z + r() * sz.z), ax = (r() * 3) | 0; q.setComponent(ax, r() < .5 ? bb.min.getComponent(ax) : bb.max.getComponent(ax)); d.fl.push(q); const f = fireSprite(W, grp, DK); if (purple) f.material.color.set(0xe8c2ff); d.fires.push(f); }
     S.ders.push(d); return d; };
-  for (let i = 0; i < nd; i++) { const a = r() * TAU, rr = 10 + r() * 16; hull(kinds[(seed + i * 3) % kinds.length], new TH.Vector3(Math.cos(a) * rr, -3 + r() * 8, Math.sin(a) * rr), 3.4 + r() * 1.4, LITE ? 2 : 4); }
-  if (kill) { // a destroyed Cube Destroyer: charred, a slab of its shell blown off, its core glowing through the wound
+  if (wake) { const a = r() * TAU; hull("flagship", new TH.Vector3(Math.cos(a) * 8, 0, Math.sin(a) * 8), 3.6, LITE ? 3 : 6); }
+  else for (let i = 0; i < nd; i++) { const a = r() * TAU, rr = 10 + r() * 16; hull(kinds[(seed + i * 3) % kinds.length], new TH.Vector3(Math.cos(a) * rr, -3 + r() * 8, Math.sin(a) * rr), 3.4 + r() * 1.4, LITE ? 2 : 4); }
+  if (kill || wake) { const a = r() * TAU; if (kill) { // a destroyed Cube Destroyer: charred, a slab of its shell blown off, its core glowing through the wound
     const a = r() * TAU, d = hull("worldbreaker", new TH.Vector3(Math.cos(a) * 16, 3, Math.sin(a) * 16), 5.5, LITE ? 3 : 6); d.g.updateMatrixWorld(true); const bb = new TH.Box3().setFromObject(d.g), R = Math.max(bb.max.x - bb.min.x, bb.max.y - bb.min.y) * .5;
     const slab = new TH.Mesh(new TH.SphereGeometry(R * 1.01, 16, 10, 0, 1.3, .9, 1.1), DK.mat); slab.userData.off = new TH.Vector3(R * .9, R * .4, R * .5); d.g.add(slab); slab.position.copy(slab.userData.off); slab.rotation.set(.3, -.4, .2); d.slab = slab;
-    const core = new TH.Sprite(W.additive(glowTex("255,110,40", 1), 0xff7a30, .95)); core.scale.setScalar(R * 1.6); core.position.set(R * .35, R * .15, R * .2); d.g.add(core); d.core = core; d.R = R;
+    const core = new TH.Sprite(W.additive(glowTex(purple ? "200,110,255" : "255,110,40", 1), purple ? 0xc77dff : 0xff7a30, .95)); core.scale.setScalar(R * 1.6); core.position.set(R * .35, R * .15, R * .2); d.g.add(core); d.core = core; d.R = R; }
     // a shattered planetoid: a world with a bite carved out of it, magma glowing in the wound, rubble round it
     const pg = new TH.IcosahedronGeometry(1, LITE ? 3 : 4), pa = pg.attributes.position, v = new TH.Vector3(), cut = new TH.Vector3(.55, .35, .76).normalize(), cols = new Float32Array(pa.count * 3);
     for (let i = 0; i < pa.count; i++) { v.fromBufferAttribute(pa, i); const n = 1 + .05 * (Math.sin(7 * v.x) + Math.sin(9 * v.y + 1) + Math.sin(8 * v.z + 2)) / 3 + .025 * Math.sin(23 * v.x + 17 * v.y), c = v.dot(cut);
       if (c > .28) v.addScaledVector(cut, -(c - .28) * (1 + .12 * Math.sin(31 * v.x + 13 * v.z))); v.multiplyScalar(n); pa.setXYZ(i, v.x, v.y, v.z);
-      const hot = clamp((c - .18) / .12, 0, 1), k = .2 + .08 * Math.sin(11 * v.x + 5 * v.z); cols[i * 3] = k + hot * .5; cols[i * 3 + 1] = k * .9 + hot * .12; cols[i * 3 + 2] = k * .85; }
+      const hot = clamp((c - .18) / .12, 0, 1), k = .2 + .08 * Math.sin(11 * v.x + 5 * v.z); cols[i * 3] = k + hot * (purple ? .35 : .5); cols[i * 3 + 1] = k * .9 + hot * (purple ? .05 : .12); cols[i * 3 + 2] = k * .85 + (purple ? hot * .55 : 0); }
     pg.setAttribute("color", new TH.BufferAttribute(cols, 3)); pg.computeVertexNormals();
     const planet = new TH.Mesh(pg, new TH.MeshStandardMaterial({ vertexColors: true, roughness: .95, metalness: .05, flatShading: true }));
-    const lava = texCanvas(256, 256, x => { const g = x.createRadialGradient(128, 128, 6, 128, 128, 128); g.addColorStop(0, "rgba(255,240,190,1)"); g.addColorStop(.3, "rgba(255,150,40,1)"); g.addColorStop(.7, "rgba(200,40,10,.95)"); g.addColorStop(1, "rgba(60,8,4,0)"); x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+    const lava = texCanvas(256, 256, x => { const g = x.createRadialGradient(128, 128, 6, 128, 128, 128); g.addColorStop(0, purple ? "rgba(250,230,255,1)" : "rgba(255,240,190,1)"); g.addColorStop(.3, purple ? "rgba(205,120,255,1)" : "rgba(255,150,40,1)"); g.addColorStop(.7, purple ? "rgba(120,30,200,.95)" : "rgba(200,40,10,.95)"); g.addColorStop(1, purple ? "rgba(40,6,70,0)" : "rgba(60,8,4,0)"); x.fillStyle = g; x.fillRect(0, 0, 256, 256);
       x.strokeStyle = "rgba(30,6,4,.85)"; x.lineWidth = 3; const rr = cwRnd(77); for (let i = 0; i < 26; i++) { x.beginPath(); let px = 128, py = 128; x.moveTo(px, py); const a0 = rr() * TAU; for (let k = 0; k < 6; k++) { px += Math.cos(a0 + (rr() - .5) * 1.2) * 20; py += Math.sin(a0 + (rr() - .5) * 1.2) * 20; x.lineTo(px, py); } x.stroke(); } });
     const disc = new TH.Mesh(new TH.CircleGeometry(.93, 40), new TH.MeshBasicMaterial({ map: lava, transparent: true, toneMapped: false, depthWrite: false })); disc.position.copy(cut).multiplyScalar(.285); disc.lookAt(cut.clone().multiplyScalar(2)); planet.add(disc);
-    const halo = new TH.Sprite(W.additive(glowTex("255,120,50", 1), 0xff7a30, .55)); halo.position.copy(cut).multiplyScalar(.6); halo.scale.setScalar(1.9); planet.add(halo);
-    const pr = 7 + r() * 2, b2 = a + Math.PI * (.7 + r() * .6); planet.scale.setScalar(pr); planet.position.set(Math.cos(b2) * 22, -6 + r() * 4, Math.sin(b2) * 22); planet.rotation.set(r(), r() * TAU, r()); grp.add(planet); S.planet = planet; S.pspin = (r() < .5 ? -1 : 1) * 2e-5;
+    const halo = new TH.Sprite(W.additive(glowTex(purple ? "190,100,255" : "255,120,50", 1), purple ? 0xb45cff : 0xff7a30, .55)); halo.position.copy(cut).multiplyScalar(.6); halo.scale.setScalar(1.9); planet.add(halo);
+    const pr = wake ? 5 + r() * 2 : 7 + r() * 2, b2 = a + Math.PI * (.7 + r() * .6); planet.scale.setScalar(pr); planet.position.set(Math.cos(b2) * 22, -6 + r() * 4, Math.sin(b2) * 22); planet.rotation.set(r(), r() * TAU, r()); grp.add(planet); S.planet = planet; S.pspin = (r() < .5 ? -1 : 1) * 2e-5;
     const rocks = new TH.InstancedMesh(new TH.IcosahedronGeometry(1, 0), new TH.MeshStandardMaterial({ color: 0x5a4a44, roughness: 1, flatShading: true }), LITE ? 16 : 36); rocks.frustumCulled = false; grp.add(rocks); S.rocks = rocks; S.rk = [];
     for (let i = 0; i < rocks.count; i++) S.rk.push({ a: r() * TAU, d: pr * (1.15 + r() * .9), y: (r() - .5) * pr * .5, k: .25 + r() * r() * 1.3, w: (r() < .5 ? -1 : 1) * TAU / (200000 + r() * 300000), e: r() * TAU }); }
   // torn hull plates and girders drifting through the site
@@ -5384,16 +5385,16 @@ function wbWreckSet(W, kill, seed) { const LITE = MOBILE || FX_LITE(), DK = debr
   S.plates.forEach(im => { for (let j = 0; j < im.count; j++) { const a = r() * TAU, rr = 6 + Math.sqrt(r()) * 30; S.pl.push({ im, j, p: new TH.Vector3(Math.cos(a) * rr, -6 + r() * 12, Math.sin(a) * rr), e: [r() * TAU, r() * TAU, r() * TAU], s: [(r() - .5) * 3e-4, (r() - .5) * 3e-4, (r() - .5) * 2e-4], k: .35 + r() * r() * 1.3 }); } });
   return S; }
 function wbWrecks(W, t, T) { const X = W.wbWk || (W.wbWk = { sets: [], at: 0, pick: [] }), cam = W.camera.position;
-  if (t - X.at > 1000) { X.at = t; const L = wbScars(T).filter(s => !s.a && Math.hypot(s.x - cam.x, s.y - cam.y, s.z - cam.z) < (MOBILE ? 450 : 700)); L.sort((a, b) => (b.b || 0) - (a.b || 0) || Math.hypot(a.x - cam.x, a.z - cam.z) - Math.hypot(b.x - cam.x, b.z - cam.z));
+  if (t - X.at > 1000) { X.at = t; const L = wbScars(T).filter(s => (!s.a || s.k === "dev") && Math.hypot(s.x - cam.x, s.y - cam.y, s.z - cam.z) < (MOBILE ? 450 : 700)); L.sort((a, b) => (b.b || 0) - (a.b || 0) || (a.a || 0) - (b.a || 0) || Math.hypot(a.x - cam.x, a.z - cam.z) - Math.hypot(b.x - cam.x, b.z - cam.z));
     const NS = MOBILE ? 1 : FX_LITE() ? 2 : 3; X.pick = L.slice(0, NS); }
   if (reduced || !X.pick.length) { for (const S of X.sets) S.grp.visible = false; return; }
   const used = new Set();
-  for (const s of X.pick) { let S = X.sets.find(S => !used.has(S) && S.site === s.k + s.at) || X.sets.find(S => !used.has(S) && S.kill === !!s.b && !X.pick.some(q => q.k + q.at === S.site));
-    if (!S && X.sets.length < (MOBILE ? 2 : FX_LITE() ? 2 : 3)) { S = wbWreckSet(W, !!s.b, 1 + hash(s.k + ":" + s.at) % 99991); X.sets.push(S); }
+  for (const s of X.pick) { const ty = s.b ? "kill" : s.a ? "wake" : "fight", pu = s.k === "dev"; let S = X.sets.find(S => !used.has(S) && S.site === s.k + s.at) || X.sets.find(S => !used.has(S) && S.type === ty && S.purple === pu && !X.pick.some(q => q.k + q.at === S.site));
+    if (!S && X.sets.length < (MOBILE ? 3 : 6)) { S = wbWreckSet(W, !!s.b, 1 + hash(s.k + ":" + s.at) % 99991, ty, pu); X.sets.push(S); }
     if (!S) continue; used.add(S); S.site = s.k + s.at;
     const age = clamp((T - s.at) / WB_SCAR_MS, 0, 1), heat = clamp(1 - (T - s.at) / (12 * 3600e3), .15, 1), V = S.V; S.grp.visible = true; S.grp.position.set(s.x, s.y, s.z);
     for (const d of S.ders) { d.g.position.copy(d.p); d.g.rotation.set(d.e[0] + T * d.s[0], d.e[1] + T * d.s[1], d.e[2] + T * d.s[2]); d.g.scale.setScalar(d.k);
-      d.g.updateMatrix(); d.fl.forEach((lp, k) => { if (k / d.fl.length > heat + .2) { d.fires[k].visible = false; return; } fireTick(d.fires[k], t, V.copy(lp).applyMatrix4(d.g.matrix), d.fs * d.k * (.35 + .3 * heat)); });
+      d.g.updateMatrix(); d.fl.forEach((lp, k) => { if (k / d.fl.length > heat + .2) { d.fires[k].visible = false; return; } fireTick(d.fires[k], t, V.copy(lp).applyMatrix4(d.g.matrix), Math.min(2.6, d.fs * d.k * (.35 + .3 * heat))); });
       if (d.slab) { const u = ((T - s.at) / 3600e3) % 1e3; d.slab.position.copy(d.slab.userData.off).multiplyScalar(1 + Math.min(.6, u * .02)); d.core.material.opacity = (.5 + .45 * heat) * (.85 + .15 * Math.sin(t * .005)); } }
     if (S.planet) { S.planet.rotation.y += S.pspin * 16; const P = S.planet.position, m4 = S.m4 || (S.m4 = new TH.Matrix4()), q = S.q || (S.q = new TH.Quaternion()), e = S.e || (S.e = new TH.Euler()), sc = S.sc || (S.sc = new TH.Vector3());
       S.rk.forEach((o, i) => { const a = o.a + T * o.w; V.set(P.x + Math.cos(a) * o.d, P.y + o.y, P.z + Math.sin(a) * o.d); q.setFromEuler(e.set(o.e + T * 1e-4, o.e * 2, a)); sc.setScalar(o.k); m4.compose(V, q, sc); S.rocks.setMatrixAt(i, m4); }); S.rocks.instanceMatrix.needsUpdate = true; }
