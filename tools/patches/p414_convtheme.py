@@ -10,4 +10,5 @@ t = t[:i] + """function convTheme() { const want = convWant(), c = AU.ctx; if (!
   if (!AU.conv) { const out = c.createGain(); out.gain.value = 0; out.connect(AU.master); const src = c.createBufferSource(); src.buffer = AU.convBuf; src.loop = true; src.connect(out); src.start(); AU.conv = { out, src }; AU.cduck = 0; applyAudio(); }
   AU.conv.out.gain.setTargetAtTime(AU.musicOn && !AU.muted ? .12 * gainOf(AU.mv) / gainOf(50) * (AU.duck || 1) : 0, c.currentTime, AU.conv.on ? .3 : 2); AU.conv.on = 1; }
 """ + t[j:]
+n = t.count("(AU.cduck || 1)"); assert n == 2, n; t = t.replace("(AU.cduck || 1)", "(AU.cduck == null ? 1 : AU.cduck)") # 0 must mute the song
 open(p, "w").write(t); print("ok")
