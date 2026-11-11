@@ -2651,10 +2651,10 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
     const spine = t => { const T = t * .001;
       for (let i = 0; i < NN; i++) { const u = i / (NN - 1), up = 1 - u; // 0 head end .. 1 chest
         const lx = Math.sin(T * .55 + u * 1.6) * .9 * up * (1 - st.lift * .6) + st.sway * up * 2.2, ly = 7.6 + up * (6.2 + st.lift * 2.4) - Math.pow(up, 2) * 1.4 * (1 - st.lift), lz = 2.1 + up * (4.6 - st.lift * 1.7) - st.recoil * up * up * 1.8 + st.look * up * 1.2;
-        P[i].set(lx, ly, lz); SC[i] = 1.05 + u * .95; }
-      for (let i = 0; i < NT; i++) { const u = i / (NT - 1), k = NN + i; P[k].set(Math.sin(T * .4) * .15 * (1 - u), 6.6 - u * 8.2 + Math.sin(T * .7) * .12, 1.7 - u * 2.9 + st.beat * .15); SC[k] = 2.4 + Math.sin(u * Math.PI) * 1.1 - u * .35; }
+        P[i].set(lx, ly, lz); SC[i] = 1.35 + u * 1.15; }
+      for (let i = 0; i < NT; i++) { const u = i / (NT - 1), k = NN + i; P[k].set(Math.sin(T * .4) * .15 * (1 - u), 6.6 - u * 8.2 + Math.sin(T * .7) * .12, 1.7 - u * 2.9 + st.beat * .15); SC[k] = 3.0 + Math.sin(u * Math.PI) * 1.3 - u * .4; }
       for (let i = 0; i < NL; i++) { const u = (i + 1) / NL, k = NN + NT + i, a = u * (3.3 + st.curl * 1.4) + Math.sin(T * .6 + u * 4) * .35 * u + st.coil * u * 1.2, R = 3.4 + u * 6.5;
-        P[k].set(Math.sin(T * .5 + u * 5) * u * 2.4 + Math.sin(a) * u * 4.5, -2.0 - Math.sin(a) * R * .55 - u * 2, -1.6 - (1 - Math.cos(a)) * R * .6 - u * 1.5); SC[k] = 2.0 * (1 - u * .86); }
+        P[k].set(Math.sin(T * .5 + u * 5) * u * 2.4 + Math.sin(a) * u * 4.5, -2.0 - Math.sin(a) * R * .55 - u * 2, -1.6 - (1 - Math.cos(a)) * R * .6 - u * 1.5); SC[k] = 2.5 * (1 - u * .86); }
       P[N].copy(P[N - 1]).multiplyScalar(2).sub(P[N - 2]); };
     /* ---- the head: a long armoured skull, gold crown of swept horns and a forehead blade, a hinged jaw full of teeth, violet-white eyes ---- */
     const head = new TH.Group(); body.add(head); const hd = new TH.Group(); head.add(hd); hd.scale.setScalar(1.25);
@@ -2674,7 +2674,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
     // the beam (in the model's own frame, used by the close-up viewer; the galaxy map draws its own at world scale)
     const lens = new TH.Group(); mouth.add(lens); lens.visible = false; const bm = [];
     for (const [r, o, c] of [[2.4, .2, 0x8a40ff], [1.3, .42, 0xc890ff], [.5, .8, 0xf4e8ff]]) { const g = new TH.CylinderGeometry(r * .8, r, 80, 18, 1, true); g.translate(0, 40, 0); g.rotateX(Math.PI / 2); const m = new TH.Mesh(g, glowMat(c, o)); m.userData.dyn = 1; lens.add(m); bm.push([m, o]); }
-    const halos = []; for (let k = 0; k < 5; k++) { const h = new TH.Mesh(new TH.TorusGeometry(3, .12, 6, 40), glowMat(0xe8d0ff, .8)); h.userData.dyn = 1; lens.add(h); halos.push(h); }
+    const halos = []; for (let k = 0; k < 5; k++) { const h = new TH.Mesh(new TH.TorusGeometry(1.9, .05, 5, 36), glowMat(0xe8d0ff, .6)); h.userData.dyn = 1; lens.add(h); halos.push(h); }
     /* ---- the chest core and the forelimbs: gold pauldrons, armoured arms, gold vambraces, four-taloned claws ---- */
     const core = new TH.Group(); core.position.set(0, 4.4, 3.45); body.add(core);
     { const c = new TH.Mesh(new TH.SphereGeometry(.85, 18, 12), CORE); core.add(c); const rr = runeRing(1.9, 0xd8a0ff, .85); core.add(rr); core.userData.rr = rr; const ring = new TH.Mesh(new TH.TorusGeometry(1.25, .16, 6, 32), MG); core.add(ring);
@@ -2696,7 +2696,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       x.globalAlpha = 1; for (let i = 0; i < 160; i++) { x.fillStyle = `rgba(255,${200 + rnd() * 55 | 0},255,${.3 + rnd() * .6})`; x.fillRect(rnd() * N2, rnd() * N2, 1.2, 1.2); } });
     const memM = new TH.MeshBasicMaterial({ map: memT, color: 0xffffff, transparent: true, opacity: .45, side: TH.DoubleSide, depthWrite: false, blending: TH.AdditiveBlending, toneMapped: false });
     const wings = []; for (const sx of [-1, 1]) { const root = new TH.Group(); root.position.set(sx * 1.8, 6.6, -.4); body.add(root); const w = new TH.Group(); root.add(w);
-      const J = [V(0, 0, 0), V(sx * 6, 6.5, -2.4), V(sx * 11.5, 11.5, -4.4)], tips = [V(sx * 19, 20, -8), V(sx * 24, 13, -9), V(sx * 24, 5, -8.5), V(sx * 20, -1, -7), V(sx * 12, -4.5, -4.5)];
+      const J = [V(0, 0, 0), V(sx * 6, 6.5, -.8), V(sx * 11.5, 11.5, -1.6)], tips = [V(sx * 19, 20, -2.6), V(sx * 24, 13, -3), V(sx * 24, 5, -2.6), V(sx * 20, -1, -2), V(sx * 12, -4.5, -1.2)];
       w.add(strut(J[0], J[1], .55, .42, MG, 6)); w.add(strut(J[1], J[2], .42, .32, MG, 6)); for (const tp of tips) w.add(strut(J[2], tp, .26, .06, MG, 5));
       for (const j of [J[1], J[2]]) { const s = shard(.35, 2.2, MS); s.position.copy(j); s.rotation.set(-.5, 0, sx * -.6); w.add(s); const k = new TH.Mesh(new TH.SphereGeometry(.5, 8, 6), MG); k.position.copy(j); w.add(k); }
       for (let k = 0; k < 6; k++) { const f = k / 5, s = shard(.12, .9, MG); s.position.lerpVectors(J[0], J[1], f); s.position.y += .45; s.rotation.z = sx * -.3; w.add(s); }
@@ -2707,7 +2707,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       const mg = new TH.BufferGeometry(); mg.setAttribute("position", new TH.Float32BufferAttribute(pos, 3)); mg.setAttribute("uv", new TH.Float32BufferAttribute(uv, 2)); mg.computeVertexNormals(); const mem = new TH.Mesh(mg, memM); mem.userData.dyn = 1; w.add(mem);
       wings.push({ sx, root, w, tips: tips.map(p => p.clone()), J }); }
     /* ---- the celestial wheel ---- */
-    const wheel = new TH.Group(); wheel.position.set(0, 10.5, -7.5); wheel.rotation.y = .18; body.add(wheel); const WR = 14.5;
+    const wheel = new TH.Group(); wheel.position.set(0, 11, -11); wheel.rotation.y = .12; body.add(wheel); const WR = 14.5;
     const runeShader = (R, col, op, w0 = .64) => { const m = new TH.ShaderMaterial({ uniforms: { map: { value: runeTex() }, uC: { value: new TH.Color(col) }, uO: { value: op }, uSw: { value: 0 }, uHot: { value: 0 } }, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, side: TH.DoubleSide,
         vertexShader: "varying vec2 vU; varying vec2 vP; void main() { vU = uv; vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
         fragmentShader: "uniform sampler2D map; uniform vec3 uC; uniform float uO, uSw, uHot; varying vec2 vU; varying vec2 vP; void main() { float a = fract(atan(vP.x, vP.y) / 6.2831853 + 1.), lit = smoothstep(uSw, uSw - .04, a) * step(.001, uSw); vec4 t = texture2D(map, vU); float k = uO * (.35 + .65 * lit) * (1. + uHot * 1.6); gl_FragColor = vec4(mix(uC, vec3(1.), lit * .35 + uHot * .3) * t.a * k, t.a * k); }" });
@@ -2738,7 +2738,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
     // waves: a wing shockwave, the seal circles, judgment circles, the beam's shockwave rings
     const wingWave = wave(body, 12, false, 0xc890ff), sealC = runeShader(9, GOLD, .9, .5); sealC.rotation.x = -Math.PI / 2; sealC.position.set(0, -7, 16); sealC.visible = false; body.add(sealC);
     const judges = []; for (let k = 0; k < 4; k++) { const j = runeShader(2.2, GOLD, .95, .45); j.visible = false; wheel.add(j); const p = sprite(2.4, "rgba(255,225,160,1)", "vae_jp"); p.visible = false; body.add(p); judges.push({ j, p }); }
-    const shocks = []; for (let k = 0; k < 3; k++) { const m = new TH.Mesh(new TH.TorusGeometry(3, .25, 6, 48), glowMat(0xe8d0ff, 0)); m.userData.dyn = 1; m.visible = false; lens.add(m); shocks.push(m); }
+    const shocks = []; for (let k = 0; k < 3; k++) { const m = new TH.Mesh(new TH.TorusGeometry(2.4, .08, 5, 48), glowMat(0xe8d0ff, 0)); m.userData.dyn = 1; m.visible = false; lens.add(m); shocks.push(m); }
     const mv = moves({ claw: 1500, wing: 2400, judge: 3200, seal: 3600, rebirth: 3400, annihilate: 18000, hit: 520 }), hit = hitKit(body, shk), drv = {};
     const S = scr(), c1 = new TH.Color(), Q = new TH.Quaternion(), tmpO = new TH.Object3D();
     const f = (n, t) => drv[n] != null ? drv[n] : mv.f(n, t);
@@ -2748,7 +2748,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       const A = fa < 0 ? -1 : fa, warn = bell(A, 0, .06, .9, .97), runes = A < 0 ? 0 : ss(.12, .35, A), acc = bell(A, .35, .55, .7, .74), align = bell(A, .55, .64, .86, .92), fire = bell(A, .66, .685, .84, .88), after = bell(A, .86, .9, .97, 1);
       out.ph = A < 0 ? "idle" : A < .12 ? "warning" : A < .35 ? "runes" : A < .55 ? "accumulate" : A < .66 ? "align" : A < .86 ? "beam" : "aftermath"; out.dark = align * (1 - fire * .5) * .6;
       const spin = 1 + warn * 2 + runes * 3 + acc * 4 + align * 2 - after * 2.5, wob = out.stab.filter(x => !x).length;
-      st.spread = Math.max(warn, bell(fw, 0, .2, .8, 1)); st.beat = fw < 0 ? 0 : Math.sin(fw * Math.PI * 3) * (1 - fw); st.lift = Math.max(acc, align) * .9 + fire * .4 - after * .2; st.recoil = fire * (.8 + Math.sin(t * .03) * .1); st.sway = fire * Math.sin((A - .66) / .2 * Math.PI * 1.2 - .6) * .35;
+      st.spread = Math.max(warn, bell(fw, 0, .2, .8, 1)); st.beat = fw < 0 ? 0 : Math.sin(fw * Math.PI * 3) * (1 - fw); st.lift = Math.max(acc, align) * .9 * (1 - fire * .7) + fire * .15 - after * .2; st.recoil = fire * (.8 + Math.sin(t * .03) * .1); st.sway = fire * Math.sin((A - .66) / .2 * Math.PI * 1.2 - .6) * .35;
       st.coil = bell(fr, 0, .2, .8, 1) * .6 + warn * .2; st.curl = Math.sin(t * .0003) * .4; st.gape = Math.max(acc * .6, align * .85, fire, bell(fc, .2, .4, .7, .9) * .4, bell(fw, .3, .45, .6, .8) * .5);
       spine(t);
       for (let i = 0; i < N; i++) { const a = P[i], b = P[i + 1] || P[i]; S.v.subVectors(i < N ? P[i + 1] : P[i], i ? P[i - 1] : P[i]).normalize(); S.q.setFromUnitVectors(S.Z, S.v); const s = SC[i];
@@ -2756,22 +2756,22 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
         S.p.copy(a).addScaledVector(S.v, -s * .55); S.m.compose(S.p, S.q, S.s); seams.setMatrixAt(i, S.m);
         S.w.set(0, 1, 0).addScaledVector(S.v, -S.v.y).normalize(); Q.setFromUnitVectors(S.Y, S.w); if (i >= NN && i < NN + NT) Q.setFromUnitVectors(S.Y, tmpV.set(0, .2, -1).normalize()); S.s.setScalar(s * .75); S.p.copy(a).addScaledVector(S.w, s * .25); S.m.compose(S.p, Q, S.s); fins.setMatrixAt(i, S.m);
         let hot = 0; for (let k = 0; k < 2; k++) { const c = ((t * .00007 + k / 2) % 1) * N; hot = Math.max(hot, 1 - Math.min(1, Math.abs(i - c) / 2)); }
-        const g = .55 + .2 * Math.sin(t * .003 - i * .45) + acc * .6 + fire * .8 + hot * .3 + bell(fr, 0, .3, .7, 1) * .6; c1.setRGB(g * .62, g * .32, g * 1.0); seams.setColorAt(i, c1); }
+        const g = .08 + hot * .7 + acc * .35 + fire * .5 + bell(fr, 0, .3, .7, 1) * .5; c1.setRGB(g * .62, g * .32, g * 1.0); seams.setColorAt(i, c1); }
       for (const m of [segs, cols, seams, fins]) m.instanceMatrix.needsUpdate = true; seams.instanceColor.needsUpdate = true;
-      head.position.copy(P[0]); S.v.subVectors(P[0], P[1]).normalize(); head.quaternion.setFromUnitVectors(S.Z, S.v); head.rotateX(-.5 - st.lift * .5 + st.recoil * .18); head.rotateY(st.sway * .5); head.rotateZ(Math.sin(t * .0007) * .06);
+      head.position.copy(P[0]); body.updateMatrixWorld(); tmpV.copy(P[0]).add(tmpV2.set(st.sway * .9 + Math.sin(t * .0005) * .08, -.28 + st.lift * .75 - st.recoil * .12, 1)); body.localToWorld(tmpV); head.lookAt(tmpV); head.rotateZ(Math.sin(t * .0007) * .06);
       jaw.rotation.x = .08 + st.gape * .62 + Math.sin(t * .002) * .02;
       const eyeK = .55 + warn * .5 + align * 1.2 + fire * .6 + .1 * Math.sin(t * .004); eyes.forEach(e => { e.material.opacity = Math.min(1, eyeK); e.scale.setScalar(1.6 * (1 + align * 1.2 + fire * .6)); });
       const og = Math.max(acc * .55, align, fire * .8, after * .3 * (1 - after)); orb.material.opacity = og * .9; orb.scale.setScalar(.2 + og * 1.4 + fire * Math.sin(t * .05) * .15); orbS.material.opacity = og; orbS.scale.setScalar(3 + og * 7 + fire * 3);
       lens.visible = fire > .01; if (lens.visible) { bm.forEach(([m, o], k) => { m.material.opacity = o * fire * (.85 + rnd() * .15); m.scale.set(1 + Math.sin(t * .04 + k) * .06, 1 + Math.sin(t * .05 + k) * .06, Math.min(1, (A - .66) / .02)); });
-        halos.forEach((h, k) => { const z = ((t * .05 + k * 16) % 80); h.position.z = z; h.scale.setScalar(1 + z * .03); h.material.opacity = .8 * fire * (1 - z / 80); });
-        shocks.forEach((m, k) => { const q = ((t * .0016 + k / 3) % 1); m.visible = true; m.position.z = 2 + q * 10; m.scale.setScalar(1 + q * 5); m.material.opacity = (1 - q) * fire * .7; }); }
+        halos.forEach((h, k) => { const z = ((t * .05 + k * 16) % 80); h.position.z = z; h.scale.setScalar(1 + z * .012); h.material.opacity = .55 * fire * (1 - z / 80); });
+        shocks.forEach((m, k) => { const q = ((t * .0016 + k / 3) % 1); m.visible = true; m.position.z = 1 + q * 6; m.scale.setScalar(1 + q * 2.6); m.material.opacity = (1 - q) * fire * .5; }); }
       core.userData.rr.rotation.z = t * .0008; coreS.material.opacity = .55 + .25 * Math.sin(t * .003) + acc * .4 + bell(fr, 0, .3, .7, 1) * .5; coreS.scale.setScalar(7 * (1 + acc * .4 + fire * .3));
       // arms: idle breathing; the claw rakes forward and down, alternating
       const cl = fc < 0 ? 0 : fc; arms.forEach((a, k) => { const sw = k === (Math.floor(t / 4000) % 2) ? cl : 0, rake = Math.sin(ss(.15, .55, sw) * Math.PI) * 1.0 + bell(sw, .1, .3, .5, .8) * .4;
         a.up.rotation.set(-.15 + Math.sin(t * .0011 + k) * .06 - rake * 1.1 + align * .3, a.sx * (.1 - rake * .25), a.sx * (.15 + st.spread * .1)); a.el.rotation.set(.2 - rake * .6 + Math.sin(t * .0013 + k) * .05, 0, 0); a.hand.rotation.set(-.2 + rake * .9, 0, 0);
         a.trail.material.opacity = bell(sw, .2, .35, .55, .75); a.trail.scale.setScalar(4 + rake * 6); });
       // wings: folded half open at rest, flung wide for the warning and the wingstorm, beating in the storm
-      wings.forEach(W => { const sp = .35 + st.spread * .65; W.root.rotation.set(-.2 + st.beat * .25 + Math.sin(t * .0009) * .04, W.sx * (.85 - sp * .75), W.sx * (-.15 + st.beat * .5 - sp * .1)); W.w.scale.set(.75 + sp * .25, .85 + sp * .15, 1); });
+      wings.forEach(W => { const sp = .35 + st.spread * .65; W.root.rotation.set(-.1 + st.beat * .25 + Math.sin(t * .0009) * .04, W.sx * (.55 - sp * .5), W.sx * (-.1 + st.beat * .5 - sp * .1)); W.w.scale.set(.75 + sp * .25, .85 + sp * .15, 1); });
       memM.opacity = .36 + st.spread * .16 + acc * .12 + fire * .15; wingWave(fw < 0 ? -1 : ss(.35, 1, fw));
       // the wheel: majestic idle turn; it spins up through the charge, the rings counter-rotate, the runes ignite in sequence, then align
       const dt = Math.min(64, t - (out.lt || t)); out.lt = t; const crack = out.crack;
@@ -2794,6 +2794,117 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       sealC.visible = fs >= 0; if (sealC.visible) { const k = bell(fs, 0, .25, .8, 1); sealC.material.uniforms.uSw.value = Math.min(1.04, ss(0, .45, fs) * 1.04); sealC.material.uniforms.uO.value = k; sealC.rotation.z = t * .0006; sealC.scale.setScalar(1 + ss(0, .3, fs) * .4); }
       hit(bell(fx, 0, .05, .4, 1), t); };
     out.tick = tick; tick(0); bake(body); return out; }
+  /* ---------- Aexion, the Warform Sovereign (owner's art, assets/bosses/aexion/ref): one rigged machine with two poses. As a ship it is a
+     long silver-and-gunmetal dreadnought: a split prow, flank cannons, deck turrets, a rune halo standing on its deck, swept rear wings and
+     great engines at its stern. Every part of it is a part of the mech: the stern is its legs (the engines are in its heels, firing down
+     once it stands), the flank cannons its forearms, the prow its shoulder armour, the deck turrets its shoulder cannons, the halo rises
+     behind its head, the wings become the V behind its shoulders, and the hull plates close round the reactor in its chest.
+     transform (0..1) moves every joint from the ship pose to the mech pose in stages (activation, hull separation, limb deployment, core
+     alignment, weapons, reveal): nothing is swapped or hidden. Moves: broadside, missiles, rail, aegis, blade, lance, overdrive, hit.
+     form is 0 (ship) .. 1 (Warform); drive(name, f) pins a move to a progress, as on Vaelthar. ---------- */
+  function aexion() { const grp = new TH.Group(), shk = new TH.Group(), body = new TH.Group(); grp.add(shk); shk.add(body);
+    const LO = LOD === 1, RC = [.3, .62, 1], BLUE = 0x58b8ff;
+    const MA = hullMat("aex", { rows: 3, pal: ["#7c8592", "#6c7482", "#8e97a4", "#5e6672", "#868e9a"], bronze: 0, slits: .42, sc: "#d8f4ff", sg: "#3aa8ff", metal: .92, rough: .3, rc: RC, ei: 3.4, rep: [.14, .14], relief: 2.2 }); MA.envMapIntensity = .85;
+    const MD = hullMat("aexd", { rows: 4, pal: ["#141a25", "#1a2130", "#10151e", "#222a38"], bronze: 0, slits: .55, sc: "#cfefff", sg: "#2a90ff", metal: .9, rough: .34, rc: RC, ei: 3.6, rep: [.16, .16] });
+    const MR = hullMat("aexr", { rows: 4, cols: 6, pal: ["#20242c"], bronze: 0, slits: 1, sc: "#ffd0c0", sg: "#ff4a3a", metal: .9, rough: .3, rc: [1, .4, .3], ei: 3.2, rep: [.4, .4] });
+    const CORE = new TH.MeshBasicMaterial({ color: 0xe8f6ff, toneMapped: false }), GL = glowMat(BLUE, .85), GW = glowMat(0xcfeeff, .95);
+    // angular armour: a chamfered slab, and a pointed blade
+    const slab = (w, h, d, mat, ch = .35, tp = 1) => { const s = new TH.Shape(), x = w / 2, y = h / 2, c = Math.min(ch, x * .45, y * .45), xb = x * tp; s.moveTo(-xb + c, -y); s.lineTo(xb - c, -y); s.lineTo(xb, -y + c); s.lineTo(x, y - c); s.lineTo(x - c, y); s.lineTo(-x + c, y); s.lineTo(-x, y - c); s.lineTo(-xb, -y + c); s.closePath();
+      const g = new TH.ExtrudeGeometry(s, { depth: d, bevelEnabled: true, bevelThickness: Math.min(.14, d * .2), bevelSize: Math.min(.14, c * .5), bevelSegments: 1 }); g.translate(0, 0, -d / 2); return new TH.Mesh(g, mat); };
+    const spike = (w, h, d, mat) => { const s = new TH.Shape(); s.moveTo(-w / 2, 0); s.lineTo(w / 2, 0); s.lineTo(w * .22, h * .72); s.lineTo(0, h); s.lineTo(-w * .22, h * .72); s.closePath(); const g = new TH.ExtrudeGeometry(s, { depth: d, bevelEnabled: true, bevelThickness: Math.min(.12, d * .25), bevelSize: Math.min(.12, w * .08), bevelSegments: 1 }); g.translate(0, 0, -d / 2); return new TH.Mesh(g, mat); };
+    const glowBar = (w, h, d, mat = GL) => { const m = new TH.Mesh(new TH.BoxGeometry(w, h, d), mat); return m; };
+    const put = (par, m, p, r) => { m.position.set(...p); if (r) m.rotation.set(...r); par.add(m); return m; };
+    // the rig: each joint has a pivot, a ship pose, a mech pose and the stage window in which it moves
+    const joints = [], E = (x, y, z) => new TH.Quaternion().setFromEuler(new TH.Euler(x, y, z));
+    const J = (par, mechP, shipP, mechR, shipR, a, b, ease = 1) => { const g = new TH.Group(); par.add(g); const j = { g, mp: V(...mechP), sp: V(...(shipP || mechP)), mq: E(...(mechR || [0, 0, 0])), sq: E(...(shipR || mechR || [0, 0, 0])), a, b, ease }; joints.push(j); return g; };
+    /* the pelvis is the root: lying along the keel as a ship (torso forward, back up), upright as the mech */
+    const root = J(body, [0, 0, 0], [0, 1.5, 6], [0, 0, 0], [Math.PI / 2, 0, 0], .16, .5);
+    put(root, slab(5.2, 2.6, 3.4, MD), [0, 0, 0]); put(root, slab(3.4, 1.4, 3.8, MA), [0, -1.1, .2]); for (const sx of [-1, 1]) { put(root, slab(2.3, 3.6, .55, MA), [sx * 2.5, -1.8, 1.4], [.22, 0, sx * .12]); put(root, glowBar(.12, 2.6, .1), [sx * 2.5, -1.8, 1.75], [.22, 0, sx * .12]); }
+    const chest = J(root, [0, 1.6, 0], [0, 1.6, 0], [-.04, 0, 0], [0, 0, 0], .3, .6);
+    put(chest, slab(8.0, 6.4, 4.4, MD, .6, .62), [0, 3.5, 0]); put(chest, slab(4.0, 2.6, 3.2, MD, .35, .8), [0, .5, 0]); put(chest, slab(6.4, 1.3, 3.2, MA), [0, 6.7, -.2]); put(chest, slab(6.8, 5.2, 1.2, MA), [0, 4.0, -2.4]);
+    for (const sx of [-1, 1]) { put(chest, slab(3.8, 5.4, 1.1, MA, .5, .55), [sx * 2.3, 4.0, 2.05], [0, sx * -.28, 0]); put(chest, glowBar(.14, 4.4, .12), [sx * 1.15, 3.9, 2.45]); put(chest, slab(2.0, 1.8, 1.0, MA), [sx * 1.2, 1.2, 1.8], [.2, 0, 0]); put(chest, spike(1.2, 2.4, .5, MA), [sx * 3.4, 6.9, .4], [0, 0, sx * -.5]); }
+    put(chest, spike(1.6, 2.2, .6, MA), [0, 6.2, 2.1], [Math.PI, 0, 0]);
+    // the reactor, and the two hull plates that slide over it as the mech forms (open on the ship's belly)
+    const core = put(chest, new TH.Group(), [0, 4.3, 2.25]); { core.add(new TH.Mesh(new TH.SphereGeometry(.9, 18, 12), CORE)); const r = new TH.Mesh(new TH.TorusGeometry(1.25, .14, 6, 32), MA); core.add(r); const g = new TH.Mesh(new TH.TorusGeometry(1.55, .06, 4, 40), GL); g.userData.dyn = 1; core.add(g); core.userData.g = g; }
+    const coreS = sprite(6, "rgba(190,230,255,1)", "aex_core"); coreS.position.copy(core.position).add(V(0, 0, .6)); chest.add(coreS);
+    const plates = [-1, 1].map(sx => { const p = J(chest, [sx * 1.15, 4.3, 2.35], [sx * 2.9, 4.3, 2.0], [0, 0, 0], [0, sx * .55, 0], .58, .7); put(p, slab(2.1, 3.2, .55, MA), [0, 0, 0]); put(p, glowBar(.1, 2.6, .1), [-sx * .95, 0, .3]); return p; });
+    /* the head rises out of the chest; the prow halves cover it as a ship and swing out over the shoulders */
+    const head = J(chest, [0, 7.2, .2], [0, 4.7, -.4], [0, 0, 0], [0, 0, 0], .5, .66);
+    put(head, slab(2.0, 2.3, 2.3, MA), [0, 1.1, 0]); put(head, slab(1.4, .5, .5, GW), [0, 1.25, 1.2]); put(head, spike(.9, 3.4, .45, MA), [0, 2.0, -.2]);
+    for (const sx of [-1, 1]) { const h = put(head, spike(.8, 2.8, .4, MA), [sx * .9, 1.8, -.3], [0, 0, sx * -.7]); const c = put(head, new TH.Mesh(crescentGeo(1.6, .35, 1.0, .3), MA), [sx * .2, 2.6, -.4], [0, 0, 0]); c.scale.setScalar(.8); }
+    const eyes = [-1, 1].map(sx => { const e = sprite(1.4, "rgba(200,235,255,1)", "aex_eye"); e.position.set(sx * .42, 1.3, 1.25); head.add(e); return e; });
+    const prow = [-1, 1].map(sx => { const p = J(chest, [sx * 2.4, 6.8, .8], [sx * 1.0, 6.9, .9], [-.35, 0, sx * -2.25], [0, 0, sx * .1], .12, .32);
+      put(p, spike(3.2, 11, 1.3, MA), [-sx * .35, 0, 0], [0, 0, 0]); put(p, glowBar(.12, 7, .1), [-sx * .35, 3.4, .72]); put(p, slab(2.6, 2, 1.0, MD), [0, .6, -.2]); return p; });
+    /* arms: raised along the hull as the ship's flank cannons, lowered to the mech's sides */
+    const arms = [-1, 1].map(sx => { const sh = J(chest, [sx * 5.3, 5.6, 0], [sx * 4.2, 5.6, .2], [0, 0, sx * .2], [0, 0, sx * (Math.PI - .08)], .3, .56);
+      put(sh, slab(4.2, 3.0, 4.4, MA), [sx * 1.0, .7, 0]); put(sh, spike(1.4, 3.2, .6, MA), [sx * 1.9, 1.8, 0], [0, 0, sx * -.9]); put(sh, slab(2.2, 5.4, 2.4, MD, .35, .8), [0, -3.0, 0]); put(sh, slab(2.8, 3.0, 2.9, MA, .5, .8), [0, -2.0, .1]);
+      const el = J(sh, [0, -6, 0], [0, -6, 0], [-.4, 0, 0], [0, 0, 0], .45, .6);
+      put(el, slab(3.3, 6.2, 3.2, MA, .6, .72), [0, -3.0, .2]); put(el, slab(2.0, 4.2, 2.2, MD), [0, -3.2, -.5]); put(el, glowBar(.12, 4.4, .12), [sx * 1.5, -3.0, .4]); put(el, glowBar(.1, 3.6, .1), [-sx * 1.2, -3.2, 1.75]); put(el, glowBar(1.4, .1, .1), [0, -1.4, 1.85]);
+      const bar = []; for (const dx of [-.55, .55]) { const b = new TH.Mesh(new TH.CylinderGeometry(.3, .38, 5.4, 10), MD); b.position.set(sx * 1.55 + dx * .5, -3.8, 1.5 + (dx > 0 ? 0 : .02)); el.add(b); const m = new TH.Mesh(new TH.TorusGeometry(.34, .07, 5, 14), GL); m.rotation.x = Math.PI / 2; m.position.set(b.position.x, -6.5, b.position.z); m.userData.dyn = 1; el.add(m); const f = sprite(2.4, "rgba(170,220,255,1)", "aex_mz"); f.position.set(b.position.x, -7.0, b.position.z); f.material.opacity = 0; el.add(f); bar.push(f); }
+      const hand = J(el, [0, -6.3, .2], [0, -6.3, .2], [0, 0, 0], [0, 0, 0], .55, .62); put(hand, slab(1.9, 1.9, 1.9, MD), [0, -.9, 0]); for (let k = 0; k < 4; k++) put(hand, slab(.38, 1.3, .5, MA), [(k - 1.5) * .45, -2.0, .4], [.5, 0, 0]);
+      return { sx, sh, el, hand, bar }; });
+    // the Judgment Blade (right hand) and the Holographic Aegis (left forearm)
+    const RH = arms[1].hand, LF = arms[0].el; const sword = new TH.Group(); sword.position.set(0, -1.6, .2); sword.rotation.x = Math.PI / 2 + .25; RH.add(sword);
+    put(sword, new TH.Mesh(new TH.CylinderGeometry(.24, .24, 2.6, 8), MD), [0, 0, 0]); put(sword, slab(2.6, .4, .6, MA), [0, 1.3, 0]);
+    const blade = new TH.Group(); blade.position.y = 1.5; sword.add(blade); { const g1 = new TH.Mesh(new TH.BoxGeometry(.28, 1, 1.0), GW), g2 = new TH.Mesh(new TH.BoxGeometry(.9, 1.05, 2.0), glowMat(0x58b8ff, .45)), g3 = new TH.Mesh(new TH.BoxGeometry(1.8, 1.1, 3.4), glowMat(0x3a7aff, .16)); for (const g of [g1, g2, g3]) { g.geometry.translate(0, .5, 0); g.userData.dyn = 1; blade.add(g); } const tip = spike(1.0, 1.6, .3, GW); tip.position.y = 1; blade.add(tip); }
+    blade.scale.set(1, .001, 1); const bladeS = sprite(4, "rgba(190,230,255,1)", "aex_bl"); sword.add(bladeS); bladeS.position.y = 1.5;
+    const hexM = new TH.ShaderMaterial({ uniforms: { uC: { value: new TH.Color(0x6ac8ff) }, uO: { value: .0 }, uT: { value: 0 }, uHit: { value: new TH.Vector3(0, 0, -9) } }, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, side: TH.DoubleSide,
+      vertexShader: "varying vec2 vP; void main() { vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+      fragmentShader: "uniform vec3 uC; uniform float uO, uT; uniform vec3 uHit; varying vec2 vP; float hx(vec2 p) { p /= .9; vec2 q = vec2(p.x * 1.1547, p.y + p.x * .57735); vec2 i = floor(q), f = fract(q); float a = mod(i.x + i.y, 3.); vec2 c = a < 1. ? vec2(0.) : a < 2. ? vec2(1.) : vec2(step(f.y, f.x), step(f.x, f.y)); vec2 d = f - c; return length(vec2(d.x - d.y * .5, d.y * .866)); }\n void main() { float r = length(vP), e = smoothstep(6., 5.6, r), h = smoothstep(.36, .5, hx(vP)), d = length(vP - uHit.xy), w = uHit.z > 0. ? exp(-pow((d - uHit.z * 6.) / .8, 2.)) * (1. - uHit.z) : 0.; float rim = smoothstep(5.2, 5.9, r) * e;\n float k = uO * e * (.08 + h * .5 + rim * .9 + w * 1.6 + .06 * sin(uT * .004 + r * 2.)); gl_FragColor = vec4(uC * k + vec3(w * .6), k); }" });
+    const shield = new TH.Mesh(new TH.CircleGeometry(6, 48), hexM); shield.userData.dyn = 1; shield.position.set(-2.4, -3.2, .3); shield.rotation.y = -Math.PI / 2 + .2; LF.add(shield);
+    /* legs: the stern of the ship; the engines are in the heels */
+    const legs = [-1, 1].map(sx => { const hip = J(root, [sx * 2.3, -1.3, 0], [sx * 2.0, -1.3, 0], [-.12, 0, sx * .07], [0, 0, sx * .02], .22, .5);
+      put(hip, slab(3.3, 7.0, 3.2, MA, .6, .74), [0, -3.4, 0]); put(hip, slab(2.0, 5.4, 2.2, MD), [0, -3.5, -.6]); put(hip, glowBar(.12, 5, .12), [sx * 1.5, -3.4, .5]); put(hip, glowBar(.1, 4.4, .1), [0, -3.6, 1.68]);
+      const kn = J(hip, [0, -7, 0], [0, -7, 0], [.3, 0, 0], [0, 0, 0], .35, .55); put(kn, spike(2.0, 3.0, 1.0, MA), [0, -.2, 1.6], [-.15, 0, 0]); put(kn, slab(3.5, 7.8, 3.6, MA, .7, .66), [0, -3.9, 0]); put(kn, slab(2.2, 5.6, 1.4, MD), [0, -4.2, -1.6]); for (const dy of [-2.4, -4.4]) put(kn, glowBar(1.6, .12, .12), [0, dy, -2.35]);
+      const an = J(kn, [0, -7.9, 0], [0, -7.9, 0], [-.18, 0, 0], [-Math.PI / 2, 0, 0], .45, .62); put(an, slab(3.1, 1.4, 5.2, MD), [0, -.8, 1.3]); put(an, spike(2.6, 2.4, .9, MA), [0, -.9, 3.4], [Math.PI / 2, 0, 0]);
+      const eng = put(an, new TH.Group(), [0, -1.2, -1.5]); put(eng, slab(2.8, 2.4, 2.8, MD), [0, .5, 0]); const fl = []; for (const dx of [-.7, .7]) { const n = new TH.Mesh(new TH.CylinderGeometry(.55, .8, 1.0, 12, 1, true), MA); n.position.set(dx, -.9, 0); eng.add(n); const g = new TH.Mesh(new TH.CircleGeometry(.5, 16), GW); g.rotation.x = Math.PI / 2; g.position.set(dx, -1.35, 0); g.userData.dyn = 1; eng.add(g); const f = sprite(3, "rgba(150,210,255,1)", "aex_fl"); f.position.set(dx, -2.4, 0); eng.add(f); fl.push(f); }
+      return { sx, hip, kn, an, fl }; });
+    /* the wings, the halo and the deck turrets, all on the back */
+    const wings = [-1, 1].map(sx => { const w = J(chest, [sx * 2.6, 5.6, -2.6], [sx * 2.4, 5.0, -2.5], [.35, 0, sx * (Math.PI - .75)], [-.05, 0, sx * .22], .35, .6);
+      [[0, 12, 1.4], [.32, 10, 1.1], [.62, 7.5, .9]].forEach(([a, L, wd], k) => { put(w, spike(wd, L, .45, MA), [sx * k * .5, 0, -k * .25], [0, 0, Math.PI + sx * a]); put(w, glowBar(.1, L * .6, .1), [sx * (k * .5 + Math.sin(a) * L * .3), -Math.cos(a) * L * .3, -k * .25 + .3], [0, 0, sx * a]); }); return w; });
+    const halo = J(chest, [0, 7.4, -3.4], [0, 5.6, -3.2], [0, 0, 0], [-Math.PI / 2, 0, 0], .6, .76); { const b = band(5.2, .55, .5, MA, 0, TAU, 72, 24); b.rotation.x = Math.PI / 2; halo.add(b); const rr = runeRing(5.0, 0x7ac8ff, .9); halo.add(rr); halo.userData.rr = rr; for (let k = 0; k < 4; k++) { const a = k / 4 * TAU; const o = new TH.Mesh(new TH.SphereGeometry(.45, 10, 8), CORE); o.position.set(Math.sin(a) * 5.4, Math.cos(a) * 5.4, 0); halo.add(o); } const top = spike(1.2, 3, .5, MA); top.position.y = 5.2; halo.add(top); }
+    const cannons = [-1, 1].map(sx => { const c = J(chest, [sx * 2.4, 7.0, -2.8], [sx * 2.0, 6.0, -2.9], [Math.PI / 2 - .1, 0, 0], [0, 0, 0], .7, .82); put(c, slab(2.2, 2.0, 2.2, MD), [0, .4, 0]); const mz = []; for (const dx of [-.45, .45]) { const b = new TH.Mesh(new TH.CylinderGeometry(.22, .26, 4.4, 8), MA); b.position.set(dx, 3.0, 0); c.add(b); const f = sprite(2.2, "rgba(170,220,255,1)", "aex_mz"); f.position.set(dx, 5.5, 0); f.material.opacity = 0; c.add(f); mz.push(f); } return { c, mz }; });
+    const pods = [-1, 1].map(sx => { const p = put(chest, new TH.Group(), [sx * 3.9, 7.2, .5]); put(p, slab(2.4, 1.4, 2.8, MR), [0, 0, 0]); const lid = J(p, [0, .75, -1.4], [0, .75, -1.4], [-1.25, 0, 0], [0, 0, 0], .72, .84); put(lid, slab(2.5, .3, 2.9, MA), [0, 0, 1.45]); return { p, lid }; });
+    // effects: missiles, the rail slug, the lance, the blade's arc, the reveal shockwave, the unlock flashes
+    const NM = LO ? 16 : 28, mis = puffs(NM, 0xbfe4ff); body.add(mis); const mD = []; for (let k = 0; k < NM; k++) mD.push({ s: k % 2, a: rnd() * TAU, d: .3 + rnd() * .5, h: rnd() });
+    const rail = new TH.Mesh(new TH.CylinderGeometry(.25, .25, 1, 8, 1, true), GW); rail.geometry.translate(0, .5, 0); rail.userData.dyn = 1; rail.visible = false; arms[1].el.add(rail); rail.position.set(1.55, -6.5, 1.5); rail.rotation.x = Math.PI;
+    const lance = new TH.Group(); core.add(lance); lance.visible = false; for (const [r, o, c] of [[1.2, .3, 0x3a7aff], [.5, .9, 0xe8f6ff]]) { const g = new TH.CylinderGeometry(r * .8, r, 60, 14, 1, true); g.translate(0, 30, 0); g.rotateX(Math.PI / 2); const m = new TH.Mesh(g, glowMat(c, o)); m.userData.dyn = 1; lance.add(m); }
+    const arcM = new TH.Mesh(new TH.RingGeometry(14, 17, 48, 1, 0, Math.PI * .9), glowMat(0x9ad8ff, 0)); arcM.userData.dyn = 1; arcM.visible = false; body.add(arcM);
+    const reveal = wave(body, 18, false, 0x9ad8ff), seams = []; body.traverse(o => { if (o.isMesh && o.material === GL) seams.push(o); });
+    const bt = bolts(body, 8, () => { const a = joints[(rnd() * joints.length) | 0].g.getWorldPosition(V(0, 0, 0)), b = joints[(rnd() * joints.length) | 0].g.getWorldPosition(V(0, 0, 0)); body.worldToLocal(a); body.worldToLocal(b); return [a, b]; }, 0x9ad8ff);
+    const mv = moves({ transform: 20000, broadside: 2200, missiles: 3000, rail: 2600, aegis: 2400, blade: 2600, lance: 2800, overdrive: 4200, hit: 520 }), hit = hitKit(body, shk), drv = {};
+    const f = (n, t) => drv[n] != null ? drv[n] : mv.f(n, t), q0 = new TH.Quaternion(), S = scr();
+    const out = { grp, r: 22, h: 30, form: 0, ph: "ship", act: n => { if (n === "transform" && out.form > .99) return; mv.play(n); }, drive: (n, v) => { if (v == null || v < 0) delete drv[n]; else drv[n] = v; },
+      moves: ["broadside", "missiles", "rail", "aegis", "blade", "lance", "overdrive"], mouth: core, lens: null, reactor: core };
+    const tick = t => { const ft = f("transform", t); if (ft >= 0) out.form = ft; else if (out.ftL > .9) out.form = 1; out.ftL = ft; const u = out.form;
+      out.ph = u <= 0 ? "ship" : u < .12 ? "activation" : u < .32 ? "separation" : u < .5 ? "limbs" : u < .7 ? "core" : u < .88 ? "weapons" : u < 1 ? "reveal" : "warform";
+      const wake = u > 0 && u < 1 ? bell(u, 0, .05, .9, 1) : 0, unlock = bell(u, .02, .06, .1, .14);
+      for (const j of joints) { const k = j.ease ? ss(j.a, j.b, u) : Math.min(1, Math.max(0, (u - j.a) / (j.b - j.a))); j.g.position.lerpVectors(j.sp, j.mp, k); j.g.quaternion.slerpQuaternions(j.sq, j.mq, k);
+        if (unlock > 0) j.g.position.y += Math.sin(t * .05 + j.a * 40) * .05 * unlock; }
+      // the ship drifts nose-on; the mech breathes in its stance
+      const mech = ss(.88, 1, u); body.position.y = Math.sin(t * .0008) * (.4 + mech * .2); body.rotation.z = Math.sin(t * .0005) * .02 * (1 - mech);
+      const fo = f("overdrive", t), od = bell(fo, 0, .15, .85, 1), fb = f("blade", t), fa = f("aegis", t), fl = f("lance", t), fr = f("rail", t), fm = f("missiles", t), fbs = f("broadside", t), fx = f("hit", t);
+      // the blade swing: the right arm sweeps across, the arc trails it
+      if (fb >= 0 && u > .99) { const sw = ss(.25, .6, fb), back = bell(fb, 0, .2, .3, .45); arms[1].sh.rotation.x += -back * 1.6 + sw * 1.2; arms[1].sh.rotation.z += back * .5 - sw * 1.1; arms[1].el.rotation.x -= back * .4; }
+      arcM.visible = fb >= 0 && u > .99; if (arcM.visible) { const k = bell(fb, .3, .4, .6, .85); arcM.material.opacity = k * .8; arcM.position.set(0, 4, 6); arcM.rotation.set(-Math.PI / 2 + .3, 0, -.6 + ss(.3, .6, fb) * 1.4); arcM.scale.setScalar(.6 + ss(.3, .9, fb) * .7); }
+      const bl = u > .99 ? 1 : ss(.74, .88, u); blade.scale.set(1, .001 + bl * 17 * (1 + od * .15), 1); blade.visible = bl > .01; bladeS.material.opacity = bl * (.5 + .3 * Math.sin(t * .02)); bladeS.scale.setScalar(3 + bl * 3 + bell(fb, .3, .4, .6, .8) * 6);
+      const sh = Math.max(ss(.7, .85, u) * .5, bell(fa, 0, .15, .8, 1), od * .6); hexM.uniforms.uO.value = u < .99 ? sh : .5 + bell(fa, 0, .15, .8, 1) * .7 + od * .4; hexM.uniforms.uT.value = t; shield.scale.setScalar(u < .7 ? .55 : .55 + ss(.7, .85, u) * .45);
+      const hq = fa >= 0 ? (fa * 3) % 1 : -1; hexM.uniforms.uHit.value.set(Math.sin(t * .001) * 2.5, Math.cos(t * .0013) * 2, hq);
+      // reactor, eyes, seams: the awakening lights the hull; the reveal and overdrive flare them
+      const glow = .45 + wake * .6 + bell(u, .58, .66, .9, 1) * .8 + od * 1.2 + bell(fl, 0, .2, .8, 1) * .6; coreS.material.opacity = Math.min(1, glow * .7); coreS.scale.setScalar(5 + glow * 3 + od * Math.sin(t * .04) * 1.5); core.userData.g.rotation.z = t * .002;
+      eyes.forEach(e => { const k = u < .6 ? 0 : ss(.6, .66, u) * (.7 + bell(u, .88, .92, .96, 1) * .8) + od * .4; e.material.opacity = Math.min(1, k); e.scale.setScalar(1.4 * (1 + bell(u, .88, .92, .96, 1) * 1.5)); });
+      seams.forEach((m, k) => { m.material.opacity = Math.min(1, .55 + wake * .3 + od * (.4 + .3 * Math.sin(t * .03 + k)) + unlock * .4 * Math.sin(t * .06 + k)); }); halo.userData.rr.rotation.z = t * (.0005 + wake * .002 + od * .004);
+      // engines: the ship's stern thrust; they flare through the awakening and fire beneath the mech at the reveal
+      legs.forEach(L => L.fl.forEach((s, k) => { const th = (u <= 0 ? .75 : 0) + wake * .9 + bell(u, .86, .9, .97, 1) * 1.2 + .35 * mech + od * .5; s.material.opacity = Math.min(1, th * (.8 + .2 * Math.sin(t * .05 + k))); s.scale.setScalar(2.4 + th * 3.2); }));
+      // weapons: broadside flashes from the flank/forearm cannons and the deck turrets, missiles from the pods, the rail slug, the lance
+      const fire = (fbs >= 0 ? Math.max(0, Math.sin(fbs * Math.PI * 7)) * (1 - fbs) : 0) + od * (rnd() < .3 ? 1 : 0); arms.forEach((A, k) => A.bar.forEach((s, i) => { s.material.opacity = fire * (((i + k) % 2) ? 1 : .7); s.scale.setScalar(2 + fire * 3); })); cannons.forEach(C => C.mz.forEach(s => { s.material.opacity = fire * .9; s.scale.setScalar(2 + fire * 2.5); }));
+      const open = Math.max(fm >= 0 ? bell(fm, 0, .1, .85, 1) : 0, od); if (u > .99) pods.forEach(P => P.lid.rotation.set(-1.25 - open * .5, 0, 0));
+      for (let k = 0; k < NM; k++) { const m = mD[k], q = fm < 0 ? -1 : (fm - m.h * .4) / .5; if (q > 0 && q < 1) { const P = pods[m.s].p.getWorldPosition(S.p); body.worldToLocal(P); mis.put(k, P.x + Math.sin(m.a) * q * 6, P.y + q * 6 - q * q * 4 + Math.cos(m.a) * q * 2, P.z + q * 34 * m.d + q * 8, 1.6, 1 - q * .3); } else mis.put(k, 0, 0, 0, 0, 0); } mis.done();
+      rail.visible = fr >= 0 && fr > .55 && fr < .75; if (rail.visible) { rail.scale.set(1 + (1 - (fr - .55) / .2), 70 * ss(.55, .6, fr), 1); rail.material.opacity = 1 - (fr - .55) / .2; } if (fr >= 0) arms[1].bar.forEach(s => { s.material.opacity = Math.max(s.material.opacity, bell(fr, 0, .5, .55, .6)); s.scale.setScalar(2 + bell(fr, 0, .5, .55, .6) * 3); });
+      lance.visible = fl >= 0 && fl > .3 && fl < .85; if (lance.visible) { const k = bell(fl, .3, .36, .75, .85); lance.children.forEach((m, i) => { m.material.opacity = (i ? .9 : .3) * k; m.scale.set(1 + Math.sin(t * .05) * .05, 1 + Math.sin(t * .06) * .05, ss(.3, .4, fl)); }); }
+      reveal(u > .88 && u < 1 ? ss(.9, 1, u) : -1); bt(t, wake * 3 + od * 5 + unlock * 6);
+      hit(bell(fx, 0, .05, .4, 1) + od * .15, t); };
+    out.tick = tick; tick(0); bake(body); return out; }
   // merge each group's static leaf meshes that share a material (same look), so a boss costs tens of draw calls, not hundreds
   function bake(root) { const fl = []; root.traverse(o => { if (o !== root && o.userData.flat && o.parent) fl.push(o); });
     for (const o of fl.reverse()) { o.updateMatrix(); const par = o.parent; for (const c of [...o.children]) { c.applyMatrix4(o.matrix); par.add(c); } par.remove(o); }
@@ -2809,7 +2920,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
         const mesh = new TH.Mesh(g2, L[0].material); for (const c of L) o.remove(c); o.add(mesh); } } }
   // light the boss's own materials from an environment map (the galaxy scene has none); count its draw calls
   function prep(b, env) { b.grp.traverse(o => { const m = o.material; if (m && m.isMeshStandardMaterial && env) { m.envMap = env; m.needsUpdate = true; } }); return b; }
-  root.BOSS3D = { init(T) { TH = T; }, set lod(v) { LOD = v | 0; }, get lod() { return LOD; }, conduit, warden, overlord, devourer, matriarch, tyrant, wyrm, colossus, station, elemental, pentarch, vaelthar, EL, prep };
+  root.BOSS3D = { init(T) { TH = T; }, set lod(v) { LOD = v | 0; }, get lod() { return LOD; }, conduit, warden, overlord, devourer, matriarch, tyrant, wyrm, colossus, station, elemental, pentarch, vaelthar, aexion, EL, prep };
 })(typeof window !== "undefined" ? window : globalThis);
 
 </script>
@@ -3829,7 +3940,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 448;
+const GAME_V = 449;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
