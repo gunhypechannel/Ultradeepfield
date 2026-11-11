@@ -3961,7 +3961,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 458;
+const GAME_V = 459;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6067,9 +6067,9 @@ function sbTick(W, t) { const P = G.sbSim; if (!P) { sbLiveTick(W, t); return; }
   /* arrival: the rift opens, it pushes through and grows to full size */
   const arr = clamp((s - 1.5) / 4, 0, 1), k = 1 - Math.pow(1 - arr, 3); X.rift.material.opacity = bell01(s, .2, 1.5, 5, 8) * .9; X.rift.scale.setScalar(4 + D.sc * 22 * clamp(s / 3, 0, 1) * (1 - clamp((s - 6) / 3, 0, 1) * .4)); X.rift.rotation.z += dt * .0006;
   X.flash.material.opacity = Math.max(bell01(s, 1.2, 1.8, 2.4, 4.5), X.fall ? bell01(s, X.fall, X.fall + .4, X.fall + 1.2, X.fall + 4) : 0); X.flash.scale.setScalar(D.sc * 60 * (1 + (X.fall ? clamp(s - X.fall, 0, 3) : 0)));
-  let scl = D.sc * Math.max(.001, k); if (X.fall && s > X.fall) scl *= P.key === "vae" ? Math.max(.001, 1 - clamp((s - X.fall - .6) / 2.5, 0, 1)) : 1; b.grp.scale.setScalar(scl);
+  let scl = D.sc * Math.max(.001, k);  b.grp.scale.setScalar(scl);
   if (P.key === "vae") sbVae(X, W, b, s, t, dt, say, yaw, side); else sbAex(X, W, b, s, t, dt, say, yaw, side);
-  b.tick(t);
+  if (!(P.key === "vae" && X.fall && sbVaeCrystal(W, X, b, s - X.fall, t))) b.tick(t);
   /* the fleet: warps in, fires on the boss, and dies where the attacks really reach it */
   const n = X.types.map(() => 0), D3 = X.D3, look = X.V2.copy(X.B).add(new TH.Vector3(0, D.look * D.sc, 0)), bp = X.bolts.geometry.attributes.position.array, bc = X.bolts.geometry.attributes.color.array; let nb = 0;
   for (const sh of X.ships) { const T = X.types[sh.ti], i = n[sh.ti]++, u = clamp((s - 3 - sh.arr) / 2.5, 0, 1), w = 1 - Math.pow(1 - u, 3), dead = sh.dead >= 0 && t >= sh.dead;
@@ -6100,12 +6100,12 @@ function sbVae(X, W, b, s, t, dt, say, yaw, side) { const sc = SBX.vae.sc;
   if (s > 74 && !X.mw) { X.mw = 1; b.act("wing"); } if (s > 78 && !X.mr) { X.mr = 1; b.act("rebirth"); }
   // its fall: a last roar, the wheel collapses inward, a great shockwave; a relic of the wheel stays
   if (s > 84 && !X.fall) { X.fall = s; say("v8", "Vaelthar has fallen! The wheel collapses. A celestial relic drifts where it died."); }
-  if (X.fall && !X.relic && s > X.fall + 2) { X.relic = new TH.Group(); const r = new TH.Mesh(new TH.TorusGeometry(18, 2.2, 8, 40, Math.PI * 1.3), new TH.MeshStandardMaterial({ color: 0xc9a24a, metalness: 1, roughness: .25, emissive: 0x6a3aa0, emissiveIntensity: .6 })); X.relic.add(r); const g = new TH.Sprite(W.additive(W.glow.wh, new TH.Color("#c890ff"), .6)); g.scale.setScalar(70); X.relic.add(g); X.relic.position.copy(X.B).add(new TH.Vector3(0, 40, 0)); X.grp.add(X.relic); }
+  if (X.fall && !X.relic && s > X.fall + 6.5) { X.relic = new TH.Group(); const r = new TH.Mesh(new TH.TorusGeometry(18, 2.2, 8, 40, Math.PI * 1.3), new TH.MeshStandardMaterial({ color: 0xc9a24a, metalness: 1, roughness: .25, emissive: 0x6a3aa0, emissiveIntensity: .6 })); X.relic.add(r); const g = new TH.Sprite(W.additive(W.glow.wh, new TH.Color("#c890ff"), .6)); g.scale.setScalar(70); X.relic.add(g); X.relic.position.copy(X.B).add(new TH.Vector3(0, 40, 0)); X.grp.add(X.relic); }
   if (X.relic) { X.relic.rotation.set(t * .0002, t * .0003, t * .0001); }
   // the camera: wide arrival, around the fight, slowly round the dragon as it charges, beside the beam, on the wheel, wide for the fall
   const K = fa >= .55 && fa < .97 ? sbVaeCam(X, fa) : s < 8 ? { y: 40, d: 900, th: .5, ph: .25 } : s < 33 ? { y: 50, d: 620 + Math.sin(s * .2) * 60, th: .55, ph: .35 + Math.sin((s - 8) * .08) * .25 } : s < A0 + AL * .35 ? { y: 60, d: 430, th: .35, ph: .5 + (s - A0) * .03 }
     : s < A0 + AL * .66 ? { y: 55, d: 360, th: .28, ph: .8 + (s - A0 - AL * .35) * .04 } : s < A0 + AL * .9 ? { y: 40, d: 1350, th: .62, ph: .95, tx: X.B.x + X.F.x * 520, tz: X.B.z + X.F.z * 520 } : s < 58 ? { y: 40, d: 700, th: .5, ph: .3 }
-    : s < 84 ? { y: 70, d: 460, th: .3, ph: -.45 + (s - 58) * .02 } : { y: 40, d: 1000, th: .55, ph: .3 };
+    : s < 84 ? { y: 70, d: 460, th: .3, ph: -.45 + (s - 58) * .02 } : s < 93 ? { y: 55, d: 470, th: .26, ph: .4 + (s - 84) * .03 } : { y: 40, d: 900, th: .5, ph: .65 };
   SBX_CAM(X, W, s, dt, K); }
 /* Aexion's encounter, 98 s */
 function sbAex(X, W, b, s, t, dt, say, yaw, side) { const sc = SBX.aex.sc;
@@ -6290,14 +6290,14 @@ function sbLiveTick(W, t) { const T = now(), k = sbLiveKey(T); if (!k || view !=
   if (e < 600) say(k + s0 + "a", k === "vae" ? "WARNING: a celestial anomaly is tearing open beyond the Rim. Vaelthar has arrived!" : "WARNING: a dreadnought-class signature is dropping out of warp. Aexion has arrived!");
   let scl = D.sc * Math.max(.001, 1 - Math.pow(1 - arr, 3)); const dead = st.dead && st.dead < T, df = dead ? (T - st.dead) / 1000 : 0;
   { const ph = sbPhase(k, st.hp); if (st.hp && ph > 0 && e > 600) say(k + s0 + "p" + ph, SBL[k][ph]); } if (dead && k === "vae") say(k + st.dead + "x", "Vaelthar has fallen! The wheel collapses. A celestial relic drifts where it died.");
-  if (k === "vae") { if (dead) scl *= Math.max(.001, 1 - clamp((df - .6) / 2.5, 0, 1)); b.grp.scale.setScalar(scl);
+  if (k === "vae") { b.grp.scale.setScalar(scl); if (dead) { X.flash.material.opacity = Math.max(X.flash.material.opacity, bell01(df, .2, .55, 1.0, 3)); X.flash.scale.setScalar(D.sc * 60); }
     const { c, ce } = vaeCycle(s0, T), res = vaeResult(st, s0, c), f = (T - (ce - 150e3)) / 180e3; let fa = -1; if (st.hp && sbHpAt(st, ce) <= 75 && f >= 0 && f < 1) { fa = res === "interrupted" && f > .58 ? -1 : f; if (f < .05) say(k + ce + "w", "WARNING: CATASTROPHIC CELESTIAL ENERGY SIGNATURE DETECTED. Break the wheel's stabilizers!"); if (res === "interrupted" && f > .58) say(k + ce + "i", "The charge collapsed! Its core is exposed: strike now!"); if (res !== "interrupted" && f > .66 && f < .9) say(k + ce + "f", "It's firing! Divine Annihilation is sweeping across the galaxy!"); }
     b.drive("annihilate", fa); { const dt = Math.min(64, t - (X.lt || t)); X.lt = t; const sk = sbVaeStorm(W, X, b, t, 0, fa >= 0 ? (fa - .66) * 180 : -1, 45); sbVaeCine(X, W, fa, dt); X.expK = 1 + sk * .4; } sbBoomTick(X, t); const d = Math.min(6, wpN(st, "stab" + c, "stab")); for (let i = 0; i < 6; i++) b.stab[i] = i < d ? 0 : 1; b.crack = st.hp <= 25 ? .4 + (25 - st.hp) / 25 * .6 : 0;
     if (!dead && fa < 0) { const slot = Math.floor(T / 30000); if (slot !== X.slot) { X.slot = slot; b.act(SBW.vae.mv[Math.abs(hash("v" + slot)) % SBW.vae.mv.length]); } } }
   else { const xf = aexXf(st); b.drive("transform", xf ? clamp((T - xf) / 60000, 0, 1) : 0); if (xf && T - xf < 60000) say(k + xf, "WARNING: Aexion is transforming! Its hull is splitting apart!");
     b.drive("overdrive", st.hp && st.hp <= 20 ? (T / 4200) % 1 : -1); if (!dead) { const slot = Math.floor(T / 25000); if (slot !== X.slot) { X.slot = slot; const L = xf ? SBW.aex.mv2 : SBW.aex.mv; b.act(L[Math.abs(hash("a" + slot)) % L.length]); } }
     if (dead) { const be = df - 2; b.boomE = be; if (be < 0) b.drive("overdrive", (df * 2.4) % 1); sbBlast(W, X, be, t); if (be > -1 && be < 60) say(k + st.dead + "x", "Aexion's reactor went critical! The blast is tearing across the whole map. Its wreckage is everywhere!"); } b.grp.scale.setScalar(scl); }
-  b.tick(t); W.renderer.toneMappingExposure = X.exp * (1 - (b.dark || 0) * .4) * (X.expK || 1); }
+  if (!(k === "vae" && dead && sbVaeCrystal(W, X, b, df, t))) b.tick(t); W.renderer.toneMappingExposure = X.exp * (1 - (b.dark || 0) * .4) * (X.expK || 1); }
 /* v454 Aexion's death (owner: "a super massive explosion that sends shockwaves through the map and scatters his pieces everywhere"):
    two seconds of reactor overload, then the detonation: a blinding flash that lights the whole map, a burst shell of energy, shockwave
    rings racing across the galaxy (the camera shakes as each passes, surviving ships are thrown outward), and every real part of the
@@ -6346,7 +6346,7 @@ function sbVaeStorm(W, X, b, t, kill, sec, dur) { const on = sec >= 0 && sec < d
     const wh = W.glow.wh || (W.glow.wh = glowTex("255,255,255", .85)), core = new TH.Sprite(W.additive(wh, new TH.Color("#f4e8ff"), 0)), core2 = new TH.Sprite(W.additive(wh, new TH.Color("#a050ff"), 0)); g.add(core); g.add(core2);
     const flood = []; for (let j = 0; j < 6; j++) { const s = new TH.Sprite(W.additive(wh, new TH.Color(j % 2 ? "#e0a040" : "#8a40ff"), 0)); s.renderOrder = 2; g.add(s); flood.push(s); }
     X.vs = { g, P, NP, NT, pts, lines, shells, rings, rays, core, core2, flood, src: [new TH.Vector3(), new TH.Vector3()], v: new TH.Vector3(), s: new TH.Vector3(), u: new TH.Vector3(), hit: new Set(), killed: 0 }; }
-  const Z = X.vs; Z.g.visible = on; if (!on) { Z.hit.clear(); Z.killed = 0; return 0; }
+  const Z = X.vs; Z.g.visible = on; if (!on) { Z.hit.clear(); Z.killed = 0; if (X.vbk) X.vbk.g.visible = false; return 0; }
   b.wheel.getWorldPosition(Z.src[0]); b.mouth.getWorldPosition(Z.src[1]); const O = Z.src[0], sc = b.grp.scale.x / 4.4;
   const k = Math.min(1, sec / .35) * (sec < dur ? 1 : Math.max(0, 1 - (sec - dur) / 3.2)), fireOn = sec < dur, PER = 1.6;
   const pp = Z.pts.geometry.attributes.position.array, pc = Z.pts.geometry.attributes.color.array, ps = Z.pts.geometry.attributes.aS.array, lp = Z.lines.geometry.attributes.position.array, lc = Z.lines.geometry.attributes.color.array;
@@ -6368,7 +6368,7 @@ function sbVaeStorm(W, X, b, t, kill, sec, dur) { const on = sec >= 0 && sec < d
   Z.core.position.copy(O); Z.core.scale.setScalar((120 + 40 * Math.sin(t * .03)) * (.6 + .6 * k) * sc); Z.core.material.opacity = .9 * k; Z.core2.position.copy(O); Z.core2.scale.setScalar(420 * (.6 + .6 * k) * sc); Z.core2.material.opacity = .4 * k;
   Z.flood.forEach((s, jj) => { const a = jj / 6 * TAU + t * .00005, rr = 260 + (jj % 3) * 180; s.position.set(O.x * .4 + Math.cos(a) * rr, 0, O.z * .4 + Math.sin(a) * rr); s.scale.setScalar(1300 + jj * 120); s.material.opacity = .2 * k * (.8 + .2 * Math.sin(t * .002 + jj)); });
   const cam = W.camera; if (cam && fireOn) { const amp = (sec < 1 ? (1 - sec) * 10 : 0) + 1.6 * k; cam.position.x += (Math.random() - .5) * amp; cam.position.y += (Math.random() - .5) * amp; cam.position.z += (Math.random() - .5) * amp; }
-  return k; }
+  sbVaeBlanket(W, X, O, t, sec, dur, k); return k; }
 /* the storm's camera, by the attack's progress fa (0..1): low behind him as the wheel aligns, held as it erupts, then up and out over the galaxy */
 function sbVaeCam(X, fa) { const sc = X.b.grp.scale.x || 4.4, ss2 = (a, b, x) => { const u = clamp((x - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); }, P = Math.PI;
   const al = ss2(.55, .66, fa), er = ss2(.66, .72, fa), cr = ss2(.71, .86, fa), wy = 14 * sc;
@@ -6380,6 +6380,69 @@ function sbVaeCine(X, W, fa, dt) { const c = W.cam; if (!c) return; const want =
   const C = X.cine; if (!C) return; if (performance.now() - (G.camTouch || 0) < 5000) { X.cine = null; return; } /* they took the camera: leave it where it is */
   C.out += dt; const e = 1 - Math.pow(.95, (dt || 16) / 16.7); for (const kk of ["tx", "ty", "tz", "dist", "ph"]) c[kk] += (C[kk] - c[kk]) * e; let dp = C.th - c.th; while (dp > Math.PI) dp -= TAU; while (dp < -Math.PI) dp += TAU; c.th += dp * e; if (C.out > 3500) X.cine = null; }
 addEventListener("pointerdown", () => { G.camTouch = performance.now(); }, true); addEventListener("wheel", () => { G.camTouch = performance.now(); }, { capture: true, passive: true });
+/* v459 (owner: "his attack doesn't blanket the map"; "when he falls he should turn into a transparent crystal that fades away like spirits").
+   The blanket: while the storm rages, a sheet of living plasma (electric veins, rune ripples, a bright wavefront) rolls out from him
+   across the whole galaxy floor, and photons rain down everywhere on the map in arcs, many of them right where you are looking, each
+   bursting where it lands. Driven by the attack's own clock, like the rest of the storm. */
+function sbVaeBlanket(W, X, O, t, sec, dur, k) { const on = k > .001;
+  if (!X.vbk) { const g = new TH.Group(); X.grp.add(g); const r = cwRnd(5521), NR = MOBILE ? 200 : 460, NT = 3, R = [];
+    for (let i = 0; i < NR; i++) R.push({ per: 1.2 + r() * 1.0, off: r() * 2.2, ft: .75 + r() * .55, h: 160 + r() * 260, near: r() < .42, sz: 12 + r() * 14, col: r() < .6 ? [.85, .65, 1] : r() < .85 ? [1, .85, .5] : [1, 1, 1], tg: new TH.Vector3(), tc: -1 });
+    const n = NR * (NT + 2), pg = new TH.BufferGeometry(); pg.setAttribute("position", new TH.BufferAttribute(new Float32Array(n * 3), 3)); pg.setAttribute("color", new TH.BufferAttribute(new Float32Array(n * 3), 3)); pg.setAttribute("aS", new TH.BufferAttribute(new Float32Array(n), 1));
+    const pts = new TH.Points(pg, X.vs.pts.material); pts.frustumCulled = false; g.add(pts);
+    const lg = new TH.BufferGeometry(); lg.setAttribute("position", new TH.BufferAttribute(new Float32Array(NR * 6), 3)); lg.setAttribute("color", new TH.BufferAttribute(new Float32Array(NR * 6), 3)); const lines = new TH.LineSegments(lg, X.vs.lines.material); lines.frustumCulled = false; g.add(lines);
+    const sheet = new TH.Mesh(new TH.CircleGeometry(1, 96), new TH.ShaderMaterial({ uniforms: { uO: { value: new TH.Vector2() }, uR: { value: 0 }, uK: { value: 0 }, uT: { value: 0 }, uE: { value: 900 } }, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, side: TH.DoubleSide, toneMapped: false,
+      vertexShader: "varying vec2 vP; void main() { vec4 w = modelMatrix * vec4(position, 1.); vP = w.xz; gl_Position = projectionMatrix * viewMatrix * w; }",
+      fragmentShader: "uniform vec2 uO; uniform float uR, uK, uT, uE; varying vec2 vP; float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); } float n(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }" +
+        "float fb(vec2 p) { float s = 0., a = .5; for (int i = 0; i < 4; i++) { s += a * n(p); p = p * 2.03 + 7.1; a *= .5; } return s; }" +
+        "void main() { float d = length(vP - uO), c = length(vP); float inside = smoothstep(uR, uR - 90., d), front = exp(-pow((d - uR) / 30., 2.)), edge = 1. - smoothstep(uE * .82, uE, c);" +
+        "vec2 q = vP * .006; float f = fb(q + vec2(uT * .25, -uT * .18)), f2 = fb(q * 2.3 - vec2(uT * .4, uT * .3)); float veins = pow(1. - abs(sin((f + f2 * .5) * 9.)), 5.), web = pow(1. - abs(sin(f2 * 14. + uT)), 10.);" +
+        "float rip = pow(.5 + .5 * sin(d * .045 - uT * 7.), 6.) * .5; vec3 col = mix(vec3(.45, .18, 1.), vec3(1., .75, .35), f2 * .8) * (veins * 1.3 + web * .8 + rip + .35) + vec3(.9, .8, 1.) * front * 1.6;" +
+        "float a = uK * edge * (inside * (.2 + .6 * veins + .4 * web + rip * .5) + front); gl_FragColor = vec4(col * a, a); }" }));
+    sheet.rotation.x = -Math.PI / 2; sheet.frustumCulled = false; g.add(sheet);
+    X.vbk = { g, R, NR, NT, pts, lines, sheet, v: new TH.Vector3(), hit: new Set() }; }
+  const Z = X.vbk; Z.g.visible = on; if (!on) { Z.hit.clear(); return; }
+  const cam = W.cam || { tx: 0, tz: 0 }, sh = Z.sheet, SY = Math.min(O.y - 50, 4); sh.position.set(0, SY - 6, 0); sh.scale.setScalar(980); sh.material.uniforms.uO.value.set(O.x, O.z); sh.material.uniforms.uR.value = 40 + 1700 * Math.min(1, Math.pow(Math.max(0, sec) / 2.6, .8)); sh.material.uniforms.uK.value = k; sh.material.uniforms.uT.value = t * .001; sh.material.uniforms.uE.value = 980;
+  const pp = Z.pts.geometry.attributes.position.array, pc = Z.pts.geometry.attributes.color.array, ps = Z.pts.geometry.attributes.aS.array, lp = Z.lines.geometry.attributes.position.array, lc = Z.lines.geometry.attributes.color.array, V = Z.v;
+  const arc = (q, u, out) => { out.copy(O).lerp(q.tg, u); out.y += Math.sin(Math.PI * u) * q.h; return out; };
+  for (let i = 0; i < Z.NR; i++) { const q = Z.R[i], c = Math.floor((sec - q.off) / q.per), a = sec - q.off - c * q.per, l0 = q.off + c * q.per, j = i * (Z.NT + 2);
+    const live = c >= 0 && l0 >= 0 && l0 <= dur && a < q.ft + .45;
+    if (!live) { for (let m = 0; m < Z.NT + 2; m++) ps[j + m] = 0; lp.fill(0, i * 6, i * 6 + 6); continue; }
+    if (q.tc !== c) { q.tc = c; const h1 = Math.abs(Math.sin((i + 1) * 12.9898 + c * 78.233) * 43758.5453) % 1, h2 = Math.abs(Math.sin((i + 1) * 39.346 + c * 11.135) * 24634.634) % 1;
+      if (q.near) { const rr = 40 + Math.sqrt(h1) * 300, an = h2 * TAU; q.tg.set(cam.tx + Math.cos(an) * rr, SY, cam.tz + Math.sin(an) * rr); } else { const rr = Math.sqrt(h1) * 720, an = h2 * TAU; q.tg.set(Math.cos(an) * rr, SY, Math.sin(an) * rr); } }
+    if (a < q.ft) { const u = a / q.ft, f = Math.min(1, a / .06) * k;
+      for (let m = 0; m <= Z.NT; m++) { arc(q, Math.max(0, u - m * .035), V); pp.set([V.x, V.y, V.z], (j + m) * 3); const ff = f * (1 - m / (Z.NT + 1)); pc.set([q.col[0] * ff, q.col[1] * ff, q.col[2] * ff], (j + m) * 3); ps[j + m] = q.sz * (1 - m * .2); }
+      arc(q, u, V); lp.set([V.x, V.y, V.z], i * 6); arc(q, Math.max(0, u - .12), V); lp.set([V.x, V.y, V.z], i * 6 + 3); lc.set([q.col[0] * f, q.col[1] * f, q.col[2] * f, 0, 0, 0], i * 6); ps[j + Z.NT + 1] = 0; }
+    else { const b = (a - q.ft) / .45, f = (1 - b) * (1 - b) * k; for (let m = 0; m <= Z.NT; m++) ps[j + m] = 0; lp.fill(0, i * 6, i * 6 + 6); pp.set([q.tg.x, q.tg.y + 4, q.tg.z], (j + Z.NT + 1) * 3); pc.set([f, f * .85, f * 1.0], (j + Z.NT + 1) * 3); ps[j + Z.NT + 1] = 40 + b * 110;
+      if (i % 9 === 0 && !Z.hit.has(i * 1000 + c)) { Z.hit.add(i * 1000 + c); sbBoom(X, q.tg.clone(), t, 40 + q.sz * 3); } } }
+  for (const A of [Z.pts.geometry.attributes.position, Z.pts.geometry.attributes.color, Z.pts.geometry.attributes.aS, Z.lines.geometry.attributes.position, Z.lines.geometry.attributes.color]) A.needsUpdate = true; }
+/* his fall: under a blinding flash he turns to clear crystal, frozen in his last pose, faceted and glinting; then the crystal dissolves from
+   the tail up and pale spirits rise from it and drift away until nothing is left. e = seconds since he fell (the same for everyone). */
+function sbVaeCrystal(W, X, b, e, t) { if (e < .55) return false;
+  if (!X.cry) { const m = new TH.ShaderMaterial({ uniforms: { uT: { value: 0 }, uD: { value: 0 }, uO: { value: 1 }, uY: { value: new TH.Vector2(-40, 120) } }, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, side: TH.DoubleSide, toneMapped: false,
+      vertexShader: "varying vec3 vW; varying vec3 vN; void main() { vec4 p = vec4(position, 1.); vec3 nn = normal;\n#ifdef USE_INSTANCING\np = instanceMatrix * p; nn = mat3(instanceMatrix) * nn;\n#endif\nvec4 w = modelMatrix * p; vW = w.xyz; vN = normalize(mat3(modelMatrix) * nn); gl_Position = projectionMatrix * viewMatrix * w; }",
+      fragmentShader: "uniform float uT, uD, uO; uniform vec2 uY; varying vec3 vW; varying vec3 vN; float h(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }" +
+        "void main() { vec3 fn = normalize(cross(dFdx(vW), dFdy(vW))); vec3 v = normalize(cameraPosition - vW); float fr = pow(1. - abs(dot(fn, v)), 2.2), fr2 = pow(1. - abs(dot(normalize(vN), v)), 3.);" +
+        "float ht = clamp((vW.y - uY.x) / (uY.y - uY.x), 0., 1.), nz = h(floor(vW * .35)), th = ht * .55 + nz * .45; if (th < uD * 1.12 - .06) discard; float edge = 1. - smoothstep(0., .035, th - (uD * 1.12 - .06));" +
+        "float gl = step(.985, h(floor(vW * .9) + floor(uT * 3.))) * 2.5; vec3 col = mix(vec3(.35, .25, .85), vec3(.7, .9, 1.), fr) + vec3(1., .9, 1.) * (fr2 * .5 + gl) + vec3(.7, .9, 1.) * edge * 1.3 * step(.001, uD);" +
+        "float a = (.04 + fr * .32 + fr2 * .16 + gl * .25 + edge * .3) * uO; gl_FragColor = vec4(col * a, a); }" });
+    m.extensions = { derivatives: true }; const keep = [];
+    b.grp.traverse(o => { if (o.isMesh && !o.userData.cryKeep) { const mt = o.material, add = mt && (mt.blending === TH.AdditiveBlending || mt.isSpriteMaterial); if (add) { o.visible = false; return; } o.userData.om = mt; o.material = m; keep.push(o); }
+      else if (o.isSprite || o.isPoints || o.isLine) o.visible = false; });
+    // the spirits: pale wisps that rise out of the dissolving crystal, drawn from points all over his body
+    b.grp.updateMatrixWorld(true); const src = [], M = new TH.Matrix4(), Vp = new TH.Vector3(); for (const o of keep) { if (o.isInstancedMesh) { for (let i = 0; i < o.count; i += 1) { o.getMatrixAt(i, M); Vp.setFromMatrixPosition(M).applyMatrix4(o.matrixWorld); src.push(Vp.clone()); } } else src.push(o.getWorldPosition(new TH.Vector3())); }
+    const bb = new TH.Box3().setFromObject(b.grp); m.uniforms.uY.value.set(bb.min.y, bb.max.y);
+    const r = cwRnd(777), NS = MOBILE ? 160 : 380, S = []; for (let i = 0; i < NS; i++) { const p = src[(r() * src.length) | 0] || bb.getCenter(new TH.Vector3()); S.push({ p: p.clone().add(new TH.Vector3((r() - .5) * 30, (r() - .5) * 16, (r() - .5) * 30)), t0: 1.6 + ((p.y - bb.min.y) / Math.max(1, bb.max.y - bb.min.y)) * 3.2 + r() * 1.4, life: 2.2 + r() * 2.2, rise: 60 + r() * 120, sw: (r() - .5) * 2, ph: r() * TAU, sz: 7 + r() * 10, c: r() < .5 ? [.75, .9, 1] : r() < .8 ? [.85, .7, 1] : [1, 1, 1] }); }
+    const pg = new TH.BufferGeometry(); pg.setAttribute("position", new TH.BufferAttribute(new Float32Array(NS * 3), 3)); pg.setAttribute("color", new TH.BufferAttribute(new Float32Array(NS * 3), 3)); pg.setAttribute("aS", new TH.BufferAttribute(new Float32Array(NS), 1));
+    const pm = new TH.ShaderMaterial({ transparent: true, depthWrite: false, blending: TH.AdditiveBlending, vertexColors: true, toneMapped: false,
+      vertexShader: "attribute float aS; varying vec3 vC; void main() { vC = color; vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv; gl_PointSize = clamp(aS * 520. / -mv.z, 0., 90.); }",
+      fragmentShader: "varying vec3 vC; void main() { vec2 c = gl_PointCoord - .5; c.y *= .55; float d = length(c) * 2.; float a = exp(-d * d * 3.) * .8 + exp(-d * d * 30.) * .6; if (a < .01) discard; gl_FragColor = vec4(vC * a, a); }" });
+    const pts = new TH.Points(pg, pm); pts.frustumCulled = false; pts.userData.cryKeep = 1; X.grp.add(pts);
+    X.cry = { m, S, pts, keep }; }
+  const C = X.cry, D = clamp((e - 1.8) / 4.6, 0, 1); C.m.uniforms.uT.value = t * .001; C.m.uniforms.uD.value = D; C.m.uniforms.uO.value = clamp((e - .55) / .5, 0, 1) * (1 - clamp((e - 6.6) / .6, 0, 1));
+  b.grp.visible = e < 7.3; const pp = C.pts.geometry.attributes.position.array, pc = C.pts.geometry.attributes.color.array, ps = C.pts.geometry.attributes.aS.array; let any = 0;
+  C.S.forEach((q, i) => { const a = (e - q.t0) / q.life; if (a < 0 || a >= 1) { ps[i] = 0; return; } any = 1; const y = q.rise * a + 6 * a * a * q.rise / 10, w = q.ph + a * 4; pp.set([q.p.x + Math.sin(w) * 22 * a * q.sw, q.p.y + y, q.p.z + Math.cos(w) * 22 * a], i * 3);
+    const f = Math.sin(Math.PI * Math.min(1, a * 1.4)) * (1 - a) * .75; pc.set([q.c[0] * f, q.c[1] * f, q.c[2] * f], i * 3); ps[i] = q.sz * (.6 + a * .9); });
+  C.pts.visible = any || e < 8; for (const A of [C.pts.geometry.attributes.position, C.pts.geometry.attributes.color, C.pts.geometry.attributes.aS]) A.needsUpdate = true; return true; }
 function sbBoomTick(X, t) { for (const Bm of X.booms) { const a = (t - Bm.t) / 900; Bm.s.visible = a >= 0 && a < 1; if (Bm.s.visible) { Bm.s.material.opacity = (1 - a) * .95; Bm.s.scale.setScalar(Bm.sz * (.4 + a * 1.4)); } } }
 /* v408 tapping the Super Cube */
 function shCubePick() { const T = now(), ph = cubePhase(T), live = evActive(T), cur = nexusNow(T), who = cur.holder ? `Held by ${esc(allyTag(cur.holder))}` : live ? "Unclaimed · the Collective Warden guards it" : `Next battle in ${ftime(evStart(evWeek(T) + 1) - T)}`;
