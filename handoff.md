@@ -1,11 +1,12 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-10 (America/Phoenix). Current game version: **v438** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v245**.
+Last updated: 2026-11-10 (America/Phoenix). Current game version: **v439** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v246**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
 ## Pending work (as of 2026-11-07): start here in a new session
 
+00000000000000000000000000. **v439 (2026-11-11): the Convergence theme back to the solo-piano version** (owner: "nvm revert" the v438 choral piece). The file is identical to v433/v437's; `?v=439`. `tools/orch_theme.py` stays in the repo if the choral piece is wanted again.
 00000000000000000000000000. **v438 (2026-11-11): the Convergence theme is now choral and orchestral** (owner approved the draft). `tools/orch_theme.py` renders `music_conv.mp3` (106 s loop) from MusyngKite General MIDI samples (gleitz/midi-js-soundfonts, fetched through the owner's browser and unpacked to samples.npz). It is an original piece in the vein of Omnis Lacrima on our C#-A-E-B motif over F#m-D-A-E: a piano ostinato, oohs, a full choir, tremolo strings, cello and bass, horns, timpani, and an 8-bar choir melody at the climax, mixed 6 dB above the strings. Samples are looped with crossfades past their 3.1 s length. `?v=438`.
 00000000000000000000000000. **v437 (2026-11-11): the Convergence theme back to the v433 solo-piano version** (owner: the synthesized violin of v436 "sounds kinda bad"). `music_conv.mp3?v=437` (the file is identical to v433's). Next: an Omnis Lacrima-style theme from real instrument samples.
 00000000000000000000000000. **v436 (2026-11-11): the Convergence theme as a violin solo** (owner). `tools/conv_theme3.py` = conv_theme2 with the piano replaced by an additive bowed violin. The motif is C#, A, E, B up an octave (at 80% pitch the A would be 176 Hz, below the violin's G3). It has bow bite, vibrato blooming after 0.18 s, 55 ms slides between notes, body resonances at 280/460/590/2600/3400 Hz, bow noise, and dynamics per cycle (`DYN`) that set loudness and brightness. Score, arc, timing, hall and loop are unchanged; checked in tune within 7 cents where the violin plays alone. `music_conv.mp3?v=436`.
