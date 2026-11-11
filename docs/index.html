@@ -3657,7 +3657,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 431;
+const GAME_V = 432;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4289,7 +4289,7 @@ function migrate(st) {
    every building, research, ship, defence and missile costs 1.5x what it did (a Light Fighter 3,000/1,000 -> 4,500/1,500). Job
    times follow cost, so they are held to 1.15x (ECON_TK in the time formulas) instead of 1.5x. Resource output is unchanged.
    Jobs already queued keep what was paid and their finish time. */
-const ECON_K = 1.5, ECON_T = 1.15, ECON_TK = ECON_T / ECON_K; for (const D0 of [B, R, SH, DF, MS]) for (const k in D0) { const c = D0[k] && D0[k].c; if (c) for (const r in c) if (typeof c[r] === "number") c[r] = Math.round(c[r] * ECON_K); }
+const ECON_K = 1, ECON_T = 1.15, /* v432 OGame prices again; times stay 1.15x */ ECON_TK = ECON_T / ECON_K; for (const D0 of [B, R, SH, DF, MS]) for (const k in D0) { const c = D0[k] && D0[k].c; if (c) for (const r in c) if (typeof c[r] === "number") c[r] = Math.round(c[r] * ECON_K); }
 const UNI = 8, PRM = UNI / 60; // production per minute = OGame's hourly rate x UNI / 60
 const costK = (f, lvl) => Math.pow(f, lvl - 1);
 const cost = (def, lvl) => { const o = {}; for (const r of ["m", "c", "g"]) if (def.c[r]) o[r] = Math.round(def.c[r] * costK(def.f, lvl)); return o; };
