@@ -648,6 +648,7 @@ canvas.dthumb{display:block}
 .dprod{display:grid;grid-template-columns:auto auto;gap:2px 10px;align-items:center;border-left:1px solid rgba(127,230,243,.25);padding-left:10px}.dprod span{grid-column:1/3;color:var(--cyan);font-size:12px}.dprod b{font-family:var(--f-display);font-size:24px;color:#ffd84a}
 .dwr{width:42px;height:42px;border-radius:50%;border:2px solid #9fe9ff;background:radial-gradient(circle at 40% 35%,#3b8fd8,#0b3a6a 70%);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 0 12px rgba(85,214,232,.45);padding:0}.dwr svg{width:22px;height:22px}
 .sheet .x{background:none;border:1px solid var(--line-hi);color:var(--muted);width:34px;height:34px;cursor:pointer;font-size:18px;flex:none}
+#omband{position:absolute;left:50%;transform:translateX(-50%);top:calc(var(--hudH,150px) + 8px);z-index:24}.omb{display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:14px;border:1px solid #5dff6a;background:rgba(4,22,10,.9);color:#d9ffe0;font-family:var(--f-display);font-size:13px;cursor:pointer;box-shadow:0 0 18px rgba(93,255,106,.35)}.omb b{color:#7dff90;letter-spacing:.06em}.omb i{font-style:normal;color:#ffd66a}
 .kv{display:grid;grid-template-columns:minmax(min(42%,9em),auto) minmax(min(40%,10em),1fr);gap:4px 12px;font-size:14px;font-variant-numeric:tabular-nums;margin:0}
 .kv dt{color:var(--muted)}.kv dd{margin:0;font-family:var(--f-display);text-align:right}
 .units{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
@@ -3633,7 +3634,7 @@ function haulPlan(n, ships) { const cap = cargoOf(ships), rate = gatherRate(n) *
   if (n.res === "s") return { amt: shardRest(n) ? 0 : Math.min(shardYield(n), shardLeft()), ms: SHARD_DIG_MS }; // v135: a shard dig takes the same time whatever the cargo
   if (n.kind === "empty") return { amt: Math.floor(Math.min(cap, rate * OUTPOST_MS / 60000)), ms: OUTPOST_MS };
   const amt = Math.floor(Math.min(cap, rate * 20)); return { amt, ms: Math.max(10000, amt / rate * 60000) }; }
-const fleetTarget = f => f.tgObj ? f.tgObj : f.nid ? NB[f.nid] : f.xid ? PB[f.xid] : f.cx ? PB[f.cx] : f.yid ? YB[f.yid] : f.wb ? WBO[f.wb] : f.pid === "nexus" ? NEXUS : G.byId[f.pid];
+const fleetTarget = f => f.tgObj ? f.tgObj : f.nid ? NB[f.nid] : f.xid ? PB[f.xid] : f.cx ? PB[f.cx] : f.yid ? YB[f.yid] : f.wb ? WBO[f.wb] : f.om ? OMO : f.pid === "nexus" ? NEXUS : G.byId[f.pid];
 /* 10,000 commander seats: fixed homeworld spots on a spiral through the Rim and the Far Reach (layers 1-2). A new commander
    takes the free seat farthest from everyone else, so every homeworld sits on a location with fixed coordinates. */
 const SEAT_R = new Float32Array(MAX_PLAYERS), SEAT_A = new Float32Array(MAX_PLAYERS);
@@ -3657,7 +3658,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 441;
+const GAME_V = 442;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -4831,7 +4832,7 @@ function events() {
     changed = true; } }); }
   if (G.ready) {
     for (const f of S.fleets) {
-      if (f.phase === "out") ev.push({ at: f.arrive, run: () => f.rj && !f.launched ? rallyReach(f) : f.assault && f.launched ? (f.phase = "resolving") : f.wb ? (f.phase = "resolving") : f.nid ? gatherStart(f) : f.xid ? pirateArrive(f) : f.yid ? pyramidArrive(f) : (f.assault || f.pid === "nexus") ? (f.phase = "resolving") : arrive(f) });
+      if (f.phase === "out") ev.push({ at: f.arrive, run: () => f.rj && !f.launched ? rallyReach(f) : f.assault && f.launched ? (f.phase = "resolving") : f.wb || f.om ? (f.phase = "resolving") : f.nid ? gatherStart(f) : f.xid ? pirateArrive(f) : f.yid ? pyramidArrive(f) : (f.assault || f.pid === "nexus") ? (f.phase = "resolving") : arrive(f) });
       else if (f.phase === "muster") ev.push({ at: f.launch, run: () => rallyLaunch(f) }); // v73: a joint strike marches when its timer ends
       else if (f.phase === "gather") ev.push({ at: f.gend, run: () => gatherEnd(f) });
       else if (f.phase === "back") ev.push({ at: f.back, run: () => homecoming(f) });
@@ -4861,7 +4862,7 @@ function advance(T) {
     produce(Math.max(e.at, S.t)); e.run(); any = true;
   }
   produce(T);
-  for (const f of S.fleets) if (f.phase === "resolving" && !G.resolving.has(f.id) && G.ready) { if (f.wb) wbResolve(f); else if (f.pid === "nexus" && !f.assault) resolveNexus(f); else resolveAssault(f); }
+  for (const f of S.fleets) if (f.phase === "resolving" && !G.resolving.has(f.id) && G.ready) { if (f.wb) wbResolve(f); else if (f.om) omResolve(f); else if (f.pid === "nexus" && !f.assault) resolveNexus(f); else resolveAssault(f); }
   if (any) { changed = true; progress(); }
   const c = changed; changed = false; return c || any;
 }
@@ -4901,6 +4902,7 @@ function transferArrive(f, p, st) {
 function pirateArrive(f) {
   const x = PB[f.xid], tt = f.tt || (f.arrive - f.out); f.phase = "back"; f.back = f.arrive + tt;
   if (!x) return;
+  if (x.boss && dvNow(f.arrive) && !G.dvSim) { note(`${x.name} had left to join the Omega Cube. Fleet returning, nothing lost.`, "warn"); return; } /* v442 */
   if (pirDown(x) > f.arrive) { note(`${x.name} was already empty. Fleet returning.`, "warn"); return; }
   const mine0 = Object.assign({}, f.n), res = simulate(stacksOf(f.n, techVs(x), G.me).concat(allyStacks(f.allies, x.lvl)), xStacks(x));
   const rep = mkRep({ at: f.arrive, kind: "attack", title: x.mon ? `Hunt: ${isElite(x) ? "Elite " : ""}${x.name} (${MON[x.mon].n} Lv.${x.lvl})` : x.boss ? `Assault on ${x.name} (Cube Lv.${x.lvl})` : `Raid on ${isElite(x) ? "Elite " : ""}${x.name} (Pirates Lv.${x.lvl})`, aUids: [G.me].concat(f.allies || []), aName: S.homeName + " Fleet", dName: x.boss || x.mon ? x.name : `${x.name} Pirates`, boss: !!x.boss, mon: x.mon || null, lvl: x.lvl, ptype: "desert", fortL: 0, alien: !!x.mon, pirate: true,
@@ -5335,16 +5337,16 @@ function shStress() { const st = G.stress, out = st ? st.out : [], fails = out.f
    The form: the Super Cube is the core (2x2x2 cells of 15 units); twelve blocks the size of the Super Cube, each built from eight
    Assimilation Cubes, interlock round it, staggered by half a block, after the reference; the last four cubes crown it. Checked: no
    two pieces overlap, every block shares a face with the core or an earlier block. */
-const DV_M = 60e3, DV_H = 3600e3, DV_FIRST = Date.UTC(2026, 11, 11, 18), DV_CELL = 30, DV_CELLP = 15, DV_LOCK2 = 40e3, DV_Y = 170, DV_HOLD = 320, /* v440 */ DV_LOCK = 90e3;
-const DV = { mig: 30 * DV_M, lock0: 90 * DV_M, lock1: 130 * DV_M, ex0: 134 * DV_M, ex1: 136.5 * DV_M, rb0: 141 * DV_M, rb1: 149 * DV_M, /* v441 the puzzle, then the giant cube */ act: 150 * DV_M, erupt: 153 * DV_M, combat: 156 * DV_M, stage: 158 * DV_M, war0: 172 * DV_M, war1: 200 * DV_M, ret: 205 * DV_M, end: 250 * DV_M }; /* v440 the fleet stages, is wiped out, and the cubes disperse */
+const DV_M = 60e3, DV_H = 3600e3, DV_FIRST = Date.UTC(2026, 10, 15, 18) /* v442 every 15th */, DV_CELL = 30, DV_CELLP = 15, DV_LOCK2 = 40e3, DV_Y = 170, DV_HOLD = 320, /* v440 */ DV_LOCK = 90e3;
+const DV = { mig: 30 * DV_M, lock0: 90 * DV_M, lock1: 130 * DV_M, ex0: 134 * DV_M, ex1: 136.5 * DV_M, rb0: 141 * DV_M, rb1: 149 * DV_M, /* v441 the puzzle, then the giant cube */ act: 150 * DV_M, erupt: 153 * DV_M, combat: 156 * DV_M, stage: 158 * DV_M, war0: 172 * DV_M, war1: 200 * DV_M, fight0: 205 * DV_M, get ret() { return G.dvRBv || 205 * DV_M; }, get end() { return this.ret + 45 * DV_M; } }; /* v442 it comes apart when it falls, or after its 36 hours */ /* v440 the fleet stages, is wiped out, and the cubes disperse */
 const DV_MODS = [[1, 0, -1], [-3, -2, -1], [-1, 1, 0], [-1, -3, -2], [0, -1, 1], [-2, -1, -3], [1, 2, 0], [-3, 1, -2], [1, -3, -1], [-3, 0, 1], [2, -2, 1], [0, 1, -3]];
 const DV_CROWN = [[1, 4, 0], [2, 4, 1], [1, -4, -1], [-4, -2, -1]];
-function dvStartOf(T) { const d = new Date(T); let s = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 11, 18); if (T < s) s = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 11, 18); return s; }
-const dvPhase = e => e < DV.mig ? "awake" : e < DV.lock0 ? "mig" : e < DV.act ? "asm" : e < DV.combat ? "act" : e < DV.war0 ? "stage" : e < DV.war1 ? "war" : e < DV.ret ? "after" : "ret";
+function dvStartOf(T) { const d = new Date(T); let s = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 15, 18); if (T < s) s = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 15, 18); return s; }
+const dvPhase = e => e < DV.mig ? "awake" : e < DV.lock0 ? "mig" : e < DV.act ? "asm" : e < DV.combat ? "act" : e < DV.war0 ? "stage" : e < DV.war1 ? "war" : e < DV.fight0 ? "after" : e < DV.ret ? "fight" : "ret";
 /* where the event stands at T (null outside it). The owner's preview runs the whole thing in about four minutes (dvSimStart). */
-function dvNow(T) { if (G.dvSim) return dvSimNow(); if (T < DV_FIRST) return null; const s0 = dvStartOf(T), e = T - s0; return e >= 0 && e < DV.end ? { e, s0, ph: dvPhase(e) } : null; }
-const DV_SIM = [[0, 0], [15, DV.mig], [140, DV.act], [160, DV.combat], [176, DV.war0], [230, DV.war1], [238, DV.ret], [270, DV.end]]; /* preview seconds -> event time */
-function dvSimNow() { const C = G.dvSim, s = (performance.now() - C.t0) / 1000; if (s >= DV_SIM[DV_SIM.length - 1][0]) { dvSimStop(1); return null; }
+function dvNow(T) { if (G.dvSim) return dvSimNow(); if (T < DV_FIRST) return null; const s0 = dvStartOf(T), e = T - s0; G.dvRBv = omRB(s0); return e >= 0 && e < DV.end ? { e, s0, ph: dvPhase(e) } : null; }
+const DV_SIM = [[0, 0], [15, DV.mig], [140, DV.act], [160, DV.combat], [176, DV.war0], [230, DV.war1], [236, DV.fight0], [272, DV.fight0 + 39 * DV_M], [304, DV.fight0 + 84 * DV_M]]; /* preview seconds -> event time */
+function dvSimNow() { G.dvRBv = DV.fight0 + 39 * DV_M; const C = G.dvSim, s = (performance.now() - C.t0) / 1000; if (s >= DV_SIM[DV_SIM.length - 1][0]) { dvSimStop(1); return null; }
   let i = 0; while (i < DV_SIM.length - 2 && s >= DV_SIM[i + 1][0]) i++; const [a, ea] = DV_SIM[i], [b, eb] = DV_SIM[i + 1], e = ea + (eb - ea) * (s - a) / (b - a); return { e, s0: C.s0, ph: dvPhase(e), sim: 1, rate: (eb - ea) / ((b - a) * 1000) }; }
 /* the plan for one event: which cube takes which slot, when it leaves, arrives, holds and locks. Fixed for the event (it depends only on
    its start time), so it is the same on every device. */
@@ -5373,9 +5375,9 @@ function dvPlan(s0) { if (G.dvP && G.dvP.s0 === s0) return G.dvP;
   /* the giant cube's slots, bottom face first: each goes to the piece whose puzzle slot points most nearly the same way */
   const free = new Set(L), un = p => { const l = Math.hypot(...p) || 1; return p.map(v => v / l); };
   P2.slice(0, N).forEach((s2, i2) => { const d2 = un(s2.p); let best = null, bv = -1e9; for (const c of free) { const d1 = un(c.s.p), v = d1[0] * d2[0] + d1[1] * d2[1] * 1.3 + d1[2] * d2[2]; if (v > bv) { bv = v; best = c; } }
-    free.delete(best); best.s2 = s2; best.i2 = i2; best.lk2 = DV.rb0 + i2 * (DV.rb1 - DV.rb0) / N; const l = Math.hypot(...best.s.p) || 1; best.E = best.s.p.map(v => v / l * (l + 95)); best.ret = DV.ret + (N - 1 - i2) * 12 * DV_M / N; });
+    free.delete(best); best.s2 = s2; best.i2 = i2; best.lk2 = DV.rb0 + i2 * (DV.rb1 - DV.rb0) / N; const l = Math.hypot(...best.s.p) || 1; best.E = best.s.p.map(v => v / l * (l + 95)); best.retOff = (N - 1 - i2) * 12 * DV_M / N; });
   L.sort((a, b) => a.i - b.i); return (G.dvP = { s0, L, cells: P1, cells2: P2, N }); }
-function dvCube(c, e, D, o) { const s0 = D.s0, sz = c.sz, f1 = DV_CELLP * .975, f2 = DV_CELL * .975, rotY = e > DV.combat ? (Math.min(e, DV.ret) - DV.combat) * TAU / (40 * DV_M) : 0, cy = Math.cos(rotY), sy = Math.sin(rotY);
+function dvCube(c, e, D, o) { c.ret = DV.ret + (c.retOff || 0); const s0 = D.s0, sz = c.sz, f1 = DV_CELLP * .975, f2 = DV_CELL * .975, rotY = e > DV.combat ? (Math.min(e, DV.ret) - DV.combat) * TAU / (40 * DV_M) : 0, cy = Math.cos(rotY), sy = Math.sin(rotY);
   const slotW = (p, out) => { out.x = p[0] * cy + p[2] * sy; out.y = DV_Y + p[1]; out.z = -p[0] * sy + p[2] * cy; return out; }, P = o.P || (o.P = [{}, {}, {}, {}]), at = (p, out) => { out.x = p[0]; out.y = DV_Y + p[1]; out.z = p[2]; return out; };
   o.rot = rotY; o.lkT = 0;
   if (e < c.dep) { P3(c.x, s0 + e, o); o.k = sz; o.al = 0; o.st = "home"; return o; }
@@ -5395,7 +5397,9 @@ function dvCube(c, e, D, o) { const s0 = D.s0, sz = c.sz, f1 = DV_CELLP * .975, 
   if (e < c.lk2 - DV_LOCK2) { const u = dvEase((e - DV.ex1) / Math.max(1, c.lk2 - DV_LOCK2 - DV.ex1)); o.x = E.x + (st2.x - E.x) * u; o.y = E.y + (st2.y - E.y) * u + Math.sin(u * Math.PI) * 30; o.z = E.z + (st2.z - E.z) * u; o.k = f2; o.al = 1; o.st = "shift"; return o; }
   const S2 = slotW(c.s2.p, P[3]);
   if (e < c.lk2) { const u = 1 - Math.pow(1 - (e - (c.lk2 - DV_LOCK2)) / DV_LOCK2, 3); o.x = st2.x + (S2.x - st2.x) * u; o.y = st2.y + (S2.y - st2.y) * u; o.z = st2.z + (S2.z - st2.z) * u; o.k = f2; o.al = 1; o.st = "slide"; return o; }
-  if (e < c.ret) { o.x = S2.x; o.y = S2.y; o.z = S2.z; o.k = f2; o.al = 1; o.st = "locked"; o.lkT = c.lk2; return o; }
+  if (e < c.ret) { const b = e >= DV.fight0 ? dvBrk(c, D, (G.dvP && G.dvP.N) || OM_SEG) : Infinity; /* v442 a section the fleets destroyed breaks off, dark, and drifts */
+    if (e >= b) { const a = dvEase(Math.min(1, (e - b) / 20e3)), d = 4 + 34 * a + (e - b) / 60e3 * 2, q = slotW([c.s2.p[0] + c.s2.n[0] * d, c.s2.p[1] + c.s2.n[1] * d - 6 * a, c.s2.p[2] + c.s2.n[2] * d], P[2]); o.x = q.x; o.y = q.y; o.z = q.z; o.k = f2 * .96; o.al = 1 - .45 * a; o.st = "broken"; o.brk = b; return o; }
+    o.x = S2.x; o.y = S2.y; o.z = S2.z; o.k = f2; o.al = 1; o.st = "locked"; o.lkT = c.lk2; return o; }
   /* coming apart: slide out along its face, shrink, and fly home */
   const k = (e - c.ret) / (30 * DV_M), so = slotW([c.s2.p[0] + c.s2.n[0] * 110, c.s2.p[1] + c.s2.n[1] * 110, c.s2.p[2] + c.s2.n[2] * 110], P[1]);
   if (k < .08) { const u = dvEase(k / .08); o.x = S2.x + (so.x - S2.x) * u; o.y = S2.y + (so.y - S2.y) * u; o.z = S2.z + (so.z - S2.z) * u; o.k = f2 + (sz - f2) * u; o.al = 1 - u; o.st = "unlock"; return o; }
@@ -5438,13 +5442,14 @@ function dvTick(W, t, T) { const D = dvNow(T); try { dvCountdown(W, t, T, !!D); 
   for (const c of P.L) { dvCube(c, e, D, o); if (!fogSeen(o.x, o.z) && o.st === "home") continue;
     const dc = Math.hypot(o.x - cp.x, o.y - cp.y, o.z - cp.z); near.push([dc, c, o.x, o.y, o.z, o.k, o.al, o.rot]);
     D3.position.set(o.x, o.y, o.z); D3.scale.setScalar(o.k); const tum = (1 - o.al) * (o.st === "home" ? .12 : 1); D3.rotation.set(Math.sin(e / 7e4 * c.sp + c.i) * tum * 1.2 + (o.st === "home" ? Math.sin(t * 1.5e-4 + c.x.a0) * .12 : 0), (1 - o.al) * (c.x.a0 + e / 5e4 * c.sp) + o.al * o.rot, Math.cos(e / 9e4 * c.sp + c.i) * tum); D3.updateMatrix(); X.inst.setMatrixAt(n, D3.matrix); c.ni = n; n++;
-    { /* the emerald seams: faint on a cube in flight, burning once it locks, flaring in the eruption, dead in the silence before it */ const lv = o.st === "locked" ? (.2 + .1 * Math.sin(t * .002 + c.i * .7)) * (1 - .9 * dark) + 1.1 * eru : o.st === "shift" ? .9 + .5 * Math.sin(t * .012 + c.i) : o.st === "slide" || o.st === "align" ? .3 + .7 * o.al : o.st === "home" ? .12 * wake : .22;
+    { /* the emerald seams: faint on a cube in flight, burning once it locks, flaring in the eruption, dead in the silence before it */ const lv = o.st === "broken" ? 0 : o.st === "locked" ? (.2 + .1 * Math.sin(t * .002 + c.i * .7)) * (1 - .9 * dark) + 1.1 * eru : o.st === "shift" ? .9 + .5 * Math.sin(t * .012 + c.i) : o.st === "slide" || o.st === "align" ? .3 + .7 * o.al : o.st === "home" ? .12 * wake : .22;
       if (lv > .02) { for (let k = 0; k < 32; k++) { X.SV.copy(X.SE[k]).applyMatrix4(D3.matrix); const j = (sm * 32 + k) * 3, band = k >= 24 ? (o.st === "locked" ? 3.2 : 1.3) : 1; /* the bands of light run across the machine like the reference's light strips */ sp2[j] = X.SV.x; sp2[j + 1] = X.SV.y; sp2[j + 2] = X.SV.z; sc2[j] = .3 * lv * band; sc2[j + 1] = lv * band; sc2[j + 2] = .45 * lv * band; } sm++; } }
     const g = n - 1, glw = o.st === "locked" ? .35 + 1.1 * eru : o.st === "fly" || o.st === "detach" ? 1 : .55 + .45 * wake; gp[g * 3] = o.x; gp[g * 3 + 1] = o.y; gp[g * 3 + 2] = o.z; gc[g * 3] = .35 * glw; gc[g * 3 + 1] = glw; gc[g * 3 + 2] = .42 * glw;
     if ((o.st === "fly" || o.st === "detach") && !lite) for (let k = 1; k <= X.TR; k++) { const tq = dvCube(c, e - k * (D.sim ? 14e3 : 25e3), D, X.tq); const a = (1 - k / (X.TR + 1)) * (o.st === "detach" ? .4 : .9), j = tr * 3; tp[j] = tq.x; tp[j + 1] = tq.y; tp[j + 2] = tq.z; tc[j] = .25 * a; tc[j + 1] = a; tc[j + 2] = .35 * a; tr++; }
     if (o.st === "hold" || o.st === "align") { const pul = .35 + .3 * Math.sin(t * .006 + c.i * 1.7), j = bm * 6, cx = Math.sign(o.x) * 15, cy2 = DV_Y + Math.sign(o.y - DV_Y) * 15, cz = Math.sign(o.z) * 15; bp[j] = o.x; bp[j + 1] = o.y; bp[j + 2] = o.z; bp[j + 3] = cx; bp[j + 4] = cy2; bp[j + 5] = cz; for (let q = 0; q < 6; q += 3) { bc[j + q] = .3 * pul; bc[j + q + 1] = pul; bc[j + q + 2] = .4 * pul; } bm++; }
     if (o.st === "locked" && !X.locked.has(c.i)) { X.locked.add(c.i); if (e - (o.lkT || c.lk) < 8000 * (D.rate || 1) * 3) dvFx(X, o, o.lkT === c.lk2 ? c.s2.n : c.s.n, o.lkT === c.lk2 ? 1.6 : 1, t); }
-    if (o.st !== "locked") X.locked.delete(c.i); }
+    if (o.st !== "locked") X.locked.delete(c.i);
+    if (o.st === "broken" && !(X.brk || (X.brk = new Set())).has(c.i)) { X.brk.add(c.i); if (e - o.brk < 8000 * (D.rate || 1) * 3) dvFx(X, o, c.s2.n, 2.2, t); } }
   X.inst.count = n; X.inst.instanceMatrix.needsUpdate = true;
   X.glow.geometry.setDrawRange(0, n); X.glow.geometry.attributes.position.needsUpdate = X.glow.geometry.attributes.color.needsUpdate = true; X.glow.material.size = 26;
   X.trail.geometry.setDrawRange(0, tr); X.trail.geometry.attributes.position.needsUpdate = X.trail.geometry.attributes.color.needsUpdate = true;
@@ -5541,7 +5546,7 @@ function dvBoom(F, x, y, z, t, k, col) { const b = F.booms[F.bi++ % F.booms.leng
    drawn in 4 calls (segments, halos, arcs, title plate), and it hides while the event itself runs. */
 const DVC_SEG = { a: [0, 1, 1, 0], b: [1, .5, 0, 1], c: [1, -.5, 0, 1], d: [0, -1, 1, 0], e: [-1, -.5, 0, 1], f: [-1, .5, 0, 1], g: [0, 0, 1, 0] };
 const DVC_DIG = ["abcdef", "bc", "abdeg", "abcdg", "bcfg", "acdfg", "acdefg", "abc", "abcdefg", "abcdfg"];
-function dvNext(T) { let s = Math.max(DV_FIRST, dvStartOf(T)); if (T >= s) { const d = new Date(s); s = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 11, 18); } return s; }
+function dvNext(T) { let s = Math.max(DV_FIRST, dvStartOf(T)); if (T >= s) { const d = new Date(s); s = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 15, 18); } return s; }
 function dvCdBuild(W) { const C = { grp: new TH.Group(), segs: [] }, DW = 10, DH = 9, TH0 = 1.9, GAP = 15.5, COL = 7; let x = 0;
   const lay = []; for (let i = 0; i < 4; i++) { for (let k = 0; k < 2; k++) { lay.push({ d: i * 2 + k, x }); x += GAP; } if (i < 3) { lay.push({ colon: 1, x: x - GAP / 2 + COL / 2 - 1 }); x += COL; } }
   const x0 = (x - GAP) / 2; C.lay = lay;
@@ -5574,10 +5579,83 @@ function dvCountdown(W, t, T, live) { const show = !live && view === "galaxy";
   for (const A of C.arc) { let px = A.a[0], py = A.a[1]; const steps = 8, j = ((t / 40) | 0) + A.sd;
     for (let k = 1; k <= steps; k++) { const u = k / steps, nx = A.a[0] + (A.b[0] - A.a[0]) * u + (k < steps ? Math.sin(j * 12.9 + k * 78.2) * 3.2 : 0), ny = A.a[1] + (A.b[1] - A.a[1]) * u + (k < steps ? Math.cos(j * 4.1 + k * 31.7) * 3.2 : 0); P.set([px, py, 1.2, nx, ny, 1.2], n * 6); n++; px = nx; py = ny; } }
   C.arcs.geometry.setDrawRange(0, n * 2); C.arcs.geometry.attributes.position.needsUpdate = true; C.arcs.material.opacity = .7 + .3 * Math.random(); }
+/* v442 THE OMEGA CUBE FIGHT. After the Last Stand the Omega Cube stays over the Void for 36 hours, and every commander can attack it.
+   Its hull is 100 sections, one per Assimilation Cube in it: every section a fleet destroys breaks that cube off the machine (it goes
+   dark and drifts away, for everyone to see), the topmost first. If the galaxy brings it down, it shatters; if the 36 hours run out
+   first, it comes apart on its own and the cubes go home. Shared record: event/omega {cyc, hp, dmg, log, dead, last}, written under
+   the doc lock like the world bosses. A fleet takes a share of its hull that rises with the fleet (8% to 20% for the largest). */
+const OM_SEG = 100, OM_FIGHT = 36 * DV_H, OM_HP = 1200000, OM_ATK = 520000;
+{ const hull = Math.round(OM_HP * WB_K / OM_SEG); AL.wbOmg = { n: "Omega Cube section", atk: Math.round(OM_ATK / OM_SEG), sh: Math.round(hull * .05), hull, val: hull * 2 }; }
+const OMO = { id: "omega", kind: "omega", lvl: 30, name: "Omega Cube", mv: (T, out) => { const o = out || {}; o.x = 0; o.y = DV_Y; o.z = 0; return o; }, r: .01, a0: 0 };
+G.om = null; let OMN = null, OMN_SRC = undefined;
+function omNorm(d, s0) { const o = d && typeof d === "object" && d.cyc === s0 ? d : { cyc: s0 }; o.hp = o.hp == null ? OM_SEG : clamp(Math.round(+o.hp || 0), 0, OM_SEG);
+  o.dmg = o.dmg && typeof o.dmg === "object" ? o.dmg : {}; o.log = Array.isArray(o.log) ? o.log.filter(x => Array.isArray(x) && x.length === 2).slice(-150) : []; o.dead = +o.dead || 0; o.last = o.last || null; return o; }
+function omState(s0) { const src = G.mode === "online" ? G.om : ((S && S.ldb) || {})["event/omega"] || null; if (!OMN || OMN.cyc !== s0 || OMN_SRC !== src) { OMN = omNorm(src ? jcopy(src) : null, s0); OMN_SRC = src; } return OMN; }
+/* when the Omega Cube comes apart (event time): 3 minutes after it falls, or when its 36 hours run out; the preview has it fall at 36 min */
+function omRB(s0) { if (G.dvSim) return DV.fight0 + 39 * DV_M; const st = omState(s0); return st.dead && st.dead > s0 ? st.dead - s0 + 3 * DV_M : DV.fight0 + OM_FIGHT; }
+const omHp = D => D.sim ? Math.round(OM_SEG * (1 - clamp((D.e - DV.fight0) / (36 * DV_M), 0, 1))) : omState(D.s0).hp;
+/* when a section broke off: the r-th from the top goes when the r-th section of hull is destroyed */
+function dvBrk(c, D, N) { const r = N - 1 - c.i2; if (D.sim) return DV.fight0 + (r + 1) / OM_SEG * 36 * DV_M; const st = omState(D.s0); for (const [at, left] of st.log) if (OM_SEG - left > r) return at - D.s0; return Infinity; }
+function omOn(T = now()) { if (G.dvSim || T < DV_FIRST) return false; const s0 = dvStartOf(T), e = T - s0; return e >= DV.fight0 && e < omRB(s0) && omState(s0).hp > 0; }
+function omFightRise(mkA, mkD, n0) { let { F, x } = wbRiseK(mkA(), mkD()); if (F <= 1) return { res: simulate(mkA(), mkD()), rise: 1 };
+  const tgt = Math.min(n0, Math.max(1, Math.round(OM_SEG * clamp(.08 + .04 * Math.log10(x), .08, .2)))); let lo = 1, hi = 0, best = null;
+  for (let i = 0; i < 9; i++) { const A = mkA(), D = mkD(); for (const s of D) { s.atk *= F; s.hull *= F; } const res = simulate(A, D), seg = n0 - clamp(Math.round(((res.dLeft || {}).wbOmg) || 0), 0, n0), err = Math.abs(seg - tgt);
+    if (!best || err < best.err) best = { res, F, err }; if (err <= 2) break; if (seg > tgt) lo = F; else hi = F; F = hi ? Math.sqrt(Math.max(lo, 1) * hi) : F * Math.max(1.5, Math.pow(seg / Math.max(1, tgt), 1.6)); if (hi && hi / Math.max(lo, 1) < 1.03) break; }
+  return { res: best.res, rise: best.F }; }
+async function omResolve(f) {
+  G.resolving.add(f.id); const T0 = now();
+  const home = () => { f.phase = "back"; f.back = Math.max(T0, f.arrive) + (f.tt || 60000); if (!Object.values(f.n || {}).some(v => v > 0)) S.fleets = S.fleets.filter(x => x !== f); };
+  try {
+    const at = f.arrive, s0 = dvStartOf(at), e = at - s0; if (at < DV_FIRST || e < DV.fight0 || e >= omRB(s0)) { note("The Omega Cube was gone when our fleet arrived. Returning.", "warn"); return home(); }
+    const ref = adb().doc("event/omega"); for (let i = 0; i < 8; i++) { const r = await ref.acquire({ holder: G.me, ttlMs: 15000 }); if (r.acquired) break; await sleep(1500); }
+    const snap = await ref.get(), cur = omNorm(snap.exists ? snap.data() : null, s0), n0 = cur.hp;
+    if (!n0) { note("The Omega Cube had already fallen when our fleet arrived. Returning.", "warn"); return home(); }
+    const mine0 = Object.assign({}, f.n), { res, rise } = omFightRise(() => stacksOf(f.n, techOf(null), G.me), () => stacksOf({ wbOmg: n0 }, { wbSh: 1 }, "wboss"), n0);
+    const left = clamp(Math.round(((res.dLeft || {}).wbOmg) || 0), 0, n0), seg = n0 - left;
+    cur.hp = left; if (seg) { cur.dmg[G.me] = (cur.dmg[G.me] || 0) + seg; cur.log.push([at, left]); } if (!left) { cur.dead = at; cur.last = G.me; }
+    await ref.set(cur); if (G.mode === "online") G.om = cur; OMN = null;
+    const rep = mkRep({ at, kind: "attack", title: "Assault on the Omega Cube", aUids: [G.me], aName: S.homeName + " Fleet", dName: "Omega Cube", omega: 1, omSeg: [n0, left], omRise: rise > 1.01 ? Math.round(rise * 10) / 10 : undefined, lvl: 30, ptype: "gas", fortL: 0, alien: true,
+      start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
+    f.n = cleanShips(res.aLeft); repairDocks(rep, lossesOf(mine0, f.n));
+    if (seg) { const L = { m: 40000 * seg, c: 26000 * seg, g: 12000 * seg }, ratio = Math.min(1, cargoOf(f.n) / Math.max(1, total(L)));
+      rep.loot = { m: Math.floor(L.m * ratio), c: Math.floor(L.c * ratio), g: Math.floor(L.g * ratio) }; f.loot = rep.loot; const sh = 3 * seg; S.shards = (S.shards || 0) + sh; rep.shards = sh; evPts("hunt", seg * 60); S.wins++;
+      logReward("Omega Cube bounty", rep.loot, { shards: sh, kind: "battle" }); rep.mats = fsDrop(lootRoll([["cube", 5, 1 + Math.floor(seg / 3)], ["void", 5, 1 + Math.floor(seg / 5)]]), "the Omega Cube", { nocap: 1 }); }
+    if (rise > 1.01) note(`The Omega Cube rose to meet our fleet: ×${fmt(Math.round(rise))} toughness and firepower against a force this size.`, "warn");
+    if (!left) { bump("bosses"); note("We brought down the Omega Cube! It is shattering. Everyone who fought it can claim the spoils.", "win"); }
+    else note(seg ? `Our fleet broke ${seg} section${seg > 1 ? "s" : ""} off the Omega Cube (${left} of ${OM_SEG} left)${rep.loot ? `. Bounty: ${fmt(rep.loot.m)} metal, ${fmt(rep.loot.c)} crystal, ${fmt(rep.loot.g)} gas, plus ◆${rep.shards}` : ""}.` : "The Omega Cube shrugged off our attack.", seg ? "win" : "loss");
+    addReport(rep); omClaim(); home();
+  } catch (e) { note("Lost contact with the Omega Cube fight. Fleet returning.", "warn"); home(); }
+  finally { G.resolving.delete(f.id); dirty(); progress(); softRender(); } }
+/* it fell: everyone who broke a section claims once: shards by share, Omega Core Fragments (more for the top ten, the top damage and the
+   final blow), an item, and a Teleport Ticket for the top damage */
+function omClaim() { if (!S || !G.ready || G.dvSim) return; const T = now(); if (T < DV_FIRST) return; const s0 = dvStartOf(T), st = omState(s0), my = st.dmg[G.me] || 0;
+  if (st.hp > 0 || !my || S.omGot === s0) return; S.omGot = s0; const rank = Object.entries(st.dmg).sort((a, b) => b[1] - a[1]).map(x => x[0]), tot = Object.values(st.dmg).reduce((a, b) => a + b, 0) || 1, share = my / tot, i = rank.indexOf(G.me);
+  const sh = 20 + Math.round(160 * Math.min(1, share * 4)), frag = 1 + (i < 10 ? 1 : 0) + (i === 0 ? 1 : 0) + (st.last === G.me ? 1 : 0), it = DROPS[(Math.random() * DROPS.length) | 0];
+  S.shards = (S.shards || 0) + sh; S.omegaFrag = (S.omegaFrag || 0) + frag; giveItem(it); if (i === 0) giveItem("teleport");
+  logReward("Omega Cube destroyed", null, { shards: sh, item: it, kind: "battle" });
+  note(`The Omega Cube is destroyed! Your share: ◆${sh}, ${frag} Omega Core Fragment${frag > 1 ? "s" : ""}, ${SHOP[it].n}${i === 0 ? " and a Teleport Ticket for top damage" : ""}.`, "win"); dirty(); }
+/* the attack panel */
+function shOmega() { const T = now(); if (T < DV_FIRST && !G.dvSim) return `<div class="hd"><h2>The Omega Cube</h2></div><p class="note">It has not formed yet.</p>`;
+  const s0 = dvStartOf(T), st = omState(s0), hp = st.hp, pc = Math.round(hp / OM_SEG * 100), end = s0 + omRB(s0), on = omOn(T), my = st.dmg[G.me] || 0, h = originPlanet(), avail = originAvail(), sel = selected(), sent = S.fleets.some(f => f.om && f.phase === "out");
+  const lead = Object.entries(st.dmg).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([u, v], i) => `<li><span>${i + 1}. ${esc(u === G.me ? "You" : nameOf(u))}</span><b>${v} section${v > 1 ? "s" : ""}</b></li>`).join("");
+  let body = ""; if (!on) body = `<p class="note">${hp ? "The Omega Cube is not open to attack right now." : "Destroyed. Its cubes are scattering across the galaxy."}</p>`;
+  else if (!canPlay()) body = `<p class="note">${G.mode === "connecting" ? connNote() : "You can only watch this galaxy."}</p>`;
+  else if (sent) body = `<p class="note">Our fleet is on its way.</p>`;
+  else if (!Object.keys(avail).length) body = `${originBar()}<p class="note">No ships at ${esc(h ? h.name : S.homeName)}.</p>`;
+  else body = `<h2 class="sec">Attack</h2>${originBar()}${picker(avail)}${speedBar(OMO, sel)}<button class="btn wide amber" data-act="omGo" ${Object.keys(sel).length && !slotsFull() ? "" : "disabled"}>⚔ Attack the Omega Cube</button>`;
+  return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">${on ? "● LIVE · " : ""}Cube Devastation</div><h2>The Omega Cube</h2><p class="note">A hundred Assimilation Cubes locked round the Super Cube. Every section our fleets destroy breaks a cube off the machine. Bring it down before it disperses.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
+    <div class="wbhp"><div class="wbbar"><i style="width:${pc}%;background:#5dff6a"></i></div><span>${hp ? `${hp} of ${OM_SEG} sections · ${pc}%` : "Destroyed"}</span></div>
+    <dl class="kv"><dt>Bounty per section</dt><dd>${costHTML({ m: 40000, c: 26000, g: 12000 })} + ◆3</dd><dt>Your sections</dt><dd>${my || "None yet"}</dd><dt>${on ? "Disperses in" : "Status"}</dt><dd>${on ? `<b data-end="${end}">${ftime(end - T)}</b>` : hp ? "Not attackable" : "Fallen"}</dd><dt>When it falls</dt><dd>◆ shards by share, Omega Core Fragments, an item; the top damage a Teleport Ticket</dd></dl>
+    ${lead ? `<h2 class="sec">Top damage</h2><ol class="wblead">${lead}</ol>` : ""}${body}`; }
+/* the band over the map while it can be fought */
+function omBand() { const on = omOn(), b = $("#omband"); if (!on || view !== "galaxy") { if (b) b.remove(); return; } const st = omState(dvStartOf(now()));
+  const html = `<button class="omb" data-act="omOpen"><b>Ω OMEGA CUBE</b><span>${st.hp} of ${OM_SEG} sections</span><i>⚔ Attack</i></button>`;
+  if (!b) { const e = document.createElement("div"); e.id = "omband"; e.innerHTML = html; $("#app").appendChild(e); } else if (b.dataset.h !== html) { b.dataset.h = html; b.innerHTML = html; } }
+setInterval(() => { try { omBand(); omClaim(); } catch (e) {} }, 1000);
 /* the owner's preview: the whole event (awakening, migration, assembly, eruption, a turn of the finished Omega, and its break-up) in
    four minutes, on this device only */
 function dvSimStart() { if (!duelOwner()) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } G.dvP = null; G.dvF = null; G.dvSim = { t0: performance.now(), s0: Math.floor(now() / 60000) * 60000 };
-  toast("Owner preview: Cube Devastation in four and a half minutes. Only you see this."); try { const c = G3 && G3.cam; if (c) { c.follow = null; c.followFleet = null; c.goal = { tx: 0, ty: DV_Y, tz: 0, dist: 760, th: .6 }; } } catch (e) {} }
+  toast("Owner preview: Cube Devastation in five minutes, the fight included. Only you see this."); try { const c = G3 && G3.cam; if (c) { c.follow = null; c.followFleet = null; c.goal = { tx: 0, ty: DV_Y, tz: 0, dist: 760, th: .6 }; } } catch (e) {} }
 function dvSimStop(done) { if (!G.dvSim) return; G.dvSim = null; G.dvP = null; toast(done ? "Preview over: the cubes are home." : "Preview stopped."); }
 /* v408 tapping the Super Cube */
 function shCubePick() { const T = now(), ph = cubePhase(T), live = evActive(T), cur = nexusNow(T), who = cur.holder ? `Held by ${esc(allyTag(cur.holder))}` : live ? "Unclaimed · the Collective Warden guards it" : `Next battle in ${ftime(evStart(evWeek(T) + 1) - T)}`;
@@ -7088,7 +7166,8 @@ async function connectCloud() {
       helpApply(); chatInit(); allyInSub(); softRender();
     }, () => {});
     db.doc("event/nexus").onSnapshot(s => { G.nexus = s.exists ? cleanNexus(s.data()) : null; softRender(); }, () => {});
-    db.doc("event/wboss").onSnapshot(s => { G.wb = s.exists ? s.data() : null; wbSeen(G.wb); wbClaim(); softRender(); }, () => {}); /* v384 world bosses */
+    db.doc("event/wboss").onSnapshot(s => { G.wb = s.exists ? s.data() : null; wbSeen(G.wb); wbClaim(); softRender(); }, () => {});
+    db.doc("event/omega").onSnapshot(s => { G.om = s.exists ? s.data() : null; OMN = null; omClaim(); softRender(); }, () => {}); /* v442 the Omega Cube */ /* v384 world bosses */
     db.doc("event/glory").onSnapshot(s => { G.glory = s.exists ? cleanGlory(s.data()) : null; gloryReturns(); softRender(); }, () => {});
   } catch (e) { initOffline(); }
 }
@@ -8639,7 +8718,7 @@ function cubeOrbit(c, id, T, rad, f) { const h = hash(id); let inc = .1 + (h % 3
    one flies the last 50 minutes before its strike and limps home afterwards. */
 const MV_LBL = { o: "holding an outpost", p: "espionage", a: "attack", g: "gathering", r: "pirate raid", y: "station expedition", t: "transfer", f: "reinforcing", c: "recycling", w: "bot war strike", j: "joint strike", s: "stationed with an ally" };
 const mvCode = f => f.nid ? (f.nid[0] === "e" ? "o" : "g") : f.xid ? "r" : f.yid ? "y" : f.assault ? "j" : f.mission === "spy" ? "p" : f.mission === "station" ? "s" : f.mission === "transfer" ? "t" : f.mission === "reinforce" ? "f" : f.mission === "recycle" ? "c" : "a";
-const tgtById = id => G.byId[id] || NB[id] || PB[id] || YB[id] || wbById(id) || (id === "nexus" ? NEXUS : null);
+const tgtById = id => G.byId[id] || NB[id] || PB[id] || YB[id] || wbById(id) || (id === "nexus" ? NEXUS : id === "omega" ? OMO : null);
 function myMoves() {
   const out = [];
   for (const f of S.fleets) { if (f.phase === "resolving" || f.phase === "muster" || out.length >= 10) continue; const tg = fleetTarget(f), h = fleetHome(f); if (!tg) continue; const tt = f.tt || (f.arrive - f.out);
@@ -15425,7 +15504,7 @@ function renderSheet() {
   if (!sheet) return; /* v190: a card closed while a redraw was pending */
   if (G.rangeHeld && sheet) { G.rangeLate = 1; return; }
   let w = $("#sheetwrap");
-  let html = ({ planet: shPlanet, report: shReport, settings: shSettings, void: shVoid, assault: shAssault, targets: shTargets, node: shNode, bld: shBld, nexus: shNexus, skin: shSkin, find: shFind, pirate: shPirate, pyramid: shPyramid, wboss: shWboss, matbox: () => { const s = SHOP[sheet.k]; if (!s) return ""; const f = fsOf(), tt = s.mbT; return `<div class="hd"><div><div class="chapter" style="color:${FS_TIER[tt][1]}">Material Selection Box</div><h2>${esc(s.n)}</h2><p class="note">${sheet.all && (S.items || {})[sheet.k] > 1 ? `Pick one for all ${S.items[sheet.k]} boxes: you get ${fmt(MB_N[tt] * S.items[sheet.k])} × ${FS_TIER[tt][0]} of it.` : `Pick one: you get ${MB_N[tt]} × ${FS_TIER[tt][0]} of it.`}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div><div class="fsmb">${Object.keys(FS_MATS).map(m => `<button class="btn" data-act="matboxPick" data-v="${m}" style="--tc:${FS_TIER[tt][1]}"><i class="fsmi lg fsmat-${m}"></i><b>${FS_MATS[m][0]}</b><small>you have ${fmt(f.mats[fsMatKey(m, tt)] || 0)}</small></button>`).join("")}</div>`; }, fctl: shFctl, station: shStation, ally: shAlly, layers: shLayers, tile: shTile, graphics: shGfx, cuberes: shCubeRes, basedet: shBaseDet, planets: shPlanets, fo: shFo, allymem: shAllyMem, altools: () => { const a = myAlly(); return a ? `<div class="hd"><div><div class="chapter">[${esc(a.tag)}] ${esc(a.name)}</div><h2>${allyRank(a, G.me) === "lead" ? "Leader" : "Captain"} tools</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${allyTools(a) || '<p class="note">Only the leader and captains have these tools.</p>'}` : ""; },
+  let html = ({ planet: shPlanet, report: shReport, settings: shSettings, void: shVoid, assault: shAssault, targets: shTargets, node: shNode, bld: shBld, nexus: shNexus, skin: shSkin, find: shFind, pirate: shPirate, pyramid: shPyramid, wboss: shWboss, omega: shOmega, matbox: () => { const s = SHOP[sheet.k]; if (!s) return ""; const f = fsOf(), tt = s.mbT; return `<div class="hd"><div><div class="chapter" style="color:${FS_TIER[tt][1]}">Material Selection Box</div><h2>${esc(s.n)}</h2><p class="note">${sheet.all && (S.items || {})[sheet.k] > 1 ? `Pick one for all ${S.items[sheet.k]} boxes: you get ${fmt(MB_N[tt] * S.items[sheet.k])} × ${FS_TIER[tt][0]} of it.` : `Pick one: you get ${MB_N[tt]} × ${FS_TIER[tt][0]} of it.`}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div><div class="fsmb">${Object.keys(FS_MATS).map(m => `<button class="btn" data-act="matboxPick" data-v="${m}" style="--tc:${FS_TIER[tt][1]}"><i class="fsmi lg fsmat-${m}"></i><b>${FS_MATS[m][0]}</b><small>you have ${fmt(f.mats[fsMatKey(m, tt)] || 0)}</small></button>`).join("")}</div>`; }, fctl: shFctl, station: shStation, ally: shAlly, layers: shLayers, tile: shTile, graphics: shGfx, cuberes: shCubeRes, basedet: shBaseDet, planets: shPlanets, fo: shFo, allymem: shAllyMem, altools: () => { const a = myAlly(); return a ? `<div class="hd"><div><div class="chapter">[${esc(a.tag)}] ${esc(a.name)}</div><h2>${allyRank(a, G.me) === "lead" ? "Leader" : "Captain"} tools</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${allyTools(a) || '<p class="note">Only the leader and captains have these tools.</p>'}` : ""; },
     yard: shYard, labs: shLabs, flagship: shFlag, sound: shSound, shop: shShop, pack: shPack, packadmin: shPackAdmin, vip: shVip, spyrep: shSpyRep, spysend: shSpySend, repshare: shRepShare, stress: shStress, cubepick: shCubePick, health: shHealth, howto: shHowTo, fbinbox: shFbInbox, events: shEvents, ach: shAch, avatars: shAvatars, detail: shDetail, faction: shFaction, profile: shProfile, ranks: shRanks, friends: shFriends, chat: shChat,
     mastery: () => `<div class="hd"><div><div class="chapter">Progression</div><h2>Path to Mastery</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${mMastery()}` })[sheet.type]();
   if (!html) { closeSheet(); return; }
@@ -17326,7 +17405,7 @@ function playBattle(r) {
   /* v341: every commander's squadrons fly in their own flagship's glow colour (a friend's or an ally's report shows their colours, not yours) */
   for (const q of R.squads) { const u = q.own; if (typeof u === "string" && u !== "pirates" && u !== "cube" && (u === G.me || G.players[u] || isBot(u) || FAC4_U[u])) { const f = playerFac(u); if (FLAG_GLOW[f] != null) Object.defineProperty(q, "acc", { value: "#" + FLAG_GLOW[f].toString(16).padStart(6, "0") + "@" + f, enumerable: false, writable: true, configurable: true }); } }
   fbBake(); battle.flags = battleFlags(r, R.squads); for (const sd of ["a", "d"]) for (const e of battle.flags[sd]) shipArtSoon("flagship", e.acc, "side"); // v250
-  battle.superSide = r.wb ? "d" : r.dName === "Collective Warden" ? "d" : r.aName === "The Cube" ? "a" : null; // v109: the Super Cube fights as one grand Cube
+  battle.superSide = r.omega ? "d" : r.wb ? "d" : r.dName === "Collective Warden" ? "d" : r.aName === "The Cube" ? "a" : null; // v109: the Super Cube fights as one grand Cube
   /* v401: your fleet is always nearest you. When you attack, the field is mirrored top to bottom (the recorded frames, once per record) and the two panels swap, so your ships and their panel sit at the bottom and the defender is across the field */
   { const mine = R.squads.find(q => q.own === G.me); battle.flip = !battle.notMine && !!mine && mine.side === "a"; if (!!R.flipY !== battle.flip) { for (const f of R.frames) for (const s of f.s) s[1] = 100 - s[1]; R.flipY = battle.flip; } w.classList.toggle("flip", battle.flip); }
   for (const q of R.squads) { if (isWbU(q.k)) continue; cardPal(q.k); shipArtSoon(q.k, q.acc || battle.acc[q.side], "side"); if (q.role === "carrier") shipArtSoon(q.k === "lord" ? "drone" : "fighter", q.acc || battle.acc[q.side], "side"); } // start baking every unit type now (and sample its card), and a carrier's fighter wing
@@ -18072,8 +18151,8 @@ function battleHUD(b, pos) {
 const lossCost = (L) => { const c = { m: 0, c: 0, g: 0 }; for (const k in L) { const n = L[k], u = SH[k] ? SH[k].c : DF[k] ? DF[k].c : null; if (u) { for (const r of ["m", "c", "g"]) c[r] += (u[r] || 0) * n; } else if (AL[k]) { c.m += AL[k].val * .5 * n; c.c += AL[k].val * .3 * n; c.g += AL[k].val * .2 * n; } } return c; };
 /* v116 the Super Cube is one unit wherever a battle is shown: its cubes, spheres and drones are summed into a single entry with
    one integrity figure (display only; the battle itself and the stored report are untouched) */
-const superSideOf = r => r ? (r.wb ? "d" : r.dName === "Collective Warden" ? "d" : r.aName === "The Cube" ? "a" : null) : null;
-const scName = r => r && r.wb && WB[r.wb] ? WB[r.wb].n : "Super Cube";
+const superSideOf = r => r ? (r.omega ? "d" : r.wb ? "d" : r.dName === "Collective Warden" ? "d" : r.aName === "The Cube" ? "a" : null) : null;
+const scName = r => r && r.omega ? "Omega Cube" : r && r.wb && WB[r.wb] ? WB[r.wb].n : "Super Cube";
 function scSum(r, side) { if (r.wb && r.wbSeg && WB[r.wb]) { const u = AL[WB[r.wb].k]; return { h0: WB_SEG * u.hull, h1: r.wbSeg[1] * u.hull, a: r.wbSeg[0] * u.atk, sh: r.wbSeg[0] * u.sh, integ: r.wbSeg[1] / WB_SEG }; } /* v384: a world boss's whole hull */
   const s0 = r.start[side] || {}, L = (side === "a" ? r.lossA : r.lossD) || {}; let h0 = 0, h1 = 0, a = 0, sh = 0;
   for (const k in s0) { const u = AL[k]; if (!u) continue; h0 += s0[k] * u.hull; h1 += Math.max(0, s0[k] - (L[k] || 0)) * u.hull; a += s0[k] * u.atk; sh += s0[k] * u.sh; } return { h0, h1, a, sh, integ: h0 ? h1 / h0 : 1 }; }
@@ -19630,7 +19709,7 @@ const ACT = {
     G.sel = null; G.selNode = x.id; if (G3 && !d.nofly) { G3.cam.followFleet = null; G3.cam.follow = null; const q = P3(x, now()); G3.cam.goal = { tx: q.x, ty: q.y, tz: q.z, dist: 36 }; }
     openSheet({ type: "pirate", id: x.id }); },
   raid: d => act(() => {
-    const x = PB[d.id]; if (!x || !canPlay()) return; if (pirDown(x) > now()) return toast(`${x.name} is still regrouping.`, "warn");
+    const x = PB[d.id]; if (!x || !canPlay()) return; if (x.boss && dvLive(now()) && !G.dvSim) return toast(`${x.name} has left to join the Omega Cube. Attack the Omega Cube instead.`, "warn"); if (pirDown(x) > now()) return toast(`${x.name} is still regrouping.`, "warn");
     if (S.fleets.some(f => f.xid === x.id && f.phase === "out")) return toast("A fleet is already on its way there.", "warn");
     if (slotsFull()) return;
     const n = takeShips(pick); if (!Object.keys(n).length) return;
@@ -19638,6 +19717,9 @@ const ACT = {
     const f = sendFleet(x, n, "pirate", { xid: x.id }); if (!f) return; callAllies(f); closeSheet(); toast(`Raid launched on ${x.name}. Arrival in ${ftime(f.tt)}.`);
   }),
   pirLvl: d => { G.pirLvl = d.v === G.pirLvl ? null : d.v; renderSheet(); },
+  omOpen: () => { pick = {}; for (const k in S.ships) if (S.ships[k] && SH[k]) pick[k] = S.ships[k]; if (view !== "galaxy") { view = "galaxy"; render(); } if (G3) { G3.cam.followFleet = null; G3.cam.follow = null; G3.cam.goal = { tx: 0, ty: DV_Y, tz: 0, dist: 520 }; } openSheet({ type: "omega" }); }, /* v442 */
+  omGo: () => act(() => { if (!canPlay()) return; if (!omOn()) return toast("The Omega Cube can't be attacked right now.", "warn"); if (S.fleets.some(f => f.om && f.phase === "out")) return toast("A fleet is already on its way there.", "warn"); if (slotsFull()) return;
+    const n = takeShips(pick); if (!Object.keys(n).length) return; const f = sendFleet(OMO, n, "attack", { om: 1 }); if (!f) return; closeSheet(); toast(`Fleet launched at the Omega Cube. Arrival in ${ftime(f.tt)}.`); }),
   wboss: d => { const key = d.id, O = WBO[key]; if (!O) return; pick = {}; for (const k in S.ships) if (S.ships[k] && SH[k]) pick[k] = S.ships[k]; /* v384 world bosses */
     if (view !== "galaxy") { view = "galaxy"; render(); } G.sel = null; G.selNode = null; if (G3 && !d.nofly) { G3.cam.followFleet = null; G3.cam.follow = null; const q = P3(O, now()); G3.cam.goal = { tx: q.x, ty: q.y, tz: q.z, dist: WB[key].con != null ? 50 : 90 }; }
     openSheet({ type: "wboss", id: key }); },
