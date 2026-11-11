@@ -707,7 +707,7 @@ canvas.dthumb{display:block}
 .bctl button.on{color:#ffd66a;border-color:rgba(255,214,106,.7)}.labsv{display:block;margin:-2px 0 8px auto}
 .bctl button{min-width:40px;height:34px;padding:0 9px;border-radius:9px;background:rgba(8,24,36,.85);border:1px solid rgba(95,208,255,.45);color:#cfefff;font-family:var(--f-display);font-size:13px;cursor:pointer}
 @media (max-width:420px){.bctl{gap:4px}.bctl button{min-width:34px;padding:0 6px}} /* v319: all nine replay controls fit a 360px phone (the last one was cut off) */
-.bev{position:absolute;left:10px;top:calc(13% + 56px);z-index:2;display:flex;flex-direction:column;gap:4px;max-width:62%;pointer-events:none}
+.bev{position:absolute;left:10px;top:calc(13% + 56px);z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:4px;max-width:62%;pointer-events:none}.bevt{pointer-events:auto;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:13px;background:rgba(4,12,20,.78);border:1px solid rgba(95,208,255,.45);color:#cfefff;font-family:var(--f-display);font-size:11px;letter-spacing:.06em;cursor:pointer}.bevt b{font-weight:700;color:#ffd66a}.bevt i{font-style:normal;display:inline-block;transition:transform .2s}.bevt[aria-expanded=true] i{transform:rotate(90deg)}.bevt.nw{animation:bevp 1.2s ease-out 2}@keyframes bevp{0%{box-shadow:0 0 0 0 rgba(255,214,106,.7)}100%{box-shadow:0 0 0 9px rgba(255,214,106,0)}}.bevl{display:flex;flex-direction:column;gap:4px;max-height:38vh;overflow-y:auto;pointer-events:auto}
 .be{font-family:var(--f-display);font-size:11px;color:#e8f4fb;background:rgba(4,12,20,.72);border-left:3px solid #9fb6c4;padding:3px 7px;border-radius:0 6px 6px 0;animation:bein .3s}.be.a{border-color:#5fd0ff}.be.d{border-color:#ff8a5c}.be time{color:#9fb6c4;margin-right:6px}
 @keyframes bein{from{opacity:0;transform:translateX(-8px)}to{opacity:1}}
 .battle .bres2{position:absolute;left:10px;right:10px;display:flex;flex-direction:column;top:calc(env(safe-area-inset-top,0px) + 10px);bottom:calc(10px + env(safe-area-inset-bottom,0px));overflow-y:auto;z-index:5;-webkit-overflow-scrolling:touch}
@@ -3657,7 +3657,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 427;
+const GAME_V = 428;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -17003,6 +17003,8 @@ function battlePrebake(r) { if (!r || !r.start || battlePrebake[r.id]) return; b
    emptied); both are rebuilt at full size the moment the battle closes. */
 function gpuNap(on) { for (const W of [G3, C3]) { if (!W || !W.renderer) continue; try { if (on) { W.renderer.setSize(1, 1, false); W.size = [1, 1]; } else W.size = [0, 0]; } catch (e) {} }
   if (on) for (const id of ["#galaxyfx", "#colfx"]) { const c = $(id); if (c) { c.width = 1; c.height = 1; } } }
+/* v428 the battle log drop-down: closed unless the player opened it (remembered on this device) */
+function bevOpen() { if (G.bevOpen == null) { try { G.bevOpen = localStorage.getItem("udf.bevOpen") === "1"; } catch (e) { G.bevOpen = false; } } return !!G.bevOpen; }
 function playBattle(r) {
   if (battle) closeBattle(); crumb("battle replay: " + String((r && r.title) || "battle").slice(0, 40)); gpuNap(true);
   const w = document.createElement("div"); w.className = "battle"; w.id = "battle";
@@ -17755,7 +17757,8 @@ function battleHUD(b, pos) {
   const ha = card("a", aN, youA && !b.notMine) + `<span class="bh-rd">${b.intro > 0 ? "READY" : b.simT >= b.end ? "FINAL" : `ROUND ${rd} · ${Math.floor(clk / 60)}:${String(clk % 60).padStart(2, "0")}`}</span>`, hd = card("d", dN, !youA && !b.notMine);
   let ch = 0; if (A.dataset.h !== ha) { A.dataset.h = ha; A.innerHTML = ha; ch = 1; } if (D.dataset.h !== hd) { D.dataset.h = hd; D.innerHTML = hd; ch = 1; }
   if (ch) { const w = $("#battle"), ht = $("#bhA").offsetHeight + "px", hb = $("#bhD").offsetHeight + "px"; if (w && w.dataset.hh !== ht + hb) { w.dataset.hh = ht + hb; w.style.setProperty("--bht", ht); w.style.setProperty("--bhb", hb); } } /* v196: Back and the controls sit just clear of the HUDs as the rosters grow */
-  const evs = (b.res.sim.ev || []).filter(e => e.t <= b.simT && e.kind !== "loss").slice(-3), he = evs.map(e => `<div class="be ${e.side || ""}"><time>${Math.floor(e.t / 60)}:${String(Math.floor(e.t % 60)).padStart(2, "0")}</time>${esc(scTxt(b.r, e.txt))}</div>`).join(""), E = $("#bev");
+  const all = (b.res.sim.ev || []).filter(e => e.t <= b.simT && e.kind !== "loss"), open = bevOpen(), evs = open ? all.slice(-6) : [], last = all[all.length - 1], nw = !open && last && b.simT - last.t < 2.5, /* v428 the log is a drop-down */
+    he = `<button class="bevt${nw ? " nw" : ""}" data-act="bevT" aria-expanded="${open}" aria-label="${open ? "Hide" : "Show"} battle log"><i>▸</i>Log${all.length ? ` <b>${all.length}</b>` : ""}</button>` + (evs.length ? `<div class="bevl">` : "") + evs.map(e => `<div class="be ${e.side || ""}"><time>${Math.floor(e.t / 60)}:${String(Math.floor(e.t % 60)).padStart(2, "0")}</time>${esc(scTxt(b.r, e.txt))}</div>`).join("") + (evs.length ? "</div>" : ""), E = $("#bev");
   if (E && E.dataset.h !== he) { E.dataset.h = he; E.innerHTML = he; }
 }
 const lossCost = (L) => { const c = { m: 0, c: 0, g: 0 }; for (const k in L) { const n = L[k], u = SH[k] ? SH[k].c : DF[k] ? DF[k].c : null; if (u) { for (const r of ["m", "c", "g"]) c[r] += (u[r] || 0) * n; } else if (AL[k]) { c.m += AL[k].val * .5 * n; c.c += AL[k].val * .3 * n; c.g += AL[k].val * .2 * n; } } return c; };
@@ -19536,6 +19539,7 @@ const ACT = {
   combatTest: () => { const res = combatTests(); sheet.tests = res; renderSheet(); },
   bdetail: d => { closeBattle(); openSheet({ type: "report", id: d.id }); },
   bclose: () => closeBattle(),
+  bevT: () => { const o = !bevOpen(); G.bevOpen = o; try { localStorage.setItem("udf.bevOpen", o ? "1" : "0"); } catch (e) {} const E = $("#bev"); if (E) E.dataset.h = ""; }, /* v428 */
   back: () => sheetBack(),
   packOpen: d => { if (G.packs && G.packs.find(p => p.id === d.k)) openSheet({ type: "pack", id: d.k }); },
   packAdmin: () => { G.pkAdm = null; openSheet({ type: "packadmin" }); },
