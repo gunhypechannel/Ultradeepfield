@@ -2754,8 +2754,8 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       const A = fa < 0 ? -1 : fa, warn = bell(A, 0, .06, .9, .97), runes = A < 0 ? 0 : ss(.12, .35, A), acc = bell(A, .35, .55, .7, .74), align = bell(A, .55, .64, .86, .92), fire = bell(A, .66, .685, .84, .88), after = bell(A, .86, .9, .97, 1);
       out.ph = A < 0 ? "idle" : A < .12 ? "warning" : A < .35 ? "runes" : A < .55 ? "accumulate" : A < .66 ? "align" : A < .86 ? "beam" : "aftermath"; out.dark = align * (1 - fire * .5) * .6;
       const spin = 1 + warn * 2 + runes * 3 + acc * 4 + align * 2 - after * 2.5, wob = out.stab.filter(x => !x).length;
-      st.spread = Math.max(warn, bell(fw, 0, .2, .8, 1)); st.beat = fw < 0 ? 0 : Math.sin(fw * Math.PI * 3) * (1 - fw); st.lift = Math.max(acc, align) * .9 * (1 - fire * .7) + fire * .15 - after * .2; st.recoil = fire * (.8 + Math.sin(t * .03) * .1); st.sway = fire * Math.sin((A - .66) / .2 * Math.PI * 1.2 - .6) * .72; const lean = A < 0 ? 0 : ss(.05, .3, A) * (1 - ss(.9, 1, A)); out.lean = lean; out.fireK = fire; out.sway = st.sway;
-      st.coil = bell(fr, 0, .2, .8, 1) * .6 + warn * .2; st.curl = Math.sin(t * .0003) * .4; st.gape = Math.max(acc * .6, align * .85, fire, bell(fc, .2, .4, .7, .9) * .4, bell(fw, .3, .45, .6, .8) * .5);
+      st.spread = Math.max(warn, bell(fw, 0, .2, .8, 1)); st.beat = fw < 0 ? 0 : Math.sin(fw * Math.PI * 3) * (1 - fw); st.lift = Math.max(acc, align) * .9 * (1 - fire * .7) + fire * .15 - after * .2; st.recoil = fire * (.8 + Math.sin(t * .03) * .1); st.sway = fire * Math.sin((A - .66) / .2 * Math.PI * 1.2 - .6) * .3; const lean = A < 0 ? 0 : ss(.05, .3, A) * (1 - ss(.9, 1, A)); out.lean = lean; out.fireK = fire; out.sway = st.sway;
+      st.coil = bell(fr, 0, .2, .8, 1) * .6; st.curl = Math.sin(t * .0003) * .4; st.gape = Math.max(acc * .6, align * .85, fire, bell(fc, .2, .4, .7, .9) * .4, bell(fw, .3, .45, .6, .8) * .5);
       spine(t);
       for (let i = 0; i < N; i++) { const a = P[i], b = P[i + 1] || P[i]; S.v.subVectors(i < N ? P[i + 1] : P[i], i ? P[i - 1] : P[i]).normalize(); S.q.setFromUnitVectors(S.Z, S.v); const s = SC[i];
         S.s.set(s, s * .9, s * 1.45); S.m.compose(a, S.q, S.s); segs.setMatrixAt(i, S.m); S.p.copy(a).addScaledVector(S.v, s * .62); S.s.set(s * 1.01, s * .91, s).multiplyScalar(i % 2 ? .001 : 1); S.m.compose(S.p, S.q, S.s); cols.setMatrixAt(i, S.m); S.s.set(s * 1.0, s * .9, s);
@@ -2781,7 +2781,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       memM.opacity = .36 + st.spread * .16 + acc * .12 + fire * .15; wingWave(fw < 0 ? -1 : ss(.35, 1, fw));
       // the wheel: majestic idle turn; it spins up through the charge, the rings counter-rotate, the runes ignite in sequence, then align
       const dt = Math.min(64, t - (out.lt || t)); out.lt = t; const crack = out.crack, Lg = out.lean || 0;
-      body.rotation.x = Lg * .42; wheel.rotation.set(-Lg * (Math.PI / 2 + .42), 0, 0); wheel.rotateY(.12 * (1 - Lg)); wheel.position.set(0, 11 + Lg * 5, -11 + Lg * 5.5);
+      body.rotation.x = Lg * .42; wheel.rotation.set(Lg * .22, .12 * (1 - Lg), 0); { const Lw = A < 0 ? 0 : ss(0, .1, A) * (1 - ss(.94, 1, A)); wheel.position.set(0, 12.2 + Lw * 5.5, -11 - Lg * 2.5); }
       // the aura: a violet glow along his whole body, brighter and brighter through the charge, peaking as he fires
       const au = A < 0 ? .12 + .05 * Math.sin(t * .002) : .15 + warn * .25 + runes * .35 + acc * .8 + align * 1.5 + fire * 1.1 - after * .9;
       for (let k = 0; k < NA; k++) { const i = k * 2, p = P[i], s = aura[k]; s.position.copy(p); const z = SC[i] * (2.4 + au * 1.1) * (1 + .12 * Math.sin(t * .006 + k)); s.scale.setScalar(z); s.material.opacity = Math.min(.42, .06 + au * .11); }
@@ -3961,7 +3961,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 457;
+const GAME_V = 458;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6089,10 +6089,10 @@ function sbVae(X, W, b, s, t, dt, say, yaw, side) { const sc = SBX.vae.sc;
   for (const [at, mv, kn] of [[9, "claw", 2], [13, "wing", 4], [18, "judge", 3], [24, "seal", 0], [28, "claw", 2]]) if (s > at && !X["m" + at]) { X["m" + at] = 1; b.act(mv); if (kn) setTimeout(() => { try { sbKillN(X, kn, performance.now(), mv !== "judge"); } catch (e) {} }, mv === "judge" ? 1600 : 900); }
   if (s > 24) say("v2", "A golden seal is forming. Our fleets are slowed inside the circle.");
   // phase 3, Divine Judgment: the full sequence, 22 s, the beam cutting the formation
-  const A0 = 33, AL = 22, fa = (s - A0) / AL; b.drive("annihilate", fa >= 0 && fa < 1 ? fa : -1);
+  const A0 = 33, AL = 24, fa = (s - A0) / AL; b.drive("annihilate", fa >= 0 && fa < 1 ? fa : -1);
   if (fa >= 0 && fa < 1) { X.quiet = fa > .55 && fa < .9; if (fa > .0) say("v3", "WARNING: CATASTROPHIC CELESTIAL ENERGY SIGNATURE DETECTED."); if (fa > .4) say("v4", "The wheel is aligning. Brace for impact!");
     }
-  else X.quiet = false; sbVaeBeam(W, X, b, t, 1); X.expK = 1 + (b.ph === "beam" ? (b.fireK || 0) * .35 : 0);
+  else X.quiet = false; { const sk = sbVaeStorm(W, X, b, t, 1, fa >= 0 ? (fa - .66) * AL : -1, .26 * AL); X.expK = 1 + sk * .4; }
   if (s > A0 + AL) say("v5", "We survived the blast. Now hit the wheel's stabilizers before it charges again!");
   // phase 4: the stabilizers fall one by one, the wheel fractures: Final Eclipse
   for (let k = 0; k < 6; k++) { const at = 58 + k * 2.6; if (s > at && b.stab[k]) { b.stab[k] = 0; b.wheel.updateMatrixWorld(); const p = X.V.copy(b.wheel.position); b.grp.localToWorld(p); sbBoom(X, p.clone().add(new TH.Vector3((Math.random() - .5) * 40 * sc / 4, (Math.random() - .5) * 40 * sc / 4, 0)), t, 60); b.act("hit"); } }
@@ -6103,7 +6103,7 @@ function sbVae(X, W, b, s, t, dt, say, yaw, side) { const sc = SBX.vae.sc;
   if (X.fall && !X.relic && s > X.fall + 2) { X.relic = new TH.Group(); const r = new TH.Mesh(new TH.TorusGeometry(18, 2.2, 8, 40, Math.PI * 1.3), new TH.MeshStandardMaterial({ color: 0xc9a24a, metalness: 1, roughness: .25, emissive: 0x6a3aa0, emissiveIntensity: .6 })); X.relic.add(r); const g = new TH.Sprite(W.additive(W.glow.wh, new TH.Color("#c890ff"), .6)); g.scale.setScalar(70); X.relic.add(g); X.relic.position.copy(X.B).add(new TH.Vector3(0, 40, 0)); X.grp.add(X.relic); }
   if (X.relic) { X.relic.rotation.set(t * .0002, t * .0003, t * .0001); }
   // the camera: wide arrival, around the fight, slowly round the dragon as it charges, beside the beam, on the wheel, wide for the fall
-  const K = s < 8 ? { y: 40, d: 900, th: .5, ph: .25 } : s < 33 ? { y: 50, d: 620 + Math.sin(s * .2) * 60, th: .55, ph: .35 + Math.sin((s - 8) * .08) * .25 } : s < A0 + AL * .35 ? { y: 60, d: 430, th: .35, ph: .5 + (s - A0) * .03 }
+  const K = fa >= .55 && fa < .97 ? sbVaeCam(X, fa) : s < 8 ? { y: 40, d: 900, th: .5, ph: .25 } : s < 33 ? { y: 50, d: 620 + Math.sin(s * .2) * 60, th: .55, ph: .35 + Math.sin((s - 8) * .08) * .25 } : s < A0 + AL * .35 ? { y: 60, d: 430, th: .35, ph: .5 + (s - A0) * .03 }
     : s < A0 + AL * .66 ? { y: 55, d: 360, th: .28, ph: .8 + (s - A0 - AL * .35) * .04 } : s < A0 + AL * .9 ? { y: 40, d: 1350, th: .62, ph: .95, tx: X.B.x + X.F.x * 520, tz: X.B.z + X.F.z * 520 } : s < 58 ? { y: 40, d: 700, th: .5, ph: .3 }
     : s < 84 ? { y: 70, d: 460, th: .3, ph: -.45 + (s - 58) * .02 } : { y: 40, d: 1000, th: .55, ph: .3 };
   SBX_CAM(X, W, s, dt, K); }
@@ -6292,7 +6292,7 @@ function sbLiveTick(W, t) { const T = now(), k = sbLiveKey(T); if (!k || view !=
   { const ph = sbPhase(k, st.hp); if (st.hp && ph > 0 && e > 600) say(k + s0 + "p" + ph, SBL[k][ph]); } if (dead && k === "vae") say(k + st.dead + "x", "Vaelthar has fallen! The wheel collapses. A celestial relic drifts where it died.");
   if (k === "vae") { if (dead) scl *= Math.max(.001, 1 - clamp((df - .6) / 2.5, 0, 1)); b.grp.scale.setScalar(scl);
     const { c, ce } = vaeCycle(s0, T), res = vaeResult(st, s0, c), f = (T - (ce - 150e3)) / 180e3; let fa = -1; if (st.hp && sbHpAt(st, ce) <= 75 && f >= 0 && f < 1) { fa = res === "interrupted" && f > .58 ? -1 : f; if (f < .05) say(k + ce + "w", "WARNING: CATASTROPHIC CELESTIAL ENERGY SIGNATURE DETECTED. Break the wheel's stabilizers!"); if (res === "interrupted" && f > .58) say(k + ce + "i", "The charge collapsed! Its core is exposed: strike now!"); if (res !== "interrupted" && f > .66 && f < .9) say(k + ce + "f", "It's firing! Divine Annihilation is sweeping across the galaxy!"); }
-    b.drive("annihilate", fa); sbVaeBeam(W, X, b, t, 0); sbBoomTick(X, t); X.expK = 1 + (b.ph === "beam" ? (b.fireK || 0) * .35 : 0); const d = Math.min(6, wpN(st, "stab" + c, "stab")); for (let i = 0; i < 6; i++) b.stab[i] = i < d ? 0 : 1; b.crack = st.hp <= 25 ? .4 + (25 - st.hp) / 25 * .6 : 0;
+    b.drive("annihilate", fa); { const dt = Math.min(64, t - (X.lt || t)); X.lt = t; const sk = sbVaeStorm(W, X, b, t, 0, fa >= 0 ? (fa - .66) * 180 : -1, 45); sbVaeCine(X, W, fa, dt); X.expK = 1 + sk * .4; } sbBoomTick(X, t); const d = Math.min(6, wpN(st, "stab" + c, "stab")); for (let i = 0; i < 6; i++) b.stab[i] = i < d ? 0 : 1; b.crack = st.hp <= 25 ? .4 + (25 - st.hp) / 25 * .6 : 0;
     if (!dead && fa < 0) { const slot = Math.floor(T / 30000); if (slot !== X.slot) { X.slot = slot; b.act(SBW.vae.mv[Math.abs(hash("v" + slot)) % SBW.vae.mv.length]); } } }
   else { const xf = aexXf(st); b.drive("transform", xf ? clamp((T - xf) / 60000, 0, 1) : 0); if (xf && T - xf < 60000) say(k + xf, "WARNING: Aexion is transforming! Its hull is splitting apart!");
     b.drive("overdrive", st.hp && st.hp <= 20 ? (T / 4200) % 1 : -1); if (!dead) { const slot = Math.floor(T / 25000); if (slot !== X.slot) { X.slot = slot; const L = xf ? SBW.aex.mv2 : SBW.aex.mv; b.act(L[Math.abs(hash("a" + slot)) % L.length]); } }
@@ -6316,30 +6316,70 @@ function sbBlast(W, X, e, t) { if (e < -.2 || e > 14) { if (X.bl) for (const m o
   if (!X.fleetBooms) for (const Bm of X.booms) { const a = (t - Bm.t) / 900; Bm.s.visible = a >= 0 && a < 1; if (Bm.s.visible) { Bm.s.material.opacity = (1 - a) * .95; Bm.s.scale.setScalar(Bm.sz * (.4 + a * 1.4)); } }
   // the camera shakes when a wave passes it, hardest at the moment of the blast
   const cam = W.camera; if (cam && e > -2 && e < 4.5) { const d = cam.position.distanceTo(X.B), front = Math.abs(d - R1), amp = (e < 0 ? .6 : 0) + bell01(e, 0, .05, .5, 1.6) * 7 + (front < 140 ? (1 - front / 140) * 9 : 0); cam.position.x += (Math.random() - .5) * amp; cam.position.y += (Math.random() - .5) * amp; cam.position.z += (Math.random() - .5) * amp; } }
-/* v455 Divine Annihilation at the scale of the galaxy (owner: "its attack should nearly blanket the whole map"): the beam the map draws
-   from Vaelthar's jaws is 1700 units long and widens to 300: a white-hot core in layers of violet plasma, four spiralling streams,
-   shockwave rings racing along it, explosions erupting the length of its path and a violet glow flooding the map beneath, sweeping
-   about 70 degrees across the galaxy as his head turns. It follows his real head, so it is the same for everyone. */
-function sbVaeBeam(W, X, b, t, kill) { const on = b.ph === "beam" && b.fireK > .01;
-  if (!X.vb) { const g = new TH.Group(), mats = []; const add = (geo, col, op) => { const m = new TH.Mesh(geo, new TH.MeshBasicMaterial({ color: col, transparent: true, opacity: op, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false })); m.frustumCulled = false; m.userData.o = op; g.add(m); mats.push(m); return m; };
-    const L = 1700, cyl = (r0, r1) => { const c = new TH.CylinderGeometry(r1, r0, L, 28, 1, true); c.translate(0, L / 2, 0); c.rotateX(Math.PI / 2); return c; };
-    const layers = [[160, 210, 0x5a1aa8, .05], [90, 125, 0x8a40ff, .1], [48, 70, 0xb070ff, .26], [22, 34, 0xe0c0ff, .6], [9, 14, 0xffffff, .95]].map(([a, c, col, op]) => add(cyl(a, c), col, op));
-    const streams = []; for (let k = 0; k < 4; k++) { const m = add(cyl(6, 9), 0xd8b0ff, .55); streams.push(m); }
-    const rings = []; for (let k = 0; k < 9; k++) { const m = add(new TH.TorusGeometry(70, 5, 6, 48), 0xf0e0ff, .7); rings.push(m); }
-    const glow = []; for (let k = 0; k < 4; k++) { const s = new TH.Sprite(W.additive(W.glow.wh || (W.glow.wh = glowTex("255,255,255", .85)), new TH.Color("#b070ff"), 0)); s.renderOrder = 2; X.grp.add(s); glow.push(s); }
-    const muz = new TH.Sprite(W.additive(W.glow.wh, new TH.Color("#f0e0ff"), 0)); X.grp.add(muz); const hit = new TH.Sprite(W.additive(W.glow.wh, new TH.Color("#d8b0ff"), 0)); X.grp.add(hit);
-    X.grp.add(g); X.vb = { g, layers, streams, rings, glow, muz, hit, L, d: new TH.Vector3(), o: new TH.Vector3(), q: new TH.Quaternion(), on0: 0 }; }
-  const V0 = X.vb; V0.g.visible = on; V0.glow.forEach(s => s.visible = on); V0.muz.visible = V0.hit.visible = on; if (!on) { V0.on0 = 0; return 0; }
-  if (!V0.on0) V0.on0 = t; const age = (t - V0.on0) / 1000, k = b.fireK, grow = Math.min(1, age / 1.2);
-  b.mouth.getWorldPosition(V0.o); V0.d.set(-V0.o.x, -V0.o.y * .92, -V0.o.z).normalize(); { const sw = (b.sway || 0) * .8, c = Math.cos(sw), sn = Math.sin(sw), x = V0.d.x * c - V0.d.z * sn, z = V0.d.x * sn + V0.d.z * c; V0.d.x = x; V0.d.z = z; V0.d.normalize(); } /* down through the heart of the galaxy, swept by his head */ V0.g.position.copy(V0.o); V0.g.lookAt(V0.o.clone().add(V0.d));
-  const wob = 1 + Math.sin(t * .05) * .06 + Math.sin(t * .13) * .04; V0.layers.forEach((m, i) => { m.material.opacity = m.userData.o * k * (.85 + Math.random() * .15); m.scale.set((.35 + grow * .65) * wob * (1 + i * .02 * Math.sin(t * .02 + i)), (.35 + grow * .65) * wob, Math.min(1, age / .35)); });
-  V0.streams.forEach((m, i) => { const a = t * .006 + i * Math.PI / 2, r = 55 + Math.sin(t * .004 + i) * 12; m.position.set(Math.cos(a) * r, Math.sin(a) * r, 0); m.material.opacity = .55 * k; m.scale.set(1, 1, Math.min(1, age / .45)); });
-  V0.rings.forEach((m, i) => { const z = ((t * .9 + i * V0.L / 9) % V0.L); m.position.set(0, 0, z); m.scale.setScalar(.6 + z / V0.L * 2.2); m.material.opacity = .7 * k * (1 - z / V0.L); });
-  V0.glow.forEach((s, i) => { s.position.copy(V0.o).addScaledVector(V0.d, (i + .6) * V0.L / 4.4); s.position.y -= 30; s.scale.setScalar(900 * (.6 + grow * .4)); s.material.opacity = .22 * k; });
-  V0.muz.position.copy(V0.o); V0.muz.scale.setScalar(380 + Math.sin(t * .04) * 40); V0.muz.material.opacity = .9 * k; V0.hit.position.copy(V0.o).addScaledVector(V0.d, V0.L * Math.min(1, age / .35)); V0.hit.scale.setScalar(700 + Math.sin(t * .03) * 80); V0.hit.material.opacity = .7 * k;
-  if (Math.random() < .55) sbBoom(X, V0.o.clone().addScaledVector(V0.d, 120 + Math.random() * (V0.L - 120)).add(new TH.Vector3((Math.random() - .5) * 200, (Math.random() - .5) * 60, (Math.random() - .5) * 200)), t, 60 + Math.random() * 130);
-  const cam = W.camera; if (cam) { const amp = (age < 1.2 ? (1.2 - age) * 9 : 0) + 1.5 * k; cam.position.x += (Math.random() - .5) * amp; cam.position.y += (Math.random() - .5) * amp; cam.position.z += (Math.random() - .5) * amp; }
-  if (kill) sbBeamKill(X, V0.o, V0.d, 70 * (.35 + grow * .65), V0.L, t); return k; }
+/* v458 Divine Annihilation becomes a photon storm (owner: "can't he release some kinda photon energy storm that launches every direction and
+   blankets the map, give a really good cinematic camera angle for that"). From the wheel on his back and from his jaws, hundreds of photons
+   burst in every direction across the galaxy in curling streaks, each ending in a flash where it strikes; great shells of light and flat
+   shock rings race outward over the whole map, god rays wheel round the core and the galaxy floods with violet and gold. It is driven by
+   the attack's own clock (sec = seconds since it fired), so every commander sees the same storm at the same moment.
+   The camera: low behind him as the wheel aligns, his silhouette against the charging wheel; it holds there as the storm erupts toward
+   the map, then cranes up and out over the galaxy to show the whole map blanketed in light. Live, it plays only while you leave the
+   map alone; touch it and the camera is yours again. */
+function sbVaeStorm(W, X, b, t, kill, sec, dur) { const on = sec >= 0 && sec < dur + 3.2;
+  if (!X.vs) { const NP = MOBILE ? 260 : 560, NT = 4, g = new TH.Group(); g.frustumCulled = false; X.grp.add(g);
+    const r = cwRnd(9137), P = []; for (let i = 0; i < NP; i++) { let y = -.55 + r() * .85; const a = r() * TAU, h = Math.sqrt(1 - y * y), burst = i < NP * .3;
+      const c = r(); P.push({ d: new TH.Vector3(Math.cos(a) * h, y, Math.sin(a) * h), v: 650 + r() * 750, L: 700 + r() * 1100, off: burst ? r() * .25 : r() * 1.6, ph: r() * TAU, cw: (r() - .5) * 2.4, sz: 10 + r() * 16, src: r() < .72 ? 0 : 1, col: c < .55 ? [.82, .62, 1] : c < .85 ? [1, .82, .45] : [1, 1, 1], boom: r() < .22 }); }
+    const n = NP * (NT + 1), pg = new TH.BufferGeometry(); pg.setAttribute("position", new TH.BufferAttribute(new Float32Array(n * 3), 3)); pg.setAttribute("color", new TH.BufferAttribute(new Float32Array(n * 3), 3)); pg.setAttribute("aS", new TH.BufferAttribute(new Float32Array(n), 1));
+    const pm = new TH.ShaderMaterial({ transparent: true, depthWrite: false, blending: TH.AdditiveBlending, vertexColors: true, toneMapped: false,
+      vertexShader: "attribute float aS; varying vec3 vC; varying float vA; void main() { vC = color; vA = step(.01, aS); vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv; gl_PointSize = clamp(aS * 520. / -mv.z, 0., 72.); }",
+      fragmentShader: "varying vec3 vC; varying float vA; void main() { vec2 c = gl_PointCoord - .5; float d = length(c) * 2.; float a = (exp(-d * d * 4.) + exp(-d * d * 40.) * 1.6) * vA; if (a < .01) discard; gl_FragColor = vec4(mix(vC, vec3(1.), exp(-d * d * 30.)) * a, a); }" });
+    const pts = new TH.Points(pg, pm); pts.frustumCulled = false; g.add(pts);
+    const lg = new TH.BufferGeometry(); lg.setAttribute("position", new TH.BufferAttribute(new Float32Array(NP * 6), 3)); lg.setAttribute("color", new TH.BufferAttribute(new Float32Array(NP * 6), 3));
+    const lines = new TH.LineSegments(lg, new TH.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: .9, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); lines.frustumCulled = false; g.add(lines);
+    // the shells: great spheres of light racing outward, bright at the rim; and flat shock rings across the map beneath them
+    const shellM = () => new TH.ShaderMaterial({ uniforms: { uO: { value: 0 }, uC: { value: new TH.Color(.75, .5, 1) } }, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, side: TH.DoubleSide, toneMapped: false,
+      vertexShader: "varying float vR; void main() { vec4 mv = modelViewMatrix * vec4(position, 1.); vec3 n = normalize(normalMatrix * normal); vR = 1. - abs(dot(n, normalize(-mv.xyz))); gl_Position = projectionMatrix * mv; }",
+      fragmentShader: "uniform float uO; uniform vec3 uC; varying float vR; void main() { float a = pow(vR, 3.) * uO; gl_FragColor = vec4(mix(uC, vec3(1.), pow(vR, 8.)) * a, a); }" });
+    const shells = [], rings = []; for (let j = 0; j < 3; j++) { const m = new TH.Mesh(new TH.SphereGeometry(1, 40, 24), shellM()); m.frustumCulled = false; g.add(m); shells.push(m);
+      const rg = new TH.Mesh(new TH.RingGeometry(.86, 1, 96, 1), new TH.MeshBasicMaterial({ color: j % 2 ? 0xffd890 : 0xc890ff, transparent: true, opacity: 0, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false })); rg.rotation.x = -Math.PI / 2; rg.frustumCulled = false; g.add(rg); rings.push(rg); }
+    // god rays wheeling round the core, the core flash itself, and the light flooding the galaxy
+    const rays = [], rayG = new TH.CylinderGeometry(0, 1, 1, 6, 1, true); rayG.translate(0, .5, 0); for (let j = 0; j < (MOBILE ? 10 : 16); j++) { const m = new TH.Mesh(rayG, new TH.MeshBasicMaterial({ color: j % 3 ? 0xd8b0ff : 0xffe0a0, transparent: true, opacity: 0, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); m.frustumCulled = false; m.userData.a = r() * TAU; m.userData.b = (r() - .5) * 1.4; m.userData.w = (r() - .5) * .5; m.userData.l = .6 + r() * .7; g.add(m); rays.push(m); }
+    const wh = W.glow.wh || (W.glow.wh = glowTex("255,255,255", .85)), core = new TH.Sprite(W.additive(wh, new TH.Color("#f4e8ff"), 0)), core2 = new TH.Sprite(W.additive(wh, new TH.Color("#a050ff"), 0)); g.add(core); g.add(core2);
+    const flood = []; for (let j = 0; j < 6; j++) { const s = new TH.Sprite(W.additive(wh, new TH.Color(j % 2 ? "#e0a040" : "#8a40ff"), 0)); s.renderOrder = 2; g.add(s); flood.push(s); }
+    X.vs = { g, P, NP, NT, pts, lines, shells, rings, rays, core, core2, flood, src: [new TH.Vector3(), new TH.Vector3()], v: new TH.Vector3(), s: new TH.Vector3(), u: new TH.Vector3(), hit: new Set(), killed: 0 }; }
+  const Z = X.vs; Z.g.visible = on; if (!on) { Z.hit.clear(); Z.killed = 0; return 0; }
+  b.wheel.getWorldPosition(Z.src[0]); b.mouth.getWorldPosition(Z.src[1]); const O = Z.src[0], sc = b.grp.scale.x / 4.4;
+  const k = Math.min(1, sec / .35) * (sec < dur ? 1 : Math.max(0, 1 - (sec - dur) / 3.2)), fireOn = sec < dur, PER = 1.6;
+  const pp = Z.pts.geometry.attributes.position.array, pc = Z.pts.geometry.attributes.color.array, ps = Z.pts.geometry.attributes.aS.array, lp = Z.lines.geometry.attributes.position.array, lc = Z.lines.geometry.attributes.color.array;
+  const at = (q, a, o, out) => { const rr = q.v * a, w = q.ph + rr * .006 * q.cw; Z.s.set(-q.d.z, 0, q.d.x).normalize(); Z.u.crossVectors(q.d, Z.s); const cu = rr * .14 * Math.min(1, rr / 300);
+    return out.copy(o).addScaledVector(q.d, rr).addScaledVector(Z.s, Math.sin(w) * cu).addScaledVector(Z.u, Math.cos(w) * cu * .5); };
+  for (let i = 0; i < Z.NP; i++) { const q = Z.P[i], c = Math.floor((sec - q.off) / PER), a = sec - q.off - c * PER, l0 = q.off + c * PER, o = Z.src[q.src];
+    const live = c >= 0 && l0 <= dur && l0 >= 0 && q.v * a < q.L; let j = i * (Z.NT + 1);
+    if (!live) { for (let m = 0; m <= Z.NT; m++) ps[j + m] = 0; lp.fill(0, i * 6, i * 6 + 6); if (q.boom && c >= 0 && l0 <= dur && q.v * a >= q.L && !Z.hit.has(i * 1000 + c)) { Z.hit.add(i * 1000 + c); if (sec - l0 < PER * 1.5) sbBoom(X, at(q, q.L / q.v, o, Z.v).clone(), t, (50 + q.sz * 6) * (.6 + sc * .4)); } continue; }
+    const fade = Math.min(1, a / .08) * (1 - Math.pow(q.v * a / q.L, 4));
+    for (let m = 0; m <= Z.NT; m++) { const am = Math.max(0, a - m * .05); at(q, am, o, Z.v); pp[(j + m) * 3] = Z.v.x; pp[(j + m) * 3 + 1] = Z.v.y; pp[(j + m) * 3 + 2] = Z.v.z; const f = fade * (1 - m / (Z.NT + 1)) * k;
+      pc.set([q.col[0] * f, q.col[1] * f, q.col[2] * f], (j + m) * 3); ps[j + m] = q.sz * (1 - m * .17) * (.5 + .5 * k) * sc; }
+    at(q, a, o, Z.v); lp.set([Z.v.x, Z.v.y, Z.v.z], i * 6); at(q, Math.max(0, a - .3), o, Z.v); lp.set([Z.v.x, Z.v.y, Z.v.z], i * 6 + 3); lc.set([q.col[0] * fade * k, q.col[1] * fade * k, q.col[2] * fade * k, 0, 0, 0], i * 6); }
+  for (const A of [Z.pts.geometry.attributes.position, Z.pts.geometry.attributes.color, Z.pts.geometry.attributes.aS, Z.lines.geometry.attributes.position, Z.lines.geometry.attributes.color]) A.needsUpdate = true;
+  // shells and rings: one every .55 s while it fires, each crossing the map in 2.2 s
+  Z.shells.forEach((m, jj) => { const c = Math.floor((sec - jj * .55) / 1.65), l0 = jj * .55 + c * 1.65, a = (sec - l0) / 2.2, ok = c >= 0 && l0 <= dur && a < 1; m.visible = Z.rings[jj].visible = ok; if (!ok) return;
+    const R = 30 + Math.pow(a, .7) * 1900; m.position.copy(O); m.scale.setScalar(R); m.material.uniforms.uO.value = (1 - a) * (1 - a) * 1.3 * Math.min(1, a * 8); const rg = Z.rings[jj]; rg.position.set(O.x, Math.min(O.y - 40, 10), O.z); rg.scale.setScalar(R * .96); rg.material.opacity = (1 - a) * .55;
+    if (kill && c === 0 && jj === 0) for (let si = 0; si < X.ships.length; si++) { const sh = X.ships[si]; if (sh.dead < 0 && sh.p.distanceTo(O) < R && (si * 7919) % 10 < 8) sbKill(X, sh, t + Math.random() * 300, 44); } });
+  Z.rays.forEach((m, jj) => { const u = m.userData, a = u.a + t * .00025 * (1 + jj % 3) * (jj % 2 ? -1 : 1); m.position.copy(O); m.rotation.set(Math.PI / 2 + u.b + Math.sin(t * .001 + jj) * .2, 0, a); const L = 900 * u.l * (.4 + .6 * k) * (1 + .15 * Math.sin(t * .007 + jj)); m.scale.set(5 + 9 * k, L * 1.4, 5 + 9 * k); m.material.opacity = .26 * k * (.6 + .4 * Math.sin(t * .011 + jj * 2)); });
+  Z.core.position.copy(O); Z.core.scale.setScalar((120 + 40 * Math.sin(t * .03)) * (.6 + .6 * k) * sc); Z.core.material.opacity = .9 * k; Z.core2.position.copy(O); Z.core2.scale.setScalar(420 * (.6 + .6 * k) * sc); Z.core2.material.opacity = .4 * k;
+  Z.flood.forEach((s, jj) => { const a = jj / 6 * TAU + t * .00005, rr = 260 + (jj % 3) * 180; s.position.set(O.x * .4 + Math.cos(a) * rr, 0, O.z * .4 + Math.sin(a) * rr); s.scale.setScalar(1300 + jj * 120); s.material.opacity = .2 * k * (.8 + .2 * Math.sin(t * .002 + jj)); });
+  const cam = W.camera; if (cam && fireOn) { const amp = (sec < 1 ? (1 - sec) * 10 : 0) + 1.6 * k; cam.position.x += (Math.random() - .5) * amp; cam.position.y += (Math.random() - .5) * amp; cam.position.z += (Math.random() - .5) * amp; }
+  return k; }
+/* the storm's camera, by the attack's progress fa (0..1): low behind him as the wheel aligns, held as it erupts, then up and out over the galaxy */
+function sbVaeCam(X, fa) { const sc = X.b.grp.scale.x || 4.4, ss2 = (a, b, x) => { const u = clamp((x - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); }, P = Math.PI;
+  const al = ss2(.55, .66, fa), er = ss2(.66, .72, fa), cr = ss2(.71, .86, fa), wy = 14 * sc;
+  const th = .3 - al * .24 + cr * 1.0, d = 440 - al * 130 - er * 50 + cr * 2050, ph = P - .55 + al * .3 + er * .1 + cr * .5;
+  return { y: wy * (1 - cr), d, th, ph, tx: X.B.x * (1 - cr * .8), tz: X.B.z * (1 - cr * .8), ty: (X.B.y + wy) * (1 - cr) }; }
+/* live: the cinematic plays while the map is left alone, and hands the camera back afterwards */
+function sbVaeCine(X, W, fa, dt) { const c = W.cam; if (!c) return; const want = fa >= .56 && fa < .93 && view === "galaxy" && !sheet && !(typeof battle !== "undefined" && battle) && performance.now() - (G.camTouch || 0) > 5000;
+  if (want) { if (!X.cine) X.cine = { tx: c.tx, ty: c.ty, tz: c.tz, dist: c.dist, ph: c.ph, th: c.th, out: 0 }; SBX_CAM(X, W, 0, dt, sbVaeCam(X, fa)); return; }
+  const C = X.cine; if (!C) return; if (performance.now() - (G.camTouch || 0) < 5000) { X.cine = null; return; } /* they took the camera: leave it where it is */
+  C.out += dt; const e = 1 - Math.pow(.95, (dt || 16) / 16.7); for (const kk of ["tx", "ty", "tz", "dist", "ph"]) c[kk] += (C[kk] - c[kk]) * e; let dp = C.th - c.th; while (dp > Math.PI) dp -= TAU; while (dp < -Math.PI) dp += TAU; c.th += dp * e; if (C.out > 3500) X.cine = null; }
+addEventListener("pointerdown", () => { G.camTouch = performance.now(); }, true); addEventListener("wheel", () => { G.camTouch = performance.now(); }, { capture: true, passive: true });
 function sbBoomTick(X, t) { for (const Bm of X.booms) { const a = (t - Bm.t) / 900; Bm.s.visible = a >= 0 && a < 1; if (Bm.s.visible) { Bm.s.material.opacity = (1 - a) * .95; Bm.s.scale.setScalar(Bm.sz * (.4 + a * 1.4)); } } }
 /* v408 tapping the Super Cube */
 function shCubePick() { const T = now(), ph = cubePhase(T), live = evActive(T), cur = nexusNow(T), who = cur.holder ? `Held by ${esc(allyTag(cur.holder))}` : live ? "Unclaimed · the Collective Warden guards it" : `Next battle in ${ftime(evStart(evWeek(T) + 1) - T)}`;
