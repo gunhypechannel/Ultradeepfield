@@ -3657,7 +3657,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 440;
+const GAME_V = 441;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5335,8 +5335,8 @@ function shStress() { const st = G.stress, out = st ? st.out : [], fails = out.f
    The form: the Super Cube is the core (2x2x2 cells of 15 units); twelve blocks the size of the Super Cube, each built from eight
    Assimilation Cubes, interlock round it, staggered by half a block, after the reference; the last four cubes crown it. Checked: no
    two pieces overlap, every block shares a face with the core or an earlier block. */
-const DV_M = 60e3, DV_H = 3600e3, DV_FIRST = Date.UTC(2026, 11, 11, 18), DV_CELL = 30, DV_Y = 170, DV_HOLD = 320, /* v440 */ DV_LOCK = 90e3;
-const DV = { mig: 30 * DV_M, lock0: 90 * DV_M, lock1: 148 * DV_M, act: 150 * DV_M, erupt: 153 * DV_M, combat: 156 * DV_M, stage: 158 * DV_M, war0: 172 * DV_M, war1: 200 * DV_M, ret: 205 * DV_M, end: 250 * DV_M }; /* v440 the fleet stages, is wiped out, and the cubes disperse */
+const DV_M = 60e3, DV_H = 3600e3, DV_FIRST = Date.UTC(2026, 11, 11, 18), DV_CELL = 30, DV_CELLP = 15, DV_LOCK2 = 40e3, DV_Y = 170, DV_HOLD = 320, /* v440 */ DV_LOCK = 90e3;
+const DV = { mig: 30 * DV_M, lock0: 90 * DV_M, lock1: 130 * DV_M, ex0: 134 * DV_M, ex1: 136.5 * DV_M, rb0: 141 * DV_M, rb1: 149 * DV_M, /* v441 the puzzle, then the giant cube */ act: 150 * DV_M, erupt: 153 * DV_M, combat: 156 * DV_M, stage: 158 * DV_M, war0: 172 * DV_M, war1: 200 * DV_M, ret: 205 * DV_M, end: 250 * DV_M }; /* v440 the fleet stages, is wiped out, and the cubes disperse */
 const DV_MODS = [[1, 0, -1], [-3, -2, -1], [-1, 1, 0], [-1, -3, -2], [0, -1, 1], [-2, -1, -3], [1, 2, 0], [-3, 1, -2], [1, -3, -1], [-3, 0, 1], [2, -2, 1], [0, 1, -3]];
 const DV_CROWN = [[1, 4, 0], [2, 4, 1], [1, -4, -1], [-4, -2, -1]];
 function dvStartOf(T) { const d = new Date(T); let s = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 11, 18); if (T < s) s = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 11, 18); return s; }
@@ -5348,48 +5348,59 @@ function dvSimNow() { const C = G.dvSim, s = (performance.now() - C.t0) / 1000; 
   let i = 0; while (i < DV_SIM.length - 2 && s >= DV_SIM[i + 1][0]) i++; const [a, ea] = DV_SIM[i], [b, eb] = DV_SIM[i + 1], e = ea + (eb - ea) * (s - a) / (b - a); return { e, s0: C.s0, ph: dvPhase(e), sim: 1, rate: (eb - ea) / ((b - a) * 1000) }; }
 /* the plan for one event: which cube takes which slot, when it leaves, arrives, holds and locks. Fixed for the event (it depends only on
    its start time), so it is the same on every device. */
-function dvPlan(s0) { if (G.dvP && G.dvP.s0 === s0) return G.dvP;
-  /* v440 one giant cube: 5x5x5 cells the size of the Super Cube, the Super Cube at its centre. The two cubes inside lock first (above
-     and below the core, while the walls are still open), then the 98 of the shell, from the bottom face up, layer by layer */
-  const cells = [], cell = (c, m) => cells.push({ c, m, p: [c[0] * DV_CELL, c[1] * DV_CELL, c[2] * DV_CELL] }); cell([0, -1, 0], -1); cell([0, 1, 0], -1);
-  const sh = []; for (let x = -2; x <= 2; x++) for (let y = -2; y <= 2; y++) for (let z = -2; z <= 2; z++) if (Math.max(Math.abs(x), Math.abs(y), Math.abs(z)) === 2) sh.push([x, y, z]);
-  sh.sort((u, v) => u[1] - v[1] || Math.atan2(u[2], u[0]) - Math.atan2(v[2], v[0]) || Math.hypot(u[0], u[2]) - Math.hypot(v[0], v[2])); sh.forEach(c => cell(c, 0));
-  const occ = new Set(cells.map(s => s.c.join())); occ.add("0,0,0");
-  for (const s of cells) { /* the face it is drawn in through: the open side most in line with the slot's own direction */ let best = null, bv = -1e9;
-    for (const [ax, sg] of [[0, 1], [0, -1], [1, 1], [1, -1], [2, 1], [2, -1]]) { const n = s.c.slice(); n[ax] += sg; if (occ.has(n.join())) continue; const v = s.p[ax] * sg; if (v > bv) { bv = v; best = [ax, sg]; } }
-    s.n = [0, 0, 0]; s.n[best[0]] = best[1]; }
-  const cubes = PIRATES.filter(x => x.boss).sort((a, b) => (+a.id.slice(1)) - (+b.id.slice(1))), N = Math.min(cubes.length, cells.length), Tm = s0 + DV.lock0, P = {};
-  const az = x => { const q = P3(x, Tm, P); return Math.atan2(q.z, q.x); };
-  const cs = cubes.slice(0, N).map(x => ({ x, a: az(x) })).sort((u, v) => u.a - v.a), sl = cells.slice(0, N).map((s, i) => ({ s, i, a: Math.atan2(s.p[2], s.p[0]) })).sort((u, v) => u.a - v.a);
-  let rot = 0, bestE = 1e9; for (let k = 0; k < N; k++) { let E = 0; for (let j = 0; j < N; j++) { const d = Math.abs(cs[j].a - sl[(j + k) % N].a) % TAU; E += Math.min(d, TAU - d); } if (E < bestE) { bestE = E; rot = k; } } /* cubes take the slots on their own side of the Void */
-  const L = []; cs.forEach((c, j) => { const s = sl[(j + rot) % N].s, i = sl[(j + rot) % N].i, r = rnd(hash(c.x.id + ":" + s0)), lk = DV.lock0 + i * (DV.lock1 - DV.lock0) / N, arr = Math.max(70 * DV_M, lk - 20 * DV_M) - r() * 4 * DV_M;
-    const hd = Math.hypot(s.p[0], s.p[1] * .6, s.p[2]) || 1, H = [s.p[0] / hd * DV_HOLD + (r() - .5) * 30, s.p[1] / hd * DV_HOLD * .45 + (r() - .5) * 40, s.p[2] / hd * DV_HOLD + (r() - .5) * 30];
-    const q = P3(c.x, s0 + arr - 25 * DV_M, P), dist = Math.hypot(q.x - H[0], q.y - DV_Y - H[1], q.z - H[2]), trav = (15 + 20 * Math.min(1, dist / 520)) * DV_M;
-    L.push({ x: c.x, s, i, lk, arr, dep: arr - trav, trav, H, sz: MK_K * (3.2 + c.x.lvl * .06), ax: [r() - .5, r() - .5, r() - .5], sp: .4 + r() * .6, lift: 60 + r() * 40, ret: DV.ret + (N - 1 - i) * 12 * DV_M / N, home: null }); });
-  L.sort((a, b) => a.i - b.i); return (G.dvP = { s0, L, cells, N }); }
 const dvEase = u => u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u), dvIn = u => u <= 0 ? 0 : u >= 1 ? 1 : u * u * u;
 function dvBez(a, b, c, d, u, o) { const v = 1 - u, A = v * v * v, B = 3 * v * v * u, C = 3 * v * u * u, D = u * u * u; o.x = A * a.x + B * b.x + C * c.x + D * d.x; o.y = A * a.y + B * b.y + C * c.y + D * d.y; o.z = A * a.z + B * b.z + C * c.z + D * d.z; return o; }
 /* one cube at event time e: world position, scale, how aligned it is (0 = its own tumble, 1 = square to the Omega), and its state */
-function dvCube(c, e, D, o) { const s0 = D.s0, sz = c.sz, full = DV_CELL * .975, rotY = e > DV.combat ? (Math.min(e, DV.ret) - DV.combat) * TAU / (40 * DV_M) : 0, cy = Math.cos(rotY), sy = Math.sin(rotY);
-  const slotW = (p, out) => { out.x = p[0] * cy + p[2] * sy; out.y = DV_Y + p[1]; out.z = -p[0] * sy + p[2] * cy; return out; }, P = o.P || (o.P = [{}, {}, {}, {}]);
-  o.rot = rotY;
+function dvPlan(s0) { if (G.dvP && G.dvP.s0 === s0) return G.dvP;
+  /* v441 two forms. The PUZZLE: twelve blocks the size of the Super Cube (2x2x2 cells of 15), staggered round it, and a crown of four.
+     The OMEGA CUBE: 5x5x5 cells of 30 round the Super Cube (two inside, 98 in the shell). Every cube first locks into the puzzle; then the
+     puzzle bursts apart, every piece grows to the Super Cube's size, and each flies to the slot of the giant cube on its own side. */
+  const face = (cells, occ) => { for (const s of cells) { let best = null, bv = -1e9; for (const [ax, sg] of [[0, 1], [0, -1], [1, 1], [1, -1], [2, 1], [2, -1]]) { const n = s.c.slice(); n[ax] += sg; if (occ.has(n.join())) continue; const v = s.p[ax] * sg; if (v > bv) { bv = v; best = [ax, sg]; } } s.n = [0, 0, 0]; s.n[best[0]] = best[1]; } };
+  const P1 = [], c1 = c => P1.push({ c, p: [(c[0] + .5) * DV_CELLP, (c[1] + .5) * DV_CELLP, (c[2] + .5) * DV_CELLP] });
+  DV_MODS.forEach(m => { const L = []; for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++) for (let c = 0; c < 2; c++) L.push([m[0] + a, m[1] + b, m[2] + c]); L.sort((u, v) => Math.hypot(u[0] + .5, u[1] + .5, u[2] + .5) - Math.hypot(v[0] + .5, v[1] + .5, v[2] + .5)); L.forEach(c1); });
+  DV_CROWN.forEach(c1); { const occ = new Set(P1.map(s => s.c.join())); for (let x = -1; x <= 0; x++) for (let y = -1; y <= 0; y++) for (let z = -1; z <= 0; z++) occ.add([x, y, z].join()); face(P1, occ); }
+  const P2 = [], c2 = c => P2.push({ c, p: [c[0] * DV_CELL, c[1] * DV_CELL, c[2] * DV_CELL] }); c2([0, -1, 0]); c2([0, 1, 0]);
+  { const sh = []; for (let x = -2; x <= 2; x++) for (let y = -2; y <= 2; y++) for (let z = -2; z <= 2; z++) if (Math.max(Math.abs(x), Math.abs(y), Math.abs(z)) === 2) sh.push([x, y, z]);
+    sh.sort((u, v) => u[1] - v[1] || Math.atan2(u[2], u[0]) - Math.atan2(v[2], v[0]) || Math.hypot(u[0], u[2]) - Math.hypot(v[0], v[2])); sh.forEach(c2); const occ = new Set(P2.map(s => s.c.join())); occ.add("0,0,0"); face(P2, occ); }
+  const cubes = PIRATES.filter(x => x.boss).sort((a, b) => (+a.id.slice(1)) - (+b.id.slice(1))), N = Math.min(cubes.length, P1.length, P2.length), Tm = s0 + DV.lock0, Q = {};
+  const az = x => { const q = P3(x, Tm, Q); return Math.atan2(q.z, q.x); };
+  const cs = cubes.slice(0, N).map(x => ({ x, a: az(x) })).sort((u, v) => u.a - v.a), sl = P1.slice(0, N).map((s, i) => ({ s, i, a: Math.atan2(s.p[2], s.p[0]) })).sort((u, v) => u.a - v.a);
+  let rot = 0, bestE = 1e9; for (let k = 0; k < N; k++) { let E = 0; for (let j = 0; j < N; j++) { const d = Math.abs(cs[j].a - sl[(j + k) % N].a) % TAU; E += Math.min(d, TAU - d); } if (E < bestE) { bestE = E; rot = k; } } /* cubes take the puzzle slots on their own side of the Void */
+  const L = []; cs.forEach((c, j) => { const s = sl[(j + rot) % N].s, i = sl[(j + rot) % N].i, r = rnd(hash(c.x.id + ":" + s0)), lk = DV.lock0 + i * (DV.lock1 - DV.lock0) / N, arr = Math.max(70 * DV_M, lk - 20 * DV_M) - r() * 4 * DV_M;
+    const hd = Math.hypot(s.p[0], s.p[1] * .6, s.p[2]) || 1, H = [s.p[0] / hd * DV_HOLD + (r() - .5) * 30, s.p[1] / hd * DV_HOLD * .45 + (r() - .5) * 40, s.p[2] / hd * DV_HOLD + (r() - .5) * 30];
+    const q = P3(c.x, s0 + arr - 25 * DV_M, Q), dist = Math.hypot(q.x - H[0], q.y - DV_Y - H[1], q.z - H[2]), trav = (15 + 20 * Math.min(1, dist / 520)) * DV_M;
+    L.push({ x: c.x, s, i, lk, arr, dep: arr - trav, trav, H, sz: MK_K * (3.2 + c.x.lvl * .06), sp: .4 + r() * .6, lift: 60 + r() * 40 }); });
+  /* the giant cube's slots, bottom face first: each goes to the piece whose puzzle slot points most nearly the same way */
+  const free = new Set(L), un = p => { const l = Math.hypot(...p) || 1; return p.map(v => v / l); };
+  P2.slice(0, N).forEach((s2, i2) => { const d2 = un(s2.p); let best = null, bv = -1e9; for (const c of free) { const d1 = un(c.s.p), v = d1[0] * d2[0] + d1[1] * d2[1] * 1.3 + d1[2] * d2[2]; if (v > bv) { bv = v; best = c; } }
+    free.delete(best); best.s2 = s2; best.i2 = i2; best.lk2 = DV.rb0 + i2 * (DV.rb1 - DV.rb0) / N; const l = Math.hypot(...best.s.p) || 1; best.E = best.s.p.map(v => v / l * (l + 95)); best.ret = DV.ret + (N - 1 - i2) * 12 * DV_M / N; });
+  L.sort((a, b) => a.i - b.i); return (G.dvP = { s0, L, cells: P1, cells2: P2, N }); }
+function dvCube(c, e, D, o) { const s0 = D.s0, sz = c.sz, f1 = DV_CELLP * .975, f2 = DV_CELL * .975, rotY = e > DV.combat ? (Math.min(e, DV.ret) - DV.combat) * TAU / (40 * DV_M) : 0, cy = Math.cos(rotY), sy = Math.sin(rotY);
+  const slotW = (p, out) => { out.x = p[0] * cy + p[2] * sy; out.y = DV_Y + p[1]; out.z = -p[0] * sy + p[2] * cy; return out; }, P = o.P || (o.P = [{}, {}, {}, {}]), at = (p, out) => { out.x = p[0]; out.y = DV_Y + p[1]; out.z = p[2]; return out; };
+  o.rot = rotY; o.lkT = 0;
   if (e < c.dep) { P3(c.x, s0 + e, o); o.k = sz; o.al = 0; o.st = "home"; return o; }
   if (e < c.arr) { const u = (e - c.dep) / c.trav, h = P3(c.x, s0 + c.dep, P[0]); P[1].x = h.x; P[1].y = h.y + c.lift; P[1].z = h.z;
     const hl = Math.hypot(c.H[0], c.H[2]) || 1; P[3].x = c.H[0]; P[3].y = DV_Y + c.H[1]; P[3].z = c.H[2]; P[2].x = P[3].x + c.H[0] / hl * 140; P[2].y = P[3].y + 50; P[2].z = P[3].z + c.H[2] / hl * 140;
     const w = u < .1 ? dvIn(u / .1) * .02 : .02 + .98 * dvEase((u - .1) / .9); dvBez(P[0], P[1], P[2], P[3], w, o); o.k = sz; o.al = 0; o.st = u < .1 ? "detach" : "fly"; o.u = u; return o; }
   if (e < c.lk - DV_LOCK) { o.x = c.H[0]; o.y = DV_Y + c.H[1] + Math.sin(e / 9000 + c.i) * 1.5; o.z = c.H[2]; o.k = sz; o.al = 0; o.st = "hold"; return o; }
-  const S = slotW(c.s.p, P[0]);
-  if (e < c.lk) { const k = (e - (c.lk - DV_LOCK)) / DV_LOCK, st = P[1]; st.x = c.s.p[0] + c.s.n[0] * 75; st.y = c.s.p[1] + c.s.n[1] * 75; st.z = c.s.p[2] + c.s.n[2] * 75; slotW([st.x, st.y, st.z], st);
+  const S1 = at(c.s.p, P[0]);
+  if (e < c.lk) { const k = (e - (c.lk - DV_LOCK)) / DV_LOCK, st = at([c.s.p[0] + c.s.n[0] * 40, c.s.p[1] + c.s.n[1] * 40, c.s.p[2] + c.s.n[2] * 40], P[1]);
     if (k < .55) { const u = dvEase(k / .55); o.x = c.H[0] + (st.x - c.H[0]) * u; o.y = DV_Y + c.H[1] + (st.y - DV_Y - c.H[1]) * u; o.z = c.H[2] + (st.z - c.H[2]) * u; o.st = "align"; }
-    else { const u = 1 - Math.pow(1 - (k - .55) / .45, 3); o.x = st.x + (S.x - st.x) * u; o.y = st.y + (S.y - st.y) * u; o.z = st.z + (S.z - st.z) * u; o.st = "slide"; }
-    o.k = sz + (full - sz) * dvEase(k / .5); o.al = dvEase(k / .45); return o; }
-  if (e < c.ret) { o.x = S.x; o.y = S.y; o.z = S.z; o.k = full; o.al = 1; o.st = "locked"; return o; }
+    else { const u = 1 - Math.pow(1 - (k - .55) / .45, 3); o.x = st.x + (S1.x - st.x) * u; o.y = st.y + (S1.y - st.y) * u; o.z = st.z + (S1.z - st.z) * u; o.st = "slide"; }
+    o.k = sz + (f1 - sz) * dvEase(k / .5); o.al = dvEase(k / .45); return o; }
+  if (e < DV.ex0) { o.x = S1.x; o.y = S1.y; o.z = S1.z; o.k = f1; o.al = 1; o.st = "locked"; o.lkT = c.lk; return o; }
+  /* the reconfiguration: the puzzle bursts apart and every piece grows, then flies to its slot in the giant cube and slides home */
+  const st2 = at([c.s2.p[0] + c.s2.n[0] * 75, c.s2.p[1] + c.s2.n[1] * 75, c.s2.p[2] + c.s2.n[2] * 75], P[1]), E = at(c.E, P[2]);
+  if (e < DV.ex1) { const u = dvEase((e - DV.ex0) / (DV.ex1 - DV.ex0)); o.x = S1.x + (E.x - S1.x) * u; o.y = S1.y + (E.y - S1.y) * u; o.z = S1.z + (E.z - S1.z) * u; o.k = f1 + (f2 - f1) * u; o.al = 1; o.st = "shift"; return o; }
+  if (e < c.lk2 - DV_LOCK2) { const u = dvEase((e - DV.ex1) / Math.max(1, c.lk2 - DV_LOCK2 - DV.ex1)); o.x = E.x + (st2.x - E.x) * u; o.y = E.y + (st2.y - E.y) * u + Math.sin(u * Math.PI) * 30; o.z = E.z + (st2.z - E.z) * u; o.k = f2; o.al = 1; o.st = "shift"; return o; }
+  const S2 = slotW(c.s2.p, P[3]);
+  if (e < c.lk2) { const u = 1 - Math.pow(1 - (e - (c.lk2 - DV_LOCK2)) / DV_LOCK2, 3); o.x = st2.x + (S2.x - st2.x) * u; o.y = st2.y + (S2.y - st2.y) * u; o.z = st2.z + (S2.z - st2.z) * u; o.k = f2; o.al = 1; o.st = "slide"; return o; }
+  if (e < c.ret) { o.x = S2.x; o.y = S2.y; o.z = S2.z; o.k = f2; o.al = 1; o.st = "locked"; o.lkT = c.lk2; return o; }
   /* coming apart: slide out along its face, shrink, and fly home */
-  const k = (e - c.ret) / (30 * DV_M), st = P[1]; st.x = c.s.p[0] + c.s.n[0] * 110; st.y = c.s.p[1] + c.s.n[1] * 110; st.z = c.s.p[2] + c.s.n[2] * 110; slotW([st.x, st.y, st.z], st);
-  if (k < .08) { const u = dvEase(k / .08); o.x = S.x + (st.x - S.x) * u; o.y = S.y + (st.y - S.y) * u; o.z = S.z + (st.z - S.z) * u; o.k = full + (sz - full) * u; o.al = 1 - u; o.st = "unlock"; return o; }
-  const u = dvEase(Math.min(1, (k - .08) / .92)), h = P3(c.x, s0 + Math.min(e, c.ret + 30 * DV_M), P[2]); P[3].x = st.x; P[3].y = st.y + 60; P[3].z = st.z;
-  dvBez(st, P[3], { x: h.x, y: h.y + 80, z: h.z }, h, u, o); o.k = sz; o.al = 0; o.st = k >= 1 ? "home" : "fly"; o.u = u; return o; }
-/* the Super Cube, the core: it leaves its orbit at 35 min, settles at the heart of the Omega by 70 min, and goes home after 24 h */
+  const k = (e - c.ret) / (30 * DV_M), so = slotW([c.s2.p[0] + c.s2.n[0] * 110, c.s2.p[1] + c.s2.n[1] * 110, c.s2.p[2] + c.s2.n[2] * 110], P[1]);
+  if (k < .08) { const u = dvEase(k / .08); o.x = S2.x + (so.x - S2.x) * u; o.y = S2.y + (so.y - S2.y) * u; o.z = S2.z + (so.z - S2.z) * u; o.k = f2 + (sz - f2) * u; o.al = 1 - u; o.st = "unlock"; return o; }
+  const u = dvEase(Math.min(1, (k - .08) / .92)), h = P3(c.x, s0 + Math.min(e, c.ret + 30 * DV_M), P[2]); P[0].x = so.x; P[0].y = so.y + 60; P[0].z = so.z;
+  dvBez(so, P[0], { x: h.x, y: h.y + 80, z: h.z }, h, u, o); o.k = sz; o.al = 0; o.st = k >= 1 ? "home" : "fly"; o.u = u; return o; }
 const dvRot = e => e > DV.combat ? (Math.min(e, DV.ret) - DV.combat) * TAU / (40 * DV_M) : 0;
 function dvCore(D, o) { const e = D.e, home = P3(NEXUS, D.s0 + e, {}), c = { x: 0, y: DV_Y, z: 0 }; let u = 0;
   if (e < 35 * DV_M) u = 0; else if (e < 70 * DV_M) u = dvEase((e - 35 * DV_M) / (35 * DV_M)); else if (e < DV.ret + 10 * DV_M) u = 1; else u = 1 - dvEase((e - DV.ret - 10 * DV_M) / (25 * DV_M));
@@ -5427,12 +5438,12 @@ function dvTick(W, t, T) { const D = dvNow(T); try { dvCountdown(W, t, T, !!D); 
   for (const c of P.L) { dvCube(c, e, D, o); if (!fogSeen(o.x, o.z) && o.st === "home") continue;
     const dc = Math.hypot(o.x - cp.x, o.y - cp.y, o.z - cp.z); near.push([dc, c, o.x, o.y, o.z, o.k, o.al, o.rot]);
     D3.position.set(o.x, o.y, o.z); D3.scale.setScalar(o.k); const tum = (1 - o.al) * (o.st === "home" ? .12 : 1); D3.rotation.set(Math.sin(e / 7e4 * c.sp + c.i) * tum * 1.2 + (o.st === "home" ? Math.sin(t * 1.5e-4 + c.x.a0) * .12 : 0), (1 - o.al) * (c.x.a0 + e / 5e4 * c.sp) + o.al * o.rot, Math.cos(e / 9e4 * c.sp + c.i) * tum); D3.updateMatrix(); X.inst.setMatrixAt(n, D3.matrix); c.ni = n; n++;
-    { /* the emerald seams: faint on a cube in flight, burning once it locks, flaring in the eruption, dead in the silence before it */ const lv = o.st === "locked" ? (.2 + .1 * Math.sin(t * .002 + c.i * .7)) * (1 - .9 * dark) + 1.1 * eru : o.st === "slide" || o.st === "align" ? .3 + .7 * o.al : o.st === "home" ? .12 * wake : .22;
+    { /* the emerald seams: faint on a cube in flight, burning once it locks, flaring in the eruption, dead in the silence before it */ const lv = o.st === "locked" ? (.2 + .1 * Math.sin(t * .002 + c.i * .7)) * (1 - .9 * dark) + 1.1 * eru : o.st === "shift" ? .9 + .5 * Math.sin(t * .012 + c.i) : o.st === "slide" || o.st === "align" ? .3 + .7 * o.al : o.st === "home" ? .12 * wake : .22;
       if (lv > .02) { for (let k = 0; k < 32; k++) { X.SV.copy(X.SE[k]).applyMatrix4(D3.matrix); const j = (sm * 32 + k) * 3, band = k >= 24 ? (o.st === "locked" ? 3.2 : 1.3) : 1; /* the bands of light run across the machine like the reference's light strips */ sp2[j] = X.SV.x; sp2[j + 1] = X.SV.y; sp2[j + 2] = X.SV.z; sc2[j] = .3 * lv * band; sc2[j + 1] = lv * band; sc2[j + 2] = .45 * lv * band; } sm++; } }
     const g = n - 1, glw = o.st === "locked" ? .35 + 1.1 * eru : o.st === "fly" || o.st === "detach" ? 1 : .55 + .45 * wake; gp[g * 3] = o.x; gp[g * 3 + 1] = o.y; gp[g * 3 + 2] = o.z; gc[g * 3] = .35 * glw; gc[g * 3 + 1] = glw; gc[g * 3 + 2] = .42 * glw;
     if ((o.st === "fly" || o.st === "detach") && !lite) for (let k = 1; k <= X.TR; k++) { const tq = dvCube(c, e - k * (D.sim ? 14e3 : 25e3), D, X.tq); const a = (1 - k / (X.TR + 1)) * (o.st === "detach" ? .4 : .9), j = tr * 3; tp[j] = tq.x; tp[j + 1] = tq.y; tp[j + 2] = tq.z; tc[j] = .25 * a; tc[j + 1] = a; tc[j + 2] = .35 * a; tr++; }
     if (o.st === "hold" || o.st === "align") { const pul = .35 + .3 * Math.sin(t * .006 + c.i * 1.7), j = bm * 6, cx = Math.sign(o.x) * 15, cy2 = DV_Y + Math.sign(o.y - DV_Y) * 15, cz = Math.sign(o.z) * 15; bp[j] = o.x; bp[j + 1] = o.y; bp[j + 2] = o.z; bp[j + 3] = cx; bp[j + 4] = cy2; bp[j + 5] = cz; for (let q = 0; q < 6; q += 3) { bc[j + q] = .3 * pul; bc[j + q + 1] = pul; bc[j + q + 2] = .4 * pul; } bm++; }
-    if (o.st === "locked" && !X.locked.has(c.i)) { X.locked.add(c.i); if (e - c.lk < 8000 * (D.sim ? 1 : 3)) dvFx(X, o, c.s.n, 1, t); }
+    if (o.st === "locked" && !X.locked.has(c.i)) { X.locked.add(c.i); if (e - (o.lkT || c.lk) < 8000 * (D.rate || 1) * 3) dvFx(X, o, o.lkT === c.lk2 ? c.s2.n : c.s.n, o.lkT === c.lk2 ? 1.6 : 1, t); }
     if (o.st !== "locked") X.locked.delete(c.i); }
   X.inst.count = n; X.inst.instanceMatrix.needsUpdate = true;
   X.glow.geometry.setDrawRange(0, n); X.glow.geometry.attributes.position.needsUpdate = X.glow.geometry.attributes.color.needsUpdate = true; X.glow.material.size = 26;
