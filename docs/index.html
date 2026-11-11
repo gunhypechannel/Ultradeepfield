@@ -3655,7 +3655,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 421;
+const GAME_V = 422;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5103,7 +5103,7 @@ function wbPosRaw(key, T, out) { const o = out || {};
     const LEG = 8 * 3600e3, u = (T - WB2_BASE) / LEG, i = Math.floor(u), f = u - i, n = WB_LANE.length, at = j => WB_LANE[((hash("tyr" + c2) + j * 37) % n + n) % n]; // the Tyrant sails hideout to hideout, 8 hours a leg
     const A = P3(at(i), T, {}), B = P3(at(i + 1), T, {}), k = f * f * (3 - 2 * f); o.x = A.x + (B.x - A.x) * k; o.z = A.z + (B.z - A.z) * k; o.y = A.y + (B.y - A.y) * k + 30 + Math.sin(f * Math.PI) * 6; return o; } // high above the worlds, claw hanging down
   const c = wbCyc(T), H = wbHome(c);
-  if (key === "dev") { const w = T / 864e5, r = MAP_R * (.42 + .22 * Math.sin(w * .9 + c)), a = c * 1.7 + w * TAU / 2.2; o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 24 + 3 * Math.sin(w * 3); return o; } // v394: it hunts from just above the worlds
+  if (key === "dev") { const w = T / 864e5, r = MAP_R * (.42 + .22 * Math.sin(w * .9 + c)), a = c * 1.7 + w * TAU / 2.2; o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 14 + 2 * Math.sin(w * 3); return o; } // v394: it hunts from just above the worlds (v422: lower, skimming them)
   if (key === "war") { const a = H.wa + TAU * T / period(H.wr); o.x = Math.cos(a) * H.wr; o.z = Math.sin(a) * H.wr; o.y = 22; return o; } // v395: just above the worlds
   const q = P3(H.y, T, WBS), r = Math.hypot(q.x, q.z) || 1, ux = q.x / r, uz = q.z / r; o.x = q.x + ux * 16; o.z = q.z + uz * 16; o.y = 24; // the Overlord (and its conduits) hover just above the worlds beside its station (v395)
   if (WB[key].con != null) { const f = WB_OFF[key]; o.x += ux * f[0] - uz * f[1]; o.z += uz * f[0] + ux * f[1]; }
@@ -17128,11 +17128,12 @@ const CD_PHI0 = -.314; // v416 the Cube Destroyer's rest aim: its baked dish poi
 function cdYawPitch(phi) { const cy = .85 * Math.cos(phi), sy = -Math.sqrt(Math.max(1e-6, 1 - cy * cy)); return [Math.atan2(sy, cy), Math.asin(clamp(.85 * Math.sin(phi) / sy, -1, 1))]; }
 /* the aim (on screen, up positive, in the sprite's own facing) a Cube Destroyer formation has turned to, eased toward the target it fires at */
 function cdTurn(b, i, cx, cy, face, scr, T, real) { const A = b.cdPhi || (b.cdPhi = {}), m = (b.beams || []).find(m => m.wb && m.s === i && T - m.t0 > -2.2 && T - m.t0 < m.charge + m.life + 1.5);
-  let want = CD_PHI0; if (m) { const E = scr[m.e] || (m.ix != null ? { x: m.ix, y: m.iy } : null); if (E) want = Math.atan2(-(E.y - cy), face * (E.x - cx)); }
+  let want = A[i] == null ? CD_PHI0 : A[i]; /* v422 it holds its lock between shots */ if (m) { const E = (m.mode === "sweep" && m.cxy) || scr[m.e] || (m.ix != null ? { x: m.ix, y: m.iy } : m.lx != null ? { x: m.lx, y: m.ly } : null); if (E) want = Math.atan2(-(E.y - cy), face * (E.x - cx)); }
   const cur = A[i] == null ? CD_PHI0 : A[i], d = Math.atan2(Math.sin(want - cur), Math.cos(want - cur)); A[i] = cur + d * Math.min(1, (real || 16) / 1100); return A[i]; }
 /* v418 the Cube Destroyer's shots: one per formation every 5 s of the replay, each starting its charge 1.4 s before its volley so the beam lands with it */
-function cdPlan(b) { const out = [], last = {}, ord = {}; let no = 0; for (const v of b.R.vols || []) { const q = b.Q[v.s]; if (!q || q.k !== "worldbreaker" || v.bounce || v.e == null || v.e < 0) continue; if (ord[v.s] == null) ord[v.s] = no++; if (v.t < ord[v.s] * 1.7) continue; /* formations take turns: a rolling barrage */ if (last[v.s] != null && v.t < last[v.s] + 5) continue; last[v.s] = v.t;
-    out.push({ t0: Math.max(.3, v.t - 1.4), s: v.s, e: v.e, side: q.side, w: 12, charge: 1.2, life: 1.6, wb: 1 }); } return out.sort((x, y) => x.t0 - y.t0); }
+const CD_MODES = [{ m: "beam", charge: 1.2, life: 1.6, lead: 1.4 }, { m: "sweep", charge: 1, life: 2.2, lead: 1.2 }, { m: "nova", charge: 1.6, life: 1, lead: 2.55 }]; // v422 its three attacks, in turn
+function cdPlan(b) { const out = [], last = {}, ord = {}, cnt = {}; let no = 0; for (const v of b.R.vols || []) { const q = b.Q[v.s]; if (!q || q.k !== "worldbreaker" || v.bounce || v.e == null || v.e < 0) continue; if (ord[v.s] == null) ord[v.s] = no++; if (v.t < ord[v.s] * 1.7) continue; /* formations take turns: a rolling barrage */ if (last[v.s] != null && v.t < last[v.s] + 5) continue; last[v.s] = v.t;
+    const md = CD_MODES[(cnt[v.s] = (cnt[v.s] || 0) + 1) % 3 === 1 ? 0 : cnt[v.s] % 3 === 2 ? 1 : 2]; out.push({ t0: Math.max(.3, v.t - md.lead), s: v.s, e: v.e, side: q.side, w: 12, charge: md.charge, life: md.life, wb: 1, mode: md.m }); } return out.sort((x, y) => x.t0 - y.t0); }
 /* the two baked poses either side of an aim, and how far between them */
 function cdPose(phi, base) { const st = Math.PI / 6, u = (phi - CD_PHI0) / st, k0 = Math.floor(u), w = u - k0, A = ((k0 % 12) + 12) % 12, B = (A + 1) % 12, got = k => !k || !!shipArtSoon("worldbreaker", base + "~p" + k, "side"), acc = k => k ? base + "~p" + k : base;
   if (got(A) && got(B)) return [acc(A), acc(B), w]; if (got(A)) return [acc(A), null, 0]; if (got(B)) return [acc(B), null, 0]; return [base, null, 0]; }
@@ -17459,8 +17460,8 @@ function drawBattle(t) {
   for (const m of b.beams) { const age = T - m.t0; if (age < 0) continue;
     if (m.wb) { /* v410 the Cube Destroyer: charge in the dish, beam from its core, a wide splash */ const S0 = scr[m.s], E0 = scr[m.e], g = b.geo && b.geo[m.s], ok = g && g.f === b.gf;
       if (S0 && b.n[m.s] > 0 && !m.ht) { const Lg = ok ? g.L : Math.min(W * .1 * bLen("worldbreaker") * S0.s, W * .55 * S0.s), fc = ok ? g.face : (b.face[m.s] || 1); const ph = (b.cdPhi || {})[m.s] == null ? CD_PHI0 : b.cdPhi[m.s]; m.ox = S0.x + fc * Lg * .491 * Math.cos(ph); m.oy = S0.y - Lg * .491 * Math.sin(ph); /* v416 the dish where the turned station holds it */ m.L = Lg; }
-      if (m.ox == null || (!E0 && m.ix == null)) continue;
-      const ox = m.ox, oy = m.oy, Lg = m.L, ex = E0 ? E0.x : m.ix, ey = E0 ? E0.y : m.iy, R0 = Lg * .16, red = "#ff2a1a";
+      if (E0) { m.lx = E0.x; m.ly = E0.y; } if (m.ox == null || (!E0 && m.ix == null && m.lx == null)) continue;
+      const ox = m.ox, oy = m.oy, Lg = m.L, R0 = Lg * .16 * (m.mode === "nova" ? 1.5 : 1), red = "#ff2a1a"; let ex = E0 ? E0.x : m.ix != null ? m.ix : m.lx, ey = E0 ? E0.y : m.iy != null ? m.iy : m.ly;
       ctx.save(); ctx.globalCompositeOperation = "lighter";
       if (age < m.charge) { const k = age / m.charge; if (!m.cs) { m.cs = 1; try { SFX.charge(sp(ox, oy)); } catch (e) {} }
         ctx.strokeStyle = red; for (let r = 0; r < 3; r++) { const u = (k * 1.6 + r / 3) % 1, rr = R0 * (2.4 - 1.9 * u); ctx.globalAlpha = .3 + .6 * u; ctx.lineWidth = (1.5 + 2.5 * u) * d; ctx.beginPath(); ctx.ellipse(ox, oy, rr * .62, rr, 0, 0, TAU); ctx.stroke(); }
@@ -17468,16 +17469,27 @@ function drawBattle(t) {
         const cr = R0 * (.4 + 1.1 * k); ctx.globalAlpha = .6 + .4 * k; ctx.drawImage(glowSprite(red), ox - cr * 2, oy - cr * 2, cr * 4, cr * 4); ctx.drawImage(glowSprite("#ffffff"), ox - cr * .5, oy - cr * .5, cr, cr);
         ctx.restore(); continue; }
       const k = (age - m.charge) / m.life;
-      if (k < 1) { const al = k < .06 ? k / .06 : Math.pow(Math.max(0, 1 - (k - .06) / .94), 1.4), reach = Math.min(1, k * 7), x1 = ox + (ex - ox) * reach, y1 = oy + (ey - oy) * reach, w = Math.max(6 * d, Lg * .13) * (.85 + .15 * Math.sin(t * .08));
+      if (k < 1 && m.mode === "sweep") { /* v422 the raking beam: from its target across to the nearest other enemy group */
+        if (m.e2 == null) { const sd = (Q[m.s] || {}).side; let best = -1, bd = 1e9; Q.forEach((q, i) => { const p = scr[i]; if (i !== m.e && q.side !== sd && b.n[i] > 0 && p) { const dd = Math.hypot(p.x - ex, p.y - ey); if (dd < bd && dd > 30 * d) { bd = dd; best = i; } } }); m.e2 = best; }
+        const P2 = m.e2 >= 0 ? scr[m.e2] : null, tx2 = P2 ? P2.x : ex + 140 * d, ty2 = P2 ? P2.y : ey - 30 * d, u2 = clamp((k - .18) / .7, 0, 1), es = u2 * u2 * (3 - 2 * u2); ex += (tx2 - ex) * es; ey += (ty2 - ey) * es; m.cxy = { x: ex, y: ey };
+        if (k > .15 && (!m.lf || T - m.lf > .12)) { m.lf = T; b.flashes.push({ x: ex + (Math.random() - .5) * 24 * d, y: ey + (Math.random() - .5) * 16 * d, t, r: (34 + Math.random() * 26) * d, life: 300, rot: Math.random() * .8 }); b.shake = Math.max(b.shake, 6 * d); } }
+      if (k < 1 && m.mode === "nova") { /* v422 the nova: a plasma orb hurled from the dish */ const al = Math.min(1, k * 8), e3 = k * k * (1.6 - .6 * k), px = ox + (ex - ox) * e3, py = oy + (ey - oy) * e3, rr = R0 * (1.1 + .15 * Math.sin(t * .04));
+        if (!m.fs) { m.fs = 1; try { SFX.megaBeam(sp(ox, oy)); } catch (e) {} b.shake = Math.max(b.shake, 14 * d); b.flash = Math.max(b.flash, .35); }
+        for (let j = 1; j <= 6; j++) { const f = Math.max(0, e3 - j * .035), qx = ox + (ex - ox) * f, qy = oy + (ey - oy) * f; ctx.globalAlpha = al * (.5 - j * .07); ctx.drawImage(glowSprite(red), qx - rr * 1.6, qy - rr * 1.6, rr * 3.2, rr * 3.2); }
+        ctx.globalAlpha = al; ctx.drawImage(glowSprite(red), px - rr * 3, py - rr * 3, rr * 6, rr * 6); ctx.drawImage(starSprite(red), px - rr * 2.2, py - rr * 2.2, rr * 4.4, rr * 4.4); ctx.drawImage(glowSprite("#ffffff"), px - rr * .8, py - rr * .8, rr * 1.6, rr * 1.6);
+        if (!lo) { ctx.strokeStyle = "#ffd0c0"; ctx.lineWidth = 1.6 * d; for (let j = 0; j < 5; j++) { let a = Math.random() * TAU, x = px, y = py; ctx.globalAlpha = al * .8; ctx.beginPath(); ctx.moveTo(x, y); for (let s = 0; s < 4; s++) { a += (Math.random() - .5) * 1.4; x += Math.cos(a) * rr * .6; y += Math.sin(a) * rr * .6; ctx.lineTo(x, y); } ctx.stroke(); } }
+        if (k < .15) { const mr = R0 * 1.6 * (1 - k / .15); ctx.globalAlpha = 1; ctx.drawImage(glowSprite("#ffffff"), ox - mr, oy - mr, mr * 2, mr * 2); }
+        if (k >= .97 && !m.ht) { m.ht = T || 1e-6; m.ix = ex; m.iy = ey; } }
+      else if (k < 1) { const al = k < .06 ? k / .06 : Math.pow(Math.max(0, 1 - (k - .06) / .94), 1.4), reach = Math.min(1, k * 7), x1 = ox + (ex - ox) * reach, y1 = oy + (ey - oy) * reach, w = Math.max(6 * d, Lg * .13) * (.85 + .15 * Math.sin(t * .08));
         if (!m.fs) { m.fs = 1; try { SFX.megaBeam(sp(ox, oy)); } catch (e) {} b.shake = Math.max(b.shake, 12 * d); b.flash = Math.max(b.flash, .3); }
         for (const [lw, a, c2] of [[6, .12, red], [3, .35, red], [1.5, .85, "#ff8a6a"], [.6, 1, "#ffffff"]]) { ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(x1, y1); ctx.strokeStyle = c2; ctx.globalAlpha = al * a * (.5 + .5 * dim); ctx.lineWidth = w * lw; ctx.stroke(); }
         if (!lo) { const dx = x1 - ox, dy = y1 - oy, Ln = Math.hypot(dx, dy) || 1, nx = -dy / Ln, ny = dx / Ln, n = Math.max(8, Ln / (6 * d) | 0);
           for (const ph of [0, Math.PI]) { ctx.beginPath(); for (let s = 0; s <= n; s++) { const f = s / n, a2 = f * Ln / (14 * d) - t * .03 + ph, amp = w * 1.3 * Math.min(1, f * 4), px = ox + dx * f + nx * Math.sin(a2) * amp, py = oy + dy * f + ny * Math.sin(a2) * amp; if (s) ctx.lineTo(px, py); else ctx.moveTo(px, py); } ctx.strokeStyle = red; ctx.globalAlpha = al * .6; ctx.lineWidth = 1.6 * d; ctx.stroke(); } }
         const mr = R0 * (1.3 + .25 * Math.sin(t * .05)); ctx.globalAlpha = al; ctx.drawImage(glowSprite(red), ox - mr * 2, oy - mr * 2, mr * 4, mr * 4); ctx.drawImage(starSprite(red), ox - mr * 1.6, oy - mr * 1.6, mr * 3.2, mr * 3.2); ctx.drawImage(glowSprite("#ffffff"), ox - mr * .5, oy - mr * .5, mr, mr);
         ctx.strokeStyle = red; ctx.lineWidth = 2.5 * d; ctx.globalAlpha = al * .8; ctx.beginPath(); ctx.ellipse(ox, oy, R0 * .62, R0, 0, 0, TAU); ctx.stroke();
-        if (reach >= 1 && !m.ht) { m.ht = T || 1e-6; m.ix = ex; m.iy = ey; } }
-      if (m.ht) { const u = (T - m.ht) / 1.3; if (u < 1) { const Rs = Math.max(W, H) * .26, e1 = 1 - Math.pow(1 - u, 3), ix = m.ix, iy = m.iy;
-        if (!m.hs) { m.hs = 1; try { SFX.blast(2.4, 0); } catch (e) {} b.shake = Math.max(b.shake, 16 * d); b.flash = Math.max(b.flash, .35); b.flashes.push({ x: ix, y: iy, t, r: Rs * .5, life: 420, rot: Math.random() * .8 });
+        if (reach >= 1 && !m.ht && (m.mode !== "sweep" || k > .9)) { m.ht = T || 1e-6; m.ix = ex; m.iy = ey; } }
+      if (m.ht) { const u = (T - m.ht) / (m.mode === "nova" ? 1.7 : 1.3); if (u < 1) { const Rs = Math.max(W, H) * (m.mode === "nova" ? .34 : m.mode === "sweep" ? .2 : .26), e1 = 1 - Math.pow(1 - u, 3), ix = m.ix, iy = m.iy;
+        if (!m.hs) { m.hs = 1; try { SFX.blast(2.4, 0); } catch (e) {} b.shake = Math.max(b.shake, (m.mode === "nova" ? 22 : 16) * d); b.flash = Math.max(b.flash, m.mode === "nova" ? .65 : .35); b.flashes.push({ x: ix, y: iy, t, r: Rs * .5, life: 420, rot: Math.random() * .8 });
           if (!lo) for (let j = 0; j < 40 && b.sparks.length < 420; j++) { const a = Math.random() * TAU, v = (.2 + Math.random() * .6) * d; b.sparks.push({ x: ix, y: iy, vx: Math.cos(a) * v, vy: Math.sin(a) * v * .7, t, life: 400 + Math.random() * 500 }); }
           const sd = (Q[m.s] || {}).side; Q.forEach((q, i) => { const p = scr[i]; if (q.side !== sd && b.n[i] > 0 && p && Math.hypot(p.x - ix, (p.y - iy) / .6) < Rs) b.flashes.push({ x: p.x, y: p.y, t: t + 60 + Math.random() * 160, r: (30 + Math.random() * 20) * d, life: 320, rot: Math.random() * .8 }); }); }
         const fr = Rs * (.25 + .45 * e1); ctx.globalAlpha = (1 - u) * .9; ctx.drawImage(glowSprite("fire"), ix - fr, iy - fr * .7, fr * 2, fr * 1.4); ctx.globalAlpha = (1 - u) * .7; ctx.drawImage(glowSprite(red), ix - fr * 1.3, iy - fr * .9, fr * 2.6, fr * 1.8);
