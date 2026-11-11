@@ -3657,7 +3657,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 439;
+const GAME_V = 440;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5335,24 +5335,26 @@ function shStress() { const st = G.stress, out = st ? st.out : [], fails = out.f
    The form: the Super Cube is the core (2x2x2 cells of 15 units); twelve blocks the size of the Super Cube, each built from eight
    Assimilation Cubes, interlock round it, staggered by half a block, after the reference; the last four cubes crown it. Checked: no
    two pieces overlap, every block shares a face with the core or an earlier block. */
-const DV_M = 60e3, DV_H = 3600e3, DV_FIRST = Date.UTC(2026, 11, 11, 18), DV_CELL = 15, DV_Y = 150, DV_HOLD = 200, DV_LOCK = 90e3;
-const DV = { mig: 30 * DV_M, lock0: 90 * DV_M, lock1: 148 * DV_M, act: 150 * DV_M, erupt: 153 * DV_M, combat: 156 * DV_M, ret: 24 * DV_H, end: 25 * DV_H };
+const DV_M = 60e3, DV_H = 3600e3, DV_FIRST = Date.UTC(2026, 11, 11, 18), DV_CELL = 30, DV_Y = 170, DV_HOLD = 320, /* v440 */ DV_LOCK = 90e3;
+const DV = { mig: 30 * DV_M, lock0: 90 * DV_M, lock1: 148 * DV_M, act: 150 * DV_M, erupt: 153 * DV_M, combat: 156 * DV_M, stage: 158 * DV_M, war0: 172 * DV_M, war1: 200 * DV_M, ret: 205 * DV_M, end: 250 * DV_M }; /* v440 the fleet stages, is wiped out, and the cubes disperse */
 const DV_MODS = [[1, 0, -1], [-3, -2, -1], [-1, 1, 0], [-1, -3, -2], [0, -1, 1], [-2, -1, -3], [1, 2, 0], [-3, 1, -2], [1, -3, -1], [-3, 0, 1], [2, -2, 1], [0, 1, -3]];
 const DV_CROWN = [[1, 4, 0], [2, 4, 1], [1, -4, -1], [-4, -2, -1]];
 function dvStartOf(T) { const d = new Date(T); let s = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 11, 18); if (T < s) s = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 11, 18); return s; }
-const dvPhase = e => e < DV.mig ? "awake" : e < DV.lock0 ? "mig" : e < DV.act ? "asm" : e < DV.combat ? "act" : e < DV.ret ? "combat" : "ret";
+const dvPhase = e => e < DV.mig ? "awake" : e < DV.lock0 ? "mig" : e < DV.act ? "asm" : e < DV.combat ? "act" : e < DV.war0 ? "stage" : e < DV.war1 ? "war" : e < DV.ret ? "after" : "ret";
 /* where the event stands at T (null outside it). The owner's preview runs the whole thing in about four minutes (dvSimStart). */
 function dvNow(T) { if (G.dvSim) return dvSimNow(); if (T < DV_FIRST) return null; const s0 = dvStartOf(T), e = T - s0; return e >= 0 && e < DV.end ? { e, s0, ph: dvPhase(e) } : null; }
-const DV_SIM = [[0, 0], [15, DV.mig], [165, DV.act], [190, DV.combat], [205, DV.combat + 3 * DV_H], [207, DV.ret], [240, DV.end]]; /* preview seconds -> event time */
+const DV_SIM = [[0, 0], [15, DV.mig], [140, DV.act], [160, DV.combat], [176, DV.war0], [230, DV.war1], [238, DV.ret], [270, DV.end]]; /* preview seconds -> event time */
 function dvSimNow() { const C = G.dvSim, s = (performance.now() - C.t0) / 1000; if (s >= DV_SIM[DV_SIM.length - 1][0]) { dvSimStop(1); return null; }
-  let i = 0; while (i < DV_SIM.length - 2 && s >= DV_SIM[i + 1][0]) i++; const [a, ea] = DV_SIM[i], [b, eb] = DV_SIM[i + 1], e = ea + (eb - ea) * (s - a) / (b - a); return { e, s0: C.s0, ph: dvPhase(e), sim: 1 }; }
+  let i = 0; while (i < DV_SIM.length - 2 && s >= DV_SIM[i + 1][0]) i++; const [a, ea] = DV_SIM[i], [b, eb] = DV_SIM[i + 1], e = ea + (eb - ea) * (s - a) / (b - a); return { e, s0: C.s0, ph: dvPhase(e), sim: 1, rate: (eb - ea) / ((b - a) * 1000) }; }
 /* the plan for one event: which cube takes which slot, when it leaves, arrives, holds and locks. Fixed for the event (it depends only on
    its start time), so it is the same on every device. */
 function dvPlan(s0) { if (G.dvP && G.dvP.s0 === s0) return G.dvP;
-  const cells = [], cell = (c, m) => cells.push({ c, m, p: [(c[0] + .5) * DV_CELL, (c[1] + .5) * DV_CELL, (c[2] + .5) * DV_CELL] });
-  DV_MODS.forEach((m, i) => { const L = []; for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++) for (let c = 0; c < 2; c++) L.push([m[0] + a, m[1] + b, m[2] + c]); L.sort((u, v) => Math.hypot(u[0] + .5, u[1] + .5, u[2] + .5) - Math.hypot(v[0] + .5, v[1] + .5, v[2] + .5)); L.forEach(c => cell(c, i)); });
-  DV_CROWN.forEach(c => cell(c, 12));
-  const occ = new Set(cells.map(s => s.c.join())); for (let x = -1; x <= 0; x++) for (let y = -1; y <= 0; y++) for (let z = -1; z <= 0; z++) occ.add([x, y, z].join());
+  /* v440 one giant cube: 5x5x5 cells the size of the Super Cube, the Super Cube at its centre. The two cubes inside lock first (above
+     and below the core, while the walls are still open), then the 98 of the shell, from the bottom face up, layer by layer */
+  const cells = [], cell = (c, m) => cells.push({ c, m, p: [c[0] * DV_CELL, c[1] * DV_CELL, c[2] * DV_CELL] }); cell([0, -1, 0], -1); cell([0, 1, 0], -1);
+  const sh = []; for (let x = -2; x <= 2; x++) for (let y = -2; y <= 2; y++) for (let z = -2; z <= 2; z++) if (Math.max(Math.abs(x), Math.abs(y), Math.abs(z)) === 2) sh.push([x, y, z]);
+  sh.sort((u, v) => u[1] - v[1] || Math.atan2(u[2], u[0]) - Math.atan2(v[2], v[0]) || Math.hypot(u[0], u[2]) - Math.hypot(v[0], v[2])); sh.forEach(c => cell(c, 0));
+  const occ = new Set(cells.map(s => s.c.join())); occ.add("0,0,0");
   for (const s of cells) { /* the face it is drawn in through: the open side most in line with the slot's own direction */ let best = null, bv = -1e9;
     for (const [ax, sg] of [[0, 1], [0, -1], [1, 1], [1, -1], [2, 1], [2, -1]]) { const n = s.c.slice(); n[ax] += sg; if (occ.has(n.join())) continue; const v = s.p[ax] * sg; if (v > bv) { bv = v; best = [ax, sg]; } }
     s.n = [0, 0, 0]; s.n[best[0]] = best[1]; }
@@ -5377,13 +5379,13 @@ function dvCube(c, e, D, o) { const s0 = D.s0, sz = c.sz, full = DV_CELL * .975,
     const w = u < .1 ? dvIn(u / .1) * .02 : .02 + .98 * dvEase((u - .1) / .9); dvBez(P[0], P[1], P[2], P[3], w, o); o.k = sz; o.al = 0; o.st = u < .1 ? "detach" : "fly"; o.u = u; return o; }
   if (e < c.lk - DV_LOCK) { o.x = c.H[0]; o.y = DV_Y + c.H[1] + Math.sin(e / 9000 + c.i) * 1.5; o.z = c.H[2]; o.k = sz; o.al = 0; o.st = "hold"; return o; }
   const S = slotW(c.s.p, P[0]);
-  if (e < c.lk) { const k = (e - (c.lk - DV_LOCK)) / DV_LOCK, st = P[1]; st.x = c.s.p[0] + c.s.n[0] * 40; st.y = c.s.p[1] + c.s.n[1] * 40; st.z = c.s.p[2] + c.s.n[2] * 40; slotW([st.x, st.y, st.z], st);
+  if (e < c.lk) { const k = (e - (c.lk - DV_LOCK)) / DV_LOCK, st = P[1]; st.x = c.s.p[0] + c.s.n[0] * 75; st.y = c.s.p[1] + c.s.n[1] * 75; st.z = c.s.p[2] + c.s.n[2] * 75; slotW([st.x, st.y, st.z], st);
     if (k < .55) { const u = dvEase(k / .55); o.x = c.H[0] + (st.x - c.H[0]) * u; o.y = DV_Y + c.H[1] + (st.y - DV_Y - c.H[1]) * u; o.z = c.H[2] + (st.z - c.H[2]) * u; o.st = "align"; }
     else { const u = 1 - Math.pow(1 - (k - .55) / .45, 3); o.x = st.x + (S.x - st.x) * u; o.y = st.y + (S.y - st.y) * u; o.z = st.z + (S.z - st.z) * u; o.st = "slide"; }
     o.k = sz + (full - sz) * dvEase(k / .5); o.al = dvEase(k / .45); return o; }
   if (e < c.ret) { o.x = S.x; o.y = S.y; o.z = S.z; o.k = full; o.al = 1; o.st = "locked"; return o; }
   /* coming apart: slide out along its face, shrink, and fly home */
-  const k = (e - c.ret) / (30 * DV_M), st = P[1]; st.x = c.s.p[0] + c.s.n[0] * 60; st.y = c.s.p[1] + c.s.n[1] * 60; st.z = c.s.p[2] + c.s.n[2] * 60; slotW([st.x, st.y, st.z], st);
+  const k = (e - c.ret) / (30 * DV_M), st = P[1]; st.x = c.s.p[0] + c.s.n[0] * 110; st.y = c.s.p[1] + c.s.n[1] * 110; st.z = c.s.p[2] + c.s.n[2] * 110; slotW([st.x, st.y, st.z], st);
   if (k < .08) { const u = dvEase(k / .08); o.x = S.x + (st.x - S.x) * u; o.y = S.y + (st.y - S.y) * u; o.z = S.z + (st.z - S.z) * u; o.k = full + (sz - full) * u; o.al = 1 - u; o.st = "unlock"; return o; }
   const u = dvEase(Math.min(1, (k - .08) / .92)), h = P3(c.x, s0 + Math.min(e, c.ret + 30 * DV_M), P[2]); P[3].x = st.x; P[3].y = st.y + 60; P[3].z = st.z;
   dvBez(st, P[3], { x: h.x, y: h.y + 80, z: h.z }, h, u, o); o.k = sz; o.al = 0; o.st = k >= 1 ? "home" : "fly"; o.u = u; return o; }
@@ -5409,15 +5411,15 @@ function dvBuild(W) { const X = { grp: new TH.Group() }, M = borgMats(false); if
   X.beams = new TH.LineSegments(lg, new TH.LineBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, toneMapped: false })); X.beams.frustumCulled = false; X.grp.add(X.beams);
   X.fx = []; for (let i = 0; i < 8; i++) { const f = new TH.Sprite(W.additive(gt, 0xbfffc8, 0)); f.visible = false; X.grp.add(f);
     const ring = new TH.Mesh(new TH.RingGeometry(.86, 1, 48), new TH.MeshBasicMaterial({ color: 0x7dff90, transparent: true, opacity: 0, side: TH.DoubleSide, depthWrite: false, blending: TH.AdditiveBlending, toneMapped: false })); ring.visible = false; X.grp.add(ring); X.fx.push({ f, ring, t: -1e9 }); }
-  X.haze = []; { const ht = W.glow.dvh || (W.glow.dvh = glowTex("70,255,110", .35)); for (let i = 0; i < 7; i++) { const h = new TH.Sprite(W.additive(ht, 0x3dff6a, 0)); h.material.depthWrite = false; const a = i / 7 * TAU; h.userData.o = [Math.cos(a) * 55, (i % 3 - 1) * 35, Math.sin(a) * 55, 220 + (i * 37) % 120]; X.grp.add(h); X.haze.push(h); } } /* the green nebula the machine sits in */
+  X.haze = []; { const ht = W.glow.dvh || (W.glow.dvh = glowTex("70,255,110", .35)); for (let i = 0; i < 7; i++) { const h = new TH.Sprite(W.additive(ht, 0x3dff6a, 0)); h.material.depthWrite = false; const a = i / 7 * TAU; h.userData.o = [Math.cos(a) * 110, (i % 3 - 1) * 70, Math.sin(a) * 110, 400 + (i * 37) % 200]; X.grp.add(h); X.haze.push(h); } } /* the green nebula the machine sits in */
   X.core = new TH.Sprite(W.additive(gt, 0x9dffae, 0)); X.core.material.depthTest = false; X.core.visible = false; X.grp.add(X.core);
-  X.wave = new TH.Mesh(new TH.SphereGeometry(1, 32, 16), new TH.MeshBasicMaterial({ color: 0x5dff6a, transparent: true, opacity: 0, side: TH.BackSide, depthWrite: false, blending: TH.AdditiveBlending, toneMapped: false })); X.wave.visible = false; X.grp.add(X.wave);
+  X.wave = new TH.Mesh(new TH.SphereGeometry(1, 48, 24), dvRim(0x5dff6a)); /* v440 a shell of light, not a green fill */ X.wave.visible = false; X.grp.add(X.wave);
   X.locked = new Set(); X.SV = new TH.Vector3(); X.fxi = 0; X.D3 = new TH.Object3D(); X.V = new TH.Vector3(); X.q = {}; X.tq = {};
   W.scene.add(X.grp); return (W.dv = X); }
 function dvFree(W) { const X = W.dv; if (!X) return; for (const d of X.det) X.grp.remove(d.g); /* the detail models share the master's geometry: never disposed */ W.scene.remove(X.grp);
-  X.grp.traverse(o => { try { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); } catch (e) {} }); W.dv = null; G.dvP = null; }
+  X.grp.traverse(o => { if (o.userData.keep) return; /* v440 the fleet's hulls and materials are the map's shared ones */ try { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); } catch (e) {} }); W.dv = null; G.dvP = null; G.dvF = null; }
 function dvFx(X, p, n, big, t) { const f = X.fx[X.fxi++ % X.fx.length]; f.t = t; f.p = [p.x, p.y, p.z]; f.n = n; f.big = big || 1; }
-function dvTick(W, t, T) { const D = dvNow(T); if (!D) { if (W.dv) dvFree(W); return; } const X = W.dv || dvBuild(W), P = dvPlan(D.s0), e = D.e, cp = W.camera.position, o = X.q, D3 = X.D3, lite = reduced || FX_LITE();
+function dvTick(W, t, T) { const D = dvNow(T); try { dvCountdown(W, t, T, !!D); } catch (e) { mapErr(e); } /* v440 */ if (!D) { if (W.dv) dvFree(W); return; } const X = W.dv || dvBuild(W), P = dvPlan(D.s0), e = D.e, cp = W.camera.position, o = X.q, D3 = X.D3, lite = reduced || FX_LITE();
   /* the galaxy's mood: the Collective's lights brighten as it wakes, die before the eruption, then burn */
   const wake = clamp(e / DV.mig, 0, 1), eru = e >= DV.erupt ? Math.exp(-(e - DV.erupt) / (D.sim ? 20e3 : 90e3)) : 0, dark = e >= DV.act && e < DV.erupt ? dvEase((e - DV.act) / (DV.erupt - DV.act - 30e3)) : 0;
   X.mat.emissiveIntensity = (.55 + .25 * wake + (reduced ? 0 : .12 * wake * Math.sin(t * .004))) * (1 - .85 * dark) + .5 * eru;
@@ -5443,18 +5445,128 @@ function dvTick(W, t, T) { const D = dvNow(T); if (!D) { if (W.dv) dvFree(W); re
   X.det.forEach((d, i) => { const r = want[i]; d.g.visible = !!r; if (!r) return; const c = r[1]; X.inst.getMatrixAt(c.ni, d.g.matrix); d.g.matrix.decompose(d.g.position, d.g.quaternion, d.g.scale); d.g.scale.multiplyScalar(1.001); D3.scale.setScalar(0); D3.updateMatrix(); X.inst.setMatrixAt(c.ni, D3.matrix); });
   /* lock flashes: a white-green flare and a shockwave ring racing out across the face it locked onto */
   for (const f of X.fx) { const a = (t - f.t) / 1400; if (a < 0 || a > 1 || reduced) { f.f.visible = f.ring.visible = false; continue; }
-    f.f.visible = f.ring.visible = true; f.f.position.set(f.p[0], f.p[1], f.p[2]); f.f.scale.setScalar(70 * f.big * (.4 + a)); f.f.material.opacity = Math.pow(1 - a, 2) * .95;
-    f.ring.position.set(f.p[0] - f.n[0] * 7, f.p[1] - f.n[1] * 7, f.p[2] - f.n[2] * 7); f.ring.lookAt(f.ring.position.x + f.n[0], f.ring.position.y + f.n[1], f.ring.position.z + f.n[2]); f.ring.scale.setScalar(6 + 90 * dvEase(a)); f.ring.material.opacity = (1 - a) * .8; }
+    f.f.visible = f.ring.visible = true; f.f.position.set(f.p[0], f.p[1], f.p[2]); f.f.scale.setScalar(130 * f.big * (.4 + a)); f.f.material.opacity = Math.pow(1 - a, 2) * .95;
+    f.ring.position.set(f.p[0] - f.n[0] * 15, f.p[1] - f.n[1] * 15, f.p[2] - f.n[2] * 15); f.ring.lookAt(f.ring.position.x + f.n[0], f.ring.position.y + f.n[1], f.ring.position.z + f.n[2]); f.ring.scale.setScalar(12 + 170 * dvEase(a)); f.ring.material.opacity = (1 - a) * .8; }
   { const done = X.locked.size / Math.max(1, P.N), hz = (lite ? .05 : .09) * done * (1 - .8 * dark) + .25 * eru; for (const h of X.haze) { const u = h.userData.o, cr = dvRot(e); h.visible = hz > .005; h.position.set(u[0] * Math.cos(cr) + u[2] * Math.sin(cr), DV_Y + u[1], -u[0] * Math.sin(cr) + u[2] * Math.cos(cr)); h.scale.setScalar(u[3] * (1 + .5 * eru)); h.material.opacity = hz * (.8 + .2 * Math.sin(t * .0008 + u[3])); } }
+  try { dvFleetTick(W, X, D, t); } catch (e) { mapErr(e); } /* v440 the Last Stand */
   /* the core: silent and dark, then the eruption (a sphere of light racing out), then it burns at the heart of the machine */
   const live = e >= DV.erupt && e < DV.ret + 10 * DV_M; X.core.visible = live; if (live) { X.core.position.set(0, DV_Y, 0); X.core.scale.setScalar(120 + 260 * eru + (reduced ? 0 : 12 * Math.sin(t * .003))); X.core.material.opacity = .35 + .6 * eru; }
-  const wa = (e - DV.erupt) / (D.sim ? 6e3 : 40e3); X.wave.visible = wa >= 0 && wa < 1 && !reduced; if (X.wave.visible) { X.wave.position.set(0, DV_Y, 0); X.wave.scale.setScalar(20 + 900 * dvEase(wa)); X.wave.material.opacity = .55 * (1 - wa); }
+  const wa = (e - DV.erupt) / (D.sim ? 6e3 : 40e3); X.wave.visible = wa >= 0 && wa < 1 && !reduced; if (X.wave.visible) { X.wave.position.set(0, DV_Y, 0); X.wave.scale.setScalar(20 + 900 * dvEase(wa)); X.wave.material.uniforms.uA.value = 1.2 * (1 - wa); }
   /* the Super Cube itself (W.nexus) is moved by the map's own Cube code (dvCore there) */
 }
+/* v440 THE LAST STAND: once the Omega Cube wakes, the galaxy's grand fleet warps in and stages in formation against it (158-172 min),
+   opens fire, and is wiped out (172-200 min): green beams that erase a squadron at a time, an Omega Pulse through the front ranks,
+   and a final pulse. Then the Omega Cube comes apart and its cubes disperse (from 205 min). Scripted from the shared clock like the
+   rest of the event: the same ship dies at the same moment for everyone. One instanced mesh per hull type (body + glow), so ~190
+   ships cost about ten draw calls; tracers, impacts and beams are one call each. */
+const DV_FT = [["corvette", 70], ["destroyer", 46], ["battleship", 50], ["dreadnought", 14], ["supercarrier", 6]], DV_SHIPK = 6.5, DV_PW = 60e3;
+function dvFleet(s0) { if (G.dvF && G.dvF.s0 === s0) return G.dvF;
+  const r = rnd(hash("fleet:" + s0)), ang = r() * TAU, fx = Math.cos(ang), fz = Math.sin(ang), C = [fx * 430, DV_Y - 20, fz * 430], sd = [-fz, 0, fx];
+  const list = []; DV_FT.forEach(([k, n], ti) => { for (let i = 0; i < (MOBILE ? Math.ceil(n * .55) : n); i++) list.push(ti); });
+  const N = list.length, rows = 4, per = Math.ceil(N / rows), tiers = 4, cols = Math.ceil(per / tiers), slots = [];
+  for (let row = 0; row < rows; row++) for (let c = 0; c < cols; c++) for (let h = 0; h < tiers; h++) slots.push({ row, c: c - (cols - 1) / 2, h: h - (tiers - 1) / 2 });
+  slots.sort((a, b) => a.row - b.row || Math.abs(a.c) - Math.abs(b.c) || Math.abs(a.h) - Math.abs(b.h));
+  const S = list.map((ti, j) => { const sl = slots[j], wc = sl.c * 36 + (r() - .5) * 12, wh = sl.h * 30 + (r() - .5) * 10, back = sl.row * 44 + ti * 8 + (r() - .5) * 8;
+    const p = [C[0] + sd[0] * wc + fx * back, C[1] + wh, C[2] + sd[2] * wc + fz * back];
+    return { ti, p, arr: DV.stage + 12 * DV_M * Math.pow(r(), .8), kill: Infinity, fr: .45 + r() * .5, fs: r(), hit: null, dr: [r() - .5, (r() - .5) * .5, r() - .5], rs: [r() - .5, r() - .5, r() - .5] }; });
+  for (const s of S) { const dx = s.p[0], dy = s.p[1] - DV_Y, dz = s.p[2], d = Math.hypot(dx, dy, dz); s.d = d; const k = 78 / d; s.hit = [dx * k + (r() - .5) * 60, DV_Y + dy * k + (r() - .5) * 60, dz * k + (r() - .5) * 60]; }
+  /* who dies when: beams take a squadron at a time, the first pulse sweeps the front ranks, the second pulse takes the rest */
+  const beams = [], pulses = [DV.war0 + 16 * DV_M, DV.war1 - 3 * DV_M], NB = MOBILE ? 22 : 34, perm = S.map((_, i) => i).sort(() => r() - .5); let pi = 0;
+  const alive = (s, at) => s.kill > at;
+  for (let b = 0; b < NB; b++) { const at = DV.war0 + 90e3 + b * (DV.war1 - DV.war0 - 6 * DV_M) / NB; if (Math.abs(at - pulses[0]) < 90e3) continue;
+    while (pi < perm.length && !alive(S[perm[pi]], at)) pi++; if (pi >= perm.length) break; const T0 = S[perm[pi]]; beams.push({ at, to: T0.p });
+    for (const s of S) if (alive(s, at) && Math.hypot(s.p[0] - T0.p[0], s.p[1] - T0.p[1], s.p[2] - T0.p[2]) < 44) s.kill = at + 1200; }
+  const front = S.filter(s => alive(s, pulses[0])).map(s => s.d).sort((a, b) => a - b), cut = front[Math.floor(front.length * .55)] || 0;
+  for (const s of S) { if (alive(s, pulses[0]) && s.d <= cut) s.kill = pulses[0] + DV_PW * (s.d - 80) / 820; }
+  for (const s of S) { if (alive(s, pulses[1])) s.kill = pulses[1] + DV_PW * (s.d - 80) / 820; }
+  return (G.dvF = { s0, S, beams, pulses, C, fwd: [fx, 0, fz] }); }
+function dvFleetBuild(W, X) { const K = fleetKit(W, "terran"); if (!K) return null; const F = { types: [], booms: [], bi: 0, dead: new Set(), seen: new Set() }, gt = W.glow.dv;
+  DV_FT.forEach(([k, n]) => { const G0 = shipGeo(K, k), cap = MOBILE ? Math.ceil(n * .55) : n, T = { k, body: null, glow: null };
+    if (G0.midB) { T.body = new TH.InstancedMesh(G0.midB, midMat(K, 0), cap); T.body.setColorAt(0, new TH.Color(1, 1, 1)); }
+    if (G0.midG) T.glow = new TH.InstancedMesh(G0.midG, midMat(K, 1), cap);
+    for (const m of [T.body, T.glow]) if (m) { m.frustumCulled = false; m.count = 0; m.userData.keep = 1; X.grp.add(m); } F.types.push(T); });
+  const lg = new TH.BufferGeometry(), NS = 260; lg.setAttribute("position", new TH.BufferAttribute(new Float32Array(NS * 6), 3)); lg.setAttribute("color", new TH.BufferAttribute(new Float32Array(NS * 6), 3));
+  F.bolts = new TH.LineSegments(lg, new TH.LineBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, toneMapped: false })); F.bolts.frustumCulled = false; X.grp.add(F.bolts);
+  const pg = new TH.BufferGeometry(); pg.setAttribute("position", new TH.BufferAttribute(new Float32Array(NS * 3), 3)); pg.setAttribute("color", new TH.BufferAttribute(new Float32Array(NS * 3), 3));
+  F.hits = new TH.Points(pg, new TH.PointsMaterial({ map: W.glow.fire || (W.glow.fire = glowTex("255,190,120", .8)), size: 16, vertexColors: true, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, toneMapped: false })); F.hits.frustumCulled = false; X.grp.add(F.hits);
+  F.beams = []; for (let i = 0; i < 4; i++) { const m = new TH.Mesh(new TH.CylinderGeometry(1, 1, 1, 10, 1, true), new TH.MeshBasicMaterial({ color: 0x6dff86, transparent: true, opacity: 0, depthWrite: false, blending: TH.AdditiveBlending, toneMapped: false })); m.visible = false; X.grp.add(m); F.beams.push(m); }
+  F.pulse = new TH.Mesh(new TH.SphereGeometry(1, 48, 24), dvRim(0x4dff70)); F.pulse.visible = false; X.grp.add(F.pulse);
+  for (let i = 0; i < (MOBILE ? 14 : 28); i++) { const s = new TH.Sprite(W.additive(W.glow.fire, 0xffd0a0, 0)); s.visible = false; X.grp.add(s); F.booms.push({ s, t: -1e9 }); }
+  F.D3 = new TH.Object3D(); F.V = new TH.Vector3(); F.Y = new TH.Vector3(0, 1, 0); F.dark = new TH.Color(.16, .1, .08); F.white = new TH.Color(1, 1, 1); return F; }
+function dvFleetTick(W, X, D, t) { const e = D.e; if (e < DV.stage - DV_M || e > DV.end) return; const P = dvFleet(D.s0), F = X.fl || (X.fl = dvFleetBuild(W, X)); if (!F) return;
+  const rate = D.rate || 1, D3 = F.D3, cx = 0, cy = DV_Y, cz = 0, n = F.types.map(() => 0), bp = F.bolts.geometry.attributes.position.array, bc = F.bolts.geometry.attributes.color.array, hp = F.hits.geometry.attributes.position.array, hc = F.hits.geometry.attributes.color.array; let nb = 0, nh = 0;
+  const fade = e > DV.ret ? clamp(1 - (e - DV.ret) / (30 * DV_M), 0, 1) : 1; /* the wrecks fade out as the cubes disperse */
+  for (const s of P.S) { const T = F.types[s.ti]; if (e < s.arr || fade <= 0) continue; const i = n[s.ti]++, dead = e >= s.kill, u = clamp((e - s.arr) / (3000 * rate), 0, 1), w = 1 - Math.pow(1 - u, 3);
+    let x = s.p[0] - P.fwd[0] * (1 - w) * 260, y = s.p[1], z = s.p[2] - P.fwd[2] * (1 - w) * 260; /* warps in from behind the line */
+    if (dead) { const a = (e - s.kill) / 60e3; x += s.dr[0] * a * 6; y += s.dr[1] * a * 6; z += s.dr[2] * a * 6; }
+    D3.position.set(x, y, z); D3.lookAt(cx, y, cz); if (dead) { const a = (e - s.kill) / 20e3; D3.rotateX(s.rs[0] * a); D3.rotateY(s.rs[1] * a); D3.rotateZ(s.rs[2] * a); }
+    D3.scale.setScalar(DV_SHIPK * (u > 0 ? 1 : 0)); D3.updateMatrix(); if (T.body) { T.body.setMatrixAt(i, D3.matrix); T.body.setColorAt(i, dead ? F.dark : F.white); }
+    if (T.glow) { if (dead) { D3.scale.setScalar(0); D3.updateMatrix(); } T.glow.setMatrixAt(i, D3.matrix); }
+    const key = P.S.indexOf(s); if (u > .02 && !F.seen.has(key)) { F.seen.add(key); if (e - s.arr < 8000 * rate) dvBoom(F, x, y, z, t, .6, 0x9fd8ff); }
+    if (dead && !F.dead.has(key)) { F.dead.add(key); if (e - s.kill < 6000 * rate) dvBoom(F, x, y, z, t, 1, 0xffc890); }
+    /* firing: each live ship sends volleys at the cube's face */
+    if (!dead && e > DV.war0 && u >= 1 && nb < 258) { const ph = (t / 1000 * s.fr + s.fs) % 1, hx = s.hit[0], hy = s.hit[1], hz = s.hit[2], dx = hx - x, dy = hy - y, dz = hz - z, L = Math.hypot(dx, dy, dz) || 1, px = x + dx * ph, py = y + dy * ph, pz = z + dz * ph, j = nb * 6, g = s.ti === 1 ? [.5, .8, 1] : [1, .62, .25];
+      bp[j] = px; bp[j + 1] = py; bp[j + 2] = pz; bp[j + 3] = px + dx / L * 16; bp[j + 4] = py + dy / L * 16; bp[j + 5] = pz + dz / L * 16; for (let q = 0; q < 6; q += 3) { bc[j + q] = g[0]; bc[j + q + 1] = g[1]; bc[j + q + 2] = g[2]; } nb++;
+      if (ph > .9) { const k = nh * 3, a = (ph - .9) * 10; hp[k] = hx; hp[k + 1] = hy; hp[k + 2] = hz; hc[k] = 1 - a * .5; hc[k + 1] = .7 - a * .4; hc[k + 2] = .4 - a * .3; nh++; } } }
+  F.types.forEach((T, i) => { for (const m of [T.body, T.glow]) if (m) { m.count = n[i]; m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; } });
+  F.bolts.geometry.setDrawRange(0, nb * 2); F.bolts.geometry.attributes.position.needsUpdate = F.bolts.geometry.attributes.color.needsUpdate = true;
+  F.hits.geometry.setDrawRange(0, nh); F.hits.geometry.attributes.position.needsUpdate = F.hits.geometry.attributes.color.needsUpdate = true;
+  /* the Omega Cube's beams: from the face that looks at the target, a green lance that holds for a breath */
+  let bi = 0; for (const b of P.beams) { const a = (e - b.at) / rate; if (a < -1500 || a > 2500 || bi >= F.beams.length) continue; const m = F.beams[bi++], dx = b.to[0] - cx, dy = b.to[1] - cy, dz = b.to[2] - cz, L = Math.hypot(dx, dy, dz) || 1, o = 78 / L;
+    const fx = cx + dx * o, fy = cy + dy * o, fz = cz + dz * o, len = L - 78; m.visible = !reduced; m.position.set(fx + dx / L * len / 2, fy + dy / L * len / 2, fz + dz / L * len / 2); F.V.set(dx / L, dy / L, dz / L); m.quaternion.setFromUnitVectors(F.Y, F.V);
+    const k = a < 0 ? .25 * (1 + a / 1500) : 1 - Math.max(0, a - 1500) / 1000, wdt = a < 0 ? .8 : 3.2 + 1.2 * Math.sin(t * .03); m.scale.set(wdt, len, wdt); m.material.opacity = .85 * Math.max(0, k); }
+  for (let i = bi; i < F.beams.length; i++) F.beams[i].visible = false;
+  /* the Omega Pulse: a sphere of green fire that rolls out through the fleet */
+  let pv = false; for (const pt of P.pulses) { const a = (e - pt) / DV_PW; if (a < 0 || a > 1) continue; pv = !reduced; F.pulse.position.set(cx, cy, cz); F.pulse.scale.setScalar(80 + 820 * a); F.pulse.material.uniforms.uA.value = 1.1 * (1 - a) * (a < .05 ? a / .05 : 1); } F.pulse.visible = pv;
+  for (const b of F.booms) { const a = (t - b.t) / 1300; if (a < 0 || a > 1) { b.s.visible = false; continue; } b.s.visible = true; b.s.position.set(b.p[0], b.p[1], b.p[2]); b.s.scale.setScalar(b.k * 34 * (.3 + a)); b.s.material.opacity = Math.pow(1 - a, 1.6); }
+}
+/* a shockwave shell: bright where you look along its surface, clear where you look through it */
+function dvRim(col) { return new TH.ShaderMaterial({ uniforms: { uC: { value: new TH.Color(col) }, uA: { value: 0 } }, transparent: true, depthWrite: false, side: TH.DoubleSide, blending: TH.AdditiveBlending, toneMapped: false,
+  vertexShader: "varying vec3 vN, vV; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }",
+  fragmentShader: "uniform vec3 uC; uniform float uA; varying vec3 vN, vV; void main(){ float f = 1.0 - abs(dot(vN, vV)); gl_FragColor = vec4(uC * (0.25 + 1.6 * pow(f, 3.0)), pow(f, 2.2) * uA); }" }); }
+function dvBoom(F, x, y, z, t, k, col) { const b = F.booms[F.bi++ % F.booms.length]; b.t = t; b.p = [x, y, z]; b.k = k; b.s.material.color.setHex(col); }
+/* v440 the countdown to Cube Devastation: a giant 3D clock hanging over the Void (DAYS : HRS : MIN : SEC), every digit built of glowing
+   emerald segments, with power surges racing through it and green lightning arcing between the digits. It faces the camera, it is
+   drawn in 4 calls (segments, halos, arcs, title plate), and it hides while the event itself runs. */
+const DVC_SEG = { a: [0, 1, 1, 0], b: [1, .5, 0, 1], c: [1, -.5, 0, 1], d: [0, -1, 1, 0], e: [-1, -.5, 0, 1], f: [-1, .5, 0, 1], g: [0, 0, 1, 0] };
+const DVC_DIG = ["abcdef", "bc", "abdeg", "abcdg", "bcfg", "acdfg", "acdefg", "abc", "abcdefg", "abcdfg"];
+function dvNext(T) { let s = Math.max(DV_FIRST, dvStartOf(T)); if (T >= s) { const d = new Date(s); s = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 11, 18); } return s; }
+function dvCdBuild(W) { const C = { grp: new TH.Group(), segs: [] }, DW = 10, DH = 9, TH0 = 1.9, GAP = 15.5, COL = 7; let x = 0;
+  const lay = []; for (let i = 0; i < 4; i++) { for (let k = 0; k < 2; k++) { lay.push({ d: i * 2 + k, x }); x += GAP; } if (i < 3) { lay.push({ colon: 1, x: x - GAP / 2 + COL / 2 - 1 }); x += COL; } }
+  const x0 = (x - GAP) / 2; C.lay = lay;
+  for (const L of lay) { if (L.colon) { for (const y of [-4.5, 4.5]) C.segs.push({ x: L.x - x0, y, sx: 2.6, sy: 2.6, colon: 1 }); continue; }
+    for (const s in DVC_SEG) { const [ox, oy, hz] = DVC_SEG[s]; C.segs.push({ d: L.d, s, x: L.x - x0 + ox * DW / 2, y: oy * DH, sx: hz ? DW - 1.4 : TH0, sy: hz ? TH0 : DH - 1.4 }); } }
+  const n = C.segs.length; C.box = new TH.InstancedMesh(new TH.BoxGeometry(1, 1, 1.6), new TH.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }), n);
+  C.halo = new TH.InstancedMesh(new TH.PlaneGeometry(1, 1), new TH.MeshBasicMaterial({ map: W.glow.dv || (W.glow.dv = glowTex("93,255,106", .85)), color: 0xffffff, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, toneMapped: false }), n);
+  const D3 = new TH.Object3D(); C.segs.forEach((s, i) => { D3.position.set(s.x, s.y, 0); D3.scale.set(s.sx, s.sy, 1); D3.updateMatrix(); C.box.setMatrixAt(i, D3.matrix); D3.scale.set(s.sx * 2.6 + 6, s.sy * 2.6 + 6, 1); D3.position.z = -1; D3.updateMatrix(); C.halo.setMatrixAt(i, D3.matrix); C.box.setColorAt(i, new TH.Color(0, 0, 0)); C.halo.setColorAt(i, new TH.Color(0, 0, 0)); });
+  for (const m of [C.box, C.halo]) { m.frustumCulled = false; C.grp.add(m); }
+  const ag = new TH.BufferGeometry(); ag.setAttribute("position", new TH.BufferAttribute(new Float32Array(16 * 10 * 6), 3)); C.arcs = new TH.LineSegments(ag, new TH.LineBasicMaterial({ color: 0xb8ffc8, transparent: true, opacity: .95, depthWrite: false, blending: TH.AdditiveBlending, toneMapped: false })); C.arcs.frustumCulled = false; C.grp.add(C.arcs); C.arc = [];
+  /* the title above the clock and the unit names under it, on one plate as wide as the clock (the canvas keeps the plate's shape) */
+  const PW = x + 10, PH = 64, cv = document.createElement("canvas"); cv.width = 1024; cv.height = Math.round(1024 * PH / PW); const g = cv.getContext("2d"), sx = 1024 / PW, Y = y => (PH / 2 - y) * sx;
+  g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#c9ffd2"; g.shadowColor = "#38ff6a"; g.shadowBlur = 26; g.font = `800 ${Math.round(9.5 * sx)}px ${cssFont()}`; g.fillText("CUBE DEVASTATION", 512, Y(21));
+  g.shadowBlur = 12; g.fillStyle = "#7dffa0"; g.font = `700 ${Math.round(3.6 * sx)}px ${cssFont()}`; ["DAYS", "HRS", "MIN", "SEC"].forEach((w, i) => g.fillText(w, 512 + (lay[i * 3].x + GAP / 2 - x0) * sx, Y(-15)));
+  C.title = new TH.Mesh(new TH.PlaneGeometry(PW, PH), new TH.MeshBasicMaterial({ map: new TH.CanvasTexture(cv), transparent: true, depthWrite: false, toneMapped: false })); C.title.position.z = -.5; C.title.renderOrder = 5; C.grp.add(C.title); C.w = x;
+  C.grp.scale.setScalar(1.55); W.scene.add(C.grp); return (W.dvCd = C); }
+function dvCountdown(W, t, T, live) { const show = !live && view === "galaxy";
+  if (!show) { if (W.dvCd) W.dvCd.grp.visible = false; return; } const C = W.dvCd || dvCdBuild(W); C.grp.visible = true;
+  const left = Math.max(0, dvNext(T) - T), sec = Math.floor(left / 1000), v = [Math.min(99, Math.floor(sec / 86400)), Math.floor(sec / 3600) % 24, Math.floor(sec / 60) % 60, sec % 60], dg = v.flatMap(q => [Math.floor(q / 10), q % 10]);
+  C.grp.position.set(0, 128 + Math.sin(t * .0006) * 2, 0); C.grp.quaternion.copy(W.camera.quaternion);
+  /* the power surge: a bright front sweeps the clock every few seconds; every second a ripple runs out from the seconds */
+  const sw = ((t / 2600) % 1) * (C.w + 60) - C.w / 2 - 30, rip = (t % 1000) / 1000, tick = Math.exp(-rip * 5), col = new TH.Color(), hcol = new TH.Color(); const lit = [];
+  C.segs.forEach((s, i) => { const on = s.colon ? 1 : (DVC_DIG[dg[s.d]].includes(s.s) ? 1 : 0), su = Math.exp(-Math.pow((s.x - sw) / 9, 2)), tk = s.d >= 6 ? tick * .6 : 0, fl = reduced ? 1 : .88 + .12 * Math.sin(t * .02 + i * 1.7);
+    const k = on ? (s.colon ? .7 + .3 * Math.sin(t * .006) : 1) * fl * (1 + 1.6 * su + tk) : .035 + .05 * su; col.setRGB(.25 * k + .5 * su * on, 1 * k, .42 * k + .3 * su * on); hcol.setRGB(.2 * k, .9 * k, .35 * k).multiplyScalar(on ? .55 : .2);
+    C.box.setColorAt(i, col); C.halo.setColorAt(i, hcol); if (on && !s.colon) lit.push(s); });
+  C.box.instanceColor.needsUpdate = C.halo.instanceColor.needsUpdate = true;
+  /* green lightning: short jagged arcs leap between lit segments, a few at a time, each for a heartbeat */
+  if (!reduced && Math.random() < .35 && C.arc.length < 10 && lit.length > 1) { const a = lit[(Math.random() * lit.length) | 0], b = lit[(Math.random() * lit.length) | 0]; if (a !== b && Math.abs(a.x - b.x) < 40) C.arc.push({ a: [a.x, a.y], b: [b.x, b.y], t0: t, life: 90 + Math.random() * 180, sd: Math.random() * 1e4 }); }
+  C.arc = C.arc.filter(A => t - A.t0 < A.life); const P = C.arcs.geometry.attributes.position.array; let n = 0;
+  for (const A of C.arc) { let px = A.a[0], py = A.a[1]; const steps = 8, j = ((t / 40) | 0) + A.sd;
+    for (let k = 1; k <= steps; k++) { const u = k / steps, nx = A.a[0] + (A.b[0] - A.a[0]) * u + (k < steps ? Math.sin(j * 12.9 + k * 78.2) * 3.2 : 0), ny = A.a[1] + (A.b[1] - A.a[1]) * u + (k < steps ? Math.cos(j * 4.1 + k * 31.7) * 3.2 : 0); P.set([px, py, 1.2, nx, ny, 1.2], n * 6); n++; px = nx; py = ny; } }
+  C.arcs.geometry.setDrawRange(0, n * 2); C.arcs.geometry.attributes.position.needsUpdate = true; C.arcs.material.opacity = .7 + .3 * Math.random(); }
 /* the owner's preview: the whole event (awakening, migration, assembly, eruption, a turn of the finished Omega, and its break-up) in
    four minutes, on this device only */
-function dvSimStart() { if (!duelOwner()) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } G.dvP = null; G.dvSim = { t0: performance.now(), s0: Math.floor(now() / 60000) * 60000 };
-  toast("Owner preview: Cube Devastation in four minutes. Only you see this."); try { const c = G3 && G3.cam; if (c) { c.follow = null; c.followFleet = null; c.goal = { tx: 0, ty: DV_Y, tz: 0, dist: 520, th: .6 }; } } catch (e) {} }
+function dvSimStart() { if (!duelOwner()) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } G.dvP = null; G.dvF = null; G.dvSim = { t0: performance.now(), s0: Math.floor(now() / 60000) * 60000 };
+  toast("Owner preview: Cube Devastation in four and a half minutes. Only you see this."); try { const c = G3 && G3.cam; if (c) { c.follow = null; c.followFleet = null; c.goal = { tx: 0, ty: DV_Y, tz: 0, dist: 760, th: .6 }; } } catch (e) {} }
 function dvSimStop(done) { if (!G.dvSim) return; G.dvSim = null; G.dvP = null; toast(done ? "Preview over: the cubes are home." : "Preview stopped."); }
 /* v408 tapping the Super Cube */
 function shCubePick() { const T = now(), ph = cubePhase(T), live = evActive(T), cur = nexusNow(T), who = cur.holder ? `Held by ${esc(allyTag(cur.holder))}` : live ? "Unclaimed · the Collective Warden guards it" : `Next battle in ${ftime(evStart(evWeek(T) + 1) - T)}`;
