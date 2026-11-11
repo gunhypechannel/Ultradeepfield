@@ -1,0 +1,41 @@
+# v434: when the Pentarch falls, the galaxy rains little shards of clear crystal (owner: "raining void shards", "little", "maybe
+#  not even void shards, like shards of clear crystals"). The rain of coloured dots is now ~420 small glass splinters in four
+#  shapes, each tinted one of the Pentarch's five element colours ("crystals of all colours of the Pentarch": ice, fire, light,
+#  storm, nature), spinning and flipping as it falls and drifts and catching the light now and then, over a glitter of glints. One draw call for the shards (a point shader turns each sprite), one for the glitter.
+p = "docs/index.html"; t = open(p).read()
+def rep(a, b, n=1):
+    global t; assert t.count(a) == n, (t.count(a), a[:100]); t = t.replace(a, b)
+i0 = t.index("function convRain(W, t, T, st) {"); i1 = t.index("/* the galaxy takes the colours of the elements still loose")
+NEW = r'''/* v434 little shards of clear crystal, painted once: four shapes (a kite, a long splinter, a broken triangle, a sliver) of
+   nearly clear glass, with bright cut edges, a white glint and a faint prism tint along one edge. An atlas of 2x2 cells. */
+function shardTex() { if (G.shardTex) return G.shardTex; const N = 256, h = 128, c = document.createElement("canvas"); c.width = c.height = N; const x = c.getContext("2d");
+  const SH = [[[.72, .08], [.9, .32], [.3, .93], [.1, .6]], [[.62, .04], [.72, .1], [.36, .97], [.28, .9]], [[.2, .14], [.88, .4], [.34, .9]], [[.5, .06], [.62, .3], [.46, .95], [.4, .55]]];
+  SH.forEach((S0, k) => { const ox = (k % 2) * h, oy = (k >> 1) * h, P = S0.map(([a, b]) => [ox + a * h, oy + b * h]), path = () => { x.beginPath(); P.forEach((q, i) => i ? x.lineTo(q[0], q[1]) : x.moveTo(q[0], q[1])); x.closePath(); };
+    x.save(); x.shadowColor = "rgba(200,235,255,.8)"; x.shadowBlur = 8; path(); const g = x.createLinearGradient(P[0][0], P[0][1], P[2][0], P[2][1]); g.addColorStop(0, "rgba(255,255,255,.55)"); g.addColorStop(.45, "rgba(190,225,255,.16)"); g.addColorStop(.75, "rgba(220,240,255,.28)"); g.addColorStop(1, "rgba(255,255,255,.5)"); x.fillStyle = g; x.fill(); x.restore();
+    x.save(); path(); x.clip(); const m = P.reduce((u, q) => [u[0] + q[0] / P.length, u[1] + q[1] / P.length], [0, 0]); /* inner facets */ x.strokeStyle = "rgba(255,255,255,.45)"; x.lineWidth = 1.2; x.beginPath(); for (const q of P) { x.moveTo(m[0], m[1]); x.lineTo(q[0], q[1]); } x.stroke();
+    const pg = x.createLinearGradient(P[0][0], P[0][1], P[1][0], P[1][1]); for (const [o, col] of [[0, "rgba(255,120,200,.35)"], [.33, "rgba(255,240,120,.3)"], [.66, "rgba(120,255,220,.3)"], [1, "rgba(140,170,255,.35)"]]) pg.addColorStop(o, col); x.strokeStyle = pg; x.lineWidth = 4; x.beginPath(); x.moveTo(P[0][0], P[0][1]); x.lineTo(P[1][0], P[1][1]); x.stroke(); /* a prism tint along one edge */
+    const gl = x.createRadialGradient(P[0][0] * .6 + m[0] * .4, P[0][1] * .6 + m[1] * .4, 0, P[0][0] * .6 + m[0] * .4, P[0][1] * .6 + m[1] * .4, h * .16); gl.addColorStop(0, "rgba(255,255,255,1)"); gl.addColorStop(1, "rgba(255,255,255,0)"); x.fillStyle = gl; x.fillRect(ox, oy, h, h); x.restore();
+    x.strokeStyle = "rgba(255,255,255,.95)"; x.lineWidth = 1.5; path(); x.stroke(); });
+  const tx = new TH.CanvasTexture(c); tx.colorSpace = TH.SRGBColorSpace || tx.colorSpace; return (G.shardTex = tx); }
+function convRain(W, t, T, st) { const on = st.dead && st.dead.epx && T - st.dead.epx < 10 * 60e3 && stCyc(st, "epx") === wbCyc2(T);
+  if (!on) { if (W.convRain) { for (const o of [W.convRain, W.convRain.userData.glit]) { W.scene.remove(o); o.geometry.dispose(); o.material.dispose(); } W.convRain = null; } return; }
+  const H = 130, R0 = 170;
+  if (!W.convRain) { const n = MOBILE ? 300 : 420, g = new TH.BufferGeometry(), P = new Float32Array(n * 3), S = new Float32Array(n), V = new Float32Array(n * 2);
+    for (let i = 0; i < n; i++) { const a = Math.random() * TAU, r = 15 + Math.sqrt(Math.random()) * R0; P[i * 3] = Math.cos(a) * r; P[i * 3 + 1] = Math.random() * H; P[i * 3 + 2] = Math.sin(a) * r; S[i] = Math.random(); V[i * 2] = 9 + Math.random() * 9; V[i * 2 + 1] = (Math.random() - .5) * 3; }
+    const EC = WB_EL.map(k => new TH.Color(WB[k].col)), TC = new Float32Array(n * 3); for (let i = 0; i < n; i++) { const c = EC[i % 5]; TC[i * 3] = c.r; TC[i * 3 + 1] = c.g; TC[i * 3 + 2] = c.b; } /* every shard one of the Pentarch's five elements */
+    g.setAttribute("position", new TH.BufferAttribute(P, 3)); g.setAttribute("aSeed", new TH.BufferAttribute(S, 1)); g.setAttribute("aTint", new TH.BufferAttribute(TC, 3));
+    const m = new TH.ShaderMaterial({ uniforms: { uTex: { value: shardTex() }, uT: { value: 0 }, uK: { value: 600 }, uSize: { value: 1.25 }, uA: { value: 1 } }, transparent: true, depthWrite: false, toneMapped: false,
+      vertexShader: "attribute float aSeed; attribute vec3 aTint; uniform float uT, uK, uSize; varying float vRot, vFlip, vTw; varying vec2 vCell; varying vec3 vTint; void main(){ vTint = aTint; float sh = floor(fract(aSeed * 57.3) * 4.0); vCell = vec2(mod(sh, 2.0), floor(sh / 2.0)); vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mv; float s = uSize * (0.6 + 0.8 * fract(aSeed * 31.7)); gl_PointSize = clamp(s * uK / max(1.0, -mv.z), 1.5, 40.0); float d = fract(aSeed * 13.1) > 0.5 ? 1.0 : -1.0; vRot = aSeed * 6.283 + uT * (0.8 + 1.6 * fract(aSeed * 7.3)) * d; vFlip = abs(cos(uT * (0.5 + fract(aSeed * 3.7)) + aSeed * 9.0)); vTw = 0.75 + 0.25 * sin(uT * 4.0 + aSeed * 40.0); }",
+      fragmentShader: "uniform sampler2D uTex; uniform float uA; varying float vRot, vFlip, vTw; varying vec2 vCell; varying vec3 vTint; void main(){ vec2 p = gl_PointCoord - 0.5; float c = cos(vRot), s = sin(vRot); p = vec2(c * p.x - s * p.y, s * p.x + c * p.y); p.x /= max(0.22, vFlip); p += 0.5; if (p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0) discard; vec4 k = texture2D(uTex, (p + vCell) * 0.5); if (k.a < 0.03) discard; float gl = pow(vTw, 6.0) * vFlip; vec3 col = mix(k.rgb * vTint * 1.7, vec3(1.0), clamp(0.35 * k.a + gl * 0.6, 0.0, 1.0) * dot(k.rgb, vec3(0.33))); gl_FragColor = vec4(col * (0.95 + 0.8 * gl), min(1.0, k.a * 1.25) * uA * (0.8 + 0.4 * gl)); }" });
+    W.convRain = new TH.Points(g, m); W.convRain.frustumCulled = false; W.convRain.renderOrder = 6; W.scene.add(W.convRain); W.convRain.userData = { t, V, n };
+    /* a glitter of element-coloured glints falling with them */ const gn = MOBILE ? 160 : 260, gg = new TH.BufferGeometry(), GP = new Float32Array(gn * 3), GC = new Float32Array(gn * 3), cols = WB_EL.map(k => new TH.Color(WB[k].col)).concat([new TH.Color(0xffffff)]);
+    for (let i = 0; i < gn; i++) { const a = Math.random() * TAU, r = 15 + Math.sqrt(Math.random()) * R0; GP[i * 3] = Math.cos(a) * r; GP[i * 3 + 1] = Math.random() * H; GP[i * 3 + 2] = Math.sin(a) * r; const c = cols[i % cols.length]; GC[i * 3] = c.r * 1.5; GC[i * 3 + 1] = c.g * 1.5; GC[i * 3 + 2] = c.b * 1.5; }
+    gg.setAttribute("position", new TH.BufferAttribute(GP, 3)); gg.setAttribute("color", new TH.BufferAttribute(GC, 3)); const gl = new TH.Points(gg, new TH.PointsMaterial({ size: 1.1, vertexColors: true, transparent: true, opacity: .7, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); gl.frustumCulled = false; W.scene.add(gl); W.convRain.userData.glit = gl; }
+  const U = W.convRain.userData, dt = Math.min(.1, (t - U.t) / 1000); U.t = t; const P = W.convRain.geometry.attributes.position.array;
+  for (let i = 0; i < U.n; i++) { const j = i * 3; P[j + 1] -= dt * U.V[i * 2]; P[j] += dt * U.V[i * 2 + 1]; if (P[j + 1] < -6) { P[j + 1] += H; P[j] -= U.V[i * 2 + 1] * H / U.V[i * 2]; } } W.convRain.geometry.attributes.position.needsUpdate = true;
+  const GP = U.glit.geometry.attributes.position.array; for (let i = 1; i < GP.length; i += 3) { GP[i] -= dt * (12 + (i % 7) * 2.5); if (GP[i] < -6) GP[i] += H; } U.glit.geometry.attributes.position.needsUpdate = true;
+  const fade = Math.min(1, (st.dead.epx + 10 * 60e3 - T) / 60e3, (T - st.dead.epx) / 4000 + .05), M = W.convRain.material.uniforms; M.uT.value = reduced ? 0 : t / 1000; M.uA.value = fade; M.uK.value = W.renderer.domElement.height * .5 / Math.tan((W.camera.fov || 50) * Math.PI / 360); U.glit.material.opacity = .7 * fade; }
+'''
+t = t[:i0] + NEW + t[i1:]
+t = t.replace("const GAME_V = 433;", "const GAME_V = 434;")
+open(p, "w").write(t); print("ok")
