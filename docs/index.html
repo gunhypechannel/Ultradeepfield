@@ -3659,7 +3659,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 444;
+const GAME_V = 445;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5564,9 +5564,14 @@ function dvCdBuild(W) { const C = { grp: new TH.Group(), segs: [] }, DW = 10, DH
   C.title = new TH.Mesh(new TH.PlaneGeometry(PW, PH), new TH.MeshBasicMaterial({ map: new TH.CanvasTexture(cv), transparent: true, depthWrite: false, toneMapped: false })); C.title.position.z = -.5; C.title.renderOrder = 5; C.grp.add(C.title); C.w = x;
   C.grp.scale.setScalar(1.55); W.scene.add(C.grp); return (W.dvCd = C); }
 function dvCountdown(W, t, T, live) { const show = !live && view === "galaxy";
-  if (!show) { if (W.dvCd) W.dvCd.grp.visible = false; return; } const C = W.dvCd || dvCdBuild(W); C.grp.visible = true;
+  if (!show) { if (W.dvCd) { W.dvCd.grp.visible = false; W.dvCd.hid = 1; } return; } const C = W.dvCd || dvCdBuild(W); C.grp.visible = true;
   const left = Math.max(0, dvNext(T) - T), sec = Math.floor(left / 1000), v = [Math.min(99, Math.floor(sec / 86400)), Math.floor(sec / 3600) % 24, Math.floor(sec / 60) % 60, sec % 60], dg = v.flatMap(q => [Math.floor(q / 10), q % 10]);
-  C.grp.position.set(0, 128 + Math.sin(t * .0006) * 2, 0); C.grp.quaternion.copy(W.camera.quaternion);
+  { const cp = W.camera.position, tg = (W.cam && W.cam.tx != null) ? W.cam : { tx: 0, tz: 0 }; let dx = tg.tx - cp.x, dz = tg.tz - cp.z, l = Math.hypot(dx, dz);
+    if (l < 1) { const u = new TH.Vector3(0, 1, 0).applyQuaternion(W.camera.quaternion); dx = u.x; dz = u.z; l = Math.hypot(dx, dz) || 1; }
+    const a = Math.atan2(dz / l, dx / l), da = C.a == null ? 9 : Math.atan2(Math.sin(a - C.a), Math.cos(a - C.a)), dt = Math.min(500, Math.max(0, t - (C.tl || t))); C.tl = t;
+    C.a = Math.abs(da) > 1.2 || C.hid ? a : C.a + da * (1 - Math.exp(-dt / 350)); /* glides after the camera; a big swing (or coming back to the map) puts it straight there */
+    const R = MAP_R + 70; C.hid = 0; C.grp.position.set(Math.cos(C.a) * R, 95 + Math.sin(t * .0006) * 2, Math.sin(C.a) * R); }
+  C.grp.quaternion.copy(W.camera.quaternion);
   /* the power surge: a bright front sweeps the clock every few seconds; every second a ripple runs out from the seconds */
   const sw = ((t / 2600) % 1) * (C.w + 60) - C.w / 2 - 30, rip = (t % 1000) / 1000, tick = Math.exp(-rip * 5), col = new TH.Color(), hcol = new TH.Color(); const lit = [];
   C.segs.forEach((s, i) => { const on = s.colon ? 1 : (DVC_DIG[dg[s.d]].includes(s.s) ? 1 : 0), su = Math.exp(-Math.pow((s.x - sw) / 9, 2)), tk = s.d >= 6 ? tick * .6 : 0, fl = reduced ? 1 : .88 + .12 * Math.sin(t * .02 + i * 1.7);
@@ -7733,6 +7738,11 @@ function tapMap(cv, e) {
 
 /* ---------- 3D galaxy (Three.js) ---------- */
 const TH = window.THREE;
+(() => { const P = TH.Object3D.prototype, cp0 = P.copy;
+  const ud = (v, d) => { if (v === null || typeof v !== "object") return v; if (d > 6 || ArrayBuffer.isView(v) || v.isObject3D || v.isMaterial || v.isTexture || v.isBufferGeometry || v instanceof Map || v instanceof Set) return v;
+    if (Array.isArray(v)) return v.map(x => ud(x, d + 1)); const pr = Object.getPrototypeOf(v); if (pr !== Object.prototype && pr !== null) return v; const o = {}; for (const k in v) o[k] = ud(v[k], d + 1); return o; };
+  P.copy = function (src, recursive = true) { const u = src.userData; src.userData = {}; try { cp0.call(this, src, false); } finally { src.userData = u; } this.userData = ud(u, 0);
+    if (recursive) for (const c of src.children) this.add(c.clone()); return this; }; })(); /* v445 clones share three.js objects in userData (was a JSON copy of whole models) */
 let G3 = null, G3fail = !TH;
 const map3DInit = {};
 /* v171 crash recorder: a small flight log kept on the device. Key moments (a demo, a battle, a GPU reset) and a heartbeat every few
@@ -7753,7 +7763,7 @@ setInterval(() => { try { const C = G.lastCrash; if (!G.lastCrashFresh || G.cras
     device: navigator.userAgent.slice(0, 200), w: innerWidth, h: innerHeight }).then(() => { G.lastCrashFresh = 0; }, () => { G.crashSent = 0; });
 } catch (e) {} }, 5000);
 let CRUMBS = (() => { try { return JSON.parse(localStorage.getItem(CRUMB_K) || "null"); } catch (e) { return null; } })();
-G.lastCrash = (() => { try { if (CRUMBS && CRUMBS.open && CRUMBS.ev && CRUMBS.ev.length) { localStorage.setItem(CRUMB_K + ".last", JSON.stringify(CRUMBS)); G.lastCrashFresh = 1; return CRUMBS; } return JSON.parse(localStorage.getItem(CRUMB_K + ".last") || "null"); } catch (e) { return null; } })();
+G.lastCrash = (() => { try { if (CRUMBS && CRUMBS.open && CRUMBS.ev && CRUMBS.ev.length) { localStorage.setItem(CRUMB_K + ".last", JSON.stringify(CRUMBS)); G.lastCrashFresh = 1; G.crashBoot = 1; return CRUMBS; } return JSON.parse(localStorage.getItem(CRUMB_K + ".last") || "null"); } catch (e) { return null; } })();
 CRUMBS = { open: true, t0: Date.now(), ev: [] };
 /* v373 health reports: a queue kept on the device (udf.hq) and sent one by one whenever the game is signed in and online */
 const HQ_K = "udf.hq", PF_K = "udf.pf", hqDev = () => navigator.userAgent.slice(0, 200);
@@ -8263,6 +8273,7 @@ const orbAll = (L, names) => { for (const k of names) { const at = L.pts.geometr
 // v145: iPhones and iPads are never judged "weak" by core count: Safari reports a capped core count (4) whatever the chip, which put
 // every iPhone on the Performance preset with no anti-aliasing and 0.6x resolution (the blocky, grainy map)
 const MOBILE = IOS || ANDROID || /Mobi/i.test(navigator.userAgent) || !!(navigator.userAgentData && navigator.userAgentData.mobile), WEAK = MOBILE && !IOS && ((navigator.hardwareConcurrency || 4) <= 4 || (navigator.deviceMemory || 4) <= 3);
+if (MOBILE) { try { if (G.crashBoot) localStorage.setItem("udf.safeUntil", String(Date.now() + 3 * 864e5)); if (+localStorage.getItem("udf.safeUntil") > Date.now()) G.glSafe = 1; } catch (e) {} } /* v445 */
 const PERF = { plSlice: WEAK ? 2500 : MOBILE ? 4000 : 9000, mkSlice: WEAK ? 2000 : MOBILE ? 3500 : 7000, nearPl: WEAK ? 700 : MOBILE ? 1300 : 3000, details: WEAK ? 4 : MOBILE ? 6 : 10, battleCap: WEAK ? .45 : MOBILE ? .7 : 1 };
 /* worlds: one slot per world, kept stable while the list is rebuilt; new homeworlds are appended, moved worlds update in place */
 function plSync(W, T, pxK) {
@@ -18256,7 +18267,7 @@ const gfxMaxPR = () => clamp((window.devicePixelRatio || 1) * gfx("scale"), .6, 
    old phone check (700 px), so they got the desktop setting: 2.5x on an iPad, about 9 million pixels a frame, which heats up and lags.
    The budget (3.4M pixels, 2M on weak devices) leaves phones at 2x and puts tablets near 1.5-1.8x; it follows the window, so rotating
    the tablet or using split screen re-sizes on the next resolution check. */
-const mobilePRCap = () => { if (!MOBILE) return 9; const px = Math.max(1, innerWidth * innerHeight); return clamp(Math.sqrt((WEAK ? 2e6 : G.glSafe ? 2.4e6 : 3.4e6) / px), 1, 2 * FZ()); }; // v166: a smaller budget after a GPU reset
+const mobilePRCap = () => { if (!MOBILE) return 9; const px = Math.max(1, innerWidth * innerHeight); return clamp(Math.sqrt((WEAK ? 2e6 : G.glSafe ? 1.4e6 : 3.4e6) / px), 1, 2 * FZ()); }; // v166: a smaller budget after a GPU reset
 // v164 live, not fixed at launch: a Z Fold is a phone folded and a small tablet unfolded, and it can change mid-game
 const isTablet = () => MOBILE && Math.min(innerWidth, innerHeight) >= 560;
 const isFoldOpen = () => MOBILE && isTablet() && Math.max(innerWidth, innerHeight) / Math.min(innerWidth, innerHeight) < 1.45; // an unfolded foldable is nearly square
