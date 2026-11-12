@@ -1882,7 +1882,14 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
     const fBeam = new TH.Group(); fBeam.visible = false; body.add(fBeam); { const sg = sigils[0].sg; sg.updateWorldMatrix(true, false); }
     const fb1 = new TH.Mesh(new TH.CylinderGeometry(.9, .55, 40, 24, 1, true), glowMat(0xc070ff, .5)), fb2 = new TH.Mesh(new TH.CylinderGeometry(.3, .2, 40, 16, 1, true), glowMat(0xf6e6ff, .9)); for (const b of [fb1, fb2]) { b.rotation.x = Math.PI / 2; b.position.z = 20; b.userData.dyn = 1; fBeam.add(b); }
     const fbS = sprite(7, "rgba(240,210,255,1)", "hot2"); fBeam.add(fbS);
-    const groundY = -.55 + 2.8 - 8.4 - .4, quake = wave(grp, 9, false); grp.children[grp.children.length - 1].position.y = groundY;
+    const groundY = -.55 + 2.8 - 8.4 - .4, quake = wave(grp, 9, false);
+    /* v470 footfalls, the shield of four layers, the four-face beams of its overload */
+    const steps = []; for (let k = 0; k < 6; k++) { const m = new TH.Mesh(new TH.RingGeometry(.55, 1, 40), glowMat(VIO2, 0)); m.rotation.x = -Math.PI / 2; m.userData.dyn = 1; m.visible = false; grp.add(m); const d = new TH.Mesh(new TH.CircleGeometry(1, 24), glowMat(0x9a80c0, 0)); d.rotation.x = -Math.PI / 2; d.userData.dyn = 1; d.visible = false; grp.add(d); steps.push({ m, d, t: -1e9 }); } let si = 0; const fw0 = V(0, 0, 0);
+    const shM = () => new TH.ShaderMaterial({ uniforms: { uO: { value: 0 }, uC: { value: new TH.Color(0xb070ff) }, uT: { value: 0 } }, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, side: TH.DoubleSide, toneMapped: false,
+      vertexShader: "varying vec3 vN; varying vec3 vV; varying vec3 vP; void main() { vec4 mv = modelViewMatrix * vec4(position, 1.); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); vP = position; gl_Position = projectionMatrix * mv; }",
+      fragmentShader: "uniform float uO, uT; uniform vec3 uC; varying vec3 vN; varying vec3 vV; varying vec3 vP; void main() { float fr = pow(1. - abs(dot(vN, vV)), 2.); float hx = abs(sin(vP.x * 2.2 + uT) * sin(vP.y * 2.2) * sin(vP.z * 2.2 - uT)); float a = (fr * 1.1 + pow(hx, 6.) * .7 + .06) * uO; gl_FragColor = vec4(uC * a, a); }" });
+    const shells = [0, 1, 2, 3].map(k => { const m = new TH.Mesh(new TH.ConeGeometry((B * Math.SQRT2 + 2.2 + k * .9), H + 3.4 + k * .9, 4, 1, true), shM()); m.rotation.y = Math.PI / 4; m.position.y = y0 + (H + 3.4 + k * .9) / 2 - 1.6; m.userData.dyn = 1; m.visible = false; body.add(m); return { m, on: 0, brk: -1 }; });
+    const fBeams = [1, 2, 3].map(k => { const g = new TH.Group(); g.rotation.y = k * Math.PI / 2; body.add(g); const f = fBeam.clone(); f.visible = false; g.add(f); return f; }); grp.children[grp.children.length - 1].position.y = groundY;
     const mv = moves({ walk: 6000, beam: 3200, stomp: 1700, summon: 2600, hit: 520 }), hit = hitKit(body, shk);
     const tick = t => { const fw = mv.f("walk", t), fbm = mv.f("beam", t), fst = mv.f("stomp", t), fsu = mv.f("summon", t), fh = mv.f("hit", t);
       const W = .12 + .88 * bell(fw, 0, .08, .92, 1), sp = .0014 + .0021 * bell(fw, 0, .08, .92, 1);
@@ -1897,8 +1904,21 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       quake(fst < 0 ? -1 : (fst - .5) / .5);
       const surge = bell(fsu, 0, .2, .75, 1); for (const c of claws) c.rotation.z = -surge * .7 + Math.sin(t * .002) * .04;
       const f = (.8 + Math.sin(t * .006) * .12 + (rnd() < .05 ? .15 : 0)) * (1 + surge * .8); bm.material.opacity = .4 * f; bm2.material.opacity = .75 * Math.min(1.3, f); bm.scale.set(1 + surge * .6, 1, 1 + surge * .6); em.material.opacity = Math.min(1, f);
-      bt(t, 1 + surge * 4 + fire * 2); hit(bell(fh, 0, .05, .4, 1), t); };
-    bake(body); return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 12, h: 16 }; }
+            // footfalls: each foot that comes down lands with a jolt and a ring
+      { let jolt = 0; for (const g of legs) { const p = t * sp + g.ph, up = Math.cos(p); if (g.upL > .05 && up <= .05 && W > .5) { const S0 = steps[si++ % steps.length]; g.kn.updateWorldMatrix(true, false); fw0.set(1.7, -8.4, 0); g.kn.localToWorld(fw0); grp.worldToLocal(fw0); S0.m.position.set(fw0.x, groundY + .05, fw0.z); S0.d.position.copy(S0.m.position); S0.t = t; jolt = 1; } g.upL = up; }
+        if (jolt) out.jolt = t; const ja = (t - (out.jolt || -1e9)) / 260; if (ja < 1) body.position.y -= Math.sin(ja * Math.PI) * .14; }
+      for (const S0 of steps) { const a = (t - S0.t) / 900; S0.m.visible = S0.d.visible = a >= 0 && a < 1; if (S0.m.visible) { S0.m.scale.setScalar(1 + a * 3.2); S0.m.material.opacity = (1 - a) * .7; S0.d.scale.setScalar(1.2 + a * 2.4); S0.d.material.opacity = (1 - a) * (1 - a) * .35; } }
+      // the belly emitters turn, faster while it charges or summons
+      emit.rotation.y += .004 + charge * .04 + surge * .03 + (out.over || 0) * .12; emit.children.forEach((r, k) => { r.rotation.y = Math.sin(t * .0007 + k) * .25; });
+      // the shield: one layer per living conduit; a layer that loses its conduit cracks, flares and bursts
+      shells.forEach((L, k) => { const want = k < (out.cons == null ? 0 : out.cons) ? 1 : 0; if (L.on && !want && L.brk < 0) L.brk = t; L.on = want;
+        const b = L.brk >= 0 ? (t - L.brk) / 1400 : -1; if (b >= 1) L.brk = -1; const vis = want || (b >= 0 && b < 1); L.m.visible = vis; if (!vis) return; const U = L.m.material.uniforms; U.uT.value = t * .001 + k;
+        if (b >= 0 && b < 1) { U.uO.value = (b < .45 ? (rnd() < .5 ? 1.6 : .2) : (1 - b) * 2.2); L.m.scale.setScalar(1 + Math.max(0, b - .45) * .9); U.uC.value.setRGB(1, .75, 1); } else { U.uO.value = .75 + .15 * Math.sin(t * .003 + k) + fire * .3; L.m.scale.setScalar(1); U.uC.value.setRGB(.69, .44, 1); } });
+      // its death: the fortress core overloads, every face firing
+      const ov = out.over || 0; if (ov > 0) { const f = Math.min(1, ov * 1.3); for (const s of sigils) { s.sp.material.opacity = 1; s.sp.scale.setScalar(3.4 * (1 + f * 2.5)); s.sgs.rotation.z += f * .2; } fBeam.visible = true; fb1.material.opacity = .5 * f; fb2.material.opacity = .9 * f; fbS.material.opacity = f; fBeam.position.set(0, y0 + Math.cos(phi) * Ls * .3 + .1, B - Math.sin(phi) * Ls * .3 + .7); fBeam.scale.set(1 + f, 1 + f, 1 + f * .8);
+        fBeams.forEach(F => { F.visible = true; F.position.copy(fBeam.position); F.scale.copy(fBeam.scale); }); body.position.x = (rnd() - .5) * .25 * f; body.position.z = (rnd() - .5) * .25 * f; } else fBeams.forEach(F => { F.visible = false; });
+      bt(t, 1 + surge * 4 + fire * 2 + (out.over || 0) * 10); hit(Math.max(bell(fh, 0, .05, .4, 1), (out.over || 0) * .8), t); };
+    bake(body); const out = { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 12, h: 16, cons: 0, over: 0 }; return out; }
 
   /* ---------- Orbital Devourer: a long hull of overlapping chitin scales tapering to a lance tail, scythe blades sweeping
      back, a maw of eight hinged claws round a crackling vortex, and many jointed tentacles that never stop moving.
@@ -3994,7 +4014,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 469;
+const GAME_V = 470;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5563,16 +5583,16 @@ function wbFight(key, seg, dead) { const W = G3, M = W && W.wbM && W.wbM[key]; i
   if (seg && W.bursts) { const q = P3(WBO[key], now()); W.bursts.push({ p: new TH.Vector3(q.x, q.y + 12 * WB[key].sc, q.z), t: performance.now(), col: WB[key].col, txt: dead ? `${WB[key].n} destroyed!` : `−${Math.round(seg / WB_SEG * 100)}% hull` }); } }
 function wbMapFx(W, t, T) {
   if (typeof BOSS3D === "undefined") return; const st = wbState(T), cp = W.camera.position; W.wbM = W.wbM || {};
-  for (const key in WB) { const D = WB[key], alive = st.hp[key] > 0 && wbOn(key, T) && !(key === "epx" && wbSwept(T)), pdie = key === "epx" && st.dead && st.dead.epx && T >= st.dead.epx && T - st.dead.epx < 26000 && stCyc(st, "epx") === wbCyc2(T), q = P3(WBO[key], T, WBQ), d = Math.hypot(q.x - cp.x, q.y - cp.y, q.z - cp.z), near = (alive || pdie) && d < 1400; let M = W.wbM[key];
+  for (const key in WB) { const D = WB[key], alive = st.hp[key] > 0 && wbOn(key, T) && !(key === "epx" && wbSwept(T)) && !(G.wbFakeDead && G.wbFakeDead.k === key), dAt = G.wbFakeDead && G.wbFakeDead.k === key ? G.wbFakeDead.at : st.dead && st.dead[key] && stCyc(st, key) === wbCycOf(key, T) ? st.dead[key] : 0, pdie = !!dAt && T >= dAt && T - dAt < 26000, q = P3(WBO[key], T, WBQ), d = Math.hypot(q.x - cp.x, q.y - cp.y, q.z - cp.z), near = (alive || pdie) && d < 1400; let M = W.wbM[key];
     if (M && M.pd && !pdie) { try { W.scene.remove(M.b.grp); W.scene.remove(M.pd.grp); } catch (e) {} delete W.wbM[key]; continue; }
     if (!M) { if (!near || W.wbBuilt === t) continue; W.wbBuilt = t; try { BOSS3D.init(TH); BOSS3D.lod = 1; const b = BOSS3D.prep(BOSS3D[D.m3](D.el || (key === "epx" ? wbPentAlive(T) : undefined)), wbEnv(W.renderer)); b.grp.scale.setScalar(D.sc * 1.6); if (key === "wym" && b.own) for (const o of b.own) o.visible = false; /* v391: over the real black hole */ W.scene.add(b.grp); M = W.wbM[key] = { b, next: t + 4000 + Math.random() * 6000, q: new TH.Vector3() }; } catch (e) { W.wbM[key] = M = { b: null }; } }
     if (!M.b) continue; const g = M.b.grp; g.visible = near; if (!near) continue;
     g.position.set(q.x, q.y, q.z);
     if (key === "dev" || key === "tyr") { const q2 = wbPos(key, T + 60000, {}); g.rotation.y = -Math.atan2(q2.z - q.z, q2.x - q.x); if (key === "dev") g.rotation.z = -.16 - .04 * Math.sin(t * .0004); } // the Devourer noses down at the worlds below, maw first else if (key === "wym") g.rotation.y = -t * 2e-5; else if (key === "war") g.rotation.y = t * 4e-5; else g.rotation.y = Math.atan2(-q.x, -q.z); // the Overlord and its conduits face the Core
     if (t > M.next && !pdie) { M.next = t + 9000 + Math.random() * 10000; const m = M.b.moves.filter(x => x !== "hit" && x !== "link"); M.b.act(m[(Math.random() * m.length) | 0]); } // alive: a move every few seconds
-    if (D.con != null) { const on = st.hp.ovl > 0; M.b.feed = on ? 1 : 0; if (on) { const tq = P3(WBO.ovl, T, {}), s = g.scale.x, lk = M.b.link; // the feed beam runs to the Overlord's crown
+    if (key === "ovl") M.b.cons = [0, 1, 2, 3].filter(i => st.hp["c" + i] > 0 && wbOn("c" + i, T)).length; if (D.con != null) { const on = st.hp.ovl > 0; M.b.feed = on ? 1 : 0; if (on) { const tq = P3(WBO.ovl, T, {}), s = g.scale.x, lk = M.b.link; // the feed beam runs to the Overlord's crown
       const dx = tq.x - q.x, dz = tq.z - q.z, dy = (tq.y + 5 * WB.ovl.sc * 1.6) - (q.y + 9 * s), yaw = Math.atan2(dz, dx); lk.rotation.set(0, -yaw - g.rotation.y, Math.atan2(dy, Math.hypot(dx, dz))); lk.userData.len = Math.hypot(dx, dy, dz) / s; } }
-    if (key === "epx" && !pdie) wbPentFx(M, g, q, st, T, t); /* v402: the fusion, the colours that remain, a wing torn loose */ if (M.sweep && !(G.wbScan && G.wbScan.key === key)) M.sweep.visible = false; if (!(pdie && wbPentDie(W, M, q, (T - st.dead.epx) / 1000, t))) M.b.tick(t); }
+    if (key === "epx" && !pdie) wbPentFx(M, g, q, st, T, t); /* v402: the fusion, the colours that remain, a wing torn loose */ if (M.sweep && !(G.wbScan && G.wbScan.key === key)) M.sweep.visible = false; if (!(pdie && (key === "epx" ? wbPentDie(W, M, q, (T - dAt) / 1000, t) : wbBossDie(W, M, q, (T - dAt) / 1000, t, key)))) M.b.tick(t); }
   try { wbScanFx(W, t); wbScarFx(W, t, T); convRain(W, t, T, st); convTint(W, T); } catch (e) {}
   if (!W.wbComp && Object.keys(W.wbM).length === Object.keys(WB).length) { W.wbComp = 1; try { W.renderer.compile(W.scene, W.camera); } catch (e) {} } } // all built (one a frame, usually during the background map build): compile their shaders now, not on first sight
 function wbPentFx(M, g, q, st, T, t) { const b = M.b, fz = wbFuse(T); b.form = fz.form; for (const k in fz.dock) b.dock[k] = fz.dock[k]; b.far = 95 / g.scale.x; b.ground = Math.max(5, q.y / g.scale.x);
@@ -5663,7 +5683,7 @@ async function stressRun() { if (!duelOwner() || (G.stress && G.stress.busy)) re
 function shBossLab() { const T = now(), w0 = Math.max(0, rotW(T)), NM = { vae: ["✦", "Vaelthar, the Celestial Ruin"], aex: ["✦", "Aexion, the Warform Sovereign"], dv: ["◼", "Cube Devastation (Omega Cube)"], conv: ["✪", "The Elemental Convergence"] };
   const nm = k => NM[k] || [WB[k].ic, WB[k].n], live = k => k === "vae" || k === "aex" ? sbLiveKey(T) === k : k === "dv" ? !!dvNow(T) : k === "conv" ? wbGroupOn(3, T) : wbOn(k, T) && !G.wbShow;
   const rows = [...ROT, ...ROTS].map(k => [k, rotNextOf(k, T - 1)]).sort((a, b) => a[1] - b[1]).map(([k, at]) => { const [ic, n] = nm(k);
-    return `<div class="strow"><div style="flex:1;min-width:0"><b>${ic} ${esc(n)}</b><div class="note">${live(k) ? "<b style=\"color:#7dff9a\">● live now</b>" : `${new Date(at).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}, ${new Date(at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} · in ${ftime(at - T)}`}</div></div><button class="btn ghost" data-act="labPrev" data-k="${k}">▶ Preview</button></div>`; }).join("");
+    return `<div class="strow"><div style="flex:1;min-width:0"><b>${ic} ${esc(n)}</b><div class="note">${live(k) ? "<b style=\"color:#7dff9a\">● live now</b>" : `${new Date(at).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}, ${new Date(at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} · in ${ftime(at - T)}`}</div></div><button class="btn ghost" data-act="labPrev" data-k="${k}">▶ Preview</button>${WB[k] ? `<button class="btn ghost" data-act="labDie" data-k="${k}">✝ Death</button>` : ""}</div>`; }).join("");
   return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">Owner</div><h2>Boss Lab</h2><p class="note">Wednesdays: the great events in turn (each back every ${ROT.length} weeks). Saturdays between them: the world bosses in turn (each back every ${ROTS.length} weeks). All at 18:00 UTC. Preview any of them on this device only; nothing is saved or shared.</p></div><div class="fhdb"><button class="x" data-act="close" aria-label="Close">✕</button></div></div>
     ${G.wbShow ? `<button class="btn wide" data-act="labStop">■ Stop the ${esc(WB[G.wbShow].n)} preview</button>` : ""}<button class="btn ghost wide" data-act="stressOpen">⚔ Battle tests and reports (every boss)</button><div class="strows">${rows}</div>`; }
 function shStress() { const st = G.stress, out = st ? st.out : [], fails = out.filter(r => !r.ok).length, tot = vsum(Object.values(STRESS_FLEET));
@@ -6366,7 +6386,7 @@ function sbLiveTick(W, t) { const T = now(), k = sbLiveKey(T); if (!k || view !=
    blast, and a commander arriving later finds the pieces where they came to rest. e = seconds since the detonation. */
 function sbBlast(W, X, e, t) { if (e < -.2 || e > 14) { if (X.bl) for (const m of X.bl.all) m.visible = false; X.expK = 1; X.bR = 0; return; }
   if (!X.bl) { const mk = (w, c) => { const m = new TH.Mesh(new TH.RingGeometry(1 - w, 1, 160), new TH.MeshBasicMaterial({ color: c, transparent: true, opacity: 0, side: TH.DoubleSide, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); m.position.copy(X.B); m.frustumCulled = false; X.grp.add(m); return m; };
-    const vae = X.key === "vae", px = X.key === "epx", r1 = mk(.03, px ? 0xfff0c0 : vae ? 0xffe2a0 : 0xcfeeff), r2 = mk(.09, px ? 0x7dffb0 : vae ? 0xa45cff : 0x58b8ff), r3 = mk(.025, px ? 0xff9a50 : 0xffffff), sh = new TH.Mesh(new TH.SphereGeometry(1, 40, 24), dvRim(px ? 0xe2d4ff : vae ? 0xc890ff : 0x7ac8ff)); r1.rotation.x = r2.rotation.x = -Math.PI / 2; r3.lookAt(X.B.clone().add(X.F)); sh.position.copy(X.B); sh.frustumCulled = false; X.grp.add(sh); X.bl = { r1, r2, r3, sh, all: [r1, r2, r3, sh], nb: 0 }; }
+    const vae = X.key === "vae", px = X.key === "epx", wc = X.key !== "epx" && typeof WB !== "undefined" && WB[X.key] ? new TH.Color(WB[X.key].col).getHex() : null, r1 = mk(.03, px ? 0xfff0c0 : vae ? 0xffe2a0 : wc ? 0xffffff : 0xcfeeff), r2 = mk(.09, px ? 0x7dffb0 : vae ? 0xa45cff : wc || 0x58b8ff), r3 = mk(.025, px ? 0xff9a50 : 0xffffff), sh = new TH.Mesh(new TH.SphereGeometry(1, 40, 24), dvRim(px ? 0xe2d4ff : vae ? 0xc890ff : wc || 0x7ac8ff)); r1.rotation.x = r2.rotation.x = -Math.PI / 2; r3.lookAt(X.B.clone().add(X.F)); sh.position.copy(X.B); sh.frustumCulled = false; X.grp.add(sh); X.bl = { r1, r2, r3, sh, all: [r1, r2, r3, sh], nb: 0 }; }
   const B = X.bl, R1 = 30 + Math.max(0, e) * 430, R2 = 20 + Math.max(0, e - .35) * 330, R3 = 10 + Math.max(0, e) * 260, Rs = 20 + Math.max(0, e) * 220;
   B.r1.visible = e >= 0 && e < 4; B.r1.scale.setScalar(R1); B.r1.material.opacity = .9 * (1 - e / 4); B.r2.visible = e >= .35 && e < 5; B.r2.scale.setScalar(R2); B.r2.material.opacity = .55 * (1 - (e - .35) / 4.65);
   B.r3.visible = e >= 0 && e < 3; B.r3.scale.setScalar(R3); B.r3.material.opacity = .8 * (1 - e / 3); B.sh.visible = e >= 0 && e < 2.6; B.sh.scale.setScalar(Rs); B.sh.material.uniforms.uA.value = .9 * (1 - e / 2.6);
@@ -6542,6 +6562,16 @@ function sbGlyph(W, X, e, t) { if (e < 0) { if (X.gly) X.gly.g.visible = false; 
         const x0 = j ? px : Math.cos(a) * R0, y0 = j ? py : Math.sin(a) * R0; px = Math.cos(a) * R1 + (Math.random() - .5) * jit; py = Math.sin(a) * R1 + (Math.random() - .5) * jit;
         P.set(on ? [x0, y0, 1, px, py, 1] : [0, 0, 0, 0, 0, 0], o); const f = k * (1 - u0 * .6); Cl.set([cc[0] * f, cc[1] * f, cc[2] * f, cc[0] * f * .8, cc[1] * f * .8, cc[2] * f * .8], o); } }
     Z.arcs.geometry.attributes.position.needsUpdate = true; Z.arcs.geometry.attributes.color.needsUpdate = true; } }
+/* v470 a world boss's death: its core overloads (the Overlord's whole fortress firing), then it blows apart in its own colour, every part
+   flung out tumbling, turning to crystal and dissolving into spirits, and a glyph stays; a conduit only shatters and dissolves */
+function wbBossDie(W, M, q, e, t, key) { const b = M.b, D = WB[key], con = D.con != null;
+  if (!M.pd) { const X = { key, grp: new TH.Group(), B: new TH.Vector3(q.x, q.y, q.z), V: new TH.Vector3(), V2: new TH.Vector3(), ships: [], b, F: new TH.Vector3(0, 0, 1) }; W.scene.add(X.grp);
+    const wh = W.glow.wh || (W.glow.wh = glowTex("255,255,255", .85)); X.flash = new TH.Sprite(W.additive(wh, new TH.Color(D.col || "#e2d4ff"), 0)); X.flash.position.copy(X.B); X.grp.add(X.flash);
+    X.booms = []; for (let i = 0; i < (MOBILE ? 12 : 24); i++) { const s = new TH.Sprite(W.additive(W.glow.fire || (W.glow.fire = glowTex("255,190,120", .8)), 0xffd0a0, 0)); s.visible = false; X.grp.add(s); X.booms.push({ s, t: -1e9, sz: 30 }); } X.bi = 0; M.pd = X; }
+  const X = M.pd, sc = b.grp.scale.x, OV = con ? .8 : key === "ovl" ? 3 : 2;
+  if (e < OV) { const k = e / OV; X.flash.material.opacity = k * .75; X.flash.scale.setScalar((con ? 60 : 220) * sc * (1 - k * .5)); b.over = k; if (Math.random() < .04 + k * .2) sbBoom(X, X.B.clone().add(new TH.Vector3((Math.random() - .5) * 20 * sc, Math.random() * 15 * sc, (Math.random() - .5) * 20 * sc)), t, (20 + k * 50) * sc); }
+  const ib = e - OV; sbShatter(X, b, ib); if (!con) sbBlast(W, X, ib, t); else { X.flash.material.opacity = Math.max(0, 1 - ib / .6) * (ib >= 0 ? 1 : X.flash.material.opacity); for (const Bm of X.booms) { const a = (t - Bm.t) / 900; Bm.s.visible = a >= 0 && a < 1; if (Bm.s.visible) { Bm.s.material.opacity = (1 - a) * .95; Bm.s.scale.setScalar(Bm.sz * (.4 + a * 1.4)); } } }
+  sbVaeCrystal(W, X, b, ib - 1.2, t, 1); if (!con) { X.glySeed = X.glySeed || Math.round(q.x * 7 + q.z * 13 + Math.floor(now() / 864e5)); sbGlyph(W, X, ib - 9.5, t); } return ib >= 0; }
 function wbPentDie(W, M, q, e, t) { const b = M.b, ELC = { fire: "#ff7a30", ice: "#8fe0ff", light: "#fff0a0", storm: "#c890ff", nature: "#7dff8a" };
   if (!M.pd) { const X = { key: "epx", grp: new TH.Group(), B: new TH.Vector3(q.x, q.y, q.z), V: new TH.Vector3(), V2: new TH.Vector3(), ships: [], b, F: new TH.Vector3(0, 0, 1) }; W.scene.add(X.grp);
     const wh = W.glow.wh || (W.glow.wh = glowTex("255,255,255", .85)); X.flash = new TH.Sprite(W.additive(wh, new TH.Color("#e2d4ff"), 0)); X.flash.position.copy(X.B); X.grp.add(X.flash);
@@ -20134,7 +20164,8 @@ const ACT = {
   labOpen: () => { if (!duelOwner()) return; openSheet({ type: "bosslab" }); },
   labPrev: d => { if (!duelOwner()) return; const k = d.k; if (k === "vae" || k === "aex") return sbSimStart(k); if (k === "dv") return dvSimStart(); if (k === "conv") return convSimStart();
     G.wbShow = k; WBN = null; clearTimeout(G.wbShowT); G.wbShowT = setTimeout(() => { G.wbShow = null; WBN = null; }, 5 * 60e3); toast(`Owner preview: ${WB[k].n} is on the map for 5 minutes, on this device only.`); setTimeout(() => { try { cineObjStart("wb_" + k); } catch (e) {} }, 1200); },
-  labStop: () => { G.wbShow = null; WBN = null; if (sheet) renderSheet(); },
+  labStop: () => { G.wbShow = null; G.wbFakeDead = null; WBN = null; if (sheet) renderSheet(); },
+  labDie: d => { if (!duelOwner()) return; const k = d.k; if (!WB[k]) return; G.wbShow = k; WBN = null; closeSheet(); setTimeout(() => { try { cineObjStart("wb_" + k); } catch (e) {} }, 800); setTimeout(() => { G.wbFakeDead = { k, at: now() }; if (G3 && G3.cam && G3.cam.cineObj) { G3.cam.goal = { dist: (WB[k].cam || 105) * WB[k].sc * 3 }; } toast(`Owner preview: ${WB[k].n} falls (on this device only).`); }, 5000); clearTimeout(G.wbShowT); G.wbShowT = setTimeout(() => { G.wbShow = null; G.wbFakeDead = null; WBN = null; }, 45000); },
   stressRun: () => { if (!duelOwner()) return; stressRun(); },
   stressPlay: d => { const r = G.stress && G.stress.out[+d.i]; if (r && r.rep) playBattle(r.rep); },
   cubeCine: () => { closeSheet(); siegeStart(); const go = n => { if (G3 && G3.cam.siege) G3.cam.siege.show = 1; else if (n < 20) setTimeout(() => go(n + 1), 300); }; go(0); },
