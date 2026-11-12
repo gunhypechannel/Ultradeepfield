@@ -28,7 +28,7 @@ rep('    const aE = [0, 1].map(j => { const s2 = sprite(3.2,', '    if (PAINT) o
 M = json.load(open(sys.argv[2] if len(sys.argv) > 2 else 'tools/painted/meta.json'))
 COL = {'overlord': '#c58bff', 'conduit': '#d9a0ff', 'devourer': '#b45cff', 'warden': '#9a6bff', 'matriarch': '#a8ff3a', 'tyrant': '#ff8a3a', 'wyrm': '#ffa040', 'colossus': '#c070ff',
        'el-ice': '#7fd8ff', 'el-fire': '#ff7a2a', 'el-light': '#ffd860', 'el-storm': '#b070ff', 'el-nature': '#7aff5a'}
-SCL = {'wyrm': 4.2, 'colossus': 1.35, 'matriarch': .85, 'overlord': 1.4, 'devourer': 1.25}
+SCL = {'wyrm': 3.4, 'colossus': 1.0, 'matriarch': .8, 'overlord': 1.05, 'devourer': 1.05, 'conduit': .45, 'warden': .8, 'tyrant': .9}
 pnt = ', '.join('"%s": [%d, %d, [%s], %s, [%d, %d], "%s", %s]' % (k, v['iw'], v['ih'], ', '.join(map(str, v['bb'])), v['dm'], v['m'][0], v['m'][1], COL[k], SCL.get(k, 1)) for k, v in M.items())
 HELP = r'''  /* v492 a world boss modelled from its painting: the painted relief sized to the code-built model's solid parts (so its camera
      framing holds), those solid parts hidden, the effects kept; it leans into each attack, a glow gathers at its strike point
@@ -40,11 +40,11 @@ HELP = r'''  /* v492 a world boss modelled from its painting: the painted relief
     root.traverse(o => { if (solid(o)) box.expandByObject(o); if (o.isMesh || o.isLine || o.isPoints || o.isSprite) hide.push(o); }); if (box.isEmpty()) return out; // only the painting shows; the strikes are drawn across the field
     const sz = box.getSize(new TH.Vector3()), c = box.getCenter(new TH.Vector3()), [iw, ih, bb, dm, [mx, my], col] = P, pw = bb[2] - bb[0], ph = bb[3] - bb[1];
     const u = Math.min(Math.max(sz.x, sz.z) / pw, sz.y / ph) * 1.08 * (P[6] || 1), L = Math.max(pw, ph) * u, z0 = c.z + Math.max(sz.x, sz.z) * .15;
-    const A = artRelief(root, { k, iw, ih, u, ox: (bb[0] + bb[2]) / 2, oy: (bb[1] + bb[3]) / 2, cx: c.x, cy: c.y, z: z0, D: L * .3, d0: dm, pitch: .6, at: { m: [mx, my] }, hide });
+    const A = artRelief(root, { k, iw, ih, u, ox: (bb[0] + bb[2]) / 2, oy: (bb[1] + bb[3]) / 2, cx: c.x, cy: c.y - L * .08, z: z0, D: L * .3, d0: dm, pitch: .6, at: { m: [mx, my] }, hide });
     out.art = A; out.mouth = A.at.m; const gl = sprite(1, col.length === 7 ? `rgba(${parseInt(col.slice(1, 3), 16)},${parseInt(col.slice(3, 5), 16)},${parseInt(col.slice(5, 7), 16)},1)` : col, "pnt_" + k); gl.material.opacity = 0; A.at.m.add(gl);
     const act0 = out.act, tick0 = out.tick; let mv = null; out.act = n => { if (act0) act0(n); mv = { n, t0: -1 }; };
     out.tick = t => { tick0(t); if (!A.ok) return; A.step(); let e = 0, h = 0; if (mv) { if (mv.t0 < 0) mv.t0 = t; const q = (t - mv.t0) / 1000; if (mv.n === "hit") h = Math.max(0, 1 - q / .45); else e = q < .6 ? q / .6 : q < 1.8 ? 1 : Math.max(0, 1 - (q - 1.8) / .8); if (q > 3) mv = null; }
-      const sm = e * e * (3 - 2 * e); A.g.position.set(c.x + Math.sin(t * .09) * L * .006 * h, c.y + Math.sin(t * .0007) * L * .006, z0 + sm * L * .07); A.g.scale.setScalar(1 + sm * .035);
+      const sm = e * e * (3 - 2 * e); A.g.position.set(c.x + Math.sin(t * .09) * L * .006 * h, c.y - L * .08 + Math.sin(t * .0007) * L * .006, z0 + sm * L * .07); A.g.scale.setScalar(1 + sm * .035);
       A.mat.color.setScalar(1 + h * .4 + sm * .12); gl.material.opacity = sm * .95; gl.scale.setScalar(L * (.1 + .12 * sm) * (1 + .1 * Math.sin(t * .02))); };
     return out; }
 '''.replace('__PNT__', pnt)
