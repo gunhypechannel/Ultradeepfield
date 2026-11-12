@@ -4143,7 +4143,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 483;
+const GAME_V = 484;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5670,6 +5670,10 @@ const wbSegLoot = (key, T = now()) => { const b = WB[key].bounty, v = key === "t
 const CAS_RETRY = { cas: 1 }, casGet = ref => ref.getV ? ref.getV() : ref.get();
 async function casSet(ref, snap, data) { if (!ref.cas || !snap || snap.v === undefined) { await ref.set(data); return true; } const ok = await ref.cas(snap.v, data); if (!ok) { try { crumb("cas conflict " + (ref.path || "")); } catch (e) {} } return ok; }
 const casAgain = async (f, again) => { if (f.casN >= 5) return false; f.casN = (f.casN || 0) + 1; await sleep(150 + Math.random() * 650); await again(f); return true; };
+/* v484 the server re-runs this boss fight and logs whether it agrees (phase 2, shadow) */
+function fightShadow(rep) { try { if (G.mode !== "online" || !G.db || !G.db.fn || !rep || rep.test || !rep.sim) return; const sg = rep.sbSeg || rep.omSeg || rep.wbSeg; if (!sg) return;
+  const unit = rep.omega ? "wbOmg" : rep.sbk ? SBW[rep.sbk].u : WB[rep.wb] ? WB[rep.wb].k : null; if (!unit) return;
+  G.db.fn("settle_fight", { kind: rep.omega ? "om" : rep.sbk ? "sb" : "wb", unit, n0: sg[0], left: sg[1], sim: rep.sim, lossA: rep.lossA, v: GAME_V }).then(r => { if (r && r.ok === false) crumb(`server disagrees: ${unit} ${sg[1]} vs ${r.left}`); }, () => {}); } catch (e) {} }
 /* a fleet reaches a boss: fight it under the shared lock, write the hull it tore off, pay the bounty */
 async function wbResolve(f) {
   G.resolving.add(f.id); const key = f.wb, D = WB[key], T0 = now();
@@ -5703,7 +5707,7 @@ async function wbResolve(f) {
     if (rise > 1.01) note(`The ${D.n} rose to meet our fleet: ×${fmt(Math.round(rise))} toughness and firepower against a force this size.`, "warn");
     if (!left) { bump("bosses"); note(`We brought down the ${D.n}! Everyone who fought it this week can claim the spoils.`, "win"); }
     else note(seg ? `Our fleet tore ${Math.round(seg / WB_SEG * 100)}% of the ${D.n}'s hull away (${Math.round(left / WB_SEG * 100)}% left)${rep.loot ? `. Bounty: ${fmt(rep.loot.m)} metal, ${fmt(rep.loot.c)} crystal, ${fmt(rep.loot.g)} gas on the way home, plus ◆${rep.shards}` : ""}.` : `The ${D.n} shrugged off our attack.`, seg ? "win" : "loss");
-    addReport(rep); wbFight(key, seg, !left); wbClaim(); { const pv = jcopy(cur); pv.hp[key] = n0; if (pv.dmg[key]) pv.dmg[key][G.me] = ((pv.dmg[key][G.me] || 0) - seg); if (G.mode !== "online") wbNews(pv, cur); sbFeedAdd(pv, cur); WB_PREV = wbNorm(jcopy(cur), cur.cyc); } home();
+    addReport(rep); fightShadow(rep); wbFight(key, seg, !left); wbClaim(); { const pv = jcopy(cur); pv.hp[key] = n0; if (pv.dmg[key]) pv.dmg[key][G.me] = ((pv.dmg[key][G.me] || 0) - seg); if (G.mode !== "online") wbNews(pv, cur); sbFeedAdd(pv, cur); WB_PREV = wbNorm(jcopy(cur), cur.cyc); } home();
   } catch (e) { if (e === CAS_RETRY && await casAgain(f, wbResolve)) return; note("Lost contact with the boss fight. Fleet returning.", "warn"); home(); }
   finally { G.resolving.delete(f.id); dirty(); progress(); softRender(); }
 }
@@ -6260,7 +6264,7 @@ async function omResolve(f) {
     if (rise > 1.01) note(`The Omega Cube rose to meet our fleet: ×${fmt(Math.round(rise))} toughness and firepower against a force this size.`, "warn");
     if (!left) { bump("bosses"); note("We brought down the Omega Cube! It is shattering. Everyone who fought it can claim the spoils.", "win"); }
     else note(seg ? `Our fleet broke ${seg} section${seg > 1 ? "s" : ""} off the Omega Cube (${left} of ${OM_SEG} left)${rep.loot ? `. Bounty: ${fmt(rep.loot.m)} metal, ${fmt(rep.loot.c)} crystal, ${fmt(rep.loot.g)} gas, plus ◆${rep.shards}` : ""}.` : "The Omega Cube shrugged off our attack.", seg ? "win" : "loss");
-    addReport(rep); omClaim(); home();
+    addReport(rep); fightShadow(rep); omClaim(); home();
   } catch (e) { if (e === CAS_RETRY && await casAgain(f, omResolve)) return; note("Lost contact with the Omega Cube fight. Fleet returning.", "warn"); home(); }
   finally { G.resolving.delete(f.id); dirty(); progress(); softRender(); } }
 /* it fell: everyone who broke a section claims once: shards by share, elemental runes (2, +1 for the top ten, +1 the top damage, +1 the
@@ -6533,7 +6537,7 @@ async function sbResolve(f) { const k = f.sb, D = SBW[k];
     if (k === "aex" && !xf0 && aexXf(cur)) note("Our attack broke Aexion past 60%: it is transforming into its Warform! Its armour is open for 20 minutes.", "win");
     if (!cur.hp) { bump("bosses"); note(`We brought down ${D.n}! Everyone who fought it can claim the spoils.`, "win"); }
     else note(seg ? `Our fleet ${tgt === "core" || tgt === "reactor" ? `broke ${seg} section${seg > 1 ? "s" : ""} off ${D.n} (${cur.hp} of 100 left)` : `hit the ${tname.toLowerCase()} for ${seg} sections${rep0.broke ? ` and destroyed ${rep0.broke}` : ""}`}${rep.loot ? `. Bounty: ${fmt(rep.loot.m)} metal, ${fmt(rep.loot.c)} crystal, ${fmt(rep.loot.g)} gas, ◆${rep.shards}${rep.sbMats && rep.sbMats.length ? ", " + rep.sbMats.join(", ") : ""}` : ""}.` : `${D.n} shrugged off our attack.`, seg ? "win" : "loss");
-    addReport(rep); sbClaim(); home();
+    addReport(rep); fightShadow(rep); sbClaim(); home();
   } catch (e) { if (e === CAS_RETRY && await casAgain(f, sbResolve)) return; note(`Lost contact with the ${D.n} fight. Fleet returning.`, "warn"); home(); }
   finally { G.resolving.delete(f.id); dirty(); progress(); softRender(); } }
 /* it fell: everyone who broke a section claims once: shards by share, elemental runes (the super boss rule, and 1 for everyone who
