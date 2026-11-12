@@ -19207,7 +19207,7 @@ const KEY_HOLD = new Set(["up", "down", "left", "right", "rotL", "rotR", "tiltUp
 const keyName = k => k === " " ? "Space" : k.length === 1 ? k.toUpperCase() : k;
 const held = new Set();
 addEventListener("keydown", e => {
-  const tg = e.target, typing = tg && (tg.tagName === "INPUT" || tg.tagName === "TEXTAREA" || tg.isContentEditable); if (typing || e.ctrlKey || e.metaKey || e.altKey) return; const k = e.key.toLowerCase();
+  const tg = e.target, typing = tg && (tg.tagName === "INPUT" || tg.tagName === "TEXTAREA" || tg.isContentEditable); if (typing || e.ctrlKey || e.metaKey || e.altKey || !e.key) return; /* fb: no key from IME/autofill */ const k = e.key.toLowerCase();
   if (G.rebind) { if (k !== "escape") { for (const a in KEYS) if (KEYS[a] === k) KEYS[a] = KEYS[G.rebind]; KEYS[G.rebind] = k; try { localStorage.setItem("void.keys", JSON.stringify(KEYS)); } catch (e2) {} } G.rebind = null; e.preventDefault(); if (sheet) renderSheet(); return; }
   if (battle || $("#authw")) return; const a = Object.keys(KEYS).find(x => KEYS[x] === k) || KEY_ALT[k]; if (!a) return;
   if (KEY_HOLD.has(a)) { if (view === "galaxy" && !sheet) { held.add(a); e.preventDefault(); } return; } if (e.repeat) return; e.preventDefault();
@@ -19216,7 +19216,7 @@ addEventListener("keydown", e => {
   else if (a === "home") { const h = homePlanet(); if (h) { if (view !== "galaxy") { view = "galaxy"; render(); } setTimeout(() => ACT.gotoMine({ id: h.id }), 50); } }
   else if (a === "stop" && G3) { if (G3.cam.siege) siegeEnd(); else if (G3.cam.cine) cineEnd(); ACT.followStop(); }
 });
-addEventListener("keyup", e => { const k = e.key.toLowerCase(), a = Object.keys(KEYS).find(x => KEYS[x] === k) || KEY_ALT[k]; if (a) held.delete(a); });
+addEventListener("keyup", e => { const k = (e.key || "").toLowerCase(), a = Object.keys(KEYS).find(x => KEYS[x] === k) || KEY_ALT[k]; if (a) held.delete(a); });
 addEventListener("blur", () => held.clear());
 /* held keys move the camera smoothly every frame (speed scaled by zoom and frame time) */
 function keyCam(W) { if (!held.size || view !== "galaxy" || sheet || W.cam.cine || W.cam.live) { if (sheet || view !== "galaxy") held.clear(); return; } const c = W.cam, k = W.dtk || 1, sp = 14 * k;
