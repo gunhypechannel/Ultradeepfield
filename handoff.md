@@ -1,10 +1,12 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-12 (America/Phoenix). Current game version: **v494** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v299**.
+Last updated: 2026-11-12 (America/Phoenix). Current game version: **v495** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v300**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
 ## Pending work (as of 2026-11-07): start here in a new session
+
+00000000000000000000000000. **v495 — Medusara's serpents like the painting** (tools/patches/p495_serpents.py). Owner: "Continue" after I offered thick scaled serpents. Each serpent is one tapered TubeGeometry (radius 2.4 to 1.15, slight ripple) along a bigger S-curve (wave 3.2), skinned with medScale(): rows of rounded silver-grey stone scales with dark rims, the gold light between them as the emissive map (MSk, also the heads and jaws); the striped segments, gold bands and crimson seams are gone. The painted face skin now mirrors past the painting's edge (MirroredRepeatWrapping, no clamp) instead of stretching its border.
 
 00000000000000000000000000. **v494 — Medusara: art-skinned 3D face, viper heads, serpents with minds of their own** (tools/patches/p494_medusara.py; pose fit tools/painted/pose.py, pose2.py; texture docs/art/boss/medusara-face.webp). Owner: the face looked opaque, not petrified; snake eyes and teeth silly, fangs curved the wrong way; serpents should move randomly and independently; chose "Art-skinned 3D face" (her 3D head wears the painting, not a billboard). The head takes the painted face's pose (rotation x -.525, y -.15) and each face vertex gets the UV of its place in the painting under that pose (affine fit of eyes, nose, mouth, chin, gem: 18 px rms); the 3D eyes, diadem, crown crystals and gem hide once it loads (their glows, beams and cracks stay). Face material (fallback) starstone med3; corona sprites behind the head; storm glow moved behind her. Serpents: smooth viper wedge heads (VH) and lower jaws, slit-pupil amber eyes under brow ridges, dark mouths, small ivory teeth rows and fangs curving back, slimmer gold horns and crest, softer rim light; each serpent has its own three-frequency drift and phases, looks around with its head, darts every 3-12 s and hisses every 2-9 s.
 
