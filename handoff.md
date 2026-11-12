@@ -1,10 +1,12 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-12 (America/Phoenix). Current game version: **v495** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v300**.
+Last updated: 2026-11-12 (America/Phoenix). Current game version: **v496** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v301**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
 ## Pending work (as of 2026-11-07): start here in a new session
+
+00000000000000000000000000. **v496 — fleet slots wording** (tools/patches/p496_slots.py; from the Pending list). Fleet slots come from Computer Technology (maxFleets: 2 + computer + colonies + Admiral + General class + VIP), but the slots-full toast and the voiced FAQ answer said "Research Fleet Command" (Fleet Command, S.r.command, raises allies per strike, maxReq). Both now say Computer Technology; the FAQ line was re-voiced (key h0w2jt replaces owy48d). Phase 3 of the server plan was looked at and NOT started: its gate (a weekend of shadow-checked boss fights) is unmet, fight_log is empty.
 
 00000000000000000000000000. **v495 — Medusara's serpents like the painting** (tools/patches/p495_serpents.py). Owner: "Continue" after I offered thick scaled serpents. Each serpent is one tapered TubeGeometry (radius 2.4 to 1.15, slight ripple) along a bigger S-curve (wave 3.2), skinned with medScale(): rows of rounded silver-grey stone scales with dark rims, the gold light between them as the emissive map (MSk, also the heads and jaws); the striped segments, gold bands and crimson seams are gone. The painted face skin now mirrors past the painting's edge (MirroredRepeatWrapping, no clamp) instead of stretching its border. **Server simulator re-synced (after v495):** tools/sim_bundle.py re-run (only change: the wbKhz and wbMed units), committed at ea05fbafdb48d66f3bea69989203a8d18d05702d, settle_fight redeployed (version 2) importing sim.js from jsDelivr at that commit; the live function boots and answers 401 "sign in first" without a player token. fight_log was still empty (no world or super boss fight since v484), so nothing had been mis-checked.
 
@@ -246,7 +248,6 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v293 bandwidth fix on the real server:** confirm with Supabase edge logs (no `col=eq` gaps, save uploads ~70 KB, no echo) after the owner plays; watch Usage → Egress. Hand-off between devices now takes up to 30 s (poll) unless the tab is reopened.
 - **v271 call-to-arms / v273 SOS** were tested with fake data only; they need two real alliance accounts.
 - **iOS "closed unexpectedly after: battle closed"** crash reports keep appearing (v257–v290); v268 mitigations are unverified on device.
-- **Wording:** the "fleet slots full" toast says "Research Fleet Command", but slots come from Computer Technology (`maxFleets`: 2 + Computer Tech + colonies + Admiral + Warlord + VIP 6/14).
 - Only the owner is active (4 accounts; the other three are Lv.1–2).
 - **Transport button** wasn't tested end-to-end (test account had one planet). Check on a real account with 2+ planets.
 - **Simultaneous play on two devices:** a tap made in the ~1 s before the other device's save arrives can still be lost. Normal switching is covered.
