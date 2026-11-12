@@ -6420,7 +6420,7 @@ function dvCdDraw(C, t, T, dt) { const g = C.g, CW = DVM.CW, CH = DVM.CH, GS = C
   for (const q of C.arc) { const j = ((t / 40) | 0) + q.sd, pts = [[q.a.cx, q.a.cy]]; for (let k = 1; k <= 8; k++) { const f = k / 8; pts.push([q.a.cx + (q.b.cx - q.a.cx) * f + (k < 8 ? Math.sin(j * 12.9 + k * 78.2) * 12 : 0), q.a.cy + (q.b.cy - q.a.cy) * f + (k < 8 ? Math.cos(j * 4.1 + k * 31.7) * 12 : 0)]); }
     for (const [w, al, col] of [[7, .25, "#38ff6a"], [2.4, .95, "#e2ffe9"]]) { g.globalAlpha = al; g.strokeStyle = col; g.lineWidth = w; g.beginPath(); pts.forEach(([x, y], k) => k ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); } }
   g.globalAlpha = 1; }
-function dvCountdown(W, t, T, live) { const show = !live && view === "galaxy" && !G.sbSim;
+function dvCountdown(W, t, T, live) { const show = !live && view === "galaxy" && !G.sbSim && !sbLiveKey(T); /* v488 */
   if (!show) { if (W.dvCd) { W.dvCd.grp.visible = false; W.dvCd.hid = 1; } return; } const C = W.dvCd || dvCdBuild(W); C.grp.visible = true;
   { const cp = W.camera.position, tg = (W.cam && W.cam.tx != null) ? W.cam : { tx: 0, tz: 0 }; let dx = tg.tx - cp.x, dz = tg.tz - cp.z, l = Math.hypot(dx, dz);
     if (l < 1) { const u = new TH.Vector3(0, 1, 0).applyQuaternion(W.camera.quaternion); dx = u.x; dz = u.z; l = Math.hypot(dx, dz) || 1; }
@@ -6696,7 +6696,9 @@ const sbPhase = (k, hp) => { const P = SBW[k].ph; for (let i = 0; i < P.length; 
 /* when the window closes: 5 minutes after it falls, or when its 36 hours run out */
 const sbEnd = (k, s0) => { const st = sbState(k, s0); return st.dead && st.dead > s0 ? st.dead + 5 * 60e3 : s0 + SB_WIN; };
 function sbOn(k, T = now()) { const s0 = sbStartOf(k, T); if (s0 == null) return false; const st = sbState(k, s0); return T >= s0 + SB_ARR && T < sbEnd(k, s0) && st.hp > 0; }
-const sbLiveKey = (T = now()) => { for (const k in SBW) { const s0 = sbStartOf(k, T); if (s0 != null && T >= s0 && T < sbEnd(k, s0) + 10 * 60e3) return k; } return null; };
+const SB_GLY = 3 * SB_H; /* v488 a fallen super boss's glyph stays this long */
+const sbGlyEnd = (k, s0) => { const st = sbState(k, s0); return st.dead && st.dead > s0 ? st.dead + SB_GLY : 0; };
+const sbLiveKey = (T = now()) => { for (const k in SBW) { const s0 = sbStartOf(k, T); if (s0 != null && T >= s0 && T < Math.max(sbEnd(k, s0) + 10 * 60e3, sbGlyEnd(k, s0))) return k; } return null; };
 /* Vaelthar's charge cycles (6 h from its arrival): the stabilizers broken in a cycle decide whether the beam fires at its end */
 const SB_VC = 6 * SB_H, WPK = { stab: 4, eng: 3, emit: 3, an: 15, an0: 15, an1: 15, an2: 15 }, wpN = (st, key, kind) => Math.floor((st.wp[key] || 0) / WPK[kind]);
 function vaeCycle(s0, T) { const c = Math.floor((T - s0 - SB_ARR) / SB_VC), ce = s0 + SB_ARR + (c + 1) * SB_VC; return { c, ce, cs: ce - SB_VC }; }
@@ -6793,7 +6795,7 @@ function shSboss() { const k = (sheet && sheet.id) || sbLiveKey() || "vae", D = 
   if (live && k === "khz") { const { c, ce } = vaeCycle(s0, T), A = khzAnch(st, c), p2 = sbPhase(k, hp), dn = A.filter(a => !a).length; shield = `<dt>Rune anchors</dt><dd>${A.map(a => `<i class="sbpip ${a ? "" : "off"}"></i>`).join("")} ${p2 === 0 ? "dormant" : p2 === 3 ? "shattered" : `${dn}/3 disabled this cycle${hp <= 50 ? ` · Judgment in <b data-end="${ce}">${ftime(ce - T)}</b>` : ""}`}</dd>`; }
   if (live && k === "aex") { const e = Math.min(8, wpN(st, xf ? "emit" : "eng", xf ? "emit" : "eng")); shield = `<dt>${xf ? "Shield emitters" : "Stern engines"}</dt><dd>${[0, 1, 2, 3, 4, 5, 6, 7].map(i => `<i class="sbpip ${i < e ? "off" : ""}"></i>`).join("")} ${e}/8 destroyed</dd>`; }
   let body = ""; if (!live) body = `<p class="note">${D.n} comes with the Wednesday boss rotation, every ${ROT.length} weeks, at ${new Date(nx).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} your time, for 36 hours. Next: <b data-end="${nx}">${ftime(nx - T)}</b>.</p>${duelOwner() ? `<button class="btn ghost wide" data-act="labPrev" data-k="${k}">▶ Watch the preview (owner)</button>` : ""}`;
-  else if (!on) body = `<p class="note">${hp ? (T < s0 + SB_ARR ? `${D.n} is arriving. Attacks open in <b data-end="${s0 + SB_ARR}">${ftime(s0 + SB_ARR - T)}</b>.` : "It cannot be attacked right now.") : `Destroyed. ${k === "vae" ? "A celestial relic drifts where it fell." : k === "khz" ? "An ancient sphinx relic drifts where it fell." : "Its wreck drifts past the Rim."}`}</p>`;
+  else if (!on) body = `<p class="note">${hp ? (T < s0 + SB_ARR ? `${D.n} is arriving. Attacks open in <b data-end="${s0 + SB_ARR}">${ftime(s0 + SB_ARR - T)}</b>.` : "It cannot be attacked right now.") : `Destroyed. ${k === "vae" ? "A celestial relic drifts where it fell." : k === "khz" ? "Its glyph burns where it fell, for a few hours." : "Its wreck drifts past the Rim."}`}</p>`;
   else if (!canPlay()) body = `<p class="note">${G.mode === "connecting" ? connNote() : "You can only watch this galaxy."}</p>`;
   else if (sent) body = `<p class="note">Our fleet is on its way.</p>`;
   else if (!Object.keys(avail).length) body = `${originBar()}<p class="note">No ships at ${esc((originPlanet() || {}).name || S.homeName)}.</p>`;
@@ -6851,8 +6853,8 @@ function sbLiveTick(W, t) { const T = now(), k = sbLiveKey(T); if (!k || view !=
   else if (k === "khz") khzLive(W, X, b, T, t, e, st, s0, dead, df, scl, say);
   else { if (e < 9) { b.grp.position.copy(X.B); aexWarp(X, b, e, t); if (e > 1.2) scl = D.sc * (back ? 1.08 : 1); } const xf = aexXf(st); { const sg = xf && st.hp && st.hp <= 45 ? 1 : 0, wg = xf && st.hp && st.hp <= 30 ? 1 : 0; if (X.sgP != null && sg && !X.sgP) { b.act("sbreak"); say(k + s0 + "sb", "Direct hit! It's staggering... its shield is breaking!"); } if (X.wgP != null && wg && !X.wgP) { b.act("wbreak"); say(k + s0 + "wb", "Its blade is gone! Keep up the pressure!"); } X.sgP = sg; X.wgP = wg; b.shieldGone = sg || (dead ? 1 : 0); b.swordGone = wg; } b.drive("transform", xf ? clamp((T - xf) / 60000, 0, 1) : 0); if (xf && T - xf < 60000) say(k + xf, "Wait. What is that? Aexion's hull is shifting..."); if (xf && T - xf > 10000 && T - xf < 60000) say(k + xf + "b", "Wait... I think it's... transforming? It IS transforming! Its whole hull is splitting apart!"); if (xf && T - xf > 32000 && T - xf < 90000) say(k + xf + "c", "It's standing up. That thing is a Warform!");
     b.drive("overdrive", st.hp && st.hp <= 20 ? (T / 4200) % 1 : -1); X.bolts.geometry.setDrawRange(0, 0); if (!dead) { if (xf && T - xf > 62000) aexLive(X, b, T, t, scl, st); else { const slot = Math.floor(T / 25000); if (slot !== X.slot) { X.slot = slot; const L = (xf ? SBW.aex.mv2 : SBW.aex.mv).filter(n => !(b.shieldGone && n === "aegis") && !(b.swordGone && n === "blade")); b.act(L[Math.abs(hash("a" + slot)) % L.length]); } } }
-    if (dead) { const be = df - 2; X.glySeed = st.dead; sbGlyph(W, X, be - 10.5, t); b.boomE = be; if (be < 0) b.drive("overdrive", (df * 2.4) % 1); sbBlast(W, X, be, t); sbVaeCrystal(W, X, b, be - 1.2, t, 1); if (be > -1 && be < 60) say(k + st.dead + "x", "Aexion's reactor went critical! The blast is tearing across the whole map. Its wreckage is everywhere!"); } b.grp.scale.setScalar(scl); }
-  let vf = -1; if (k === "vae" && dead) { vf = df - .8; X.glySeed = st.dead; sbGlyph(W, X, vf - 6.2, t); if (vf > -.6) sbCryFlash(W, X, b, vf + .6); sbVaeCrystal(W, X, b, vf + .55, t, 1); } if (!(vf >= 0)) b.tick(t); W.renderer.toneMappingExposure = X.exp * (1 - (b.dark || 0) * .4) * (X.expK || 1); }
+    if (dead) { const be = df - 2; X.glySeed = st.dead; sbGlyph(W, X, be - 10.5, t, clamp((st.dead + SB_GLY - T) / 600e3, 0, 1)); b.boomE = be; if (be < 0) b.drive("overdrive", (df * 2.4) % 1); sbBlast(W, X, be, t); sbVaeCrystal(W, X, b, be - 1.2, t, 1); if (be > -1 && be < 60) say(k + st.dead + "x", "Aexion's reactor went critical! The blast is tearing across the whole map. Its wreckage is everywhere!"); } b.grp.scale.setScalar(scl); }
+  let vf = -1; if (k === "vae" && dead) { vf = df - .8; X.glySeed = st.dead; sbGlyph(W, X, vf - 6.2, t, clamp((st.dead + SB_GLY - T) / 600e3, 0, 1)); if (vf > -.6) sbCryFlash(W, X, b, vf + .6); sbVaeCrystal(W, X, b, vf + .55, t, 1); } if (!(vf >= 0)) b.tick(t); W.renderer.toneMappingExposure = X.exp * (1 - (b.dark || 0) * .4) * (X.expK || 1); }
 /* v487 Aexion live, in his Warform: he fends off the fleets from three facings (the battle reports' beat, on the shared clock, so everyone
    sees the same fight), and their fire pours in from the side he faces and breaks on his shield */
 function aexLive(X, b, T, t, sc, st) { const CY = 11000, slot = Math.floor(T / CY), e = T % CY, dirOf = n => [-1, 0, 1][Math.abs(hash("ad" + n)) % 3];
@@ -6889,7 +6891,7 @@ function khzLive(W, X, b, T, t, e, st, s0, dead, df, scl, say) { const k = "khz"
     if (res === "interrupted" && f > .58) say(k + ce + "i", "The anchors are down and its singularity collapsed! It's stunned. Hit it now!"); if (res !== "interrupted" && f > .76 && f < .9) say(k + ce + "f", "Gravitational shockwave! It's tearing through the fleets!"); }
   b.drive("judge", fj); X.ht = (X.ht || 0) + ((ph === 3 && hp && !dead ? 1 : 0) - (X.ht || 0)) * Math.min(1, dt * .0015); b.drive("heart", X.ht > .002 ? X.ht : -1);
   if (!dead && hp && fj < 0 && aw >= 1) { const slot = Math.floor(T / 14000); if (slot !== X.slot) { X.slot = slot; const L = b.moves; b.act(L[Math.abs(hash("k" + slot)) % L.length]); } }
-  if (dead) { const dd = df / 10; b.drive("die", dd < 1 ? dd : -1); b.relic = dd >= 1 ? 1 : 0; b.anchOn = 0; if (dd < 2) say(k + st.dead + "x", "Its singularity is collapsing... Khezaroth is breaking apart! It's imploding!"); if (dd > 1.2 && dd < 8) say(k + st.dead + "r", "It's gone. Only a relic of the sphinx is left, drifting where it fell."); } else b.relic = 0; }
+  b.relic = 0; if (dead) { const dd = df / 10; b.drive("die", dd < 1 ? dd : -1); b.anchOn = 0; X.glySeed = st.dead; sbGlyph(W, X, df - 9, t, clamp((st.dead + SB_GLY - T) / 600e3, 0, 1)); if (dd < 2) say(k + st.dead + "x", "Its singularity is collapsing... Khezaroth is breaking apart! It's imploding!"); if (dd > 1.2 && dd < 8) say(k + st.dead + "r", "It's gone. Only its glyph is left, burning where it fell."); } }
 /* the owner preview, about 100 s: the awakening, Ancient Guardian, the Three Seals (the fleet breaks the anchors), Judgment of the Abyss
    (the shockwave cuts the fleet), the Unsealed Heart, its fall and the relic */
 function sbKhz(X, W, b, s, t, dt, say, yaw, side) { const sc = SBX.khz.sc; b.drive("awake", s < 26 ? Math.max(0, s / 26) : -1);
@@ -6904,7 +6906,7 @@ function sbKhz(X, W, b, s, t, dt, say, yaw, side) { const sc = SBX.khz.sc; b.dri
   if (fj > .77 && !X.jk) { X.jk = 1; sbKillN(X, 12, t, 1); say("k5", "Gravitational shockwave! It's tearing through the fleets!"); }
   const ht = clamp((s - 71) / 4, 0, 1); b.drive("heart", ht > 0 ? ht : -1); if (s > 71.5) say("k6", SBL.khz[3]);
   if (s > 82 && !X.fall) { X.fall = s; say("k7", "Its singularity is collapsing... Khezaroth is breaking apart! It's imploding!"); }
-  if (X.fall) { const dd = (s - X.fall) / 10; b.drive("die", dd < 1 ? dd : -1); b.relic = dd >= 1 ? 1 : 0; b.anchOn = 0; b.drive("heart", -1); if (dd > 1.1) say("k8", "It's gone. Only a relic of the sphinx is left, drifting where it fell."); }
+  if (X.fall) { const dd = (s - X.fall) / 10; b.drive("die", dd < 1 ? dd : -1); b.anchOn = 0; b.drive("heart", -1); sbGlyph(W, X, s - X.fall - 9, t); if (dd > 1.1) say("k8", "It's gone. Only its glyph is left, burning where it fell."); }
   const bp = b.grp.position, tb = { tx: bp.x, tz: bp.z };
   const K = s < 26 ? Object.assign(tb, khzCam(X, s * 60 / 26)) : s < 41 ? Object.assign(tb, { y: 14 * sc, d: 520, th: .18, ph: .55 + (s - 26) * .03 }) : s < 55 ? Object.assign(tb, { y: 20 * sc, d: 760, th: .34, ph: 1.0 - (s - 41) * .03 })
     : s < 71 ? Object.assign(tb, { y: (10 + bell01(fj, 0, .3, .7, .8) * 6) * sc, d: 460 + fj * 220, th: .1 + fj * .12, ph: .25 }) : s < 82 ? Object.assign(tb, { y: 9 * sc, d: 300, th: .08, ph: .15 + (s - 71) * .02 }) : Object.assign(tb, { y: 8 * sc, d: 640 + (s - 82) * 18, th: .25, ph: .5 });
@@ -7034,7 +7036,7 @@ function sbVaeBlanket(W, X, O, t, sec, dur, k) { const on = k > .001;
 const SB_CRY = { vae: [[.8, .55, .12], [1, .92, .6]], ovl: [[.55, .2, .95], [.95, .78, 1]], dev: [[.85, .15, .55], [1, .72, .9]], war: [[.16, .06, .4], [.8, .66, 1]],
   brd: [[.42, .8, .08], [.9, 1, .6]], tyr: [[.82, .08, .14], [1, .62, .6]], wym: [[.8, .3, .04], [1, .7, .38]], col: [[.72, .48, .86], [1, .9, 1]],
   eic: [[.42, .05, .62], [.82, .42, 1]], efi: [[.95, .4, .05], [1, .82, .45]], eli: [[.95, .8, .35], [1, 1, .86]], est: [[.05, .38, 1], [.6, .9, 1]], ena: [[.05, .7, .3], [.65, 1, .75]],
-  con: [[.6, .4, .95], [.9, .85, 1]], epx: [[.6, .5, .8], [1, .95, 1]], khz: [[.45, .16, .85], [.92, .78, 1]] };
+  con: [[.6, .4, .95], [.9, .85, 1]], epx: [[.6, .5, .8], [1, .95, 1]], khz: [[.45, .16, .85], [.92, .78, 1]], aex: [[.2, .5, 1], [.75, .92, 1]] };
 const sbCryOf = k => SB_CRY[k] || (k && k[0] === "c" && /^c\d$/.test(k) ? SB_CRY.con : [[.35, .25, .85], [.7, .9, 1]]);
 /* v474 the soft flash that covers a boss turning to crystal, in its crystal colour (no blast) */
 function sbCryFlash(W, X, b, e) { if (!X.cf) { const bs = new TH.Box3().setFromObject(b.grp).getBoundingSphere(new TH.Sphere()), c = sbCryOf(X.key)[1]; X.cfR = Math.max(10, bs.radius); X.cf = new TH.Sprite(W.additive(W.glow.wh || (W.glow.wh = glowTex("255,255,255", .85)), new TH.Color(c[0], c[1], c[2]), 0)); X.cf.position.copy(bs.center); X.grp.add(X.cf); }
@@ -7081,7 +7083,7 @@ function sbShatter(X, b, e) { if (e < 0) return;
     else { x.o.position.copy(x.p0).addScaledVector(x.dl, x.d * k + e * .22); x.o.quaternion.copy(x.q0); x.o.rotateOnAxis(x.ax, x.sp * rk + e * .035); } } }
 /* v462 what a fallen super boss leaves behind: a holographic glyph hanging where it died, its rings turning, crackling with elemental
    lightning (fire, frost, storm, void and life in turn), in that boss's colours. e = seconds since it formed. */
-function sbGlyph(W, X, e, t) { if (e < 0) { if (X.gly) X.gly.g.visible = false; return; }
+function sbGlyph(W, X, e, t, fade = 1) { if (e < 0 || fade <= 0) { if (X.gly) X.gly.g.visible = false; return; }
   if (!X.gly) { const seed = X.glySeed || (X.glySeed = (Math.random() * 1e9) | 0), r = cwRnd(hash(X.key + "glyph" + seed)), ELS = [["fire", "#ff8a3a", [1, .5, .15]], ["frost", "#8fe0ff", [.55, .9, 1]], ["storm", "#fff07a", [1, 1, .45]], ["void", "#c890ff", [.8, .45, 1]], ["life", "#7dff8a", [.45, 1, .55]]], EL = ELS[(r() * 5) | 0];
     const cv = document.createElement("canvas"); cv.width = cv.height = 512; const c = cv.getContext("2d"); c.translate(256, 256); c.strokeStyle = "#fff"; c.fillStyle = "#fff"; c.lineCap = c.lineJoin = "round";
     const ring = (R, w) => { c.lineWidth = w; c.beginPath(); c.arc(0, 0, R, 0, TAU); c.stroke(); }; ring(244, 6); if (r() < .7) ring(226, 2); const R2 = 150 + r() * 40; ring(R2, 3 + r() * 2); if (r() < .6) ring(R2 - 14, 1.5);
@@ -7089,7 +7091,8 @@ function sbGlyph(W, X, e, t) { if (e < 0) { if (X.gly) X.gly.g.visible = false; 
     const nr = 5 + ((r() * 8) | 0); for (let k = 0; k < nr; k++) { c.save(); c.rotate(k / nr * TAU); c.translate(0, -(R2 + 226) / 2 - 4); c.lineWidth = 3; c.beginPath(); for (let q = 0; q < 3 + ((r() * 3) | 0); q++) { c.moveTo((r() - .5) * 26, (r() - .5) * 30); c.lineTo((r() - .5) * 26, (r() - .5) * 30); } c.stroke(); c.restore(); }
     const n = 5 + ((r() * 5) | 0), m = Math.max(2, Math.floor(n / 2) - ((r() * 2) | 0)); c.lineWidth = 4; c.beginPath(); for (let k = 0; k <= n; k++) { const a = k * m / n * TAU - Math.PI / 2, x = Math.cos(a) * (R2 - 18), y = Math.sin(a) * (R2 - 18); k ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke();
     const core = (r() * 4) | 0; c.lineWidth = 4; c.beginPath(); if (core === 0) c.arc(0, 0, 28, 0, TAU); else if (core === 1) { c.moveTo(0, -42); c.lineTo(36, 22); c.lineTo(-36, 22); c.closePath(); } else if (core === 2) { c.ellipse(0, 0, 50, 22, 0, 0, TAU); c.moveTo(14, 0); c.arc(0, 0, 14, 0, TAU); } else { c.rect(-26, -26, 52, 52); } c.stroke(); c.beginPath(); c.arc(0, 0, 9, 0, TAU); c.fill();
-    const tex = new TH.CanvasTexture(cv), col = new TH.Color(EL[1]), g = new TH.Group(); g.position.copy(X.B).add(new TH.Vector3(0, 45, 0)); X.grp.add(g);
+    const CY = X.key && (SB_CRY[X.key] || (X.key[0] === "c" && /^c\d$/.test(X.key) ? SB_CRY.con : null)), col = CY ? new TH.Color(...CY[1]).lerp(new TH.Color(...CY[0]), .3) : new TH.Color(EL[1]); if (CY) EL[2] = CY[1].map((v, i) => Math.min(1, v * .6 + CY[0][i] * .6)); /* v488 its own colour */
+    const tex = new TH.CanvasTexture(cv), g = new TH.Group(); g.position.copy(X.B).add(new TH.Vector3(0, 45, 0)); X.grp.add(g);
     const Cc = new TH.Mesh(new TH.PlaneGeometry(170, 170), new TH.MeshBasicMaterial({ map: tex, color: col, transparent: true, opacity: 1, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false })); Cc.frustumCulled = false; g.add(Cc);
     const NA = 12, SEG = 7, lg = new TH.BufferGeometry(); lg.setAttribute("position", new TH.BufferAttribute(new Float32Array(NA * SEG * 6), 3)); lg.setAttribute("color", new TH.BufferAttribute(new Float32Array(NA * SEG * 6), 3));
     const arcs = new TH.LineSegments(lg, new TH.LineBasicMaterial({ vertexColors: true, transparent: true, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); arcs.frustumCulled = false; g.add(arcs);
@@ -7097,12 +7100,12 @@ function sbGlyph(W, X, e, t) { if (e < 0) { if (X.gly) X.gly.g.visible = false; 
     X.gly = { g, Cc, arcs, glow, NA, SEG, lt: 0, ec: EL[2], el: EL[0] }; }
   const Z = X.gly, k = Math.min(1, e / 1.4), pk = 1 - Math.pow(1 - k, 3); Z.g.visible = true; Z.g.scale.setScalar(.2 + pk * .8);
   if (W.camera) Z.Cc.quaternion.copy(W.camera.quaternion); Z.Cc.rotateZ(-t * .0004); Z.arcs.quaternion.copy(Z.Cc.quaternion);
-  const fl = .85 + .15 * Math.sin(t * .013) * Math.sin(t * .0031); Z.Cc.material.opacity = k * fl; Z.glow.material.opacity = .35 * k * (.8 + .2 * Math.sin(t * .004)); Z.g.position.y = X.B.y + 45 + Math.sin(t * .0007) * 5;
+  const fl = .85 + .15 * Math.sin(t * .013) * Math.sin(t * .0031); Z.Cc.material.opacity = k * fl * fade; Z.glow.material.opacity = .35 * k * fade * (.8 + .2 * Math.sin(t * .004)); Z.g.position.y = X.B.y + 45 + Math.sin(t * .0007) * 5;
   if (t - Z.lt > 70) { Z.lt = t; const P = Z.arcs.geometry.attributes.position.array, Cl = Z.arcs.geometry.attributes.color.array, cc = Z.ec;
     for (let i = 0; i < Z.NA; i++) { const on = Math.random() < .75, a = Math.random() * TAU, r0 = 30 + Math.random() * 25, r1 = 85 + Math.random() * 55; let px = 0, py = 0;
       for (let j = 0; j < Z.SEG; j++) { const u0 = j / Z.SEG, u1 = (j + 1) / Z.SEG, R0 = r0 + (r1 - r0) * u0, R1 = r0 + (r1 - r0) * u1, jit = 12 * (1 - u1 * .5), o = (i * Z.SEG + j) * 6;
         const x0 = j ? px : Math.cos(a) * R0, y0 = j ? py : Math.sin(a) * R0; px = Math.cos(a) * R1 + (Math.random() - .5) * jit; py = Math.sin(a) * R1 + (Math.random() - .5) * jit;
-        P.set(on ? [x0, y0, 1, px, py, 1] : [0, 0, 0, 0, 0, 0], o); const f = k * (1 - u0 * .6); Cl.set([cc[0] * f, cc[1] * f, cc[2] * f, cc[0] * f * .8, cc[1] * f * .8, cc[2] * f * .8], o); } }
+        P.set(on ? [x0, y0, 1, px, py, 1] : [0, 0, 0, 0, 0, 0], o); const f = k * fade * (1 - u0 * .6); Cl.set([cc[0] * f, cc[1] * f, cc[2] * f, cc[0] * f * .8, cc[1] * f * .8, cc[2] * f * .8], o); } }
     Z.arcs.geometry.attributes.position.needsUpdate = true; Z.arcs.geometry.attributes.color.needsUpdate = true; } }
 /* v470 a world boss's death: its core overloads (the Overlord's whole fortress firing), then it blows apart in its own colour, every part
    flung out tumbling, turning to crystal and dissolving into spirits, and a glyph stays; a conduit only shatters and dissolves */
