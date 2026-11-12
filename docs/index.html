@@ -2902,7 +2902,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       const mech = ss(.88, 1, u); body.position.y = Math.sin(t * .0008) * (.4 + mech * .2); body.rotation.z = Math.sin(t * .0005) * .02 * (1 - mech);
       const fo = f("overdrive", t), od = bell(fo, 0, .15, .85, 1), fb = f("blade", t), fa = f("aegis", t), fl = f("lance", t), fr = f("rail", t), fm = f("missiles", t), fbs = f("broadside", t), fx = f("hit", t);
       // the blade swing: the right arm sweeps across, the arc trails it
-      const st0 = ss(.92, 1, u), g0 = t * .001; let gd = 0; const fdg = f("dodge", t), fst = f("stagger", t), fsb = f("sbreak", t), fwb = f("wbreak", t), stg = fst >= 0 ? bell(fst, 0, .08, .4, 1) : 0;
+      const st0 = ss(.92, 1, u), g0 = t * .001; let gd = 0; body.position.z = 0; const fdg = f("dodge", t), fst = f("stagger", t), fsb = f("sbreak", t), fwb = f("wbreak", t), stg = fst >= 0 ? bell(fst, 0, .08, .4, 1) : 0;
       if (st0 > 0) { /* v460 the warform is never still: weight shifting, torso and head tracking targets, knees bent, blade ready */
         root.rotation.y += Math.sin(g0 * .55) * .1 * st0; body.position.x = Math.sin(g0 * .4) * .8 * st0; chest.rotation.y += Math.sin(g0 * .75 + 1) * .13 * st0; chest.rotation.x += (.07 + Math.sin(g0 * .9) * .025) * st0;
         head.rotation.y += (Math.sin(g0 * .5) * .3 + Math.sin(g0 * 2.1) * .05) * st0; head.rotation.x += (Math.sin(g0 * 1.3) * .05 - .06) * st0;
@@ -3981,7 +3981,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 463;
+const GAME_V = 464;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6010,7 +6010,7 @@ const DVS = [[0, "awake", "Awakening", "The Super Cube wakes, and every Assimila
   [DV.stage, "stand", "The Last Stand", "A massed fleet makes its stand against it.", "Every fleet we have is taking position. This is our Last Stand."],
   [DV.fight0, "fight", "The Fight", "Every commander has 36 hours to bring it down before it disperses.", "The Omega Cube is open to attack. Thirty-six hours. All fleets, engage!"]];
 const dvStage = e => { let i = 0; for (let k = 0; k < DVS.length; k++) if (e >= DVS[k][0]) i = k; return i; };
-function dvSay(D) { const e = D.e, s0 = D.s0; G.dvSaid = G.dvSaid || {}; const say = (k, line) => { const id = s0 + k; if (G.dvSaid[id]) return; G.dvSaid[id] = 1; try { advHolo(line, 1); } catch (er) {} };
+function dvSay(D) { const e = D.e, s0 = D.s0; G.dvSaid = G.dvSaid || {}; const say = (k, line) => { const id = s0 + k; if (G.dvSaid[id]) return; G.dvSaid[id] = 1; sbSay(line); };
   const si = dvStage(e); if (e < DV.ret) say(DVS[si][1], DVS[si][4]); /* the stage you find it in, once, even arriving late */
   if (e >= DV.war0 && e < DV.war0 + 3 * 60e3) say("war", "The Last Stand has begun! Fire everything!"); if (e >= DV.war1 && e < DV.war1 + 3 * 60e3) say("lost", "The fleet is gone. The Omega Cube is still standing.");
   if (e >= DV.ret && e < DV.ret + 3 * 60e3) { const st = omState(s0); say("ret", st.hp ? "It's breaking apart. The cubes are scattering home. It will return next month." : "The Omega Cube is destroyed! Its cubes are scattering home, broken."); } }
@@ -6083,7 +6083,7 @@ const SBX_CAM = (X, W, s, dt, K) => { const c = W.cam; if (!c) return; c.goal = 
   const tx = K.tx != null ? K.tx : X.B.x, ty = K.ty != null ? K.ty : X.B.y + K.y, tz = K.tz != null ? K.tz : X.B.z; c.tx += (tx - c.tx) * e; c.ty += (ty - c.ty) * e; c.tz += (tz - c.tz) * e; c.dist += (K.d - c.dist) * e; c.ph += (Math.PI / 2 - K.th - c.ph) * e; /* K.th: height above the horizon; K.ph: angle round from straight in front of the boss */
   let dp = Math.atan2(X.F.z, X.F.x) + K.ph - c.th; while (dp > Math.PI) dp -= TAU; while (dp < -Math.PI) dp += TAU; c.th += dp * e; };
 function sbTick(W, t) { const P = G.sbSim; if (!P) { sbLiveTick(W, t); return; } const D = SBX[P.key]; if (W.sb && (W.sb.key !== P.key || W.sb.live)) sbFree(W); const X = W.sb || sbBuild(W, P.key), b = X.b, s = (performance.now() - P.t0) / 1000;
-  if (s > D.dur) { sbSimStop(true); return; } const dt = Math.min(64, t - (X.lt || t)); X.lt = t; const say = (k, line) => { if (P.said[k]) return; P.said[k] = 1; try { advHolo(line, 1); } catch (e) { toast(line); } };
+  if (s > D.dur) { sbSimStop(true); return; } const dt = Math.min(64, t - (X.lt || t)); X.lt = t; const say = (k, line) => { if (P.said[k]) return; P.said[k] = 1; sbSay(line); };
   const yaw = Math.atan2(X.F.x, X.F.z), side = yaw + Math.PI / 2; // the camera's azimuth is measured round the target; ph = yaw puts it in front of the boss
   /* arrival: the rift opens, it pushes through and grows to full size */
   const arr = clamp((s - 1.5) / 4, 0, 1), k = 1 - Math.pow(1 - arr, 3); X.rift.material.opacity = bell01(s, .2, 1.5, 5, 8) * .9; X.rift.scale.setScalar(4 + D.sc * 22 * clamp(s / 3, 0, 1) * (1 - clamp((s - 6) / 3, 0, 1) * .4)); X.rift.rotation.z += dt * .0006;
@@ -6137,17 +6137,17 @@ function sbAex(X, W, b, s, t, dt, say, yaw, side) { const sc = SBX.aex.sc;
   for (const [at, mv, kn] of [[8, "broadside", 3], [12.5, "missiles", 5], [17, "rail", 1], [20, "broadside", 2]]) if (s > at && !X["m" + at]) { X["m" + at] = 1; b.act(mv); setTimeout(() => { try { sbKillN(X, kn, performance.now(), mv === "rail"); } catch (e) {} }, mv === "missiles" ? 1400 : mv === "rail" ? 1500 : 500); }
   // phase 2, Warform Awakening: the transformation, 24 s, the fleet holding fire to watch
   const T0 = 24, TL = 24, ft = (s - T0) / TL; if (ft >= 0) b.drive("transform", Math.min(1, ft)); X.quiet = ft > .05 && ft < .95;
-  if (ft > 0) say("a2", "Wait. What is that? Aexion's hull is shifting..."); if (ft > .2) say("a2b", "Wait... I think it's... transforming? It IS transforming! Its whole hull is splitting apart!"); if (ft > .5) say("a3", "It's standing up. That thing is a Warform!");
+  if (ft > 0) say("a2", "Wait. What is that? Aexion's hull is shifting..."); if (ft > .23) say("a2b", "Wait... I think it's... transforming? It IS transforming! Its whole hull is splitting apart!"); if (ft > .6) say("a3", "It's standing up. That thing is a Warform!");
   // phase 3, Sovereign Warform: shield, blade (a travelling shockwave through the line), missiles, lance
   for (const [at, mv, kn, near] of [[49.5, "dodge", 0], [51.2, "blade", 7, 1], [54, "dodge", 0], [55.6, "aegis", 0], [58.6, "missiles", 6], [62.2, "dodge", 0], [63.6, "stagger", 0], [64.9, "sbreak", 0], [67.4, "stagger", 0], [68.6, "wbreak", 0], [71, "missiles", 5], [80.2, "lance", 0]]) if (s > at && !X["w" + at]) { X["w" + at] = 1; b.act(mv); if (mv === "sbreak") b.shieldGone = 1; if (mv === "wbreak") b.swordGone = 1; if (kn) setTimeout(() => { try { sbKillN(X, kn, performance.now(), near); } catch (e) {} }, 1200); }
   if (s > 50) say("a4", "Its holographic shield is soaking our fire. Wait for the blade, then strike!");
   if (s > 81.2 && s < 83.4 && b.reactor) { const o = b.reactor.getWorldPosition(X.V).clone(), d = X.F.clone(); sbBeamKill(X, o, d, 9 * sc, 190 * sc, t); X.quiet = 1; }
   // phase 4, Reactor Overdrive: everything at once; its reactor is exposed
   const od = (s - 72) / 8; if (od >= 0 && od < 1) { b.drive("overdrive", (od * 2.4) % 1); if (Math.random() < .03) sbKillN(X, 1, t); } else b.drive("overdrive", -1);
-  if (s > 64) say("a4b", "Direct hit! It's staggering... its shield is breaking!"); if (s > 68.7) say("a4c", "Its blade is gone! Keep up the pressure!"); if (s > 72) say("a5", "Reactor Overdrive! Its core is exposed. Everything we have, now!"); if (s > 79.6) say("a5b", "Its core is charging... it's going to fire! Brace yourselves!");
+  if (s > 64) say("a4b", "Direct hit! It's staggering... its shield is breaking!"); if (s > 69.6) say("a4c", "Its blade is gone! Keep up the pressure!"); if (s > 72) say("a5", "Reactor Overdrive! Its core is exposed. Everything we have, now!"); if (s > 78.2) say("a5b", "Its core is charging... it's going to fire! Brace yourselves!");
   // its fall: the weapons fail, the shield collapses, it topples back in a last discharge; the wreck stays
   if (s > 84 && !X.fall) { X.fall = s; say("a6", "Aexion is down! Its reactor has burned out. The Warform is a wreck."); }
-  if (X.fall) { const be = s - X.fall - 2; sbGlyph(W, X, be - 10.5, t); b.boomE = be; b.drive("overdrive", be < 0 ? ((s - X.fall) * 2.4) % 1 : -1); X.fleetBooms = 1; sbBlast(W, X, be, t); sbVaeCrystal(W, X, b, be - 1.2, t, 1); if (be > .2) say("a7", "Its reactor went critical! The blast is tearing across the whole map!"); }
+  if (X.fall) { const be = s - X.fall - 2; sbGlyph(W, X, be - 10.5, t); b.boomE = be; b.drive("overdrive", be < 0 ? ((s - X.fall) * 2.4) % 1 : -1); X.fleetBooms = 1; sbBlast(W, X, be, t); sbVaeCrystal(W, X, b, be - 1.2, t, 1); if (be > 2.4) say("a7", "Its reactor went critical! The blast is tearing across the whole map!"); }
   const K = s < 8 ? { y: 30, d: 620, th: .45, ph: .6 } : s < T0 ? { y: 20, d: 380, th: .4, ph: Math.PI / 2 + .3 + (s - 8) * .02, tx: b.grp.position.x, tz: b.grp.position.z } : s < T0 + TL * .5 ? { y: 15 + ft * 60, d: 260, th: .25, ph: 1.1 + (s - T0) * .05, tx: b.grp.position.x, tz: b.grp.position.z }
     : s < T0 + TL ? { y: 40, d: 330 + ft * 90, th: .18, ph: .35, tx: b.grp.position.x, tz: b.grp.position.z } : s < 84 ? { y: 50, d: 420, th: .32, ph: .6 + Math.sin(s * .08) * .5, tx: b.grp.position.x, tz: b.grp.position.z } : s < 86 ? { y: 40, d: 480, th: .3, ph: .5, tx: b.grp.position.x, tz: b.grp.position.z } : { y: 60, d: 1150, th: .55, ph: .7 };
   SBX_CAM(X, W, s, dt, K); }
@@ -6298,6 +6298,10 @@ const SBL = { vae: [null, "Vaelthar's wheel is waking. Its stabilizers are expos
 const SB_SOON = { vae: "Long-range sensors have found a celestial anomaly. Vaelthar arrives within three days.", aex: "A dreadnought-class signature is closing on our galaxy. Aexion arrives within three days." };
 const DV_SOON = "Every Assimilation Cube in the galaxy is stirring. Cube Devastation begins within three days.";
 const annOnce = (k, at, line) => { try { if (!S || !G.ready) return; S.ann = S.ann || {}; if (S.ann[k] === at) return; S.ann[k] = at; dirty(); advHolo(line, 1); } catch (e) {} }; /* v456 once per event, on this device */
+function sbSay(line) { /* v464 she finishes each line before the next; nothing is cut off or lost */ G.sbQ = G.sbQ || []; const a0 = typeof VOICE !== "undefined" && VOICE.au;
+  if (a0 && !a0.paused && !a0.ended && G.holoCur && G.holoCur !== line) { G.sbQ.push({ line, at: Date.now() }); sbQWatch(); return; } try { advHolo(line, 1); } catch (e) { try { toast(line); } catch (e2) {} } setTimeout(sbQWatch, 300); }
+function sbQWatch() { const a = typeof VOICE !== "undefined" && VOICE.au; if (!G.sbQ || !G.sbQ.length) return; if (!a || a.paused || a.ended) { const n = G.sbQ.shift(); if (n) sbSay(n.line); return; } if (a._sbq) return; a._sbq = 1;
+  const go = () => { a._sbq = 0; G.sbQ = (G.sbQ || []).filter(n => Date.now() - n.at < 25000); const n = G.sbQ.shift(); if (n) setTimeout(() => sbSay(n.line), 350); }; a.addEventListener("ended", go, { once: true }); a.addEventListener("error", go, { once: true }); }
 function sbBand() { const T = now(), b = $("#sbband"); let html = ""; if (view === "galaxy" && !G.sbSim && !sheet && !battle) { const k = sbLiveKey(T);
     if (k) { const D = SBW[k], s0 = sbStartOf(k, T), st = sbState(k, s0); html = st.hp ? `<button class="sbb" data-act="sbOpen" data-id="${k}" style="--c:${D.col}"><b>${D.ic} ${esc(D.n.toUpperCase())}</b><span>${st.hp}/100</span><i>⚔ Attack</i></button>` : ""; }
     else for (const k2 in SBW) { const nx = sbNext(k2, T); if (nx - T < 72 * SB_H) { annOnce("sb" + k2, nx, nx > SBW[k2].first + 864e5 ? (k2 === "vae" ? "Long-range sensors have found Vaelthar's signature again. It's coming back stronger, within three days." : "Aexion's signature is back on our scanners, stronger than before. It arrives within three days.") : SB_SOON[k2]); const D = SBW[k2]; html = `<button class="sbb soon" data-act="sbOpen" data-id="${k2}" style="--c:${D.col}"><b>${D.ic} ${esc(D.n.toUpperCase())}</b><span>arrives in ${ftime(nx - T)}</span></button>`; break; } } }
@@ -6306,7 +6310,7 @@ setInterval(() => { try { sbBand(); sbClaim(); } catch (e) {} }, 1000);
 /* on the galaxy map, for everyone: the boss stands past the Rim for its 36 hours, its moments played from the shared clock */
 function sbLiveTick(W, t) { const T = now(), k = sbLiveKey(T); if (!k || view !== "galaxy") { if (W.sb && W.sb.live) sbFree(W); return; }
   if (W.sb && (!W.sb.live || W.sb.key !== k)) sbFree(W); const X = W.sb || sbBuild(W, k, 1), b = X.b, D = SBX[k], s0 = sbStartOf(k, T), st = sbState(k, s0), e = (T - s0) / 1000; X.live = 1;
-  const say = (id, line) => { G.sbSaid = G.sbSaid || {}; if (G.sbSaid[id]) return; G.sbSaid[id] = 1; try { advHolo(line, 1); } catch (er) {} };
+  const say = (id, line) => { G.sbSaid = G.sbSaid || {}; if (G.sbSaid[id]) return; G.sbSaid[id] = 1; sbSay(line); };
   const arr = clamp((e - 1.5) / 4, 0, 1); X.rift.material.opacity = bell01(e, .2, 1.5, 5, 8) * .9; X.rift.scale.setScalar(4 + D.sc * 22 * clamp(e / 3, 0, 1)); X.flash.material.opacity = bell01(e, 1.2, 1.8, 2.4, 4.5); X.flash.scale.setScalar(D.sc * 60);
   const back = s0 > SBW[k].first + 864e5; if (e < 600) say(k + s0 + "a", back ? (k === "vae" ? "They're back... Vaelthar has returned, and its energy readings are even stronger than before!" : "It's back... Aexion has returned, and it's even stronger than before. All fleets, battle stations!") : k === "vae" ? "WARNING: a celestial anomaly is tearing open beyond the Rim. Vaelthar has arrived!" : "WARNING: a dreadnought-class signature is dropping out of warp. Aexion has arrived!");
   let scl = D.sc * (back ? 1.08 : 1) * Math.max(.001, 1 - Math.pow(1 - arr, 3)); const dead = st.dead && st.dead < T, df = dead ? (T - st.dead) / 1000 : 0;
