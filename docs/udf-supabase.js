@@ -200,6 +200,8 @@
     return run(sb.rpc("doc_acquire", { p: this.path, holder: holder, ttl: ttl, t: Date.now() })).then(function (r) { return r || { acquired: false }; }, function () { return { acquired: false }; });
   };
   var DB = { doc: function (p) { return new Doc(p); }, collection: function (p) { return new Query(p); } };
+  /* v484 call a server function (Supabase Edge Functions) as the signed-in player; resolves to its JSON or rejects */
+  DB.fn = function (name, body) { return loadSdk().then(function () { return sb.functions.invoke(name, { body: body }); }).then(function (r) { if (r.error) throw r.error; return r.data; }); };
 
   /* ---------- sign-in screen ---------- */
   var css = "#udfAuth,#udfOld{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(120% 70% at 50% 0%,#0f2230 0%,#05090f 70%);font-family:'Barlow Semi Condensed',Arial,sans-serif;color:#d5e4ec}" +
