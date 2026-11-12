@@ -1,10 +1,12 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-12 (America/Phoenix). Current game version: **v498** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v303**.
+Last updated: 2026-11-12 (America/Phoenix). Current game version: **v499** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v304**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
 ## Pending work (as of 2026-11-07): start here in a new session
+
+00000000000000000000000000. **v499 — feedback-triage fixes released** (tools/patches/p468_fbkey.py from branch fb-20261112-0320, tools/patches/p_fb20261112_bgcrumb.py from fb-20261112-0621; applied in that order to v498, then GAME_V 499). (1) bgDiet's background crumb reopened the flight log right after the hide handler closed it, so every normal iPhone background trip was reported as "Closed unexpectedly after: background: N drawing buffers released"; it now closes the session again, and a dead session is queued once (udf.crashDied). Harness check: hide → open false (was true), return → open true. (2) key events with no e.key (Android IME/autofill) threw toLowerCase errors; now ignored (harness: 4 errors before, 0 after). fb-20261112-0020 is superseded by 0621; fb-20261110-0924 was already covered by v402 (window.__udfLeaving). The iPhone memory kills after ~4-12 stress-test replays in a row remain open.
 
 00000000000000000000000000. **v498 — the Pentarch bigger than the Elementals** (tools/patches/p498_pentarch.py). Owner: all 5 Elementals should be smaller than the Pentarch. Galaxy map: WB.epx.sc .72 -> 1.2, each Elemental 1.3 -> 1.0 (measured side by side at map LOD: the Pentarch about 1.7x an Elemental). Battle reports: the Pentarch already fills its view (a closer camera made it overflow, so its camera is unchanged); WB_VIEW.elemental camera 62 -> 86 so each Elemental reads smaller.
 

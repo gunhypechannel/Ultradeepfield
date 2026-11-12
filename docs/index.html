@@ -4585,7 +4585,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 498;
+const GAME_V = 499;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9510,7 +9510,7 @@ setInterval(() => { try { const C = G.lastCrash; if (!G.lastCrashFresh || G.cras
 } catch (e) {} }, 5000);
 let CRUMBS = (() => { try { return JSON.parse(localStorage.getItem(CRUMB_K) || "null"); } catch (e) { return null; } })();
 G.lastCrash = (() => { try { if (CRUMBS && CRUMBS.open && CRUMBS.ev && CRUMBS.ev.length) { localStorage.setItem(CRUMB_K + ".last", JSON.stringify(CRUMBS)); G.lastCrashFresh = 1; G.crashBoot = 1; return CRUMBS; } return JSON.parse(localStorage.getItem(CRUMB_K + ".last") || "null"); } catch (e) { return null; } })();
-CRUMBS = { open: true, t0: Date.now(), ev: [] };
+CRUMBS = { open: true, t0: Date.now(), ev: [] }; try { localStorage.setItem(CRUMB_K, JSON.stringify(CRUMBS)); } catch (e) {} /* fb-20261112: the dead session is reported once */
 /* v373 health reports: a queue kept on the device (udf.hq) and sent one by one whenever the game is signed in and online */
 const HQ_K = "udf.hq", PF_K = "udf.pf", hqDev = () => navigator.userAgent.slice(0, 200);
 function hqPush(r) { try { const q = JSON.parse(localStorage.getItem(HQ_K) || "[]"); r.id = r.id || r.kind + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); q.push(r); localStorage.setItem(HQ_K, JSON.stringify(q.slice(-14))); } catch (e) {} }
@@ -9524,7 +9524,8 @@ document.addEventListener("visibilitychange", () => { try { if (document.hidden 
 addEventListener("pagehide", e => { try { if (!e.persisted) { window.__udfLeaving = 1; localStorage.removeItem("udf.bg"); } } catch (er) {} }); /* v402: reloads fire pagehide before the hidden event */
 addEventListener("pageshow", () => { window.__udfLeaving = 0; });
 if (G.lastCrashFresh && G.lastCrash && G.lastCrash.ev) { const C = G.lastCrash, b = C.beat || {}, last = C.ev[C.ev.length - 1]; G.crashSent = 1; G.lastCrashFresh = 0; /* queued: the old one-shot sender stands down */
-  hqPush({ kind: "crash", status: "new", at: Date.now(), died: b.t || (last && last[0]) || 0, v: b.v || 0, now: typeof GAME_V !== "undefined" ? GAME_V : 0, text: `Closed unexpectedly${last ? " after: " + last[1] : ""}`.slice(0, 300),
+  const dk = String(b.t || (last && last[0]) || 0); let dup = 0; try { dup = localStorage.getItem("udf.crashDied") === dk; localStorage.setItem("udf.crashDied", dk); } catch (e) {} /* fb-20261112 */
+  if (!dup) hqPush({ kind: "crash", status: "new", at: Date.now(), died: b.t || (last && last[0]) || 0, v: b.v || 0, now: typeof GAME_V !== "undefined" ? GAME_V : 0, text: `Closed unexpectedly${last ? " after: " + last[1] : ""}`.slice(0, 300),
     beat: JSON.stringify(b).slice(0, 1500), log: C.ev.map(([tt, m]) => new Date(tt).toISOString().slice(11, 19) + " " + m).join("\n").slice(0, 4000), up: Math.round(((b.t || (last && last[0]) || C.t0) - (C.t0 || 0)) / 1000), device: hqDev(), w: innerWidth, h: innerHeight }); G.lastCrashToast = 1; }
 /* v373 frame-rate tracker: every display frame is timed and counted per screen (base, galaxy, battle, with a panel open or not);
    slow frames (under 30 fps), janky ones (under 20 fps) and freezes (over 0.7 s) are counted. The session's summary is sent when the
@@ -9636,7 +9637,7 @@ function bgDiet(on) { try {
     try { wbArtFree(); } catch (e) {}
     if (MOBILE && G3) { try { const X = G3.wbWk; if (X) { for (const S of X.sets) wreckDispose(S.grp); X.sets = []; X.at = 0; } } catch (e) {} try { if (G3.dv && !G.dvSim && !dvNow(now())) dvFree(G3); } catch (e) {} } /* v446 */
     if (MOBILE) { try { worldDrop("stu", "background"); } catch (e) {} if (!battle && G.stuCache) for (const k in G.stuCache) if (/\|side$/.test(k)) delete G.stuCache[k]; }
-    try { crumb("background: " + n + " drawing buffers released"); } catch (e) {} }
+    try { crumb("background: " + n + " drawing buffers released"); CRUMBS.open = false; crumbSave(); } catch (e) {} } /* fb-20261112: the crumb must not reopen a session that just went to the background */
   else if (G.bgDiet) { G.bgDiet = 0; for (const W of [G3, C3]) if (W) W.size = [0, 0]; if (battle) try { gpuNap(true); } catch (e) {} try { startAnim(); } catch (e) {} }
 } catch (e) {} }
 document.addEventListener("visibilitychange", () => bgDiet(document.hidden)); addEventListener("pagehide", () => bgDiet(true)); addEventListener("pageshow", () => { if (!document.hidden) bgDiet(false); });
@@ -20066,7 +20067,7 @@ const KEY_HOLD = new Set(["up", "down", "left", "right", "rotL", "rotR", "tiltUp
 const keyName = k => k === " " ? "Space" : k.length === 1 ? k.toUpperCase() : k;
 const held = new Set();
 addEventListener("keydown", e => {
-  const tg = e.target, typing = tg && (tg.tagName === "INPUT" || tg.tagName === "TEXTAREA" || tg.isContentEditable); if (typing || e.ctrlKey || e.metaKey || e.altKey) return; const k = e.key.toLowerCase();
+  const tg = e.target, typing = tg && (tg.tagName === "INPUT" || tg.tagName === "TEXTAREA" || tg.isContentEditable); if (typing || e.ctrlKey || e.metaKey || e.altKey || !e.key) return; /* fb: no key from IME/autofill */ const k = e.key.toLowerCase();
   if (G.rebind) { if (k !== "escape") { for (const a in KEYS) if (KEYS[a] === k) KEYS[a] = KEYS[G.rebind]; KEYS[G.rebind] = k; try { localStorage.setItem("void.keys", JSON.stringify(KEYS)); } catch (e2) {} } G.rebind = null; e.preventDefault(); if (sheet) renderSheet(); return; }
   if (battle || $("#authw")) return; const a = Object.keys(KEYS).find(x => KEYS[x] === k) || KEY_ALT[k]; if (!a) return;
   if (KEY_HOLD.has(a)) { if (view === "galaxy" && !sheet) { held.add(a); e.preventDefault(); } return; } if (e.repeat) return; e.preventDefault();
@@ -20075,7 +20076,7 @@ addEventListener("keydown", e => {
   else if (a === "home") { const h = homePlanet(); if (h) { if (view !== "galaxy") { view = "galaxy"; render(); } setTimeout(() => ACT.gotoMine({ id: h.id }), 50); } }
   else if (a === "stop" && G3) { if (G3.cam.siege) siegeEnd(); else if (G3.cam.cine) cineEnd(); ACT.followStop(); }
 });
-addEventListener("keyup", e => { const k = e.key.toLowerCase(), a = Object.keys(KEYS).find(x => KEYS[x] === k) || KEY_ALT[k]; if (a) held.delete(a); });
+addEventListener("keyup", e => { const k = (e.key || "").toLowerCase(), a = Object.keys(KEYS).find(x => KEYS[x] === k) || KEY_ALT[k]; if (a) held.delete(a); });
 addEventListener("blur", () => held.clear());
 /* held keys move the camera smoothly every frame (speed scaled by zoom and frame time) */
 function keyCam(W) { if (!held.size || view !== "galaxy" || sheet || W.cam.cine || W.cam.live) { if (sheet || view !== "galaxy") held.clear(); return; } const c = W.cam, k = W.dtk || 1, sp = 14 * k;
