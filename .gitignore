@@ -1,2 +1,15 @@
 __pycache__/
 tools/online_test/seed.json
+# tools/online_test: mk.py's build (the served game, symlinks into docs/, seed.js with player data) and test output
+tools/online_test/*
+!tools/online_test/*.py
+!tools/online_test/*.sh
+!tools/online_test/fakesb.js
+!tools/online_test/fakesb2.js
+!tools/online_test/fakesrv.js
+!tools/online_test/mp.js
+!tools/online_test/mpcas.js
+!tools/online_test/obot.js
+!tools/online_test/cbchk.js
+!tools/online_test/mailall.js
+!tools/online_test/voicechk.js
