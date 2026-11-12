@@ -8671,7 +8671,7 @@ function bgDiet(on) { try {
     try { wbArtFree(); } catch (e) {}
     if (MOBILE && G3) { try { const X = G3.wbWk; if (X) { for (const S of X.sets) wreckDispose(S.grp); X.sets = []; X.at = 0; } } catch (e) {} try { if (G3.dv && !G.dvSim && !dvNow(now())) dvFree(G3); } catch (e) {} } /* v446 */
     if (MOBILE) { try { worldDrop("stu", "background"); } catch (e) {} if (!battle && G.stuCache) for (const k in G.stuCache) if (/\|side$/.test(k)) delete G.stuCache[k]; }
-    try { crumb("background: " + n + " drawing buffers released"); } catch (e) {} }
+    try { crumb("background: " + n + " drawing buffers released"); CRUMBS.open = false; crumbSave(); } catch (e) {} } /* fb-20261112: crumb() reopened the log, so every background trip read as a crash */
   else if (G.bgDiet) { G.bgDiet = 0; for (const W of [G3, C3]) if (W) W.size = [0, 0]; if (battle) try { gpuNap(true); } catch (e) {} try { startAnim(); } catch (e) {} }
 } catch (e) {} }
 document.addEventListener("visibilitychange", () => bgDiet(document.hidden)); addEventListener("pagehide", () => bgDiet(true)); addEventListener("pageshow", () => { if (!document.hidden) bgDiet(false); });
