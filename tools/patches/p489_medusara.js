@@ -7,36 +7,38 @@
      beams), shatter (Shattered Visage: the face cracks wide, gold light pours out, the third eye opens), die (she turns to grey stone
      and crumbles away). snk[i] = 0 severs a serpent. ---------- */
   function medusara() { const grp = new TH.Group(), shk = new TH.Group(), body = new TH.Group(), hull = new TH.Group(); grp.add(shk); shk.add(body); body.add(hull);
-    const LO = LOD === 1, RC = [1, .45, .35], S = scr(), RED = 0xff3a2a, GOLD = 0xffc85a;
-    const MS = hullMat("med", { rows: 1, cols: 1, pal: ["#3a3542"], slits: 0, sg: "#ff9a20", veins: 70, vc: "#d8a040", metal: .15, rough: .88, rc: [.75, .45, 1], ei: 2.4, rep: [3, 2], relief: 3.6, rust: 0 }); MS.envMapIntensity = .45; MS.normalScale.set(2.6, 2.6);
+    const LO = LOD === 1, RC = [1, .45, .35], S = scr(), RED = 0xff3a2a, GOLD = 0xffc85a, out0 = {};
+    const MS = hullMat("med", { rows: 1, cols: 1, pal: ["#302c38"], slits: 0, sg: "#ff8a10", veins: 110, vc: "#9a6a28", metal: .15, rough: .9, rc: [.75, .45, 1], ei: 1.5, rep: [1, 1], relief: 3.6, n: 1024, rust: 0 }); MS.envMapIntensity = .45; MS.normalScale.set(2.6, 2.6);
     const MSd = hullMat("medd", { rows: 1, cols: 1, pal: ["#2a2632"], slits: 0, sg: "#ffa030", veins: 30, vc: "#d89a40", metal: .2, rough: .85, rc: [.75, .45, 1], ei: 2.6, rep: [2, 2], relief: 3 });
     const MG = hullMat("medg", { rows: 3, pal: ["#c8901e", "#e6b23c", "#a87418", "#f5c84a"], bronze: 0, slits: .2, sc: "#fff4d0", sg: "#ff6a3a", metal: 1, rough: .14, rc: [1, .7, .4], ei: 1.8, rep: [3, 1] }); MG.envMapIntensity = 2.2;
     const scT = paint("med_scale", 256, (x, N) => { x.fillStyle = "#3a2c1c"; x.fillRect(0, 0, N, N); for (let r = 0; r < 12; r++) for (let c = 0; c < 8; c++) { const cx = c * N / 8 + (r % 2) * N / 16, cy = r * N / 12; const g = x.createRadialGradient(cx, cy - 4, 1, cx, cy, N / 12); g.addColorStop(0, "#f4cf72"); g.addColorStop(.6, "#b07a26"); g.addColorStop(1, "#2a1c0e"); x.fillStyle = g; x.beginPath(); x.ellipse(cx, cy, N / 15, N / 20, 0, 0, Math.PI); x.fill(); } });
     const MSn = new TH.MeshStandardMaterial({ map: scT, metalness: .95, roughness: .25, envMapIntensity: 2.0, emissive: 0x331006, emissiveIntensity: .4 }); MSn.userData.P = {}; rimOn(MSn, 1, [1, .6, .3]);
     const MSb = new TH.MeshStandardMaterial({ color: 0x2a1c30, metalness: .7, roughness: .35, envMapIntensity: 1.4 }); MSb.userData.P = {}; rimOn(MSb, .8, [.7, .3, 1]);
-    const REDM = new TH.MeshBasicMaterial({ color: 0xff6040, toneMapped: false, transparent: true }), WHT = new TH.MeshBasicMaterial({ color: 0xfff0e0, toneMapped: false });
+    const REDM = new TH.MeshBasicMaterial({ color: 0xff1808, toneMapped: false, transparent: true }), WHT = new TH.MeshBasicMaterial({ color: 0xfff0e0, toneMapped: false });
     const put = (par, m, p, r, s) => { m.position.set(...p); if (r) m.rotation.set(...r); if (s != null) { if (typeof s === "number") m.scale.setScalar(s); else m.scale.set(...s); } par.add(m); return m; };
     const sph = (mat, seg = 24) => new TH.Mesh(new TH.SphereGeometry(1, LO ? Math.max(10, seg / 2) : seg, LO ? 8 : Math.round(seg * .7)), mat);
-    /* ---- the face: a great stone head looking down +z; forehead, heavy lids, a straight nose, full lips, high cheeks, a strong chin ---- */
-    const head = put(hull, new TH.Group(), [0, 14, 0]);
-    put(head, sph(MS, 40), [0, 0, 0], null, [11.5, 12.5, 11]);
-    put(head, sph(MS, 30), [0, 1.2, 4.2], null, [9.6, 9.8, 7.6]); /* the face plane */
-    for (const sx of [-1, 1]) { put(head, sph(MS), [sx * 4.4, -1.4, 8.4], null, [3.0, 2.6, 2.2]); /* cheek */
-      put(head, sph(MS), [sx * 3.4, 3.3, 10.6], [0, 0, sx * -.15], [3.0, .9, 1.2]); /* brow */
-      put(head, sph(MSd), [sx * 3.3, 1.7, 10.85], [0, 0, sx * .06], [2.4, 1.0, .6]); /* the eye socket */
-      put(head, sph(MS), [sx * 3.3, 2.3, 11.15], [.3, 0, sx * .06], [2.5, .55, .7]); /* heavy upper lid */ }
-    { const ng = new TH.CylinderGeometry(.7, 1.7, 5.4, 4); put(head, new TH.Mesh(ng, MS), [0, -.6, 11.5], [-.28, Math.PI / 4, 0], [1, 1, .75]); put(head, sph(MS), [0, -3.0, 11.6], null, [1.6, .9, 1.0]); }
-    put(head, sph(MS), [0, -5.3, 10.6], null, [2.7, .75, 1.1]); put(head, sph(MS), [0, -6.5, 10.4], null, [2.3, .85, 1.1]); /* lips */
-    put(head, sph(MS), [0, -1.2, 10.2], null, [7.2, 5.2, 1.6]); /* the mid-face, smoothing cheeks into the nose */
-    const lipL = put(head, new TH.Mesh(new TH.BoxGeometry(4.6, .14, .3), new TH.MeshBasicMaterial({ color: 0x2a0a10 })), [0, -5.85, 11.55]);
-    put(head, sph(MS), [0, -9.0, 8.6], null, [3.4, 2.4, 2.8]); /* chin */
-    // the eyes: red-hot irises in dark sockets
-    const eyes = [-1, 1].map(sx => { const g = put(head, new TH.Group(), [sx * 3.3, 1.65, 11.25]); put(g, sph(REDM, 16), [0, 0, 0], null, [1.5, .55, .4]); const c = put(g, sph(WHT, 12), [0, 0, .25], null, [.45, .3, .2]);
-      const s = sprite(9, "rgba(255,80,50,1)", "med_eye"); s.position.z = .8; g.add(s); return { g, s, c }; });
+    /* ---- the face: one sculpted stone head (a dense sphere displaced into a woman's face, after the owner's art): a heavy brow, deep
+       sockets with full lidded eyes, high cheekbones over hollow cheeks, a long straight nose with flared wings and nostrils, a
+       philtrum, full parted lips, a rounded chin; darker in the hollows; looking down +z ---- */
+    const head = put(hull, new TH.Group(), [0, 14, 0]), HS = [11.5, 12.5, 11];
+    const faceH = (u, v) => { const g = (cu, cv, su, sv) => Math.exp(-(((u - cu) / su) ** 2) - (((v - cv) / sv) ** 2)); let h = 0;
+      for (const s of [-1, 1]) { h += .055 * g(s * .31, .31, .25, .075) - .085 * g(s * .32, .14, .19, .115) + .05 * g(s * .32, .125, .125, .06) - .016 * g(s * .32, .195, .16, .02) + .006 * g(s * .32, .09, .12, .012)
+        + .05 * g(s * .45, -.05, .16, .12) - .03 * g(s * .37, -.36, .13, .12) - .022 * g(s * .7, .33, .14, .2) + .045 * g(s * .105, -.245, .06, .05) - .04 * g(s * .062, -.285, .026, .02) - .022 * g(s * .23, -.495, .04, .04) - .012 * g(s * .2, -.15, .03, .2); }
+      h += .035 * g(0, .27, .1, .1) + .055 * g(0, .03, .075, .25) + .1 * g(0, -.205, .095, .085) + .022 * g(0, -.37, .065, .05) - .006 * g(0, -.37, .015, .05) + .055 * g(0, -.44, .19, .042) - .04 * g(0, -.488, .23, .011)
+        + .06 * g(0, -.545, .16, .048) - .025 * g(0, -.64, .15, .03) + .08 * g(0, -.79, .17, .12) + .02 * g(0, .62, .5, .3); return h; };
+    const FX = 1.45, FY = 1.3, FA = 1.55, fp = (u, v, out = 0) => { const lo = u * FX, la = v * FY, h = faceH(u, v) * FA + out; return V(Math.sin(lo) * Math.cos(la) * (1 + h) * HS[0], Math.sin(la) * (1 + h) * HS[1], Math.cos(lo) * Math.cos(la) * (1 + h) * HS[2]); };
+    { const hg = new TH.SphereGeometry(1, LO ? 110 : 220, LO ? 84 : 170), P = hg.attributes.position, C = new Float32Array(P.count * 3);
+      for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i), lo = Math.atan2(x, z), la = Math.asin(Math.max(-1, Math.min(1, y))), u = lo / FX, v = la / FY, d = Math.hypot(u, v * .85), m = d < .9 ? 1 : Math.max(0, 1 - (d - .9) / .25), h = m > 0 ? faceH(u, v) * FA * m * m * (3 - 2 * m) : 0;
+        P.setXYZ(i, x * (1 + h) * HS[0], y * (1 + h) * HS[1], z * (1 + h) * HS[2]); const k = Math.max(.28, 1 - Math.max(0, -h) * 11); C[i * 3] = k; C[i * 3 + 1] = k * .97; C[i * 3 + 2] = k * 1.02; }
+      hg.setAttribute("color", new TH.BufferAttribute(C, 3)); hg.computeVertexNormals(); const MF = MS.clone(); MF.vertexColors = true; MF.userData.P = MS.userData.P; rimOn(MF, .45, [.8, .5, .9]); const fm = new TH.Mesh(hg, MF); fm.userData.flat = 0; head.add(fm); out0.MF = MF; }
+    const lipL = put(head, new TH.Mesh(new TH.BoxGeometry(.1, .1, .1), new TH.MeshBasicMaterial({ color: 0x2a0a10 })), fp(0, -.488, -.01).toArray()); lipL.visible = false;
+    // the eyes: red-hot irises glowing in the lidded eyes
+    const eyes = [-1, 1].map(sx => { const p = fp(sx * .32, .125, .004), g = put(head, new TH.Group(), p.toArray()); g.lookAt(p.clone().multiplyScalar(2)); put(g, sph(REDM, 16), [0, 0, 0], [0, 0, sx * -.14], [2.1, .7, .3]); const c = put(g, sph(WHT, 12), [0, 0, .16], null, [.6, .38, .16]);
+      const s = sprite(11, "rgba(255,60,40,1)", "med_eye"); s.position.z = .8; g.add(s); return { g, s, c }; });
     // the diadem: a gold band over the brow, a spiked crest, a red gem (the third eye, which opens in the Shattered Visage)
-    put(head, new TH.Mesh(new TH.TorusGeometry(10.6, .55, 6, LO ? 40 : 64, Math.PI * 1.1), MG), [0, 5.6, -.6], [Math.PI / 2 - .32, 0, Math.PI * -.05 - Math.PI * .5]);
-    for (let i = 0; i < 9; i++) { const a = (i - 4) * .2; put(head, new TH.Mesh(new TH.ConeGeometry(.55, 3.4 - Math.abs(i - 4) * .45, 4), MG), [Math.sin(a) * 10.4, 7.6 + Math.cos(a) * .4 - Math.abs(i - 4) * .3, Math.cos(a) * 9.3 - 1.4], [-.35, 0, -a * .9]); }
-    const gemG = put(head, new TH.Group(), [0, 6.4, 11.0]); put(gemG, new TH.Mesh(new TH.OctahedronGeometry(1.1, 0), new TH.MeshBasicMaterial({ color: 0xff3a50, toneMapped: false })), [0, 0, 0], null, [1, 1.35, .5]); put(gemG, new TH.Mesh(new TH.TorusGeometry(1.5, .25, 5, 18), MG), [0, 0, -.1]);
+    { const dp = []; for (let k = 0; k <= 24; k++) dp.push(fp(-1.15 + k / 24 * 2.3, .56 - Math.abs(-1.15 + k / 24 * 2.3) * .06, .025)); put(head, new TH.Mesh(new TH.TubeGeometry(new TH.CatmullRomCurve3(dp), 48, .5, 6, false), MG), [0, 0, 0]);
+      for (let k = 0; k < 9; k++) { const u = (k - 4) * .2, p = fp(u, .6 - Math.abs(u) * .06, .03), n = p.clone().normalize(), c = put(head, new TH.Mesh(new TH.ConeGeometry(.5, 3.2 - Math.abs(k - 4) * .45, 4), MG), p.toArray()); c.quaternion.setFromUnitVectors(V(0, 1, 0), n.lerp(V(0, 1, 0), .55).normalize()); } }
+    const gemG = put(head, new TH.Group(), fp(0, .5, .035).toArray()); put(gemG, new TH.Mesh(new TH.OctahedronGeometry(1.1, 0), new TH.MeshBasicMaterial({ color: 0xff3a50, toneMapped: false })), [0, 0, 0], null, [1, 1.35, .5]); put(gemG, new TH.Mesh(new TH.TorusGeometry(1.5, .25, 5, 18), MG), [0, 0, -.1]);
     const gemS = sprite(7, "rgba(255,70,90,1)", "med_gem"); gemS.position.z = .8; gemG.add(gemS);
     // the cracks of the Shattered Visage: glowing gold seams that widen
     const crG = new TH.BufferGeometry(), crP = []; { for (let k = 0; k < 9; k++) { let a = rnd() * TAU, b = (rnd() - .3) * 1.4, p = [Math.cos(a) * Math.cos(b), Math.sin(b), Math.sin(a) * Math.cos(b)]; for (let j = 0; j < 7; j++) { const q = [p[0] + (rnd() - .5) * .25, p[1] + (rnd() - .5) * .25, p[2] + (rnd() - .5) * .25], l = Math.hypot(...q); crP.push(p[0] * 11.7, p[1] * 12.7, p[2] * 11.2 + (p[2] > 0 ? 1.2 : 0), q[0] / l * 11.7, q[1] / l * 12.7, q[2] / l * 11.2 + (q[2] / l > 0 ? 1.2 : 0)); p = q.map(v => v / l); } } }
@@ -75,11 +77,11 @@
       const fg = f("gaze", t), fl = f("lunge", t), fs = f("storm", t), fr = f("ring", t), fh = f("hit", t), live = 1 - ss(.15, .5, die);
       const eyeO = ss(.35, .55, aw) * live, coil = ss(.4, .9, aw), chg = ch < 0 ? 0 : ss(0, .7, ch) * (1 - ss(.94, 1, ch)), fire = Math.max(bell(fg, .3, .38, .78, .92), ch < 0 ? 0 : bell(ch, .72, .76, .92, .98));
       // she breathes; the face tilts to her prey
-      head.rotation.set(Math.sin(T * .3) * .03 - chg * .08, Math.sin(T * .21) * .07, Math.sin(T * .17) * .02); body.position.y = Math.sin(T * .5) * .5 - ss(.5, 1, die) * 4;
-      MS.emissiveIntensity = MSe * (.35 + .65 * aw) * live * (1 + sh * 1.2 + chg * .5); MG.emissiveIntensity = MGe * (.6 + .4 * aw) * live; MS.color.copy(white).lerp(gray, ss(.1, .4, die));
+      head.rotation.set(-.12 + Math.sin(T * .3) * .03 - chg * .08, Math.sin(T * .21) * .07, Math.sin(T * .17) * .02); body.position.y = Math.sin(T * .5) * .5 - ss(.5, 1, die) * 4;
+      MS.emissiveIntensity = MSe * (.35 + .65 * aw) * live * (1 + sh * 1.2 + chg * .5); MG.emissiveIntensity = MGe * (.6 + .4 * aw) * live; MS.color.copy(white).lerp(gray, ss(.1, .4, die)); if (out0.MF) { out0.MF.color.copy(MS.color); out0.MF.emissiveIntensity = MS.emissiveIntensity; }
       eyes.forEach(E => { E.g.children[0].material.opacity = eyeO; E.c.visible = eyeO > .05; E.s.material.opacity = Math.min(1, eyeO * (.6 + .2 * Math.sin(T * 3) + chg * .3 + fire * .3)); E.s.scale.setScalar(9 * (1 + chg * .6 + fire * .5) * (eyeO > 0 ? 1 : 0)); });
       gemS.material.opacity = (.5 + chg * .5 + sh * .6) * live * aw; gemS.scale.setScalar(7 * (1 + sh * 1.6 + chg * .6)); gemG.scale.setScalar(1 + sh * .5);
-      cracks.material.opacity = Math.max(sh * (.7 + .3 * Math.sin(T * 5)), bell(die, .05, .2, .5, .7)); shine.material.opacity = sh * .55 * live; lipL.scale.y = 1 + chg * 6 + fire * 8;
+      cracks.material.opacity = Math.max(sh * (.7 + .3 * Math.sin(T * 5)), bell(die, .05, .2, .5, .7)); shine.material.opacity = sh * .55 * live; 
       storm.material.uniforms.uK.value = (.5 + .5 * aw) * live * (1 + bell(fs, 0, .2, .7, 1) * 1.5 + chg * .4); stormS.material.opacity = (.3 + .2 * Math.sin(T)) * aw * live * (1 + bell(fs, 0, .2, .7, 1)); bt(t, (1 + bell(fs, .1, .2, .8, .95) * 6 + chg * 3) * live * aw);
       // the serpents: sway, rear while she charges, strike in the lunge; severed ones are gone
       snakes.forEach((Sn, i) => { const cut = out.snk[i] ? 0 : 1; Sn.cut += (cut - Sn.cut) * .08; Sn.g.visible = Sn.cut < .98 && live > .02;
