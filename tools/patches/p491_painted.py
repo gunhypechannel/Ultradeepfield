@@ -71,3 +71,7 @@ a = 'root.BOSS3D = { init(T) { TH = T; },'
 assert s.count(a) == 1
 s = s.replace(a, 'root.BOSS3D = { init(T) { TH = T; if (!ARL.medusara) setTimeout(() => { try { artLoad("khezaroth", () => {}); artLoad("medusara", () => {}); } catch (e) {} }, 0); }, artLoad,')
 open(P, 'w', encoding='utf-8').write(s)
+s = open(P, encoding='utf-8').read()
+for a, b in [('khezaroth: [0, [-24, 20, 96], [0, 13, 4]]', 'khezaroth: [0, [-24, 19, 112], [0, 16, 4]]'), ('medusara: [0, [-20, 22, 104], [0, 16, 0]]', 'medusara: [0, [-20, 20, 112], [0, 17, 0]]')]:
+    assert s.count(a) == 1, a; s = s.replace(a, b)
+open(P, 'w', encoding='utf-8').write(s)
