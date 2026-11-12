@@ -84,3 +84,7 @@ s = open(P, encoding='utf-8').read()
 a = 'transparent: true, alphaTest: .05, side: TH.DoubleSide, toneMapped: false })'
 assert s.count(a) == 1; s = s.replace(a, 'transparent: true, alphaTest: .01, side: TH.DoubleSide, toneMapped: false })')
 open(P, 'w', encoding='utf-8').write(s)
+s = open(P, encoding='utf-8').read()
+for a in ['BOSS3D.init(TH); BOSS3D.lod = 1; const b = BOSS3D.prep(BOSS3D[D.m3]', 'BOSS3D.init(TH); BOSS3D.lod = MOBILE ? 1 : 0; X.b = BOSS3D.prep(BOSS3D[D.m3]()']:
+    assert s.count(a) == 1, a; s = s.replace(a, a.replace('BOSS3D.init(TH);', 'BOSS3D.init(TH); BOSS3D.paint = 0;'))
+open(P, 'w', encoding='utf-8').write(s)
