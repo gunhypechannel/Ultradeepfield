@@ -3351,7 +3351,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       x.restore(); x.save(); x.rotate((i + .5) / n * TAU); x.beginPath(); x.arc(0, -N * .4375, s * .18, 0, TAU); x.fill(); x.restore(); } }, false);
   function medusara() { const grp = new TH.Group(), shk = new TH.Group(), body = new TH.Group(), hull = new TH.Group(); grp.add(shk); shk.add(body); body.add(hull);
     const LO = LOD === 1, RC = [1, .45, .35], S = scr(), RED = 0xff3a2a, GOLD = 0xffc85a, out0 = {};
-    const MS = hullMat("med", { rows: 1, cols: 1, pal: ["#26222c"], slits: 0, sg: "#ff2a6a", veins: 110, vc: "#a07830", metal: .15, rough: .9, rc: [.75, .45, 1], ei: 1.5, rep: [1, 1], relief: 3.6, n: 1024, rust: 0 }); MS.envMapIntensity = .45; MS.normalScale.set(2.6, 2.6);
+    const MS = hullMat("med3", { rows: 1, cols: 1, pal: ["#57535e"], slits: 0, sg: "#ffc860", veins: 48, vc: "#ffd890", metal: .12, rough: .7, rc: [1, .8, .55], ei: 2.6, rep: [1, 1], relief: 1.1, n: 1024, rust: 0 }); MS.envMapIntensity = .35; MS.normalScale.set(1, 1); // v494 petrified starstone
     const MSd = hullMat("medd", { rows: 1, cols: 1, pal: ["#2a2632"], slits: 0, sg: "#ffa030", veins: 30, vc: "#d89a40", metal: .2, rough: .85, rc: [.75, .45, 1], ei: 2.6, rep: [2, 2], relief: 3 });
     const MG = hullMat("medg", { rows: 3, pal: ["#c8901e", "#e6b23c", "#a87418", "#f5c84a"], bronze: 0, slits: .2, sc: "#fff4d0", sg: "#ff6a3a", metal: 1, rough: .14, rc: [1, .7, .4], ei: 1.8, rep: [3, 1] }); MG.envMapIntensity = 2.2;
     const scT = paint("med_scale", 256, (x, N) => { x.fillStyle = "#3a2c1c"; x.fillRect(0, 0, N, N); for (let r = 0; r < 12; r++) for (let c = 0; c < 8; c++) { const cx = c * N / 8 + (r % 2) * N / 16, cy = r * N / 12; const g = x.createRadialGradient(cx, cy - 4, 1, cx, cy, N / 12); g.addColorStop(0, "#f4cf72"); g.addColorStop(.6, "#b07a26"); g.addColorStop(1, "#2a1c0e"); x.fillStyle = g; x.beginPath(); x.ellipse(cx, cy, N / 15, N / 20, 0, 0, Math.PI); x.fill(); } });
@@ -3373,7 +3373,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
     { const hg = new TH.SphereGeometry(1, LO ? 110 : 220, LO ? 84 : 170), P = hg.attributes.position, C = new Float32Array(P.count * 3);
       for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i), lo = Math.atan2(x, z), la = Math.asin(Math.max(-1, Math.min(1, y))), u = lo / FX, v = la / FY, d = Math.hypot(u, v * .85), m = d < .9 ? 1 : Math.max(0, 1 - (d - .9) / .25), h = m > 0 ? faceH(u, v) * FA * m * m * (3 - 2 * m) : 0;
         P.setXYZ(i, x * (1 + h) * HS[0], y * (1 + h) * HS[1], z * (1 + h) * HS[2]); const k = Math.max(.28, 1 - Math.max(0, -h) * 11); C[i * 3] = k; C[i * 3 + 1] = k * .97; C[i * 3 + 2] = k * 1.02; }
-      hg.setAttribute("color", new TH.BufferAttribute(C, 3)); hg.computeVertexNormals(); const MF = MS.clone(); MF.vertexColors = true; MF.userData.P = MS.userData.P; rimOn(MF, .45, [.8, .5, .9]); const fm = new TH.Mesh(hg, MF); fm.userData.flat = 0; head.add(fm); out0.MF = MF; }
+      hg.setAttribute("color", new TH.BufferAttribute(C, 3)); hg.computeVertexNormals(); const MF = MS.clone(); MF.vertexColors = true; MF.userData.P = MS.userData.P; rimOn(MF, .45, [.8, .5, .9]); const fm = new TH.Mesh(hg, MF); fm.userData.flat = 0; head.add(fm); out0.MF = MF; out0.hg = hg; }
     const lipL = put(head, new TH.Mesh(new TH.BoxGeometry(.1, .1, .1), new TH.MeshBasicMaterial({ color: 0x2a0a10 })), fp(0, -.488, -.01).toArray()); lipL.visible = false;
     // the eyes: red-hot irises glowing in the lidded eyes
     const eyes = [-1, 1].map(sx => { const p = fp(sx * .32, .125, .004), g = put(head, new TH.Group(), p.toArray()); g.lookAt(p.clone().multiplyScalar(2)); put(g, sph(REDM, 16), [0, 0, 0], [0, 0, sx * -.14], [2.1, .7, .3]); const c = put(g, sph(WHT, 12), [0, 0, .16], null, [.6, .38, .16]);
@@ -3386,26 +3386,37 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
     // the cracks of the Shattered Visage: glowing gold seams that widen
     const crG = new TH.BufferGeometry(), crP = []; { for (let k = 0; k < 9; k++) { let a = rnd() * TAU, b = (rnd() - .3) * 1.4, p = [Math.cos(a) * Math.cos(b), Math.sin(b), Math.sin(a) * Math.cos(b)]; for (let j = 0; j < 7; j++) { const q = [p[0] + (rnd() - .5) * .25, p[1] + (rnd() - .5) * .25, p[2] + (rnd() - .5) * .25], l = Math.hypot(...q); crP.push(p[0] * 11.7, p[1] * 12.7, p[2] * 11.2 + (p[2] > 0 ? 1.2 : 0), q[0] / l * 11.7, q[1] / l * 12.7, q[2] / l * 11.2 + (q[2] / l > 0 ? 1.2 : 0)); p = q.map(v => v / l); } } }
     crG.setAttribute("position", new TH.BufferAttribute(new Float32Array(crP), 3)); const cracks = new TH.LineSegments(crG, new TH.LineBasicMaterial({ color: 0xffd070, transparent: true, opacity: 0, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); cracks.userData.dyn = 1; head.add(cracks);
+    // v494 a petrified star: its light still burns behind the stone, a soft corona round her head
+    const coro = sprite(70, "rgba(255,214,140,1)", "med_coro"); coro.position.set(0, 0, -8); coro.material.opacity = .45; head.add(coro); const coro2 = sprite(40, "rgba(255,245,220,1)", "med_coro2"); coro2.position.set(0, 0, -6); coro2.material.opacity = .35; head.add(coro2);
     const shine = sprite(40, "rgba(255,190,90,1)", "med_shine"); shine.material.opacity = 0; shine.position.set(0, 0, 6); head.add(shine);
     /* ---- the storm beneath her: violet energy where the stone ends, and lightning ---- */
     const storm = put(body, new TH.Mesh(new TH.SphereGeometry(13, LO ? 20 : 32, LO ? 14 : 22, 0, TAU, Math.PI * .55, Math.PI * .45), auraMat(0xa050ff, 1)), [0, 13, 0]); storm.userData.dyn = 1;
     const stormS = sprite(64, "rgba(170,80,255,1)", "med_storm"); stormS.position.set(0, 0, 4); stormS.material.opacity = .5; body.add(stormS);
     const bt = bolts(body, LO ? 8 : 14, () => { const a = rnd() * TAU, b = rnd() * TAU; return [V(Math.cos(a) * 9, 4 + rnd() * 4, Math.sin(a) * 9), V(Math.cos(b) * 20, -6 - rnd() * 10, Math.sin(b) * 20)]; }, 0xd8a0ff);
     /* ---- v490 the serpent crown: biomechanical serpents rising from behind and around her head, each its own living weapon ---- */
-    const MSk = new TH.MeshStandardMaterial({ color: 0x15121a, metalness: .85, roughness: .38, envMapIntensity: .55 }); MSk.userData.P = {}; rimOn(MSk, .45, [1, .3, .25]);
+    const MSk = new TH.MeshStandardMaterial({ color: 0x15121a, metalness: .85, roughness: .38, envMapIntensity: .55 }); MSk.userData.P = {}; rimOn(MSk, .3, [.9, .45, .35]);
     const CRM = new TH.MeshBasicMaterial({ color: 0xff2a3a, toneMapped: false }), segG = new TH.CylinderGeometry(1, 1.08, 1, LO ? 8 : 12, 1), bandG = new TH.TorusGeometry(1.06, .16, 4, LO ? 10 : 16), seamG = new TH.TorusGeometry(1.02, .07, 3, LO ? 10 : 16);
+    // v494 the serpents' teeth and eyes: ivory, curved; amber eyes with a slit pupil
+    const IVO = new TH.MeshStandardMaterial({ color: 0xd8cbb0, roughness: .45, metalness: .05, envMapIntensity: .6 }); IVO.userData.P = {};
+    const FANG = (() => { const g = new TH.ConeGeometry(.075, .75, 6, 4); g.translate(0, -.375, 0); const p = g.attributes.position; for (let k = 0; k < p.count; k++) { const y = p.getY(k); p.setZ(k, p.getZ(k) - (y * y) * .45); } g.computeVertexNormals(); return g; })();
+    const TOOTH = new TH.ConeGeometry(.035, .2, 4); TOOTH.translate(0, -.1, 0);
+    const SEYE = new TH.MeshBasicMaterial({ color: 0xffa020, toneMapped: false }), SPUP = new TH.MeshBasicMaterial({ color: 0x080200 }), MOU = new TH.MeshStandardMaterial({ color: 0x160205, roughness: .8, metalness: 0, envMapIntensity: .08 }); MOU.userData.P = {};
+    const VH = top => { const g = new TH.SphereGeometry(1, LO ? 14 : 26, LO ? 10 : 18), p = g.attributes.position; for (let k = 0; k < p.count; k++) { let x = p.getX(k), y = p.getY(k); const z = p.getZ(k), zz = -.9 + (z + 1) / 2 * 3.3, u = (zz + .9) / 3.3, w = 1.02 - .56 * u * u, h = .62 - .3 * u;
+        x *= w * (1 + .08 * Math.max(0, y)); y = top ? Math.max(y, -.1) * h : Math.min(y, .1) * h * .5; p.setXYZ(k, x, y, zz); } g.computeVertexNormals(); return g; }, VHT = VH(1), VHJ = VH(0);
     const NSN = 9, snakes = []; for (let i = 0; i < NSN; i++) { const a = -2.75 + i / (NSN - 1) * 5.5, root = V(Math.sin(a) * 9.5, 14 + Math.cos(a) * 10.5, -5.5), out = V(Math.sin(a), Math.cos(a) * .9 + .2, .05).normalize();
       const g = put(body, new TH.Group(), root.toArray()); g.userData.dyn = 1; const L = 17 + (i % 3) * 3.5, pts = [], up = V(0, 1, 0), fw = V(0, 0, 1);
       for (let k = 0; k <= 12; k++) { const u = k / 12, w = Math.sin(u * Math.PI * 2 + i * 1.3) * 1.8 * (1 - u * .4); pts.push(out.clone().multiplyScalar(L * .62 * u + w).addScaledVector(up, L * .28 * Math.sin(u * Math.PI * .9)).addScaledVector(fw, L * .62 * u * u + 2 * u)); }
       const cur = new TH.CatmullRomCurve3(pts), NS = LO ? 12 : 20; for (let k = 0; k < NS; k++) { const u = (k + .5) / NS, p = cur.getPointAt(u), tg = cur.getTangentAt(u), r = 2.1 * (1 - u * .5), sg = put(g, new TH.Mesh(segG, MSk), p.toArray()); sg.quaternion.setFromUnitVectors(V(0, 1, 0), tg); sg.scale.set(r, 1.05 * L / NS, r);
         const sm = put(g, new TH.Mesh(seamG, CRM), p.clone().addScaledVector(tg, .5 * L / NS).toArray()); sm.quaternion.setFromUnitVectors(V(0, 0, 1), tg); sm.scale.setScalar(r * .98); if (k % 3 === 1) { const bd = put(g, new TH.Mesh(bandG, MG), p.toArray()); bd.quaternion.setFromUnitVectors(V(0, 0, 1), tg); bd.scale.setScalar(r); } }
       const tip = cur.getPointAt(1), hd = put(g, new TH.Group(), tip.toArray(), null, 3.0); const dir = cur.getTangentAt(1).lerp(fw, .45).normalize(); hd.quaternion.setFromUnitVectors(V(0, 0, 1), dir);
-      { const sk = new TH.CylinderGeometry(.55, 1.15, 3.0, 6); sk.rotateX(Math.PI / 2); sk.translate(0, 0, 1.1); put(hd, new TH.Mesh(sk, MSk), [0, .2, 0], null, [1.1, .55, 1]); put(hd, sph(MSk, 12), [0, .15, -.4], null, [1.25, .8, 1.2]);
-        for (const sx of [-1, 1]) { const br = new TH.ConeGeometry(.28, 2.2, 4); br.rotateX(-Math.PI / 2 - .25); put(hd, new TH.Mesh(br, MG), [sx * .55, .62, .4], [0, sx * -.2, 0]); }
-        put(hd, new TH.Mesh(new TH.BoxGeometry(.25, .18, 2.6), MG), [0, .62, .8]); }
-      const jaw = put(hd, new TH.Group(), [0, -.25, -.4]); { const jg = new TH.CylinderGeometry(.42, .95, 2.7, 6); jg.rotateX(Math.PI / 2); jg.translate(0, 0, 1.25); put(jaw, new TH.Mesh(jg, MSk), [0, 0, 0], null, [1, .4, 1]); put(jaw, sph(CRM, 8), [0, .14, 1.1], null, [.62, .1, 1.1]); for (const sx of [-1, 1]) put(jaw, new TH.Mesh(new TH.ConeGeometry(.07, .45, 4), WHT), [sx * .35, .3, 2.0]); }
-      put(hd, sph(CRM, 8), [0, -.1, 1.3], null, [.62, .14, 1.0]); for (const sx of [-1, 1]) { const fg = new TH.ConeGeometry(.13, 1.15, 5); fg.translate(0, -.55, 0); put(hd, new TH.Mesh(fg, WHT), [sx * .42, -.12, 2.05], [-.25, 0, 0]); put(hd, new TH.Mesh(new TH.ConeGeometry(.06, .4, 4), WHT), [sx * .22, -.1, 2.35], [Math.PI, 0, 0]);
-        const e = sprite(2.6, "rgba(255,40,30,1)", "med_se"); e.position.set(sx * .66, .45, .75); hd.add(e); put(hd, sph(REDM, 8), [sx * .62, .4, .7], null, [.26, .14, .22]); }
+      { put(hd, new TH.Mesh(VHT, MSk), [0, .08, 0]);
+        for (const sx of [-1, 1]) { const br = new TH.ConeGeometry(.12, 1.1, 6); br.rotateX(-Math.PI / 2 - .35); put(hd, new TH.Mesh(br, MG), [sx * .5, .5, -.1], [0, sx * -.25, 0]); }
+        put(hd, new TH.Mesh(new TH.BoxGeometry(.08, .06, 1.7), MG), [0, .56, .5], [.1, 0, 0]); }
+      const jaw = put(hd, new TH.Group(), [0, -.25, -.4]); { put(jaw, new TH.Mesh(VHJ, MSk), [0, .04, .45], null, [.9, 1, .88]); put(jaw, sph(MOU, 8), [0, .14, 1.1], null, [.62, .1, 1.1]); for (const sx of [-1, 1]) for (let q = 0; q < 6; q++) put(jaw, new TH.Mesh(TOOTH, IVO), [sx * (.36 - q * .03), .2, 2.05 - q * .26], [.15, 0, 0], [.75, .8 - q * .07, .75]); }
+      put(hd, sph(MOU, 8), [0, -.1, 1.3], null, [.62, .14, 1.0]); for (const sx of [-1, 1]) { put(hd, new TH.Mesh(FANG, IVO), [sx * .4, -.12, 2.0], [.25, 0, sx * .1]); for (let q = 0; q < 5; q++) put(hd, new TH.Mesh(TOOTH, IVO), [sx * (.34 - q * .03), -.16, 1.75 - q * .26], [Math.PI - .15, 0, 0], [.7, .7 - q * .06, .7]);
+        put(hd, new TH.Mesh(new TH.BoxGeometry(.5, .14, .55), MSk), [sx * .6, .6, .72], [.25, sx * -.35, sx * .2]); // the brow ridge over the eye
+        const eg = put(hd, new TH.Group(), [sx * .64, .4, .74], [0, sx * .5, 0]); put(eg, sph(SEYE, 10), [0, 0, 0], null, [.2, .13, .12]); put(eg, new TH.Mesh(new TH.BoxGeometry(.035, .2, .02), SPUP), [0, 0, .115]);
+        const e = sprite(1.1, "rgba(255,150,40,1)", "med_se2"); e.position.set(0, 0, .15); e.material.opacity = .7; eg.add(e); }
       const pulse = sprite(5, "rgba(255,60,50,1)", "med_pu"); pulse.material.opacity = 0; g.add(pulse);
       snakes.push({ g, hd, jaw, pts, cur, pulse, a, i, cut: 0, base: g.quaternion.clone() }); }
     // crystal deposits and small ruins on her surface
@@ -3433,17 +3444,21 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       const fg = f("gaze", t), fl = f("lunge", t), fs = f("storm", t), fr = f("ring", t), fh = f("hit", t), live = 1 - ss(.15, .5, die);
       const eyeO = ss(.35, .55, aw) * live, coil = ss(.4, .9, aw), chg = ch < 0 ? 0 : ss(0, .7, ch) * (1 - ss(.94, 1, ch)), fire = Math.max(bell(fg, .3, .38, .78, .92), ch < 0 ? 0 : bell(ch, .72, .76, .92, .98));
       // she breathes; the face tilts to her prey
-      head.rotation.set(-.12 + Math.sin(T * .3) * .03 - chg * .08, Math.sin(T * .21) * .07, Math.sin(T * .17) * .02); body.position.y = Math.sin(T * .5) * .5 - ss(.5, 1, die) * 4;
+      head.rotation.set(-.525 + Math.sin(T * .3) * .03 - chg * .08, -.15 + Math.sin(T * .21) * .07, Math.sin(T * .17) * .02); body.position.y = Math.sin(T * .5) * .5 - ss(.5, 1, die) * 4;
       MS.emissiveIntensity = MSe * (.35 + .65 * aw) * live * (1 + sh * 1.2 + chg * .5); MG.emissiveIntensity = MGe * (.6 + .4 * aw) * live; MS.color.copy(white).lerp(gray, ss(.1, .4, die)); if (out0.MF) { out0.MF.color.copy(MS.color); out0.MF.emissiveIntensity = MS.emissiveIntensity; }
       eyes.forEach(E => { E.g.children[0].material.opacity = eyeO; E.c.visible = eyeO > .05; E.s.material.opacity = Math.min(1, eyeO * (.6 + .2 * Math.sin(T * 3) + chg * .3 + fire * .3)); E.s.scale.setScalar(9 * (1 + chg * .6 + fire * .5) * (eyeO > 0 ? 1 : 0)); });
       gemS.material.opacity = (.5 + chg * .5 + sh * .6) * live * aw; gemS.scale.setScalar(7 * (1 + sh * 1.6 + chg * .6)); gemG.scale.setScalar(1 + sh * .5);
-      cracks.material.opacity = Math.max(sh * (.7 + .3 * Math.sin(T * 5)), bell(die, .05, .2, .5, .7)); shine.material.opacity = sh * .55 * live; 
+      cracks.material.opacity = Math.max(sh * (.7 + .3 * Math.sin(T * 5)), bell(die, .05, .2, .5, .7)); coro.material.opacity = (.32 + .08 * Math.sin(T * .7) + chg * .35 + sh * .3) * aw * live; coro.scale.setScalar(70 * (1 + chg * .25 + .04 * Math.sin(T * .5))); coro2.material.opacity = (.25 + chg * .3) * aw * live; shine.material.opacity = sh * .55 * live; 
       storm.material.uniforms.uK.value = (.5 + .5 * aw) * live * (1 + bell(fs, 0, .2, .7, 1) * 1.5 + chg * .4); stormS.material.opacity = (.3 + .2 * Math.sin(T)) * aw * live * (1 + bell(fs, 0, .2, .7, 1)); bt(t, (1 + bell(fs, .1, .2, .8, .95) * 6 + chg * 3) * live * aw);
       // the serpents: sway, rear while she charges, strike in the lunge; severed ones are gone
       snakes.forEach((Sn, i) => { { const pu = ch < 0 ? -1 : ((T * .6 + i * .13) % 1); Sn.pulse.material.opacity = pu < 0 ? 0 : chg * (1 - Math.abs(pu - .5) * 1.2); if (pu >= 0) Sn.pulse.position.copy(Sn.cur.getPointAt(1 - pu)); } const cut = out.snk[i % 8] ? 0 : 1; Sn.cut += (cut - Sn.cut) * .08; Sn.g.visible = Sn.cut < .98 && live > .02;
-        const ln = fl < 0 ? 0 : bell(fl, .1 + (i % 4) * .05, .3 + (i % 4) * .05, .55, .85), sw = Math.sin(T * 1.3 + i * 1.7) * .12 * coil;
-        Sn.g.rotation.set(-ln * .9 + chg * -.25 + (1 - coil) * .8, sw + Math.sin(Sn.a) * ln * .2, Math.sin(T * .9 + i) * .08 + (1 - coil) * Math.sign(Sn.a) * .6); Sn.g.scale.setScalar((1 - Sn.cut) * (.45 + .55 * coil) * (1 - ss(.2, .55, die)) + .001);
-        Sn.jaw.rotation.x = .3 + ln * .5 + chg * .35 + Math.max(0, Math.sin(T * 2 + i)) * .12; });
+        const ln = fl < 0 ? 0 : bell(fl, .1 + (i % 4) * .05, .3 + (i % 4) * .05, .55, .85);
+        if (!Sn.n) Sn.n = { f: [.3 + rnd() * .5, .45 + rnd() * .7, .2 + rnd() * .45], p: [rnd() * 9, rnd() * 9, rnd() * 9], dt: rnd() * 6, d0: -9, ht: rnd() * 5, h0: -9, q0: Sn.hd.quaternion.clone(), qq: new TH.Quaternion(), e: new TH.Euler() };
+        const N = Sn.n; if (T > N.dt) { N.d0 = T; N.dt = T + 3 + rnd() * 9; } if (T > N.ht) { N.h0 = T; N.ht = T + 2 + rnd() * 7; } const dk = T - N.d0, dart = dk < .8 ? Math.sin(dk / .8 * Math.PI) ** 2 : 0, hk = T - N.h0, hiss = hk < 1.4 ? Math.sin(hk / 1.4 * Math.PI) : 0;
+        const nx = Math.sin(T * N.f[0] + N.p[0]) * .6 + Math.sin(T * N.f[1] * 1.7 + N.p[1]) * .4, ny = Math.sin(T * N.f[1] + N.p[1]) * .6 + Math.sin(T * N.f[2] * 2.3 + N.p[2]) * .4, nz = Math.sin(T * N.f[2] + N.p[2]) * .7 + Math.sin(T * N.f[0] * 2.9 + N.p[1]) * .3;
+        N.e.set((Math.sin(T * N.f[2] * 1.9 + N.p[0]) * .22 - dart * .25) * coil, Math.sin(T * N.f[0] * 1.4 + N.p[2]) * .38 * coil, Math.sin(T * N.f[1] * .8 + N.p[0]) * .15 * coil); N.qq.setFromEuler(N.e); Sn.hd.quaternion.copy(N.q0).multiply(N.qq);
+        Sn.g.rotation.set(-ln * .9 - dart * .4 + chg * -.25 + (1 - coil) * .8 + nx * .17 * coil, ny * .22 * coil + Math.sin(Sn.a) * ln * .2, nz * .14 * coil + (1 - coil) * Math.sign(Sn.a) * .6); Sn.g.scale.setScalar((1 - Sn.cut) * (.45 + .55 * coil) * (1 - ss(.2, .55, die)) + .001);
+        Sn.jaw.rotation.x = .14 + ln * .45 + chg * .3 + hiss * .35 + dart * .4; });
       // the ring and its towers
       RR.rotation.y = T * .05 * (1 + chg * 2); RR2.rotation.z = -T * .04 * (1 + chg * 2); RR3.rotation.y = T * .03; rr2.material.opacity = .28 * aw * live * (1 + chg); RR2.visible = RR3.visible = die < .95; out.dark = chg * .5 * live; towers.forEach((w, i) => { w.w.material.opacity = (.5 + .5 * Math.sin(T * 2 + i)) * aw * live + bell(fr, .1, .25, .7, .9); }); RR.scale.setScalar(1 - ss(.3, .8, die) * .4); RR.visible = die < .95;
       body.updateMatrixWorld(); rbs.forEach((B, i) => { const k = fr < 0 ? -1 : (fr - .2 - (i % 6) * .05) / .45, on = k > 0 && k < 1; B.material.opacity = on ? 1 - k * .5 : 0; if (on) { towers[i % 6].t.getWorldPosition(S.v); body.worldToLocal(S.v); B.position.set(S.v.x * (1 - k * .6), S.v.y + 8 - k * 4, S.v.z + k * 70); B.scale.setScalar(3.2 + k * 3); } });
@@ -3455,7 +3470,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       // death: grey stone, the light gone, crumbling down and fading
       hull.scale.setScalar(1 - ss(.55, 1, die) * .15); hull.position.y = -ss(.5, 1, die) * 6; storm.visible = die < .5; stormS.visible = die < .5; grp.visible = die < .99;
       hit(bell(fh, 0, .05, .4, 1), t); };
-    const AR = artRelief(body, { k: "medusara", iw: 1199, ih: 1060, u: .0266, ox: 697, oy: 543, cy: 14, z: 0, D: 16, d0: .55, at: { e0: [482, 360], e1: [718, 292], gem: [570, 192] }, hide: [head, RR, RR2, RR3, storm, ...snakes.map(S2 => S2.g)] }), btL = body.children[body.children.indexOf(stormS) + 1]; if (PAINT) stormS.position.z = -16; // her storm glow sits behind the painted face, not over it
+    const AR = artRelief(body, { k: "medusara", iw: 1199, ih: 1060, u: .0266, ox: 697, oy: 543, cy: 14, z: 0, D: 16, d0: .55, at: { e0: [482, 360], e1: [718, 292], gem: [570, 192] }, hide: [head, RR, RR2, RR3, storm, ...snakes.map(S2 => S2.g)] }), btL = body.children[body.children.indexOf(stormS) + 1]; stormS.position.z = -16; // v494 her storm glow behind her face, not washing over it // her storm glow sits behind the painted face, not over it
     if (PAINT) out.art = AR; const aE = [0, 1].map(j => { const s2 = sprite(9, "rgba(255,60,40,1)", "med_eye"); s2.material.opacity = 0; AR.at["e" + j].add(s2); return s2; }), aG = sprite(7, "rgba(255,70,90,1)", "med_gem"); aG.material.opacity = 0; AR.at.gem.add(aG);
     const gray2 = new TH.Color(.62, .62, .66), wv2 = new TH.Vector3();
     out.tick = t => { tick(t); if (!AR.ok) return; AR.step(); const fd = f("die", t), die = fd < 0 ? 0 : fd, fl = f("lunge", t), fs = f("storm", t), ch = f("charge", t), T = t * .001;
@@ -3472,6 +3487,14 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       out.tick = t => { tick1(t); const ch = f("charge", t), chg = ch < 0 ? 0 : ss(0, .7, ch) * (1 - ss(.94, 1, ch)), fd = f("die", t), die = fd < 0 ? 0 : fd, aw = drv.awake != null ? drv.awake : 1, live = 1 - ss(.15, .5, die), fr = f("ring", t), rg = bell(fr, .05, .2, .7, .9);
         GR.forEach((m, i) => { m.material.color.copy(gold).lerp(crim, Math.min(1, chg * 1.4)); m.material.opacity = Math.min(1, (i === 2 ? .7 : m.userData.op) * aw * live * (1 + chg * .6 + rg * .8)) * (.85 + .15 * Math.sin(t * .002 + i)); });
         G2.rotation.z = -t * .0002 * (1 + chg * 3); G2.material.color.copy(GR[0].material.color); G2.material.opacity = .5 * aw * live * (1 + rg); }; }
+    { // v494 the painted face as the 3D head's skin
+      const q = new TH.Quaternion().setFromEuler(new TH.Euler(-.525, -.15, 0)), v = new TH.Vector3(), X0 = 250, Y0 = 60, CW = 750, CH = 740;
+      new TH.TextureLoader().load("art/boss/medusara-face.webp", tx => { try { tx.encoding = TH.sRGBEncoding; tx.anisotropy = 8; const g = out0.hg, P = g.attributes.position, U = new Float32Array(P.count * 2);
+        for (let k = 0; k < P.count; k++) { v.fromBufferAttribute(P, k).applyQuaternion(q); const px = 25.4341 * v.x - .8105 * v.y + 619.784, py = -(6.1959 * v.x + 18.7694 * v.y - 416.735); U[k * 2] = Math.min(1, Math.max(0, (px - X0) / CW)); U[k * 2 + 1] = Math.min(1, Math.max(0, 1 - (py - Y0) / CH)); }
+        g.setAttribute("uv", new TH.BufferAttribute(U, 2)); const m = out0.MF; m.map = tx; m.emissiveMap = tx; m.emissive.setRGB(1, 1, 1); m.normalMap = null; m.vertexColors = false; m.roughness = .85; m.metalness = 0; m.envMapIntensity = .25; m.needsUpdate = true; out0.skin = 1;
+        head.children.forEach(c => { if (c.isMesh && c !== cracks && (c.material === MG || (c.material.color && c.material.color.getHex() === 0x2a0a18))) c.visible = false; }); gemG.children.forEach(c => { if (c.isMesh) c.visible = false; }); eyes.forEach(E => { E.g.children[0].visible = false; }); } catch (e) {} }); }
+    { const tick2 = out.tick; out.tick = t => { tick2(t); if (!out0.skin) return; const fd = f("die", t), die = fd < 0 ? 0 : fd, ch = f("charge", t), chg = ch < 0 ? 0 : ss(0, .7, ch) * (1 - ss(.94, 1, ch)), sh = drv.shatter != null ? drv.shatter : 0, aw = drv.awake != null ? drv.awake : 1;
+      out0.MF.emissiveIntensity = .34 * (.4 + .6 * aw) * (1 - ss(.15, .6, die)) * (1 + chg * .35 + sh * .5); eyes.forEach(E => { E.c.visible = false; }); }; }
     tick(0); bake(body); return out; }
   // merge each group's static leaf meshes that share a material (same look), so a boss costs tens of draw calls, not hundreds
   function bake(root) { const fl = []; root.traverse(o => { if (o !== root && o.userData.flat && o.parent) fl.push(o); });
@@ -4549,7 +4572,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 493;
+const GAME_V = 494;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
