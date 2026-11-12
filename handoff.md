@@ -1,10 +1,12 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-12 (America/Phoenix). Current game version: **v496** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v301**.
+Last updated: 2026-11-12 (America/Phoenix). Current game version: **v497** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v302**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
 ## Pending work (as of 2026-11-07): start here in a new session
+
+00000000000000000000000000. **v497 — head-on boss battles; Aexion's Warform higher, his blade releases an energy wave** (tools/patches/p497_headon.py). Owner: "Keep all boss and super boss battle head on, except omega cube and aexion"; then "Warform is too low now, need to be high and when he slashes his blade an energy wave is released". WB_SWING = {omega, aexion}: for every other boss the battle-report camera sits straight in front (x 0, looking at x 0) and the boss no longer turns up to 45 degrees to its targets (WBR.swing gates WBR.face). WB_VIEW.aexW [-24,16,64] at [0,11,0] (was [-26,16,70] at [0,21,0]): he stands tall over the fleet, head near the top. Blade wave (bwv, two alternating): when the blade move passes .46 a crescent of blade light (ring 13-18, white core 15-16.2) leaves the sword tilted with the cut, travels 46 units toward the fleet and down, growing x.5 to x2.1, fading over 1.3 s.
 
 00000000000000000000000000. **v496 — fleet slots wording** (tools/patches/p496_slots.py; from the Pending list). Fleet slots come from Computer Technology (maxFleets: 2 + computer + colonies + Admiral + General class + VIP), but the slots-full toast and the voiced FAQ answer said "Research Fleet Command" (Fleet Command, S.r.command, raises allies per strike, maxReq). Both now say Computer Technology; the FAQ line was re-voiced (key h0w2jt replaces owy48d). Phase 3 of the server plan was looked at and NOT started: its gate (a weekend of shadow-checked boss fights) is unmet, fight_log is empty.
 
