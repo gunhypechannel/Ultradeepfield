@@ -253,7 +253,7 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **v271 call-to-arms / v273 SOS** were tested with fake data only; they need two real alliance accounts.
 - **iOS "closed unexpectedly after: battle closed"** crash reports keep appearing (v257–v290); v268 mitigations are unverified on device.
 - Only the owner is active (4 accounts; the other three are Lv.1–2).
-- **Transport button** wasn't tested end-to-end (test account had one planet). Check on a real account with 2+ planets.
+- **Transport button: tested end to end (2026-11-12, after v498)** in the gt harness with a second world claimed the way empWorlds does: Fleets → Transport, 20 Large Cargo with 100K crystal + Max metal (550K/550K; the form blocks 650K/550K and offers Add cargo ships to fit) → resources leave home, arrive at the colony (450K m + 100K c), holds empty, all ships home; Deploy 5 → they stay in the colony garrison; colony → home 3 ships with 80K metal (100K blocked at 82.5K space) → +80K at home, ships back in the garrison, the colony pays the gas. No bug found. Not yet seen on a real two-planet account.
 - **Simultaneous play on two devices:** a tap made in the ~1 s before the other device's save arrives can still be lost. Normal switching is covered.
 - Leaving a page relies on an async save on `visibilitychange`/`pagehide`; with `saveSoon()` the gap is ~1 s.
 - Google sign-in on Supabase is off (`google: false`).
