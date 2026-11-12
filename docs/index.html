@@ -4102,7 +4102,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 478;
+const GAME_V = 479;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5314,7 +5314,7 @@ function advance(T) {
   if (any) { changed = true; progress(); }
   const c = changed; changed = false; return c || any;
 }
-function mkRep(o) { return Object.assign({ id: "r" + (S.seq++), loot: { m: 0, c: 0, g: 0 } }, o); }
+function mkRep(o) { if (!o.test && (o.wb || o.sbk || o.omega) && G.evCur) try { const e = (PF.ev || (PF.ev = {}))[G.evCur] || (PF.ev[G.evCur] = [0, 0, 0, 0, 0]); e[4] = (e[4] || 0) + 1; } catch (er) {} /* v479 attacks per event */ return Object.assign({ id: "r" + (S.seq++), loot: { m: 0, c: 0, g: 0 } }, o); }
 function hiveLoot(lvl, cargo, lossD) {
   const s = stock(lvl), half = { m: s.m / 2, c: s.c / 2, g: s.g / 2 }, tot = total(half), ratio = tot ? Math.min(1, cargo / tot) : 0;
   let salv = 0; for (const k in lossD) salv += (AL[k] ? AL[k].val : 0) * lossD[k] * .15;
@@ -5785,12 +5785,21 @@ async function stressRun() { if (!duelOwner() || (G.stress && G.stress.busy)) re
     catch (e) { r.bad = [String(e && e.message || e).slice(0, 120)]; }
     out.push(r); if (sheet && sheet.type === "stress") renderSheet(); }
   G.stress.busy = false; G.stress.ms = performance.now() - G.stress.t0; if (sheet && sheet.type === "stress") renderSheet(); }
+/* v479 the live event and its stage, by name (the same for everyone: worked out from the shared clock and the hunt records) */
+const DV_STAGE = { awake: "Awakening", mig: "Migration", asm: "Assembly", act: "Activation", stage: "The grand fleet stages", war: "The last stand", after: "Aftermath", fight: "The Omega Cube", ret: "Collapse" };
+function evNow(T = now()) { try {
+  const k = sbLiveKey(T); if (k) { const s0 = sbStartOf(k, T), st = sbState(k, s0), dead = st.dead && st.dead > s0; return { id: k, n: SBW[k].n, stage: dead ? "Fallen" : T < s0 + SB_ARR ? "Arrival" : SBW[k].ph[sbPhase(k, st.hp)][1] }; }
+  const d = dvNow(T); if (d) return { id: "dv", n: "Cube Devastation", stage: DV_STAGE[d.ph] || d.ph };
+  if (wbGroupOn(3, T)) { const fz = wbFuse(T); return { id: "conv", n: "The Convergence", stage: wbSwept(T) ? "Clean Sweep" : fz.form >= .99 ? "The Pentarch" : fz.form > .01 ? "Fusion" : "The Elementals" }; }
+  const st = wbState(T); for (const w of ROTS) if (wbOn(w, T)) { const h = Math.round((st.hp[w] | 0) / WB_SEG * 100); return { id: w, n: WB[w].n, stage: h > 75 ? "Hull above 75%" : h > 50 ? "Hull 50-75%" : h > 25 ? "Hull 25-50%" : h > 0 ? "Hull below 25%" : "Fallen" }; }
+} catch (e) {} return null; }
+setInterval(() => { try { const E = evNow(); G.evCur = E ? `${E.id}:${E.stage}` : null; } catch (e) {} }, 2000);
 function shBossLab() { const T = now(), w0 = Math.max(0, rotW(T)), NM = { vae: ["✦", "Vaelthar, the Celestial Ruin"], aex: ["✦", "Aexion, the Warform Sovereign"], dv: ["◼", "Cube Devastation (Omega Cube)"], conv: ["✪", "The Elemental Convergence"] };
   const nm = k => NM[k] || [WB[k].ic, WB[k].n], live = k => k === "vae" || k === "aex" ? sbLiveKey(T) === k : k === "dv" ? !!dvNow(T) : k === "conv" ? wbGroupOn(3, T) : wbOn(k, T) && !G.wbShow;
   const rows = [...ROT, ...ROTS].map(k => [k, rotNextOf(k, T - 1)]).sort((a, b) => a[1] - b[1]).map(([k, at]) => { const [ic, n] = nm(k);
     return `<div class="strow"><div style="flex:1;min-width:0"><b>${ic} ${esc(n)}</b><div class="note">${live(k) ? "<b style=\"color:#7dff9a\">● live now</b>" : `${new Date(at).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}, ${new Date(at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} · in ${ftime(at - T)}`}</div></div><button class="btn ghost" data-act="labPrev" data-k="${k}">▶ Preview</button>${WB[k] ? `<button class="btn ghost" data-act="labDie" data-k="${k}">✝ Death</button>` : ""}</div>`; }).join("");
   return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">Owner</div><h2>Boss Lab</h2><p class="note">Wednesdays: the great events in turn (each back every ${ROT.length} weeks). Saturdays between them: the world bosses in turn (each back every ${ROTS.length} weeks). All at 18:00 UTC. Preview any of them on this device only; nothing is saved or shared.</p></div><div class="fhdb"><button class="x" data-act="close" aria-label="Close">✕</button></div></div>
-    ${G.wbShow ? `<button class="btn wide" data-act="labStop">■ Stop the ${esc(WB[G.wbShow].n)} preview</button>` : ""}<button class="btn ghost wide" data-act="stressOpen">⚔ Battle tests and reports (every boss)</button><div class="strows">${rows}</div>`; }
+    ${(E => E ? `<p class="note"><b style="color:#7dff9a">● Now:</b> ${esc(E.n)} · ${esc(E.stage)}</p>` : "")(evNow(T))}${evMetricsHTML()}${G.wbShow ? `<button class="btn wide" data-act="labStop">■ Stop the ${esc(WB[G.wbShow].n)} preview</button>` : ""}<button class="btn ghost wide" data-act="stressOpen">⚔ Battle tests and reports (every boss)</button><div class="strows">${rows}</div>`; }
 function shStress() { const st = G.stress, out = st ? st.out : [], fails = out.filter(r => !r.ok).length, tot = vsum(Object.values(STRESS_FLEET));
   const head = `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">Owner</div><h2>Stress-test battles</h2><p class="note">One fleet of ${fmt(tot)} ships (${fmt(STRESS_FLEET.worldbreaker)} Cube Destroyers among them) against every super boss in every form. Only you see this; nothing is saved or shared.</p></div><div class="fhdb"><button class="x" data-act="close" aria-label="Close">✕</button></div></div>`;
   const run = `<button class="btn wide" data-act="stressRun"${st && st.busy ? " disabled" : ""}>${st && st.busy ? `Running ${out.length} of ${st.n}…` : st ? "⚔ Run them again" : "⚔ Run all " + stressCases().length + " battles"}</button>`;
@@ -6575,7 +6584,10 @@ function sbVaeCam(X, fa) { const sc = X.b.grp.scale.x || 4.4, ss2 = (a, b, x) =>
   const th = .3 - al * .24 + cr * 1.0, d = 440 - al * 130 - er * 50 + cr * 2050, ph = P - .55 + al * .3 + er * .1 + cr * .5;
   return { y: wy * (1 - cr), d, th, ph, tx: X.B.x * (1 - cr * .8), tz: X.B.z * (1 - cr * .8), ty: (X.B.y + wy) * (1 - cr) }; }
 /* live: the cinematic plays while the map is left alone, and hands the camera back afterwards */
-function sbVaeCine(X, W, fa, dt) { const c = W.cam; if (!c) return; const want = fa >= .56 && fa < .93 && view === "galaxy" && !sheet && !(typeof battle !== "undefined" && battle) && performance.now() - (G.camTouch || 0) > 5000;
+/* v479 the camera director: may an event take the camera right now? Not while it is being touched (5 s), in a panel or a battle, off
+   the galaxy, or with Cinematic camera turned off in Graphics */
+function camAuto() { return !GFX.noCine && view === "galaxy" && !sheet && !(typeof battle !== "undefined" && battle) && performance.now() - (G.camTouch || 0) > 5000; }
+function sbVaeCine(X, W, fa, dt) { const c = W.cam; if (!c) return; const want = fa >= .56 && fa < .93 && camAuto();
   if (want) { if (!X.cine) X.cine = { tx: c.tx, ty: c.ty, tz: c.tz, dist: c.dist, ph: c.ph, th: c.th, out: 0 }; SBX_CAM(X, W, 0, dt, sbVaeCam(X, fa)); return; }
   const C = X.cine; if (!C) return; if (performance.now() - (G.camTouch || 0) < 5000) { X.cine = null; return; } /* they took the camera: leave it where it is */
   C.out += dt; const e = 1 - Math.pow(.95, (dt || 16) / 16.7); for (const kk of ["tx", "ty", "tz", "dist", "ph"]) c[kk] += (C[kk] - c[kk]) * e; let dp = C.th - c.th; while (dp > Math.PI) dp -= TAU; while (dp < -Math.PI) dp += TAU; c.th += dp * e; if (C.out > 3500) X.cine = null; }
@@ -8836,11 +8848,14 @@ if (G.lastCrashFresh && G.lastCrash && G.lastCrash.ev) { const C = G.lastCrash, 
 let PF = { t0: Date.now(), v: typeof GAME_V !== "undefined" ? GAME_V : 0, vw: {}, frz: [] };
 function pfKey() { try { return battle ? "battle" : (view || "?") + (sheet ? "+panel" : ""); } catch (e) { return "?"; } }
 function pfFrame(rd) { if (!(rd > 0) || rd > 20000 || !G.ready || performance.now() - (G.pfOk || (G.pfOk = performance.now())) < 4000) return; /* start-up loading is not play */ const k = pfKey(), s = PF.vw[k] || (PF.vw[k] = [0, 0, 0, 0, 0]); s[0]++; s[1] += rd; if (rd > 34) s[2]++; if (rd > 50) s[3]++; if (rd > s[4]) s[4] = rd;
+  if (G.evCur) { const e = (PF.ev || (PF.ev = {}))[G.evCur] || (PF.ev[G.evCur] = [0, 0, 0, 0, 0]); e[0]++; e[1] += rd; if (rd > 34) e[2]++; if (rd > 700) e[3]++; } /* v479 per event and stage */
   if (rd > 700) { PF.frz.push([Math.round(rd), k, Date.now()]); if (PF.frz.length > 12) PF.frz.shift(); try { crumb(`freeze ${(rd / 1000).toFixed(1)} s on ${k}`); } catch (e) {} } }
 function pfRec(P, end) { const vw = {}; let n = 0, ms = 0; for (const k in P.vw) { const s = P.vw[k]; if (s[0] < 30) continue; vw[k] = [s[0], Math.round(s[1]), s[2], s[3], Math.round(s[4])]; n += s[0]; ms += s[1]; }
   if (n < 600) return null; let mem = ""; try { if (performance.memory) mem = Math.round(performance.memory.usedJSHeapSize / 1e6) + " MB"; } catch (e) {}
   return { kind: "perf", status: "log", at: Date.now(), now: P.v, end, dur: Math.round(ms / 1000), fps: Math.round(n * 1000 / ms * 10) / 10, vw: JSON.stringify(vw), frz: JSON.stringify(P.frz || []).slice(0, 900), errs: (P.errs || []).slice(0, 8).join(" | ").slice(0, 900),
-    device: hqDev(), w: innerWidth, h: innerHeight, dpr: devicePixelRatio, pr: P.pr || 0, gpu: P.gpu || "", preset: P.preset || "", hz: P.hz || 0, mem }; }
+    device: hqDev(), w: innerWidth, h: innerHeight, dpr: devicePixelRatio, pr: P.pr || 0, gpu: P.gpu || "", preset: P.preset || "", hz: P.hz || 0, mem, ev: JSON.stringify(P.ev || {}).slice(0, 900) }; }
+/* v479 this session's per-event numbers, for Boss Lab: [frames, ms, slow, freezes, attacks] per event:stage */
+function evMetricsHTML() { const E = PF.ev || {}, ks = Object.keys(E); if (!ks.length) return ""; return `<details class="note" style="margin:4px 0 8px"><summary>This session, by event</summary>${ks.map(k => { const e = E[k]; return `${esc(k.replace(":", " · "))}: ${Math.round(e[1] / 1000)} s · ${e[1] ? (e[0] * 1000 / e[1]).toFixed(0) : 0} fps · ${e[2]} slow · ${e[3]} freezes · ${e[4] || 0} attacks`; }).join("<br>")}</details>`; }
 function pfSave() { try { PF.errs = [...ERR_SEEN]; PF.gpu = gfxGpu(); PF.preset = gfxPreset(); PF.hz = gfxHz(); try { if (G3 && G3.renderer) PF.pr = +G3.renderer.getPixelRatio().toFixed(2); } catch (e) {} localStorage.setItem(PF_K, JSON.stringify(PF)); } catch (e) {} }
 function pfSend(end) { try { pfSave(); const r = pfRec(PF, end); if (r) hqPush(r); PF = { t0: Date.now(), v: PF.v, vw: {}, frz: [] }; localStorage.removeItem(PF_K); } catch (e) {} }
 try { const old = JSON.parse(localStorage.getItem(PF_K) || "null"); localStorage.removeItem(PF_K); if (old && old.vw) { const r = pfRec(old, G.crashSent ? "crash" : "closed"); if (r) hqPush(r); } } catch (e) {}
@@ -19417,6 +19432,7 @@ function shGfx() { const cur = gfxPreset(), rec = gfxRecommend(), o = GFX.over |
     <h2 class="sec">The Celestial</h2>${seg("cel", [[1, "Painted"], [0, "3D model"]])}<p class="note">The titan beyond the binary stars, seen when you zoom all the way out: your painting of him, or the sculpted 3D figure.</p>
     <h2 class="sec">Anti-aliasing</h2>${seg("aa", [[0, "Off"], [1, "On"]])}${(gfx("aa") ? 1 : 0) !== (GFX_AA ? 1 : 0) ? `<p class="note">Applies after a reload. <button class="btn sm" data-act="gfxReload">Reload now</button></p>` : ""}
     <div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost" data-act="gfxReset">Reset to preset</button><button class="btn ${GFX.showFps ? "amber" : "ghost"}" data-act="gfxFps">${GFX.showFps ? "Hide" : "Show"} FPS counter</button></div>
+    <h2 class="sec">Cinematic camera</h2><div class="segc"><button class="${GFX.noCine ? "" : "on"}" data-act="gfxCine" data-v="0">On</button><button class="${GFX.noCine ? "on" : ""}" data-act="gfxCine" data-v="1">Off</button></div><p class="note">During live events the camera can swing in for the big moments. Turn it off to keep the camera where you put it.</p>
     ${stressCard()}${crashCard()}
     <h2 class="sec">Display</h2><dl class="kv"><dt>Device</dt><dd>${isFoldOpen() ? "Foldable, open" : isTablet() ? "Tablet" : MOBILE ? "Phone" : "Computer"}${MOBILE ? ` · resolution capped at ${mobilePRCap().toFixed(2)}× to stay smooth` : ""}</dd><dt>Window</dt><dd>${innerWidth} × ${innerHeight} · scale ${(window.devicePixelRatio || 1).toFixed(2)}×</dd><dt>Native pixels</dt><dd>${Math.round(screen.width * (window.devicePixelRatio || 1))} × ${Math.round(screen.height * (window.devicePixelRatio || 1))}</dd><dt>Refresh rate</dt><dd>${G.hz ? G.hz + " Hz (measured)" : "measuring…"}</dd><dt>Rendering at</dt><dd>${R ? R.getPixelRatio().toFixed(2) + "× · " + Math.round(1000 / (frame.ema || 16.7)) + " fps" : "–"}</dd><dt>GPU</dt><dd style="font-size:11px">${esc(gfxGpu() || "unknown")}</dd></dl>
     <h2 class="sec">Keyboard</h2><p class="note">Tap a key to change it, then press the new key (Esc cancels). Right-drag rotates the map; right-click opens a menu.</p>
@@ -20272,6 +20288,7 @@ const ACT = {
   gfxSet: d => { const v = +d.v; GFX.over = Object.assign({}, GFX.over, { [d.k]: v }); gfxSave(); if (sheet) renderSheet(); },
   gfxReset: () => { GFX.over = {}; gfxSave(); if (sheet) renderSheet(); },
   gfxFps: () => { GFX.showFps = GFX.showFps ? 0 : 1; gfxSave(); if (sheet) renderSheet(); },
+  gfxCine: d => { GFX.noCine = +d.v ? 1 : 0; gfxSave(); if (sheet) renderSheet(); toast(`Cinematic camera ${GFX.noCine ? "off" : "on"}.`); },
   gfxReload: () => { try { flush(); } catch (e) {} setTimeout(() => location.reload(), 150); },
   keyBind: d => { G.rebind = G.rebind === d.k ? null : d.k; if (sheet) renderSheet(); },
   keyReset: () => { Object.assign(KEYS, KEYS_DEF); try { localStorage.removeItem("void.keys"); } catch (e) {} if (sheet) renderSheet(); },
