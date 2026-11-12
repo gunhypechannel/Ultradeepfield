@@ -81,3 +81,29 @@ rep('const br = new TH.ConeGeometry(.28, 2.2, 4); br.rotateX(-Math.PI / 2 - .25)
     'const br = new TH.ConeGeometry(.12, 1.1, 6); br.rotateX(-Math.PI / 2 - .35); put(hd, new TH.Mesh(br, MG), [sx * .5, .5, -.1], [0, sx * -.25, 0]);')
 rep('put(hd, new TH.Mesh(new TH.BoxGeometry(.25, .18, 2.6), MG), [0, .62, .8]);', 'put(hd, new TH.Mesh(new TH.BoxGeometry(.08, .06, 1.7), MG), [0, .56, .5], [.1, 0, 0]);')
 open(P, 'w', encoding='utf-8').write(s)
+
+# --- v494 her face skinned with the owner's painting (owner chose: "Art-skinned 3D face"). The 3D head takes the painted face's pose
+# (tilted back .525, turned .15, fitted to the painted eyes, nose, mouth, chin and gem: 18 px rms, tools/painted/pose2.py), and each
+# vertex's UV is its place in the painting under that pose (an affine fit, the painted face being shorter than the model's).
+# The painting is beams-free (painted out), crop (250, 60)-(1000, 800) of the 1199x1060 crop, docs/art/boss/medusara-face.webp.
+# Once it loads, the 3D eyes, diadem, crown crystals and gem (all in the painting) hide; their glows and the beams stay. ---
+s = open(P, encoding='utf-8').read()
+rep('head.add(fm); out0.MF = MF; }', 'head.add(fm); out0.MF = MF; out0.hg = hg; }')
+rep('head.rotation.set(-.12 + Math.sin(T * .3) * .03 - chg * .08, Math.sin(T * .21) * .07, Math.sin(T * .17) * .02);', 'head.rotation.set(-.525 + Math.sin(T * .3) * .03 - chg * .08, -.15 + Math.sin(T * .21) * .07, Math.sin(T * .17) * .02);')
+SKIN = r'''    { // v494 the painted face as the 3D head's skin
+      const q = new TH.Quaternion().setFromEuler(new TH.Euler(-.525, -.15, 0)), v = new TH.Vector3(), X0 = 250, Y0 = 60, CW = 750, CH = 740;
+      new TH.TextureLoader().load("art/boss/medusara-face.webp", tx => { try { tx.encoding = TH.sRGBEncoding; tx.anisotropy = 8; const g = out0.hg, P = g.attributes.position, U = new Float32Array(P.count * 2);
+        for (let k = 0; k < P.count; k++) { v.fromBufferAttribute(P, k).applyQuaternion(q); const px = 25.4341 * v.x - .8105 * v.y + 619.784, py = -(6.1959 * v.x + 18.7694 * v.y - 416.735); U[k * 2] = Math.min(1, Math.max(0, (px - X0) / CW)); U[k * 2 + 1] = Math.min(1, Math.max(0, 1 - (py - Y0) / CH)); }
+        g.setAttribute("uv", new TH.BufferAttribute(U, 2)); const m = out0.MF; m.map = tx; m.emissiveMap = tx; m.emissive.setRGB(1, 1, 1); m.normalMap = null; m.vertexColors = false; m.roughness = .85; m.metalness = 0; m.envMapIntensity = .25; m.needsUpdate = true; out0.skin = 1;
+        head.children.forEach(c => { if (c.isMesh && c !== cracks && (c.material === MG || (c.material.color && c.material.color.getHex() === 0x2a0a18))) c.visible = false; }); gemG.children.forEach(c => { if (c.isMesh) c.visible = false; }); eyes.forEach(E => { E.g.children[0].visible = false; }); } catch (e) {} }); }
+'''
+i0 = s.index('  function medusara() {'); END = '    tick(0); bake(body); return out; }'; j = s.index(END, i0)
+WR = r'''    { const tick2 = out.tick; out.tick = t => { tick2(t); if (!out0.skin) return; const fd = f("die", t), die = fd < 0 ? 0 : fd, ch = f("charge", t), chg = ch < 0 ? 0 : ss(0, .7, ch) * (1 - ss(.94, 1, ch)), sh = drv.shatter != null ? drv.shatter : 0, aw = drv.awake != null ? drv.awake : 1;
+      out0.MF.emissiveIntensity = .5 * (.4 + .6 * aw) * (1 - ss(.15, .6, die)) * (1 + chg * .35 + sh * .5); eyes.forEach(E => { E.c.visible = false; }); }; }
+'''
+s = s[:j] + SKIN + WR + s[j:]
+open(P, 'w', encoding='utf-8').write(s)
+s = open(P, encoding='utf-8').read()
+rep('if (PAINT) stormS.position.z = -16;', 'stormS.position.z = -16; // v494 her storm glow behind her face, not washing over it')
+rep('out0.MF.emissiveIntensity = .5 * (.4 + .6 * aw)', 'out0.MF.emissiveIntensity = .34 * (.4 + .6 * aw)')
+open(P, 'w', encoding='utf-8').write(s)
