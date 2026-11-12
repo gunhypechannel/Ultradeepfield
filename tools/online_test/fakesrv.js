@@ -38,6 +38,9 @@ function rpc(name, a, uid) {
   if (name === 'doc_acquire') { const lp = '_locks/' + a.p.replace(/\//g, '~'), d = (T[lp] || {}).data || {};
     if (d.until > a.t && d.holder !== a.holder) return { data: { acquired: false, holder: d.holder, until: d.until }, error: null };
     T[lp] = { data: { holder: a.holder, until: a.t + a.ttl }, u: new Date().toISOString() }; return { data: { acquired: true, until: a.t + a.ttl }, error: null }; }
+  if (name === 'doc_cas') { if (!canWrite(a.p, uid)) return { data: null, error: { code: '42501', message: 'rls' } }; const cur = T[a.p];
+    if (cur ? cur.u !== a.expect : a.expect != null) return { data: { ok: false, v: cur ? cur.u : null }, error: null };
+    let u = new Date().toISOString(); if (cur && u <= cur.u) u = new Date(Date.parse(cur.u) + 1).toISOString(); T[a.p] = { data: clone(a.d), u }; LOG.push([uid, 'cas', a.p]); broadcast('UPDATE', a.p, a.d); return { data: { ok: true, v: u }, error: null }; }
   return { data: null, error: { message: 'fake: rpc ' + name } };
 }
 function auth(a) { const e = String(a.email || '').toLowerCase();

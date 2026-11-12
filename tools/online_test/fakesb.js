@@ -1,5 +1,5 @@
 /* A stand-in for the Supabase JS client: an in-memory copy of the real `docs` table (seeded from the live galaxy), with the same
-   query builder, RPCs (doc_update, doc_acquire, is_owner), row rules for private data/ records, auth (sign up / sign in /
+   query builder, RPCs (doc_update, doc_acquire, doc_cas, is_owner), row rules for private data/ records, auth (sign up / sign in /
    session kept across reloads) and the realtime channel. The real udf-supabase.js runs on top of it unchanged. */
 (function () {
   var LAT = window.__lat || 120, LS = window.localStorage;
@@ -60,6 +60,9 @@
     else if (name === "doc_acquire") { var lp = "_locks/" + a.p.replace(/\//g, "~"), d = (T[lp] || {}).data || {};
       if (d.until > a.t && d.holder !== a.holder) r = { data: { acquired: false, holder: d.holder, until: d.until }, error: null };
       else { T[lp] = { data: { holder: a.holder, until: a.t + a.ttl }, u: new Date().toISOString() }; persist(); r = { data: { acquired: true, until: a.t + a.ttl }, error: null }; } }
+    else if (name === "doc_cas") { var cur = T[a.p]; if (!canWrite(a.p)) r = { data: null, error: { code: "42501", message: "rls" } };
+      else if (cur ? cur.u !== a.expect : a.expect != null) r = { data: { ok: false, v: cur ? cur.u : null }, error: null };
+      else { var u = new Date().toISOString(); if (cur && u <= cur.u) u = new Date(Date.parse(cur.u) + 1).toISOString(); T[a.p] = { data: clone(a.d), u: u }; persist(); log.push(["cas", a.p]); broadcast("UPDATE", a.p, a.d); r = { data: { ok: true, v: u }, error: null }; } }
     else r = { data: null, error: { message: "fake: rpc " + name } };
     return later(r); }
   var authL = [];
