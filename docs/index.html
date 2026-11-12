@@ -4585,7 +4585,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 499;
+const GAME_V = 500;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6088,7 +6088,7 @@ const WB_LIVE = 48 * 3600e3, WB_FUSE = 24 * 3600e3;
 /* v401: a boss's window in a cycle (null when that week isn't its week). The owner preview (G.elePrev 1 or 2) shows the Convergence now. */
 function wbWin(k, c) { const D = WB[k]; if (!D) return null; const g = D.g || 1; { const s2 = WB2_BASE + c * WEEK; if (s2 >= ROT0) { if (g === 3) return rotKey(rotW(s2)) !== "conv" ? null : k === "epx" ? [s2 + WB_FUSE, s2 + WB_LIVE] : [s2, s2 + WB_FUSE]; const sat = s2 + 3 * 864e5; if (rotKeyS(rotWs(sat)) !== (D.con != null ? "ovl" : k)) return null; return [sat, sat + WB_LIVE]; } if (g === 1) return null; }
   if (g === 1) { const s = WB_BASE + c * WEEK; return [s, s + WB_LIVE]; }
-  const s = WB2_BASE + c * WEEK, odd = ((c % 2) + 2) % 2 === 1; if (g === 2) return odd ? null : [s, s + WB_LIVE];
+  const s = WB2_BASE + c * WEEK, odd = ((c % 2) + 2) % 2 === 1; if (g === 2) { const L2 = ["brd", "tyr", "wym", "col"]; return odd || L2[(((c >> 1) % 4) + 4) % 4] !== k ? null : [s, s + WB_LIVE]; } // v500 one at a time
   if (!odd) return null; return k === "epx" ? [s + WB_FUSE, s + WB_LIVE] : [s, s + WB_FUSE]; }
 const wbPrev = k => G.wbShow && WB[k] ? (G.wbShow === k || (G.wbShow === "ovl" && WB[k].con != null)) : G.elePrev && WB[k] && WB[k].g >= 2 ? (wbG3(k) ? (k === "epx" ? G.elePrev === 2 : G.elePrev === 1) : false) : null;
 const wbOn = (k, T = now()) => { const pv = wbPrev(k); if (pv !== null) return pv; const w = wbWin(k, wbCycOf(k, T)); return !!w && T >= w[0] && T < w[1]; };
