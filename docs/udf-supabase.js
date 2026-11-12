@@ -152,6 +152,14 @@
 
   function Doc(path) { this.path = path; this.id = path.split("/").pop(); }
   Doc.prototype.get = function () { var p = this.path; return run(sb.from("docs").select("path,data").eq("path", p).maybeSingle()).then(function (r) { return dsnap(p, r ? r.data : null); }); };
+  /* v483 compare-and-set for the shared event records: getV() also returns the row's version (updated_at), and cas(v, d) writes only
+     if nobody has written since; false means someone did, and the caller re-reads and works its change out again.
+     Off with UDF_SUPABASE.cas = false (then the game falls back to plain set). */
+  if (CFG.cas !== false) {
+    Doc.prototype.getV = function () { var p = this.path; return run(sb.from("docs").select("path,data,updated_at").eq("path", p).maybeSingle()).then(function (r) { var s = dsnap(p, r ? r.data : null); s.v = r ? r.updated_at : null; return s; }); };
+    Doc.prototype.cas = function (v, d) { var p = this.path, data = strip(clone(d || {}));
+      return run(sb.rpc("doc_cas", { p: p, expect: v == null ? null : v, d: data })).then(function (r) { if (r && r.ok) { emit(p, data); return true; } return false; }); };
+  }
   Doc.prototype.set = function (d) {
     var p = this.path, data = strip(clone(d || {}));
     return run(sb.from("docs").upsert({ path: p, col: "", top: "", id: "", data: data }, { onConflict: "path" })).then(function () { emit(p, data); });
