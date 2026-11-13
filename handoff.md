@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-13 (America/Phoenix). Current game version: **v534** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v334**.
+Last updated: 2026-11-13 (America/Phoenix). Current game version: **v535** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v335**.
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -39,6 +39,7 @@ Supabase project `slubtpfnimxtrfcozvhk`. Edge Function `settle_fight` (`supabase
 
 ## Pending work (as of 2026-11-07): start here in a new session
 
+00000000000000000000000000. **v535 — the Bestiary grows: the five special creatures, the Hive and the Collective** (tools/patches/p535_bestiary2.py on v534; owner approved the texts 2026-11-13, annoyed at being asked again: "Approved approved approved for the 10th time" — don't re-ask approval for texts he has approved). Records b_kegg, b_gwhale, b_reat, b_cserp, b_sent (unlock like v526), b_hive (any alien report that isn't a monster), b_coll (Omega or any report whose start lists cube/sphere/cdrone; painting art/mon/cube.webp); notes open on a win (attacker in aUids or defender dUid). 21 voice lines added to the lab (Bestiary · b_<k> · fragment/field notes/advisor).
 00000000000000000000000000. **2026-11-13 after v534:** the five special creatures' Advisor lines are recorded (docs/voice 1yuzj53, 1uqj38p, 1vdjhil, 1a3kre9, nzy1pw); the claude.ai artifact republished at v534 (artifact version 514). settle_fight phase 3 still gated: fight_log has 1 row. Call-to-arms/SOS still needs two real alliance accounts (not created: the owner's rule). Bestiary cards for the five specials, the Hive and the Collective drafted in chat, waiting for the owner's approval.
 00000000000000000000000000. **v534 — fleet speed in the Void Shop** (tools/patches/p534_fleetspeed.py on v533; owner asked where players buy flight speed-ups). Fleet Booster bf_bronze..platinum (Boosters tab, ◆6/12/20/32, +10..40% flight speed 7 days, buff "bf", read in travelRaw for your own fleets; art hyper). Afterburner Fuel xf_bronze/silver/gold (Accelerators tab, ◆2/6/15, 15 min / 1 h / 4 h, `fuelMs`/`fuelL`; art drive): ACT.fFuel from the fleet's Fleet control (one button per owned tier, or a "🚀 Afterburner Fuel in the shop" link, ACT.shopFuel), or useItem → fuelUse(): the fleet open in Fleet control, else the one landing next. Tested in the harness: Gold booster 1.30x faster sends, fuel cuts 60 and 15 min.
 00000000000000000000000000. **v533 — v532 undone: Reaper and Discovery Class sizes as in v531** (tools/patches/p533_capscale_undo.py; owner: "Never mind keep the ships sizes the same"). bLen eclipse 2.6, dreadnought back to the ladder (1.72).
