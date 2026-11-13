@@ -264,7 +264,7 @@ Playwright + Chrome are available in the cloud workspace. Pattern used this sess
 - **Simultaneous play on two devices:** a tap made in the ~1 s before the other device's save arrives can still be lost. Normal switching is covered.
 - Leaving a page relies on an async save on `visibilitychange`/`pagehide`; with `saveSoon()` the gap is ~1 s.
 - Google sign-in on Supabase is off (`google: false`).
-- `README.md` still describes the Firebase setup and should be updated for Supabase.
+- `README.md` updated for Supabase (2026-11-12).
 - `tools/test_*.py` need the `__T` hook restored or the injection approach above.
 
 ## Release checklist
