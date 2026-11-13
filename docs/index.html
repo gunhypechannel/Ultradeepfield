@@ -2883,7 +2883,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
       /* Divine Annihilation, stage by stage: warning .00-.12, runes .12-.35, accumulation .35-.55, alignment .55-.66, beam .66-.86, aftermath .86-1 */
       const A = fa < 0 ? -1 : fa, warn = bell(A, 0, .06, .9, .97), runes = A < 0 ? 0 : ss(.12, .35, A), acc = bell(A, .35, .55, .7, .74), align = bell(A, .55, .64, .86, .92), fire = bell(A, .66, .685, .84, .88), after = bell(A, .86, .9, .97, 1);
       out.ph = A < 0 ? "idle" : A < .12 ? "warning" : A < .35 ? "runes" : A < .55 ? "accumulate" : A < .66 ? "align" : A < .86 ? "beam" : "aftermath"; out.dark = align * (1 - fire * .5) * .6;
-      const spin = 1 + warn * 2 + runes * 3 + acc * 4 + align * 2 - after * 2.5, wob = out.stab.filter(x => !x).length;
+      const wind = A < 0 ? 0 : ss(.08, .64, A) ** 1.6 * (1 - ss(.67, .76, A)), spin = 1 + warn * 2 + runes * 2 + wind * 28 - after * 2.5, wob = out.stab.filter(x => !x).length;
       st.spread = Math.max(warn, bell(fw, 0, .2, .8, 1)); st.beat = fw < 0 ? 0 : Math.sin(fw * Math.PI * 3) * (1 - fw); st.lift = Math.max(acc, align) * .9 * (1 - fire * .7) + fire * .15 - after * .2; st.recoil = fire * (.8 + Math.sin(t * .03) * .1); st.sway = fire * Math.sin((A - .66) / .2 * Math.PI * 1.2 - .6) * .3; const lean = A < 0 ? 0 : ss(.05, .3, A) * (1 - ss(.9, 1, A)); out.lean = lean; out.fireK = fire; out.sway = st.sway;
       st.coil = bell(fr, 0, .2, .8, 1) * .6; st.curl = Math.sin(t * .0003) * .4; st.gape = Math.max(acc * .6, align * .85, fire, bell(fc, .2, .4, .7, .9) * .4, bell(fw, .3, .45, .6, .8) * .5);
       spine(t);
@@ -2919,7 +2919,7 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
         jet.put(k, tmpV.x + Math.cos(a) * Math.sin(m.b) * r, tmpV.y + Math.sin(a) * r * .8, tmpV.z + Math.cos(m.b) * r * .6, .5 + (1 - ph) * .5, pull * Math.min(1, ph * 6) * (.4 + .6 * ph)); } jet.done(); }
       btM(t, acc * 5 + align * 8 + fire * 4);
       ringsW.forEach((o, k) => { const dir = k % 2 ? -1 : 1, base = [.00009, .00014, .0002, .0003][k] * dir * (1 + wob * .15);
-        o.ang += base * dt * spin; if (align > .01) { const snap = Math.round(o.ang / (TAU / 8)) * (TAU / 8); o.ang += (snap - o.ang) * Math.min(1, align * dt * .006); }
+        o.ang += base * dt * spin; if (align > .01 && fire > .01) { const snap = Math.round(o.ang / (TAU / 8)) * (TAU / 8); o.ang += (snap - o.ang) * Math.min(1, align * dt * .006); }
         o.r.rotation.z = o.ang + (crack > 0 && k === 0 ? Math.sin(t * .007) * crack * .05 : 0) + (wob ? Math.sin(t * .003 + k) * .01 * wob : 0);
         const sw = A < 0 ? (fj >= 0 ? bell(fj, 0, .2, .8, 1) : 0) : ss(.12 + k * .05, .3 + k * .05, A) * (1 - after); o.rr.forEach(r => { r.material.uniforms.uSw.value = sw > .001 ? Math.min(1.04, sw * 1.04) : 0; r.material.uniforms.uHot.value = (align + fire * .8) * .5; });
         o.ch.material.opacity = .45 + .2 * Math.sin(t * .003 + k) + acc * .4 + align * .5; });
@@ -4607,7 +4607,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 506;
+const GAME_V = 509;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6215,11 +6215,17 @@ function wbMapFx(W, t, T) {
   try { wbScanFx(W, t); wbScarFx(W, t, T); convRain(W, t, T, st); convTint(W, T); } catch (e) {}
   if (!W.wbComp && Object.keys(W.wbM).length === Object.keys(WB).length) { W.wbComp = 1; try { W.renderer.compile(W.scene, W.camera); } catch (e) {} } } // all built (one a frame, usually during the background map build): compile their shaders now, not on first sight
 /* v505 the Wyrm's lens beam aimed down at a world or a fleet near the black hole, and the flare where it hits */
-function wymAim(W, M, T, t) { const b = M.b, L = b.lens; if (!L) return; M.wv = M.wv || [new TH.Vector3(), new TH.Vector3(), new TH.Vector3()];
-  if (!L.visible) { M.tg = null; L.scale.set(1, 1, 1); if (M.hitS) M.hitS.visible = false; return; }
+function wymAim(W, M, T, t) { const b = M.b, L = b.lens; if (!L) return; const hd = L.parent, head = hd && hd.parent; if (!head) return; M.wv = M.wv || [new TH.Vector3(), new TH.Vector3(), new TH.Vector3(), new TH.Quaternion(), new TH.Quaternion(), new TH.Quaternion()];
+  const gape = clamp(-hd.rotation.x / .25, 0, 1); // the jaws opening for the lens: 0 closed, 1 wide
+  if (gape < .02 && !L.visible) { M.tg = null; M.hw = 0; L.scale.set(1, 1, 1); if (M.hitS) M.hitS.visible = false; return; }
   if (!M.tg) { const g0 = b.grp.getWorldPosition(new TH.Vector3()), R0 = (b.r || 15) * b.grp.scale.x * 1.6, C = G.list.concat(PIRATES).map(p => { const q = P3(p, T, {}); return [p, Math.hypot(q.x - g0.x, q.z - g0.z)]; }).filter(([, d]) => d > R0 && d < R0 * 3.2).sort((a, c) => a[1] - c[1]).slice(0, 14); if (!C.length) return; M.tg = C[(Math.random() * C.length) | 0][0]; } // beyond its own coils
-  const p = P3(M.tg, T, {}), tp = M.wv[0].set(p.x, p.y, p.z); b.grp.updateMatrixWorld(true); L.scale.set(1, 1, 1); L.lookAt(tp); L.updateMatrixWorld(true);
-  const o = L.getWorldPosition(M.wv[1]), sc = L.getWorldScale(M.wv[2]).z || 1, d = o.distanceTo(tp); L.scale.z = Math.max(.2, d / (50 * sc));
+  const p = P3(M.tg, T, {}), tp = M.wv[0].set(p.x, p.y, p.z); L.rotation.set(0, 0, 0); L.scale.set(1, 1, 1); b.grp.updateMatrixWorld(true);
+  // swing the whole head so its mouth (the lens) faces the target: the turn that takes the lens's line onto the target's, eased in with the jaws
+  M.hw = ss(0, .6, gape); const qp = head.parent.getWorldQuaternion(new TH.Quaternion()).invert(), qH0 = head.getWorldQuaternion(M.wv[5]).clone(), qW = qH0.clone();
+  for (let it = 0; it < 4; it++) { const o = L.getWorldPosition(M.wv[1]), d0 = M.wv[2].set(0, 0, 1).applyQuaternion(L.getWorldQuaternion(M.wv[3])).normalize(), d1 = tp.clone().sub(o).normalize(); qW.premultiply(M.wv[4].setFromUnitVectors(d0, d1)); head.quaternion.copy(qp.clone().multiply(qW)); head.updateMatrixWorld(true); } // the mouth moves as the head turns: a few passes settle it on the target
+  head.quaternion.copy(qp.clone().multiply(qH0.slerp(qW, M.hw))); b.grp.updateMatrixWorld(true);
+  if (!L.visible) { if (M.hitS) M.hitS.visible = false; return; }
+  const o2 = L.getWorldPosition(M.wv[1]); L.lookAt(tp); L.updateMatrixWorld(true); const sc = L.getWorldScale(M.wv[2]).z || 1, d = o2.distanceTo(tp); L.scale.z = Math.max(.02, d / (50 * sc));
   if (!M.hitS) { M.hitS = new TH.Sprite(new TH.SpriteMaterial({ map: glowTex("255,190,110", .9), blending: TH.AdditiveBlending, depthWrite: false, transparent: true, toneMapped: false })); W.scene.add(M.hitS); }
   const f = L.children[1] ? L.children[1].material.opacity : 1; M.hitS.visible = f > .02; M.hitS.position.copy(tp); M.hitS.material.opacity = Math.min(1, f * 1.1); M.hitS.scale.setScalar(14 + 6 * Math.sin(t * .03) + 10 * f); }
 function wbPentFx(M, g, q, st, T, t) { const b = M.b, fz = wbFuse(T); b.form = fz.form; for (const k in fz.dock) b.dock[k] = fz.dock[k]; b.far = 95 / g.scale.x; b.ground = Math.max(5, q.y / g.scale.x);
@@ -8376,7 +8382,8 @@ const ARCH = {
     enc: ["Commander, the archive fragments are cross-referencing on their own.", "Every civilization. Every age. The same shapes, and the same warning.", "We called them gods because we had no other word for what we saw."], def: [] } };
 const ARCH_ORD = ["war", "wym", "col", "ovl", "vae", "khz", "med", "dev", "brd", "tyr", "aex", "est", "efi", "eli", "eic", "ena", "epx", "cube", "testament"];
 /* her lines one after another: each stays up until its voice clip ends, or long enough to read when it has none */
-function archSeq(L) { let i = 0, tries = 0; const step = () => { if (i >= L.length) return; { const a = VOICE.au; if (tries++ < 120 && ((a && !a.paused && !a.ended) || (G.sbQ && G.sbQ.length) || ($("#advh.on") && G.holoCur !== L[i - 1]))) { setTimeout(step, 500); return; } } tries = 0; const l = L[i++], t0 = Date.now(), minT = Math.max(3200, l.length * 62); try { advHolo(l, 1); } catch (e) {}
+const archFragLine = E => E.frag.replace(/^…/, "").replace(/…$/, "..."); /* v508 the fragment as she reads it */
+function archSeq(L, tok, done) { let i = 0, tries = 0; const step = () => { if (tok && tok !== G.archTok) return; if (i >= L.length) { if (done) done(); return; } { const a = VOICE.au; if (tries++ < 120 && ((a && !a.paused && !a.ended) || (G.sbQ && G.sbQ.length) || ($("#advh.on") && G.holoCur !== L[i - 1]))) { setTimeout(step, 500); return; } } tries = 0; const l = L[i++], t0 = Date.now(), minT = Math.max(3200, l.length * 62); try { advHolo(l, 1); } catch (e) {}
     const wait = () => { const a = VOICE.au, busy = a && !a.paused && !a.ended; if (busy || Date.now() - t0 < (busy ? 0 : minT)) setTimeout(wait, 300); else setTimeout(step, 350); }; setTimeout(wait, 600); }; step(); }
 const archName = k => k === "cube" ? "The Cube" : k === "testament" ? "The Final Testament" : SBW[k] ? `${SBW[k].n}, ${SBW[k].t.replace(/^The /, "the ")}` : WB[k] ? WB[k].n : k;
 const archLv = k => ((S && S.arch) || {})[k] | 0;
@@ -8406,7 +8413,7 @@ function shArch() { const id = sheet.id; S.archR = S.archR || {};
       ${lv ? archImg(E, lv, id).replace('class="arimg', 'class="arimg big') : `<div class="arimg glyph lock">🔒</div>`}
       ${lv ? `<div class="arfrag"><small>Fragment of the original record</small><p>${esc(E.frag)}</p></div>` : `<p class="note">Encounter ${esc(id === "testament" ? "the archives' deeper records" : archName(id))} to recover this record: scan it on the map, open it, or watch a battle against it.</p>`}
       ${lv >= 2 ? `<div class="arint"><small>Modern interpretation</small><p>${esc(E.interp)}</p></div><div class="aradv"><img src="${ADV_ART}" alt=""><p><b>${ADV}</b>${esc(E.adv)}</p></div>` : lv ? `<div class="arint lock"><small>Modern interpretation · sealed</small><p>${id === "testament" ? "" : `Defeat ${esc(archName(id))} to unlock what the record really means.`}</p></div>` : ""}
-      ${lv ? `<dl class="kv"><dt>Associated entity</dt><dd>${esc(archName(id))}</dd><dt>Discovery location</dt><dd>${esc(E.loc)}</dd><dt>Threat assessment</dt><dd class="arth">${esc(E.th)}</dd></dl>${lv >= 2 && (E.enc.length || E.def.length) ? `<button class="btn ghost wide" data-act="archPlay" data-id="${id}">🔊 Hear the Advisor's account</button>` : ""}` : ""}`; }
+      ${lv ? `<dl class="kv"><dt>Associated entity</dt><dd>${esc(archName(id))}</dd><dt>Discovery location</dt><dd>${esc(E.loc)}</dd><dt>Threat assessment</dt><dd class="arth">${esc(E.th)}</dd></dl><button class="btn ghost wide" data-act="archPlay" data-id="${id}">${G.archRd === id ? "■ Stop reading" : "🔊 Have the Advisor read this record"}</button>` : ""}`; }
   const n2 = ARCH_ORD.filter(k => archLv(k) >= 2).length, n1 = ARCH_ORD.filter(k => archLv(k)).length;
   const card = k => { const E = ARCH[k], lv = archLv(k), nu = lv > (S.archR[k] | 0); return `<button class="arcard lv${lv}" data-act="archEntry" data-id="${k}">${lv ? archImg(E, lv, k) : `<div class="arimg glyph lock">?</div>`}<span><b>${lv ? esc(E.t) : k === "testament" ? "A sealed testament" : "Unrecovered record"}</b><small>${lv ? esc(archName(k)) : k === "testament" ? "Unlocks after 10 interpretations" : "Encounter the entity to recover it"}</small><em>${lv >= 2 ? "Interpreted" : lv ? "Fragment" : "Sealed"}</em></span>${nu ? `<i class="arnew">NEW</i>` : ""}</button>`; };
   return `<div class="hd archd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#e2c48a">Echoes of Empire Origins</div><h2>The Ancient Archives</h2><p class="note">The oldest empires left records of things they saw in the sky. We called them myths. ${n1} of ${ARCH_ORD.length} records recovered · ${n2} interpreted.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
@@ -21684,7 +21691,8 @@ const ACT = {
   achOpen: () => openSheet({ type: "ach" }),
   archOpen: () => { G.trayOpen = false; try { trayRender(); } catch (e) {} openSheet({ type: "archives" }); },
   archEntry: d => openSheet({ type: "archives", id: d.id }),
-  archPlay: d => { const E = ARCH[d.id]; if (E) archSeq(E.enc.concat(E.def)); },
+  archPlay: d => { const E = ARCH[d.id], lv = archLv(d.id); G.archTok = (G.archTok || 0) + 1; if (G.archRd === d.id || !E || !lv) { G.archRd = null; try { voiceStop(); } catch (e) {} const h = $("#advh"); if (h) h.classList.remove("on"); if (sheet && sheet.type === "archives") renderSheet(); return; }
+    G.archRd = d.id; const L = [archFragLine(E)].concat(lv >= 2 ? [E.interp, E.adv] : [], E.enc, lv >= 2 ? E.def : []); archSeq(L, G.archTok, () => { if (G.archRd === d.id) { G.archRd = null; if (sheet && sheet.type === "archives") renderSheet(); } }); if (sheet && sheet.type === "archives") renderSheet(); },
   evCube: () => openSheet({ type: "events", ev: "cube" }), // v91: the Cube and its banner open the event card first
   achClaim: d => act(() => { const a = ACH.find(x => x[0] === d.k); if (!a) return; const s = achState(a); if (!s.ready) return; const g = achGot(); g[a[0]] = s.got + 1;
     grantRw(achRw(a[0], s.got), `Achievement · ${a[1]} tier ${s.got + 1}`); SFX.research(); toast(`${a[1]} tier ${s.got + 1}: +${achAP(s.got)} Achievement Points.`, "win"); }),
