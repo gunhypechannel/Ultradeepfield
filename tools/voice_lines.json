@@ -3768,5 +3768,140 @@
   "key": "wu14rb",
   "where": "Monster · cram",
   "line": "float tl = clamp((-2.2 - position.x) / 6., 0., 1.); transformed.z += tl * tl * .8 * sin(position.x * .9 + mt * 4.); transformed.y += tl * tl * .45 * cos(position.x * .7 + mt * 3.3); float hb = smoothstep(.8, 2.8, position.x); transformed.y += hb * .1 * sin(mt * 1.6);"
+ },
+ {
+  "key": "1bf1aw9",
+  "where": "Bestiary · b_swhale · fragment",
+  "line": "The Concord's first deep-lane convoys called them \"hull-eaters.\" They follow engine wakes for days and strike only when a ship turns back. The laser turrets in their hides aren't grown."
+ },
+ {
+  "key": "d4ov6k",
+  "where": "Bestiary · b_swhale · field notes",
+  "line": "a titan-class laser platform with the heaviest hide of any monster. Send heavy hulls; Fighters barely scratch it. It drops Exotic Tissue."
+ },
+ {
+  "key": "1u66nky",
+  "where": "Bestiary · b_swhale · advisor",
+  "line": "Someone built those guns into them, Commander. I'd like to know who."
+ },
+ {
+  "key": "1r8dtjx",
+  "where": "Bestiary · b_slevi · fragment",
+  "line": "These serpents feed on the light of dying stars. The molten seams in their scales are star-fire they never finished digesting. Old pilots say a leviathan's wake can still burn a week later."
+ },
+ {
+  "key": "10atose",
+  "where": "Bestiary · b_slevi · field notes",
+  "line": "a capital-class plasma beast that hits harder than any other monster. Scout it, then send the heaviest fleet you have. It guards rare flagship materials."
+ },
+ {
+  "key": "1rp9qda",
+  "where": "Bestiary · b_slevi · advisor",
+  "line": "Never fight one near a star. It gets stronger."
+ },
+ {
+  "key": "qsrvwl",
+  "where": "Bestiary · b_ssquid · fragment",
+  "line": "They hunt in packs inside gas nebulae, talking in pulses of light that our sensors read as static. Every pack has one elder that never joins the fight."
+ },
+ {
+  "key": "6y90zd",
+  "where": "Bestiary · b_ssquid · field notes",
+  "line": "cruiser-class acid hunters that come in packs. Bring Cruisers and armour. They drop Exotic Tissue, and sometimes Void Essence."
+ },
+ {
+  "key": "11vf5s0",
+  "where": "Bestiary · b_ssquid · advisor",
+  "line": "If the pack ever goes dark at once, pull back. That's the signal."
+ },
+ {
+  "key": "158dkhr",
+  "where": "Bestiary · b_vmanta · fragment",
+  "line": "Mantas glide the empty gulfs between layers on wings that sail on gravity itself. They're curious, and they've been seen pacing ships for hours before turning hostile without warning."
+ },
+ {
+  "key": "q9rnuz",
+  "where": "Bestiary · b_vmanta · field notes",
+  "line": "fast and evasive laser cruisers; slow guns miss them. Fighters and Lancers track them best. They drop Exotic Tissue, sometimes Void Essence."
+ },
+ {
+  "key": "1yexkuv",
+  "where": "Bestiary · b_vmanta · advisor",
+  "line": "It isn't hunting us at first. It's learning how we turn."
+ },
+ {
+  "key": "jdhm8g",
+  "where": "Bestiary · b_swasp · fragment",
+  "line": "A queen buried in a resin nest the size of a station. The swarm grows as long as the nest is fed, and each wasp is a drone of one mind."
+ },
+ {
+  "key": "fax69i",
+  "where": "Bestiary · b_swasp · field notes",
+  "line": "an acid swarm, one wasp for every level of the hive, guarding an armoured nest. Corvettes and Battleships shred the swarm; Bombers break the nest."
+ },
+ {
+  "key": "1944uey",
+  "where": "Bestiary · b_swasp · advisor",
+  "line": "Leave the nest standing and the swarm comes back. Always break the nest."
+ },
+ {
+  "key": "1ic8ggl",
+  "where": "Bestiary · b_ctort · fragment",
+  "line": "Some of these are older than the moons they graze on. The crystals on their shells grow one layer a century, and miners have followed one for a whole lifetime just to harvest what it sheds."
+ },
+ {
+  "key": "heamnn",
+  "where": "Bestiary · b_ctort · field notes",
+  "line": "a titan with half its damage turned aside by its shell. Bombers and plasma crack it; bring patience. It often drops Quantum Crystal."
+ },
+ {
+  "key": "y8mowy",
+  "where": "Bestiary · b_ctort · advisor",
+  "line": "It isn't angry, Commander. It's just very hard to move."
+ },
+ {
+  "key": "19z4t0f",
+  "where": "Bestiary · b_gspider · fragment",
+  "line": "It carries a caged singularity that it feeds with captured ships. Its webs are bent space strung between asteroids, invisible until something is caught."
+ },
+ {
+  "key": "n91cb3",
+  "where": "Bestiary · b_gspider · field notes",
+  "line": "a capital-class beast with long gravity lances. Send heavy hulls, and plenty of them. It sometimes carries Void Essence."
+ },
+ {
+  "key": "1li5pd2",
+  "where": "Bestiary · b_gspider · advisor",
+  "line": "If your fleet suddenly drifts off course, stop moving. You're in the web."
+ },
+ {
+  "key": "6q9brb",
+  "where": "Bestiary · b_smoth · fragment",
+  "line": "Drawn to starlight and shield light alike. Clouds of them have stripped whole defense grids bare in a single night, then drifted away glowing brighter."
+ },
+ {
+  "key": "1yfyz48",
+  "where": "Bestiary · b_smoth · field notes",
+  "line": "ion swarms that strip shields fast, so armour matters more than shields here. Lancers run them down. They often drop Quantum Crystal."
+ },
+ {
+  "key": "11lc8or",
+  "where": "Bestiary · b_smoth · advisor",
+  "line": "They don't mean us harm. They just love what keeps us alive."
+ },
+ {
+  "key": "1nnrucv",
+  "where": "Bestiary · b_cram · fragment",
+  "line": "A horned beast of ice that rides its own comet and charges anything in its lane, ships, stations and moons alike. The herds migrate on a ring around the Core that takes three hundred years to complete."
+ },
+ {
+  "key": "1oiez60",
+  "where": "Bestiary · b_cram · field notes",
+  "line": "a capital-class rammer with mass weapons that hit like a battering ram. Lead with Battleships and Bastions. It leaves Reinforced Alloy behind."
+ },
+ {
+  "key": "qke1p8",
+  "where": "Bestiary · b_cram · advisor",
+  "line": "Get out of its lane or get under its horns. There's no third choice."
  }
 ]
