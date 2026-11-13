@@ -587,6 +587,34 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 .clsb{font-weight:600;letter-spacing:.06em}.cl-frigate{--cc:#6fd8ff}.cl-utility{--cc:#9fe06a}.cl-cruiser{--cc:#5fa8ff}.cl-battlecruiser{--cc:#ffb347}.cl-battleship{--cc:#ff7a5a}.cl-carrier{--cc:#c9a6ff}.cl-titan{--cc:#ffd36b}.clsb{color:var(--cc)}
 .clsc{border-color:var(--cc)!important;background:linear-gradient(135deg,rgba(255,255,255,.04),transparent)}.clsc h3{color:var(--cc);font-family:var(--f-display);letter-spacing:.06em}.clsp{margin:6px 0 0;font-size:13.5px}.clsp b{color:var(--cc);font-family:var(--f-display);font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-right:6px}
 .item .cls{font-family:var(--f-display);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan);margin-top:2px}
+/* v525 the Void Shop */
+.shead{display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0}.shead .btn.on{border-color:var(--cyan);color:var(--cyan)}
+.sbars{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;flex-shrink:0}
+.sbar{position:relative;overflow:hidden;display:flex;justify-content:space-between;gap:6px;padding:6px 9px;border-radius:9px;border:1px solid rgba(85,214,232,.4);background:rgba(8,20,30,.85);font-size:12px}
+.sbar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,rgba(85,214,232,.28),rgba(85,214,232,.08));box-shadow:inset -2px 0 8px rgba(85,214,232,.5);pointer-events:none}
+.sbar b,.sbar span{position:relative;white-space:nowrap}.sbar span{color:var(--cyan);font-variant-numeric:tabular-nums}.sbar.cls{border-color:rgba(255,207,90,.45)}.sbar.cls i{background:linear-gradient(90deg,rgba(255,207,90,.2),rgba(255,207,90,.05))}
+.sdeal{position:relative;flex-shrink:0;display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px;border-radius:14px;overflow:hidden;border:1px solid color-mix(in srgb,var(--tc) 70%,transparent);background:linear-gradient(120deg,color-mix(in srgb,var(--tc) 22%,#081420),#06101a 70%);box-shadow:0 0 18px color-mix(in srgb,var(--tc) 30%,transparent)}
+.sdeal::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.12) 45%,transparent 60%);transform:translateX(-100%);animation:sdsh 4.5s ease-in-out infinite;pointer-events:none}@keyframes sdsh{60%,100%{transform:translateX(100%)}}
+.sdart{width:96px;height:76px;border-radius:10px;background:center/cover no-repeat;box-shadow:0 0 0 1px rgba(255,255,255,.12)}
+.sdtx{display:flex;flex-direction:column;gap:2px;min-width:0}.sdtx small{font-size:10.5px;letter-spacing:.12em;color:var(--tc)}.sdtx small b{color:#fff;letter-spacing:0}.sdtx>b{font-size:15px}.sdtx span{font-size:12px;color:var(--muted);line-height:1.3}
+.sdbuy{display:flex;flex-direction:column;align-items:center;gap:4px}.sdbuy s{font-size:12px;color:var(--muted)}.sdbuy em{font-style:normal;font-weight:800;font-size:11px;color:#06101a;background:var(--tc);border-radius:6px;padding:1px 6px}
+@media (max-width:420px){.sdeal{grid-template-columns:70px minmax(0,1fr) auto}.sdart{width:70px;height:60px}}
+.shopstrip{display:flex;gap:6px;overflow-x:auto;flex-shrink:0;padding:2px 0 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.shopstrip::-webkit-scrollbar{display:none}
+.shopstrip button{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:74px;padding:7px 10px;border-radius:12px;border:1px solid var(--line);background:rgba(8,18,28,.8);color:var(--muted);font-size:11.5px}
+.shopstrip button i{font-style:normal;font-size:18px;color:var(--fg)}.shopstrip button.on{border-color:var(--cyan);color:var(--cyan);background:rgba(85,214,232,.12);box-shadow:0 0 12px rgba(85,214,232,.25)}.shopstrip button.on i{color:var(--cyan)}
+.sfy{display:flex;flex-direction:column;gap:6px;flex-shrink:0}.sfyc{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 9px;border-radius:12px;border:1px solid color-mix(in srgb,var(--tc) 45%,transparent);background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 14%,transparent),rgba(8,18,28,.9))}
+.sfyc .sart{width:48px;height:48px}.sfyc small{display:block;font-size:11px;color:var(--cyan)}.sfyc b{font-size:13.5px}
+.sgrid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:9px}
+.scard{position:relative;display:grid;grid-template-columns:78px minmax(0,1fr);gap:10px;padding:10px;border-radius:14px;border:1px solid color-mix(in srgb,var(--tc) 45%,transparent);background:linear-gradient(150deg,color-mix(in srgb,var(--tc) 14%,transparent),rgba(8,18,28,.92) 60%)}
+.scard.flash{animation:scfl .7s ease-out}@keyframes scfl{0%{box-shadow:0 0 0 2px var(--tc),0 0 26px var(--tc)}100%{box-shadow:0 0 0 0 transparent}}
+.sart{display:grid;place-items:center;width:78px;height:78px;border-radius:12px;background:center/cover no-repeat;box-shadow:0 0 0 1px color-mix(in srgb,var(--tc,#55d6e8) 50%,transparent),0 4px 14px rgba(0,0,0,.4);font-size:30px}
+.sart.g{background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--tc) 40%,transparent),rgba(8,18,28,.9));color:var(--tc)}
+.sbody{display:flex;flex-direction:column;gap:5px;min-width:0}.sbody>b{font-size:15px}.sbody small{font-size:12px;color:var(--muted);line-height:1.35}
+.schips{display:flex;gap:4px;flex-wrap:wrap}.schips button{font-family:var(--f-display);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:6px;border:1px solid color-mix(in srgb,var(--cc) 55%,transparent);color:var(--cc);background:transparent}.schips button.on{background:var(--cc);color:#06101a;box-shadow:0 0 10px color-mix(in srgb,var(--cc) 60%,transparent)}
+.sbadge{position:absolute;top:8px;right:8px;font-style:normal;font-size:10px;font-weight:800;letter-spacing:.06em;padding:2px 7px;border-radius:7px}.sbadge.best{background:#ffcf5a;color:#1a1000}.sbadge.pop{background:#c88aff;color:#14051f}.sbadge.sv{background:#5dff9a;color:#04170b}
+.scard .sbuy{display:flex;justify-content:space-between;align-items:center;gap:8px}.scard .own a{color:var(--cyan);text-decoration:underline;cursor:pointer}
+.sitem .sit .sart{width:54px;height:54px;font-size:22px}
+.shfly{position:fixed;z-index:9999;pointer-events:none;color:#c88aff;font-style:normal;font-size:16px;text-shadow:0 0 8px #c88aff,0 0 2px #fff}
 .shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .sitem{position:relative;display:flex;flex-direction:column;gap:5px;padding:10px;border-radius:12px;border:1px solid color-mix(in srgb,var(--tc) 45%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 16%,transparent),rgba(8,18,28,.9) 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
 .sitem b{font-size:14px}.sitem small{font-size:12px;color:var(--muted);flex:1;line-height:1.35}
@@ -4599,20 +4627,61 @@ async function packsDeliver() { try { packShardFix(); } catch (e) {} if (!window
       else if (g.status === "revoked") { if (!S.grantsRev[g.id]) { pkApply(g.contents || {}, -1); S.grantsRev[g.id] = now(); dirty(); await flush(); note(`${nm} was refunded, so its contents were taken back.`, "warn"); }
         await udfShop.ackRevoke(g.id); } }
   } catch (e) {} finally { G.pkDel = 0; } }
+/* v525 the Void Shop remastered (owner: "remaster this page to make it more interesting and engaging"):
+   a free daily claim and the inventory by the header; active boosts as glowing bars that drain; the deal of the day (a different
+   item every UTC day, 35% off, with a countdown); "For you" picks from what your empire needs right now; one swipeable strip of
+   tabs; one card per item with Bronze-to-Platinum chips (price, effect and value change with the chip), the building or research
+   painting as its art, Best value / Popular badges and the saving against Bronze; buying sends the shards flying and flashes it. */
+const SHOP_ART = { bm: "metalMine", bc: "crystalMine", bg: "gasSynth", be: "solar", xb: "robotics", xs: "shipyard", xr: "lab", pm: "metalStore", pc: "crystalStore", pg: "gasTank", pAll: "logistics",
+  f: "terraformer", mf: "lunarBase", o_commander: "command", o_admiral: "flagDock", o_engineer: "energyT", o_geologist: "crystalMine", o_technocrat: "computer", o_staff: "command",
+  cl_collector: "robotics", cl_general: "dreadnought", cl_discoverer: "astro", crateM: "metalStore", crateC: "crystalStore", crateG: "gasTank", boost5: "impulse", probe5: "spyProbe", chart: "radar",
+  repairKit: "repairYard", pirIntel: "espionage", teleport: "jumpGate", moonSeed: "lunarBase" };
+const shopArtOf = k => { const b = k.replace(/_(bronze|silver|gold|platinum|7|30)$/, ""), a = SHOP_ART[b] || SHOP_ART[b.replace(/_[a-z]+$/, "")]; return a ? `art/${a}.webp` : null; };
+const SHOP_UNITS = { boost: i => i + 1, accel: i => [.5, 2, 8][i], res: i => [6, 24, 72][i], planet: i => [4, 9, 15][i] };
+const SHOP_CI = { packs: "◆", vip: "♛", boost: "⇑", accel: "⏩", res: "⬢", forge: "⚒", planet: "⬚", officer: "✪", class: "⚔", special: "✦", skins: "◐" };
+const shopDay = () => utcDay(), shopDayEnd = () => { const d = new Date(); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1); };
+function shopDeal() { const L = Object.keys(SHOP).filter(k => { const s = SHOP[k]; return s.cost >= 10 && s.tier != null && ["boost", "accel", "res", "officer", "planet"].includes(s.cat); }).sort(); if (!L.length) return null;
+  const k = L[hash("deal" + shopDay()) % L.length], s = SHOP[k]; return { k, s, cost: Math.max(1, Math.ceil(s.cost * .65)), bought: (S.dealDay || "") === shopDay() }; }
+function shopForYou() { const out = [], T = now(), pick = (q, left) => { const ms = [30 * 60e3, 2 * HOUR, 8 * HOUR], ks = ["bronze", "silver", "gold"]; let i = 0; for (let j = 0; j < 3; j++) if (ms[j] <= left) i = j; return `x${q}_${ks[i]}`; };
+  if (S.bq && S.bq.e - T > 20 * 60e3) out.push([pick("b", S.bq.e - T), `Your construction has ${ftime(S.bq.e - T)} to go`]);
+  if (S.sq && S.sq[0]) { const e = Math.max(...S.sq.map(h => sqEnd(h))); if (e - T > 20 * 60e3) out.push([pick("s", e - T), `The shipyard queue runs ${ftime(e - T)}`]); }
+  if (S.rq && S.rq.e - T > 20 * 60e3) out.push([pick("r", S.rq.e - T), `Research finishes in ${ftime(S.rq.e - T)}`]);
+  const lo = ["m", "c", "g"].sort((a, b) => (S.res[a] || 0) / Math.max(1, rates()[a] || 1) - (S.res[b] || 0) / Math.max(1, rates()[b] || 1))[0]; if (lo) out.push([`p${lo}_silver`, `${RES_N[lo]} is your scarcest resource`]);
+  for (const r of ["m", "c", "g", "e"]) if (!buffOn("b" + r) && out.length < 4) { out.push([`b${r}_silver`, `No ${BUFF_N["b" + r].replace(" Booster", "").toLowerCase()} booster running`]); break; }
+  return out.filter(([k]) => SHOP[k]).slice(0, 3); }
+function shopFx(k, cost) { try { const b = document.querySelector(`[data-act="buy"][data-k="${k}"], [data-act="buyDeal"]`), h = document.querySelector("#sheet .hd .shard"); if (!b) return; const r = b.getBoundingClientRect(), t = h ? h.getBoundingClientRect() : { left: r.left, top: 40 };
+    for (let i = 0; i < Math.min(8, 2 + (cost / 6 | 0)); i++) { const e = document.createElement("i"); e.className = "shfly"; e.textContent = "◆"; e.style.left = r.left + r.width / 2 + "px"; e.style.top = r.top + r.height / 2 + "px"; document.body.appendChild(e);
+      const dx = t.left + 8 - (r.left + r.width / 2), dy = t.top + 10 - (r.top + r.height / 2); e.animate([{ transform: "translate(0,0) scale(1)", opacity: 1 }, { transform: `translate(${dx * .5 + (Math.random() - .5) * 80}px,${dy * .5 - 40}px) scale(1.3)`, opacity: 1, offset: .5 }, { transform: `translate(${dx}px,${dy}px) scale(.5)`, opacity: .2 }], { duration: 650 + i * 70, easing: "cubic-bezier(.3,.6,.4,1)" }).onfinish = () => e.remove(); }
+    setTimeout(() => { const c = document.querySelector(`[data-card="${k}"]`); if (c) { c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash"); } }, 60); try { SFX && SFX.ui && SFX.ui("win"); } catch (e) {} } catch (e) {} }
 function shShop() {
   if (sheet.cat === "packs" && !G.pkSeen) { G.pkSeen = 1; packsDeliver(); }
-  const cat = sheet.cat = sheet.cat || (window.udfShop && G.mode === "online" ? "packs" : "boost"), it = S.items || {}, T = now(), inv = Object.keys(it).filter(k => it[k] > 0 && SHOP[k]);
-  const active = Object.keys(BUFF_N).filter(k => buffOn(k)).map(k => `<span class="act">${esc(BUFF_N[k])}${buffPct(k) ? ` +${buffPct(k)}%` : ""} · <b data-end="${buffs()[k].until}">${ftime(buffs()[k].until - T)}</b></span>`)
-    .concat(cmdClass() ? [`<span class="act cls">${esc(SHOP["cl_" + cmdClass()].n)}</span>`] : []);
-  const tabs = `<div class="shipcls shoptabs" role="tablist">${[["packs", "◆ Packs"]].concat(SHOP_CATS).concat([["skins", "Planet skins"], ["inv", `Inventory${inv.length ? " · " + inv.reduce((a, k) => a + it[k], 0) : ""}`]]).map(([k, l]) => `<button role="tab" aria-selected="${k === cat}" class="${k === cat ? "on" : ""}" data-act="shopCat" data-v="${k}">${l}</button>`).join("")}</div>`;
-  const icon = s => s.ic.length === 1 && "mcg".includes(s.ic) ? `<span class="r-${s.ic}">${RI[s.ic]}</span>` : s.ic;
-  const card = (k, s) => `<div class="sitem" style="--tc:${s.col || "#55d6e8"}"><div class="sit"><span class="sic">${icon(s)}</span>${s.tier != null ? `<i class="tier">${ITIERS[s.tier][1]}</i>` : ""}</div><b>${esc(s.n)}</b><small>${s.d()}</small>
-    <div class="sbuy">${it[k] ? `<span class="own">Owned ×${it[k]}</span>` : "<span></span>"}${s.cost ? `<button class="btn amber sm" data-act="buy" data-k="${k}" ${(S.shards || 0) >= s.cost ? "" : "disabled"}>◆${s.cost}</button>` : `<span class="note">Packs & events</span>`}</div></div>`;
-  const body = cat === "packs" ? packsBody() : cat === "skins" ? `<p class="note">Premium looks for any world you hold. Buy once with Void Shards, then apply from Rename & reskin on the planet. Each adds a small production perk to the world wearing it.</p>${pxGrid("shop")}` : cat === "inv" ? (inv.length ? `<div class="shopgrid">${inv.map(k => { const s = SHOP[k]; return `<div class="sitem" style="--tc:${s.col || "#55d6e8"}"><div class="sit"><span class="sic">${icon(s)}</span>${s.tier != null ? `<i class="tier">${ITIERS[s.tier][1]}</i>` : ""}</div><b>${esc(s.n)} ×${it[k]}</b><small>${s.d()}</small><div class="sbuy"><span></span>${s.use ? `<span class="useb">${it[k] > 1 && useAllOk(k) ? `<button class="btn ghost sm" data-act="useAll" data-k="${k}">Use all</button>` : ""}<button class="btn sm" data-act="useItem" data-k="${k}">Use</button></span>` : `<span class="own">${k === "probe5" ? "Used when you launch probes" : k === "teleport" ? "Use from an empty orbit" : "Use from a planet card"}</span>`}</div></div>`; }).join("")}</div>` : '<p class="note">Your inventory is empty. Items you buy, and spoils from pirate raids, land here.</p>')
-    : cat === "vip" ? vipShopBody()
-    : `<div class="shopgrid">${Object.entries(SHOP).filter(([, s]) => s.cat === cat).map(([k, s]) => card(k, s)).join("")}</div>`;
-  return `<div class="hd"><div><div class="chapter">Void Shop</div><h2><span class="shard">◆</span> ${fmt(S.shards || 0)} Void Shards</h2><p class="note">Buy with shards earned from directives, daily tasks, pirate raids and Cube titles. Items wait in your inventory until you use them.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
-    ${active.length ? `<div class="actives">${active.join("")}</div>` : ""}${tabs}${body}`;
+  const cat = sheet.cat = sheet.cat || (window.udfShop && G.mode === "online" ? "packs" : "boost"), it = S.items || {}, T = now(), inv = Object.keys(it).filter(k => it[k] > 0 && SHOP[k]), invN = inv.reduce((a, k) => a + it[k], 0), sh = S.shards || 0;
+  const bars = Object.keys(BUFF_N).filter(k => buffOn(k)).map(k => { const u = buffs()[k].until, span = k[0] === "b" && k.length === 2 ? 7 * DAY : 30 * DAY; return `<div class="sbar"><i style="width:${Math.min(100, (u - T) / span * 100).toFixed(1)}%"></i><b>${esc(BUFF_N[k])}${buffPct(k) ? ` +${buffPct(k)}%` : ""}</b><span data-end="${u}">${ftime(u - T)}</span></div>`; })
+    .concat(cmdClass() ? [`<div class="sbar cls"><i style="width:100%"></i><b>${esc(SHOP["cl_" + cmdClass()].n)}</b><span>Permanent</span></div>`] : []);
+  const free = (S.shopFree || "") !== shopDay();
+  const strip = `<div class="shopstrip" role="tablist">${[["packs", "Packs"]].concat(SHOP_CATS).concat([["skins", "Planet skins"]]).map(([k, l]) => `<button role="tab" aria-selected="${k === cat}" class="${k === cat ? "on" : ""}" data-act="shopCat" data-v="${k}"><i>${SHOP_CI[k] || "✦"}</i>${esc(l.replace(/^[♛◆]\s*/, ""))}</button>`).join("")}</div>`;
+  const art = (k, s) => { const a = shopArtOf(k); return a ? `<span class="sart" style="background-image:url(${a})"></span>` : `<span class="sart g" style="--tc:${s.col || "#55d6e8"}">${s.ic.length === 1 && "mcg".includes(s.ic) ? RI[s.ic] : s.ic}</span>`; };
+  const buyBtn = (k, s, c) => s.cost ? `<button class="btn amber sm" data-act="buy" data-k="${k}" ${sh >= (c || s.cost) ? "" : "disabled"}>◆${c || s.cost}</button>` : `<span class="note">Packs & events</span>`;
+  const one = (k, s, extra) => `<div class="scard" data-card="${k}" style="--tc:${s.col || "#55d6e8"}">${art(k, s)}<div class="sbody"><b>${esc(s.n)}</b>${extra || ""}<small>${s.d()}</small><div class="sbuy">${it[k] ? `<span class="own">Owned ×${it[k]}${s.use ? ` · <a data-act="useItem" data-k="${k}">Use now</a>` : ""}</span>` : "<span></span>"}${buyBtn(k, s)}</div></div></div>`;
+  const grouped = list => { const G2 = new Map(); for (const [k, s] of list) { const g = s.tier != null ? s.cat + "|" + s.n : k; if (!G2.has(g)) G2.set(g, []); G2.get(g).push([k, s]); }
+    return [...G2.entries()].map(([g, L]) => { if (L.length < 2) return one(L[0][0], L[0][1]); L.sort((a, b) => a[1].tier - b[1].tier); const sel = clamp((G.shopSel || {})[g] != null ? G.shopSel[g] : Math.min(1, L.length - 1), 0, L.length - 1), [k, s] = L[sel], U = SHOP_UNITS[s.cat];
+      let best = -1; if (U) { let bv = 0; L.forEach(([, x], i) => { const v = U(x.tier) / x.cost; if (v > bv * 1.001) { bv = v; best = i; } }); }
+      const save = U && sel > 0 ? Math.round((1 - (s.cost / U(s.tier)) / (L[0][1].cost / U(L[0][1].tier))) * 100) : 0;
+      const chips = `<div class="schips">${L.map(([, x], i) => `<button class="${i === sel ? "on" : ""}" style="--cc:${x.col}" data-act="shopTier" data-g="${esc(g)}" data-i="${i}">${/_(\d+)$/.test(L[i][0]) ? L[i][0].match(/_(\d+)$/)[1] + " days" : ITIERS[x.tier] ? ITIERS[x.tier][1] : x.tier}</button>`).join("")}</div>`;
+      const badge = best === sel ? `<em class="sbadge best">Best value</em>` : sel === 1 && L.length > 2 ? `<em class="sbadge pop">Popular</em>` : save > 0 ? `<em class="sbadge sv">Save ${save}%</em>` : "";
+      return one(k, s, chips + badge); }).join(""); };
+  let body;
+  if (cat === "packs") body = packsBody();
+  else if (cat === "skins") body = `<p class="note">Premium looks for any world you hold. Buy once with Void Shards, then apply from Rename & reskin on the planet. Each adds a small production perk to the world wearing it.</p>${pxGrid("shop")}`;
+  else if (cat === "inv") body = inv.length ? `<div class="shopgrid">${inv.map(k => { const s = SHOP[k]; return `<div class="sitem" style="--tc:${s.col || "#55d6e8"}"><div class="sit">${art(k, s)}${s.tier != null && ITIERS[s.tier] ? `<i class="tier">${ITIERS[s.tier][1]}</i>` : ""}</div><b>${esc(s.n)} ×${it[k]}</b><small>${s.d()}</small><div class="sbuy"><span></span>${s.use ? `<span class="useb">${it[k] > 1 && useAllOk(k) ? `<button class="btn ghost sm" data-act="useAll" data-k="${k}">Use all</button>` : ""}<button class="btn sm" data-act="useItem" data-k="${k}">Use</button></span>` : `<span class="own">${k === "probe5" ? "Used when you launch probes" : k === "teleport" ? "Use from an empty orbit" : "Use from a planet card"}</span>`}</div></div>`; }).join("")}</div>` : '<p class="note">Your inventory is empty. Items you buy, and spoils from pirate raids, land here.</p>';
+  else if (cat === "vip") body = vipShopBody();
+  else body = `<div class="sgrid2">${grouped(Object.entries(SHOP).filter(([, s]) => s.cat === cat))}</div>`;
+  const D = shopDeal(), deal = D && cat !== "inv" ? `<div class="sdeal" style="--tc:${D.s.col || "#ffcf5a"}">${shopArtOf(D.k) ? `<span class="sdart" style="background-image:url(${shopArtOf(D.k)})"></span>` : ""}<div class="sdtx"><small>DEAL OF THE DAY · ends in <b data-end="${shopDayEnd()}">${ftime(shopDayEnd() - T)}</b></small><b>${esc(D.s.n)}${ITIERS[D.s.tier] ? ` · ${ITIERS[D.s.tier][1]}` : ""}</b><span>${D.s.d()}</span></div>
+    <div class="sdbuy"><s>◆${D.s.cost}</s>${D.bought ? `<span class="pill ok">Bought today</span>` : `<button class="btn amber" data-act="buyDeal" ${sh >= D.cost ? "" : "disabled"}>◆${D.cost}</button>`}<em>−35%</em></div></div>` : "";
+  const fy = ["boost", "accel", "res", "special"].includes(cat) ? shopForYou() : [], forYou = fy.length ? `<h3 class="viph">For you</h3><div class="sfy">${fy.map(([k, why]) => `<div class="sfyc" data-card="${k}" style="--tc:${SHOP[k].col || "#55d6e8"}">${art(k, SHOP[k])}<div><small>${esc(why)}</small><b>${esc(SHOP[k].n)}${ITIERS[SHOP[k].tier] ? ` · ${ITIERS[SHOP[k].tier][1]}` : ""}</b></div>${buyBtn(k, SHOP[k])}</div>`).join("")}</div>` : "";
+  return `<div class="hd"><div><div class="chapter">Void Shop</div><h2><span class="shard">◆</span> ${fmt(sh)} Void Shards</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
+    <div class="shead"><button class="btn ${free ? "amber" : "ghost"} sm" data-act="shopFree" ${free ? "" : "disabled"}>${free ? "🎁 Free daily gift" : "✓ Gift claimed · back tomorrow"}</button><button class="btn ghost sm${cat === "inv" ? " on" : ""}" data-act="shopCat" data-v="inv">Inventory · ${invN}</button></div>
+    ${bars.length ? `<div class="sbars">${bars.join("")}</div>` : ""}${deal}${strip}${forYou}${body}`;
 }
 /* drifting salvage: glowing pods turn up in charted space near your worlds; tap one on the map to haul it in */
 const CACHE_MAX = 4, CACHE_LIFE = 25 * 60e3, CACHE_EVERY = 4 * 60e3;
@@ -4667,7 +4736,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 524;
+const GAME_V = 525;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -22113,7 +22182,7 @@ const ACT = {
     p.r = e.r; p.a0 = e.a0; p.tid = e.id; S.tpCd = S.tpCd || {}; S.tpCd[p.id] = T + TELEPORT_CD; putPlanet(p); reveal(pos(p, T).x, pos(p, T).y, 50); bump("teleports");
     closeSheet(); toast(`${p.name} jumped to [${coordStr(e)}] in ${zoneOf(e.r)}.`, "win"); if (G3) { G3.cam.follow = p.id; G3.cam.goal = { dist: 40 }; }
   }),
-  buy: d => act(() => { const s = SHOP[d.k]; if (!s || !s.cost) return; if ((S.shards || 0) < s.cost) return toast(`That costs ◆${s.cost}.`, "warn"); S.shards -= s.cost; giveItem(d.k, d.k === "probe5" ? 5 : 1); bump("shopBuys"); if (s.cat !== "vip") vipAdd(s.cost * 10); toast(`${s.n} added to your inventory.`, "win"); }),
+  buy: d => act(() => { const s = SHOP[d.k]; if (!s || !s.cost) return; if ((S.shards || 0) < s.cost) return toast(`That costs ◆${s.cost}.`, "warn"); S.shards -= s.cost; giveItem(d.k, d.k === "probe5" ? 5 : 1); bump("shopBuys"); if (s.cat !== "vip") vipAdd(s.cost * 10); toast(`${s.n} added to your inventory.`, "win"); shopFx(d.k, s.cost); }),
   useAll: d => act(() => { const s = SHOP[d.k]; if (!s || !s.use || !useAllOk(d.k)) return; const n0 = (S.items || {})[d.k] || 0; if (n0 < 1) return; // v367
     if (s.mbT) return openSheet({ type: "matbox", k: d.k, all: 1 });
     let n = 0, last = ""; while ((S.items[d.k] || 0) > 0 && n < 9999) { S.items[d.k]--; const msg = s.use(); if (!msg) { S.items[d.k]++; break; } n++; last = msg; }
@@ -22188,6 +22257,11 @@ const ACT = {
     if (!(it[d.k] > 0)) { if ((S.shards || 0) < s.cost) return toast(`That costs ◆${s.cost}.`, "warn"); S.shards -= s.cost; bump("shopBuys"); } else { it[d.k]--; if (!it[d.k]) delete it[d.k]; }
     toast(s.use(), "win"); }),
   shopCat: d => { if (sheet && sheet.type === "shop") { sheet.cat = d.v; renderSheet(); } },
+  shopTier: d => { G.shopSel = G.shopSel || {}; G.shopSel[d.g] = +d.i; if (sheet && sheet.type === "shop") renderSheet(); }, /* v525 */
+  shopFree: () => act(() => { if ((S.shopFree || "") === shopDay()) return; S.shopFree = shopDay(); const r = Math.random(); let msg;
+    if (r < .4) { const n = 1 + (Math.random() < .35 ? 1 : 0); S.shards = (S.shards || 0) + n; msg = `◆${n} Void Shard${n > 1 ? "s" : ""}`; } else if (r < .7) { giveItem("boost5"); msg = SHOP.boost5.n; } else { const k = ["crateM", "crateC", "crateG"][(Math.random() * 3) | 0]; giveItem(k); msg = SHOP[k].n; }
+    toast(`Free daily gift: ${msg}. Come back tomorrow for another.`, "win"); }),
+  buyDeal: () => act(() => { const D = shopDeal(); if (!D || D.bought) return; if ((S.shards || 0) < D.cost) return toast(`That costs ◆${D.cost}.`, "warn"); S.shards -= D.cost; S.dealDay = shopDay(); giveItem(D.k); bump("shopBuys"); vipAdd(D.cost * 10); toast(`Deal of the day: ${D.s.n} added to your inventory.`, "win"); shopFx(D.k, D.cost); }),
   reqToggle: d => { if (!sheet) return; const s = sheet.bots || (sheet.bots = []), i = s.indexOf(d.id);
     if (i >= 0) s.splice(i, 1); else { if (s.length >= maxReq()) return toast(`Up to ${maxReq()} allies per strike. Fleet Command research raises the limit.`, "warn"); s.push(d.id); }
     sheet.oddsKey = null; renderSheet(); },
