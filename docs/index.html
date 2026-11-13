@@ -3679,6 +3679,14 @@ window.__bootErr = function (msg) {
   document.getElementById("bootreload").onclick = function () { location.reload(); };
   document.getElementById("bootfresh").onclick = function () { try { localStorage.setItem("voidFresh", "1"); } catch (e) {} location.reload(); };
 };
+/* v530 the loading screen never hangs silently: after 15 s it says what it is waiting for and offers a way out */
+setTimeout(function () { try { if (window.__booted || document.getElementById("booterr")) return; var v = document.getElementById("view"); if (!v) return;
+  var why = typeof THREE === "undefined" ? "downloading the 3D engine" : !window.__udfStage ? "loading the game" : window.__udfStage;
+  v.innerHTML = '<div class="card hi" id="bootslow" style="display:flex;flex-direction:column;gap:10px"><h3 style="font-size:18px">Still starting…</h3><p class="note">Still ' + why + '. A slow connection or a busy phone can do this.</p>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="bootre">Try again</button><button class="btn ghost" id="bootsafe">Safe start</button></div><p class="note">Safe start opens on your base with lighter graphics.</p></div>';
+  document.getElementById("bootre").onclick = function () { location.reload(); };
+  document.getElementById("bootsafe").onclick = function () { try { localStorage.setItem("udf.safeStart", "1"); localStorage.setItem("udf.safeUntil", String(Date.now() + 864e5)); } catch (e) {} location.reload(); };
+} catch (e) {} }, 15000);
 addEventListener("error", function (e) { if (!window.__booted) window.__bootErr((e.message || "Script error") + (e.lineno ? " (line " + e.lineno + ")" : "")); });
 addEventListener("unhandledrejection", function (e) { if (!window.__booted) { var r = e.reason; window.__bootErr("Promise: " + (r && (r.stack || r.message || r.code) || r)); } });
 </script>
@@ -4754,7 +4762,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 529;
+const GAME_V = 530;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -12648,7 +12656,7 @@ function draw3D(t) {
   W.camera.lookAt(cam.tx, cam.ty, cam.tz);
   MAPPROF.mark("fleets");
   fleetLod(W, pxK);
-  W.renderer.render(W.scene, W.camera);
+  { const B = W.renderer.pace; if (B) { B.scene = W.scene; B.used = 0; B.skips = 0; B.ms = MOBILE ? 22 : 45; } W.renderer.render(W.scene, W.camera); if (B) { B.scene = null; W.compSkip = B.skips; if (B.skips && !W.paceN) { W.paceN = 1; try { crumb("map shaders paced over several frames"); } catch (e) {} } } } /* v530 */
   if (W.snapReq) { W.snapReq = 0; cineSnap(W); } // v96: a screenshot is grabbed right after the frame is drawn, while the buffer still holds it
   MAPPROF.mark("GPU submit");
   overlay3D(W, fx, w, h, dpr, t, T);
@@ -14557,7 +14565,7 @@ function warmStudio() {
     ...Object.keys(SH).filter(k => (S.ships[k] || 0) > 0).map(k => () => shipArt(k, myAcc(), "side")), // v66: your fleet's battle sprites are ready before the first fight
     ...Object.keys(DF).filter(k => (S.def[k] || 0) > 0).map(k => () => shipArt(k, myAcc(), "side"))];
   const idle = window.requestIdleCallback ? f => requestIdleCallback(f, { timeout: 4000 }) : f => setTimeout(f, 300);
-  const run = () => { const f = steps.shift(); if (!f) return; if (!document.hidden && (artBusy || G.sliding)) return idle(() => { steps.unshift(f); run(); }); try { f(); } catch (e) {} idle(run); };
+  const run = () => { const f = steps.shift(); if (!f) return; if (!document.hidden && (artBusy || G.sliding || view === "galaxy" || battle)) return setTimeout(() => idle(() => { steps.unshift(f); run(); }), 1500); /* v530 never while the map or a battle is on screen */ try { f(); } catch (e) {} idle(run); };
   setTimeout(() => idle(run), 2500);
 }
 function queueArt(c, make, draw) {
@@ -16218,7 +16226,7 @@ function mapMount(m) {
 function mapPrewarm() { if (mapHost || G3 || !TH || G3fail || view === "galaxy" || battle || sheet || document.hidden || !G.ready) return;
   const pk = document.createElement("div"); pk.id = "mappark"; pk.setAttribute("aria-hidden", "true"); { const vr = ($("#view") || document.body).getBoundingClientRect(); /* the map's exact box (view width, full height): a different size would mean a full resize on the first frame */ pk.style.cssText = `position:fixed;left:${vr.left}px;top:0;width:${vr.width}px;height:${innerHeight}px;display:flex;flex-direction:column;visibility:hidden;pointer-events:none;z-index:-1;overflow:hidden`; /* the map box is a flex child */ } document.body.appendChild(pk);
   const t0 = performance.now(); try { mapMount(pk); } catch (e) { try { crumb("map prewarm failed: " + e.message); } catch (er) {} }
-  let n = 0; const step = () => { if (!G3 || view === "galaxy" || !$("#mappark") || !$("#mappark").firstChild) return; if (sheet || battle || document.hidden || performance.now() - (G.lastIn || 0) < 2500) { setTimeout(() => requestAnimationFrame(step), 700); return; } /* v409: each step compiles shaders (a stall); never while a panel is open or the player is tapping */ try { draw3D(performance.now()); if (n === 6 && !G3.warmed) { G3.warmed = 1; mapWarm(performance.now()); } } catch (e) {} if (++n < 10) setTimeout(() => requestAnimationFrame(step), 300); else try { crumb(`map ready in the background (${Math.round(performance.now() - t0)} ms)`); } catch (e) {} };
+  let n = 0; const step = () => { if (!G3 || view === "galaxy" || !$("#mappark") || !$("#mappark").firstChild) return; if (sheet || battle || document.hidden || performance.now() - (G.lastIn || 0) < 2500) { setTimeout(() => requestAnimationFrame(step), 700); return; } /* v409: each step compiles shaders (a stall); never while a panel is open or the player is tapping */ try { draw3D(performance.now()); if (n === 6 && !G3.warmed) { G3.warmed = 1; mapWarm(performance.now()); } } catch (e) {} if (++n < 10 || (G3.compSkip > 0 && n < 120)) setTimeout(() => requestAnimationFrame(step), n < 10 ? 300 : 120); /* v530 until every shader is ready */ else try { crumb(`map ready in the background (${Math.round(performance.now() - t0)} ms)`); } catch (e) {} };
   requestAnimationFrame(step); }
 setInterval(() => { try { if (mapHost || !G.ready || view !== "base" || sheet || battle || document.hidden || advLines) { G.mpCalm = 0; return; } if (++G.mpCalm >= 3) (window.requestIdleCallback || setTimeout)(mapPrewarm, { timeout: 1500 }); } catch (e) {} }, 2000);
 function render(keepScroll) {
@@ -21186,13 +21194,22 @@ function sessSave() { try { if (!G.ready || !S || !G.me || G.sessHold || !G.sess
     localStorage.setItem(SESS_K, JSON.stringify(o)); } catch (e) {} }
 function sessRestore() { let o = null; try { o = JSON.parse(localStorage.getItem(SESS_K) || "null"); } catch (e) {} G.sessDone = 1;
   if (!o || o.me !== G.me || Date.now() - o.t > 12 * 3600e3 || !SESS_VIEWS.includes(o.view) || !S || !S.tut || S.tut.k !== "done" || battle) return;
+  if (o.view === "galaxy" && (G.crashBoot || G.safeStart)) { try { crumb("session not restored onto the galaxy (last session crashed)"); } catch (e) {} return; } /* v530 */
   try { if (typeof liveIntro === "function" && liveIntro(now())) return; } catch (e) {}
   G.sessHold = 1; try { if (o.sub) Object.assign(sub, o.sub); if (view !== o.view) { view = o.view; render(); } crumb(`session restored: ${o.view}${o.cam ? " + camera" : ""}${o.sheet ? " + " + o.sheet.type : ""} (${Math.round((Date.now() - o.t) / 60000)} min)`); } catch (e) {}
   if (o.view === "galaxy" && o.cam) { let n = 0; const go = () => { if (G3 && G3.cam && !G3.cam.cine && !G3.cam.live) { const c = G3.cam; Object.assign(c, o.cam); c.goal = null; c.follow = null; c.followFleet = null; c.vel = null; if (o.sel && G.byId[o.sel]) G.sel = o.sel; G.sessHold = 0; } else if (n++ < 60) setTimeout(go, 250); else G.sessHold = 0; }; go(); } else G.sessHold = 0;
   if (o.sheet) setTimeout(() => { try { if (!sheet && !battle && !$("#adv")) openSheet(o.sheet); } catch (e) {} }, 2500); }
 document.addEventListener("visibilitychange", () => { if (document.hidden) sessSave(); }); addEventListener("pagehide", sessSave); setInterval(sessSave, 15000);
 setInterval(() => { if (!G.sessDone && G.ready && S && G.me) { const tn = performance.now(); G.sessT0 = G.sessT0 || tn; if (tn - G.sessT0 < 20000 && (tn - G.sessT0 < 4000 || GLB_RUN || GLB_Q.length)) return; /* v426 let the launch settle first */ try { sessRestore(); } catch (e) { G.sessDone = 1; } } }, 500);
-function glNew(o) { const r = new TH.WebGLRenderer(o); try { r.debug.checkShaderErrors = /[?&]gldebug/.test(location.search); } catch (e) {} return r; }
+function glNew(o) { const r = new TH.WebGLRenderer(o); try { r.debug.checkShaderErrors = /[?&]gldebug/.test(location.search); } catch (e) {} try { glPace(r); } catch (e) {} return r; }
+/* v530 shader pacing: a draw whose material has never been drawn may compile a shader (on an iPhone ~0.1 s each). While a scene is
+   paced (r.pace.scene), once this frame has spent its compile budget the remaining never-drawn materials wait for the next frame. */
+function glPace(r) { const gl = r.getContext(), lp = gl.linkProgram, rbd = r.renderBufferDirect, seen = new WeakSet(); let links = 0;
+  gl.linkProgram = function (p) { links++; return lp.call(this, p); };
+  r.pace = { scene: null, ms: 30, used: 0, skips: 0 };
+  r.renderBufferDirect = function (cam, scene, geo, mat) { const B = r.pace, paced = !!B.scene && scene === B.scene;
+    if (paced && mat && !seen.has(mat) && B.used >= B.ms) { B.skips++; return; }
+    const l0 = links, t0 = paced ? performance.now() : 0, res = rbd.apply(this, arguments); if (mat) seen.add(mat); if (paced && links > l0) B.used += performance.now() - t0; return res; }; }
 function frame(t) {
   rafId = 0; { const rd = t - (frame.raw || t); hzSample(rd); pfFrame(rd); if (rd > 0 && rd < 200) frame.rawEma = (frame.rawEma || 16.7) * .94 + rd * .06; } frame.raw = t;
   if (idleSkip(t)) { frame.last = t; rafId = requestAnimationFrame(frame); return; }
@@ -22866,17 +22883,18 @@ function comeback() { if (!S || S.comeback || !tutOn() || !(S.tut.i > 0) || !(G.
 function intro() { if (!S.intro) { S.intro = true; dirty(); if (score() > 200) say(INTRO); else introPlay(); } } // veterans just get the briefing
 setInterval(() => { try { packsDeliver(); } catch (e) {} }, 600000); setTimeout(() => { try { packsDeliver(); } catch (e) {} }, 20000); /* v342: owner grants and refunds arrive even if the shop is never opened */
 window.udfBeforeSignOut = async () => { try { if (S) { dirty(); await flush(); } } catch (e) {} }; // v200: the last moves reach your account before you sign out
-function start(data) {
+function start(data) { const bt0 = performance.now(); window.__udfStage = "reading your save"; try { crumb("boot v" + GAME_V); } catch (e) {} /* v530 */
+  try { if (localStorage.getItem("udf.safeStart")) { localStorage.removeItem("udf.safeStart"); localStorage.removeItem("udf.sess"); G.safeStart = 1; } } catch (e) {}
   let fresh = false; try { fresh = localStorage.getItem("voidFresh") === "1"; if (fresh) { localStorage.removeItem("voidFresh"); const old = localStorage.getItem(KEY); if (old) localStorage.setItem(KEY + ".backup", old); } } catch (e) {}
   if (fresh) { S = newState(); S.savedAt = now(); dirty(); }
   else S = (data && data.S) ? migrate(data.S) : (loadLocal() || newState());
   secBoot(); // v80: clock and integrity checks before any offline catch-up is paid out
   if (data && data.view) view = data.view;
   if (!VIEWS.some(([k]) => k === view)) view = "base";
-  live = false; const before = S.log[0], away = now() - S.t;
+  window.__udfStage = "catching up on time away"; live = false; const before = S.log[0], away = now() - S.t;
   advance(now());
   live = true;
-  rebuild(); render(); awaySummary();
+  window.__udfStage = "building the galaxy"; rebuild(); window.__udfStage = "drawing the screen"; render(); awaySummary(); try { crumb(`boot done in ${Math.round(performance.now() - bt0)} ms`); } catch (e) {}
   G.awayMs = away; // v331: how long since this save was last played (the cloud save corrects it once checked)
   const idx = S.log.indexOf(before), n = idx < 0 ? S.log.length : idx;
   if (away > 60000 && n) toast(`Welcome back. ${n} thing${n > 1 ? "s" : ""} happened while you were away.`);

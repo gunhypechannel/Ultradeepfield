@@ -1,11 +1,12 @@
 /* Ultra Deep Field service worker: lets phones install the game and opens it fast.
    The game page is always fetched fresh when online (so updates show up), with the last copy as a fallback offline.
    Galaxy data never goes through here: Firebase handles that itself. */
-const CACHE = "udf-v329";
+const CACHE = "udf-v330";
+const LIBS = "udf-libs"; // v530 the 3D engine and fonts: kept across updates, so an update never downloads them again
 const MODELS = "udf-models"; // v356 3D models: fingerprinted file names, kept across updates
 const SHELL = ["./", "./index.html", "./udf-firebase.js", "./firebase-config.js", "./udf-supabase.js", "./udf-install.js", "./art/login.webp", "./supabase-config.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
-self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE && k !== MODELS).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
+self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE && k !== MODELS && k !== LIBS).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener("fetch", e => {
   const r = e.request, u = new URL(r.url);
   if (r.method !== "GET") return;
@@ -26,6 +27,6 @@ self.addEventListener("fetch", e => {
       .catch(() => caches.match(r).then(m => m || (r.mode === "navigate" ? caches.match("./index.html") : Response.error()))));
   } else if (lib) {
     // fonts, 3D engine and Firebase libraries rarely change: cache first
-    e.respondWith(caches.match(r).then(m => m || fetch(r).then(res => { if (res.ok || res.type === "opaque") { const cp = res.clone(); caches.open(CACHE).then(c => c.put(r, cp)); } return res; })));
+    e.respondWith(caches.match(r).then(m => m || fetch(r).then(res => { if (res.ok || res.type === "opaque") { const cp = res.clone(); caches.open(LIBS).then(c => c.put(r, cp)); } return res; })));
   }
 });
