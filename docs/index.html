@@ -615,6 +615,28 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 .scard .sbuy{display:flex;justify-content:space-between;align-items:center;gap:8px}.scard .own a{color:var(--cyan);text-decoration:underline;cursor:pointer}
 .sitem .sit .sart{width:54px;height:54px;font-size:22px}
 .shfly{position:fixed;z-index:9999;pointer-events:none;color:#c88aff;font-style:normal;font-size:16px;text-shadow:0 0 8px #c88aff,0 0 2px #fff}
+/* v531 the Holo Glyph Wheel */
+.gwc{position:relative;flex-shrink:0;display:grid;grid-template-columns:auto minmax(0,1fr) 46px;gap:12px;align-items:center;padding:12px 10px 12px 12px;border-radius:16px;overflow:hidden;border:1px solid rgba(122,244,255,.42);background:radial-gradient(circle at 18% 50%,rgba(122,244,255,.18),transparent 58%),radial-gradient(circle at 60% 120%,rgba(200,138,255,.18),transparent 60%),linear-gradient(125deg,#08182a,#0c0d24)}
+.gwc::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(122,244,255,.06) 0 1px,transparent 1px 4px);pointer-events:none;animation:gwscan 6s linear infinite}@keyframes gwscan{to{background-position:0 40px}}
+.gwc.ready{box-shadow:0 0 22px rgba(122,244,255,.28)}.gwc.ready .gwp{animation:gwbob 1.6s ease-in-out infinite}@keyframes gwbob{50%{transform:translateX(-50%) translateY(2px)}}
+.gww{position:relative;width:148px;height:148px}
+.gwr{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(rgba(122,244,255,.85) 0 1.2deg,transparent 1.2deg 7.5deg);-webkit-mask:radial-gradient(circle,transparent 66px,#000 67px,#000 71px,transparent 72px);mask:radial-gradient(circle,transparent 66px,#000 67px,#000 71px,transparent 72px);animation:gwring 30s linear infinite;filter:drop-shadow(0 0 4px rgba(122,244,255,.8))}@keyframes gwring{to{transform:rotate(360deg)}}
+.gw{position:absolute;inset:9px;border-radius:50%;border:1.5px solid rgba(122,244,255,.75);box-shadow:inset 0 0 22px rgba(122,244,255,.35),0 0 18px rgba(122,244,255,.3);will-change:transform}
+.gwt{position:absolute;left:50%;top:0;width:1px;height:50%;margin-left:-.5px;transform-origin:50% 100%;background:linear-gradient(rgba(122,244,255,.85),transparent 80%)}
+.gws{position:absolute;left:50%;top:50%;width:0;height:0}.gws span{position:absolute;left:0;top:0;transform:translate(-50%,-49px);display:flex;flex-direction:column;align-items:center;gap:1px;color:var(--c);text-shadow:0 0 6px var(--c)}
+.gws b{font-size:19px;line-height:1;font-weight:700}.gws i{font-style:normal;font-size:9px;letter-spacing:.04em;color:#e9f6ff;opacity:.9;white-space:nowrap}
+.gws.win span{animation:gwwin 1s ease-in-out 3}@keyframes gwwin{50%{transform:translate(-50%,-49px) scale(1.35);filter:brightness(1.8)}}
+.gwh{position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;display:grid;place-items:center;font-size:17px;color:#bff3fa;background:radial-gradient(circle,#123a52,#06121e 70%);border:1px solid rgba(122,244,255,.8);box-shadow:0 0 12px rgba(122,244,255,.6)}
+.gwp{position:absolute;left:50%;top:-2px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:17px solid #ffcf5a;filter:drop-shadow(0 0 5px #ffcf5a)}.gwp.tk{animation:gwtk .12s ease-out}@keyframes gwtk{50%{transform:translateX(-50%) rotate(-14deg)}}
+.gwx{position:relative;display:flex;flex-direction:column;gap:3px;min-width:0}.gwx small{font-size:10px;letter-spacing:.16em;color:#7af4ff}.gwx>b{font-size:16px}.gwx span{font-size:12px;color:var(--muted);line-height:1.35}
+.gwl{--p:0;position:relative;width:46px;height:132px;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}.gwl.off{opacity:.35;cursor:default;pointer-events:none}
+.gwl-slot{position:absolute;left:50%;top:10px;bottom:22px;width:8px;margin-left:-4px;border-radius:4px;background:linear-gradient(90deg,#030a12,#132637,#030a12);box-shadow:inset 0 0 4px #000,0 0 6px rgba(122,244,255,.35)}
+.gwl-base{position:absolute;left:4px;right:4px;bottom:0;height:28px;border-radius:9px;background:linear-gradient(180deg,#1e3a50,#0b1826);border:1px solid rgba(122,244,255,.5);box-shadow:0 0 10px rgba(122,244,255,.25)}
+.gwl-rod{position:absolute;left:50%;width:6px;margin-left:-3px;border-radius:3px;background:linear-gradient(90deg,#8aa4b8,#eef6ff,#7d93a6);top:calc(14px + var(--p) * 74px);height:calc(100% - 36px - 14px - var(--p) * 74px)}
+.gwl-knob{position:absolute;left:50%;top:calc(var(--p) * 74px);width:30px;height:30px;margin-left:-15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 8%,#ff6ad5 22%,#b0157d 70%,#5a0840);box-shadow:0 0 14px #ff4fc6,0 3px 8px rgba(0,0,0,.5)}
+.gwl.back .gwl-knob,.gwl.back .gwl-rod{transition:top .38s cubic-bezier(.3,1.6,.5,1),height .38s cubic-bezier(.3,1.6,.5,1)}
+.gwc.ready .gwl-knob{animation:gwk 1.8s ease-in-out infinite}@keyframes gwk{50%{box-shadow:0 0 22px #ff4fc6,0 0 4px #fff,0 3px 8px rgba(0,0,0,.5)}}
+@media (max-width:400px){.gww{width:124px;height:124px}.gwr{-webkit-mask:radial-gradient(circle,transparent 54px,#000 55px,#000 59px,transparent 60px);mask:radial-gradient(circle,transparent 54px,#000 55px,#000 59px,transparent 60px)}.gws span{transform:translate(-50%,-40px)}.gws b{font-size:16px}.gwc{gap:8px}}
 .shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .sitem{position:relative;display:flex;flex-direction:column;gap:5px;padding:10px;border-radius:12px;border:1px solid color-mix(in srgb,var(--tc) 45%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 16%,transparent),rgba(8,18,28,.9) 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
 .sitem b{font-size:14px}.sitem small{font-size:12px;color:var(--muted);flex:1;line-height:1.35}
@@ -4679,6 +4701,39 @@ function shopFx(k, cost) { try { const b = document.querySelector(`[data-act="bu
     for (let i = 0; i < Math.min(8, 2 + (cost / 6 | 0)); i++) { const e = document.createElement("i"); e.className = "shfly"; e.textContent = "◆"; e.style.left = r.left + r.width / 2 + "px"; e.style.top = r.top + r.height / 2 + "px"; document.body.appendChild(e);
       const dx = t.left + 8 - (r.left + r.width / 2), dy = t.top + 10 - (r.top + r.height / 2); e.animate([{ transform: "translate(0,0) scale(1)", opacity: 1 }, { transform: `translate(${dx * .5 + (Math.random() - .5) * 80}px,${dy * .5 - 40}px) scale(1.3)`, opacity: 1, offset: .5 }, { transform: `translate(${dx}px,${dy}px) scale(.5)`, opacity: .2 }], { duration: 650 + i * 70, easing: "cubic-bezier(.3,.6,.4,1)" }).onfinish = () => e.remove(); }
     setTimeout(() => { const c = document.querySelector(`[data-card="${k}"]`); if (c) { c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash"); } }, 60); try { SFX && SFX.ui && SFX.ui("win"); } catch (e) {} } catch (e) {} }
+/* v531 the Holo Glyph Wheel: the free daily gift, spun with a slot-machine lever */
+const WHEEL = [{ k: "sh", n: 1, g: "ᚠ", l: "◆1", col: "#c88aff", w: 26 }, { k: "boost5", g: "ᛉ", l: "⚡×5", col: "#55d6e8", w: 15 }, { k: "crateM", g: "ᛗ", l: "Metal", col: "#b8c6d6", w: 10 }, { k: "sh", n: 2, g: "ᚱ", l: "◆2", col: "#c88aff", w: 12 },
+  { k: "boost5", g: "ᛉ", l: "⚡×5", col: "#55d6e8", w: 15 }, { k: "crateC", g: "ᚲ", l: "Crystal", col: "#7af4ff", w: 10 }, { k: "sh", n: 3, g: "ᛟ", l: "◆3", col: "#ffcf5a", w: 2, jack: 1 }, { k: "crateG", g: "ᚷ", l: "Gas", col: "#5dff9a", w: 10 }];
+const wheelName = W => W.k === "sh" ? `◆${W.n} Void Shard${W.n > 1 ? "s" : ""}` : SHOP[W.k].n;
+function wheelHTML(T) { const can = (S.shopFree || "") !== shopDay() && S.wheelPend == null, spin = !!G.wheel, rot = G.wheelRot || 0, N = WHEEL.length, st = 360 / N;
+  const cg = WHEEL.map((W, i) => `${W.col}${i % 2 ? "38" : "22"} ${i * st}deg ${(i + 1) * st}deg`).join(",");
+  const segs = WHEEL.map((W, i) => `<div class="gws${G.wheelWin === i && !spin ? " win" : ""}" style="transform:rotate(${i * st + st / 2}deg);--c:${W.col}"><span><b>${W.g}</b><i>${W.l}</i></span></div>`).join("");
+  const ticks = WHEEL.map((W, i) => `<div class="gwt" style="transform:rotate(${i * st}deg)"></div>`).join("");
+  return `<div class="gwc${can ? " ready" : ""}${spin ? " spin" : ""}"><div class="gww"><div class="gwr"></div><div class="gw" id="gwheel" style="transform:rotate(${rot}deg);background:conic-gradient(${cg})">${ticks}${segs}</div><div class="gwh">◈</div><div class="gwp" id="gwptr"></div></div>
+    <div class="gwx"><small>HOLO GLYPH WHEEL</small><b>${spin ? "Spinning…" : can ? "Free daily spin" : "Spun today"}</b><span>${spin ? "The glyphs are aligning." : can ? "Pull the lever to spin. Shards, speed-ups or a crate, every day." : `Next spin in <b data-end="${shopDayEnd()}">${ftime(shopDayEnd() - T)}</b>`}</span></div>
+    <div class="gwl${can && !spin ? "" : " off"}" id="gwlever" role="button" tabindex="0" aria-label="Pull the lever to spin the wheel"><div class="gwl-slot"></div><div class="gwl-rod"></div><div class="gwl-knob"></div><div class="gwl-base"></div></div></div>`; }
+function wheelPull() { if (G.wheel || (S.shopFree || "") === shopDay() || S.wheelPend != null) return;
+  let r = Math.random() * WHEEL.reduce((a, W) => a + W.w, 0), idx = 0; for (let i = 0; i < WHEEL.length; i++) { r -= WHEEL[i].w; if (r < 0) { idx = i; break; } }
+  const st = 360 / WHEEL.length, from = G.wheelRot || 0, aim = -(idx * st + st / 2) + (Math.random() - .5) * st * .6, to = from + 360 * 6 + (((aim - from) % 360) + 360) % 360;
+  G.wheelWin = null; G.wheel = { from, to, t0: performance.now(), dur: 4800, idx, seg: -1 };
+  act(() => { S.shopFree = shopDay(); S.wheelPend = idx; }); crumb("glyph wheel spun");
+  requestAnimationFrame(wheelAnim); }
+function wheelAnim() { const R = G.wheel; if (!R) return; const u = Math.min(1, (performance.now() - R.t0) / R.dur), e = 1 - Math.pow(1 - u, 4), rot = R.from + (R.to - R.from) * e; G.wheelRot = rot;
+  const el = document.getElementById("gwheel"); if (el) el.style.transform = `rotate(${rot}deg)`;
+  const seg = Math.floor(((rot % 360) + 360) % 360 / (360 / WHEEL.length)); if (seg !== R.seg) { R.seg = seg; try { SFX.click(); } catch (er) {} const p = document.getElementById("gwptr"); if (p) { p.classList.remove("tk"); void p.offsetWidth; p.classList.add("tk"); } }
+  if (u < 1) return requestAnimationFrame(wheelAnim);
+  G.wheel = null; G.wheelRot = rot % 360; G.wheelWin = R.idx; wheelGrant(); }
+function wheelGrant() { if (S.wheelPend == null) return; const W = WHEEL[S.wheelPend]; if (!W) { S.wheelPend = null; return; }
+  act(() => { S.wheelPend = null; if (W.k === "sh") S.shards = (S.shards || 0) + W.n; else giveItem(W.k); });
+  toast(`${W.jack ? "JACKPOT! " : ""}Glyph Wheel: ${wheelName(W)}${W.k === "sh" ? "" : " added to your inventory"}. Spin again tomorrow.`, "win"); try { W.jack ? SFX.fanfare(true) : SFX.research(); } catch (e) {} }
+/* the lever: drag the knob down past halfway (or tap it) to pull */
+(() => { let D = null; const lev = () => document.getElementById("gwlever"), setP = p => { const L = lev(); if (L) L.style.setProperty("--p", p.toFixed(3)); };
+  const release = pulled => { D = null; const L = lev(); if (L) { L.classList.add("back"); setP(pulled ? 1 : 0); setTimeout(() => { setP(0); setTimeout(() => { const L2 = lev(); if (L2) L2.classList.remove("back"); }, 420); }, pulled ? 160 : 0); } if (pulled) wheelPull(); };
+  document.addEventListener("pointerdown", e => { const L = e.target && e.target.closest && e.target.closest("#gwlever"); if (!L || L.classList.contains("off")) return; e.preventDefault(); L.classList.remove("back"); const r = L.getBoundingClientRect(); D = { y0: e.clientY, h: r.height * .62, p: 0, moved: false }; });
+  document.addEventListener("pointermove", e => { if (!D) return; const p = clamp((e.clientY - D.y0) / D.h, 0, 1); if (Math.abs(e.clientY - D.y0) > 6) D.moved = true; D.p = p; setP(p); }, { passive: true });
+  document.addEventListener("pointerup", () => { if (!D) return; release(D.p > .55 || !D.moved); });
+  document.addEventListener("pointercancel", () => { if (D) release(false); });
+  document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && document.activeElement === lev() && !lev().classList.contains("off")) { e.preventDefault(); release(true); } }); })();
 function shShop() {
   if (sheet.cat === "packs" && !G.pkSeen) { G.pkSeen = 1; packsDeliver(); }
   const cat = sheet.cat = sheet.cat || (window.udfShop && G.mode === "online" ? "packs" : "boost"), it = S.items || {}, T = now(), inv = Object.keys(it).filter(k => it[k] > 0 && SHOP[k]), invN = inv.reduce((a, k) => a + it[k], 0), sh = S.shards || 0;
@@ -4706,7 +4761,7 @@ function shShop() {
     <div class="sdbuy"><s>◆${D.s.cost}</s>${D.bought ? `<span class="pill ok">Bought today</span>` : `<button class="btn amber" data-act="buyDeal" ${sh >= D.cost ? "" : "disabled"}>◆${D.cost}</button>`}<em>−35%</em></div></div>` : "";
   const fy = ["boost", "accel", "res", "special"].includes(cat) ? shopForYou() : [], forYou = fy.length ? `<h3 class="viph">For you</h3><div class="sfy">${fy.map(([k, why]) => `<div class="sfyc" data-card="${k}" style="--tc:${SHOP[k].col || "#55d6e8"}">${art(k, SHOP[k])}<div><small>${esc(why)}</small><b>${esc(SHOP[k].n)}${ITIERS[SHOP[k].tier] ? ` · ${ITIERS[SHOP[k].tier][1]}` : ""}</b></div>${buyBtn(k, SHOP[k])}</div>`).join("")}</div>` : "";
   return `<div class="hd"><div><div class="chapter">Void Shop</div><h2><span class="shard">◆</span> ${fmt(sh)} Void Shards</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
-    <div class="shead"><button class="btn ${free ? "amber" : "ghost"} sm" data-act="shopFree" ${free ? "" : "disabled"}>${free ? "🎁 Free daily gift" : "✓ Gift claimed · back tomorrow"}</button><button class="btn ghost sm${cat === "inv" ? " on" : ""}" data-act="shopCat" data-v="inv">Inventory · ${invN}</button></div>
+    ${S.wheelPend != null && !G.wheel ? (setTimeout(wheelGrant, 60), "") : ""}${cat !== "inv" ? wheelHTML(T) : ""}<div class="shead"><button class="btn ghost sm${cat === "inv" ? " on" : ""}" data-act="shopCat" data-v="inv">Inventory · ${invN}</button></div>
     ${bars.length ? `<div class="sbars">${bars.join("")}</div>` : ""}${deal}${strip}${forYou}${body}`;
 }
 /* drifting salvage: glowing pods turn up in charted space near your worlds; tap one on the map to haul it in */
@@ -4762,7 +4817,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 530;
+const GAME_V = 531;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9527,7 +9582,7 @@ const DRAWK = { worldbreaker: 3.2, cube: 2.9, sphere: 2.9 }, FOOTK = k => DRAWK[
 const BOSSK = { cube: 1.7, sphere: 1.35, swhale: 1.8, slevi: 1.8, ssquid: 1.6, leviathan: 1.5, vmanta: 1.7, swasp: 1.3, snest: 1.6, ctort: 1.8, gspider: 1.7, smoth: 2.4, cram: 1.8, kegg: 1.6, gwhale: 1.9, reat: 1.5, cserp: 1.6, sent: 1.9 }, BOSS_GLOW = { kegg: "200,122,255", gwhale: "122,244,255", reat: "255,154,74", cserp: "255,211,107", sent: "106,255,184", vmanta: "122,244,255", swasp: "255,176,42", snest: "255,176,42", ctort: "169,140,255", gspider: "200,122,255", smoth: "255,196,90", cram: "140,210,255", cube: "90,255,140", sphere: "90,255,140", swhale: "110,200,255", slevi: "255,138,74", ssquid: "200,120,255", leviathan: "180,255,90" };
 /* v212 size ladder: fighter < heavy fighter < pathfinder < cruiser < bomber < heavy cruiser < escort carrier < battleship < battlecruiser < destroyer
    < Citadel Supercarrier < Reaper (king of the fleet) < Discovery Class < Cube Destroyer (about twice the Reaper) */
-const bLen = k => k === "worldbreaker" ? 2 * (SIDE_LEN.dreadnought || 1.25) * 1.08 : Math.pow(SIDE_LEN[k] || .5, 1.15) * (BOSSK[k] || 1);
+const bLen = k => k === "worldbreaker" ? 4.3 /* v531 the biggest thing on the field */ : k === "eclipse" ? 2.6 /* v531 the Discovery Class well above the Reaper (1.72) */ : Math.pow(SIDE_LEN[k] || .5, 1.15) * (BOSSK[k] || 1);
 for (const k in MON) BOSSK[k] = (BOSSK[k] || 1) * 1.35; BOSSK.snest = (BOSSK.snest || 1) * 1.35; /* v528 space monsters loom larger in battle */
 const SIDE_LEN = { wbOvl: 1.8, wbDev: 1.8, wbWar: 1.8, wbCon: 1.4, wbBrd: 1.8, wbTyr: 1.8, wbWym: 1.8, wbCol: 1.8, spyProbe: .3, cube: 1.2, sphere: .8, cdrone: .4, tender: .6, guardian: .82, escortCarrier: .9, supercarrier: 1.42, eclipse: 1.75, fighter: .38, heavyFighter: .46, hauler: .5, heavyCargo: .7, recycler: .72, lancer: .55, ark: .6, corvette: .66, battleship: .96, bastion: 1.04, bomber: .78, destroyer: 1.14, dreadnought: 1.6, worldbreaker: 1.5, drone: .38, spitter: .42, brute: .6, lord: .8, leviathan: 1.2, swhale: 1.5, slevi: 1.5, ssquid: 1.05, vmanta: 1.3, swasp: .9, snest: 1.2, ctort: 1.4, gspider: 1.3, smoth: 1.2, cram: 1.5, kegg: 1.1, gwhale: 1.5, reat: 1.2, cserp: 1.3, sent: 1.4 };
 /* v260 battle sprite mip levels: a ship drawn small used to be squeezed out of its full-size render every frame. That resample scales with the
@@ -20423,7 +20478,7 @@ function drawBattle(t) {
   const pos = Q.map((q, i) => bPos(b, i, T));
   /* v60 depth: every squadron flies on its own depth plane. Far ones are smaller and sit behind a layer of haze, near ones are
      bigger and brighter, so a crowded 10 vs 10 fight opens out in depth instead of piling into one strip */
-  if (!b.z) b.z = Q.map((q, i) => q.role === "station" || q.role === "turret" ? .78 : ((hash(q.k + "|" + i + "|" + q.side) % 1000) / 1000) * .9 + .05);
+  if (!b.z) b.z = Q.map((q, i) => q.k === "worldbreaker" ? .98 : q.role === "station" || q.role === "turret" ? .78 : ((hash(q.k + "|" + i + "|" + q.side) % 1000) / 1000) * .9 + .05);
   let alive = 0; Q.forEach((q, i) => { if (b.n[i] > 0 && !(pos[i].fl & 6)) alive++; });
   const crowd = b.fit || clamp(Math.sqrt(22 / Math.max(22, alive)), .46, .92), zy = (bot - top) * (alive > 30 ? .27 : .14), busy = alive > 30; // v75: the fit scale (below) sizes every ship to the free space
   // squadrons of the same type from different commanders share a position in the simulation: fan them apart on screen
@@ -20446,6 +20501,12 @@ function drawBattle(t) {
     const fitT = A0 ? clamp(crowd * Math.sqrt((W * .88 * (bot - top)) * (busy ? .44 : .42) / A0), .4, 1.85) : crowd;
     b.fit = b.fit ? b.fit + (fitT - b.fit) * Math.min(1, real / 700) : fitT;
     const lay = b.lay || (b.lay = Q.map(() => ({ x: 0, y: 0 }))), P = reps.map(i => { const [rx, ry, w] = fpOf(i); return { i, x: scr[i].x + lay[i].x, y: scr[i].y + lay[i].y, rx, ry, w }; }), x0 = W * .03, x1 = W * .97, y0 = top - (bot - top) * .02, y1 = bot + (bot - top) * .04;
+    if (!b.superSide) for (const p of P) { const q = Q[p.i]; if (q.k !== "worldbreaker") continue; /* v531 the Cube Destroyer holds the rear */
+      let mo = 0, no = 0, me = 0, ne = 0; for (const o of P) { if (o.i === p.i) continue; if (Q[o.i].side === q.side) { mo += o.x; no++; } else { me += o.x; ne++; } }
+      let my = 0, ey = 0; for (const o of P) { if (o.i === p.i) continue; if (Q[o.i].side === q.side) my += o.y; else ey += o.y; } my = no ? my / no : p.y; ey = ne ? ey / ne : p.y;
+      const ox = no ? mo / no : p.x, ex = ne ? me / ne : p.x, vert = ne ? Math.abs(ey - my) > Math.abs(ex - ox) : W < H; /* portrait: the sides face each other top and bottom */
+      if (vert) { const down = ne ? my >= ey : q.side === "a"; p.y = down ? y1 - p.ry * 1.05 : y0 + p.ry * .6; p.x = clamp(ox, x0 + p.rx * .8, x1 - p.rx * .8); }
+      else { const left = ne ? ox <= ex : q.side === "a"; p.x = left ? x0 + p.rx * .8 : x1 - p.rx * .8; } p.w = .12; }
     for (let it = 0; it < (P.length > 50 ? 3 : 5); it++) { for (let a = 0; a < P.length; a++) for (let c = a + 1; c < P.length; c++) { const A = P[a], C = P[c], dx = C.x - A.x, dy = C.y - A.y, ox = A.rx + C.rx - Math.abs(dx), oy = A.ry + C.ry - Math.abs(dy);
           if (ox <= 0 || oy <= 0) continue; const wa = A.w / (A.w + C.w), wc = 1 - wa;
           if (ox * .55 < oy) { const s = (dx >= 0 ? 1 : -1) * ox * .5; A.x -= s * wa * 1.0; C.x += s * wc * 1.0; } else { const s = (dy >= 0 ? 1 : -1) * oy * .5; A.y -= s * wa; C.y += s * wc; } }
@@ -22501,7 +22562,7 @@ const ACT = {
     toast(s.use(), "win"); }),
   shopCat: d => { if (sheet && sheet.type === "shop") { sheet.cat = d.v; renderSheet(); } },
   shopTier: d => { G.shopSel = G.shopSel || {}; G.shopSel[d.g] = +d.i; if (sheet && sheet.type === "shop") renderSheet(); }, /* v525 */
-  shopFree: () => act(() => { if ((S.shopFree || "") === shopDay()) return; S.shopFree = shopDay(); const r = Math.random(); let msg;
+  shopFree: () => wheelPull(), shopFreeOld: () => act(() => { if ((S.shopFree || "") === shopDay()) return; S.shopFree = shopDay(); const r = Math.random(); let msg;
     if (r < .4) { const n = 1 + (Math.random() < .35 ? 1 : 0); S.shards = (S.shards || 0) + n; msg = `◆${n} Void Shard${n > 1 ? "s" : ""}`; } else if (r < .7) { giveItem("boost5"); msg = SHOP.boost5.n; } else { const k = ["crateM", "crateC", "crateG"][(Math.random() * 3) | 0]; giveItem(k); msg = SHOP[k].n; }
     toast(`Free daily gift: ${msg}. Come back tomorrow for another.`, "win"); }),
   buyDeal: () => act(() => { const D = shopDeal(); if (!D || D.bought) return; if ((S.shards || 0) < D.cost) return toast(`That costs ◆${D.cost}.`, "warn"); S.shards -= D.cost; S.dealDay = shopDay(); giveItem(D.k); bump("shopBuys"); vipAdd(D.cost * 10); toast(`Deal of the day: ${D.s.n} added to your inventory.`, "win"); shopFx(D.k, D.cost); }),
