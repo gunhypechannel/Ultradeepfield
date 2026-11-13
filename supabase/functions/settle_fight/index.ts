@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
   const uid = user.data.user?.id; if (!uid) return out({ error: "sign in first" }, 401);
   // deno-lint-ignore no-explicit-any
   let b: any; try { b = await req.json(); } catch { return out({ error: "bad json" }, 400); }
-  const sim = b && b.sim; if (!sim || !okStacks(sim.A) || !okStacks(sim.D) || ![3, 4, 5].includes(+sim.v)) return out({ error: "bad sim" }, 400);
+  const sim = b && b.sim; if (!sim || !okStacks(sim.A) || !okStacks(sim.D) || ![3, 4, 5, 6].includes(+sim.v)) return out({ error: "bad sim" }, 400);
   const unit = String(b.unit || "").slice(0, 32), kind = String(b.kind || "").slice(0, 16), n0 = Math.max(0, Math.floor(+b.n0 || 0)), claimed = Math.floor(+b.left);
   const t0 = performance.now(); let r;
   try { r = simulate(hyd(sim.A), hyd(sim.D), { seed: (+sim.seed) >>> 0, doc: sim.doc || null, quick: !!sim.quick, v: +sim.v }); }

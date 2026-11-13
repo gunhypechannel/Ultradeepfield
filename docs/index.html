@@ -4642,7 +4642,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 513;
+const GAME_V = 514;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5400,7 +5400,7 @@ function defenders(p) {
    pick targets, and fire weapons with their own range, cooldown, accuracy, tracking and damage profile. Damage drains
    regenerating shields first, then goes through armor into the hull. Same inputs + same seed = the same battle: reports
    store the seed and the fleets, and the replay re-runs them, so what you watch is exactly what was decided. */
-const CB_V = 5, CB_OK = v => v === 3 || v === 4 || v === 5, ROUND_S = 5, /* v5: same-type stacks of many commanders fight as merged squadrons (60 vs 60 battles), see simulate */ MAX_ROUNDS = 8, SHM = 1.5; // v4: joint fleets arrive together, shield saturation (v3 battles still replay exactly)
+const CB_V = 6, CB_OK = v => v === 3 || v === 4 || v === 5 || v === 6, /* v6: a space monster's pack is one squadron */ ROUND_S = 5, /* v5: same-type stacks of many commanders fight as merged squadrons (60 vs 60 battles), see simulate */ MAX_ROUNDS = 8, SHM = 1.5; // v4: joint fleets arrive together, shield saturation (v3 battles still replay exactly)
 const WPN = {
   laser:   { n: "Laser cannons",      acc: .92, track: 1,    vsSh: 1,    vsAr: .8,   rng: 26, cd: 1 },
   plasma:  { n: "Plasma batteries",   acc: .8,  track: .6,   vsSh: .75,  vsAr: 1.45, rng: 30, cd: 1.6 },
@@ -5442,7 +5442,7 @@ const DOCTRINES = {
 };
 const DOC_AI = { swarm: "Hive swarm", raider: "Pirate raiders", guard: "Defensive screen" };
 function simulate(A, D, o = {}) {
-  const seed = (o.seed != null ? o.seed : (Math.random() * 2147483647) | 0) >>> 0, rng = rnd(seed), V4 = (o.v || CB_V) >= 4, V5 = (o.v || CB_V) >= 5;
+  const seed = (o.seed != null ? o.seed : (Math.random() * 2147483647) | 0) >>> 0, rng = rnd(seed), V4 = (o.v || CB_V) >= 4, V5 = (o.v || CB_V) >= 5, V6 = (o.v || CB_V) >= 6;
   const cnt = arr => arr.reduce((a, s) => a + (s.n > 0 ? Math.floor(s.n) : 0), 0);
   const quick = !!o.quick || cnt(A) + cnt(D) > 30000, dt = quick ? .5 : .25;
   const aOwn = (A.find(s => s.n > 0) || {}).own, dOwn0 = (D.find(s => s.n > 0) || {}).own;
@@ -5465,7 +5465,7 @@ function simulate(A, D, o = {}) {
   for (const [arr, side] of [[MA, "a"], [MD, "d"]]) for (const s of arr) {
     const n = Math.max(0, Math.floor(s.n || 0)); if (!n) continue;
     const [role, wp, ar, ev, sp, pd] = cprof(s.k);
-    const cap = quick || role === "turret" ? 1 : role === "titan" || role === "station" ? 3 : BIG_R.has(role) ? 2 : SMALL_R.has(role) ? 3 : 2, parts = Math.max(1, Math.min(cap, n));
+    const cap = quick || role === "turret" || (V6 && (s.k === "swhale" || s.k === "slevi" || s.k === "ssquid")) ? 1 : role === "titan" || role === "station" ? 3 : BIG_R.has(role) ? 2 : SMALL_R.has(role) ? 3 : 2, parts = Math.max(1, Math.min(cap, n));
     for (let i = 0; i < parts; i++) { const m = Math.floor(n / parts) + (i < n % parts ? 1 : 0); if (!m) continue;
       sq.push({ id: sq.length, side, k: s.k, own: s.own == null ? null : s.own, role, cl: CLASS_OF[s.k] || null, wp, ar, ev: ev * (CLASS_OF[s.k] === "frigate" ? 1.15 : 1), sp, pd, atk: V4 ? +(+s.atk || 0).toFixed(2) : +s.atk || 0, sh: V4 ? +(+s.sh || 0).toFixed(2) : +s.sh || 0, hull: Math.max(1, V4 ? +(+s.hull || 1).toFixed(2) : +s.hull || 1), /* v4: the same 2-decimal stats the report stores, so replays match exactly */ ac: 1 + (+s.ab || 0),
         src: s, n: m, n0: m, wd: 0, shp: 0, shPer: 0, x: 0, y: 0, hx: 0, tg: null, cd: 0, fcd: 0, wcd: 0, retarget: 0, first: true, ret: false, esc: false, arr: 0, inn: true, lastHit: -9, flank: i % 2 ? 1 : -1 }); } }
@@ -5646,7 +5646,7 @@ function simulate(A, D, o = {}) {
       return out; }
     for (const s of sq) if (s.side === side && s.n > 0) { const k = s.own || "_"; (out[k] = out[k] || {})[s.k] = (out[k][s.k] || 0) + s.n; } return out; };
   const pack = arr => arr.filter(s => s.n > 0).map(s => [s.k, Math.floor(s.n), +(+s.atk).toFixed(2), +(+s.sh).toFixed(2), +(+s.hull).toFixed(2), s.own == null ? null : s.own, +(s.ab || 0)]);
-  const sim = { v: V5 ? 5 : V4 ? 4 : 3, seed, doc: o.doc && DOCTRINES[o.doc] ? o.doc : null, quick: !!o.quick, A: pack(A), D: pack(D), dur: Math.round(t * 100) / 100, docA, docD, ev, stats: st, wpn: wst, pow: { a0: pow0.a, d0: pow0.d, a1: Math.round(powOf("a") + sq.reduce((a, s) => a + (s.side === "a" && s.esc ? s.n * unitPow(s) * (.35 + .65 * (1 - s.wd)) : 0), 0)), d1: Math.round(powOf("d")) } };
+  const sim = { v: V6 ? 6 : V5 ? 5 : V4 ? 4 : 3, seed, doc: o.doc && DOCTRINES[o.doc] ? o.doc : null, quick: !!o.quick, A: pack(A), D: pack(D), dur: Math.round(t * 100) / 100, docA, docD, ev, stats: st, wpn: wst, pow: { a0: pow0.a, d0: pow0.d, a1: Math.round(powOf("a") + sq.reduce((a, s) => a + (s.side === "a" && s.esc ? s.n * unitPow(s) * (.35 + .65 * (1 - s.wd)) : 0), 0)), d1: Math.round(powOf("d")) } };
   const out = { start, rounds, winner, aLeft: snap("a"), dLeft: snap("d"), aByOwn: byOwn("a"), dByOwn: byOwn("d"), sim };
   if (o.rec) out.rec = { dt: quick ? .5 : .5, frames, vols, rocks, squads: sq.map(s => ({ id: s.id, side: s.side, k: s.k, own: s.own, shr: s.src && s.src.shares, role: s.role, wp: s.wp, n0: s.n0, hull: s.hull, sh: s.sh, shPer: s.shPer, atk: s.atk, pow: unitPow(s) })) };
   return out;
