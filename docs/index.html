@@ -4667,7 +4667,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 519;
+const GAME_V = 520;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6705,6 +6705,7 @@ function dvCdBuild(W, N) { const C = { grp: new TH.Group(), arc: [] }, cv = docu
   for (let r = 0; r < 3; r++) for (let k = 0; k < kinds; k++) { const x = k * GS + GS / 2, y = r * GS + GS / 2; a.strokeStyle = a.fillStyle = cols[r];
     if (k < RUNE_G.length) { a.save(); a.translate(x, y); a.scale(GS / 24, GS / 24); a.lineWidth = 2.2; try { a.stroke(new Path2D(RUNE_G[k])); } catch (e) {} a.restore(); } else a.fillText("0123456789ABCDEF"[k - RUNE_G.length], x, y + 1); }
   C.at = at; C.GS = GS; C.kinds = kinds; C.ang = [0, 0, 0, 0];
+  if (N.multi) C.atC = N.multi.map(col => { const c2 = document.createElement("canvas"); c2.width = at.width; c2.height = at.height; const q = c2.getContext("2d"); q.drawImage(at, 0, 0); q.globalCompositeOperation = "multiply"; q.fillStyle = col; q.fillRect(0, 0, c2.width, c2.height); q.globalCompositeOperation = "destination-in"; q.drawImage(at, 0, 0); return c2; }); /* v520 the Convergence: runes in the five Elementals' colours */
   /* the digits: 8 seven-segment cells and 3 colons */
   const DW = 70, DH = 118, T = 12, cy = 524; C.cy = cy; C.cells = []; let x = 118, d = 0;
   for (const it of "DDCDDCDDCDD") { if (it === "C") { C.cells.push({ colon: 1, x: x + 18 }); x += 48; continue; }
@@ -6715,7 +6716,7 @@ function dvCdBuild(W, N) { const C = { grp: new TH.Group(), arc: [] }, cv = docu
   /* the fixed plate: title, unit names and the faint ghost of every segment, drawn once */
   const pl = document.createElement("canvas"); pl.width = DVM.CW; pl.height = DVM.CH; const p = pl.getContext("2d"); p.textAlign = "center"; p.textBaseline = "middle";
   const O = DVM.CW / 2; p.fillStyle = "#eaeaea"; p.shadowColor = "#b3b3b3"; p.shadowBlur = 20; p.font = `800 46px ${cssFont()}`; { const txt = String(N.n).toUpperCase(), R = 486, sp = .068; let a = -Math.PI / 2 - sp * (txt.length - 1) / 2;
-    for (const ch of txt) { p.save(); p.translate(O + Math.cos(a) * R, O + Math.sin(a) * R); p.rotate(a + Math.PI / 2); p.fillText(ch, 0, 0); p.restore(); a += sp; } }
+    let ci = 0; for (const ch of txt) { p.save(); if (N.multi && ch !== " ") p.fillStyle = p.shadowColor = N.multi[ci++ % N.multi.length]; p.translate(O + Math.cos(a) * R, O + Math.sin(a) * R); p.rotate(a + Math.PI / 2); p.fillText(ch, 0, 0); p.restore(); a += sp; } }
   p.shadowBlur = 8; p.lineWidth = 2; for (const [, , R] of DVM.RG) for (const r of [R - 30, R + 30]) { p.strokeStyle = "rgba(193,193,193,.28)"; p.beginPath(); p.arc(O, O, r, 0, Math.PI * 2); p.stroke(); }
   p.shadowBlur = 0; p.fillStyle = "rgba(185,185,185,.07)"; const dc = C.cells.filter(c => !c.colon); for (const c of dc) for (const k in c.seg) { const r = c.seg[k]; p.fillRect(r.x, r.y, r.w, r.h); } C.plate = pl;
   C.mesh.material.color.set(N.col).lerp(new TH.Color(0xffffff), .18); C.key = N.k; /* v519 drawn in greys, tinted to the event */
@@ -6724,7 +6725,7 @@ function dvCdDraw(C, t, T, dt) { const g = C.g, CW = DVM.CW, CH = DVM.CH, GS = C
   const left = Math.max(0, (C.s0 || dvNext(T)) - T), sec = Math.floor(left / 1000), v = [Math.min(99, Math.floor(sec / 86400)), Math.floor(sec / 3600) % 24, Math.floor(sec / 60) % 60, sec % 60], dg = v.flatMap(q => [Math.floor(q / 10), q % 10]);
   const u = reduced ? 5000 : t % DVM.P, rain = reduced ? 0 : u < IN ? 1 - .72 * u / IN : u > OUT ? .28 + .72 * Math.min(1, (u - OUT) / 1400) : .28, sw = ((t / 2600) % 1) * (CW + 300) - 150;
   g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.clearRect(0, 0, CW, CH); g.globalCompositeOperation = "lighter";
-  const glyph = (k, row, x, y, s, al) => { if (al <= .01) return; g.globalAlpha = Math.min(1, al); g.drawImage(A, (Math.abs(k | 0) % C.kinds) * GS, row * GS, GS, GS, x - s / 2, y - s / 2, s, s); };
+  const glyph = (k, row, x, y, s, al) => { if (al <= .01) return; g.globalAlpha = Math.min(1, al); g.drawImage(C.atC ? C.atC[Math.abs(k | 0) % C.atC.length] : A, (Math.abs(k | 0) % C.kinds) * GS, row * GS, GS, GS, x - s / 2, y - s / 2, s, s); };
   const rr = (x, y, w, hh, q) => { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, hh, q); else g.rect(x, y, w, hh); g.fill(); };
   const seg = (r, k) => { g.globalAlpha = Math.min(1, .16 * k); g.fillStyle = "#b3b3b3"; rr(r.x - 7, r.y - 7, r.w + 14, r.h + 14, 9); g.globalAlpha = Math.min(1, .3 * k); g.fillStyle = "#c1c1c1"; rr(r.x - 3, r.y - 3, r.w + 6, r.h + 6, 6);
     g.globalAlpha = Math.min(1, .55 + .3 * k); g.fillStyle = k > 1.6 ? "#ffffff" : "#eaeaea"; rr(r.x, r.y, r.w, r.h, 4); };
@@ -6753,9 +6754,9 @@ function dvCdDraw(C, t, T, dt) { const g = C.g, CW = DVM.CW, CH = DVM.CH, GS = C
     for (const [w, al, col] of [[7, .25, "#b3b3b3"], [2.4, .95, "#f4f4f4"]]) { g.globalAlpha = al; g.strokeStyle = col; g.lineWidth = w; g.beginPath(); pts.forEach(([x, y], k) => k ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); } }
   g.globalAlpha = 1; }
 /* v519 which event the clock counts down to: the next great event or world boss, within 7 days */
-function evCdNext(T) { let best = null; for (const k of ROT.concat(ROTS)) { const D = k === "dv" ? { n: "Cube Devastation", col: "#5dff6a" } : k === "conv" ? { n: "The Convergence", col: "#ffd36b" } : SBX[k] || SBW[k] ? { n: (SBW[k] || SBX[k]).n, col: (SBX[k] || {}).col || (SBW[k] || {}).col || "#c890ff" } : WB[k] ? { n: WB[k].n, col: WB[k].col } : null;
-    if (!D) continue; const s0 = rotNextOf(k, T); if (s0 > T && s0 - T <= 7 * 864e5 && (!best || s0 < best.s0)) best = { k, s0, n: D.n, col: D.col }; } return best; }
-const evCdLive = T => { try { return wbGroupOn(3, T) || ROTS.some(k => WB[k] && wbOn(k, T)); } catch (e) { return false; } };
+function evCdNext(T) { let best = null; const M = { dv: ["Cube Devastation", "#5dff6a"], vae: ["Vaelthar · Cosmic Anomaly", (SBX.vae || {}).col || "#c890ff"], aex: ["Aexion · The Aeon", (SBX.aex || {}).col || "#7ac8ff"], khz: ["Khezaroth · The Sphinx", "#ffb340"], med: ["Medusara · Petrified Star", (SBX.med || {}).col || "#ff5a4a"], conv: ["Pentarch Convergence", "#ffffff"] };
+  for (const k in M) { const s0 = rotNextOf(k, T); if (s0 > T && s0 - T <= 7 * 864e5 && (!best || s0 < best.s0)) best = { k, s0, n: M[k][0], col: M[k][1], multi: k === "conv" ? WB_EL.map(e => WB[e].col) : null }; } return best; }
+const evCdLive = T => { try { return wbGroupOn(3, T); } catch (e) { return false; } };
 function dvCountdown(W, t, T, live) { const N = evCdNext(T), show = !!N && !live && view === "galaxy" && !G.sbSim && !sbLiveKey(T) && !evCdLive(T); /* v488; v519 */
   if (W.dvCd && N && W.dvCd.key !== N.k) { try { W.scene.remove(W.dvCd.grp); W.dvCd.mesh.material.dispose(); W.dvCd.mesh.geometry.dispose(); W.dvCd.tex.dispose(); } catch (e) {} W.dvCd = null; }
   if (!show) { if (W.dvCd) { W.dvCd.grp.visible = false; W.dvCd.hid = 1; } return; } const C = W.dvCd || dvCdBuild(W, N); C.s0 = N.s0; C.grp.visible = true;
