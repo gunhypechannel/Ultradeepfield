@@ -4065,7 +4065,7 @@ const CUBE_G = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Th
    Each species fights its own way: sharks are armoured gun platforms, leviathans hit hardest, squids come in packs. */
 const MON = {
   swhale: { n: "Space Shark", sp: "Void Shark", ic: "🦈", col: "#7fd4ff", rgb: "127,212,255", per: 8, d: "A cruiser-sized predator of the dark lanes, its hide bolted with twin laser turrets. Thick-skinned and relentless: it circles, then strikes.", names: ["Old Razorfin", "Grey Reaper", "Deepjaw", "Pale Hunter", "Starmaw", "Bladeback", "Silent Fang", "Ironteeth"] }, /* v199: the Void Whale became the Void Shark (key kept, so saves and reports carry over) */
-  slevi:  { n: "Space Leviathan", sp: "Star Leviathan", ic: "🐉", col: "#ff8a4a", rgb: "255,138,74", per: 10, d: "An armoured serpent that feeds on fleets. Molten light runs along its scales and its jaws can split a battleship.", names: ["Ashcoil", "the Devourer", "Emberspine", "Worldbiter", "Scaldjaw", "the Long Night", "Cinderwyrm", "Vorrax"] },
+  slevi:  { n: "Space Leviathan", sp: "Star Leviathan", ic: "🐉", col: "#5ac8ff", rgb: "90,200,255", per: 10, d: "A sea serpent as long as a fleet, with the armoured head of a whale. Starlight runs in the cracks of its hide, and its jaws can split a battleship.", names: ["Ashcoil", "the Devourer", "Emberspine", "Worldbiter", "Scaldjaw", "the Long Night", "Cinderwyrm", "Vorrax"] },
   ssquid: { n: "Space Squid", sp: "Nebula Squid", ic: "🦑", col: "#d58cff", rgb: "213,140,255", per: 5, d: "Hunts in packs through the gas lanes, pulsing with bioluminescence. Fast, many-armed and venomous to hulls.", names: ["Glimmerreach", "Inkveil", "the Shiver", "Lanternmaw", "Nine-Arms", "Prismtide", "Vyl'ka", "Gloomcoil"] }
 };
 Object.assign(MON, { /* v515 */
@@ -4667,7 +4667,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 520;
+const GAME_V = 522;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6716,7 +6716,7 @@ function dvCdBuild(W, N) { const C = { grp: new TH.Group(), arc: [] }, cv = docu
   /* the fixed plate: title, unit names and the faint ghost of every segment, drawn once */
   const pl = document.createElement("canvas"); pl.width = DVM.CW; pl.height = DVM.CH; const p = pl.getContext("2d"); p.textAlign = "center"; p.textBaseline = "middle";
   const O = DVM.CW / 2; p.fillStyle = "#eaeaea"; p.shadowColor = "#b3b3b3"; p.shadowBlur = 20; p.font = `800 46px ${cssFont()}`; { const txt = String(N.n).toUpperCase(), R = 486, sp = .068; let a = -Math.PI / 2 - sp * (txt.length - 1) / 2;
-    let ci = 0; for (const ch of txt) { p.save(); if (N.multi && ch !== " ") p.fillStyle = p.shadowColor = N.multi[ci++ % N.multi.length]; p.translate(O + Math.cos(a) * R, O + Math.sin(a) * R); p.rotate(a + Math.PI / 2); p.fillText(ch, 0, 0); p.restore(); a += sp; } }
+    for (const ch of txt) { p.save(); p.translate(O + Math.cos(a) * R, O + Math.sin(a) * R); p.rotate(a + Math.PI / 2); p.fillText(ch, 0, 0); p.restore(); a += sp; } }
   p.shadowBlur = 8; p.lineWidth = 2; for (const [, , R] of DVM.RG) for (const r of [R - 30, R + 30]) { p.strokeStyle = "rgba(193,193,193,.28)"; p.beginPath(); p.arc(O, O, r, 0, Math.PI * 2); p.stroke(); }
   p.shadowBlur = 0; p.fillStyle = "rgba(185,185,185,.07)"; const dc = C.cells.filter(c => !c.colon); for (const c of dc) for (const k in c.seg) { const r = c.seg[k]; p.fillRect(r.x, r.y, r.w, r.h); } C.plate = pl;
   C.mesh.material.color.set(N.col).lerp(new TH.Color(0xffffff), .18); C.key = N.k; /* v519 drawn in greys, tinted to the event */
@@ -9413,7 +9413,7 @@ const unitName = k => k === "fortress" ? "Orbital Fortress" : k === "supercube" 
 /* v86: boss monsters fight at grand scale (bigger than any warship but the Cube Destroyer) with their own size cap, glow and sharper sprites */
 /* round and boxy giants only fill the middle of their wide sprite, so they are drawn larger to fill their place */
 const DRAWK = { worldbreaker: 3.2, cube: 2.9, sphere: 2.9 }, FOOTK = k => DRAWK[k] ? DRAWK[k] / 1.9 : 1;
-const BOSSK = { cube: 1.7, sphere: 1.35, swhale: 1.8, slevi: 1.8, ssquid: 1.6, leviathan: 1.5, vmanta: 1.7, swasp: 1.3, snest: 1.6, ctort: 1.8, gspider: 1.7, smoth: 1.6, cram: 1.8 }, BOSS_GLOW = { vmanta: "122,244,255", swasp: "255,176,42", snest: "255,176,42", ctort: "169,140,255", gspider: "200,122,255", smoth: "255,196,90", cram: "140,210,255", cube: "90,255,140", sphere: "90,255,140", swhale: "110,200,255", slevi: "255,138,74", ssquid: "200,120,255", leviathan: "180,255,90" };
+const BOSSK = { cube: 1.7, sphere: 1.35, swhale: 1.8, slevi: 1.8, ssquid: 1.6, leviathan: 1.5, vmanta: 1.7, swasp: 1.3, snest: 1.6, ctort: 1.8, gspider: 1.7, smoth: 1.6, cram: 1.8 }, BOSS_GLOW = { vmanta: "122,244,255", swasp: "255,176,42", snest: "255,176,42", ctort: "169,140,255", gspider: "200,122,255", smoth: "255,196,90", cram: "140,210,255", cube: "90,255,140", sphere: "90,255,140", swhale: "110,200,255", slevi: "90,200,255", ssquid: "200,120,255", leviathan: "180,255,90" };
 /* v212 size ladder: fighter < heavy fighter < pathfinder < cruiser < bomber < heavy cruiser < escort carrier < battleship < battlecruiser < destroyer
    < Citadel Supercarrier < Reaper (king of the fleet) < Discovery Class < Cube Destroyer (about twice the Reaper) */
 const bLen = k => k === "worldbreaker" ? 2 * (SIDE_LEN.dreadnought || 1.25) * 1.08 : Math.pow(SIDE_LEN[k] || .5, 1.15) * (BOSSK[k] || 1);
@@ -10711,13 +10711,13 @@ const MON_WAVE = {
   /* v221 the shark swims like a shark: an S-wave runs from head to tail, small through the body and growing smoothly to a full
      tail sweep, while the head yaws gently against the tail and the body rolls a touch (it used to flick only its tail tip) */
   swhale: "float su = clamp((2.2 - position.x) / 6.9, 0., 1.), sh = clamp((position.x - 1.) / 2.6, 0., 1.), sb = mt * 4.2; transformed.z += (.04 + .72 * su * su) * sin(position.x * .78 + sb) - .1 * sh * sin(sb + 1.1); transformed.y += .03 * su * sin(sb * .5 + 1.);",
-  slevi: "float tl = clamp((4.3 - position.x) / 9.3, 0., 1.); transformed.z += (.16 + .55 * tl) * sin(position.x * .95 + mt * 3.2); transformed.y += .12 * tl * sin(position.x * .6 + mt * 2.1);",
+  slevi: "float tl = clamp((3.2 - position.x) / 11.8, 0., 1.); transformed.z += (.12 + .85 * tl) * sin(position.x * .62 + mt * 2.4); transformed.y += .2 * tl * sin(position.x * .4 + mt * 1.6); if (position.x > 3.2 && position.y < -.45) { float jo = .45 * pow(max(0., sin(mt * .5)), 4.), dx = position.x - 3.2; transformed.y -= dx * sin(jo); transformed.x -= dx * (1. - cos(jo)); }",
   /* v515 the Manta's wings ripple from root to tip and its tail whips; the Starhive's swarm circles its nest; the Tortoise paddles
      its four flippers in turn; the Spider walks its legs in waves; the Moth beats its wings; the Ram's comet tail streams behind it */
   vmanta: "float sp = abs(position.z), w = smoothstep(.9, 3.5, sp); transformed.y += w * w * 1.05 * sin(mt * 1.7 - sp * .55); float tl = clamp((-1.9 - position.x) / 5., 0., 1.); transformed.z += tl * tl * .7 * sin(mt * 2.3 + position.x * 1.1); transformed.y += tl * .15 * sin(mt * 1.7 + 1.);",
   swasp: "float rr = length(position.xz); if (rr > 1.95) { float th = mt * (1.5 - rr * .18), c = cos(th), sn = sin(th); transformed.xz = vec2(transformed.x * c - transformed.z * sn, transformed.x * sn + transformed.z * c); transformed.y += .28 * sin(mt * 3.1 + rr * 5.); } else { transformed.x += .03 * sin(mt * 1.3 + position.y * 2.); }",
   ctort: "vec3 p = position; float lw = 1. - smoothstep(-.6, -.3, p.y), nr = 1. - smoothstep(.55, .85, length(vec2(abs(p.x) - 1.45, abs(p.z) - 1.25))), ph = mt * 1.7 + (sign(p.x) * sign(p.z) > 0. ? 0. : 3.1416); transformed.x += lw * nr * (-.3 - p.y) * .5 * sin(ph); transformed.y += lw * nr * .1 * max(0., cos(ph)); transformed.y += .035 * sin(mt * 3.4); if (p.x > 2.74 && p.y < .02) { float jo = .38 * pow(max(0., sin(mt * .42)), 6.), dx = p.x - 2.74; transformed.y -= dx * sin(jo); transformed.x -= dx * (1. - cos(jo)); } float hw = smoothstep(1.9, 2.6, p.x), yaw = .3 * sin(mt * .45) * hw; vec2 q = transformed.xz - vec2(1.9, 0.); transformed.xz = vec2(1.9, 0.) + vec2(q.x * cos(yaw) - q.y * sin(yaw), q.x * sin(yaw) + q.y * cos(yaw)); transformed.y += hw * .07 * sin(mt * .9) * (p.x - 1.9); float tw = clamp((-2.2 - p.x) / .65, 0., 1.); transformed.z += tw * .2 * sin(mt * 1.3);",
-  gspider: "float lg = smoothstep(1.3, 3., abs(position.z)), ph = position.x * 1.6 + sign(position.z) * 1.57; transformed.y += lg * .32 * max(0., sin(mt * 3.4 + ph)); transformed.x += lg * .2 * cos(mt * 3.4 + ph); transformed.y += .04 * sin(mt * 6.8);",
+  gspider: "vec3 p = position; float w = smoothstep(1.05, 2.9, abs(p.z)), a = atan(p.x - .45, abs(p.z)), ph = a * 3.3 + (p.z > 0. ? 0. : 3.1416); transformed.y += w * .42 * max(0., sin(mt * 4.2 + ph)); transformed.x += w * .3 * cos(mt * 4.2 + ph); float rear = pow(max(0., sin(mt * .5)), 10.); transformed.y += rear * w * smoothstep(.25, .85, a) * 1.7 + rear * smoothstep(-1., 1.6, p.x) * .35; transformed.y += .04 * sin(mt * 8.4); if (p.x > 1.6 && p.y < .08 && abs(p.z) < .3) transformed.z += sign(p.z) * .07 * (.5 + .5 * sin(mt * 7.)); if (p.x < -.4 && w < .05 && p.y < 1.75) transformed.y += .05 * sin(mt * 2.) * (p.y - .55); vec3 cq = p - vec3(-1.7, 1.98, 0.); float cd = length(cq); if (cd > .5 && cd < .95 && p.y > 1.35) { float th = mt * 1.6; vec2 r2 = vec2(cq.x * cos(th) - cq.z * sin(th), cq.x * sin(th) + cq.z * cos(th)); transformed.x = -1.7 + r2.x; transformed.z = r2.y; }",
   smoth: "float sp = abs(position.z); if (sp > .38) { float a = .7 * sin(mt * 2.4), d = sp - .38; transformed.y += d * sin(a); transformed.z = sign(position.z) * (.38 + d * cos(a)); } transformed.y += .18 * sin(mt * 2.4 + 1.4);",
   cram: "float tl = clamp((-2.2 - position.x) / 6., 0., 1.); transformed.z += tl * tl * .8 * sin(position.x * .9 + mt * 4.); transformed.y += tl * tl * .45 * cos(position.x * .7 + mt * 3.3); float hb = smoothstep(.8, 2.8, position.x); transformed.y += hb * .1 * sin(mt * 1.6);",
   ssquid: "float ar = clamp((-.9 - position.x) / 3., 0., 1.), ang = atan(position.z, position.y), e = pow(ar, 1.4); transformed.y += .36 * e * sin(position.x * 2.2 + mt * 4. + ang * 2.); transformed.z += .36 * e * cos(position.x * 2. + mt * 3.6 + ang * 3.); transformed.yz *= 1. + .24 * ar * sin(mt * 2.);" };
@@ -11240,7 +11240,7 @@ function clashDispose(W, c) { const o = c.o; if (!o) return; for (const g of [o.
    If it loses, it goes down in a chain of blasts across its hull. */
 const MON_SWIM = { vmanta: .00026, ctort: .00009, gspider: .00016, smoth: .0003, cram: .00038 }; /* v515 how fast each new species swims its figure-eight */
 const NEWBEAST = new Set(["vmanta", "swasp", "ctort", "gspider", "smoth", "cram"]);
-const BEAST_FX = { vmanta: [122, 244, 255], swasp: [255, 176, 42], ctort: [169, 140, 255], gspider: [200, 122, 255], smoth: [255, 196, 90], cram: [140, 210, 255], cube: [93, 255, 106], swhale: [127, 212, 255], slevi: [255, 138, 74], ssquid: [213, 140, 255] };
+const BEAST_FX = { vmanta: [122, 244, 255], swasp: [255, 176, 42], ctort: [169, 140, 255], gspider: [200, 122, 255], smoth: [255, 196, 90], cram: [140, 210, 255], cube: [93, 255, 106], swhale: [127, 212, 255], slevi: [90, 200, 255], ssquid: [213, 140, 255] };
 const beastKind = L => !L || !PB[L.id] ? null : L.boss ? "cube" : L.mon && BEAST_FX[L.mon] ? L.mon : null;
 function beastCenter(L, q, out) { const m = G3 && G3.pirates && G3.pirates.get(L.id); if (m && m.grp && m.grp.visible) { (m.mon && m.body ? m.body : m.grp).getWorldPosition(out); return out; } return out.set(q.x, q.y, q.z); } // v264: a monster's own body, wherever it swims
 function beastInit(W, c) { const kind = beastKind(c.loc), rgb = BEAST_FX[kind], col = new TH.Color(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255), rs = rgb.join(","), g = new TH.Group(); W.scene.add(g);
@@ -13563,7 +13563,7 @@ function monMats() {
     for (let i = 0; i < 14; i++) { x.strokeStyle = `rgba(190,120,255,${.5 + r() * .5})`; x.lineWidth = 1 + r() * 2; x.beginPath(); let px = r() * W, py = r() * H; x.moveTo(px, py); for (let j = 0; j < 5; j++) { px += (r() - .5) * 60; py += (r() - .5) * 40; x.lineTo(px, py); } x.stroke(); } });
   C.spider = new TH.MeshPhysicalMaterial({ map: pC, emissiveMap: pE, emissive: 0xffffff, emissiveIntensity: 1.6, roughness: .3, metalness: .4, clearcoat: 1, clearcoatRoughness: .15 });
   C.gcore = new TH.MeshBasicMaterial({ color: 0xd2a4ff, toneMapped: false });
-  C.gring = new TH.MeshBasicMaterial({ color: 0x9a5cff, transparent: true, opacity: .75, toneMapped: false, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide });
+  C.gring = new TH.MeshBasicMaterial({ color: 0x7a3cff, transparent: true, opacity: .5, toneMapped: false, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide });
   C.eyeP = new TH.MeshBasicMaterial({ color: 0xff4ad8, toneMapped: false });
   // Solar Moth: velvet ember body, gold wings with sun-disc eye spots that blaze
   const fC = T2(256, 128, (x, W, H) => { const r = rnd(738); x.fillStyle = "#5a2a10"; x.fillRect(0, 0, W, H); for (let i = 0; i < 1500; i++) { x.fillStyle = `rgba(${r() < .5 ? "255,170,80" : "40,14,4"},${.15 + r() * .25})`; x.fillRect(r() * W, r() * H, 1, 2 + r() * 3); } }, 1);
@@ -13605,6 +13605,35 @@ function monMats() {
   C.tcrys = new TH.MeshPhysicalMaterial({ color: 0x1f7cff, emissive: 0x0a58ff, emissiveIntensity: .75, roughness: .05, metalness: 0, clearcoat: 1, flatShading: true }); C.tcrys.userData.pulse = ".65 + .7 * (.5 + .5 * sin(uMT * 2.1))";
   C.tcrys2 = new TH.MeshPhysicalMaterial({ color: 0x163cb8, emissive: 0x1a2cff, emissiveIntensity: .7, roughness: .05, metalness: 0, clearcoat: 1, flatShading: true }); C.tcrys2.userData.pulse = ".65 + .7 * (.5 + .5 * sin(uMT * 2.1 + 1.7))";
   C.tglow = new TH.MeshBasicMaterial({ color: 0x6fe0ff, toneMapped: false });
+  /* v520 the Star Leviathan as its card shows it: an armoured space whale, slate hide, glowing cyan throat grooves and energy cracks */
+  const lwC = T2(1024, 512, (x, W, H) => { const n = fbm2(7901), img = x.createImageData(W, H), d = img.data;
+    for (let px = 0; px < W; px++) { const u = px / W, back = .5 + .5 * Math.cos((u - .75) * TAU); for (let py = 0; py < H; py++) { const v = n(px / 26, py / 26, 64, 5), o = (py * W + px) * 4;
+      d[o] = 20 + back * -6 + (1 - back) * 46 + v * 30; d[o + 1] = 28 + (1 - back) * 52 + v * 34; d[o + 2] = 40 + (1 - back) * 62 + v * 40; d[o + 3] = 255; } } x.putImageData(img, 0, 0);
+    const r = rnd(7902); x.strokeStyle = "rgba(8,12,18,.85)"; x.lineWidth = 3; for (let i = 0; i < 26; i++) { const u = .1 + i * .011; x.beginPath(); x.moveTo(u * W, H * .1); x.lineTo(u * W + (r() - .5) * 6, H * .62); x.stroke(); }
+    for (let i = 0; i < 300; i++) { x.fillStyle = `rgba(${r() < .5 ? "150,170,190" : "6,8,12"},${.2 + r() * .3})`; x.beginPath(); x.arc(r() * W, r() * H, 1 + r() * 3, 0, TAU); x.fill(); } }, 1);
+  const lwE = T2(1024, 512, (x, W, H) => { const r = rnd(7903); x.fillStyle = "#000"; x.fillRect(0, 0, W, H); x.lineCap = "round";
+    for (let i = 0; i < 26; i++) { const u = .1 + i * .011 + .0055; x.strokeStyle = `rgba(90,220,255,${.55 + r() * .45})`; x.lineWidth = 2; x.shadowColor = "#3ad0ff"; x.shadowBlur = 6; x.beginPath(); x.moveTo(u * W, H * .12); x.lineTo(u * W, H * .6); x.stroke(); }
+    for (let i = 0; i < 26; i++) { x.strokeStyle = `rgba(${r() < .8 ? "110,230,255" : "190,120,255"},${.5 + r() * .5})`; x.lineWidth = 1 + r() * 2; x.beginPath(); let px = r() * W, py = r() * H; x.moveTo(px, py); for (let j = 0; j < 7; j++) { px += (r() - .5) * 50; py += (r() - .5) * 36; x.lineTo(px, py); } x.stroke(); }
+    x.shadowBlur = 0; for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(160,240,255,${r()})`; x.fillRect(r() * W, r() * H, 2, 2); } });
+  C.lwhale = new TH.MeshPhysicalMaterial({ color: 0x8a96a6, map: lwC, emissiveMap: lwE, emissive: 0xffffff, emissiveIntensity: 1.8, roughness: .55, metalness: .2, clearcoat: .5, clearcoatRoughness: .35, side: TH.DoubleSide }); C.lwhale.userData.pulse = ".75 + .45 * (.5 + .5 * sin(uMT * 1.1))";
+  const leC = T2(1024, 256, (x, W, H) => { const r = rnd(7905), n = fbm2(7906), img = x.createImageData(W, H), d = img.data; for (let px = 0; px < W; px++) for (let py = 0; py < H; py++) { const v = n(px / 22, py / 22, 64, 5), o = (py * W + px) * 4, bel = .5 + .5 * Math.cos(py / H * TAU); d[o] = 18 + v * 30 + bel * 30; d[o + 1] = 26 + v * 34 + bel * 38; d[o + 2] = 38 + v * 40 + bel * 46; d[o + 3] = 255; } x.putImageData(img, 0, 0);
+    x.strokeStyle = "rgba(4,8,12,.7)"; x.lineWidth = 1.4; for (let row = 0; row < 14; row++) for (let i = 0; i < 90; i++) { const cx = i * W / 88 + (row % 2) * W / 176, cy = row * H / 13; x.beginPath(); x.arc(cx, cy, W / 150, 0, Math.PI); x.stroke(); } }, 1);
+  const leE = T2(1024, 256, (x, W, H) => { const r = rnd(7907); x.fillStyle = "#000"; x.fillRect(0, 0, W, H); x.lineCap = "round"; x.shadowColor = "#3ad0ff"; x.shadowBlur = 6;
+    for (let i = 0; i < 40; i++) { x.strokeStyle = `rgba(${r() < .8 ? "110,230,255" : "190,120,255"},${.5 + r() * .5})`; x.lineWidth = 1 + r() * 2; x.beginPath(); let px = r() * W, py = r() * H; x.moveTo(px, py); for (let j = 0; j < 6; j++) { px += (r() - .5) * 46; py += (r() - .5) * 30; x.lineTo(px, py); } x.stroke(); }
+    x.shadowBlur = 0; for (let i = 0; i < 300; i++) { x.fillStyle = `rgba(160,240,255,${r()})`; x.fillRect(r() * W, r() * H, 2, 2); } });
+  C.leel = new TH.MeshPhysicalMaterial({ color: 0x8a96a6, map: leC, emissiveMap: leE, emissive: 0xffffff, emissiveIntensity: 1.8, roughness: .5, metalness: .2, clearcoat: .5, clearcoatRoughness: .3 }); C.leel.userData.pulse = ".75 + .45 * (.5 + .5 * sin(uMT * 1.1))";
+  C.larmor = new TH.MeshPhysicalMaterial({ color: 0x10161e, roughness: .4, metalness: .6, clearcoat: .5, emissive: 0x031018, emissiveIntensity: 1 });
+  C.lfin = new TH.MeshPhysicalMaterial({ color: 0x1a4a6a, roughness: .3, metalness: .1, clearcoat: .6, emissive: 0x1aa8e8, emissiveIntensity: .8, transparent: true, opacity: .7, side: TH.DoubleSide });
+  C.lcyan = new TH.MeshBasicMaterial({ color: 0x7ae8ff, toneMapped: false });
+  /* v520 the Gravity Spider, scarier: black armour plates traced with magenta seams, glowing joints, a purple core eye */
+  const spC = T2(512, 256, (x, W, H) => { const r = rnd(7911); x.fillStyle = "#0b0910"; x.fillRect(0, 0, W, H); for (let i = 0; i < 70; i++) { const k = 14 + r() * 18; x.fillStyle = `rgb(${k + 6},${k},${k + 12})`; x.fillRect(r() * W, r() * H, 20 + r() * 70, 10 + r() * 30); }
+    x.strokeStyle = "rgba(0,0,0,.9)"; x.lineWidth = 2; for (let i = 0; i < 70; i++) x.strokeRect(r() * W, r() * H, 20 + r() * 70, 10 + r() * 30); }, 1);
+  const spE = T2(512, 256, (x, W, H) => { const r = rnd(7912); x.fillStyle = "#000"; x.fillRect(0, 0, W, H); x.lineCap = "round"; x.shadowColor = "#ff3ad8"; x.shadowBlur = 6;
+    for (let i = 0; i < 18; i++) { x.strokeStyle = `rgba(255,${60 + r() * 60},${200 + r() * 55},${.6 + r() * .4})`; x.lineWidth = 1.2 + r() * 2.2; x.beginPath(); let px = r() * W, py = r() * H; x.moveTo(px, py); for (let j = 0; j < 4; j++) { if (r() < .5) px += (r() - .5) * 90; else py += (r() - .5) * 60; x.lineTo(px, py); } x.stroke(); } });
+  C.sp2 = new TH.MeshPhysicalMaterial({ map: spC, emissiveMap: spE, emissive: 0xffffff, emissiveIntensity: 1.7, roughness: .28, metalness: .55, clearcoat: 1, clearcoatRoughness: .12 }); C.sp2.userData.pulse = ".7 + .5 * (.5 + .5 * sin(uMT * 2.6))";
+  C.spM = new TH.MeshBasicMaterial({ color: 0xff3ad8, toneMapped: false }); C.spM.userData.pulse = "1.";
+  C.spEye = new TH.MeshBasicMaterial({ color: 0xc860ff, toneMapped: false });
+  C.spFang = new TH.MeshPhysicalMaterial({ color: 0x120c16, roughness: .15, metalness: .4, clearcoat: 1 });
   return C;
 }
 const MONM = {};
@@ -13654,20 +13683,27 @@ function buildMonster(k, part) {
         put(new TH.Mesh(new TH.CylinderGeometry(.04, .04, .1, 16), C.gunL), .2, .1, dz).rotation.z = -Math.PI / 2; // heat sink collar
         put(new TH.Mesh(new TH.TorusGeometry(.042, .012, 8, 16), C.laser), .93, .1, dz).rotation.y = Math.PI / 2; put(new TH.Mesh(new TH.SphereGeometry(.036, 12, 8), C.laser), .94, .1, dz); // emitter ring and lens
         const gl = put(new TH.Mesh(new TH.SphereGeometry(.07, 12, 8), C.laserG), .97, .1, dz); gl.scale.set(1.6, 1, 1); } }
-  } else if (k === "slevi") { // a serpent the size of a fleet: coiling body, crested head, horned jaws, spined back, molten seams
-    const pts = []; for (let i = 0; i <= 12; i++) { const t = i / 12; pts.push([3.2 - t * 8.2, Math.sin(t * 7) * .35, Math.sin(t * 5 + .6) * .9 * t]); }
-    const body = add(new TH.Mesh(taperTube(pts, t => .55 * (t < .08 ? .75 + t * 3 : 1.02 - t * .9) + .05, 140, 20), C.levi));
-    const head = lathe([[4.3, 0], [4.15, .18], [3.8, .38], [3.4, .52], [3.0, .5]], C.levi, 36); head.scale.set(1, .75, 1);
-    const jaw = lathe([[4.1, 0], [3.8, .2], [3.3, .3], [3.0, .25]], C.leviHorn, 24); jaw.position.y = -.22; jaw.rotation.z = -.12;
-    for (const s of [1, -1]) { const h = add(new TH.Mesh(new TH.ConeGeometry(.08, .95, 12), C.leviHorn), 3.1, .38, s * .28); h.rotation.set(s * .5, 0, .95);
-      add(new TH.Mesh(new TH.SphereGeometry(.06, 12, 8), C.eyeL), 3.85, .2, s * .27);
-      for (let i = 0; i < 5; i++) { const fang = add(new TH.Mesh(new TH.ConeGeometry(.025, .16, 6), C.leviHorn), 4.05 - i * .16, -.12, s * (.12 + i * .03)); fang.rotation.z = Math.PI; } }
-    const curve = new TH.CatmullRomCurve3(pts.map(p => new TH.Vector3(...p))), q = new TH.Vector3();
-    for (let i = 1; i < 28; i++) { const t = i / 30; curve.getPointAt(t, q); const rr = .55 * (1.02 - t * .9) + .05, sp = add(new TH.Mesh(new TH.ConeGeometry(.06 * (1 - t * .6), .5 * (1 - t * .55), 8), C.leviHorn), q.x, q.y + rr * .92, q.z); sp.rotation.z = .5; }
-    const fin = add(new TH.Mesh(new TH.SphereGeometry(1, 20, 10), C.glowL), -5.05, 0, pts[12][2]); fin.scale.set(.5, .38, .04);
-    add(new TH.Mesh(new TH.SphereGeometry(.14, 14, 10), C.glowL), 3.55, -.12, 0).scale.set(1.6, .5, .9); // a furnace glow in the throat
-    for (const t of [.22, .42]) { curve.getPointAt(t, q); const rr = .55 * (1.02 - t * .9) + .05; for (const sd of [1, -1]) { const base = add(new TH.Mesh(new TH.CylinderGeometry(.12, .16, .14, 12), C.gun), q.x, q.y + rr * .7, q.z + sd * rr * .55);
-      const bar = add(new TH.Mesh(new TH.CylinderGeometry(.04, .05, .7, 10), C.gun), q.x + .32, q.y + rr * .7 + .1, q.z + sd * rr * .55); bar.rotation.z = -Math.PI / 2 + .12; add(new TH.Mesh(new TH.SphereGeometry(.055, 10, 8), C.glowL), q.x + .68, q.y + rr * .7 + .14, q.z + sd * rr * .55); } } // twin plasma batteries on the back
+  } else if (k === "slevi") { /* v522 the Star Leviathan: a sea serpent as long as a fleet, with the armoured whale head of its card. A
+       plated skull with cyan throat grooves and a jaw full of teeth that opens, a long eel body ringed with scale plates and cracked
+       with cyan light, a ridge of bone spikes that becomes a glowing fin membrane down the tail, small pectoral fins and a paddle tail */
+    const hg0 = g.children.length;
+    const head = lathe([[4.7, 0], [4.62, .3], [4.4, .6], [4.0, .84], [3.5, .96], [3.0, .98], [2.6, .92]], C.lwhale, 64); head.scale.set(1, .78, .95);
+    const jaw = lathe([[4.45, 0], [4.3, .22], [3.9, .38], [3.4, .44], [3.0, .4]], C.larmor, 40); jaw.scale.set(1, .55, .95); jaw.position.y = -.42;
+    for (const s of [1, -1]) { for (let i = 0; i < 9; i++) { const x = 4.3 - i * .14, z = s * (.18 + i * .05), tu = add(new TH.Mesh(new TH.ConeGeometry(.035, .2 - i * .008, 6), C.bone), x, -.33, z); tu.rotation.z = Math.PI; const tl = add(new TH.Mesh(new TH.ConeGeometry(.03, .16 - i * .006, 6), C.bone), x - .05, -.33, z * .92); }
+      add(new TH.Mesh(new TH.SphereGeometry(.085, 16, 12), C.lcyan), 3.75, .25, s * .78);
+      const lid = add(new TH.Mesh(new TH.BoxGeometry(.42, .06, .14), C.larmor), 3.8, .38, s * .74); lid.rotation.set(s * .35, s * .2, -.18);
+      for (let j = 0; j < 3; j++) { const pl = add(new TH.Mesh(new TH.BoxGeometry(.6 - j * .1, .06, .32), C.larmor), 4.15 - j * .5, .5 + j * .12, s * (.36 + j * .12)); pl.rotation.set(s * (.55 - j * .08), 0, -.18); }
+      const pf = add(new TH.Mesh(slab([[.35, 0], [.2, .7], [-.5, 1.35], [-.35, .55], [-.45, 0]], .05), C.lwhale), 2.1, -.25, s * .62); pf.rotation.set(s * (Math.PI / 2 + .45), 0, -.3); }
+    add(new TH.Mesh(new TH.SphereGeometry(1, 20, 12), C.lcyan), 3.75, -.3, 0).scale.set(.55, .04, .38); // a cyan glow in the throat, seen when the jaw opens
+    for (const m of g.children.slice(hg0)) { m.position.x = 2.6 + (m.position.x - 2.6) * 1.25; m.position.y *= 1.25; m.position.z *= 1.25; m.scale.multiplyScalar(1.25); }
+    const pts = []; for (let i = 0; i <= 14; i++) { const t = i / 14; pts.push([2.9 - t * 11.6, Math.sin(t * 3.2) * .12, Math.sin(t * 6.2) * .75 * t]); }
+    const rad = t => .8 * (t < .05 ? .95 + t : 1.0 - t * .88) + .04, curve = new TH.CatmullRomCurve3(pts.map(p => new TH.Vector3(...p))), q = new TH.Vector3();
+    add(new TH.Mesh(taperTube(pts, rad, 220, 24), C.leel));
+    for (let i = 1; i < 18; i++) { const t = i / 19; curve.getPointAt(t, q); const rr = rad(t), rg = add(new TH.Mesh(new TH.TorusGeometry(rr * 1.0, .02 + rr * .018, 6, 28), C.larmor), q.x, q.y, q.z); rg.lookAt(curve.getPointAt(Math.min(1, t + .01), new TH.Vector3())); } // scale rings
+    for (let i = 0; i < 40; i++) { const t = .02 + i / 40 * .9; curve.getPointAt(t, q); const rr = rad(t);
+      if (t < .5) { const sp = add(new TH.Mesh(new TH.ConeGeometry(.05 + rr * .06, .25 + rr * .45, 8), C.larmor), q.x, q.y + rr * .95, q.z); sp.rotation.z = .5; }
+      else { const fn = add(new TH.Mesh(slab([[.16, 0], [.05, .3], [-.2, .55], [-.18, .2], [-.3, 0]], .02), C.lfin), q.x, q.y + rr * .9, 0); fn.position.z = q.z; fn.scale.setScalar(.6 + rr * 1.2); } }
+    curve.getPointAt(1, q); const tf = add(new TH.Mesh(slab([[.2, 0], [-.3, .6], [-1.1, .9], [-.8, .1], [-1.15, -.7], [-.3, -.55], [.2, -.05]], .04), C.lfin), q.x - .05, q.y, q.z);
   } else if (k === "ssquid") { // mantle forward, fins at the tip, eight arms and two long hunting tentacles trailing behind
     const mantle = lathe([[2.4, 0], [2.3, .25], [1.8, .52], [.9, .66], [0, .62], [-.45, .48], [-.6, .42]], C.squid, 56); mantle.scale.set(1, .9, 1);
     for (const s of [1, -1]) { const fin = add(new TH.Mesh(new TH.SphereGeometry(1, 24, 10), C.squid), 1.85, 0, s * .55); fin.scale.set(.55, .04, .5); fin.rotation.y = s * .35;
@@ -13742,19 +13778,31 @@ function buildMonster(k, part) {
       for (let j = 0; j < 4; j++) { const a = (j - 1.5) * .45 + (sx > 0 ? 0 : Math.PI), cl = add(new TH.Mesh(new TH.ConeGeometry(.05, .2, 8), C.thorn), lx + Math.cos(a) * .4 * fr, -1.0, lz + Math.sin(a) * .34); cl.rotation.z = (sx > 0 ? -1 : 1) * (Math.PI / 2 - .25); cl.rotation.y = -a + (sx > 0 ? 0 : Math.PI); } }
     add(new TH.Mesh(taperTube([[-2.2, -.05, 0], [-2.55, -.12, 0], [-2.85, -.22, 0]], t => .16 * (1 - t * .8), 20, 10), C.tskin2));
     prism(new TH.Vector3(-2.85, -.22, 0), new TH.Vector3(-1, -.2, 0).normalize(), .16, .035, C.tcrys);
-  } else if (k === "gspider") { // a void spider: a round abdomen carrying a caged singularity, a narrow head with eight eyes, and eight jointed legs
-    const abd = add(new TH.Mesh(new TH.SphereGeometry(1, 40, 24), C.spider), -1.55, .4, 0); abd.scale.set(1.45, 1.1, 1.2);
-    const ct = add(new TH.Mesh(new TH.SphereGeometry(1, 32, 18), C.spider), .5, .12, 0); ct.scale.set(.95, .55, .78);
-    const hd = add(new TH.Mesh(new TH.SphereGeometry(1, 24, 14), C.spider), 1.38, .18, 0); hd.scale.set(.42, .36, .4);
-    for (let i = 0; i < 8; i++) { const a = (i % 4 - 1.5) * .32, row = i < 4 ? 0 : 1; add(new TH.Mesh(new TH.SphereGeometry(row ? .05 : .075, 10, 8), C.eyeP), 1.66 - row * .08, .34 + row * .1, Math.sin(a) * .3); }
-    for (const s of [1, -1]) { const f = add(new TH.Mesh(new TH.ConeGeometry(.06, .4, 8), C.gcore), 1.72, -.08, s * .12); f.rotation.z = -Math.PI / 2 - .9; }
-    add(new TH.Mesh(new TH.SphereGeometry(.34, 24, 16), C.gcore), -1.55, 1.68, 0);
-    for (const [rx, rz] of [[.4, 0], [-.4, .6], [1.2, -.3]]) { const ring = add(new TH.Mesh(new TH.TorusGeometry(.62, .035, 8, 48), C.gring), -1.55, 1.68, 0); ring.rotation.set(Math.PI / 2 + rx, rz, 0); }
-    for (let i = 0; i < 4; i++) { const t = new TH.Vector3(-1.55, 1.15, 0); for (const s of [1, -1]) { const p = [[t.x, t.y, 0], [-1.55 + (i - 1.5) * .5, 1.15 + .1, s * .45], [-1.55 + (i - 1.5) * .9, .75, s * 1.05]]; add(new TH.Mesh(taperTube(p, () => .025, 16, 5), C.gring)); } } // the cage struts
-    for (let i = 0; i < 4; i++) for (const s of [1, -1]) { const hx = .85 - i * .3, dx = (1.5 - i) * .55, pts = [[hx, .1, s * .5], [hx + dx * .4, .9, s * 1.25], [hx + dx * .8, 1.15, s * 1.9], [hx + dx * 1.3, .3, s * 2.6], [hx + dx * 1.7, -.85, s * 3.0]];
-      add(new TH.Mesh(taperTube(pts, t => .13 * (1 - t * .65), 40, 8), C.spider)); add(new TH.Mesh(new TH.SphereGeometry(.07, 8, 6), C.gcore), hx + dx * 1.7, -.88, s * 3.0);
-      add(new TH.Mesh(new TH.SphereGeometry(.12, 10, 8), C.spider), hx + dx * .8, 1.15, s * 1.9); }
-    for (const z of [-.15, .15]) { const sp = add(new TH.Mesh(new TH.ConeGeometry(.08, .3, 8), C.spider), -2.98, .3, z); sp.rotation.z = Math.PI / 2; }
+  } else if (k === "gspider") { /* v520 a far scarier Gravity Spider: plated black armour with magenta seams, an armoured abdomen ringed
+       with glowing bands and spines, a caged singularity with rings, a purple core eye in a ring of six, curved fangs, palps, and
+       eight four-jointed legs with glowing joints and spiked femurs, high-kneed like the card */
+    const abd = add(new TH.Mesh(new TH.SphereGeometry(1, 64, 40), C.sp2), -1.7, .55, 0); abd.scale.set(1.5, 1.12, 1.08);
+    for (let i = 0; i < 6; i++) { const x = -1.7 + (i - 2.5) * .44, f = Math.sqrt(Math.max(.05, 1 - ((x + 1.7) / 1.5) ** 2)), b = add(new TH.Mesh(new TH.TorusGeometry(1, .035, 8, 48, Math.PI * 1.3), C.spM), x, .55, 0); b.rotation.set(0, Math.PI / 2, -Math.PI * .15); b.scale.set(1.08 * f * 1.02, 1.12 * f * 1.02, 1);
+      for (let j = -1; j <= 1; j++) { const sp = add(new TH.Mesh(new TH.ConeGeometry(.05, .32, 6), C.spFang), x, .55 + 1.12 * f * Math.cos(j * .5), 1.08 * f * Math.sin(j * .5)); sp.rotation.set(j * .5, 0, .35); } }
+    const ct = add(new TH.Mesh(new TH.SphereGeometry(1, 48, 28), C.sp2), .45, .18, 0); ct.scale.set(.95, .48, .74);
+    for (let i = 0; i < 4; i++) { const pl = add(new TH.Mesh(new TH.SphereGeometry(1, 24, 12, 0, TAU, 0, Math.PI / 2), C.sp2), .85 - i * .3, .33, 0); pl.scale.set(.28, .2, .5 - i * .05); }
+    const hd = add(new TH.Mesh(new TH.SphereGeometry(1, 32, 20), C.sp2), 1.38, .22, 0); hd.scale.set(.42, .34, .4);
+    add(new TH.Mesh(new TH.TorusGeometry(.19, .04, 10, 32), C.spFang), 1.72, .28, 0).rotation.y = Math.PI / 2;
+    const eye = add(new TH.Mesh(new TH.SphereGeometry(.21, 28, 20), C.spEye), 1.7, .28, 0); eye.scale.x = .7;
+    for (let i = 0; i < 6; i++) { const a = i / 6 * TAU; add(new TH.Mesh(new TH.SphereGeometry(.045, 12, 8), C.spM), 1.66, .28 + Math.sin(a) * .3, Math.cos(a) * .3); }
+    for (const s of [1, -1]) { add(new TH.Mesh(taperTube([[1.62, .02, s * .14], [1.88, -.12, s * .2], [2.0, -.38, s * .16], [1.94, -.6, s * .08]], t => .085 * (1 - t * .8), 30, 10), C.spFang)); add(new TH.Mesh(new TH.SphereGeometry(.03, 8, 6), C.spM), 1.94, -.6, s * .08);
+      add(new TH.Mesh(taperTube([[1.5, .05, s * .3], [1.95, .2, s * .45], [2.25, -.05, s * .5], [2.35, -.32, s * .46]], t => .05 * (1 - t * .5), 24, 8), C.sp2)); }
+    add(new TH.Mesh(new TH.SphereGeometry(.38, 32, 24), C.gcore), -1.7, 1.98, 0);
+    for (const [rx, rz] of [[.4, 0], [-.5, .7], [1.2, -.4]]) { const ring = add(new TH.Mesh(new TH.TorusGeometry(.66, .03, 8, 64), C.gring), -1.7, 1.98, 0); ring.rotation.set(Math.PI / 2 + rx, rz, 0); }
+    for (let i = 0; i < 4; i++) { const a = i / 4 * TAU + .4; add(new TH.Mesh(taperTube([[-1.7 + Math.cos(a) * .7, 1.45, Math.sin(a) * .6], [-1.7 + Math.cos(a) * .62, 1.95, Math.sin(a) * .55], [-1.7 + Math.cos(a) * .2, 2.48, Math.sin(a) * .18]], () => .028, 16, 5), C.sp2)); }
+    for (let i = 0; i < 4; i++) for (const s of [1, -1]) { const th = .95 - i * .62, hx = .95 - i * .33, dx = Math.sin(th), dz = s * Math.cos(th), L = i === 0 ? 1.12 : 1;
+      const P0 = [hx, .12, s * .5], P1 = [hx + dx * .85 * L, 1.65 * L, s * .5 + dz * .85 * L], P2 = [hx + dx * 1.95 * L, 1.3 * L, s * .5 + dz * 1.95 * L], P3 = [hx + dx * 2.6 * L, .1, s * .5 + dz * 2.6 * L], P4 = [hx + dx * 2.95 * L, -1.0, s * .5 + dz * 2.95 * L];
+      const mid = (a, b, h) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + h, (a[2] + b[2]) / 2];
+      add(new TH.Mesh(taperTube([P0, mid(P0, P1, .05), P1], t => .15 - t * .03, 20, 10), C.sp2)); add(new TH.Mesh(taperTube([P1, mid(P1, P2, .12), P2], t => .12 - t * .025, 20, 10), C.sp2));
+      add(new TH.Mesh(taperTube([P2, mid(P2, P3, .05), P3], t => .095 - t * .025, 20, 8), C.sp2)); add(new TH.Mesh(taperTube([P3, P4], t => .07 * (1 - t * .75), 14, 8), C.spFang));
+      for (const J of [P1, P2, P3]) add(new TH.Mesh(new TH.SphereGeometry(.075, 12, 8), C.spM), J[0], J[1], J[2]);
+      for (let j = 1; j < 4; j++) { const t = j / 4, sp = add(new TH.Mesh(new TH.ConeGeometry(.03, .2, 6), C.spFang), P1[0] + (P2[0] - P1[0]) * t, P1[1] + (P2[1] - P1[1]) * t + .1, P1[2] + (P2[2] - P1[2]) * t); sp.rotation.x = -s * .4; } }
+    for (const z of [-.15, .15]) { const sp = add(new TH.Mesh(new TH.ConeGeometry(.08, .34, 8), C.sp2), -3.2, .45, z); sp.rotation.z = Math.PI / 2; }
   } else if (k === "smoth") { // a moth that drinks starlight: a velvet body, feathered antennae, and four great gold wings with burning sun-eyes
     const th = add(new TH.Mesh(new TH.SphereGeometry(1, 28, 18), C.mothF), .55, 0, 0); th.scale.set(.45, .38, .38);
     add(new TH.Mesh(new TH.SphereGeometry(.27, 22, 14), C.mothF), 1.12, .02, 0);
@@ -13947,7 +13995,7 @@ function shipArt(k, accent, view) {
     let M = shipMats(accent); if (k === "flagship") { const F2 = flagMats(M.fac, 2.9); M = Object.assign(Object.create(M), F2); Object.defineProperty(M, "fac", { value: Object.getPrototypeOf(M).fac }); } /* v256 the portrait wears the plated metal */
     const ship = kind === "s" ? (glbShip(k) || buildShip(k, M)) : kind === "a" ? buildAlien(k) : kind === "m" ? buildMissile(k, M) : buildDefense(k, M); S.scene.add(ship);
     if ((kind === "d" || kind === "m") && view === "side") ship.rotation.y = -.5; // turrets read better turned a little toward the camera
-    if (k === "eclipse" && view === "side") ship.rotation.x = .42; // v170 the Discovery's saucer reads as a disc, not a sliver, tilted a little toward the camera
+    if (k === "eclipse" && view === "side") ship.rotation.x = .42; if (k === "smoth" && view === "side") ship.rotation.x = 1.15; /* v522 the Solar Moth shows its wings in battle, not their edge */ // v170 the Discovery's saucer reads as a disc, not a sliver, tilted a little toward the camera
     const gl = S.glowT || (S.glowT = glowTex("150,215,255", 1)), FG = k === "flagship" ? M.neon.color : null, gc = FG ? [new TH.Color(0xffffff).lerp(FG, .5), FG] : kind === "a" ? [0xd8ff9a, 0x7aff3a] : [0x9fdcff, 0x4f9fff];
     if (FG) { const gw = S.glowW || (S.glowW = glowTex("255,255,255", 1)); for (const [x, y, z, rr, c, a] of ship.userData.glow || []) { const sp = new TH.Sprite(new TH.SpriteMaterial({ map: gw, color: c || FG, opacity: a * .32, transparent: true, blending: TH.AdditiveBlending, depthWrite: false })); sp.position.set(x, y, z); sp.scale.setScalar(rr * .8); ship.add(sp); } } // v250 the flagship's battle portrait carries its halo
     for (const [x, y, z, rr] of ship.userData.eng) { for (const [d, s, c] of [[.05, 5, gc[0]], [.5, 3.2, gc[1]]]) { const sp = new TH.Sprite(new TH.SpriteMaterial({ map: gl, color: c, transparent: true, blending: TH.AdditiveBlending, depthWrite: false })); sp.position.set(x - rr * d * 2, y, z); sp.scale.setScalar(rr * s * (FG ? .62 : 1)); ship.add(sp); } }
