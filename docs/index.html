@@ -4736,7 +4736,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 526;
+const GAME_V = 527;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9493,11 +9493,10 @@ const unitName = k => k === "fortress" ? "Orbital Fortress" : k === "supercube" 
 /* v86: boss monsters fight at grand scale (bigger than any warship but the Cube Destroyer) with their own size cap, glow and sharper sprites */
 /* round and boxy giants only fill the middle of their wide sprite, so they are drawn larger to fill their place */
 const DRAWK = { worldbreaker: 3.2, cube: 2.9, sphere: 2.9 }, FOOTK = k => DRAWK[k] ? DRAWK[k] / 1.9 : 1;
-const BOSSK = { cube: 1.7, sphere: 1.35, swhale: 1.8, slevi: 1.8, ssquid: 1.6, leviathan: 1.5, vmanta: 1.7, swasp: 1.3, snest: 1.6, ctort: 1.8, gspider: 1.7, smoth: 2.4, cram: 1.8 }, BOSS_GLOW = { vmanta: "122,244,255", swasp: "255,176,42", snest: "255,176,42", ctort: "169,140,255", gspider: "200,122,255", smoth: "255,196,90", cram: "140,210,255", cube: "90,255,140", sphere: "90,255,140", swhale: "110,200,255", slevi: "255,138,74", ssquid: "200,120,255", leviathan: "180,255,90" };
+const BOSSK = { cube: 1.7, sphere: 1.35, swhale: 1.8, slevi: 1.8, ssquid: 1.6, leviathan: 1.5, vmanta: 1.7, swasp: 1.3, snest: 1.6, ctort: 1.8, gspider: 1.7, smoth: 1.6, cram: 1.8 }, BOSS_GLOW = { vmanta: "122,244,255", swasp: "255,176,42", snest: "255,176,42", ctort: "169,140,255", gspider: "200,122,255", smoth: "255,196,90", cram: "140,210,255", cube: "90,255,140", sphere: "90,255,140", swhale: "110,200,255", slevi: "255,138,74", ssquid: "200,120,255", leviathan: "180,255,90" };
 /* v212 size ladder: fighter < heavy fighter < pathfinder < cruiser < bomber < heavy cruiser < escort carrier < battleship < battlecruiser < destroyer
    < Citadel Supercarrier < Reaper (king of the fleet) < Discovery Class < Cube Destroyer (about twice the Reaper) */
-const bLen = k => k === "worldbreaker" ? 2 * (SIDE_LEN.dreadnought || 1.25) * 1.08 * 1.5 : Math.pow(SIDE_LEN[k] || .5, 1.3) * (BOSSK[k] || 1); /* v523 a steeper class ladder; the Cube Destroyer x1.5 */
-for (const k in MON) BOSSK[k] = (BOSSK[k] || 1) * 1.35; BOSSK.snest = (BOSSK.snest || 1) * 1.35; /* v523 space monsters loom larger in battle (owner: as fun to watch as possible) */
+const bLen = k => k === "worldbreaker" ? 2 * (SIDE_LEN.dreadnought || 1.25) * 1.08 : Math.pow(SIDE_LEN[k] || .5, 1.15) * (BOSSK[k] || 1);
 const SIDE_LEN = { wbOvl: 1.8, wbDev: 1.8, wbWar: 1.8, wbCon: 1.4, wbBrd: 1.8, wbTyr: 1.8, wbWym: 1.8, wbCol: 1.8, spyProbe: .3, cube: 1.2, sphere: .8, cdrone: .4, tender: .6, guardian: .82, escortCarrier: .9, supercarrier: 1.42, eclipse: 1.75, fighter: .38, heavyFighter: .46, hauler: .5, heavyCargo: .7, recycler: .72, lancer: .55, ark: .6, corvette: .66, battleship: .96, bastion: 1.04, bomber: .78, destroyer: 1.14, dreadnought: 1.6, worldbreaker: 1.5, drone: .38, spitter: .42, brute: .6, lord: .8, leviathan: 1.2, swhale: 1.5, slevi: 1.5, ssquid: 1.05, vmanta: 1.3, swasp: .9, snest: 1.2, ctort: 1.4, gspider: 1.3, smoth: 1.2, cram: 1.5 };
 /* v260 battle sprite mip levels: a ship drawn small used to be squeezed out of its full-size render every frame. That resample scales with the
    source, not the screen: a 10 vs 10 replay spent most of each frame on it (about 2.6 ms per hull in software) and it was the main load in the
@@ -14080,7 +14079,7 @@ function shipArt(k, accent, view) {
     let M = shipMats(accent); if (k === "flagship") { const F2 = flagMats(M.fac, 2.9); M = Object.assign(Object.create(M), F2); Object.defineProperty(M, "fac", { value: Object.getPrototypeOf(M).fac }); } /* v256 the portrait wears the plated metal */
     const ship = kind === "s" ? (glbShip(k) || buildShip(k, M)) : kind === "a" ? buildAlien(k) : kind === "m" ? buildMissile(k, M) : buildDefense(k, M); S.scene.add(ship);
     if ((kind === "d" || kind === "m") && view === "side") ship.rotation.y = -.5; // turrets read better turned a little toward the camera
-    if (k === "eclipse" && view === "side") ship.rotation.x = .42; if (k === "smoth" && view === "side") { ship.rotation.order = "ZYX"; ship.rotation.set(Math.PI / 2, 0, Math.PI / 2); } /* v523 its back: head up, wings spread */ /* v522 the Solar Moth shows its wings in battle, not their edge */ // v170 the Discovery's saucer reads as a disc, not a sliver, tilted a little toward the camera
+    if (k === "eclipse" && view === "side") ship.rotation.x = .42; if (k === "smoth" && view === "side") ship.rotation.x = 1.15; /* v522 the Solar Moth shows its wings in battle, not their edge */ /* v522 the Solar Moth shows its wings in battle, not their edge */ // v170 the Discovery's saucer reads as a disc, not a sliver, tilted a little toward the camera
     const gl = S.glowT || (S.glowT = glowTex("150,215,255", 1)), FG = k === "flagship" ? M.neon.color : null, gc = FG ? [new TH.Color(0xffffff).lerp(FG, .5), FG] : kind === "a" ? [0xd8ff9a, 0x7aff3a] : [0x9fdcff, 0x4f9fff];
     if (FG) { const gw = S.glowW || (S.glowW = glowTex("255,255,255", 1)); for (const [x, y, z, rr, c, a] of ship.userData.glow || []) { const sp = new TH.Sprite(new TH.SpriteMaterial({ map: gw, color: c || FG, opacity: a * .32, transparent: true, blending: TH.AdditiveBlending, depthWrite: false })); sp.position.set(x, y, z); sp.scale.setScalar(rr * .8); ship.add(sp); } } // v250 the flagship's battle portrait carries its halo
     for (const [x, y, z, rr] of ship.userData.eng) { for (const [d, s, c] of [[.05, 5, gc[0]], [.5, 3.2, gc[1]]]) { const sp = new TH.Sprite(new TH.SpriteMaterial({ map: gl, color: c, transparent: true, blending: TH.AdditiveBlending, depthWrite: false })); sp.position.set(x - rr * d * 2, y, z); sp.scale.setScalar(rr * s * (FG ? .62 : 1)); ship.add(sp); } }
@@ -20212,23 +20211,12 @@ function drawBattle(t) {
     const fitT = A0 ? clamp(crowd * Math.sqrt((W * .88 * (bot - top)) * (busy ? .44 : .42) / A0), .4, 1.85) : crowd;
     b.fit = b.fit ? b.fit + (fitT - b.fit) * Math.min(1, real / 700) : fitT;
     const lay = b.lay || (b.lay = Q.map(() => ({ x: 0, y: 0 }))), P = reps.map(i => { const [rx, ry, w] = fpOf(i); return { i, x: scr[i].x + lay[i].x, y: scr[i].y + lay[i].y, rx, ry, w }; }), x0 = W * .03, x1 = W * .97, y0 = top - (bot - top) * .02, y1 = bot + (bot - top) * .04;
-    if (!b.superSide && b.fdir !== "x") { const fm = ["a", "d"].map(sd => P.filter(p => Q[p.i].side === sd)), my = fm.map(L => L.length ? L.reduce((a, p) => a + p.y, 0) / L.length : null), mid = (top + bot) / 2, Lf = Math.min(W, H) * .16;
-      const RK = { interceptor: 0, fighter: 0, bomber: 0, frigate: 1, cruiser: 1, support: 1, battleship: 2, carrier: 2, capital: 2, titan: 3, station: 4, turret: 4 };
-      fm.forEach((L, si) => { if (!L.length || my[si] == null) return; const oy = my[1 - si] != null ? my[1 - si] : (si ? bot : top), dir = oy < my[si] ? -1 : 1, hasF = b.flags && (b.flags[si ? "d" : "a"] || []).some(e => e.dead == null);
-        const share = L.length <= 2 && fm[1 - si].length > 2 ? .38 : fm[1 - si].length <= 2 && L.length > 2 ? .6 : .46, front = dir < 0 ? bot - (bot - top) * share : top + (bot - top) * share, back = dir < 0 ? bot - (hasF ? Lf * 1.15 : 0) : top + (hasF ? Lf * 1.15 : 0), D = Math.abs(back - front), rows = [];
-        const pack = () => { rows.length = 0; for (let r = 0; r < 5; r++) { const R = L.filter(p => (RK[Q[p.i].role] != null ? RK[Q[p.i].role] : 1) === r).sort((a, c) => a.x - c.x); if (!R.length) continue; let cur = [], w = 0; for (const p of R) { if (cur.length && w + p.rx * 2 > W * .94) { rows.push(cur); cur = []; w = 0; } cur.push(p); w += p.rx * 2; } rows.push(cur); }
-          return rows.map(R => Math.max(...R.map(p => p.ry)) * 2); };
-        let hs = pack(), sumH = hs.reduce((a, c) => a + c, 0); for (let it = 0; it < 2 && sumH > D; it++) { const kk = Math.max(.45, D / sumH); for (const p of L) { scr[p.i].s *= kk; p.rx *= kk; p.ry *= kk; } hs = pack(); sumH = hs.reduce((a, c) => a + c, 0); } /* too deep: the side is drawn smaller until it fits */
-        const k = 1, pad = sumH < D ? (D - sumH) / (rows.length + 1) : 0; let acc = pad;
-        rows.forEach((R, ri) => { const yy = front - dir * (acc + hs[ri] * k / 2); acc += hs[ri] * k + pad; const ws = R.reduce((a, p) => a + p.rx * 2, 0), g = Math.max(0, (W * .94 - ws) / (R.length + 1)); let xx = W * .03 + g;
-          for (const p of R) { p.x = xx + p.rx; p.y = L.length === 1 ? (front + back) / 2 : yy; xx += p.rx * 2 + g; } }); }); } /* v523 */
-    if (b.flags && !b.superSide) { const Lf = Math.min(W, H) * .16; for (const sd of ["a", "d"]) for (const e of b.flags[sd] || []) if (e.x != null && e.dead == null) P.push({ i: -1, fixed: 1, x: e.x, y: e.y, rx: Lf * 1.02, ry: Lf * .46, w: 1e6 }); } /* v523 */
     for (let it = 0; it < (P.length > 50 ? 3 : 5); it++) { for (let a = 0; a < P.length; a++) for (let c = a + 1; c < P.length; c++) { const A = P[a], C = P[c], dx = C.x - A.x, dy = C.y - A.y, ox = A.rx + C.rx - Math.abs(dx), oy = A.ry + C.ry - Math.abs(dy);
           if (ox <= 0 || oy <= 0) continue; const wa = A.w / (A.w + C.w), wc = 1 - wa;
           if (ox * .55 < oy) { const s = (dx >= 0 ? 1 : -1) * ox * .5; A.x -= s * wa * 1.0; C.x += s * wc * 1.0; } else { const s = (dy >= 0 ? 1 : -1) * oy * .5; A.y -= s * wa; C.y += s * wc; } }
-      for (const p of P) { if (p.fixed) continue; p.x = clamp(p.x, x0 + p.rx * .8, x1 - p.rx * .8); p.y = clamp(p.y, y0 + p.ry * .6, y1 - p.ry * (BOSSK[Q[p.i].k] ? 1.05 : .6)); } } /* v86: giants stay clear of the bottom panel */
+      for (const p of P) { p.x = clamp(p.x, x0 + p.rx * .8, x1 - p.rx * .8); p.y = clamp(p.y, y0 + p.ry * .6, y1 - p.ry * (BOSSK[Q[p.i].k] ? 1.05 : .6)); } } /* v86: giants stay clear of the bottom panel */
     const ease = reduced ? 1 : Math.min(1, real / 380);
-    for (const p of P) { if (p.fixed) continue; const L0 = lay[p.i]; L0.x += (p.x - scr[p.i].x - L0.x) * ease; L0.y += (p.y - scr[p.i].y - L0.y) * ease; scr[p.i].x += L0.x; scr[p.i].y += L0.y; scr[p.i].fp = p; }
+    for (const p of P) { const L0 = lay[p.i]; L0.x += (p.x - scr[p.i].x - L0.x) * ease; L0.y += (p.y - scr[p.i].y - L0.y) * ease; scr[p.i].x += L0.x; scr[p.i].y += L0.y; scr[p.i].fp = p; }
     if (busy) Q.forEach((q, i) => { if (tot[i] === -1 && rep[i] != null) scr[i] = scr[rep[i]]; }); }
   // v109 the Super Cube: its whole side is one colossal Cube; every one of its squads fires from, and is hit on, that one hull
   if (b.superSide) { const sd = b.superSide, idx = Q.map((q, i) => q.side === sd ? i : -1).filter(i => i >= 0), live = idx.filter(i => b.n[i] > 0), use = live.length ? live : idx;
