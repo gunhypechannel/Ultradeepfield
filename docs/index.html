@@ -4607,7 +4607,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 510;
+const GAME_V = 511;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8481,6 +8481,22 @@ function sbOverview(T, g = 1) { const { st, pts, sb } = sbMine(T, g), me = Date.
     <h4>Event Rules</h4><p>${rules} Milestones you reach but don't claim are paid out when they return.</p></div>`; }
 function sbRanking(T, g = 1) { const st = wbState(T), rows = sbBoard(st, g), mi = rows.findIndex(r => r.me), show = rows.slice(0, 50); if (mi >= 50) show.push(rows[mi]);
   return `<div class="evrank"><div class="evrh"><span>Rank</span><span>Commander</span><span>Hunt points</span></div>${show.map(r => { const pos = rows.indexOf(r) + 1; return `<div class="evrr${r.me ? " me" : ""}"><span>${pos <= 3 ? ["🥇", "🥈", "🥉"][pos - 1] : pos + "."}</span><span>${esc(r.me ? (G.myName || "You") + " (you)" : nameOf(r.id))}</span><span>${fmt(r.pts)}</span></div>`; }).join("") || `<p class="note" style="padding:10px">Nobody has hit a ${g === 2 ? "titan" : "world boss"} this week yet. Be the first.</p>`}</div>`; }
+/* v511 the event leaderboards: each commander's event numbers ride on their player record */
+function evPub() { try { const ls = loginState(); return { d: utcDay(), bd: bonusState().days | 0, on: obMin(), sp: Math.round(soloState().pts || 0), ls: ls.claimed ? ls.streak : (ls.next > 1 ? ls.next - 1 : 0), vip: Math.round(vipPts()), ap: Math.round(achPts()) }; } catch (e) { return null; } }
+const EVB = { builder: ["Days played", e => e.bd, v => `${fmt(v)} day${v === 1 ? "" : "s"}`], online: ["Online today", e => e.d === utcDay() ? e.on : 0, v => v >= 60 ? `${Math.floor(v / 60)} h ${v % 60} min` : `${v} min`],
+  lvlb: ["Commander level", null, v => `Lv.${v}`], daily: ["Points today", e => e.d === utcDay() ? e.sp : 0, v => fmt(v)], login: ["Login streak", e => e.ls, v => `${fmt(v)} day${v === 1 ? "" : "s"}`],
+  ach: ["Achievement points", e => e.ap, v => `${fmt(v)} AP`], vip: ["VIP points", e => e.vip, v => fmt(v)], gifts: ["Gifts sent", null, v => fmt(v)] };
+function evBoard(k) { const D = EVB[k], rows = [], T = now();
+  if (k === "gifts") { const a = myAlly(); if (!a) return []; const n = {}; for (const g of Object.values(a.gifts || {})) if (g && g.by) n[g.by] = (n[g.by] || 0) + 1; for (const u of Object.keys(a.members)) rows.push({ id: u, v: n[u] || 0, me: u === G.me }); }
+  else { const mine = evPub() || {};
+    for (const [uid, p] of Object.entries(G.players || {})) { if (uid === G.me || !p) continue; const v = k === "lvlb" ? (p.lvl | 0) : p.ev && typeof p.ev === "object" ? (+D[1](p.ev) || 0) : 0; if (v > 0 || k === "lvlb") rows.push({ id: uid, v }); }
+    if (k === "lvlb") for (const b of BOTS) rows.push({ id: b.id, v: cmdLevel(botScore(b)), bot: 1 });
+    rows.push({ id: G.me, v: k === "lvlb" ? cmdLevel(score()) : (+D[1](mine) || 0), me: 1 }); }
+  return rows.sort((x, y) => y.v - x.v || (x.me ? -1 : y.me ? 1 : 0)); }
+function evRankHTML(k) { const D = EVB[k], rows = evBoard(k), mi = rows.findIndex(r => r.me), show = rows.slice(0, 50); if (mi >= 50) show.push(rows[mi]);
+  if (k === "gifts" && !myAlly()) return `<p class="note" style="padding:10px">Join an alliance to see who sends the most gifts.</p>`;
+  return `<div class="evrank"><div class="evrh"><span>Rank</span><span>${k === "gifts" ? "Member" : "Commander"}</span><span>${esc(D[0])}</span></div>${show.map(r => { const pos = rows.indexOf(r) + 1; return `<div class="evrr${r.me ? " me" : ""}"><span>${pos <= 3 ? ["🥇", "🥈", "🥉"][pos - 1] : pos + "."}</span><span>${esc(r.me ? (G.myName || "You") + " (you)" : r.bot ? BOT_BY[r.id].name : nameOf(r.id))}${r.bot ? ' <i class="botk">bot</i>' : ""}</span><span>${D[2](r.v)}</span></div>`; }).join("")}</div>
+    ${rows.length < 2 ? `<p class="note" style="padding:6px 10px">${k === "gifts" ? "Gifts your alliance members send show up here." : "Other commanders show up here as they play."}</p>` : ""}`; }
 function shEvents() {
   const T = now(), tab = sheet.evTab === "rk" ? "rk" : "ov", k = EVS.some(e => e[0] === sheet.ev) ? sheet.ev : "sboss";
   const chips = `<div class="evchips evhub">${EVS.filter(e => e[0] !== "gifts" || myAlly()).map(([key, n, ic]) => { const c = evCount(key); return `<button class="evcard ec-${key}${key === k ? " on" : ""}" data-act="evPick" data-v="${key}"><span class="eci">${ic}</span><span class="ecn">${n}</span>${c ? `<i class="ecb">${c}</i>` : ""}</button>`; }).join("")}</div>`;
@@ -8501,10 +8517,11 @@ function shEvents() {
       : `<div class="evrank"><div class="evrh"><span>Rank</span><span>Alliance</span><span>Hold time</span></div>${stand.map(([aid, ms], j) => `<div class="evrr${aid === S.ally ? " me" : ""}"><span>${j + 1}.</span><span>${esc(allyTag(aid))}</span><span>${fmt(ms / 60000)} min</span></div>`).join("") || '<p class="note" style="padding:10px">No alliance has held the Cube this week yet.</p>'}</div>`;
     claim = ""; } // v91: Join lives on the video card
   else if (k === "sboss" || k === "tboss" || k === "eboss") { const g = k === "eboss" ? 3 : k === "tboss" ? 2 : 1; body = tab === "ov" ? sbOverview(T, g) : sbRanking(T, g); const n = sbReady(g); claim = `<button class="btn ${n ? "amber" : "ghost"} evclaim" data-act="sbClaim" data-g="${g}" ${n ? "" : "disabled"}>${n ? `Claim · ${n} milestone${n > 1 ? "s" : ""}` : "Claim"}</button>`; }
-  else if (k === "builder" || k === "online" || k === "lvlb") body = bonusBody(k, T);
+  else if (k === "builder" || k === "online" || k === "lvlb") body = tab === "rk" ? evRankHTML(k) : bonusBody(k, T);
+  else if (k === "ach" && tab === "rk") body = evRankHTML(k);
   else if (k === "ach") { body = `<div class="evinfo"><h4>Achievement Points:</h4><p><b class="evscore">${fmt(achPts())}</b> · ${achReady()} tier${achReady() === 1 ? "" : "s"} ready to claim</p><p>Long-term goals for every part of the game: level, PvP, raids, recycling, relocating, speed-ups, ship production and more.</p></div>`;
     claim = `<button class="btn amber evclaim" data-act="achOpen">Open Achievements</button>`; }
-  else { body = `<div class="evinfo">${oldEvSection(k, T)}</div>`; }
+  else { body = tab === "rk" && EVB[k] ? evRankHTML(k) : `<div class="evinfo">${oldEvSection(k, T)}</div>`; }
   return `<div class="hd evhd"><div><h2>Events</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${tabs}${chips}${evBanner(k, T)}${body}${claim}`;
 }
 /* the other events keep their existing panels, shown under their banner */
@@ -8895,9 +8912,9 @@ function syncPlayer() {
   if (S && S.cname) G.myName = S.cname;
   if (G.mode !== "online" || !G.db || !G.me || !G.myHome) return;
   const d = { joined: G.joinedAt, last: Math.floor(now() / 600000) * 600000, score: score(), wins: S.wins, planets: myPlanets().length, home: G.myHome, ally: S.ally || null,
-    tech: { weapons: S.r.weapons, shields: S.r.shields, armor: S.r.armor, esp: S.r.espionage || 0, fsa: Math.round(fsB("atk")), fss: Math.round(fsB("shd")), fsh: Math.round(fsB("hul")), fl: fsBuilt() ? (acadFlag() ? 2 : 1) : 0 }, pvp: (S.pvp || {}).pts || 0, rec: S.rec || { w: 0, l: 0, d: 0 }, bio: (S.bio || "").slice(0, 160), nm: S.cname || "", fac: facOf(), lvl: cmdLevel(score()), ast: S.r.astro || 0, av: S.avatar || null, mv: myMoves(), iv: myIntel(), cf: secFlag(), sh: hash(G.me) % SHARDS, gw: S.gw && S.gw.i === gwIdx(now()) ? { i: S.gw.i, p: S.gw.pts } : null };
+    tech: { weapons: S.r.weapons, shields: S.r.shields, armor: S.r.armor, esp: S.r.espionage || 0, fsa: Math.round(fsB("atk")), fss: Math.round(fsB("shd")), fsh: Math.round(fsB("hul")), fl: fsBuilt() ? (acadFlag() ? 2 : 1) : 0 }, pvp: (S.pvp || {}).pts || 0, rec: S.rec || { w: 0, l: 0, d: 0 }, bio: (S.bio || "").slice(0, 160), nm: S.cname || "", fac: facOf(), lvl: cmdLevel(score()), ast: S.r.astro || 0, av: S.avatar || null, mv: myMoves(), iv: myIntel(), cf: secFlag(), sh: hash(G.me) % SHARDS, gw: S.gw && S.gw.i === gwIdx(now()) ? { i: S.gw.i, p: S.gw.pts } : null, ev: evPub() };
   const j = JSON.stringify(d); if (j === store.lastPlayer) return;
-  const fast = JSON.stringify(Object.assign({}, d, { last: 0, score: 0, wins: 0, rec: 0, pvp: 0, lvl: 0, tech: 0, gw: 0 })); // v324+: what other players must see at once
+  const fast = JSON.stringify(Object.assign({}, d, { last: 0, score: 0, wins: 0, rec: 0, pvp: 0, lvl: 0, tech: 0, gw: 0, ev: 0 })); // v324+: what other players must see at once
   if (fast === store.lastFast && now() - (store.lastPW || 0) < 120000) return; // only the stats moved: they ride along within 2 minutes
   store.lastPlayer = j; store.lastFast = fast; store.lastPW = now();
   serial("me", () => G.db.doc("players/" + G.me).set(d).catch(() => { store.lastPlayer = ""; store.lastFast = ""; }));
