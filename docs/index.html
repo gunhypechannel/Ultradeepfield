@@ -4607,7 +4607,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 509;
+const GAME_V = 510;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5994,7 +5994,7 @@ function wbStrike(ctx, b, scr, Q, W, H, t, d, lo) { const k = b.r && b.r.wb, M =
       else { ctx.globalAlpha = .9; ctx.strokeStyle = c; ctx.lineWidth = 6 * d; ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(x, y); ctx.stroke(); ctx.globalAlpha = .3; ctx.lineWidth = 18 * d; ctx.stroke(); glow(x, y, 16 * d, "#ffffff", .9); } }
     else { hit(p.x, p.y, .6, "j" + j); const age = (u - a - .35) / .2; if (age < 1) { glow(p.x, p.y, W * .07 * (1 + age), c, .9 * (1 - age)); } } } }
   ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over"; }
-for (const [k, u] of [["wbOvl", WB.ovl], ["wbDev", WB.dev], ["wbWar", WB.war], ["wbCon", WB.c0], ["wbBrd", WB.brd], ["wbTyr", WB.tyr], ["wbWym", WB.wym], ["wbCol", WB.col], ["wbEic", WB.eic], ["wbEfi", WB.efi], ["wbEli", WB.eli], ["wbEst", WB.est], ["wbEna", WB.ena], ["wbEpx", WB.epx]]) { const hull = Math.round(u.hp * WB_K / WB_SEG); AL[k] = { n: u.n, atk: Math.round(u.atk / WB_SEG), sh: Math.round(hull * .05), hull, val: hull * 2 }; }
+for (const [k, u] of [["wbOvl", WB.ovl], ["wbDev", WB.dev], ["wbWar", WB.war], ["wbCon", WB.c0], ["wbBrd", WB.brd], ["wbTyr", WB.tyr], ["wbWym", WB.wym], ["wbCol", WB.col], ["wbEic", WB.eic], ["wbEfi", WB.efi], ["wbEli", WB.eli], ["wbEst", WB.est], ["wbEna", WB.ena], ["wbEpx", WB.epx]]) { const cv = /^wbE(ic|fi|li|st|na|px)$/.test(k), hull = Math.round(u.hp * WB_K / WB_SEG * (cv ? 2 : 1)); AL[k] = { n: u.n, atk: Math.round(u.atk / WB_SEG * (cv ? 1.5 : 1)), /* v510 the Convergence: 2x hull, 1.5x firepower */ sh: Math.round(hull * .05), hull, val: hull * 2 }; }
 const isWbU = k => typeof k === "string" && k.startsWith("wb") && !!AL[k];
 const wbCyc = T => Math.floor((T - WB_BASE) / WEEK), wbEnd = c => WB_BASE + (c + 1) * WEEK;
 const WB2_BASE = WB_BASE + 2 * 864e5, wbG2 = k => !!WB[k], wbG3 = k => !!(WB[k] && WB[k].g === 3), wbCyc2 = T => Math.floor((T - WB2_BASE) / WEEK), wbEnd2 = c => WB2_BASE + (c + 1) * WEEK;
@@ -6160,7 +6160,7 @@ async function wbResolve(f) {
     const rep = mkRep({ at, kind: "attack", title: `Assault on the ${D.n}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: D.n, wb: key, wbSh: shK, wbRise: rise > 1.01 ? Math.round(rise * 10) / 10 : undefined, wbSeg: [n0, left], lvl: 25, ptype: "gas", fortL: 0, alien: true,
       start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
     if (shedNow.length) rep.shed = shedNow; if (key === "epx") rep.pent = wbFusedIn(cur).filter(k => !cur.shed.includes(k) || shedNow.includes(k)).map(k => WB[k].el);
-    f.n = cleanShips(res.aLeft); repairDocks(rep, lossesOf(mine0, f.n));
+    f.n = cleanShips(res.aLeft); { const cv = WB_EL.includes(key) || key === "epx"; repairDocks(rep, lossesOf(mine0, f.n), cv); if (cv && rep.wrecks) note(`No ships lost for good: ${fmt(rep.wrecks)} damaged ships are coming home to the Repair Yard.`, "info"); }
     if (seg) { const per = wbSegLoot(key, at), L = { m: per.m * seg, c: per.c * seg, g: per.g * seg }, ratio = Math.min(1, cargoOf(f.n) / Math.max(1, total(L)));
       rep.loot = { m: Math.floor(L.m * ratio), c: Math.floor(L.c * ratio), g: Math.floor(L.g * ratio) }; f.loot = rep.loot;
       const sh = Math.max(1, Math.round(seg * D.sh / 4)); S.shards = (S.shards || 0) + sh; rep.shards = sh; evPts("hunt", seg * 40); S.wins++;
@@ -6960,7 +6960,7 @@ const SBM = { vwheel: ["Celestial Wheel Fragment", "#e6b84a", "#7a3cc8", "ring"]
   areact: ["Warform Reactor Core", "#e8f6ff", "#3aa8ff", "orb"], aalloy: ["Sovereign Alloy", "#c9ced6", "#4a6a9a", "ingot"], amatrix: ["Holographic Matrix", "#9ad8ff", "#2a70ff", "hex"], atitan: ["Titan Weapon Components", "#9aa4b2", "#58b8ff", "gear"],
   kcore: ["Abyssal Sphinx Core", "#f0dcff", "#7a2cff", "kcore"], krelic: ["Dark Matter Relic", "#3a2458", "#e0b04a", "krelic"], krune: ["Ancient Gravity Rune", "#ffd27a", "#9a50ff", "krune"], karmor: ["Khezaroth Armor Fragment", "#2a2238", "#e6b23c", "karmor"],
   mgaze: ["Gorgon Eye Core", "#ffd0c0", "#e0202a", "mgaze"], mscale: ["Gilded Serpent Scale", "#f4cf72", "#7a4a12", "mscale"], mstone: ["Petrified Heartstone", "#6a6478", "#e8b048", "mstone"], mcrown: ["Crown Shard of the Gorgon", "#f5c84a", "#c0202a", "mcrown"] };
-for (const k in SBW) { const D = SBW[k], hull = Math.round(D.HP * WB_K / 100); AL[D.u] = { n: D.n + " section", atk: Math.round(D.ATK / 100), sh: Math.round(hull * .05), hull, val: hull * 2 }; }
+const BOSS_HARD = { hull: 1, atk: 1.5 }; /* v510 (hull 2 tested: the strongest fleet in the galaxy then did 0 of 100 sections per attack) */ for (const k in SBW) { const D = SBW[k], hull = Math.round(D.HP * WB_K / 100 * BOSS_HARD.hull); AL[D.u] = { n: D.n + " section", atk: Math.round(D.ATK / 100 * BOSS_HARD.atk), sh: Math.round(hull * .05), hull, val: hull * 2 }; }
 const SBO = {}; for (const k in SBW) SBO[k] = { id: "sb_" + k, kind: "sboss", lvl: 35, name: SBW[k].n, mv: (T, out) => { const o = out || {}; const p = SBX[k].p; o.x = p[0]; o.y = p[1]; o.z = p[2]; return o; }, r: .01, a0: 0 };
 /* the clock: the start of the hunt that contains (or last preceded) T, the next start */
 function sbStartOf(k, T) { return rotStartOf(k, T); }
@@ -7041,7 +7041,7 @@ async function sbResolve(f) { const k = f.sb, D = SBW[k];
     const form = k === "aex" ? (aexXf(cur) && aexXf(cur) <= at ? 1 : 0) : 0, tname = (open || [0, D.n])[1];
     const rep = mkRep({ at, kind: "attack", title: `Assault on ${D.n}${tgt !== "core" ? ` · ${tname}` : ""}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: D.n, sbk: k, sbForm: form, sbSeg: [n0, cur.hp], sbT: tgt, omRise: rise > 1.01 ? Math.round(rise * 10) / 10 : undefined, lvl: 35, ptype: "gas", fortL: 0, alien: true,
       start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
-    f.n = cleanShips(res.aLeft); repairDocks(rep, lossesOf(mine0, f.n));
+    f.n = cleanShips(res.aLeft); repairDocks(rep, lossesOf(mine0, f.n), 1); if (rep.wrecks) note(`No ships lost for good: ${fmt(rep.wrecks)} damaged ships are coming home to the Repair Yard.`, "info");
     if (seg) { const L = { m: 45000 * seg, c: 30000 * seg, g: 15000 * seg }, ratio = Math.min(1, cargoOf(f.n) / Math.max(1, total(L)));
       rep.loot = { m: Math.floor(L.m * ratio), c: Math.floor(L.c * ratio), g: Math.floor(L.g * ratio) }; f.loot = rep.loot; const sh = 3 * seg; S.shards = (S.shards || 0) + sh; rep.shards = sh; evPts("hunt", seg * 70); S.wins++;
       const got = sbMatGive(sbMatRoll(k, tgt, seg), D.n); rep.sbMats = got; logReward(`${D.n} bounty`, rep.loot, { shards: sh, kind: "battle" }); rep.mats = fsDrop(lootRoll([["void", 5, 1 + Math.floor(seg / 4)]]), D.n, { nocap: 1 }); }
@@ -7709,9 +7709,9 @@ function arrive(f) {
   if (!captured && !Object.values(f.n).some(v => v > 0)) S.fleets = S.fleets.filter(x => x !== f);
 }
 /* 45% of lost ships are towed home as wrecks; the Repair Yard rebuilds them over time (faster with each level) */
-function repairDocks(rep, lost) {
-  const back = {}; let n = 0; S.wrecks = S.wrecks || {};
-  for (const k in lost) if (SH[k]) { const v = Math.floor(lost[k] * .45 + Math.random()); if (v > 0) { back[k] = Math.min(v, lost[k]); S.wrecks[k] = (S.wrecks[k] || 0) + back[k]; n += back[k]; } }
+function repairDocks(rep, lost, all) { /* v510 all: every ship destroyed comes home damaged (super bosses and the Convergence) */
+  const back = {}; let n = 0; S.wrecks = S.wrecks || {}; if (all) rep.free = 1;
+  for (const k in lost) if (SH[k]) { const v = all ? lost[k] : Math.floor(lost[k] * .45 + Math.random()); if (v > 0) { back[k] = Math.min(v, lost[k]); S.wrecks[k] = (S.wrecks[k] || 0) + back[k]; n += back[k]; } }
   if (n) { rep.repaired = back; rep.wrecks = n; S.stats = S.stats || {}; S.stats.repaired = (S.stats.repaired || 0) + n; }
   return n;
 }
@@ -17939,9 +17939,9 @@ function shReport() {
     <div style="display:flex;gap:8px">${r.rounds.length ? `<button class="btn" style="flex:2" data-act="replay" data-id="${r.id}">Watch the battle</button>` : ""}<button class="btn ${repSaved(r.id) ? "amber" : "ghost"}" style="flex:1" data-act="repSave" data-id="${r.id}">${repSaved(r.id) ? "★ Saved" : "☆ Save report"}</button></div>${G.mode === "online" ? `<button class="btn ghost wide" style="margin-top:6px" data-act="repShareOpen" data-id="${r.id}">↗ Share with friends or your alliance</button>` : ""}
     ${r.src ? `<div class="card srcc"><b>Launched from</b><span>${esc(r.src.name)} <span class="cbig">[${esc(r.src.c)}]</span></span><button class="btn ghost sm" data-act="coordShow" data-v="${esc(r.src.c)}">Locate on map ›</button></div>` : ""}
     ${r.sim && r.sim.stats ? `<h2 class="sec">Battle analysis</h2>${battleAnalysis(r, r.sim)}<h2 class="sec">Damage by unit</h2>${sideTable(r, r.sim.stats.a, "a")}${sideTable(r, r.sim.stats.d, "d")}${r.xp != null ? `<p class="note">Experience earned: +${fmt(r.xp)} XP</p>` : ""}` : ""}
-    <h2 class="sec">${esc(aN)} · attacker</h2>${superSideOf(r) === "a" ? scCard(r, "a") : `${unitGrid(r.start.a)}<dl class="kv"><dt>Lost</dt><dd>${Object.entries(r.lossA).map(([k, v]) => `${fmt(v)} ${unitName(k)}`).join(", ") || "Nothing"}</dd></dl>`}
+    <h2 class="sec">${esc(aN)} · attacker</h2>${superSideOf(r) === "a" ? scCard(r, "a") : `${unitGrid(r.start.a)}<dl class="kv"><dt>${r.free ? "Damaged · in the Repair Yard" : "Lost"}</dt><dd>${Object.entries(r.lossA).map(([k, v]) => `${fmt(v)} ${unitName(k)}`).join(", ") || "Nothing"}</dd></dl>`}
     <h2 class="sec">${esc(dN)} · defender</h2>${superSideOf(r) === "d" ? scCard(r, "d") : `${unitGrid(r.start.d)}<dl class="kv"><dt>Lost</dt><dd>${Object.entries(r.lossD).map(([k, v]) => `${fmt(v)} ${unitName(k)}`).join(", ") || "Nothing"}</dd>${r.rebuilt ? `<dt>Defenses rebuilt</dt><dd>${r.rebuilt}</dd>` : ""}</dl>`}
-    ${lootLine || r.repaired ? `<dl class="kv">${lootLine}${r.repaired ? `<dt>Recovered by repair docks</dt><dd>${Object.entries(r.repaired).map(([k, v]) => `${fmt(v)} ${unitName(k)}`).join(", ")}</dd>` : ""}</dl>` : ""}`;
+    ${lootLine || r.repaired ? `<dl class="kv">${lootLine}${r.repaired && !r.free ? `<dt>Recovered by repair docks</dt><dd>${Object.entries(r.repaired).map(([k, v]) => `${fmt(v)} ${unitName(k)}`).join(", ")}</dd>` : ""}</dl>` : ""}`;
 }
 /* v80: the Sentinel's status, this commander's incidents and, for the galaxy's owner, every flagged commander */
 function secPanel() {
