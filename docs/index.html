@@ -4607,7 +4607,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 503;
+const GAME_V = 504;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6856,10 +6856,10 @@ function sbVae(X, W, b, s, t, dt, say, yaw, side) { const sc = SBX.vae.sc;
   if (s > 24) say("v2", "A golden seal is forming. Our fleets are slowed inside the circle.");
   // phase 3, Divine Judgment: the full sequence, 22 s, the beam cutting the formation
   const A0 = 33, AL = 24, fa = (s - A0) / AL; b.drive("annihilate", fa >= 0 && fa < 1 ? fa : -1);
-  if (fa >= 0 && fa < 1) { X.quiet = fa > .55 && fa < .9; if (fa > .0) say("v3", "WARNING: CATASTROPHIC CELESTIAL ENERGY SIGNATURE DETECTED."); if (fa > .4) say("v4", "The wheel is aligning. Brace for impact!");
+  if (fa >= 0 && fa < 1) { X.quiet = fa > .55 && fa < .9; if (fa > .0) say("v3", "WARNING: CATASTROPHIC CELESTIAL ENERGY SIGNATURE DETECTED."); if (fa > .18) say("v3u", "The outer ring is accelerating. Multiple energy channels are activating."); if (fa > .5) say("v4", "Commander, MOVE THE FLEET! NOW!");
     }
   else X.quiet = false; { const sk = sbVaeStorm(W, X, b, t, 1, fa >= 0 ? (fa - .66) * AL : -1, .26 * AL); X.expK = 1 + sk * .4; }
-  if (s > A0 + AL) say("v5", "We survived the blast. Now hit the wheel's stabilizers before it charges again!");
+  if (s > A0 + AL) say("v4b", "The energy discharge has ended. I'm analyzing the damage."); if (s > A0 + AL) say("v5", "We survived the blast. Now hit the wheel's stabilizers before it charges again!");
   // phase 4: the stabilizers fall one by one, the wheel fractures: Final Eclipse
   for (let k = 0; k < 6; k++) { const at = 58 + k * 2.6; if (s > at && b.stab[k]) { b.stab[k] = 0; b.wheel.updateMatrixWorld(); const p = X.V.copy(b.wheel.position); b.grp.localToWorld(p); sbBoom(X, p.clone().add(new TH.Vector3((Math.random() - .5) * 40 * sc / 4, (Math.random() - .5) * 40 * sc / 4, 0)), t, 60); b.act("hit"); } }
   if (s > 58) say("v6", "Stabilizer down! The wheel is losing its balance!"); b.crack = clamp((s - 66) / 14, 0, 1); if (s > 72) say("v7", "Final Eclipse! The wheel is fracturing. Its core is exposed!");
@@ -6893,7 +6893,7 @@ function sbAex(X, W, b, s, t, dt, say, yaw, side) { const sc = SBX.aex.sc, sR = 
   if (ft > 0) say("a2", "Wait. What is that? Aexion's hull is shifting..."); if (ft > .23) say("a2b", "Wait... I think it's... transforming? It IS transforming! Its whole hull is splitting apart!"); if (ft > .6) say("a3", "It's standing up. That thing is a Warform!");
   // phase 3, Sovereign Warform: shield, blade (a travelling shockwave through the line), missiles, lance
   for (const [at, mv, kn, near] of [[49.5, "dodge", 0], [51.2, "blade", 7, 1], [54, "dodge", 0], [55.6, "aegis", 0], [58.6, "missiles", 6], [62.2, "dodge", 0], [63.6, "stagger", 0], [64.9, "sbreak", 0], [67.4, "stagger", 0], [68.6, "wbreak", 0], [71, "missiles", 5], [80.2, "lance", 0]]) if (s > at && !X["w" + at]) { X["w" + at] = 1; b.act(mv); if (mv === "sbreak") b.shieldGone = 1; if (mv === "wbreak") b.swordGone = 1; if (kn) setTimeout(() => { try { sbKillN(X, kn, performance.now(), near); } catch (e) {} }, 1200); }
-  if (s > 50) say("a4", "Its holographic shield is soaking our fire. Wait for the blade, then strike!");
+  if (s > 50) say("a4", "Holographic shield detected. Heavy weapons active. Avoid its frontal attack arc.");
   if (s > 81.2 && s < 83.4 && b.reactor) { const o = b.reactor.getWorldPosition(X.V).clone(), d = X.F.clone(); sbBeamKill(X, o, d, 9 * sc, 190 * sc, t); X.quiet = 1; }
   // phase 4, Reactor Overdrive: everything at once; its reactor is exposed
   const od = (s - 72) / 8; if (od >= 0 && od < 1) { b.drive("overdrive", (od * 2.4) % 1); if (Math.random() < .03) sbKillN(X, 1, t); } else b.drive("overdrive", -1);
@@ -7178,7 +7178,7 @@ function sbKhz(X, W, b, s, t, dt, say, yaw, side) { const sc = SBX.khz.sc; b.dri
   for (const [at, mv, kn] of [[42.5, "ag", 3], [45, "ar", 3], [47.5, "av", 4]]) if (s > at && !X["a" + at]) { X["a" + at] = 1; b.act(mv); setTimeout(() => { try { sbKillN(X, kn, performance.now()); } catch (e) {} }, 1200); }
   b.anch = b.anch || [1, 1, 1]; for (let i = 0; i < 3; i++) { const at = 49.5 + i * 2; if (s > at && b.anch[i]) { b.anch[i] = 0; const p = X.V.set(...[[-26, 10, 10], [26, 10, 10], [0, 31, -8]][i]); b.grp.localToWorld(p); sbBoom(X, p.clone(), t, 70); sbBoom(X, p.clone().add(new TH.Vector3(10, 6, 0)), t + 200, 50); say("ka" + i, ["The Gravity Anchor is down!", "The Rune Anchor is down!", "The Void Anchor is down!"][i]); } }
   const J0 = 55, JL = 15, fj = (s - J0) / JL; b.drive("judge", fj >= 0 && fj < 1 ? fj : -1); X.quiet = fj > .2 && fj < .76;
-  if (fj > 0) say("k3", "CRITICAL: DARK MATTER SINGULARITY EXPANDING. DISABLE THE GRAVITY ANCHORS."); if (fj > .35) say("k4", "The starlight is bending into it... it's pulling everything in!");
+  if (fj > 0) say("k3", "CRITICAL: DARK MATTER SINGULARITY EXPANDING. DISABLE THE GRAVITY ANCHORS."); if (fj > .15) say("k3u", "The sphere between its paws is developing an event horizon."); if (fj > .35) say("k4", "The starlight is bending into it... it's pulling everything in!");
   if (fj > .77 && !X.jk) { X.jk = 1; sbKillN(X, 12, t, 1); say("k5", "Gravitational shockwave! It's tearing through the fleets!"); }
   const ht = clamp((s - 71) / 4, 0, 1); b.drive("heart", ht > 0 ? ht : -1); if (s > 71.5) say("k6", SBL.khz[3]);
   if (s > 82 && !X.fall) { X.fall = s; say("k7", "Its singularity is collapsing... Khezaroth is breaking apart! It's imploding!"); }
@@ -7204,7 +7204,7 @@ function sbMed(X, W, b, s, t, dt, say, yaw, side) { const sc = SBX.med.sc; b.dri
   for (const [at, mv, kn, near] of [[14, "lunge", 3, 1], [18, "gaze", 4], [22.5, "storm", 3, 1], [26.5, "ring", 4], [64, "lunge", 4, 1], [68, "gaze", 5], [72, "storm", 4, 1]]) if (s > at && !X["m" + at]) { X["m" + at] = 1; b.act(mv); if (kn) setTimeout(() => { try { sbKillN(X, kn, performance.now(), near); } catch (e) {} }, 1300); }
   if (s > 30) say("m2", SBL.med[1]); const d = s < 32 ? 0 : Math.min(8, Math.floor((s - 32) / 2.2)); b.snk = [0, 1, 2, 3, 4, 5, 6, 7].map(i => i < Math.min(d, 4) ? 0 : 1); if (d >= 1) say("m3", "We severed a serpent head!");
   const C0 = 42, CL = 16, fc = (s - C0) / CL; b.drive("charge", fc >= 0 && fc < 1 ? fc : -1); X.quiet = fc > .2 && fc < .76;
-  if (fc > 0) say("m4", "WARNING: PETRIFYING GAZE CHARGING. SEVER HER SERPENTS, AND DON'T LOOK INTO HER EYES."); if (fc > .77 && !X.gz) { X.gz = 1; sbKillN(X, 14, t); say("m5", "Her gaze is sweeping the field... our ships are turning to stone!"); }
+  if (fc > 0) say("m4", "WARNING: PETRIFYING GAZE CHARGING. SEVER HER SERPENTS, AND DON'T LOOK INTO HER EYES."); if (fc > .25) say("m4u", "Massive energy accumulation detected within both ocular structures."); if (fc > .55) say("m4b", "BREAK FORMATION! HER EYES ARE CHARGING!"); if (fc > .77 && !X.gz) { X.gz = 1; sbKillN(X, 14, t); say("m5", "Her gaze is sweeping the field... our ships are turning to stone!"); } if (s > C0 + CL + 1) say("m5b", "Commander... the ancient accounts said her gaze turned armies to stone. We've just witnessed the technological equivalent.");
   const shv = clamp((s - 60) / 4, 0, 1); b.drive("shatter", shv > 0 ? shv : -1); if (s > 60.5) say("m6", SBL.med[3]);
   if (s > 76 && !X.fall) { X.fall = s; say("m7", "She's turning to stone herself... Medusara is crumbling!"); }
   if (X.fall) { const dd = (s - X.fall) / 8; b.drive("die", dd < 1 ? dd : -1); b.drive("shatter", -1); sbGlyph(W, X, s - X.fall - 7.5, t); if (dd > 1.1) say("m8", "She's gone. Only her glyph is left, burning where she fell."); }
@@ -8368,7 +8368,7 @@ const ARCH = {
     enc: ["Commander, the archive fragments are cross-referencing on their own.", "Every civilization. Every age. The same shapes, and the same warning.", "We called them gods because we had no other word for what we saw."], def: [] } };
 const ARCH_ORD = ["war", "wym", "col", "ovl", "vae", "khz", "med", "dev", "brd", "tyr", "aex", "est", "efi", "eli", "eic", "ena", "epx", "cube", "testament"];
 /* her lines one after another: each stays up until its voice clip ends, or long enough to read when it has none */
-function archSeq(L) { let i = 0; const step = () => { if (i >= L.length) return; const l = L[i++], t0 = Date.now(), minT = Math.max(3200, l.length * 62); try { advHolo(l, 1); } catch (e) {}
+function archSeq(L) { let i = 0, tries = 0; const step = () => { if (i >= L.length) return; { const a = VOICE.au; if (tries++ < 120 && ((a && !a.paused && !a.ended) || (G.sbQ && G.sbQ.length) || ($("#advh.on") && G.holoCur !== L[i - 1]))) { setTimeout(step, 500); return; } } tries = 0; const l = L[i++], t0 = Date.now(), minT = Math.max(3200, l.length * 62); try { advHolo(l, 1); } catch (e) {}
     const wait = () => { const a = VOICE.au, busy = a && !a.paused && !a.ended; if (busy || Date.now() - t0 < (busy ? 0 : minT)) setTimeout(wait, 300); else setTimeout(step, 350); }; setTimeout(wait, 600); }; step(); }
 const archName = k => k === "cube" ? "The Cube" : k === "testament" ? "The Final Testament" : SBW[k] ? `${SBW[k].n}, ${SBW[k].t.replace(/^The /, "the ")}` : WB[k] ? WB[k].n : k;
 const archLv = k => ((S && S.arch) || {})[k] | 0;
@@ -8382,7 +8382,7 @@ function archUnlock(k, lv, quiet) { if (!S || !ARCH[k]) return; S.arch = S.arch 
 const archKeyOf = k => !k ? null : String(k)[0] === "c" && /^c\d$/.test(k) ? "ovl" : ARCH[k] ? k : null;
 function archFromRep(r) { try { if (!r) return; const k = archKeyOf(r.sbk || r.wb || (r.omega ? "cube" : null)); if (!k) return; archUnlock(k, 1); const sg = r.sbSeg || r.omSeg || r.wbSeg;
     if (!r.test && sg && sg[1] === 0 && r.winner === "a") setTimeout(() => archUnlock(k, 2), 4000); } catch (e) {} }
-function archTick() { try { if (!S || !G.ready || battle) return; const T = now(), onMap = view === "galaxy";
+function archTick() { try { if (!S || !G.ready || battle || G.sbSim || G.dvSim || G.convSim || G.wbShow) return; const T = now(), onMap = view === "galaxy";
     if (onMap) { for (const k of Object.keys(WB)) { const a = archKeyOf(k); if (a && !archLv(a) && wbOn(k, T) && !G.wbShow && !G.convSim) { archUnlock(a, 1); return; } }
       const sk = sbLiveKey(T); if (sk && ARCH[sk] && !archLv(sk)) { archUnlock(sk, 1); return; } }
     const st = wbState(T); for (const k of Object.keys(st.dead || {})) { const a = archKeyOf(k); if (a && archLv(a) === 1 && st.dead[k] > 0 && !G.convSim) { archUnlock(a, 2); return; } }
