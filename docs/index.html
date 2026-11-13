@@ -4508,7 +4508,7 @@ function giveItem(k, n = 1) { S.items = S.items || {}; S.items[k] = (S.items[k] 
    specials. Everything is paid in Void Shards earned in play. Buying puts an item in your inventory; using it applies it. */
 const ITIERS = [["bronze", "Bronze", "#d08a55"], ["silver", "Silver", "#cfd8df"], ["gold", "Gold", "#ffcf5a"], ["platinum", "Platinum", "#b9f0ff"]];
 const DAY = 864e5, HOUR = 3600e3;
-const BUFF_N = { bm: "Metal Booster", bc: "Crystal Booster", bg: "Gas Booster", be: "Energy Booster", commander: "Commander", admiral: "Admiral", engineer: "Engineer", geologist: "Geologist", technocrat: "Technocrat" };
+const BUFF_N = { bf: "Fleet Booster", bm: "Metal Booster", bc: "Crystal Booster", bg: "Gas Booster", be: "Energy Booster", commander: "Commander", admiral: "Admiral", engineer: "Engineer", geologist: "Geologist", technocrat: "Technocrat" };
 const buffs = () => (S && S.buffs) || {};
 const buffOn = k => { const b = buffs()[k]; return b && b.until > now() ? b : null; };
 const buffPct = k => { const b = buffOn(k); return b ? b.pct || 0 : 0; };
@@ -4526,6 +4526,11 @@ function activateBuff(k, val, dur) {
   S.buffs[k] = { pct: val, until: (cur && (cur.pct || 0) === (val || 0) ? cur.until : t) + dur }; dirty(); return true;
 }
 /* v88: speed-up time and plunder are counted for achievements */
+/* v534 Afterburner Fuel from the inventory: the fleet open in Fleet control, or else the one that lands next */
+function fuelUse(ms) { const T = now(); let f = sheet && sheet.type === "fctl" ? S.fleets.find(x => x.id === sheet.id) : null;
+  if (!f || f.assault || !fleetBounds(f) || fleetBounds(f)[1] <= T) f = S.fleets.filter(x => !x.assault && fleetBounds(x) && fleetBounds(x)[1] > T).sort((a, b) => fleetBounds(a)[1] - fleetBounds(b)[1])[0];
+  if (!f) { toast("No fleet is in flight right now. Keep the fuel for your next one.", "warn"); return false; }
+  if (!fleetSpeedUp(f, ms)) return false; spdAdd(ms); return true; }
 function spdAdd(ms) { S.stats = S.stats || {}; S.stats.spdMs = (S.stats.spdMs || 0) + ms; }
 function accel(q, ms) {
   const t = now();
@@ -4547,6 +4552,12 @@ const SHOP_CATS = [["vip", "♛ VIP"], ["boost", "Boosters"], ["accel", "Acceler
   // boosters: +10/20/30/40% for 7 days; the same tier extends, a stronger one replaces
   for (const r of ["m", "c", "g", "e"]) ITIERS.forEach(([tk, tn, col], i) => { const pct = (i + 1) * 10;
     SHOP[`b${r}_${tk}`] = { cat: "boost", tier: i, col, n: `${RN[r][0]} Booster`, ic: RN[r][1], cost: [6, 12, 20, 32][i], d: () => `+${pct}% ${r === "e" ? "energy output" : RN[r][0].toLowerCase() + " production"} on every planet for 7 days.`, use: () => activateBuff("b" + r, pct, 7 * DAY) && `${RN[r][0]} Booster ${tn} active: +${pct}% for 7 days.` }; });
+  // v534 the Fleet Booster: faster flights for 7 days
+  ITIERS.forEach(([tk, tn, col], i) => { const pct = (i + 1) * 10;
+    SHOP[`bf_${tk}`] = { cat: "boost", tier: i, col, n: "Fleet Booster", ic: "➤", cost: [6, 12, 20, 32][i], d: () => `+${pct}% flight speed for every fleet you send, for 7 days.`, use: () => activateBuff("bf", pct, 7 * DAY) && `Fleet Booster ${tn} active: your fleets fly ${pct}% faster for 7 days.` }; });
+  // v534 Afterburner Fuel: time off a fleet already in flight
+  ITIERS.slice(0, 3).forEach(([tk, tn, col], i) => { const ms = [15 * 60e3, HOUR, 4 * HOUR][i];
+    SHOP[`xf_${tk}`] = { cat: "accel", tier: i, col, n: "Afterburner Fuel", ic: "🚀", cost: [2, 6, 15][i], fuelMs: ms, fuelL: ["15 min", "1 hour", "4 hours"][i], d: () => `Cuts ${ftime(ms)} off a fleet in flight. Use it from the fleet's controls, or from here for the fleet that lands next.`, use: () => fuelUse(ms) && `Afterburner Fuel ${tn}: ${ftime(ms)} cut.` }; });
   // accelerators: cut time off the running job (our take on KRAKEN, DETROID and NEWTRON)
   for (const [q, nm, ic, what] of [["b", "Forge Swarm", "⚒", "the building under construction"], ["s", "Yard Overdrive", "⚙", "the shipyard queue"], ["r", "Insight Matrix", "✺", "the research in progress"]])
     ITIERS.slice(0, 3).forEach(([tk, tn, col], i) => { const ms = [30 * 60e3, 2 * HOUR, 8 * HOUR][i];
@@ -4682,7 +4693,7 @@ async function packsDeliver() { try { packShardFix(); } catch (e) {} if (!window
    painting as its art, Best value / Popular badges and the saving against Bronze; buying sends the shards flying and flashes it. */
 const SHOP_ART = { bm: "metalMine", bc: "crystalMine", bg: "gasSynth", be: "solar", xb: "robotics", xs: "shipyard", xr: "lab", pm: "metalStore", pc: "crystalStore", pg: "gasTank", pAll: "logistics",
   f: "terraformer", mf: "lunarBase", o_commander: "command", o_admiral: "flagDock", o_engineer: "energyT", o_geologist: "crystalMine", o_technocrat: "computer", o_staff: "command",
-  cl_collector: "robotics", cl_general: "dreadnought", cl_discoverer: "astro", crateM: "metalStore", crateC: "crystalStore", crateG: "gasTank", boost5: "impulse", probe5: "spyProbe", chart: "radar",
+  cl_collector: "robotics", cl_general: "dreadnought", cl_discoverer: "astro", crateM: "metalStore", crateC: "crystalStore", crateG: "gasTank", boost5: "impulse", bf: "hyper", xf: "drive", probe5: "spyProbe", chart: "radar",
   repairKit: "repairYard", pirIntel: "espionage", teleport: "jumpGate", moonSeed: "lunarBase" };
 const shopArtOf = k => { const b = k.replace(/_(bronze|silver|gold|platinum|7|30)$/, ""), a = SHOP_ART[b] || SHOP_ART[b.replace(/_[a-z]+$/, "")]; return a ? `art/${a}.webp` : null; };
 const SHOP_UNITS = { boost: i => i + 1, accel: i => [.5, 2, 8][i], res: i => [6, 24, 72][i], planet: i => [4, 9, 15][i] };
@@ -4817,7 +4828,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 533;
+const GAME_V = 534;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5918,7 +5929,7 @@ const PROBE_K = .42, PROBE_MIN = 12000;
 function travelMs(from, to, n, r = S.r, pct = 100) { const t = travelRaw(from, to, n, r, pct); return r === S.r && acadT(1) < 1 ? Math.min(t * .25, 180000) : t; }
 function travelRaw(from, to, n, r, pct) {
   const ks = Object.keys(n).filter(k => n[k] > 0 && SH[k]); if (!ks.length || !from || !to) return 0;
-  const spd = Math.min(...ks.map(k => spdOf(k, r))) * (r === S.r ? 1 + fsB("spd") / 100 : 1), T = now(), a = pos(from, T), b = pos(to, T);
+  const spd = Math.min(...ks.map(k => spdOf(k, r))) * (r === S.r ? 1 + fsB("spd") / 100 + buffPct("bf") / 100 /* v534 */ : 1), T = now(), a = pos(from, T), b = pos(to, T);
   if (ks.length === 1 && ks[0] === "spyProbe") return Math.max(PROBE_MIN, (60 + Math.hypot(a.x - b.x, a.y - b.y) * 4.8) * 1000 * (1 + WELL_SLOW * wellFrac(a, b)) / (Math.sqrt(spd) * PROBE_K * clamp(pct, 1, 100) / 100));
   return (60 + Math.hypot(a.x - b.x, a.y - b.y) * 4.8) * 1000 * (1 + WELL_SLOW * wellFrac(a, b)) / (spd * clamp(pct, 1, 100) / 100);
 }
@@ -17626,6 +17637,7 @@ function shFctl() {
     <h2 class="sec">Speed</h2><div class="cbt" style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn" data-act="fBoost" data-id="${f.id}" ${b && !f.assault && S.shards >= bc ? "" : "disabled"}>⚡ Afterburners +50% · ◆${bc}</button>
       <button class="btn ghost" data-act="fBoostItem" data-id="${f.id}" ${b && !f.assault && S.boosts > 0 ? "" : "disabled"}>Use a boost (−5 min) · ${S.boosts || 0} left</button>
+      ${(() => { const own = ["xf_bronze", "xf_silver", "xf_gold"].filter(k => ((S.items || {})[k] || 0) > 0); return own.length ? own.map(k => `<button class="btn ghost" data-act="fFuel" data-id="${f.id}" data-k="${k}" ${b && !f.assault ? "" : "disabled"}>🚀 Fuel −${SHOP[k].fuelL} · ×${S.items[k]}</button>`).join("") : `<button class="btn ghost" data-act="shopFuel">🚀 Afterburner Fuel in the shop</button>`; })()}
       <button class="btn amber" data-act="hurry" data-id="${f.id}" ${b && !f.assault && S.shards >= hc ? "" : "disabled"}>Arrive now · ◆${hc}</button></div>
     <div style="display:flex;gap:8px;margin-top:6px"><button class="btn ghost" style="flex:1" data-act="fleetFocus" data-id="${f.id}">◎ Follow</button>${canRecall ? `<button class="btn red" style="flex:1" data-act="${f.phase === "gather" ? "recallG" : "recallF"}" data-id="${f.id}">↩ Recall</button>` : ""}</div>
     ${f.assault ? `<p class="note">Joint strike fleets fly in formation: they can't be boosted or recalled on their own.</p>${G.assaults[f.assault] && !f.launched && (f.phase === "muster" || f.rj) ? `<div style="display:flex;gap:8px"><button class="btn ghost" style="flex:1" data-act="assault" data-id="${f.assault}">⚔ Open joint strike</button>${G.assaults[f.assault].leader === G.me ? `<button class="btn red" style="flex:1" data-act="strikeDisbandQ" data-id="${f.assault}">✕ Disband</button>` : `<button class="btn ghost" style="flex:1" data-act="strikeLeave" data-id="${f.assault}">↩ Leave</button>`}</div>` : ""}` : ""}`;
@@ -22108,6 +22120,8 @@ const ACT = {
     if (sg) { const P = { chase: [0, 0, 1], side: [Math.PI / 2, 0, 1], front: [Math.PI, 0, 1], top: [0, -1.1, 1.2], orbit: [sg.oth, sg.oph, sg.ok] }[d.m]; if (P) [sg.oth, sg.oph, sg.ok] = P; sg.spin = d.m === "orbit"; }
     cineBar(); } },
   fBoost: d => act(() => { const f = S.fleets.find(x => x.id === d.id); if (!f || f.assault) return; const c = fbCost(f); if (S.shards < c) return toast(`Afterburners need ◆${c}.`, "warn"); if (fleetSpeedUp(f)) { S.shards -= c; S.tutRush = 1; toast(`Afterburners lit: the rest of the trip is 50% faster.${c ? "" : " This one is on the Academy."}`, "win"); } }),
+  fFuel: d => act(() => { const f = S.fleets.find(x => x.id === d.id), s = SHOP[d.k]; if (!f || f.assault || !s || !s.fuelMs || !((S.items || {})[d.k] > 0)) return; if (fleetSpeedUp(f, s.fuelMs)) { S.items[d.k]--; S.tutRush = 1; spdAdd(s.fuelMs); toast(`Afterburner Fuel burned: ${s.fuelL} cut.`, "win"); } }), /* v534 */
+  shopFuel: () => openSheet({ type: "shop", cat: "accel" }),
   fBoostItem: d => act(() => { const f = S.fleets.find(x => x.id === d.id); if (!f || f.assault || !(S.boosts > 0)) return; if (fleetSpeedUp(f, 5 * 60000)) { S.boosts--; S.tutRush = 1; spdAdd(300000); toast("Boost used: 5 minutes cut."); } }),
   recallG: d => act(() => { // stop gathering early: fly home with what is loaded so far
     const f = S.fleets.find(x => x.id === d.id); if (!f || f.phase !== "gather") return; const T = now(), h = f.haul || { res: "m", amt: 0 }, fr = clamp((T - f.arrive) / Math.max(1, f.gend - f.arrive), 0, 1);
