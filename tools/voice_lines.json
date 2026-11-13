@@ -3738,5 +3738,35 @@
   "key": "1nb1fhr",
   "where": "Archives · The Final Testament · commentary",
   "line": "We called them gods because we had no other word for what we saw. Our ancestors weren't telling stories, Commander. They were leaving instructions."
+ },
+ {
+  "key": "1uap24k",
+  "where": "Monster · vmanta",
+  "line": "float sp = abs(position.z), w = smoothstep(.9, 3.5, sp); transformed.y += w * w * 1.05 * sin(mt * 1.7 - sp * .55); float tl = clamp((-1.9 - position.x) / 5., 0., 1.); transformed.z += tl * tl * .7 * sin(mt * 2.3 + position.x * 1.1); transformed.y += tl * .15 * sin(mt * 1.7 + 1.);"
+ },
+ {
+  "key": "1g03xld",
+  "where": "Monster · swasp",
+  "line": "float rr = length(position.xz); if (rr > 1.95) { float th = mt * (1.5 - rr * .18), c = cos(th), sn = sin(th); transformed.xz = vec2(transformed.x * c - transformed.z * sn, transformed.x * sn + transformed.z * c); transformed.y += .28 * sin(mt * 3.1 + rr * 5.); } else { transformed.x += .03 * sin(mt * 1.3 + position.y * 2.); }"
+ },
+ {
+  "key": "pwekdz",
+  "where": "Monster · ctort",
+  "line": "float fl = smoothstep(1.7, 2.6, abs(position.z)), ph = mt * 1.1 + sign(position.z) * 1.57 + step(0., position.x) * 3.14; transformed.y += fl * .32 * sin(ph); transformed.x += fl * .22 * cos(ph); float hd = smoothstep(2.2, 3.2, position.x); transformed.y += hd * .1 * sin(mt * .7); transformed.z += hd * .12 * sin(mt * .45);"
+ },
+ {
+  "key": "1dzqt7j",
+  "where": "Monster · gspider",
+  "line": "float lg = smoothstep(1.3, 3., abs(position.z)), ph = position.x * 1.6 + sign(position.z) * 1.57; transformed.y += lg * .32 * max(0., sin(mt * 3.4 + ph)); transformed.x += lg * .2 * cos(mt * 3.4 + ph); transformed.y += .04 * sin(mt * 6.8);"
+ },
+ {
+  "key": "11zxsyv",
+  "where": "Monster · smoth",
+  "line": "float sp = abs(position.z); if (sp > .38) { float a = .7 * sin(mt * 2.4), d = sp - .38; transformed.y += d * sin(a); transformed.z = sign(position.z) * (.38 + d * cos(a)); } transformed.y += .18 * sin(mt * 2.4 + 1.4);"
+ },
+ {
+  "key": "wu14rb",
+  "where": "Monster · cram",
+  "line": "float tl = clamp((-2.2 - position.x) / 6., 0., 1.); transformed.z += tl * tl * .8 * sin(position.x * .9 + mt * 4.); transformed.y += tl * tl * .45 * cos(position.x * .7 + mt * 3.3); float hb = smoothstep(.8, 2.8, position.x); transformed.y += hb * .1 * sin(mt * 1.6);"
  }
 ]
