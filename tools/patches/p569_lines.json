@@ -1,0 +1,38 @@
+{
+ "news": {
+  "wb_new_lev": ["Commander... something just crossed the edge of the galaxy. The Leviathan. It's the season's finale, and everything we've built was for this.", "awe"],
+  "wb_new_krk": ["The Kraken has risen from the deep layers. Eight arms, Commander, and it's the season's finale. Let's cut it down to size.", "fierce"],
+  "greet_mem_lev": ["We brought down the Leviathan. I still see its fire when I close my eyes... in a good way, I think.", "tender"],
+  "greet_mem_krk": ["The Kraken's arms are still drifting out there, Commander. Every one we cut is a trophy.", "playful"],
+  "wb_live_lev": ["A fleet is fighting the Leviathan right now. You have to see this.", "excited"],
+  "wb_live_krk": ["Someone is wrestling the Kraken right now, arm by arm. Want to watch?", "excited"],
+  "wb_fall_lev": ["The Leviathan has fallen! The finale is ours. If our fleets fought, the spoils are waiting.", "excited"],
+  "wb_fall_krk": ["The Kraken is down! Every fleet that cut an arm gets a share of the spoils.", "excited"]
+ },
+ "holo": {
+  "wblev": ["The Leviathan, Commander. A serpent of black scale and living fire, circling the very edge of the galaxy. Its scales shield it while they burn, so strike when it breathes and they cool.", "grave"],
+  "wbkrk": ["The Kraken has come up from the deep layers. Eight armoured arms, and every one of them shields its body. Sever them one by one, and it's ours.", "fierce"]
+ },
+ "scan": {
+  "lev": ["Scanning the Leviathan. Burning coil, fire breath, tail scythe. Its scales burn, Commander. Strike when it breathes and they cool.", "urgent"],
+  "krk": ["Scanning the Kraken. Eight arms, a beak, and those eyes. Every arm we sever weakens its guard. Start cutting.", "fierce"]
+ },
+ "awe": {
+  "lev": [["It's older than the Wyrm, Commander. I can see it in its scales... it was out there before the stars we know.", "awe"], ["Those aren't flames. That's its blood, burning through the cracks in its armour.", "awe"]],
+  "krk": [["Eight arms... and every one of them is longer than a fleet line.", "awe"], ["Its eyes are looking right at us. Not at the ships. At us.", "grave"]]
+ },
+ "arch": {
+  "lev": { "cat": "warn", "t": "The Serpent at the Edge of the World", "era": "The First Age", "civ": "The Architects' wardens", "loc": "The galaxy's outer dark", "img": "leviathan-skin", "th": "Extreme",
+    "frag": "…it circles where the stars end, and its fire is the last light before nothing. We did not make it. We built the walls so it would never turn inward…",
+    "interp": "A warden's log from the Architects' outer stations. The walls it mentions match the edge of the mapped galaxy: they were built to keep the Leviathan out.",
+    "adv": "They didn't build the galaxy's edge to keep us in, Commander. They built it to keep that out.",
+    "enc": ["Commander, something enormous is moving along the edge of the galaxy.", "An Architect warden's log describes a serpent of fire, circling where the stars end.", "It isn't drifting, Commander. It's patrolling."],
+    "def": ["The Leviathan is falling back into the outer dark.", "The wardens wrote that it could never be killed, only turned away. Today, we turned it away."] },
+  "krk": { "cat": "anom", "t": "The Many-Armed Deep", "era": "The Classical Age", "civ": "The deep-layer miners", "loc": "The deep layers", "img": "kraken-skin", "th": "Extreme",
+    "frag": "…the lamps on the far shaft went out one by one, and where each had been there was a violet ring. Seal the deep levels. Whatever is down there has learned to count…",
+    "interp": "A mining guild's last report from the deep layers. The violet rings match the suckers on the Kraken's arms.",
+    "adv": "They sealed the mines and left. We don't have that option.",
+    "enc": ["Commander, the deep layers are going dark, one sector at a time.", "A mining guild's last report speaks of violet rings, and lamps going out one by one.", "Something down there has eight arms... and it's coming up."],
+    "def": ["The Kraken is sinking back into the deep layers.", "The miners counted their lamps going out. This time, Commander, it was counting its arms."] }
+ }
+}
