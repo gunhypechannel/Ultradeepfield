@@ -5130,7 +5130,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 569;
+const GAME_V = 570;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5411,7 +5411,8 @@ const PX2 = [
   ["voidbloom", "Void Bloom", 1900, "all", .14, "#ff5ae8", "Black stone blooming with radiant pink and violet fractures.", "void", ["#020104", "#0a0610", "#16101e"], [255, 90, 230], { cracks: .016, fractal: 1, moons: 2 }],
   ["aeon", "Aeon Glacier", 2000, "all", .14, "#7ac8ff", "A frozen world of blue crystal spires under white storm bands, cracked with starlight.", "ice", ["#1a3a6a", "#7ab0e0", "#f0f8ff"], [140, 210, 255], { swirl: 1 }], /* v568 */
   ["ruin", "Ruin of Vaelthar", 2000, "all", .14, "#c890ff", "A violet world of golden temple ruins adrift on seas of glowing nebula.", "void", ["#1a0a2a", "#5a2a8a", "#e0c070"], [200, 140, 255], { fractal: 1 }],
-  ["sphinx", "Sphinx Sands", 2000, "all", .14, "#ffb340", "Gold dunes and black glass, crossed by glowing hieroglyph bands around a winged sigil.", "rock", ["#1a1004", "#8a6020", "#ffd080"], [255, 190, 80], { cracks: .01 }]
+  ["sphinx", "Sphinx Sands", 2000, "all", .14, "#ffb340", "Gold dunes and black glass, crossed by glowing hieroglyph bands around a winged sigil.", "rock", ["#1a1004", "#8a6020", "#ffd080"], [255, 190, 80], { cracks: .01 }],
+  ["petrified", "Petrified Star", 2000, "all", .14, "#ff5a4a", "A world turned to stone by a gorgon's gaze: temples, coiled serpents and a sleeping face, split by veins of burning crimson.", "rock", ["#141012", "#5a4a4e", "#c8b8b8"], [255, 70, 60], { cracks: .014 }] /* v570 */
 ];
 for (const [k, n, cost, r, b, glow, d, a, p, e, f] of PX2) PXS[k] = { n, cost, r, b, glow, d, a, p, ec: e, f, v2: 1 };
 /* v235: painted premium skins. Each one is a hand-picked painting (skins/<id>.webp, the world at .34 of the frame, transparent around it)
@@ -5430,7 +5431,7 @@ const PX_IMG = { warsphere: 0, shatter: ["Shattered Bastion", "A white fortress 
   venom: ["Venom Wilds", "A toxic green world of dark peaks, its valleys glowing yellow."], magma: 0, voidbloom: 0,
   dragon: ["Dragon Scale", "A molten world in the coils of a red fire dragon, wings spread wide."],
   glacier: ["Frost Wyrm", "A spiked ice-crystal world in the coils of a frost dragon."], spire: 0,
-  hellgate: ["Hellgate", "A burning world split by a steel crescent, guarded by a clawed horror."], dread: 0, aeon: 0, ruin: 0, sphinx: 0 }; /* v568 */
+  hellgate: ["Hellgate", "A burning world split by a steel crescent, guarded by a clawed horror."], dread: 0, aeon: 0, ruin: 0, sphinx: 0, petrified: 0 }; /* v568 */
 /* v237: the other 31 skins are painted too (upscaled 4x from your reference sheet) */
 for (const k of ["bloom", "ember", "abyss", "aurora", "dune", "forge", "pearl", "obsidian", "solar", "eden", "frostfire", "stormtitan", "ruby", "sapphire", "metropolis", "plague", "mirror", "lattice", "phoenix", "reef", "hive", "blacksun", "magnetar", "ruins", "rust", "cosmicegg", "kraken", "lavalamp", "ghost", "clockwork", "saturn"]) if (!(k in PX_IMG)) PX_IMG[k] = 0;
 for (const k in PX_IMG) if (PXS[k]) { PXS[k].img = 1; if (PX_IMG[k]) { PXS[k].n = PX_IMG[k][0]; PXS[k].d = PX_IMG[k][1]; } }
@@ -9127,7 +9128,7 @@ function evRankHTML(k) { const D = EVB[k], rows = evBoard(k), mi = rows.findInde
 
 /* ---------- v542 the Void Pass ---------- */
 const VP_BASE = Date.UTC(2026, 10, 9), VP_LEN = 28 * 864e5, VP_TIERS = 40, VP_XP = 2000, VP_PREM = 500;
-const VP_SEASONS = [["Season of the Leviathan", "#ff8a4a", "blacksun", "Leviathan Slayer"], ["Season of the Cube", "#5dff6a", "voidbloom", "Cubebreaker"], ["Season of the Pentarch", "#e2d4ff", "magnetar", "Sealbreaker"], ["Season of the Starhive", "#ffb02a", "phoenix", "Hivebane"], ["Season of the Kraken", "#c890ff", "kraken", "Kraken Hunter"], ["Season of the Wyrm", "#ffa040", "dragon", "Wyrmrider"], ["Season of the Aeon", "#7ac8ff", "aeon", "Aeonbreaker"], ["Season of the Ruin", "#c890ff", "ruin", "Ruinwalker"], ["Season of the Sphinx", "#ffb340", "sphinx", "Gatekeeper"], ["Season of the Petrified Star", "#ff5a4a", "bonemoon", "Stoneheart"]]; const SEAN = VP_SEASONS.length; /* v568 ten seasons */
+const VP_SEASONS = [["Season of the Leviathan", "#ff8a4a", "blacksun", "Leviathan Slayer"], ["Season of the Cube", "#5dff6a", "voidbloom", "Cubebreaker"], ["Season of the Pentarch", "#e2d4ff", "magnetar", "Sealbreaker"], ["Season of the Starhive", "#ffb02a", "phoenix", "Hivebane"], ["Season of the Kraken", "#c890ff", "kraken", "Kraken Hunter"], ["Season of the Wyrm", "#ffa040", "dragon", "Wyrmrider"], ["Season of the Aeon", "#7ac8ff", "aeon", "Aeonbreaker"], ["Season of the Ruin", "#c890ff", "ruin", "Ruinwalker"], ["Season of the Sphinx", "#ffb340", "sphinx", "Gatekeeper"], ["Season of the Petrified Star", "#ff5a4a", "petrified", "Stoneheart"]]; const SEAN = VP_SEASONS.length; /* v568 ten seasons */
 const VP_LOOKS = ["vpa", "vpb", "vpc", "vpd", "vpe", "vpf"], vpLookOf = si => VP_LOOKS[((si % 6) + 6) % 6]; /* v546 */
 const vpSeason = (T = now()) => Math.floor((T - VP_BASE) / VP_LEN), vpEnd = (i = vpSeason()) => VP_BASE + (i + 1) * VP_LEN, vpInfo = (i = vpSeason()) => VP_SEASONS[((i % VP_SEASONS.length) + VP_SEASONS.length) % VP_SEASONS.length];
 const VP_DAILY = [["built", 2, "Finish 2 constructions"], ["researched", 1, "Finish a research"], ["shipsBuilt", 20, "Build 20 ships or defences"], ["battlesWon", 3, "Win 3 battles"], ["monKills", 1, "Slay a space monster"], ["hiveWins", 2, "Beat 2 Hive garrisons"], ["fleetsSent", 4, "Send 4 fleets"], ["caches", 2, "Haul in 2 salvage pods"], ["trades", 1, "Make a trade at the Supply Depot"], ["wheelSpins", 1, "Spin the Holo Glyph Wheel"], ["spdMin", 30, "Use 30 minutes of speed-ups"]];
