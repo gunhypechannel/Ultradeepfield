@@ -728,6 +728,12 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 .colbar{position:relative;display:flex;flex-direction:column;gap:4px;margin:4px 0 8px}.colbar i{display:block;height:6px;border-radius:3px;background:linear-gradient(90deg,#e2c48a,#ffcf5a);max-width:100%}.colbar::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;border-radius:3px;background:rgba(255,255,255,.08);z-index:-1}.colbar small{font-size:11.5px;color:var(--muted)}
 .colclaim{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;border:1px solid #ffcf5a;background:linear-gradient(110deg,rgba(255,207,90,.2),rgba(8,14,22,.9));margin:4px 0 8px;box-shadow:0 0 16px rgba(255,207,90,.25)}.colclaim b{color:#ffcf5a}.colclaim small{display:block;font-size:12px;color:var(--muted)}
 .buddy .bdr{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}.buddy .bdr small{display:block;font-size:11.5px;color:var(--muted)}
+/* v544 battle clips */
+#clippill{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:50%;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;background:rgba(20,4,8,.85);border:1px solid #ff4d5a;color:#fff;font-size:12.5px;font-weight:700;letter-spacing:.06em;pointer-events:none}
+#clippill i{width:10px;height:10px;border-radius:50%;background:#ff4d5a;box-shadow:0 0 10px #ff4d5a;animation:clipb 1s ease-in-out infinite}@keyframes clipb{50%{opacity:.3}}
+#clipcard{position:fixed;inset:0;z-index:9998;display:grid;place-items:center;background:rgba(2,5,10,.78);padding:16px}
+.clipbx{display:flex;flex-direction:column;gap:8px;width:min(360px,100%);padding:14px;border-radius:16px;border:1px solid rgba(85,214,232,.5);background:#08121c}.clipbx video{width:100%;max-height:62vh;border-radius:10px;background:#000;object-fit:contain}.clipbx small{font-size:11.5px;color:var(--muted)}
+.clipbt{display:flex;gap:8px;flex-wrap:wrap}.clipbt>*{flex:1 0 auto;text-align:center;text-decoration:none}
 .shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .sitem{position:relative;display:flex;flex-direction:column;gap:5px;padding:10px;border-radius:12px;border:1px solid color-mix(in srgb,var(--tc) 45%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 16%,transparent),rgba(8,18,28,.9) 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
 .sitem b{font-size:14px}.sitem small{font-size:12px;color:var(--muted);flex:1;line-height:1.35}
@@ -4930,7 +4936,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 543;
+const GAME_V = 544;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -20519,9 +20525,41 @@ function bindBattleCam(cv) {
 }
 /* v315 squadron name and count badges in the battle viewer: on by default, remembered on this device */
 const bLblOn = () => { if (G.bLbl == null) { try { G.bLbl = localStorage.getItem("udfBLbl") !== "0"; } catch (e) { G.bLbl = true; } } return G.bLbl; };
+
+/* ---------- v544 share a battle as a vertical video ---------- */
+const CLIP_URL = "gunhypechannel.github.io/Ultradeepfield";
+function clipMime() { if (!window.MediaRecorder) return null; for (const m of ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"]) try { if (MediaRecorder.isTypeSupported(m)) return m; } catch (e) {} return null; }
+function battleClip() { const b0 = battle, cv0 = $("#bcv"), mime = clipMime(); if (!b0 || G.clip) return; if (!cv0 || !mime || !document.createElement("canvas").captureStream) return toast("This browser can't record clips. Try Safari or Chrome on your phone.", "warn");
+  const r = b0.r; ACT.breplay(); const b = battle; b.speed = 2; battleCtl(); const W = 720, H = 1280, oc = document.createElement("canvas"); oc.width = W; oc.height = H; const x = oc.getContext("2d");
+  const title = String(r.title || "Battle").slice(0, 60), who = `${r.aName || "Attackers"} vs ${r.dName || "Defenders"}`.slice(0, 60), chunks = [];
+  let rec; try { rec = new MediaRecorder(oc.captureStream(30), { mimeType: mime, videoBitsPerSecond: 4500000 }); } catch (e) { return toast("Couldn't start recording on this device.", "warn"); }
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  const C = G.clip = { rec, t0: performance.now(), doneAt: 0 }; const pill = document.createElement("div"); pill.id = "clippill"; pill.innerHTML = "<i></i>REC · recording your clip"; document.body.appendChild(pill);
+  const wrap = (txt, maxW, font) => { x.font = font; const out = [], ws = txt.split(" "); let ln = ""; for (const w of ws) { const t2 = ln ? ln + " " + w : w; if (x.measureText(t2).width > maxW && ln) { out.push(ln); ln = w; } else ln = t2; } if (ln) out.push(ln); return out; };
+  const frame = () => { if (G.clip !== C) return; const cv = $("#bcv");
+    x.fillStyle = "#03060c"; x.fillRect(0, 0, W, H);
+    if (cv && cv.width && cv.height) { const sc = Math.max(W / cv.width, H / cv.height), dw = cv.width * sc, dh = cv.height * sc; try { x.drawImage(cv, (W - dw) / 2, (H - dh) / 2, dw, dh); } catch (e) {} }
+    let g = x.createLinearGradient(0, 0, 0, 260); g.addColorStop(0, "rgba(3,6,12,.92)"); g.addColorStop(1, "rgba(3,6,12,0)"); x.fillStyle = g; x.fillRect(0, 0, W, 260);
+    g = x.createLinearGradient(0, H - 300, 0, H); g.addColorStop(0, "rgba(3,6,12,0)"); g.addColorStop(1, "rgba(3,6,12,.95)"); x.fillStyle = g; x.fillRect(0, H - 300, W, 300);
+    x.textAlign = "center"; x.fillStyle = "#ffcf5a"; x.shadowColor = "#ffcf5a"; x.shadowBlur = 18; x.font = "800 46px 'Orbitron','Rajdhani',sans-serif"; x.fillText("ULTRA DEEP FIELD", W / 2, 78); x.shadowBlur = 0;
+    x.fillStyle = "#e9f6ff"; const tl = wrap(title, W - 80, "700 30px 'Rajdhani',sans-serif"); tl.slice(0, 2).forEach((l, i) => x.fillText(l, W / 2, 128 + i * 36));
+    x.fillStyle = "#9fdcff"; x.font = "500 24px 'Rajdhani',sans-serif"; x.fillText(who, W / 2, 128 + Math.min(2, tl.length) * 36 + 6);
+    const b2 = battle; if (b2 && (b2.done || b2.ending)) { const win = r.winner === "draw" ? "DRAW" : repWin(r) ? "VICTORY" : "DEFEAT"; x.fillStyle = win === "VICTORY" ? "#5dff9a" : win === "DEFEAT" ? "#ff6b5a" : "#ffcf5a"; x.shadowColor = x.fillStyle; x.shadowBlur = 24; x.font = "900 84px 'Orbitron','Rajdhani',sans-serif"; x.fillText(win, W / 2, H - 170); x.shadowBlur = 0; if (!C.doneAt) C.doneAt = performance.now(); }
+    x.fillStyle = "#ffffff"; x.font = "700 30px 'Rajdhani',sans-serif"; x.fillText("Play free · build your empire", W / 2, H - 96); x.fillStyle = "#7af4ff"; x.font = "600 26px 'Rajdhani',sans-serif"; x.fillText(CLIP_URL, W / 2, H - 56);
+    const el = performance.now() - C.t0; if (!battle || battle !== b || (C.doneAt && performance.now() - C.doneAt > 2500) || el > 45000) return clipStop(C, mime, title); requestAnimationFrame(frame); };
+  rec.onstop = () => { pill.remove(); const blob = new Blob(chunks, { type: mime.split(";")[0] }); G.clip = null; if (blob.size < 2000) return toast("The clip came out empty. Try again with the replay open.", "warn"); clipCard(blob, mime, title); };
+  rec.start(500); requestAnimationFrame(frame); crumb("battle clip recording"); }
+function clipStop(C, mime, title) { try { if (C.rec.state !== "inactive") C.rec.stop(); } catch (e) { G.clip = null; } }
+function clipCard(blob, mime, title) { const ext = /mp4/.test(mime) ? "mp4" : "webm", name = `udf-battle-${Date.now().toString(36)}.${ext}`, file = new File([blob], name, { type: blob.type }), url = URL.createObjectURL(blob);
+  let w = $("#clipcard"); if (w) w.remove(); w = document.createElement("div"); w.id = "clipcard";
+  const canShare = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+  w.innerHTML = `<div class="clipbx"><b>Your battle clip</b><video src="${url}" controls playsinline loop muted autoplay></video><small>${(blob.size / 1048576).toFixed(1)} MB · ${ext.toUpperCase()} · vertical 9:16, ready for TikTok, Reels and Shorts</small><div class="clipbt">${canShare ? '<button class="btn amber" data-clip="share">Share</button>' : ""}<a class="btn ${canShare ? "ghost" : "amber"}" href="${url}" download="${name}">Save</a><button class="btn ghost" data-clip="close">Close</button></div></div>`;
+  document.body.appendChild(w);
+  w.addEventListener("click", e => { const a = e.target.closest("[data-clip]"); if (!a) { if (e.target === w) { w.remove(); URL.revokeObjectURL(url); } return; } if (a.dataset.clip === "close") { w.remove(); URL.revokeObjectURL(url); } else navigator.share({ files: [file], title: "Ultra Deep Field", text: `${title} · Play free: https://${CLIP_URL}/` }).catch(() => {}); });
+  crumb("battle clip ready"); }
 function battleCtl() {
   const b = battle, el = $("#bctl"); if (!b || !el) return;
-  el.innerHTML = `<button data-act="bpause" aria-label="${b.paused ? "Play" : "Pause"}">${b.paused ? "▶" : "❚❚"}</button><button data-act="bspeed" aria-label="Speed">${b.speed}×</button><button data-act="breplay" aria-label="Replay from the start">⟲</button><button data-act="bskip" aria-label="Skip to the result">⏭</button><button data-act="bfx" aria-label="Effects level">${b.lowFx ? "FX lo" : "FX hi"}</button><button data-act="blbl" class="${bLblOn() ? "on" : ""}" aria-label="${bLblOn() ? "Hide ship names and counts" : "Show ship names and counts"}" aria-pressed="${bLblOn()}">🏷</button><button data-act="bcam" class="${b.vw && b.vw.mode === "free" ? "on" : ""}" aria-label="${b.vw && b.vw.mode === "free" ? "Free camera: drag and pinch. Tap for the director" : "Director camera. Tap for free camera"}">${b.vw && b.vw.mode === "free" ? "✋" : "🎬"}</button><button data-act="bview" aria-label="Tactical overview">⊡</button><button data-act="bsave" class="${bSaved(b.r) ? "on" : ""}" aria-label="${bSaved(b.r) ? "Remove from Saved" : "Save to favourites"}">${bSaved(b.r) ? "★" : "☆"}</button>`;
+  el.innerHTML = `<button data-act="bpause" aria-label="${b.paused ? "Play" : "Pause"}">${b.paused ? "▶" : "❚❚"}</button><button data-act="bspeed" aria-label="Speed">${b.speed}×</button><button data-act="breplay" aria-label="Replay from the start">⟲</button><button data-act="bclip" aria-label="Record this battle as a video to share" class="${G.clip ? "on" : ""}">⏺</button><button data-act="bskip" aria-label="Skip to the result">⏭</button><button data-act="bfx" aria-label="Effects level">${b.lowFx ? "FX lo" : "FX hi"}</button><button data-act="blbl" class="${bLblOn() ? "on" : ""}" aria-label="${bLblOn() ? "Hide ship names and counts" : "Show ship names and counts"}" aria-pressed="${bLblOn()}">🏷</button><button data-act="bcam" class="${b.vw && b.vw.mode === "free" ? "on" : ""}" aria-label="${b.vw && b.vw.mode === "free" ? "Free camera: drag and pinch. Tap for the director" : "Director camera. Tap for free camera"}">${b.vw && b.vw.mode === "free" ? "✋" : "🎬"}</button><button data-act="bview" aria-label="Tactical overview">⊡</button><button data-act="bsave" class="${bSaved(b.r) ? "on" : ""}" aria-label="${bSaved(b.r) ? "Remove from Saved" : "Save to favourites"}">${bSaved(b.r) ? "★" : "☆"}</button>`;
 }
 const bPos = (b, i, tt) => { const F = b.R.frames, fd = b.R.dt, k = Math.min(F.length - 1, Math.max(0, Math.floor(tt / fd + 1e-6))), f0 = F[k], f1 = F[Math.min(F.length - 1, k + 1)];
   const u = f1.t > f0.t ? clamp((tt - f0.t) / (f1.t - f0.t), 0, 1) : 0, a = f0.s[i], c = f1.s[i]; return { x: a[0] + (c[0] - a[0]) * u, y: a[1] + (c[1] - a[1]) * u, sh: a[2], wd: a[3], fl: a[4] }; };
@@ -23129,6 +23167,7 @@ const ACT = {
   bros: d => { const b = battle; if (!b) return; b.rosOpen = b.rosOpen || {}; b.rosOpen[d.s] = !b.rosOpen[d.s]; },
   blbl: () => { G.bLbl = !bLblOn(); try { localStorage.setItem("udfBLbl", G.bLbl ? "1" : "0"); } catch (e) {} battleCtl(); toast(G.bLbl ? "Ship names and counts shown." : "Ship names and counts hidden."); },
   bfx: () => { const b = battle; if (!b) return; b.lowFx = !b.lowFx; G.lowFx = b.lowFx; battleCtl(); },
+  bclip: () => battleClip(), /* v544 */
   breplay: () => { const b = battle; if (!b) return; const r = b.r, sp = b.speed, lf = b.lowFx; playBattle(r); battle.speed = sp; battle.lowFx = lf; battleCtl(); },
   combatTest: () => { const res = combatTests(); sheet.tests = res; renderSheet(); },
   bdetail: d => { closeBattle(); openSheet({ type: "report", id: d.id }); },
