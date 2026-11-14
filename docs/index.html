@@ -4858,7 +4858,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 536;
+const GAME_V = 537;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -10104,7 +10104,8 @@ addEventListener("pagehide", () => pfSend("closed"));
 function crumbSave() { try { localStorage.setItem(CRUMB_K, JSON.stringify(CRUMBS)); } catch (e) {} }
 function crumb(msg) { CRUMBS.open = true; CRUMBS.ev.push([Date.now(), String(msg).slice(0, 160)]); /* v178: 160, room for an error's stack line or a stress-test result */ if (CRUMBS.ev.length > 24) CRUMBS.ev.splice(0, CRUMBS.ev.length - 24); crumbSave(); }
 function crumbBeat() { const W = typeof G3 !== "undefined" ? G3 : null, mem = performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1e6) + " MB" : "";
-  CRUMBS.beat = { v: typeof GAME_V !== "undefined" ? GAME_V : 0, t: Date.now(), view, battle: !!battle, demo: !!G.cubeDemo, dist: W && W.cam ? Math.round(W.cam.dist) : null, fps: frame.ema ? Math.round(1000 / frame.ema) : null, pr: W && W.renderer ? +W.renderer.getPixelRatio().toFixed(2) : null, mem, gl: G.glLost || 0, calls: W && W.renderer ? W.renderer.info.render.calls : null, tex: W && W.renderer ? W.renderer.info.memory.textures : null, geo: W && W.renderer ? W.renderer.info.memory.geometries : null, art: (() => { try { return STU && STU.cache ? Object.keys(STU.cache).length : null; } catch (e) { return null; } })(), sheet: (() => { try { return sheet ? sheet.type : null; } catch (e) { return null; } })(), dpr: +(devicePixelRatio || 1).toFixed(2), w: innerWidth, h: innerHeight, bt: (() => { try { const b = battle; if (!b) return null; const S0 = studio(); return { n: (b.Q || []).length, sp: b.paused ? 0 : b.speed, t: +(b.simT || 0).toFixed(1), end: b.end, qs: b.qs, tier: b.tier, lo: b.lowFx ? 1 : 0, fx: (b.fire || []).length + (b.fx || []).length + (b.parts || []).length + (b.debris || []).length + (b.pend || []).length, err: b.errs || 0, art: S0 && S0.orderSide ? S0.orderSide.length : null, live: ART_LIVE.size, q: ART_Q.length, cv: (() => { const c = $("#bcv"); return c ? c.width + "x" + c.height : null; })() }; } catch (e) { return null; } })() }; CRUMBS.open = true; crumbSave(); } /* v260: the battle's own state (squadrons, speed, quality, effects, hull pictures) goes with every heartbeat */
+  CRUMBS.beat = { v: typeof GAME_V !== "undefined" ? GAME_V : 0, t: Date.now(), view, battle: !!battle, demo: !!G.cubeDemo, dist: W && W.cam ? Math.round(W.cam.dist) : null, fps: frame.ema ? Math.round(1000 / frame.ema) : null, pr: W && W.renderer ? +W.renderer.getPixelRatio().toFixed(2) : null, mem, gl: G.glLost || 0, calls: W && W.renderer ? W.renderer.info.render.calls : null, tex: W && W.renderer ? W.renderer.info.memory.textures : null, geo: W && W.renderer ? W.renderer.info.memory.geometries : null, art: (() => { try { return STU && STU.cache ? Object.keys(STU.cache).length : null; } catch (e) { return null; } })(), mt: typeof MEMT !== "undefined" ? MEMT : null, /* v537 the memory meter */
+    ...(() => { try { const rs = [G3 && G3.renderer, C3 && C3.renderer, STU && STU.renderer, typeof WBR !== "undefined" && WBR.r].filter(Boolean); let mb = 0; for (const r of rs) { const gl = r.getContext(), a = r.getContextAttributes ? r.getContextAttributes() : {}; mb += gl.drawingBufferWidth * gl.drawingBufferHeight * (4 + 4) * (a && a.antialias ? 4 : 1) * (a && a.preserveDrawingBuffer ? 2 : 1) / 1e6; } return { ctx: rs.length, fbMB: Math.round(mb) }; } catch (e) { return {}; } })(), sheet: (() => { try { return sheet ? sheet.type : null; } catch (e) { return null; } })(), dpr: +(devicePixelRatio || 1).toFixed(2), w: innerWidth, h: innerHeight, bt: (() => { try { const b = battle; if (!b) return null; const S0 = studio(); return { n: (b.Q || []).length, sp: b.paused ? 0 : b.speed, t: +(b.simT || 0).toFixed(1), end: b.end, qs: b.qs, tier: b.tier, lo: b.lowFx ? 1 : 0, fx: (b.fire || []).length + (b.fx || []).length + (b.parts || []).length + (b.debris || []).length + (b.pend || []).length, err: b.errs || 0, art: S0 && S0.orderSide ? S0.orderSide.length : null, live: ART_LIVE.size, q: ART_Q.length, cv: (() => { const c = $("#bcv"); return c ? c.width + "x" + c.height : null; })() }; } catch (e) { return null; } })() }; CRUMBS.open = true; crumbSave(); } /* v260: the battle's own state (squadrons, speed, quality, effects, hull pictures) goes with every heartbeat */
 /* v260 errors after start-up are recorded too (the first few distinct ones a session), so a crash report says what failed, not only what the player tapped */
 const ERR_SEEN = new Set(); function errCrumb(m) { try { m = String(m || "error").slice(0, 140); if (ERR_SEEN.has(m) || ERR_SEEN.size >= 8) return; ERR_SEEN.add(m); crumb("error: " + m);
   if (typeof S !== "undefined" && S) { S.errs = (S.errs || []).concat([{ t: Date.now(), v: GAME_V, m, i: S.tut ? S.tut.i : -1 }]).slice(-12); try { dirty(); } catch (e) {} } } catch (e) {} } // v333: errors reach the cloud save
@@ -10579,6 +10580,11 @@ const orbAll = (L, names) => { for (const k of names) { const at = L.pts.geometr
 // every iPhone on the Performance preset with no anti-aliasing and 0.6x resolution (the blocky, grainy map)
 const MOBILE = IOS || ANDROID || /Mobi/i.test(navigator.userAgent) || !!(navigator.userAgentData && navigator.userAgentData.mobile), WEAK = MOBILE && !IOS && ((navigator.hardwareConcurrency || 4) <= 4 || (navigator.deviceMemory || 4) <= 3);
 if (MOBILE) { try { if (G.crashBoot) localStorage.setItem("udf.safeUntil", String(Date.now() + 3 * 864e5)); if (+localStorage.getItem("udf.safeUntil") > Date.now()) G.glSafe = 1; } catch (e) {} } /* v445 */
+/* v537 the memory tier: 0 normal .. 3 lightest; +1 after a session that crashed, -1 after three clean sessions of 10+ minutes in a row */
+const MEMT = (() => { if (!MOBILE) return 0; try { const o = JSON.parse(localStorage.getItem("udf.memTier") || "{}") || {}; let t = clamp(+o.t || 0, 0, 3), ok = +o.ok || 0; if (G.crashBoot) { t = Math.min(3, t + 1); ok = 0; }
+  localStorage.setItem("udf.memTier", JSON.stringify({ t, ok }));
+  setTimeout(() => { try { const q = JSON.parse(localStorage.getItem("udf.memTier") || "{}") || {}; let n = (+q.ok || 0) + 1, tt = +q.t || 0; if (n >= 3 && tt > 0) { tt--; n = 0; } localStorage.setItem("udf.memTier", JSON.stringify({ t: tt, ok: n })); } catch (e) {} }, 600000);
+  return t; } catch (e) { return 0; } })();
 const PERF = { plSlice: WEAK ? 2500 : MOBILE ? 4000 : 9000, mkSlice: WEAK ? 2000 : MOBILE ? 3500 : 7000, nearPl: WEAK ? 700 : MOBILE ? 1300 : 3000, details: WEAK ? 4 : MOBILE ? 6 : 10, battleCap: WEAK ? .45 : MOBILE ? .7 : 1 };
 /* worlds: one slot per world, kept stable while the list is rebuilt; new homeworlds are appended, moved worlds update in place */
 function plSync(W, T, pxK) {
@@ -12682,7 +12688,7 @@ function draw3D(t) {
     // hidden and not rebuilt (120 parked fleets in a 60 vs 60 battle were 240 invisible line draws a frame)
     // v179 the green joint-strike courses converging on the Cube (dozens of alliance armies) drew a cloud of green tracers round it during
     // the live event: those are hidden (your own keep theirs on the map, not in the cinematic). Red attack and white retreat lines stay.
-    const cubeB = id !== "raid" && (path.cube || fleetTarget(f) === NEXUS), noLine = (cubeB && (routeKind(f) === "joint" || path.cube) && (!mineF.has(f) || cineOn)) || (!!f.demo && cam.followFleet !== id) /* v243: fleets circling the Cube, and the demo armies, draw no courses or trails (120 of them flickered white all round the Cube) */
+    const cubeB = id !== "raid" && (path.cube || fleetTarget(f) === NEXUS), noLine = (cubeB && !f.demo && (routeKind(f) === "joint" || path.cube) && (!mineF.has(f) || cineOn)) || (!!f.demo && cam.followFleet !== id && !(f.phase === "out" && !f.retreat && !path.park)) /* v537 the march on the Cube shows its lines; v243: fleets circling the Cube, and the demo armies, draw no courses or trails (120 of them flickered white all round the Cube) */
     o.line.visible = !path.park && !noLine; o.trail.visible = !noLine && (!path.park || (o.hist.length > 1 && Math.hypot(o.hist[0][0] - o.hist[o.hist.length - 1][0], o.hist[0][2] - o.hist[o.hist.length - 1][2]) > .05));
     if (o.line.visible) { const la = o.line.geometry.attributes.position;
       for (let i = 0; i <= 32; i++) { const q = ARC(path.a, path.b, path.k + (1 - path.k) * i / 32); la.setXYZ(i, q.x, q.y, q.z); } la.needsUpdate = true; }
@@ -13150,7 +13156,7 @@ const cbox = (w, h, d, mat, x, y, z) => { const m = new TH.Mesh(new TH.BoxGeomet
 const ccyl = (rt, rb, h, mat, x, y, z, seg) => { const m = new TH.Mesh(new TH.CylinderGeometry(rt, rb, h, seg || 16), mat); m.position.set(x || 0, (y || 0) + h / 2, z || 0); return m; };
 /* ---------- studio: an offscreen renderer that bakes realistic ship and planet portraits once, then reuses them ---------- */
 let STU = null;
-function studio() {
+function studio() { G.stuT = Date.now(); /* v537 */
   if (STU !== null) return STU || null;
   if (!TH) return (STU = false);
   try {
@@ -16074,7 +16080,8 @@ function drawColony(t) {
   if (W.prev) { const left = W.prev.until - performance.now(); if (left <= 0 || !W.blds[W.prev.k]) { W.scene.remove(W.prev.h); W.prev = null; } else { W.prev.h.position.y = .05 + Math.sin(t * .003) * .05; HOLO_WIRE().opacity = .35 + .2 * Math.sin(t * .006); } }
   try { colDayNight(W); } catch (e) {} // v355
   try { if (W.renderer.shadowMap.needsUpdate || (W.metF = (W.metF || 0) + 1) % 150 === 1) colMetal(W); } catch (e) {} // v360
-  { const B = W.bloomOff ? null : colBloom(W); let ok = false; if (B) try { B.run(); ok = true; } catch (e) { W.bloom = null; W.renderer.setRenderTarget(null); } if (!ok) W.renderer.render(W.scene, W.cam); } // v354 bloom
+  { const P = W.renderer.pace; if (P) { P.scene = W.scene; P.used = 0; P.skips = 0; P.ms = MOBILE ? 22 : 45; } /* v537 the base paces its shaders too */
+    const B = W.bloomOff ? null : colBloom(W); let ok = false; if (B) try { B.run(); ok = true; } catch (e) { W.bloom = null; W.renderer.setRenderTarget(null); } if (!ok) W.renderer.render(W.scene, W.cam); if (P) P.scene = null; } // v354 bloom
   // building tags
   const ctx = fx.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
   const hits = [], TT = now();
@@ -16328,12 +16335,19 @@ function mapMount(m) {
     }
 }
 /* v383: build the map quietly before the first tap: after 6 s of calm on the base, park it off-screen, build it and draw a few frames */
-function mapPrewarm() { if (mapHost || G3 || !TH || G3fail || view === "galaxy" || battle || sheet || document.hidden || !G.ready) return;
+function mapPrewarm() { if (IOS) return; /* v537 one world at a time on iPhone/iPad */ if (mapHost || G3 || !TH || G3fail || view === "galaxy" || battle || sheet || document.hidden || !G.ready) return;
   const pk = document.createElement("div"); pk.id = "mappark"; pk.setAttribute("aria-hidden", "true"); { const vr = ($("#view") || document.body).getBoundingClientRect(); /* the map's exact box (view width, full height): a different size would mean a full resize on the first frame */ pk.style.cssText = `position:fixed;left:${vr.left}px;top:0;width:${vr.width}px;height:${innerHeight}px;display:flex;flex-direction:column;visibility:hidden;pointer-events:none;z-index:-1;overflow:hidden`; /* the map box is a flex child */ } document.body.appendChild(pk);
   const t0 = performance.now(); try { mapMount(pk); } catch (e) { try { crumb("map prewarm failed: " + e.message); } catch (er) {} }
   let n = 0; const step = () => { if (!G3 || view === "galaxy" || !$("#mappark") || !$("#mappark").firstChild) return; if (sheet || battle || document.hidden || performance.now() - (G.lastIn || 0) < 2500) { setTimeout(() => requestAnimationFrame(step), 700); return; } /* v409: each step compiles shaders (a stall); never while a panel is open or the player is tapping */ try { draw3D(performance.now()); if (n === 6 && !G3.warmed) { G3.warmed = 1; mapWarm(performance.now()); } } catch (e) {} if (++n < 10 || (G3.compSkip > 0 && n < 120)) setTimeout(() => requestAnimationFrame(step), n < 10 ? 300 : 120); /* v530 until every shader is ready */ else try { crumb(`map ready in the background (${Math.round(performance.now() - t0)} ms)`); } catch (e) {} };
   requestAnimationFrame(step); }
 setInterval(() => { try { if (mapHost || !G.ready || view !== "base" || sheet || battle || document.hidden || advLines) { G.mpCalm = 0; return; } if (++G.mpCalm >= 3) (window.requestIdleCallback || setTimeout)(mapPrewarm, { timeout: 1500 }); } catch (e) {} }, 2000);
+/* v537 one 3D world at a time on iPhone/iPad: 8 s after you leave a world for the other it is released; away from both, the last used stays */
+setInterval(() => { try { if (!IOS || !G.ready || document.hidden) return; const T = Date.now(); if (view === "galaxy") G.lastGal = T; if (view === "base") G.lastCol = T;
+  if (!battle) { const lg = G.lastGal || 0, lc = G.lastCol || 0;
+    if (G3 && view !== "galaxy" && T - lg > 8000 && (view === "base" || lc > lg)) worldDrop("gal", "one world on iPhone");
+    if (C3 && view !== "base" && T - lc > 8000 && (view === "galaxy" || lg > lc)) worldDrop("col", "one world on iPhone");
+    if (typeof WBR !== "undefined" && WBR.r) wbArtFree(); }
+  if (STU && !battle && T - (G.stuT || 0) > 15000) worldDrop("stu", "idle"); } catch (e) {} }, 2000);
 function render(keepScroll) {
   const m = $("#view"), st = m.scrollTop, ae = document.activeElement;
   const typing = ae && ae.tagName === "INPUT" && m.contains(ae);
@@ -21186,7 +21200,9 @@ function gfxRecommend() { const g = gfxGpu(); if (WEAK) return "performance"; if
   if (/RTX|GTX 1[6-9]|Radeon\s*RX|Radeon\(TM\)\s*8\d{3}S|Radeon\s*8\d{3}S|Radeon\s*890M|Arc\(TM\)\s*A|Arc A\d/i.test(g)) return "ultra"; // the ROG Flow Z13's RTX 4070 / Radeon 8060S land here
   return "balanced"; }
 const gfxPreset = () => GFX.preset === "auto" || !GFX_PRESETS[GFX.preset] ? gfxRecommend() : GFX.preset;
-function gfx(k) { if (G.glSafe && (k === "scale" || k === "fx" || k === "detail")) { const v0 = GFX.over && GFX.over[k] != null ? GFX.over[k] : GFX_PRESETS[gfxPreset()][k]; return k === "scale" ? Math.min(v0, 1) : Math.max(0, v0 - 1); } // v166 after a GPU reset on a phone: a notch lighter for the session
+function gfx(k) { if (IOS && k === "scale") { const v0 = GFX.over && GFX.over.scale != null ? GFX.over.scale : GFX_PRESETS[gfxPreset()].scale; return Math.min(v0, 1); } /* v537 no supersampling on iPhone/iPad */
+  if (MOBILE && MEMT >= 2 && (k === "fx" || k === "detail")) { const v0 = GFX.over && GFX.over[k] != null ? GFX.over[k] : GFX_PRESETS[gfxPreset()][k]; return Math.max(0, v0 - (MEMT - 1)); }
+  if (G.glSafe && (k === "scale" || k === "fx" || k === "detail")) { const v0 = GFX.over && GFX.over[k] != null ? GFX.over[k] : GFX_PRESETS[gfxPreset()][k]; return k === "scale" ? Math.min(v0, 1) : Math.max(0, v0 - 1); } // v166 after a GPU reset on a phone: a notch lighter for the session
   if (GFX.over && GFX.over[k] != null) return GFX.over[k]; let v = GFX_PRESETS[gfxPreset()][k]; if (k === "fps" && GFX.preset === "auto" && G.batLow && !v) v = 60; /* v165: only with the battery low (it capped every unplugged phone at 60) */ return v; }
 const gfxHz = () => G.hz || 60;
 function gfxAimMs() { const cap = gfx("fps"), aim = GFX_PRESETS[gfxPreset()].aim, hz = gfxHz(); const f = cap ? Math.min(cap, hz) : aim === "max" ? hz : aim === "tgt" ? gfxTarget() : Math.min(aim, hz); return 1000 / f; }
@@ -21196,11 +21212,11 @@ const gfxMaxPR = () => clamp((window.devicePixelRatio || 1) * gfx("scale"), .6, 
    The budget (3.4M pixels, 2M on weak devices) leaves phones at 2x and puts tablets near 1.5-1.8x; it follows the window, so rotating
    the tablet or using split screen re-sizes on the next resolution check. */
 const STRONG = () => MOBILE && !WEAK && !G.glSafe && (navigator.deviceMemory || 8) >= 6 && (navigator.hardwareConcurrency || 8) >= 8; /* v466 */
-const mobilePRCap = () => { if (!MOBILE) return 9; const px = Math.max(1, innerWidth * innerHeight), st = STRONG(); return clamp(Math.sqrt((WEAK ? 2e6 : G.glSafe ? 1.4e6 : st ? 4.6e6 : 3.4e6) / px), 1, (st ? Math.min(window.devicePixelRatio || 2, IOS ? 2.5 : 3) : 2) * FZ()); }; // v166: a smaller budget after a GPU reset
+const mobilePRCap = () => { if (!MOBILE) return 9; const px = Math.max(1, innerWidth * innerHeight), st = STRONG(); return clamp(Math.sqrt((IOS ? [1e6, .75e6, .55e6, .4e6][MEMT] : (WEAK ? 2e6 : G.glSafe ? 1.4e6 : st ? 4.6e6 : 3.4e6) * [1, .75, .55, .4][MEMT]) / px), 1, /* v537 the iPhone budget */ (st ? Math.min(window.devicePixelRatio || 2, IOS ? 2.5 : 3) : 2) * FZ()); }; // v166: a smaller budget after a GPU reset
 // v164 live, not fixed at launch: a Z Fold is a phone folded and a small tablet unfolded, and it can change mid-game
 const isTablet = () => MOBILE && Math.min(innerWidth, innerHeight) >= 560;
 const isFoldOpen = () => MOBILE && isTablet() && Math.max(innerWidth, innerHeight) / Math.min(innerWidth, innerHeight) < 1.45; // an unfolded foldable is nearly square
-const GFX_AA = !WEAK && !!gfx("aa"); // antialiasing is fixed when the renderer is made: a change applies on the next launch
+const GFX_AA = !WEAK && !!gfx("aa") && !(MOBILE && MEMT >= 1); /* v537 */ // antialiasing is fixed when the renderer is made: a change applies on the next launch
 function gfxSave() { try { localStorage.setItem("void.gfx", JSON.stringify(GFX)); } catch (e) {} gfxApply(); }
 function gfxApply() {
   const d = gfx("detail"); PERF.details = [4, 9, 14][d]; PERF.nearPl = [1400, 3000, 4200][d]; PERF.mkSlice = [3500, 7000, 9000][d]; G.lowFx = gfx("fx") === 0;
