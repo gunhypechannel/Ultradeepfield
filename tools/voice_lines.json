@@ -6096,5 +6096,251 @@
   "where": "faq Events",
   "line": "Every world boss has its own trick. The Overlord hides behind four conduits. The Matriarch's swarm rebuilds if she's left alone, and her infection spreads every twelve hours. The Tyrant's bounty keeps growing. The Wyrm takes full damage only while its segments glow, and the Colossus shatters into shielding fragments. Events tracks them all live.",
   "mood": "calm"
+ },
+ {
+  "key": "erxvn2",
+  "where": "arch lev frag",
+  "line": "it circles where the stars end, and its fire is the last light before nothing. We did not make it. We built the walls so it would never turn inward...",
+  "mood": "grave"
+ },
+ {
+  "key": "bhf0n",
+  "where": "arch lev interp",
+  "line": "A warden's log from the Architects' outer stations. The walls it mentions match the edge of the mapped galaxy: they were built to keep the Leviathan out.",
+  "mood": "calm"
+ },
+ {
+  "key": "h3hgba",
+  "where": "arch lev adv",
+  "line": "They didn't build the galaxy's edge to keep us in, Commander. They built it to keep that out.",
+  "mood": "grave"
+ },
+ {
+  "key": "g4ynks",
+  "where": "arch lev enc",
+  "line": "Commander, something enormous is moving along the edge of the galaxy.",
+  "mood": "awe"
+ },
+ {
+  "key": "1j5wfo2",
+  "where": "arch lev enc",
+  "line": "An Architect warden's log describes a serpent of fire, circling where the stars end.",
+  "mood": "awe"
+ },
+ {
+  "key": "1luh6cd",
+  "where": "arch lev enc",
+  "line": "It isn't drifting, Commander. It's patrolling.",
+  "mood": "awe"
+ },
+ {
+  "key": "1o530p0",
+  "where": "arch lev def",
+  "line": "The Leviathan is falling back into the outer dark.",
+  "mood": "grave"
+ },
+ {
+  "key": "1d59c8i",
+  "where": "arch lev def",
+  "line": "The wardens wrote that it could never be killed, only turned away. Today, we turned it away.",
+  "mood": "grave"
+ },
+ {
+  "key": "yockso",
+  "where": "arch krk frag",
+  "line": "the lamps on the far shaft went out one by one, and where each had been there was a violet ring. Seal the deep levels. Whatever is down there has learned to count...",
+  "mood": "grave"
+ },
+ {
+  "key": "12d71bo",
+  "where": "arch krk interp",
+  "line": "A mining guild's last report from the deep layers. The violet rings match the suckers on the Kraken's arms.",
+  "mood": "calm"
+ },
+ {
+  "key": "1gh9voq",
+  "where": "arch krk adv",
+  "line": "They sealed the mines and left. We don't have that option.",
+  "mood": "grave"
+ },
+ {
+  "key": "1wlngx5",
+  "where": "arch krk enc",
+  "line": "Commander, the deep layers are going dark, one sector at a time.",
+  "mood": "awe"
+ },
+ {
+  "key": "1tmqzeq",
+  "where": "arch krk enc",
+  "line": "A mining guild's last report speaks of violet rings, and lamps going out one by one.",
+  "mood": "awe"
+ },
+ {
+  "key": "rdx9dt",
+  "where": "arch krk enc",
+  "line": "Something down there has eight arms... and it's coming up.",
+  "mood": "awe"
+ },
+ {
+  "key": "923npf",
+  "where": "arch krk def",
+  "line": "The Kraken is sinking back into the deep layers.",
+  "mood": "grave"
+ },
+ {
+  "key": "1ohduyo",
+  "where": "arch krk def",
+  "line": "The miners counted their lamps going out. This time, Commander, it was counting its arms.",
+  "mood": "grave"
+ },
+ {
+  "key": "86qerr",
+  "where": "news wb_new_lev",
+  "line": "Commander... something just crossed the edge of the galaxy. The Leviathan. It's the season's finale, and everything we've built was for this.",
+  "mood": "awe"
+ },
+ {
+  "key": "1y4zx0j",
+  "where": "news wb_new_krk",
+  "line": "The Kraken has risen from the deep layers. Eight arms, Commander, and it's the season's finale. Let's cut it down to size.",
+  "mood": "fierce"
+ },
+ {
+  "key": "1wo1rfp",
+  "where": "news greet_mem_lev",
+  "line": "We brought down the Leviathan. I still see its fire when I close my eyes... in a good way, I think.",
+  "mood": "tender"
+ },
+ {
+  "key": "zscqda",
+  "where": "news greet_mem_krk",
+  "line": "The Kraken's arms are still drifting out there, Commander. Every one we cut is a trophy.",
+  "mood": "playful"
+ },
+ {
+  "key": "aef0aw",
+  "where": "news wb_live_lev",
+  "line": "A fleet is fighting the Leviathan right now. You have to see this.",
+  "mood": "excited"
+ },
+ {
+  "key": "bavoy1",
+  "where": "news wb_live_krk",
+  "line": "Someone is wrestling the Kraken right now, arm by arm. Want to watch?",
+  "mood": "excited"
+ },
+ {
+  "key": "1hkgajt",
+  "where": "news wb_fall_lev",
+  "line": "The Leviathan has fallen! The finale is ours. If our fleets fought, the spoils are waiting.",
+  "mood": "excited"
+ },
+ {
+  "key": "3yhu75",
+  "where": "news wb_fall_krk",
+  "line": "The Kraken is down! Every fleet that cut an arm gets a share of the spoils.",
+  "mood": "excited"
+ },
+ {
+  "key": "p2brhu",
+  "where": "scan lev",
+  "line": "Scanning the Leviathan. Burning coil, fire breath, tail scythe. Its scales burn, Commander. Strike when it breathes and they cool.",
+  "mood": "urgent"
+ },
+ {
+  "key": "r3h5zs",
+  "where": "scan krk",
+  "line": "Scanning the Kraken. Eight arms, a beak, and those eyes. Every arm we sever weakens its guard. Start cutting.",
+  "mood": "fierce"
+ },
+ {
+  "key": "1l83j6q",
+  "where": "att lev",
+  "line": "Burning coil!",
+  "mood": "urgent"
+ },
+ {
+  "key": "1z3wrg",
+  "where": "att lev",
+  "line": "Fire breath!",
+  "mood": "urgent"
+ },
+ {
+  "key": "xvc8zs",
+  "where": "att lev",
+  "line": "Tail scythe!",
+  "mood": "urgent"
+ },
+ {
+  "key": "v0b8ob",
+  "where": "att krk",
+  "line": "Beak!",
+  "mood": "urgent"
+ },
+ {
+  "key": "11wdgou",
+  "where": "att krk",
+  "line": "Arm lash!",
+  "mood": "urgent"
+ },
+ {
+  "key": "16nz8gu",
+  "where": "att krk",
+  "line": "Abyss eyes!",
+  "mood": "urgent"
+ },
+ {
+  "key": "15ptn2t",
+  "where": "att krk",
+  "line": "Ink pulse!",
+  "mood": "urgent"
+ },
+ {
+  "key": "b66iwl",
+  "where": "att krk",
+  "line": "Constrict!",
+  "mood": "urgent"
+ },
+ {
+  "key": "5uv00",
+  "where": "att krk",
+  "line": "Sucker storm!",
+  "mood": "urgent"
+ },
+ {
+  "key": "2i1hd7",
+  "where": "holo wblev",
+  "line": "The Leviathan, Commander. A serpent of black scale and living fire, circling the very edge of the galaxy. Its scales shield it while they burn, so strike when it breathes and they cool.",
+  "mood": "grave"
+ },
+ {
+  "key": "xn4sbh",
+  "where": "holo wbkrk",
+  "line": "The Kraken has come up from the deep layers. Eight armoured arms, and every one of them shields its body. Sever them one by one, and it's ours.",
+  "mood": "fierce"
+ },
+ {
+  "key": "m5ng14",
+  "where": "awe lev",
+  "line": "It's older than the Wyrm, Commander. I can see it in its scales... it was out there before the stars we know.",
+  "mood": "awe"
+ },
+ {
+  "key": "11touqr",
+  "where": "awe lev",
+  "line": "Those aren't flames. That's its blood, burning through the cracks in its armour.",
+  "mood": "awe"
+ },
+ {
+  "key": "z9tocf",
+  "where": "awe krk",
+  "line": "Eight arms... and every one of them is longer than a fleet line.",
+  "mood": "awe"
+ },
+ {
+  "key": "w4m1ba",
+  "where": "awe krk",
+  "line": "Its eyes are looking right at us. Not at the ships. At us.",
+  "mood": "grave"
  }
 ]
