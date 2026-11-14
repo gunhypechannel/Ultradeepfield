@@ -32,11 +32,15 @@ rep('let g = x.createLinearGradient(0, 0, 0, 260); g.addColorStop(0, "rgba(3,6,1
     'let g = x.createLinearGradient(0, 0, 0, 260 + oy); g.addColorStop(0, "rgba(3,6,12,.92)"); g.addColorStop(1, "rgba(3,6,12,0)"); x.fillStyle = g; x.fillRect(0, 0, W, 260 + oy);')
 rep('const CLIP_URL = "gunhypechannel.github.io/Ultradeepfield";', 'const CLIP_URL = "gunhypechannel.github.io/Ultradeepfield", CLIP_LOGO = new Image(); /* v550 the logo, loaded when a clip starts */')
 rep('  const r = b0.r; ACT.breplay();', '  if (!CLIP_LOGO.src) CLIP_LOGO.src = "art/logo-udf.webp";\n  const r = b0.r; ACT.breplay();')
+# the VIP tab draws its own rows: give them the painted tiles too
+rep('<div class="sit"><span class="sic">${s.ic}</span></div><b>${esc(s.n)}</b>', '<div class="sit">${shopArtOf(k) ? `<span class="sart vipart" style="background-image:url(${shopArtOf(k)})"></span>` : `<span class="sic">${s.ic}</span>`}</div><b>${esc(s.n)}</b>')
 css = '''
 /* v550 the owner's art */
 .chart{margin:8px 0 2px;aspect-ratio:2/1;border-radius:10px;background:center 35%/cover no-repeat;border:1px solid rgba(226,196,138,.45);box-shadow:0 4px 18px rgba(0,0,0,.45)}
 .vpban.art{min-height:0}.vpban.art .vpglyph,.vpban.art .vpbot>b{display:none}.vpart{position:relative;aspect-ratio:3.2/1;background:url(art/ev/vpass.webp) center/cover no-repeat}
 .vpart::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(5,7,15,.9),rgba(5,7,15,0) 35%)}.vpban.art .vpbot{padding-top:4px;max-width:none;padding-right:96px}
+.sitem .sit .sart.vipart{width:100%;height:auto;aspect-ratio:4/3;border-radius:10px}
+.vpban.art .vptop small{background:rgba(5,7,15,.72);padding:2px 8px;border-radius:8px}
 .cqban .cqart{grid-column:1/-1;margin:-10px -10px 0;aspect-ratio:4.2/1;background:url(art/ev/conquest.webp) center/cover no-repeat;border-bottom:1px solid rgba(122,244,255,.35)}
 '''
 rep('.shopgrid{display:grid;', css.strip() + '\n.shopgrid{display:grid;')
