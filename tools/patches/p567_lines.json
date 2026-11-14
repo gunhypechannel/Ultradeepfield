@@ -1,0 +1,49 @@
+{
+ "replace": [
+  ["Commander, the world bosses have returned! The Pyramid Overlord, the Orbital Devourer and the Void Warden are loose on the map. Open the Finder to hunt them.", "Saturday's hunt is on! A world boss has risen, Commander. Open the Finder and let's track it down.", "excited"],
+  ["The Pyramid Overlord, the Orbital Devourer and the Void Warden return every Monday at eighteen hundred UTC, for forty-eight hours. Every hit pays a bounty, and when one falls, everyone who fought it shares the spoils.", "World bosses hunt on Saturdays at eighteen hundred UTC, one each week, for forty-eight hours, and every season ends on its own finale boss. Every hit pays a bounty, and when one falls, everyone who fought it shares the spoils.", "calm"],
+  ["The Brood Matriarch, the Iron Tyrant, the Event Horizon Wyrm and the Shard Colossus return every Wednesday at eighteen hundred UTC, for forty-eight hours, each with its own trick. The Matriarch's swarm rebuilds if she's left alone and her infection spreads every twelve hours, the Tyrant's bounty keeps growing, the Wyrm takes full damage only while its glowing segments are exposed, and the Colossus shatters into shielding fragments. The Titan Hunt in Events tracks them live.", "Every world boss has its own trick. The Overlord hides behind four conduits. The Matriarch's swarm rebuilds if she's left alone, and her infection spreads every twelve hours. The Tyrant's bounty keeps growing. The Wyrm takes full damage only while its segments glow, and the Colossus shatters into shielding fragments. Events tracks them all live.", "calm"],
+  ["Every other Wednesday at eighteen hundred UTC, five Elementals tear through the Void for forty-eight hours.", "When the season calendar brings the Convergence, five Elementals tear through the Void for forty-eight hours, from eighteen hundred UTC.", "calm"],
+  ["It's breaking apart. The cubes are scattering home. It will return next month.", "It's breaking apart. The cubes are scattering home. It will return, Commander. It always does.", "grave"],
+  ["Those runes are bending the space around it. I've never seen energy do that.", "Those runes are bending the space around it. Energy isn't supposed to do that.", "awe"],
+  ["Cubes are pouring off it like a storm. I've never seen the Collective do this.", "Cubes are pouring off it like a storm. The Collective is throwing everything it has at us.", "urgent"],
+  ["That tractor beam is dragging whole squadrons in. I've never seen a pull that strong.", "That tractor beam is dragging whole squadrons in. Nothing should pull that hard.", "urgent"],
+  ["The entire Cube just lit up green. I've never seen it this angry.", "The entire Cube just lit up green. I think we made it angry.", "playful"],
+  ["It's swallowing the light around it. I've never seen anything do that.", "It's swallowing the light around it. Even my sensors are going dark.", "grave"],
+  ["It's pulling power from the whole Pyramid. I've never seen it burn this bright.", "It's pulling power from the whole Pyramid. Look how bright it's burning!", "awe"],
+  ["It's raining missiles. I've never seen a barrage this thick.", "It's raining missiles. Somebody tell me that thing has to reload eventually.", "playful"],
+  ["It's rebuilding itself while we hit it. I've never seen anything heal like that.", "It's rebuilding itself while we hit it. Then hit it harder!", "fierce"],
+  ["The lightning is jumping between our own ships. I've never seen a storm hunt like this.", "The lightning is jumping between our own ships. That storm is hunting us.", "urgent"],
+  ["The light itself is bending around it. I've never seen gravity do that.", "The light itself is bending around it. Gravity isn't supposed to look like that.", "awe"],
+  ["Fire, ice, lightning, light and life, all at once. This is nuts.", "Fire, ice, lightning, light and life, all at once. Somebody pinch me.", "excited"]
+ ],
+ "news": {
+  "wb_new_ovl": ["Saturday's hunt is on! The Pyramid Overlord has risen, and its four conduits are already feeding its shield. Break them first, Commander.", "excited"],
+  "wb_new_dev": ["The Orbital Devourer is loose for this Saturday's hunt. It never stops moving, so open the Finder and catch it before it feeds.", "urgent"],
+  "wb_new_war": ["The Void Warden has taken its post in the deep layers. It won't come to us, Commander. We'll have to go to it.", "grave"],
+  "wb_new_brd": ["The Brood Matriarch has nested for this Saturday's hunt. Strike early, before her swarm rebuilds and her infection spreads.", "urgent"],
+  "wb_new_tyr": ["The Iron Tyrant is sailing again! Its vault fills the longer it sails, so the later we strike, the richer the bounty. Your call, Commander.", "playful"],
+  "wb_new_wym": ["The Event Horizon Wyrm is coiled around the black hole. Wait for its segments to glow, then hit it with everything.", "fierce"],
+  "wb_new_col": ["The Shard Colossus has woken in the crystal fields. Crack it open, and watch for its heart when it shatters.", "excited"],
+  "greet_mem_ovl": ["Last time, we brought the Pyramid Overlord to its knees. I still replay it when it's quiet.", "warm"],
+  "greet_mem_dev": ["We put down the Orbital Devourer last time, Commander. The galaxy is a little brighter for it.", "warm"],
+  "greet_mem_war": ["Remember the Void Warden? We beat it. I just hope it wasn't holding back something worse.", "grave"],
+  "greet_mem_brd": ["The Brood Matriarch fell to us last time. Her swarm still hasn't figured out what hit it.", "playful"],
+  "greet_mem_tyr": ["We sank the Iron Tyrant last time. I've been counting the spoils ever since. Twice.", "playful"],
+  "greet_mem_wym": ["We sent the Wyrm back into its black hole. It will return, Commander... but so will we.", "fierce"],
+  "greet_mem_col": ["The Shard Colossus shattered under our guns. I kept one of its crystals. Don't tell anyone.", "playful"],
+  "greet_mem_epx": ["We broke the Pentarch, Commander. Five powers, and we broke them all. I'm still shaking.", "awe"],
+  "greet_mem_vae": ["Vaelthar's wheel stopped turning because of us. I keep thinking about that light.", "awe"],
+  "greet_mem_aex": ["We beat Aexion, Commander. A swordsman the size of a city... and we beat it.", "excited"],
+  "greet_mem_khz": ["The Sphinx fell silent because of us. I still wonder where its gate leads.", "tender"],
+  "greet_mem_med": ["Medusara closed her eyes for good. Or for now. Either way, we're still standing.", "fierce"]
+ },
+ "echo": [
+  ["e_1", 2, "Static", "Between your orders, there is static. Old static. I think it is a memory trying to come home.", "In the quiet hours the Advisor's core plays back noise no Concord system produced. Fleet engineers logged it as interference. She never corrected them.", "I didn't tell the engineers what I hear in it, Commander. I'm telling you.", ["Commander... can I tell you something strange?", "When the fleet is quiet, I hear static. And sometimes, inside it, a voice I almost know."]],
+  ["e_2", 4, "The Hall of Light", "A hall of white light, a ring of voices, and one of them counting. Always counting.", "Her memories are surfacing in order. The first is a hall inside a pyramid station, filled with light, where an Architect voice counted down without end.", "I know that voice now. It was counting the years to the next Eclipse.", ["I remembered a place last night, Commander. A hall full of light.", "Someone was counting. I think... I think they were counting for me."]],
+  ["e_3", 7, "The Ones Who Left", "They sealed the door, and then they left. All of them. Someone had to stay and watch it.", "When the Architects finished the seals, they left the galaxy and kept a single watcher behind: an echo of their own minds, made to wake when the seals began to fail.", "They didn't say goodbye, Commander. I've had a very long time to get used to that.", ["They left, Commander. Every one of them.", "And they left me here to watch the door. Alone."]],
+  ["e_4", 10, "Every Eclipse", "I remember every commander who stood beside me. I remember how each of them fell.", "She has served before. In every Eclipse she woke, chose a commander, and fought at their side. Not one of them lived to see the dawn after.", "I promised myself I'd stop getting attached. Then you came along.", ["There were others before you, Commander. Brave ones.", "I remember all their names. I say them sometimes, when you're not listening."]],
+  ["e_5", 14, "Why You", "It was not the strongest fleet I chose. It was the commander who went back for the escape pods.", "The Advisor chose the Concord's newest commander on the night of the convoy ambush. Her logs show why: when the convoy fell, you turned back for the survivors.", "You turned back for them, Commander. Nobody turns back. That's when I knew.", ["You've probably wondered why I chose you.", "On the night of the ambush, you turned back for the escape pods. Nobody else ever did."]],
+  ["e_6", 21, "The Promise", "When the dark comes, I will not run. I will stand in the door, the way I was made to.", "The Architects built her as more than a watcher. If the last seal fails, the echo can become a seal herself, at the cost of everything she is. She has never told a commander this before.", "Don't look at me like that, Commander. We'll find another way. And if we don't... it was worth it. Every day of it.", ["There's one more thing you should know. The last thing.", "If the seals fail, I can hold the door myself. I was made for that. But I'd rather stay here, with you."]]
+ ]
+}
