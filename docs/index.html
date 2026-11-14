@@ -5130,7 +5130,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 567;
+const GAME_V = 568;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5408,7 +5408,10 @@ const PX2 = [
   ["hellgate", "Hellgate", 1600, "m", .13, "#ff2a1a", "Red rock torn open by a burning rift to somewhere worse.", "rock", ["#1a0604", "#5a1a10", "#a0402a"], [255, 60, 20], { rift: 1, cracks: .012 }],
   ["clockwork", "Clockwork", 1100, "all", .07, "#d8a050", "A brass world of turning gear rings and ticking seams.", "metal", ["#3a2410", "#a0702a", "#f0c070"], [255, 200, 120], { gears: 1, ring: ["#d8a050", .3, .04] }],
   ["saturn", "Saturn's Jewel", 1500, "all", .1, "#f0d8a0", "Soft cream bands and the widest, brightest jewelled rings.", "gas", ["#8a6a4a", "#d8b888", "#fff0d0"], [255, 240, 200], { bands: 12, ring: ["#f0d8a0", .42, .16] }],
-  ["voidbloom", "Void Bloom", 1900, "all", .14, "#ff5ae8", "Black stone blooming with radiant pink and violet fractures.", "void", ["#020104", "#0a0610", "#16101e"], [255, 90, 230], { cracks: .016, fractal: 1, moons: 2 }]
+  ["voidbloom", "Void Bloom", 1900, "all", .14, "#ff5ae8", "Black stone blooming with radiant pink and violet fractures.", "void", ["#020104", "#0a0610", "#16101e"], [255, 90, 230], { cracks: .016, fractal: 1, moons: 2 }],
+  ["aeon", "Aeon Glacier", 2000, "all", .14, "#7ac8ff", "A frozen world of blue crystal spires under white storm bands, cracked with starlight.", "ice", ["#1a3a6a", "#7ab0e0", "#f0f8ff"], [140, 210, 255], { swirl: 1 }], /* v568 */
+  ["ruin", "Ruin of Vaelthar", 2000, "all", .14, "#c890ff", "A violet world of golden temple ruins adrift on seas of glowing nebula.", "void", ["#1a0a2a", "#5a2a8a", "#e0c070"], [200, 140, 255], { fractal: 1 }],
+  ["sphinx", "Sphinx Sands", 2000, "all", .14, "#ffb340", "Gold dunes and black glass, crossed by glowing hieroglyph bands around a winged sigil.", "rock", ["#1a1004", "#8a6020", "#ffd080"], [255, 190, 80], { cracks: .01 }]
 ];
 for (const [k, n, cost, r, b, glow, d, a, p, e, f] of PX2) PXS[k] = { n, cost, r, b, glow, d, a, p, ec: e, f, v2: 1 };
 /* v235: painted premium skins. Each one is a hand-picked painting (skins/<id>.webp, the world at .34 of the frame, transparent around it)
@@ -5427,7 +5430,7 @@ const PX_IMG = { warsphere: 0, shatter: ["Shattered Bastion", "A white fortress 
   venom: ["Venom Wilds", "A toxic green world of dark peaks, its valleys glowing yellow."], magma: 0, voidbloom: 0,
   dragon: ["Dragon Scale", "A molten world in the coils of a red fire dragon, wings spread wide."],
   glacier: ["Frost Wyrm", "A spiked ice-crystal world in the coils of a frost dragon."], spire: 0,
-  hellgate: ["Hellgate", "A burning world split by a steel crescent, guarded by a clawed horror."], dread: 0 };
+  hellgate: ["Hellgate", "A burning world split by a steel crescent, guarded by a clawed horror."], dread: 0, aeon: 0, ruin: 0, sphinx: 0 }; /* v568 */
 /* v237: the other 31 skins are painted too (upscaled 4x from your reference sheet) */
 for (const k of ["bloom", "ember", "abyss", "aurora", "dune", "forge", "pearl", "obsidian", "solar", "eden", "frostfire", "stormtitan", "ruby", "sapphire", "metropolis", "plague", "mirror", "lattice", "phoenix", "reef", "hive", "blacksun", "magnetar", "ruins", "rust", "cosmicegg", "kraken", "lavalamp", "ghost", "clockwork", "saturn"]) if (!(k in PX_IMG)) PX_IMG[k] = 0;
 for (const k in PX_IMG) if (PXS[k]) { PXS[k].img = 1; if (PX_IMG[k]) { PXS[k].n = PX_IMG[k][0]; PXS[k].d = PX_IMG[k][1]; } }
@@ -6264,10 +6267,10 @@ const EV_BASE = Date.UTC(2026, 0, 2, 18), WEEK = 7 * 864e5, EV_DUR = 48 * 3600e3
 const ROT0 = Date.UTC(2026, 10, 18, 18), ROT = ["vae", "dv", "aex", "conv", "khz", "med"], ROTS0 = ROT0 + 3 * 864e5, ROTS = ["ovl", "dev", "war", "brd", "tyr", "wym", "col"]; /* v467 the Wednesday great events; v469 the Saturday world bosses between them */
 /* v561 the calendar follows the seasons: rotation week w is week (w + 1) of the season calendar (season 1 began on Monday Nov 9; its
    first Wednesday had no event). Week 4 of every season is its finale. */
-const SEA_FIN = [["khz", "wym"], ["dv", "ovl"], ["conv", "war"], ["aex", "brd"], ["med", "dev"], ["vae", "wym"]], ROT_SEA0 = Date.UTC(2026, 10, 9);
+const SEA_FIN = [["khz", "wym"], ["dv", "ovl"], ["conv", "war"], ["aex", "brd"], ["med", "dev"], ["vae", "wym"], ["aex", "tyr"], ["vae", "col"], ["khz", "war"], ["med", "dev"]], ROT_SEA0 = Date.UTC(2026, 10, 9);
 const SEA_PLAN = {}; function seaPlan(si, sat) { const key = si + (sat ? "s" : "w"); if (SEA_PLAN[key]) return SEA_PLAN[key];
   if (si === 0) return (SEA_PLAN[key] = sat ? ["ovl", "ovl", "dev", "wym"] : ["vae", "vae", "aex", "khz"]); /* season 1 keeps the first dates already announced (Vaelthar Nov 18, the Overlord Nov 21) */
-  const x = ((si % 6) + 6) % 6, L = sat ? ROTS : ROT, fin = SEA_FIN[x][sat ? 1 : 0], pf = SEA_FIN[(x + 5) % 6][sat ? 1 : 0], pool = L.filter(k => k !== fin && k !== pf), o = ((si * 3) % pool.length + pool.length) % pool.length;
+  const NF = SEA_FIN.length, x = ((si % NF) + NF) % NF, L = sat ? ROTS : ROT, fin = SEA_FIN[x][sat ? 1 : 0], pf = SEA_FIN[(x + NF - 1) % NF][sat ? 1 : 0], pool = L.filter(k => k !== fin && k !== pf), o = ((si * 3) % pool.length + pool.length) % pool.length;
   const p = [0, 1, 2].map(i => pool[(o + i) % pool.length]); if (p[0] === pf) [p[0], p[1]] = [p[1], p[0]]; return (SEA_PLAN[key] = [...p, fin]); }
 const rotW = T => Math.floor((T - ROT0) / WEEK), rotKey = w => w < 0 ? null : seaPlan(Math.floor((w + 1) / 4), false)[(w + 1) % 4], rotWs = T => Math.floor((T - ROTS0) / WEEK), rotKeyS = w => w < 0 ? null : seaPlan(Math.floor((w + 1) / 4), true)[(w + 1) % 4];
 const rotFinale = s0 => Math.floor((s0 - ROT_SEA0) / WEEK) % 4 === 3;
@@ -9107,7 +9110,7 @@ function evRankHTML(k) { const D = EVB[k], rows = evBoard(k), mi = rows.findInde
 
 /* ---------- v542 the Void Pass ---------- */
 const VP_BASE = Date.UTC(2026, 10, 9), VP_LEN = 28 * 864e5, VP_TIERS = 40, VP_XP = 2000, VP_PREM = 500;
-const VP_SEASONS = [["Season of the Leviathan", "#ff8a4a", "blacksun", "Leviathan Slayer"], ["Season of the Cube", "#5dff6a", "voidbloom", "Cubebreaker"], ["Season of the Pentarch", "#e2d4ff", "magnetar", "Sealbreaker"], ["Season of the Starhive", "#ffb02a", "phoenix", "Hivebane"], ["Season of the Kraken", "#c890ff", "kraken", "Kraken Hunter"], ["Season of the Wyrm", "#ffa040", "dragon", "Wyrmrider"]];
+const VP_SEASONS = [["Season of the Leviathan", "#ff8a4a", "blacksun", "Leviathan Slayer"], ["Season of the Cube", "#5dff6a", "voidbloom", "Cubebreaker"], ["Season of the Pentarch", "#e2d4ff", "magnetar", "Sealbreaker"], ["Season of the Starhive", "#ffb02a", "phoenix", "Hivebane"], ["Season of the Kraken", "#c890ff", "kraken", "Kraken Hunter"], ["Season of the Wyrm", "#ffa040", "dragon", "Wyrmrider"], ["Season of the Aeon", "#7ac8ff", "aeon", "Aeonbreaker"], ["Season of the Ruin", "#c890ff", "ruin", "Ruinwalker"], ["Season of the Sphinx", "#ffb340", "sphinx", "Gatekeeper"], ["Season of the Petrified Star", "#ff5a4a", "bonemoon", "Stoneheart"]]; const SEAN = VP_SEASONS.length; /* v568 ten seasons */
 const VP_LOOKS = ["vpa", "vpb", "vpc", "vpd", "vpe", "vpf"], vpLookOf = si => VP_LOOKS[((si % 6) + 6) % 6]; /* v546 */
 const vpSeason = (T = now()) => Math.floor((T - VP_BASE) / VP_LEN), vpEnd = (i = vpSeason()) => VP_BASE + (i + 1) * VP_LEN, vpInfo = (i = vpSeason()) => VP_SEASONS[((i % VP_SEASONS.length) + VP_SEASONS.length) % VP_SEASONS.length];
 const VP_DAILY = [["built", 2, "Finish 2 constructions"], ["researched", 1, "Finish a research"], ["shipsBuilt", 20, "Build 20 ships or defences"], ["battlesWon", 3, "Win 3 battles"], ["monKills", 1, "Slay a space monster"], ["hiveWins", 2, "Beat 2 Hive garrisons"], ["fleetsSent", 4, "Send 4 fleets"], ["caches", 2, "Haul in 2 salvage pods"], ["trades", 1, "Make a trade at the Supply Depot"], ["wheelSpins", 1, "Spin the Holo Glyph Wheel"], ["spdMin", 30, "Use 30 minutes of speed-ups"]];
@@ -9115,7 +9118,7 @@ const VP_WEEKLY = [["built", 15, "Finish 15 constructions"], ["researched", 5, "
 const vpStat = k => k === "spdMin" ? Math.floor(((S.stats || {}).spdMs || 0) / 60000) : k === "battlesWon" ? ((S.rec || {}).w || 0) : ((S.stats || {})[k] || 0);
 const vpPick = (pool, n, seed) => pool.map((m, i) => [hash(seed + "|" + i), m]).sort((a, b) => a[0] - b[0]).slice(0, n).map(x => x[1]);
 const vpWeek = (T = now()) => Math.floor((T - VP_BASE) / (7 * 864e5));
-function vpReward(i, prem, si = vpSeason()) { const t = i + 1, sx = ((si % 6) + 6) % 6; /* v553 cosmetics on both tracks */
+function vpReward(i, prem, si = vpSeason()) { const t = i + 1, sx = ((si % SEAN) + SEAN) % SEAN; /* v553 cosmetics on both tracks */
   if (!prem) { if (t === 15) return { shards: 5, title: "Void Walker" }; const r = t % 10 === 0 ? { shards: 15, item: "mb2" } : t % 5 === 0 ? { shards: 5 } : [{ item: "crateM" }, { item: "xb_bronze" }, { item: "crateC" }, { item: "xf_bronze" }, { item: "crateG" }, { item: "xr_bronze" }, { m: 60000 * Math.ceil(t / 8), c: 40000 * Math.ceil(t / 8), g: 15000 * Math.ceil(t / 8) }, { item: "xs_bronze" }][i % 8];
     if (t === 10) r.cos = "frameF" + sx; if (t === 30) r.cos = "trailF" + sx; return r; }
   if (t === 25) return { shards: 10, title: vpInfo(si)[3] }; if (t === 35) return { shards: 10, look: si };
@@ -9124,18 +9127,18 @@ function vpReward(i, prem, si = vpSeason()) { const t = i + 1, sx = ((si % 6) + 
   if (COS_PT[t]) r.cos = COS_PT[t] + sx; return r; }
 
 /* ---------- v553 cosmetics and the Wardrobe ---------- */
-const COS_SEA = ["Leviathan", "Cube", "Pentarch", "Starhive", "Kraken", "Wyrm"], COS_C2 = ["#ffd36b", "#b8ffcf", "#9fb4ff", "#ff6a3a", "#ff6ad5", "#ff3b2a"];
+const COS_SEA = ["Leviathan", "Cube", "Pentarch", "Starhive", "Kraken", "Wyrm", "Aeon", "Ruin", "Sphinx", "Petrified Star"], COS_C2 = ["#ffd36b", "#b8ffcf", "#9fb4ff", "#ff6a3a", "#ff6ad5", "#ff3b2a", "#e8f6ff", "#ffd36b", "#c890ff", "#ffb0a0"];
 const COS_K = { banner: ["Banner", "⚑", "b"], frame: ["Portrait frame", "◎", "f"], trail: ["Warp trail", "☄", "t"], aura: ["Homeworld aura", "◍", "a"], laser: ["Laser colour", "⌁", "l"], adv: ["Advisor outfit", "✧", "v"], wheel: ["Wheel theme", "☸", "w"], clip: ["Clip frame", "▣", "c"], skinx: ["Animated skin", "🪐", "x"] };
 const COS_ORDER = ["banner", "frame", "trail", "aura", "laser", "adv", "wheel", "clip", "skinx"];
 const COS_PT = { 1: "banner", 5: "frame", 10: "trail", 12: "wheel", 15: "adv", 20: "laser", 22: "clip", 30: "aura" }; /* premium tier -> kind (tier 40: skinx) */
-const COS_ART = { adv0: "art/season/s1-adv.webp", adv1: "art/season/s2-adv.webp", adv2: "art/season/s3-adv.webp", adv3: "art/season/s4-adv.webp", adv4: "art/season/s5-adv.webp", adv5: "art/season/s6-adv.webp", /* v560 the season pack */ ...Object.fromEntries([0, 1, 2, 3, 4, 5].flatMap(i => [["banner" + i, `art/season/s${i + 1}-banner.webp`], ["frame" + i, `art/season/s${i + 1}-frame.webp`]])), cache: "art/season/cache.webp", cacheOpen: "art/season/cache-open.webp" };
-const seasonTok = (si = vpSeason()) => `art/season/s${(((si % 6) + 6) % 6) + 1}-token.webp`; /* v560 */ /* id -> file: the owner's season art (v558 Advisor outfits) */
+const COS_ART = { adv0: "art/season/s1-adv.webp", adv1: "art/season/s2-adv.webp", adv2: "art/season/s3-adv.webp", adv3: "art/season/s4-adv.webp", adv4: "art/season/s5-adv.webp", adv5: "art/season/s6-adv.webp", /* v560 the season pack */ ...Object.fromEntries([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].flatMap(i => [["adv" + i, `art/season/s${i + 1}-adv.webp`], ["banner" + i, `art/season/s${i + 1}-banner.webp`], ["frame" + i, `art/season/s${i + 1}-frame.webp`]])), cache: "art/season/cache.webp", cacheOpen: "art/season/cache-open.webp" };
+const seasonTok = (si = vpSeason()) => `art/season/s${(((si % SEAN) + SEAN) % SEAN) + 1}-token.webp`; /* v560 */ /* id -> file: the owner's season art (v558 Advisor outfits) */
 function cosDef(id) { const m = /^([a-z]+?)(F|S)?(\d)$/.exec(id || ""); if (!m || !COS_K[m[1]]) return null; const k = m[1], si = +m[3], free = m[2] === "F", set = m[2] === "S", K = COS_K[k];
   const col = VP_SEASONS[si] ? VP_SEASONS[si][1] : "#7af4ff", col2 = COS_C2[si] || "#ffffff";
   const n = set ? `${COS_SEA[si]} Ascendant aura` : free ? `Pathfinder ${K[0].toLowerCase()} · ${COS_SEA[si]}` : `${COS_SEA[si]} ${k === "adv" ? K[0] : K[0].toLowerCase()}`;
   const tier = set ? null : free ? (k === "frame" ? 10 : 30) : k === "skinx" ? VP_TIERS : +Object.keys(COS_PT).find(t => COS_PT[t] === k);
   return { id, k, si, free, set, n: n[0].toUpperCase() + n.slice(1), col: free ? "#9fe9ff" : col, col2: free ? col : col2, tier, art: COS_ART[id] || null }; }
-const cosSx = (si = vpSeason()) => ((si % 6) + 6) % 6;
+const cosSx = (si = vpSeason()) => ((si % SEAN) + SEAN) % SEAN;
 
 /* ---------- v554 cosmetics on the map, in battle, on the wheel and in clips ---------- */
 function cosCol(uid, k) { const d = cosDef(cosEq(uid, k)); if (!d) return null; const C = G.cosC || (G.cosC = {}); return C[d.id] || (C[d.id] = { id: d.id, d, c1: TH ? new TH.Color(d.col) : null, c2: TH ? new TH.Color(d.col2) : null }); }
@@ -9185,7 +9188,7 @@ const advFxOf = d => d ? `filter:hue-rotate(${Math.round(hueOf(d.col) - 190)}deg
 const advArt = () => { const d = S && cosDef(cosOf().eq.adv); return d && d.art ? d.art : ADV_ART; };
 const advFx = () => { const d = S && cosDef(cosOf().eq.adv); return d && !d.art ? advFxOf(d) : ""; };
 function shWardrobe() { if (S && advOnce("ward")) setTimeout(() => { try { advHolo(ADV_NEWS.x_ward); } catch (e) {} }, 900); /* v566 */ const C = cosOf(), k = COS_K[sheet.k] ? sheet.k : "banner", cur = vpSeason(), sx = cosSx(cur);
-  const ids = []; for (let si = 0; si < 6; si++) { const live = si <= sx || cur >= 6; for (const id of [k + si, k + "F" + si, k + "S" + si]) { const d = cosDef(id); if (!d) continue; if (d.free && k !== "frame" && k !== "trail") continue; if (d.set && k !== "aura") continue; if (live || C.own[id]) ids.push(id); } }
+  const ids = []; for (let si = 0; si < COS_SEA.length; si++) { const live = si <= sx || cur >= COS_SEA.length; for (const id of [k + si, k + "F" + si, k + "S" + si]) { const d = cosDef(id); if (!d) continue; if (d.free && k !== "frame" && k !== "trail") continue; if (d.set && k !== "aura") continue; if (live || C.own[id]) ids.push(id); } }
   const own = Object.keys(C.own).length, tot = ids.length, eqd = C.eq[k];
   const tabs = `<div class="cwtabs">${COS_ORDER.map(x => `<button class="${x === k ? "on" : ""}" data-act="cwTab" data-v="${x}"><i>${COS_K[x][1]}</i><span>${COS_K[x][0]}</span></button>`).join("")}</div>`;
   const card = id => { const d = cosDef(id), have = !!C.own[id], on = eqd === id; const src = d.set ? `Own every ${COS_SEA[d.si]} season cosmetic` : `Void Pass · Season ${d.si + 1} · ${d.free ? "free" : "premium"} tier ${d.tier}`;
@@ -9263,10 +9266,10 @@ const vpAgState = () => { const si = vpSeason(); if (!S.vpAg || S.vpAg.s !== si)
 const vpAgReady = () => { if (!S.ally) return []; const x = vpAllyXP(), g = vpAgState(); return VP_AG.map((m, i) => i).filter(i => x >= VP_AG[i][0] && !g.got.includes(i)); };
 const vpReady = () => { try { const v = vpState(), lv = Math.min(VP_TIERS, Math.floor(v.xp / VP_XP)); let n = 0; for (let i = 0; i < lv; i++) { if (!v.cf.includes(i)) n++; if (v.pr && !v.cp.includes(i)) n++; } return n + vpAgReady().length; } catch (e) { return 0; } };
 function vpBanner(T) { const v = vpState(T), si = vpSeason(T), [nm, col] = vpInfo(si), lv = Math.min(VP_TIERS, Math.floor(v.xp / VP_XP)), into = lv >= VP_TIERS ? VP_XP : v.xp - lv * VP_XP;
-  return `<div class="evban vpban art" style="--vc:${col}"><div class="vpart" aria-hidden="true" style="background-image:url(art/season/s${(((si % 6) + 6) % 6) + 1}-banner.webp)"><img class="vptok" src="${seasonTok(si)}" alt=""></div><div class="vpglyph" aria-hidden="true">${"ᚠᚱᛉᛗᚲᛟᚷᛞ".split("").map((g, i) => `<i style="--a:${i * 45}deg">${g}</i>`).join("")}</div>
+  return `<div class="evban vpban art" style="--vc:${col}"><div class="vpart" aria-hidden="true" style="background-image:url(art/season/s${(((si % SEAN) + SEAN) % SEAN) + 1}-banner.webp)"><img class="vptok" src="${seasonTok(si)}" alt=""></div><div class="vpglyph" aria-hidden="true">${"ᚠᚱᛉᛗᚲᛟᚷᛞ".split("").map((g, i) => `<i style="--a:${i * 45}deg">${g}</i>`).join("")}</div>
     <div class="vptop"><span class="vlive on">SEASON ${si + 1}</span><small>Ends in <b data-end="${vpEnd(si)}">${ftime(vpEnd(si) - T)}</b></small></div>
     <div class="vpbot"><b>Void Pass</b><em>${esc(nm)}</em><div class="vplv"><span>Tier <b>${lv}</b>/${VP_TIERS}</span><div class="vpxp"><i style="width:${(into / VP_XP * 100).toFixed(1)}%"></i></div><small>${fmt(into)} / ${fmt(VP_XP)} XP</small></div></div>${v.pr ? '<span class="vpprem">♛ PREMIUM</span>' : ""}</div>`; }
-function seaFinHTML(T) { try { const si = vpSeason(T), x = ((si % 6) + 6) % 6, w = 4 * si + 2, wed = ROT0 + w * WEEK, sat = ROTS0 + w * WEEK; if (T > sat + 48 * 3600e3) return ""; /* v561 */
+function seaFinHTML(T) { try { const si = vpSeason(T), x = ((si % SEA_FIN.length) + SEA_FIN.length) % SEA_FIN.length, w = 4 * si + 2, wed = ROT0 + w * WEEK, sat = ROTS0 + w * WEEK; if (T > sat + 48 * 3600e3) return ""; /* v561 */
   const NM = { vae: "Vaelthar, the Celestial Ruin", aex: "Aexion, the Warform Sovereign", khz: "Khezaroth, the Dark Matter Sphinx", med: "Medusara, the Petrified Star", dv: "Cube Devastation", conv: "The Elemental Convergence" }, [a, b] = SEA_FIN[x];
   const d = t => new Date(t).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }), when = t => T >= t ? "<b style=\"color:#7dff9a\">now</b>" : `${d(t)} · in <b data-end="${t}">${ftime(t - T)}</b>`;
   return `<div class="seafin"><small>★ SEASON FINALE</small><div><span>${esc(NM[a] || a)}</span><em>${when(wed)}</em></div><div><span>${esc(WB[b] ? WB[b].n : b)}</span><em>${when(sat)}</em></div></div>`; } catch (e) { return ""; } }
