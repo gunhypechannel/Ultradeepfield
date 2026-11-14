@@ -3740,36 +3740,6 @@
   "line": "We called them gods because we had no other word for what we saw. Our ancestors weren't telling stories, Commander. They were leaving instructions."
  },
  {
-  "key": "1uap24k",
-  "where": "Monster · vmanta",
-  "line": "float sp = abs(position.z), w = smoothstep(.9, 3.5, sp); transformed.y += w * w * 1.05 * sin(mt * 1.7 - sp * .55); float tl = clamp((-1.9 - position.x) / 5., 0., 1.); transformed.z += tl * tl * .7 * sin(mt * 2.3 + position.x * 1.1); transformed.y += tl * .15 * sin(mt * 1.7 + 1.);"
- },
- {
-  "key": "1g03xld",
-  "where": "Monster · swasp",
-  "line": "float rr = length(position.xz); if (rr > 1.95) { float th = mt * (1.5 - rr * .18), c = cos(th), sn = sin(th); transformed.xz = vec2(transformed.x * c - transformed.z * sn, transformed.x * sn + transformed.z * c); transformed.y += .28 * sin(mt * 3.1 + rr * 5.); } else { transformed.x += .03 * sin(mt * 1.3 + position.y * 2.); }"
- },
- {
-  "key": "pwekdz",
-  "where": "Monster · ctort",
-  "line": "float fl = smoothstep(1.7, 2.6, abs(position.z)), ph = mt * 1.1 + sign(position.z) * 1.57 + step(0., position.x) * 3.14; transformed.y += fl * .32 * sin(ph); transformed.x += fl * .22 * cos(ph); float hd = smoothstep(2.2, 3.2, position.x); transformed.y += hd * .1 * sin(mt * .7); transformed.z += hd * .12 * sin(mt * .45);"
- },
- {
-  "key": "1dzqt7j",
-  "where": "Monster · gspider",
-  "line": "float lg = smoothstep(1.3, 3., abs(position.z)), ph = position.x * 1.6 + sign(position.z) * 1.57; transformed.y += lg * .32 * max(0., sin(mt * 3.4 + ph)); transformed.x += lg * .2 * cos(mt * 3.4 + ph); transformed.y += .04 * sin(mt * 6.8);"
- },
- {
-  "key": "11zxsyv",
-  "where": "Monster · smoth",
-  "line": "float sp = abs(position.z); if (sp > .38) { float a = .7 * sin(mt * 2.4), d = sp - .38; transformed.y += d * sin(a); transformed.z = sign(position.z) * (.38 + d * cos(a)); } transformed.y += .18 * sin(mt * 2.4 + 1.4);"
- },
- {
-  "key": "wu14rb",
-  "where": "Monster · cram",
-  "line": "float tl = clamp((-2.2 - position.x) / 6., 0., 1.); transformed.z += tl * tl * .8 * sin(position.x * .9 + mt * 4.); transformed.y += tl * tl * .45 * cos(position.x * .7 + mt * 3.3); float hb = smoothstep(.8, 2.8, position.x); transformed.y += hb * .1 * sin(mt * 1.6);"
- },
- {
   "key": "1bf1aw9",
   "where": "Bestiary · b_swhale · fragment",
   "line": "The Concord's first deep-lane convoys called them \"hull-eaters.\" They follow engine wakes for days and strike only when a ship turns back. The laser turrets in their hides aren't grown."
@@ -4033,5 +4003,70 @@
   "key": "8pix4i",
   "where": "Bestiary · b_coll · advisor",
   "line": "Don't let it take our ships, Commander. It learns from every one."
+ },
+ {
+  "key": "1vynnos",
+  "where": "Monster holo · vmanta",
+  "line": "A Void Manta, Commander. It glides faster than our frigates and slips half our shots, so send ships that track well: Fighters and Lancers. It drops Exotic Tissue, and sometimes Void Essence."
+ },
+ {
+  "key": "16ewk6q",
+  "where": "Monster holo · swasp",
+  "line": "That's a Starhive. The nest is armoured, and its wasp swarm stings with acid. Corvettes and Battleships tear through the swarm, and Bombers break the nest. The bigger the hive, the bigger the swarm."
+ },
+ {
+  "key": "160wr4z",
+  "where": "Monster holo · ctort",
+  "line": "A Crystal Tortoise. Its shell shrugs off light guns, so bring Bombers and plasma, and be patient. The crystals on its back are real: it often drops Quantum Crystal."
+ },
+ {
+  "key": "1stu4nd",
+  "where": "Monster holo · gspider",
+  "line": "Careful, Commander. A Gravity Spider. Its lances drag ships out of formation, so send heavy hulls and plenty of them. It sometimes carries Void Essence."
+ },
+ {
+  "key": "u6o72h",
+  "where": "Monster holo · smoth",
+  "line": "Solar Moths. Their wing dust strips shields fast, so armour matters more than shields here. Lancers run them down, and they often drop Quantum Crystal."
+ },
+ {
+  "key": "1voodnx",
+  "where": "Monster holo · cram",
+  "line": "A Comet Ram is charging the lanes. It hits like a battering ram, horns first, so lead with Battleships and Bastions that can take it. It leaves Reinforced Alloy behind."
+ },
+ {
+  "key": "j7hm8w",
+  "where": "Directive 2 claimed",
+  "line": "Power is online. Watch the energy meter. If it goes red, the extractors slow down."
+ },
+ {
+  "key": "nvpumt",
+  "where": "Directive 8 claimed",
+  "line": "The Shipyard is ready. Light Fighters are cheap and fast. Three should be enough for a low-level Hive garrison."
+ },
+ {
+  "key": "qmu33",
+  "where": "Directive 9 claimed",
+  "line": "Fighters ready. Open the Galaxy map. Amber worlds are held by the Hive. Pick a low level one and check the odds before you launch."
+ },
+ {
+  "key": "8qqv1v",
+  "where": "Directive 12 claimed",
+  "line": "Research will decide this war. Open the Tech tree in Research to see what every ship needs."
+ },
+ {
+  "key": "5ec5fs",
+  "where": "Directive 17 claimed",
+  "line": "A Colony Ship carries colonists. Send it with escorts. If the defenders fall, the planet is ours and shielded for 7 days."
+ },
+ {
+  "key": "1i02tkc",
+  "where": "Directive 17 claimed",
+  "line": "Astrophysics research decides how many worlds we can hold: one more every 2 levels, up to 10 counting our homeworld."
+ },
+ {
+  "key": "bz0qp",
+  "where": "Directive 18 claimed",
+  "line": "Every planet has a size in fields. Bigger worlds hold more buildings. Tap a colony to build extractors and an Orbital Fortress on it."
  }
 ]

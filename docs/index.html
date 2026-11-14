@@ -4858,7 +4858,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 537;
+const GAME_V = 538;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -20399,8 +20399,26 @@ const CAP2 = {
   eclipse:       ["plasma", 3, "#e6b3ff", .24, { hv: 1 }],        // main: beam · second: heavy violet plasma shells
   // v418 the Cube Destroyer has no second battery: its beam is the whole show
 };
+/* v538 the monsters' signature attacks: [weapon look, shots, colour, delay s, flags], two per monster, alternating volley by volley */
+const MON_ATK = {
+  swhale:  [["torpedo", 2, "#9fe8ff", .2, {}], ["flak", 6, "#bff3ff", .14, {}]],          // laser turrets · hull torpedoes · tail-gun tracers
+  slevi:   [["acid", 3, "#ff8a3a", .2, {}], ["flak", 8, "#ffd36b", .12, {}]],            // plasma breath · molten spit · ember spray
+  ssquid:  [["ion", 4, "#c890ff", .18, {}], ["torpedo", 2, "#7fe0ff", .22, {}]],         // acid · ink pulses · venom darts
+  vmanta:  [["ion", 3, "#7af4ff", .16, {}], ["mass", 2, "#e8ffff", .2, {}]],             // lasers · gravity pulses · wing slashes
+  swasp:   [["flak", 8, "#ffb02a", .1, {}], ["missile", 4, "#ffd36b", .2, {}]],          // acid stings · stinger swarm · launched barbs
+  snest:   [["missile", 4, "#ffb02a", .2, { flank: 1 }], ["flak", 6, "#ffd36b", .12, {}]], // acid · larva pods · resin spray
+  ctort:   [["ion", 3, "#5fb8ff", .18, {}], ["plasma", 2, "#9fd8ff", .24, { hv: 1 }]],   // crystal slugs · glyph pulses · crystal boulders
+  gspider: [["mass", 3, "#c8a0ff", .16, {}], ["acid", 3, "#9a6bff", .2, {}]],            // gravity lance · gravity slugs · web spit
+  smoth:   [["flak", 8, "#ffe08a", .1, {}], ["laser", 3, "#fff2b0", .16, {}]],           // ion dust · wing-dust storm · light darts
+  cram:    [["plasma", 2, "#bfeaff", .22, { hv: 1 }], ["flak", 6, "#dff6ff", .12, {}]],   // horn slugs · comet fireballs · ice shards
+  kegg:    [["flak", 6, "#c890ff", .12, {}], ["ion", 2, "#b07aff", .2, {}]],             // acid · thorn spray · violet pulses
+  gwhale:  [["laser", 3, "#bff8ff", .16, {}], ["torpedo", 2, "#7af4ff", .22, {}]],        // ion song · ghost lances · spirit wisps
+  reat:    [["acid", 3, "#ff9a4a", .2, {}], ["flak", 6, "#ffcf8a", .12, {}]],            // mass bites · molten spit · rock spray
+  cserp:   [["laser", 3, "#ffd36b", .16, {}], ["ion", 3, "#c890ff", .2, {}]],            // plasma breath · golden lances · violet fire
+  sent:    [["ion", 3, "#6affb8", .18, {}], ["plasma", 2, "#9dffcf", .26, { hv: 1 }]],    // stone fists · rune pulses · green boulders
+};
 function capSecond(b, v, q, side, sz, lo) {
-  const c = CAP2[q.k]; if (!c || v.bounce) return; const [wk, n0, col, dl, fl] = c, crowd = b.Q.length > 60;
+  const c = CAP2[q.k] || (MON_ATK[q.k] && MON_ATK[q.k][hash(v.t + "|" + v.s) % 2]); if (!c || v.bounce) return; /* v538 */ const [wk, n0, col, dl, fl] = c, crowd = b.Q.length > 60;
   const n = lo ? 1 : crowd ? Math.max(1, Math.ceil(n0 / 2)) : n0; if (b.fx.length > (crowd ? 260 : 520)) return; // never in a field already full of shots
   const v2 = Object.assign({}, v, { wk }), tr = (TRAVEL[wk] || .3) * (fl.fk ? 1.05 : 1);
   for (let j = 0; j < n; j++) { const t0 = v.t + dl + j * (wk === "flak" ? .035 : .06);
