@@ -21,8 +21,8 @@
   fit(); addEventListener("resize", fit); addEventListener("orientationchange", function () { setTimeout(fit, 250); }); if (window.visualViewport) visualViewport.addEventListener("resize", fit);
   f.src = location.href; document.body.appendChild(f);
 } catch (e) {} })();</script>
-<script src="firebase-config.js"></script>
-<script src="supabase-config.js"></script>
+
+
 <script src="udf-install.js"></script>
 <script>/* v206: the game runs on Supabase once supabase-config.js is filled in; until then on the old Firebase server */(function(){var c=window.UDF_SUPABASE||{},on=c.url&&c.anonKey&&String(c.url+c.anonKey).indexOf("PASTE")<0;document.write('<script src="'+(on?"udf-supabase.js":"udf-firebase.js")+'"><\/script>');})();</script>
 <!-- udf-firebase.js --><!-- Ultra Deep Field, formerly Void of War. The old name stays in this note: apps installed before the rename only accept updates that contain it. -->
