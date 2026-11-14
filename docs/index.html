@@ -668,6 +668,7 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 .dpbo{display:flex;align-items:center;gap:6px}.dpbo span{color:var(--amber);display:inline-flex}.dpbo svg{width:20px;height:20px}
 .dplog{display:flex;flex-direction:column;gap:4px}.dplog>div{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;gap:6px;align-items:center;font-size:12.5px;padding:5px 8px;border-radius:8px;background:rgba(4,10,16,.45)}.dplog i{font-style:normal;color:var(--muted)}.dplog small{color:var(--muted);font-size:11px}
 /* v539 the Events hub and the boss banners */
+.ev3{gap:6px}.ev3 button{flex:1 1 0;min-width:0;padding-left:4px;padding-right:4px;white-space:nowrap;font-size:14px;letter-spacing:0;overflow:hidden;text-overflow:ellipsis}
 .hubsw{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px;border-radius:14px;border:1px solid var(--line);background:rgba(6,14,22,.7);margin-bottom:8px}
 .hubsw button{position:relative;padding:10px 6px;border-radius:10px;border:0;background:transparent;color:var(--muted);font:700 14px var(--f-display,sans-serif);letter-spacing:.04em}
 .hubsw button.on{background:linear-gradient(180deg,rgba(85,214,232,.22),rgba(85,214,232,.08));color:var(--cyan);box-shadow:inset 0 0 0 1px rgba(85,214,232,.5)}
@@ -4954,7 +4955,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 547;
+const GAME_V = 548;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8981,10 +8982,12 @@ function cqClaimable(T = now()) { const lw = cqWeek(T) - 1; if (!S.ally || S.cq 
 /* v539 Events lives in the hub (the dock's Events tab); a boss event shows only in its week, while live, or with rewards waiting */
 const evState = () => sheet && sheet.type === "events" ? sheet : (sub.ev = sub.ev || {});
 const evShow = (key, T = now()) => { const g = key === "eboss" ? 3 : key === "tboss" ? 2 : key === "sboss" ? 1 : 0; if (!g) return true; try { return wbGroupOn(g, T) || wbGroupNext(g, T) - T <= 7 * 864e5 || sbReady(g) > 0; } catch (e) { return true; } };
+/* v548 the single tab bar: the event's Overview and Ranking, and (in the hub) the galaxy Leaderboards */
+const evTabsHTML = (tab, hub) => `<div class="evtabs${hub ? " ev3" : ""}"><button class="${tab === "ov" ? "on" : ""}" data-act="evTab" data-v="ov">Overview</button><button class="${tab === "rk" ? "on" : ""}" data-act="evTab" data-v="rk">Ranking</button>${hub ? `<button class="${tab === "lb" ? "on" : ""}" data-act="hubTab" data-v="rk">🏆 Leaderboard</button>` : ""}</div>`;
 function shEvents(inline) {
   const T = now(), E = evState(), tab = E.evTab === "rk" ? "rk" : "ov", VIS = EVS.filter(e => (e[0] !== "gifts" || myAlly()) && evShow(e[0], T)), k = VIS.some(e => e[0] === E.ev) ? E.ev : (VIS[0] || ["cube"])[0];
   const chips = `<div class="evchips evhub">${VIS.map(([key, n, ic]) => { const c = evCount(key); return `<button class="evcard ec-${key}${key === k ? " on" : ""}" data-act="evPick" data-v="${key}"><span class="eci">${ic}</span><span class="ecn">${n}</span>${c ? `<i class="ecb">${c}</i>` : ""}</button>`; }).join("")}</div>`;
-  const tabs = `<div class="evtabs"><button class="${tab === "ov" ? "on" : ""}" data-act="evTab" data-v="ov">Overview</button><button class="${tab === "rk" ? "on" : ""}" data-act="evTab" data-v="rk">Ranking</button></div>`;
+  const tabs = evTabsHTML(inline ? tab : tab, inline); /* v548 one bar */
   let body = "", claim = "";
   if (k === "gw") { const i = gwIdx(T), g = gwState(T), live = gwLive(T), cl = gwClaimable(T), fmtD = x => new Date(x).toISOString().replace("T", " ").slice(0, 19).replace(/-/g, "/");
     if (tab === "ov") body = `<div class="evinfo"><h4>Event Time:</h4><p>${fmtD(gwStart(i))} ~ ${fmtD(gwEnd(i) - 1000)} UTC${live ? "" : ` · next: ${fmtD(gwStart(i + 1))}`}</p>
@@ -17515,8 +17518,8 @@ function stationArrive(f, p) {
   sendInbox(p.owner, { id: "g" + f.id + hash(G.me), at: f.arrive, kind: "guardIn", title: `Guards arrived at ${p.name}`, aUids: [G.me], dName: p.name, start: { a: {}, d: {} }, rounds: [], winner: "d", lossA: {}, lossD: {} });
 }
 /* the Rankings tab: the same leaderboards as before, now a full screen of their own */
-function vRank() { sub.rk = sub.rk || { tab: "players" }; const h = sub.hub === "rk" ? "rk" : "ev", n = EVS.reduce((a, e) => a + (evShow(e[0]) ? evCount(e[0]) : 0), 0); /* v539 Events and Rankings in one hub */
-  return `<div class="gstack rankv"><div class="hubsw"><button class="${h === "ev" ? "on" : ""}" data-act="hubTab" data-v="ev">🏆 Events${n ? `<i>${n}</i>` : ""}</button><button class="${h === "rk" ? "on" : ""}" data-act="hubTab" data-v="rk">📊 Rankings</button></div>${h === "rk" ? shRanks(sub.rk) : `<div class="evhubv sheet-like">${shEvents(true)}</div>`}</div>`; }
+function vRank() { sub.rk = sub.rk || { tab: "players" }; const h = sub.hub === "rk" ? "rk" : "ev"; /* v539 the hub; v548 one tab bar */
+  return `<div class="gstack rankv">${h === "rk" ? `${evTabsHTML("lb", true)}${shRanks(sub.rk)}` : `<div class="evhubv sheet-like">${shEvents(true)}</div>`}</div>`; }
 /* the Alliances tab: your alliance (or found / join one), the alliance depot for joint defense, open joint strikes and
    the alliance leaderboard */
 /* the alliance list, laid out like the classic alliance screen: a name search, a ranked table (rank, alliance and its leader,
@@ -22945,7 +22948,7 @@ const ACT = {
   vpTitle: d => { S.vpTitle = d.v || null; dirty(); try { syncPlayer(); } catch (e) {} renderSheet(); },
   vpPrem: () => act(() => { const v = vpState(); if (v.pr) return; if ((S.shards || 0) < VP_PREM) return toast(`Premium costs ◆${VP_PREM} Void Shards.`, "warn"); S.shards -= VP_PREM; v.pr = 1; bump("shopBuys"); vipAdd(VP_PREM * 10); toast("Void Pass Premium unlocked! Claim the premium rewards for every tier you've reached.", "win"); try { SFX.fanfare(true); } catch (e) {} }),
   evPick: d => { evState().ev = d.v; sheet && sheet.type === "events" ? renderSheet() : render(true); },
-  evTab: d => { evState().evTab = d.v; sheet && sheet.type === "events" ? renderSheet() : render(true); },
+  evTab: d => { evState().evTab = d.v; if (!(sheet && sheet.type === "events")) sub.hub = "ev"; sheet && sheet.type === "events" ? renderSheet() : render(true); },
   sbPick: d => { evState().sbK = d.k; sheet && sheet.type === "events" ? renderSheet() : render(true); }, /* v539 */
   hubTab: d => { sub.hub = d.v === "rk" ? "rk" : "ev"; render(); },
   gwClaim: () => act(() => { const T = now(), g = gwState(T), cl = gwClaimable(T); let n = 0;
