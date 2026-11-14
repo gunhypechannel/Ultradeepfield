@@ -690,6 +690,20 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 .bbs img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%;opacity:.75}.bbs::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(4,7,12,.92))}
 .bbs b,.bbs small{position:absolute;left:6px;right:4px;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bbs b{bottom:16px;font-size:11px}.bbs small{bottom:3px;font-size:10px;color:#c7d3dc}
 .bbs.on{border-color:var(--bc);box-shadow:0 0 12px color-mix(in srgb,var(--bc) 60%,transparent),inset 0 0 0 1px var(--bc)}.bbs.on img{opacity:1}.bbs.live small{color:#5dff9a}.bbs.down img{filter:grayscale(.8)}
+/* v540 the long shop */
+.shopstrip.sticky{position:sticky;top:-1px;z-index:5;margin:0 -2px;padding:6px 2px 8px;background:#08121c;box-shadow:0 -40px 0 0 #08121c,0 8px 12px -6px rgba(0,0,0,.7)}
+.ssec{display:flex;flex-direction:column;gap:9px;scroll-margin-top:70px;margin-top:6px}
+.ssech{display:flex;align-items:center;gap:8px;margin:8px 0 0;font:700 15px var(--f-display,sans-serif);letter-spacing:.1em;text-transform:uppercase;color:#e9f1f7}
+.ssech i{font-style:normal;color:var(--cyan)}.ssech::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(85,214,232,.5),transparent)}
+.stiles{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.stiles .scard{grid-template-columns:1fr;gap:6px;padding:8px;align-content:start}
+.stiles .scard>.sart{width:100%;height:auto;aspect-ratio:4/3;font-size:38px;border-radius:10px}
+.stiles .sbody{gap:4px;height:100%}.stiles .sbody>b{font-size:13.5px;line-height:1.2}
+.stiles .sbody small{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:11.5px}
+.stiles .schips button{font-size:8.5px;padding:2px 5px}
+.stiles .sbuy{margin-top:auto;flex-wrap:wrap;gap:4px}.stiles .sbuy .btn{flex:1 0 auto}
+.stiles .sbadge{top:12px;right:12px;font-size:9px}
+.send{text-align:center;padding:14px 0 6px}
 .shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .sitem{position:relative;display:flex;flex-direction:column;gap:5px;padding:10px;border-radius:12px;border:1px solid color-mix(in srgb,var(--tc) 45%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 16%,transparent),rgba(8,18,28,.9) 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
 .sitem b{font-size:14px}.sitem small{font-size:12px;color:var(--muted);flex:1;line-height:1.35}
@@ -4798,13 +4812,22 @@ function wheelGrant() { if (S.wheelPend == null) return; const W = WHEEL[S.wheel
   document.addEventListener("pointerup", () => { if (!D) return; release(D.p > .55 || !D.moved); });
   document.addEventListener("pointercancel", () => { if (D) release(false); });
   document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && document.activeElement === lev() && !lev().classList.contains("off")) { e.preventDefault(); release(true); } }); })();
-function shShop() {
+/* v540 the long shop: scroll to a section, and light up the section being read */
+function shopJump(k, instant) { const el = document.getElementById("ssec-" + k); if (!el) return; const sc = shopScroller(el); if (!sc) return el.scrollIntoView({ block: "start" }); const strip = document.querySelector(".shopstrip.sticky"), off = strip ? strip.offsetHeight + 8 : 8;
+  G.shopJ = performance.now(); sc.scrollTo({ top: sc.scrollTop + el.getBoundingClientRect().top - sc.getBoundingClientRect().top - off, behavior: instant ? "instant" : "smooth" }); shopLight(k); }
+function shopScroller(el) { for (let p = el.parentElement; p; p = p.parentElement) { const cs = getComputedStyle(p); if (/(auto|scroll)/.test(cs.overflowY) && p.scrollHeight > p.clientHeight + 4) return p; } return null; }
+function shopLight(k) { for (const b of document.querySelectorAll(".shopstrip.sticky button")) { const on = b.dataset.sec === k; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); if (on && b.parentElement) { const st = b.parentElement, x = b.offsetLeft - st.clientWidth / 2 + b.offsetWidth / 2; st.scrollTo({ left: x, behavior: "smooth" }); } } if (sheet && sheet.type === "shop" && sheet.cat !== "inv") sheet.cat = k; }
+function shopWire() { const first = document.querySelector(".ssec"); if (!first) return; const sc = shopScroller(first); if (!sc || sc._shopW) { if (sheet && sheet.jump) { const j = sheet.jump; sheet.jump = null; [30, 350, 800].forEach(d => setTimeout(() => shopJump(j, true), d)); } return; } sc._shopW = 1;
+  sc.addEventListener("scroll", () => { if (performance.now() - (G.shopJ || 0) < 700) return; const top = sc.getBoundingClientRect().top + 90; let cur = null; for (const e of document.querySelectorAll(".ssec")) if (e.getBoundingClientRect().top <= top) cur = e.dataset.sec; if (cur && cur !== G.shopCur) { G.shopCur = cur; shopLight(cur); } }, { passive: true });
+  if (sheet && sheet.jump) { const j = sheet.jump; sheet.jump = null; [30, 350, 800].forEach(d => setTimeout(() => shopJump(j, true), d)); } }
+function shShop() { setTimeout(shopWire, 0);
   if (sheet.cat === "packs" && !G.pkSeen) { G.pkSeen = 1; packsDeliver(); }
   const cat = sheet.cat = sheet.cat || (window.udfShop && G.mode === "online" ? "packs" : "boost"), it = S.items || {}, T = now(), inv = Object.keys(it).filter(k => it[k] > 0 && SHOP[k]), invN = inv.reduce((a, k) => a + it[k], 0), sh = S.shards || 0;
   const bars = Object.keys(BUFF_N).filter(k => buffOn(k)).map(k => { const u = buffs()[k].until, span = k[0] === "b" && k.length === 2 ? 7 * DAY : 30 * DAY; return `<div class="sbar"><i style="width:${Math.min(100, (u - T) / span * 100).toFixed(1)}%"></i><b>${esc(BUFF_N[k])}${buffPct(k) ? ` +${buffPct(k)}%` : ""}</b><span data-end="${u}">${ftime(u - T)}</span></div>`; })
     .concat(cmdClass() ? [`<div class="sbar cls"><i style="width:100%"></i><b>${esc(SHOP["cl_" + cmdClass()].n)}</b><span>Permanent</span></div>`] : []);
   const free = (S.shopFree || "") !== shopDay();
-  const strip = `<div class="shopstrip" role="tablist">${[["packs", "Packs"]].concat(SHOP_CATS).concat([["skins", "Planet skins"]]).map(([k, l]) => `<button role="tab" aria-selected="${k === cat}" class="${k === cat ? "on" : ""}" data-act="shopCat" data-v="${k}"><i>${SHOP_CI[k] || "✦"}</i>${esc(l.replace(/^[♛◆]\s*/, ""))}</button>`).join("")}</div>`;
+  const SECS = (window.udfShop && G.mode === "online" ? [["packs", "Packs"]] : []).concat(SHOP_CATS.filter(([k]) => k === "vip" || Object.values(SHOP).some(x => x.cat === k))).concat([["skins", "Planet skins"]]); /* v540 one long page */
+  const strip = `<div class="shopstrip sticky" role="tablist">${SECS.map(([k, l]) => `<button role="tab" aria-selected="${k === cat}" class="${k === cat ? "on" : ""}" data-act="shopCat" data-v="${k}" data-sec="${k}"><i>${SHOP_CI[k] || "✦"}</i>${esc(l.replace(/^[♛◆]\s*/, ""))}</button>`).join("")}</div>`;
   const art = (k, s) => { const a = shopArtOf(k); return a ? `<span class="sart" style="background-image:url(${a})"></span>` : `<span class="sart g" style="--tc:${s.col || "#55d6e8"}">${s.ic.length === 1 && "mcg".includes(s.ic) ? RI[s.ic] : s.ic}</span>`; };
   const buyBtn = (k, s, c) => s.cost ? `<button class="btn amber sm" data-act="buy" data-k="${k}" ${sh >= (c || s.cost) ? "" : "disabled"}>◆${c || s.cost}</button>` : `<span class="note">Packs & events</span>`;
   const one = (k, s, extra) => `<div class="scard" data-card="${k}" style="--tc:${s.col || "#55d6e8"}">${art(k, s)}<div class="sbody"><b>${esc(s.n)}</b>${extra || ""}<small>${s.d()}</small><div class="sbuy">${it[k] ? `<span class="own">Owned ×${it[k]}${s.use ? ` · <a data-act="useItem" data-k="${k}">Use now</a>` : ""}</span>` : "<span></span>"}${buyBtn(k, s)}</div></div></div>`;
@@ -4815,15 +4838,16 @@ function shShop() {
       const chips = `<div class="schips">${L.map(([, x], i) => `<button class="${i === sel ? "on" : ""}" style="--cc:${x.col}" data-act="shopTier" data-g="${esc(g)}" data-i="${i}">${/_(\d+)$/.test(L[i][0]) ? L[i][0].match(/_(\d+)$/)[1] + " days" : ITIERS[x.tier] ? ITIERS[x.tier][1] : x.tier}</button>`).join("")}</div>`;
       const badge = best === sel ? `<em class="sbadge best">Best value</em>` : sel === 1 && L.length > 2 ? `<em class="sbadge pop">Popular</em>` : save > 0 ? `<em class="sbadge sv">Save ${save}%</em>` : "";
       return one(k, s, chips + badge); }).join(""); };
-  let body;
-  if (cat === "packs") body = packsBody();
+  let body; const secBody = k => k === "packs" ? packsBody() : k === "skins" ? `<p class="note">Premium looks for any world you hold. Buy once with Void Shards, then apply from Rename & reskin on the planet. Each adds a small production perk to the world wearing it.</p>${pxGrid("shop")}` : k === "vip" ? vipShopBody() : `<div class="sgrid2 stiles">${grouped(Object.entries(SHOP).filter(([, s]) => s.cat === k))}</div>`;
+  if (cat !== "inv") body = SECS.map(([k, l]) => `<section class="ssec" id="ssec-${k}" data-sec="${k}"><h3 class="ssech"><i>${SHOP_CI[k] || "✦"}</i>${esc(l.replace(/^[♛◆]\s*/, ""))}</h3>${secBody(k)}</section>`).join("") + `<p class="note send">That's the whole shop. New items arrive with updates.</p>`;
+  else if (cat === "packs") body = packsBody();
   else if (cat === "skins") body = `<p class="note">Premium looks for any world you hold. Buy once with Void Shards, then apply from Rename & reskin on the planet. Each adds a small production perk to the world wearing it.</p>${pxGrid("shop")}`;
   else if (cat === "inv") body = inv.length ? `<div class="shopgrid">${inv.map(k => { const s = SHOP[k]; return `<div class="sitem" style="--tc:${s.col || "#55d6e8"}"><div class="sit">${art(k, s)}${s.tier != null && ITIERS[s.tier] ? `<i class="tier">${ITIERS[s.tier][1]}</i>` : ""}</div><b>${esc(s.n)} ×${it[k]}</b><small>${s.d()}</small><div class="sbuy"><span></span>${s.use ? `<span class="useb">${it[k] > 1 && useAllOk(k) ? `<button class="btn ghost sm" data-act="useAll" data-k="${k}">Use all</button>` : ""}<button class="btn sm" data-act="useItem" data-k="${k}">Use</button></span>` : `<span class="own">${k === "probe5" ? "Used when you launch probes" : k === "teleport" ? "Use from an empty orbit" : "Use from a planet card"}</span>`}</div></div>`; }).join("")}</div>` : '<p class="note">Your inventory is empty. Items you buy, and spoils from pirate raids, land here.</p>';
   else if (cat === "vip") body = vipShopBody();
   else body = `<div class="sgrid2">${grouped(Object.entries(SHOP).filter(([, s]) => s.cat === cat))}</div>`;
   const D = shopDeal(), deal = D && cat !== "inv" ? `<div class="sdeal" style="--tc:${D.s.col || "#ffcf5a"}">${shopArtOf(D.k) ? `<span class="sdart" style="background-image:url(${shopArtOf(D.k)})"></span>` : ""}<div class="sdtx"><small>DEAL OF THE DAY · ends in <b data-end="${shopDayEnd()}">${ftime(shopDayEnd() - T)}</b></small><b>${esc(D.s.n)}${ITIERS[D.s.tier] ? ` · ${ITIERS[D.s.tier][1]}` : ""}</b><span>${D.s.d()}</span></div>
     <div class="sdbuy"><s>◆${D.s.cost}</s>${D.bought ? `<span class="pill ok">Bought today</span>` : `<button class="btn amber" data-act="buyDeal" ${sh >= D.cost ? "" : "disabled"}>◆${D.cost}</button>`}<em>−35%</em></div></div>` : "";
-  const fy = ["boost", "accel", "res", "special"].includes(cat) ? shopForYou() : [], forYou = fy.length ? `<h3 class="viph">For you</h3><div class="sfy">${fy.map(([k, why]) => `<div class="sfyc" data-card="${k}" style="--tc:${SHOP[k].col || "#55d6e8"}">${art(k, SHOP[k])}<div><small>${esc(why)}</small><b>${esc(SHOP[k].n)}${ITIERS[SHOP[k].tier] ? ` · ${ITIERS[SHOP[k].tier][1]}` : ""}</b></div>${buyBtn(k, SHOP[k])}</div>`).join("")}</div>` : "";
+  const fy = cat !== "inv" ? shopForYou() : [], forYou = fy.length ? `<h3 class="viph">For you</h3><div class="sfy">${fy.map(([k, why]) => `<div class="sfyc" data-card="${k}" style="--tc:${SHOP[k].col || "#55d6e8"}">${art(k, SHOP[k])}<div><small>${esc(why)}</small><b>${esc(SHOP[k].n)}${ITIERS[SHOP[k].tier] ? ` · ${ITIERS[SHOP[k].tier][1]}` : ""}</b></div>${buyBtn(k, SHOP[k])}</div>`).join("")}</div>` : "";
   return `<div class="hd"><div><div class="chapter">Void Shop</div><h2><span class="shard">◆</span> ${fmt(sh)} Void Shards</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
     ${S.wheelPend != null && !G.wheel ? (setTimeout(wheelGrant, 60), "") : ""}${cat !== "inv" ? wheelHTML(T) : ""}<div class="shead"><button class="btn ghost sm${cat === "inv" ? " on" : ""}" data-act="shopCat" data-v="inv">Inventory · ${invN}</button></div>
     ${bars.length ? `<div class="sbars">${bars.join("")}</div>` : ""}${deal}${strip}${forYou}${body}`;
@@ -4881,7 +4905,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 539;
+const GAME_V = 540;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -22263,7 +22287,7 @@ const ACT = {
     cineBar(); } },
   fBoost: d => act(() => { const f = S.fleets.find(x => x.id === d.id); if (!f || f.assault) return; const c = fbCost(f); if (S.shards < c) return toast(`Afterburners need ◆${c}.`, "warn"); if (fleetSpeedUp(f)) { S.shards -= c; S.tutRush = 1; toast(`Afterburners lit: the rest of the trip is 50% faster.${c ? "" : " This one is on the Academy."}`, "win"); } }),
   fFuel: d => act(() => { const f = S.fleets.find(x => x.id === d.id), s = SHOP[d.k]; if (!f || f.assault || !s || !s.fuelMs || !((S.items || {})[d.k] > 0)) return; if (fleetSpeedUp(f, s.fuelMs)) { S.items[d.k]--; S.tutRush = 1; spdAdd(s.fuelMs); toast(`Afterburner Fuel burned: ${s.fuelL} cut.`, "win"); } }), /* v534 */
-  shopFuel: () => openSheet({ type: "shop", cat: "accel" }),
+  shopFuel: () => openSheet({ type: "shop", cat: "accel", jump: "accel" }),
   fBoostItem: d => act(() => { const f = S.fleets.find(x => x.id === d.id); if (!f || f.assault || !(S.boosts > 0)) return; if (fleetSpeedUp(f, 5 * 60000)) { S.boosts--; S.tutRush = 1; spdAdd(300000); toast("Boost used: 5 minutes cut."); } }),
   recallG: d => act(() => { // stop gathering early: fly home with what is loaded so far
     const f = S.fleets.find(x => x.id === d.id); if (!f || f.phase !== "gather") return; const T = now(), h = f.haul || { res: "m", amt: 0 }, fr = clamp((T - f.arrive) / Math.max(1, f.gend - f.arrive), 0, 1);
@@ -22718,7 +22742,7 @@ const ACT = {
   vipBuyUse: d => act(() => { const s = SHOP[d.k]; if (!s || s.cat !== "vip") return; const it = S.items || {};
     if (!(it[d.k] > 0)) { if ((S.shards || 0) < s.cost) return toast(`That costs ◆${s.cost}.`, "warn"); S.shards -= s.cost; bump("shopBuys"); } else { it[d.k]--; if (!it[d.k]) delete it[d.k]; }
     toast(s.use(), "win"); }),
-  shopCat: d => { if (sheet && sheet.type === "shop") { sheet.cat = d.v; renderSheet(); } },
+  shopCat: d => { if (!(sheet && sheet.type === "shop")) return; const was = sheet.cat; sheet.cat = d.v; if (d.v === "inv" || was === "inv") { sheet.jump = d.v === "inv" ? null : d.v; renderSheet(); } else shopJump(d.v); }, /* v540 the strip scrolls the long page */
   shopTier: d => { G.shopSel = G.shopSel || {}; G.shopSel[d.g] = +d.i; if (sheet && sheet.type === "shop") renderSheet(); }, /* v525 */
   shopFree: () => wheelPull(), shopFreeOld: () => act(() => { if ((S.shopFree || "") === shopDay()) return; S.shopFree = shopDay(); const r = Math.random(); let msg;
     if (r < .4) { const n = 1 + (Math.random() < .35 ? 1 : 0); S.shards = (S.shards || 0) + n; msg = `◆${n} Void Shard${n > 1 ? "s" : ""}`; } else if (r < .7) { giveItem("boost5"); msg = SHOP.boost5.n; } else { const k = ["crateM", "crateC", "crateG"][(Math.random() * 3) | 0]; giveItem(k); msg = SHOP[k].n; }
