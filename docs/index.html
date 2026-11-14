@@ -753,6 +753,11 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 .chron{border-color:rgba(226,196,138,.55);background:linear-gradient(160deg,rgba(226,196,138,.12),rgba(8,14,22,.92) 55%)}.chron header{display:flex;flex-direction:column;gap:2px}.chron header span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#e2c48a}.chron header b{font:800 19px var(--f-display,sans-serif)}
 .chsay{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:start;margin:8px 0}.chsay img{width:44px;height:44px;border-radius:50%;object-fit:cover;object-position:50% 15%;border:1px solid rgba(226,196,138,.6)}.chsay p{margin:0;font-size:13.5px;font-style:italic;color:#e9f1f7}
 .chron .vpm{margin-top:6px}.chron .rw{margin-top:10px}
+/* v550 the owner's art */
+.chart{margin:8px 0 2px;aspect-ratio:2/1;border-radius:10px;background:center 35%/cover no-repeat;border:1px solid rgba(226,196,138,.45);box-shadow:0 4px 18px rgba(0,0,0,.45)}
+.vpban.art{min-height:0}.vpban.art .vpglyph,.vpban.art .vpbot>b{display:none}.vpart{position:relative;aspect-ratio:3.2/1;background:url(art/ev/vpass.webp) center/cover no-repeat}
+.vpart::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(5,7,15,.9),rgba(5,7,15,0) 35%)}.vpban.art .vpbot{padding-top:4px;max-width:none;padding-right:96px}
+.cqban .cqart{grid-column:1/-1;margin:-10px -10px 0;aspect-ratio:4.2/1;background:url(art/ev/conquest.webp) center/cover no-repeat;border-bottom:1px solid rgba(122,244,255,.35)}
 .shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .sitem{position:relative;display:flex;flex-direction:column;gap:5px;padding:10px;border-radius:12px;border:1px solid color-mix(in srgb,var(--tc) 45%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 16%,transparent),rgba(8,18,28,.9) 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
 .sitem b{font-size:14px}.sitem small{font-size:12px;color:var(--muted);flex:1;line-height:1.35}
@@ -4811,7 +4816,9 @@ async function packsDeliver() { try { packShardFix(); } catch (e) {} if (!window
 const SHOP_ART = { bm: "metalMine", bc: "crystalMine", bg: "gasSynth", be: "solar", xb: "robotics", xs: "shipyard", xr: "lab", pm: "metalStore", pc: "crystalStore", pg: "gasTank", pAll: "logistics",
   f: "terraformer", mf: "lunarBase", o_commander: "command", o_admiral: "flagDock", o_engineer: "energyT", o_geologist: "crystalMine", o_technocrat: "computer", o_staff: "command",
   cl_collector: "robotics", cl_general: "dreadnought", cl_discoverer: "astro", crateM: "metalStore", crateC: "crystalStore", crateG: "gasTank", boost5: "impulse", bf: "hyper", xf: "drive", probe5: "spyProbe", chart: "radar",
-  repairKit: "repairYard", pirIntel: "espionage", teleport: "jumpGate", moonSeed: "lunarBase" };
+  repairKit: "repairYard", pirIntel: "espionage", teleport: "jumpGate", moonSeed: "lunarBase",
+  runes3: "shop/runes", vipAct1: "shop/vip1", vipAct7: "shop/vip7", vipAct30: "shop/vip30", vipPts100: "shop/vp100", vipPts500: "shop/vp500", vipPts2500: "shop/vp2500", vipPts10k: "shop/vp10k", /* v550 */
+  mb1: "shop/mb1", mb2: "shop/mb2", mb3: "shop/mb3", mb4: "shop/mb4", mb5: "shop/mb5", mb6: "shop/mb6" };
 const shopArtOf = k => { const b = k.replace(/_(bronze|silver|gold|platinum|7|30)$/, ""), a = SHOP_ART[b] || SHOP_ART[b.replace(/_[a-z]+$/, "")]; return a ? `art/${a}.webp` : null; };
 const SHOP_UNITS = { boost: i => i + 1, accel: i => [.5, 2, 8][i], res: i => [6, 24, 72][i], planet: i => [4, 9, 15][i] };
 const SHOP_CI = { packs: "◆", vip: "♛", boost: "⇑", accel: "⏩", res: "⬢", forge: "⚒", planet: "⬚", officer: "✪", class: "⚔", special: "✦", skins: "◐" };
@@ -4955,7 +4962,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 549;
+const GAME_V = 550;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8940,7 +8947,7 @@ const vpAgState = () => { const si = vpSeason(); if (!S.vpAg || S.vpAg.s !== si)
 const vpAgReady = () => { if (!S.ally) return []; const x = vpAllyXP(), g = vpAgState(); return VP_AG.map((m, i) => i).filter(i => x >= VP_AG[i][0] && !g.got.includes(i)); };
 const vpReady = () => { try { const v = vpState(), lv = Math.min(VP_TIERS, Math.floor(v.xp / VP_XP)); let n = 0; for (let i = 0; i < lv; i++) { if (!v.cf.includes(i)) n++; if (v.pr && !v.cp.includes(i)) n++; } return n + vpAgReady().length; } catch (e) { return 0; } };
 function vpBanner(T) { const v = vpState(T), si = vpSeason(T), [nm, col] = vpInfo(si), lv = Math.min(VP_TIERS, Math.floor(v.xp / VP_XP)), into = lv >= VP_TIERS ? VP_XP : v.xp - lv * VP_XP;
-  return `<div class="evban vpban" style="--vc:${col}"><div class="vpglyph" aria-hidden="true">${"ᚠᚱᛉᛗᚲᛟᚷᛞ".split("").map((g, i) => `<i style="--a:${i * 45}deg">${g}</i>`).join("")}</div>
+  return `<div class="evban vpban art" style="--vc:${col}"><div class="vpart" aria-hidden="true"></div><div class="vpglyph" aria-hidden="true">${"ᚠᚱᛉᛗᚲᛟᚷᛞ".split("").map((g, i) => `<i style="--a:${i * 45}deg">${g}</i>`).join("")}</div>
     <div class="vptop"><span class="vlive on">SEASON ${si + 1}</span><small>Ends in <b data-end="${vpEnd(si)}">${ftime(vpEnd(si) - T)}</b></small></div>
     <div class="vpbot"><b>Void Pass</b><em>${esc(nm)}</em><div class="vplv"><span>Tier <b>${lv}</b>/${VP_TIERS}</span><div class="vpxp"><i style="width:${(into / VP_XP * 100).toFixed(1)}%"></i></div><small>${fmt(into)} / ${fmt(VP_XP)} XP</small></div></div>${v.pr ? '<span class="vpprem">♛ PREMIUM</span>' : ""}</div>`; }
 function vpBody(T) { const v = vpState(T), lv = Math.min(VP_TIERS, Math.floor(v.xp / VP_XP)), si = vpSeason(T), skin = vpInfo(si)[2];
@@ -8971,7 +8978,7 @@ function cqSvg(M) { const R = [0, 32, 55, 80, 110, 140, 172], cx = 180, cy = 180
     out += `<path d="${arc(Math.max(r0, 6), r1 - 1.5, a0, a1)}" fill="${aid ? cqCol(aid) : "rgba(255,255,255,.04)"}" fill-opacity="${aid ? (mine ? .85 : .55) : 1}" stroke="${mine ? "#fff" : "rgba(122,244,255,.18)"}" stroke-width="${mine ? 1.6 : .6}"><title>${esc(LAYERS[ln - 1].name)} · lane ${sl + 1}${aid && G.alliances[aid] ? " · [" + esc(G.alliances[aid].tag) + "]" : " · unclaimed"}</title></path>`; } }
   return `<svg class="cqmap" viewBox="0 0 360 360" role="img" aria-label="Sector control map">${out}<circle cx="${cx}" cy="${cy}" r="6" fill="#c94ad6"/></svg>`; }
 function cqBanner(T) { const M = cqMap(), top = M.rank.slice(0, 3);
-  return `<div class="evban cqban">${cqSvg(M)}<div class="cqtx"><span class="vlive on">⚑ WEEK ${cqWeek(T) + 1}</span><b>Alliance Conquest</b><small>Ends in <b data-end="${cqEnd()}">${ftime(cqEnd() - T)}</b></small>
+  return `<div class="evban cqban"><div class="cqart" aria-hidden="true"></div>${cqSvg(M)}<div class="cqtx"><span class="vlive on">⚑ WEEK ${cqWeek(T) + 1}</span><b>Alliance Conquest</b><small>Ends in <b data-end="${cqEnd()}">${ftime(cqEnd() - T)}</b></small>
     <div class="cqleg">${top.map(([aid, p], i) => `<span><i style="background:${cqCol(aid)}"></i>${["🥇", "🥈", "🥉"][i]} [${esc((G.alliances[aid] || {}).tag || "?")}] ${p}</span>`).join("") || "<span>No sector held yet</span>"}</div></div></div>`; }
 function cqBody(T, tab) { const M = cqMap(), my = S.ally && M.pts[S.ally] || 0, myR = S.ally ? M.rank.findIndex(r => r[0] === S.ally) + 1 : 0, lw = cqWeek(T) - 1, cl = S.cq === lw;
   if (tab === "rk") return `<div class="evrank"><div class="evrh"><span>Rank</span><span>Alliance</span><span>Control</span></div>${M.rank.slice(0, 50).map(([aid, p], i) => `<div class="evrr${aid === S.ally ? " me" : ""}"><span>${i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1 + "."}</span><span><i class="cqdot" style="background:${cqCol(aid)}"></i>[${esc((G.alliances[aid] || {}).tag || "?")}] ${esc((G.alliances[aid] || {}).name || "")}</span><span>${p}</span></div>`).join("") || '<p class="note" style="padding:10px">No alliance holds a sector yet.</p>'}</div>`;
@@ -16452,9 +16459,9 @@ const CHRON = [{"t": "The Silent Signal", "say": "Commander, our listening posts
 const chStat = k => k === "arch" ? ARCH_ORD.filter(x => archLv(x)).length : k === "worlds" ? myPlanets().length : vpStat(k);
 function chState() { if (!S.chron) { S.chron = { c: 0, base: {} }; for (const m of CHRON[0].m) S.chron.base[m[0]] = chStat(m[0]); dirty(); } return S.chron; }
 const chProg = (C, m) => m[0] === "worlds" ? Math.min(m[1], chStat("worlds")) : Math.min(m[1], Math.max(0, chStat(m[0]) - (C.base[m[0]] || 0)));
-function chronHTML() { if (!S || !S.tut || S.tut.k !== "done") return ""; const C = chState(); if (C.c >= CHRON.length) return `<article class="card chron done"><header>📖 Chronicles · complete</header><p>${esc(CHRON[CHRON.length - 1].end)}</p></article>`;
+function chronHTML() { if (!S || !S.tut || S.tut.k !== "done") return ""; const C = chState(); if (C.c >= CHRON.length) return `<article class="card chron done"><header>📖 Chronicles · complete</header><div class="chart" style="background-image:url(art/chron/c6.webp)"></div><p>${esc(CHRON[CHRON.length - 1].end)}</p></article>`;
   const ch = CHRON[C.c], ms = ch.m.map(m => [m, chProg(C, m)]), all = ms.every(([m, p]) => p >= m[1]);
-  return `<article class="card chron${all ? " hi" : ""}"><header><span>📖 Chronicles · Chapter ${C.c + 1} of ${CHRON.length}</span><b>${esc(ch.t)}</b></header>
+  return `<article class="card chron${all ? " hi" : ""}"><header><span>📖 Chronicles · Chapter ${C.c + 1} of ${CHRON.length}</span><b>${esc(ch.t)}</b></header><div class="chart" style="background-image:url(art/chron/c${C.c + 1}.webp)"></div>
     <div class="chsay"><img src="${ADV_ART}" alt=""><p>${esc(ch.say)}</p><button class="btn ghost sm" data-act="chPlay" aria-label="Hear the briefing">▶</button></div>
     ${ms.map(([m, p]) => `<div class="vpm${p >= m[1] ? " done" : ""}"><div><b>${esc(m[2])}</b><div class="vpmb"><i style="width:${(p / m[1] * 100).toFixed(0)}%"></i></div></div><span>${p >= m[1] ? "✓" : `${fmt(p)}/${fmt(m[1])}`}</span></div>`).join("")}
     <div class="rw"><span class="cost"><span class="shard">◆${ch.rw.shards}</span> · ${esc(SHOP[ch.rw.item] ? SHOP[ch.rw.item].n : "")}${ch.rw.title ? ` · Title “${esc(ch.rw.title)}”` : ""}</span><button class="btn ${all ? "amber" : "ghost"}" data-act="chClaim" ${all ? "" : "disabled"}>${all ? "Complete chapter" : "In progress"}</button></div></article>`; }
@@ -19310,7 +19317,7 @@ function mShop() {
   const mk = r => { const f = depF(r), y = depF(r, 1), up = f >= y; return `<div class="dpm${r === hot ? " hot" : ""}"><span class="r-${r}">${RI[r]}</span><div><b>${RES_N[r]}</b><small>${(f * 100 - 100 >= 0 ? "+" : "") + (f * 100 - 100).toFixed(1)}% today</small></div>${depSpark(r)}<em class="${up ? "up" : "dn"}">${up ? "▲" : "▼"}</em>${r === hot ? '<i>HOT TODAY</i>' : ""}</div>`; };
   const tile = (key, act) => `<div class="dpt">${["m", "c", "g"].map(r => `<button class="${tr[key] === r ? "on" : ""}" data-act="${act}" data-r="${r}"><span class="r-${r}">${RI[r]}</span><b>${RES_N[r]}</b><small>${fmt(Math.floor(S.res[r]))}</small></button>`).join("")}</div>`;
   const log = (S.trLog || []).slice(0, 6);
-  return `<div class="dpb"><div class="dpbn" style="background-image:url(art/allyDepot.webp)"></div><div class="dpq"><img src="avatars/pilot.webp" alt=""><div><small>QUARTERMASTER ONDRA VEY</small><p>${esc(depLine())}</p></div></div></div>
+  return `<div class="dpb"><div class="dpbn" style="background-image:url(art/allyDepot.webp)"></div><div class="dpq"><img src="avatars/ondra.webp" alt="Quartermaster Ondra Vey"><div><small>QUARTERMASTER ONDRA VEY</small><p>${esc(depLine())}</p></div></div></div>
     <div class="dpc"><div class="dph"><b>Market today</b><span class="note">Base: 1 gas = 2 crystal = 3 metal</span></div><div class="dpmk">${["m", "c", "g"].map(mk).join("")}</div></div>
     ${fix ? `<button class="dpfix" data-act="depFix"><span>⚡ Fix my shortage</span><small>${RES_N[fix.to]} is your lowest. Swap ${fmt(fix.amt)} ${RES_N[fix.from].toLowerCase()} → ${fmt(depGet(fix.from, fix.to, fix.amt))} ${RES_N[fix.to].toLowerCase()}</small></button>` : `<div class="dpfix ok"><span>✓ Your stores are balanced</span><small>Nothing to fix right now.</small></div>`}
     <div class="dpc dptr${stamp ? " stamp" : ""}"><div class="dph"><b>Trade</b><span class="dprk" style="--rc:${R[3]}">${R[0]} trader · ${Math.round(fee * 100)}% cut</span></div>
@@ -20603,9 +20610,10 @@ function bindBattleCam(cv) {
 const bLblOn = () => { if (G.bLbl == null) { try { G.bLbl = localStorage.getItem("udfBLbl") !== "0"; } catch (e) { G.bLbl = true; } } return G.bLbl; };
 
 /* ---------- v544 share a battle as a vertical video ---------- */
-const CLIP_URL = "gunhypechannel.github.io/Ultradeepfield";
+const CLIP_URL = "gunhypechannel.github.io/Ultradeepfield", CLIP_LOGO = new Image(); /* v550 the logo, loaded when a clip starts */
 function clipMime() { if (!window.MediaRecorder) return null; for (const m of ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"]) try { if (MediaRecorder.isTypeSupported(m)) return m; } catch (e) {} return null; }
 function battleClip() { const b0 = battle, cv0 = $("#bcv"), mime = clipMime(); if (!b0 || G.clip) return; if (!cv0 || !mime || !document.createElement("canvas").captureStream) return toast("This browser can't record clips. Try Safari or Chrome on your phone.", "warn");
+  if (!CLIP_LOGO.src) CLIP_LOGO.src = "art/logo-udf.webp";
   const r = b0.r; ACT.breplay(); const b = battle; b.speed = 2; battleCtl(); const W = 720, H = 1280, oc = document.createElement("canvas"); oc.width = W; oc.height = H; const x = oc.getContext("2d");
   const title = String(r.title || "Battle").slice(0, 60), who = `${r.aName || "Attackers"} vs ${r.dName || "Defenders"}`.slice(0, 60), chunks = [];
   let rec; try { rec = new MediaRecorder(oc.captureStream(30), { mimeType: mime, videoBitsPerSecond: 4500000 }); } catch (e) { return toast("Couldn't start recording on this device.", "warn"); }
@@ -20615,11 +20623,11 @@ function battleClip() { const b0 = battle, cv0 = $("#bcv"), mime = clipMime(); i
   const frame = () => { if (G.clip !== C) return; const cv = $("#bcv");
     x.fillStyle = "#03060c"; x.fillRect(0, 0, W, H);
     if (cv && cv.width && cv.height) { const sc = Math.max(W / cv.width, H / cv.height), dw = cv.width * sc, dh = cv.height * sc; try { x.drawImage(cv, (W - dw) / 2, (H - dh) / 2, dw, dh); } catch (e) {} }
-    let g = x.createLinearGradient(0, 0, 0, 260); g.addColorStop(0, "rgba(3,6,12,.92)"); g.addColorStop(1, "rgba(3,6,12,0)"); x.fillStyle = g; x.fillRect(0, 0, W, 260);
+    let g = x.createLinearGradient(0, 0, 0, 260 + oy); g.addColorStop(0, "rgba(3,6,12,.92)"); g.addColorStop(1, "rgba(3,6,12,0)"); x.fillStyle = g; x.fillRect(0, 0, W, 260 + oy);
     g = x.createLinearGradient(0, H - 300, 0, H); g.addColorStop(0, "rgba(3,6,12,0)"); g.addColorStop(1, "rgba(3,6,12,.95)"); x.fillStyle = g; x.fillRect(0, H - 300, W, 300);
-    x.textAlign = "center"; x.fillStyle = "#ffcf5a"; x.shadowColor = "#ffcf5a"; x.shadowBlur = 18; x.font = "800 46px 'Orbitron','Rajdhani',sans-serif"; x.fillText("ULTRA DEEP FIELD", W / 2, 78); x.shadowBlur = 0;
-    x.fillStyle = "#e9f6ff"; const tl = wrap(title, W - 80, "700 30px 'Rajdhani',sans-serif"); tl.slice(0, 2).forEach((l, i) => x.fillText(l, W / 2, 128 + i * 36));
-    x.fillStyle = "#9fdcff"; x.font = "500 24px 'Rajdhani',sans-serif"; x.fillText(who, W / 2, 128 + Math.min(2, tl.length) * 36 + 6);
+    x.textAlign = "center"; const lg = CLIP_LOGO.complete && CLIP_LOGO.naturalWidth, oy = lg ? 150 : 0; if (lg) { const lw = 540, lh = lw * CLIP_LOGO.naturalHeight / CLIP_LOGO.naturalWidth; x.drawImage(CLIP_LOGO, (W - lw) / 2, 18, lw, lh); } else { x.fillStyle = "#ffcf5a"; x.shadowColor = "#ffcf5a"; x.shadowBlur = 18; x.font = "800 46px 'Orbitron','Rajdhani',sans-serif"; x.fillText("ULTRA DEEP FIELD", W / 2, 78); x.shadowBlur = 0; }
+    x.fillStyle = "#e9f6ff"; const tl = wrap(title, W - 80, "700 30px 'Rajdhani',sans-serif"); tl.slice(0, 2).forEach((l, i) => x.fillText(l, W / 2, 128 + oy + i * 36));
+    x.fillStyle = "#9fdcff"; x.font = "500 24px 'Rajdhani',sans-serif"; x.fillText(who, W / 2, 128 + oy + Math.min(2, tl.length) * 36 + 6);
     const b2 = battle; if (b2 && (b2.done || b2.ending)) { const win = r.winner === "draw" ? "DRAW" : repWin(r) ? "VICTORY" : "DEFEAT"; x.fillStyle = win === "VICTORY" ? "#5dff9a" : win === "DEFEAT" ? "#ff6b5a" : "#ffcf5a"; x.shadowColor = x.fillStyle; x.shadowBlur = 24; x.font = "900 84px 'Orbitron','Rajdhani',sans-serif"; x.fillText(win, W / 2, H - 170); x.shadowBlur = 0; if (!C.doneAt) C.doneAt = performance.now(); }
     x.fillStyle = "#ffffff"; x.font = "700 30px 'Rajdhani',sans-serif"; x.fillText("Play free · build your empire", W / 2, H - 96); x.fillStyle = "#7af4ff"; x.font = "600 26px 'Rajdhani',sans-serif"; x.fillText(CLIP_URL, W / 2, H - 56);
     const el = performance.now() - C.t0; if (!battle || battle !== b || (C.doneAt && performance.now() - C.doneAt > 2500) || el > 45000) return clipStop(C, mime, title); requestAnimationFrame(frame); };
