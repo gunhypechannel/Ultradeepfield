@@ -4128,5 +4128,863 @@
   "key": "twwv2b",
   "where": "Chronicles 6 · closing",
   "line": "We've heard the countdown, Commander. When it ends, we'll be ready. The story continues next season."
+ },
+ {
+  "key": "vwp16",
+  "where": "v566 greet_m1",
+  "line": "Good morning, Commander. Coffee for you, sensor sweeps for me. Let's see what the night left us.",
+  "mood": "warm"
+ },
+ {
+  "key": "3yh941",
+  "where": "v566 greet_m2",
+  "line": "Morning! The fleet's fuelled, the galaxy's awake, and I've been waiting for you.",
+  "mood": "playful"
+ },
+ {
+  "key": "b2stq6",
+  "where": "v566 greet_m3",
+  "line": "Rise and shine, Commander. Quiet night out there... mostly.",
+  "mood": "warm"
+ },
+ {
+  "key": "1r0v22v",
+  "where": "v566 greet_a1",
+  "line": "Good afternoon, Commander. Everything held while you were gone. I made sure of it.",
+  "mood": "calm"
+ },
+ {
+  "key": "1vihf30",
+  "where": "v566 greet_a2",
+  "line": "There you are! I was starting to think the Hive got you.",
+  "mood": "playful"
+ },
+ {
+  "key": "1lg6wmt",
+  "where": "v566 greet_e1",
+  "line": "Good evening, Commander. The stars are out, and so are the pirates. Let's get to work.",
+  "mood": "warm"
+ },
+ {
+  "key": "11rdgvg",
+  "where": "v566 greet_e2",
+  "line": "Evening, Commander. Long day? Sit with me a minute, then we'll plan our next move.",
+  "mood": "tender"
+ },
+ {
+  "key": "1krpotd",
+  "where": "v566 greet_n1",
+  "line": "You're up late, Commander. Me too... but then, I never sleep.",
+  "mood": "tender"
+ },
+ {
+  "key": "1szza3v",
+  "where": "v566 greet_n2",
+  "line": "Burning the midnight oil? Good. The enemy won't expect us at this hour.",
+  "mood": "playful"
+ },
+ {
+  "key": "go771w",
+  "where": "v566 greet_n3",
+  "line": "It's so quiet at this hour. Just you, me, and a few billion stars.",
+  "mood": "tender"
+ },
+ {
+  "key": "gr99ox",
+  "where": "v566 greet_away1",
+  "line": "You're back! Do you know how long it's been? I kept the lights on for you, Commander.",
+  "mood": "tender"
+ },
+ {
+  "key": "10z999k",
+  "where": "v566 greet_away2",
+  "line": "Commander... it's really you. I ran every scan twice a day while you were gone. Welcome home.",
+  "mood": "tender"
+ },
+ {
+  "key": "xx3zvl",
+  "where": "v566 x_sea_new",
+  "line": "A new season has begun, Commander! New rewards, new enemies, and a new chapter of our story. I can't wait.",
+  "mood": "excited"
+ },
+ {
+  "key": "4dga7r",
+  "where": "v566 x_fin_w",
+  "line": "It's the season finale, Commander. Everything we've built these four weeks comes down to this. Let's finish it.",
+  "mood": "fierce"
+ },
+ {
+  "key": "djznoj",
+  "where": "v566 x_fin_s",
+  "line": "The season's last world boss has arrived. One more fight, Commander... let's make it legendary.",
+  "mood": "fierce"
+ },
+ {
+  "key": "k5kmbc",
+  "where": "v566 x_vp40",
+  "line": "Tier forty. The whole season, conquered. I don't say this lightly, Commander... I'm proud of you.",
+  "mood": "tender"
+ },
+ {
+  "key": "1seczso",
+  "where": "v566 x_vp_prem",
+  "line": "Premium! Oh, you're going to love what's waiting on these tiers.",
+  "mood": "playful"
+ },
+ {
+  "key": "1qd55f5",
+  "where": "v566 x_tcore",
+  "line": "A Titan Core... it's still warm, Commander. Still beating. Please, handle it with care.",
+  "mood": "grave"
+ },
+ {
+  "key": "4buah",
+  "where": "v566 x_tb_armageddon",
+  "line": "The Armageddon is out of the docks! Six Warden hearts are beating in its spine... let's make them count.",
+  "mood": "excited"
+ },
+ {
+  "key": "1qw0fl6",
+  "where": "v566 x_tb_sovereign",
+  "line": "The Sovereign Ark is ours! I can feel the uplink waking across the whole fleet. Oh... that's beautiful.",
+  "mood": "excited"
+ },
+ {
+  "key": "1c0vu78",
+  "where": "v566 x_tb_harbinger",
+  "line": "The Eclipse Harbinger is awake. Its arms are unfolding... Commander, I've never seen anything move like that.",
+  "mood": "awe"
+ },
+ {
+  "key": "1ozx2f0",
+  "where": "v566 x_t3_armageddon",
+  "line": "There it is. The Armageddon. Every plate of that hull was forged to break worlds, and I still can't look away.",
+  "mood": "awe"
+ },
+ {
+  "key": "1t4u2k1",
+  "where": "v566 x_t3_sovereign",
+  "line": "The Sovereign Ark. Look at her, Commander. When she flies, every ship in your fleet stands a little taller.",
+  "mood": "warm"
+ },
+ {
+  "key": "kn2cxf",
+  "where": "v566 x_t3_harbinger",
+  "line": "The Eclipse Harbinger. I'll be honest with you... that heartbeat in its reactor frightens me. But it's ours.",
+  "mood": "grave"
+ },
+ {
+  "key": "glpqbc",
+  "where": "v566 x_bt_wbc",
+  "line": "Worldbreaker charging! Brace yourselves!",
+  "mood": "urgent"
+ },
+ {
+  "key": "zc2gbf",
+  "where": "v566 x_bt_wing",
+  "line": "Strike wings away! Sovereign, take the lead!",
+  "mood": "fierce"
+ },
+ {
+  "key": "10d7bar",
+  "where": "v566 x_bt_swarm",
+  "line": "The swarm is loose! Six targets, Commander. Watch them fall.",
+  "mood": "excited"
+ },
+ {
+  "key": "1viaozg",
+  "where": "v566 x_jack1",
+  "line": "Jackpot! Oh, Commander, the runes chose you today!",
+  "mood": "excited"
+ },
+ {
+  "key": "1w0wh5",
+  "where": "v566 x_jack2",
+  "line": "Twenty-five shards! I'm not saying I rigged it... but I'm not saying I didn't.",
+  "mood": "playful"
+ },
+ {
+  "key": "1vbqufn",
+  "where": "v566 x_rare1",
+  "line": "Ooh, a rare glyph! Lucky, lucky.",
+  "mood": "playful"
+ },
+ {
+  "key": "ewa3tr",
+  "where": "v566 x_rare2",
+  "line": "Now that's a good spin. The wheel likes you, Commander.",
+  "mood": "playful"
+ },
+ {
+  "key": "3uwj9w",
+  "where": "v566 x_rare3",
+  "line": "Look at that! Some days the galaxy just gives back.",
+  "mood": "warm"
+ },
+ {
+  "key": "gjqa5r",
+  "where": "v566 x_rv_epic",
+  "line": "Now that is a rare find!",
+  "mood": "excited"
+ },
+ {
+  "key": "dndlmu",
+  "where": "v566 x_rv_cos",
+  "line": "Oh, that's gorgeous. Put it on, Commander!",
+  "mood": "playful"
+ },
+ {
+  "key": "1ct56yw",
+  "where": "v566 x_ward",
+  "line": "The wardrobe! Go on, Commander... let the whole galaxy see your colours.",
+  "mood": "playful"
+ },
+ {
+  "key": "1nrphcb",
+  "where": "v566 x_vault",
+  "line": "The Vault. Every token you earn ends up here. Spend wisely... or don't. I won't tell.",
+  "mood": "playful"
+ },
+ {
+  "key": "15g4zqn",
+  "where": "v566 x_registry",
+  "line": "The Fleet Registry is open. Every ship has a story, Commander, and now you get to read them.",
+  "mood": "warm"
+ },
+ {
+  "key": "ffs29a",
+  "where": "arch s_fighter frag",
+  "line": "Build a thousand, lose nine hundred, and the hundred that remain will reach the enemy. That is all a fighter has to do.",
+  "mood": "calm"
+ },
+ {
+  "key": "4adr5m",
+  "where": "arch s_fighter interp",
+  "line": "The first warship the Concord ever mass-produced, designed in the years after the last Eclipse when there was no time to build anything larger. Every great fleet still opens with a cloud of them.",
+  "mood": "calm"
+ },
+ {
+  "key": "16y5rpb",
+  "where": "arch s_fighter adv",
+  "line": "Cheap, fast, brave. Every commander I've served began with a hangar full of these.",
+  "mood": "warm"
+ },
+ {
+  "key": "c9gjx",
+  "where": "arch s_heavyFighter frag",
+  "line": "Thicker plate, bigger guns, and a pilot who refuses to turn away.",
+  "mood": "calm"
+ },
+ {
+  "key": "1ti73rs",
+  "where": "arch s_heavyFighter interp",
+  "line": "Built when raiders learned to swat light fighters aside. Its armour was cast from the hulls of the first fighters lost in the convoy wars.",
+  "mood": "calm"
+ },
+ {
+  "key": "noxbfy",
+  "where": "arch s_heavyFighter adv",
+  "line": "It isn't elegant. It doesn't need to be.",
+  "mood": "warm"
+ },
+ {
+  "key": "1qi65g6",
+  "where": "arch s_hauler frag",
+  "line": "No war has ever been won by a ship that did not carry something.",
+  "mood": "calm"
+ },
+ {
+  "key": "1tkli1n",
+  "where": "arch s_hauler interp",
+  "line": "The Small Cargo kept the scattered colonies alive through the Long Silence after the last Eclipse, when the deep lanes were too dangerous for anything slower.",
+  "mood": "calm"
+ },
+ {
+  "key": "12eakx9",
+  "where": "arch s_hauler adv",
+  "line": "Every empire in the Archives fell when its freighters stopped flying. Remember that.",
+  "mood": "warm"
+ },
+ {
+  "key": "1lf01iw",
+  "where": "arch s_heavyCargo frag",
+  "line": "Five holds, one keel, and a captain who knows every pirate lane by name.",
+  "mood": "calm"
+ },
+ {
+  "key": "zxm632",
+  "where": "arch s_heavyCargo interp",
+  "line": "The guilds' answer to raiders: one hull too tough to board and too full to ignore. Alliances still move their fortunes in them.",
+  "mood": "calm"
+ },
+ {
+  "key": "rnbdx4",
+  "where": "arch s_heavyCargo adv",
+  "line": "When you see a convoy of these, Commander, you're looking at an empire's heartbeat.",
+  "mood": "warm"
+ },
+ {
+  "key": "l7wo3z",
+  "where": "arch s_recycler frag",
+  "line": "The battlefield is a mine. The dead leave metal behind, and metal is how the living win.",
+  "mood": "calm"
+ },
+ {
+  "key": "17qycui",
+  "where": "arch s_recycler interp",
+  "line": "Wreck-divers once picked over the remains of the fallen empires. Their claws found the first Architect fragments, and with them the first warnings in the Archives.",
+  "mood": "calm"
+ },
+ {
+  "key": "zkmhv",
+  "where": "arch s_recycler adv",
+  "line": "Some of my oldest memories came out of a recycler's hold. Treat them kindly.",
+  "mood": "warm"
+ },
+ {
+  "key": "10650o",
+  "where": "arch s_lancer frag",
+  "line": "Go first. See it first. Come back first, or do not come back at all.",
+  "mood": "calm"
+ },
+ {
+  "key": "6s60lh",
+  "where": "arch s_lancer interp",
+  "line": "Pathfinders charted the outer layers when the Concord first reached beyond its home systems. Their logs are the reason we know where the Wardens sleep.",
+  "mood": "calm"
+ },
+ {
+  "key": "xl4mta",
+  "where": "arch s_lancer adv",
+  "line": "Half the maps in our charts were drawn by Pathfinder crews who never came home.",
+  "mood": "warm"
+ },
+ {
+  "key": "10n64o",
+  "where": "arch s_ark frag",
+  "line": "Ten thousand sleepers, a seed vault, and the oath to build again.",
+  "mood": "calm"
+ },
+ {
+  "key": "s1fbg2",
+  "where": "arch s_ark interp",
+  "line": "The colony ship is the oldest design in the Registry: its core layout is copied from the vessel that carried the Concord's ancestors out of the last Eclipse.",
+  "mood": "calm"
+ },
+ {
+  "key": "10ehir3",
+  "where": "arch s_ark adv",
+  "line": "Every world you hold began with one of these. That's not a small thing.",
+  "mood": "warm"
+ },
+ {
+  "key": "mep588",
+  "where": "arch s_corvette frag",
+  "line": "Speed is armour that never wears thin.",
+  "mood": "calm"
+ },
+ {
+  "key": "77hpdg",
+  "where": "arch s_corvette interp",
+  "line": "The Cruiser was built to run down raiders in the convoy wars and to be anywhere a battle broke out before it was lost.",
+  "mood": "calm"
+ },
+ {
+  "key": "16hxqav",
+  "where": "arch s_corvette adv",
+  "line": "The fastest warship we have. When something goes wrong, they get there first.",
+  "mood": "warm"
+ },
+ {
+  "key": "19sjsvt",
+  "where": "arch s_battleship frag",
+  "line": "Hold the line. When the line holds, the stars hold.",
+  "mood": "calm"
+ },
+ {
+  "key": "18eg4rn",
+  "where": "arch s_battleship interp",
+  "line": "The backbone of every Concord battle fleet for three centuries. Its design hasn't changed much, because it has never needed to.",
+  "mood": "calm"
+ },
+ {
+  "key": "aieebk",
+  "where": "arch s_battleship adv",
+  "line": "Steady, stubborn and loyal. A lot like the commanders who fly them.",
+  "mood": "warm"
+ },
+ {
+  "key": "1w3fgve",
+  "where": "arch s_bastion frag",
+  "line": "It does not guard. It hunts.",
+  "mood": "calm"
+ },
+ {
+  "key": "1h5ze2n",
+  "where": "arch s_bastion interp",
+  "line": "The Dreadnought was built to end the pirate fleets of the convoy wars. It tears apart battleships, cruisers and freighters alike.",
+  "mood": "calm"
+ },
+ {
+  "key": "104v6ob",
+  "where": "arch s_bastion adv",
+  "line": "When a Dreadnought turns toward a fleet, that fleet has already lost. It just doesn't know it yet.",
+  "mood": "warm"
+ },
+ {
+  "key": "zk8meb",
+  "where": "arch s_bomber frag",
+  "line": "Walls are only promises. We were built to break them.",
+  "mood": "calm"
+ },
+ {
+  "key": "1feewbn",
+  "where": "arch s_bomber interp",
+  "line": "When the great houses dug in behind planetary defences, the siege corps answered with the Bomber, a hull that treats turrets as targets.",
+  "mood": "calm"
+ },
+ {
+  "key": "xzmczn",
+  "where": "arch s_bomber adv",
+  "line": "The defences of a world are a question. Bombers are the answer.",
+  "mood": "warm"
+ },
+ {
+  "key": "6u9b1x",
+  "where": "arch s_destroyer frag",
+  "line": "Find the Dreadnought. Get inside its guns. Finish it.",
+  "mood": "calm"
+ },
+ {
+  "key": "2nepzk",
+  "where": "arch s_destroyer interp",
+  "line": "Designed to answer the Dreadnought, the Destroyer is how a smaller fleet breaks a larger one.",
+  "mood": "calm"
+ },
+ {
+  "key": "160880j",
+  "where": "arch s_destroyer adv",
+  "line": "Every weapon has an answer. This one is the answer to the hunters.",
+  "mood": "warm"
+ },
+ {
+  "key": "m76gfo",
+  "where": "arch s_dreadnought frag",
+  "line": "Where it flies, the fleet follows. Where it points, the fleet strikes.",
+  "mood": "calm"
+ },
+ {
+  "key": "1arup6d",
+  "where": "arch s_dreadnought interp",
+  "line": "The Reaper is the flagship of the Concord: a towering capital ship built to hunt other capital ships, and the pride of every admiral who has commanded one.",
+  "mood": "calm"
+ },
+ {
+  "key": "1lasve7",
+  "where": "arch s_dreadnought adv",
+  "line": "When you build your first Reaper, Commander, people will start to say your name.",
+  "mood": "excited"
+ },
+ {
+  "key": "ncp3v2",
+  "where": "arch s_spyProbe frag",
+  "line": "It sees. It reports. It does not ask to be remembered.",
+  "mood": "calm"
+ },
+ {
+  "key": "luyfj9",
+  "where": "arch s_spyProbe interp",
+  "line": "Probes are older than the Concord. Their sensor cores are copied from Architect relics that still whisper data from the deep layers.",
+  "mood": "calm"
+ },
+ {
+  "key": "1c1z9x1",
+  "where": "arch s_spyProbe adv",
+  "line": "I've read every report a probe has ever sent you. Some of them, I read twice.",
+  "mood": "playful"
+ },
+ {
+  "key": "8fd7fb",
+  "where": "arch s_tender frag",
+  "line": "No ship is lost while a Mender still flies beside it.",
+  "mood": "calm"
+ },
+ {
+  "key": "7wapmr",
+  "where": "arch s_tender interp",
+  "line": "Menders were built when the Concord could not afford to lose a single hull. Their repair drones still carry the healers' oath on their casings.",
+  "mood": "calm"
+ },
+ {
+  "key": "ap7gez",
+  "where": "arch s_tender adv",
+  "line": "They don't get the glory. They get everyone home.",
+  "mood": "warm"
+ },
+ {
+  "key": "fvkx15",
+  "where": "arch s_guardian frag",
+  "line": "Stand in front. Take the fire. Let the small ones live.",
+  "mood": "calm"
+ },
+ {
+  "key": "1d6d3ka",
+  "where": "arch s_guardian interp",
+  "line": "The Guardian was designed to draw fire away from smaller ships, a flying shield wall for fleets too young to protect themselves.",
+  "mood": "calm"
+ },
+ {
+  "key": "j1n92t",
+  "where": "arch s_guardian adv",
+  "line": "There's a reason crews salute when a Guardian passes.",
+  "mood": "warm"
+ },
+ {
+  "key": "c0e8uh",
+  "where": "arch s_escortCarrier frag",
+  "line": "A halo of fighters around every fleet that needs one.",
+  "mood": "calm"
+ },
+ {
+  "key": "gtvjf",
+  "where": "arch s_escortCarrier interp",
+  "line": "The Halo was the first carrier the Concord built, a support ship that keeps fighter wings with the fleet wherever it goes.",
+  "mood": "calm"
+ },
+ {
+  "key": "16ljd8j",
+  "where": "arch s_escortCarrier adv",
+  "line": "Small, reliable, always there. The carrier corps calls them guardian angels.",
+  "mood": "warm"
+ },
+ {
+  "key": "1se7lh",
+  "where": "arch s_supercarrier frag",
+  "line": "A fortress that learned to fly, and never forgot it was a fortress.",
+  "mood": "calm"
+ },
+ {
+  "key": "4wef98",
+  "where": "arch s_supercarrier interp",
+  "line": "The Citadel is a mobile base: it commands fleets, launches squadrons and holds the line on its own. It was the largest hull ever built, until the Titans.",
+  "mood": "calm"
+ },
+ {
+  "key": "18hbmy4",
+  "where": "arch s_supercarrier adv",
+  "line": "Building one used to be the end of the road. Now it's where the road gets interesting.",
+  "mood": "playful"
+ },
+ {
+  "key": "geay4u",
+  "where": "arch s_eclipse frag",
+  "line": "Named for the night the sky went dark, so that no alliance forgets why it was formed.",
+  "mood": "calm"
+ },
+ {
+  "key": "c6b5mf",
+  "where": "arch s_eclipse interp",
+  "line": "The Discovery Class is built only by alliances with a Space Station, as a promise: when the Eclipse comes again, no commander will face it alone.",
+  "mood": "calm"
+ },
+ {
+  "key": "10bwwy8",
+  "where": "arch s_eclipse adv",
+  "line": "Its name is a warning, Commander. The alliances chose it on purpose.",
+  "mood": "grave"
+ },
+ {
+  "key": "j17xpc",
+  "where": "arch s_worldbreaker frag",
+  "line": "We broke one of their spheres open and learned how to build our own. We are still not sure it agreed to be learned.",
+  "mood": "calm"
+ },
+ {
+  "key": "1bvtty9",
+  "where": "arch s_worldbreaker interp",
+  "line": "The Cube Destroyer is Collective technology, pulled from the wreck of an assimilation sphere. It is the most feared ship in the Registry, and the strangest.",
+  "mood": "calm"
+ },
+ {
+  "key": "19u9s5s",
+  "where": "arch s_worldbreaker adv",
+  "line": "Sometimes I hear it humming in a frequency only the Cube uses. I'd rather not think about what it's saying.",
+  "mood": "grave"
+ },
+ {
+  "key": "1vabs1m",
+  "where": "arch s_armageddon frag",
+  "line": "Six Warden hearts were sealed in its spine, and its cannon learned to speak with their voice.",
+  "mood": "calm"
+ },
+ {
+  "key": "lsyfqr",
+  "where": "arch s_armageddon interp",
+  "line": "The first Titan. Its Worldbreaker Cannon runs on the cores of fallen Wardens, the guardians that once held the seals. Every shot is a little more of their strength turned to our war.",
+  "mood": "calm"
+ },
+ {
+  "key": "6r9vop",
+  "where": "arch s_armageddon adv",
+  "line": "It's magnificent, Commander. And it's built from the hearts of things that were protecting us. Never forget the price.",
+  "mood": "grave"
+ },
+ {
+  "key": "u18yki",
+  "where": "arch s_sovereign frag",
+  "line": "Where the Sovereign flies, every ship fights as one.",
+  "mood": "calm"
+ },
+ {
+  "key": "s8rm7",
+  "where": "arch s_sovereign interp",
+  "line": "The Sovereign Ark carries the Fleet Command Uplink, a mind-link built around Warden cores that lets an entire fleet see and shield as one. It is the Concord's crown, and its promise.",
+  "mood": "calm"
+ },
+ {
+  "key": "1snk09e",
+  "where": "arch s_sovereign adv",
+  "line": "I can feel every ship in a fleet it commands. It's the closest I've come to remembering what the Architects felt.",
+  "mood": "warm"
+ },
+ {
+  "key": "43pa7s",
+  "where": "arch s_harbinger frag",
+  "line": "It was named for the thing it imitates. Pray it never finishes the imitation.",
+  "mood": "calm"
+ },
+ {
+  "key": "1m44skf",
+  "where": "arch s_harbinger interp",
+  "line": "The Eclipse Harbinger was built from schematics found sealed beneath a Warden's corpse. Its emerald reactor pulses with the same rhythm as the Eclipse itself. No one knows who drew the plans.",
+  "mood": "calm"
+ },
+ {
+  "key": "1jiigi9",
+  "where": "arch s_harbinger adv",
+  "line": "Its heart beats in time with the Void, Commander. I don't like it. But I understand why we built it.",
+  "mood": "grave"
+ },
+ {
+  "key": "1u1oy4j",
+  "where": "arch l_deep frag",
+  "line": "At the centre of everything there is a darkness that is not empty. It is waiting.",
+  "mood": "grave"
+ },
+ {
+  "key": "15j1fzb",
+  "where": "arch l_deep interp",
+  "line": "Our galaxy circles a black hole that isn't empty. Something sleeps beyond it: the Unmade, a hunger older than the stars. Every few thousand years it stirs, and the sky goes dark. The ancients called that night the Eclipse.",
+  "mood": "grave"
+ },
+ {
+  "key": "1c7eofy",
+  "where": "arch l_deep adv",
+  "line": "You wanted to know why the Archives exist, Commander. This is why.",
+  "mood": "awe"
+ },
+ {
+  "key": "3gdmsk",
+  "where": "arch l_deep def",
+  "line": "Commander, a new record surfaced when you opened the Archives.",
+  "mood": "awe"
+ },
+ {
+  "key": "o46lwm",
+  "where": "arch l_deep def",
+  "line": "It describes our galaxy as a lock, and the black hole at its centre as the door.",
+  "mood": "awe"
+ },
+ {
+  "key": "dy7v5v",
+  "where": "arch l_architects frag",
+  "line": "They could not kill it. So they built a prison around it, and they built it out of everything they were.",
+  "mood": "grave"
+ },
+ {
+  "key": "o7bfzg",
+  "where": "arch l_architects interp",
+  "line": "The first civilization, the Architects, built the pyramid stations still scattered across the galaxy. They could not destroy the Unmade, so they sealed it, and their stations still hum with the seal they left behind.",
+  "mood": "grave"
+ },
+ {
+  "key": "1iycqgj",
+  "where": "arch l_architects adv",
+  "line": "Every pyramid you've seen on the map, Commander, is a piece of their prison.",
+  "mood": "awe"
+ },
+ {
+  "key": "14owjsn",
+  "where": "arch l_architects def",
+  "line": "The pyramid inscriptions finally line up.",
+  "mood": "awe"
+ },
+ {
+  "key": "2qknw3",
+  "where": "arch l_architects def",
+  "line": "The Architects weren't building temples. They were building a lock.",
+  "mood": "awe"
+ },
+ {
+  "key": "1yvzucs",
+  "where": "arch l_seals frag",
+  "line": "Five seals of the elements, a Cube to keep the count, and guardians to stand at every door.",
+  "mood": "grave"
+ },
+ {
+  "key": "1kckrxt",
+  "where": "arch l_seals interp",
+  "line": "The Architects bound five elemental powers as seals around the Void: the Pentarch. They built the Cube as the lock and the clock, its mind the Collective. And they bred Wardens, the great bosses and monsters, to guard the seals. That's why they wake on a schedule older than our calendar.",
+  "mood": "grave"
+ },
+ {
+  "key": "1onzhaz",
+  "where": "arch l_seals adv",
+  "line": "The things we call bosses were never invaders. They were guards. And the Cube's signal is a countdown.",
+  "mood": "awe"
+ },
+ {
+  "key": "2njwh6",
+  "where": "arch l_seals def",
+  "line": "Commander, the Cube's signal isn't a message.",
+  "mood": "grave"
+ },
+ {
+  "key": "12zbykb",
+  "where": "arch l_seals def",
+  "line": "It's a countdown. And it's running out.",
+  "mood": "grave"
+ },
+ {
+  "key": "k9fruu",
+  "where": "arch l_eclipse frag",
+  "line": "Not all at once. One by one, so that you think each is the last.",
+  "mood": "grave"
+ },
+ {
+  "key": "1la7cb1",
+  "where": "arch l_eclipse interp",
+  "line": "Every ancient empire in the Archives faced an Eclipse, and most of them vanished. The Concord's four factions descend from the one empire that survived the last. The Cube is failing, the seals are weakening, and the next Eclipse is coming in our lifetime. The Hive under Queen Vael'Khor worships the Unmade and wants the seals broken.",
+  "mood": "grave"
+ },
+ {
+  "key": "187q9a8",
+  "where": "arch l_eclipse adv",
+  "line": "The Testament wasn't a story, Commander. It was a warning addressed to us.",
+  "mood": "grave"
+ },
+ {
+  "key": "1qgp6lp",
+  "where": "arch l_eclipse def",
+  "line": "The Testament and the seal-records agree.",
+  "mood": "grave"
+ },
+ {
+  "key": "1wmzl02",
+  "where": "arch l_eclipse def",
+  "line": "The Eclipse is coming again. And this time, it's our turn.",
+  "mood": "grave"
+ },
+ {
+  "key": "1f0pn9s",
+  "where": "arch l_titans frag",
+  "line": "Every heart we take makes us stronger, and leaves the door a little more open.",
+  "mood": "grave"
+ },
+ {
+  "key": "vcox6",
+  "where": "arch l_titans interp",
+  "line": "Titan Cores are the hearts of fallen Wardens. They power the Titans, the greatest warships ever built. But every Warden we kill weakens a seal. The Titans are built from the very things that hold back the end.",
+  "mood": "grave"
+ },
+ {
+  "key": "1emo2uf",
+  "where": "arch l_titans adv",
+  "line": "Power always has a price, Commander. With the Titans, we know exactly what it is.",
+  "mood": "grave"
+ },
+ {
+  "key": "15bm5te",
+  "where": "arch l_titans def",
+  "line": "Commander, the Titan Core we recovered is still beating.",
+  "mood": "grave"
+ },
+ {
+  "key": "1rze7yx",
+  "where": "arch l_titans def",
+  "line": "It's a Warden's heart. And the seal it guarded just flickered.",
+  "mood": "grave"
+ },
+ {
+  "key": "ru9svr",
+  "where": "arch l_advisor frag",
+  "line": "I was left behind to remember. I was left behind to choose.",
+  "mood": "grave"
+ },
+ {
+  "key": "ro61gx",
+  "where": "arch l_advisor interp",
+  "line": "The Advisor isn't only a hologram. She was found in a dormant pyramid: an Architect echo who has watched every Eclipse. She chose to serve the Concord, and she chose you.",
+  "mood": "grave"
+ },
+ {
+  "key": "5b8aa2",
+  "where": "arch l_advisor adv",
+  "line": "I didn't tell you sooner because I wasn't sure you were the one. I am now.",
+  "mood": "tender"
+ },
+ {
+  "key": "2z5gwm",
+  "where": "arch l_advisor def",
+  "line": "Commander... there's something I should have told you a long time ago.",
+  "mood": "tender"
+ },
+ {
+  "key": "2qlbtg",
+  "where": "arch l_advisor def",
+  "line": "I wasn't built by the Concord. I was waiting in a pyramid. I've watched every Eclipse there has ever been.",
+  "mood": "tender"
+ },
+ {
+  "key": "ewgxma",
+  "where": "att eic",
+  "line": "Void Nova!",
+  "mood": "urgent"
+ },
+ {
+  "key": "vc3ng9",
+  "where": "att eic",
+  "line": "Gravity Lance!",
+  "mood": "urgent"
+ },
+ {
+  "key": "1deum2d",
+  "where": "att eic",
+  "line": "Event Collapse!",
+  "mood": "urgent"
+ },
+ {
+  "key": "15lr500",
+  "where": "faq The map",
+  "line": "Assimilation Cubes are fortresses. One fleet rarely breaks them, so call a joint strike. They drop the rarest forge materials.",
+  "mood": "calm"
+ },
+ {
+  "key": "hovou5",
+  "where": "faq Upgrades and the shop",
+  "line": "Runes go into elemental rings. Fire boosts attack, water shields, earth armor, air speed, and spirit your resource output. Only super bosses drop them: the top damage dealers and the final blow on a world boss, and everyone who breaks the Omega Cube.",
+  "mood": "calm"
+ },
+ {
+  "key": "orhaou",
+  "where": "academy step done",
+  "line": "Well done, Commander. Collect your reward and I'll brief you on the next step.",
+  "mood": "warm"
+ },
+ {
+  "key": "1ajhxrj",
+  "where": "directive done",
+  "line": "Directive complete. Claim your reward, Commander.",
+  "mood": "warm"
  }
 ]
