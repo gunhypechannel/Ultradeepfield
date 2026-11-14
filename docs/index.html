@@ -4955,7 +4955,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 548;
+const GAME_V = 549;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8785,7 +8785,8 @@ function archTick() { try { if (!S || !G.ready || battle || G.sbSim || G.dvSim |
     if (archLv("cube") === 1) { const nx = nexusNow(T); if (nx.garrison && nx.garrison[G.me]) archUnlock("cube", 2); } } catch (e) {} }
 setInterval(archTick, 15000);
 function archSheetSeen(s) { try { if (!s) return false; if (s.type === "pirate" && PB[s.id] && PB[s.id].mon && ARCH["b_" + PB[s.id].mon] && !archLv("b_" + PB[s.id].mon)) { archUnlock("b_" + PB[s.id].mon, 1); return false; } /* v526 the Bestiary; her monster line still plays */ const k = s.type === "wboss" && s.id ? archKeyOf(s.id) : s.type === "sboss" && s.id ? archKeyOf(s.id) : s.type === "nexus" || (s.type === "events" && s.ev === "cube") ? "cube" : null; if (!k || archLv(k)) return false; archUnlock(k, 1); return true; } catch (e) { return false; } }
-function archImg(E, lv, k) { if (/^b_/.test(k)) return `<div class="arimg${lv >= 2 ? " full" : ""}"><img src="art/mon/${k === "b_coll" ? "cube" : k.slice(2)}.webp?v=1" alt="" loading="lazy"></div>`; if (k === "testament" || k === "cube") return `<div class="arimg${lv >= 2 ? " full" : ""}"><img src="art/mon/${k}.webp?v=1" alt="" loading="lazy"></div>`; return `<div class="arimg${lv >= 2 ? " full" : ""}"><img src="art/arch/${k}.webp" alt="" loading="lazy"></div>`; } // v503 the full paintings
+const MON_IMG = { kegg: "kraken", gwhale: "ghostwhale", reat: "rockeater", cserp: "cserpent", sent: "sentinel", coll: "cube" }, monImg = k => MON_IMG[k] || k; /* v549 */
+function archImg(E, lv, k) { if (/^b_/.test(k)) return `<div class="arimg${lv >= 2 ? " full" : ""}"><img src="art/mon/${monImg(k.slice(2))}.webp?v=1" alt="" loading="lazy"></div>`; if (k === "testament" || k === "cube") return `<div class="arimg${lv >= 2 ? " full" : ""}"><img src="art/mon/${k}.webp?v=1" alt="" loading="lazy"></div>`; return `<div class="arimg${lv >= 2 ? " full" : ""}"><img src="art/arch/${k}.webp" alt="" loading="lazy"></div>`; } // v503 the full paintings
 function shArch() { const id = sheet.id; S.archR = S.archR || {};
   if (id && ARCH[id]) { const E = ARCH[id], lv = archLv(id); if (lv) { S.archR[id] = Math.max(S.archR[id] | 0, lv); dirty(); setTimeout(() => { try { trayRender(); } catch (e) {} }, 0); }
     const cat = ARCH_CAT.find(c => c[0] === E.cat);
@@ -19849,7 +19850,7 @@ function voicePendTap() { const p = VOICE.pend; if (!p) return; VOICE.pend = nul
 ["pointerup", "touchend", "click", "keydown"].forEach(t => document.addEventListener(t, voicePendTap, true));
 try { VOICE.on = localStorage.getItem("void.voice") !== "0"; } catch (e) {}
 const MON_ARTF = { kegg: "kraken", gwhale: "ghostwhale", reat: "rockeater", cserp: "cserpent", sent: "sentinel" }; /* v529 */
-const monArt = k => `<div class="monart"><img src="art/mon/${k}.webp?v=1" alt="" loading="lazy"></div>`; /* v515 */
+const monArt = k => `<div class="monart"><img src="art/mon/${monImg(k)}.webp?v=1" alt="" loading="lazy"></div>`; /* v515 */
 const voiceKey = s => hash(String(s)).toString(36);
 try { fetch("voice/index.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (j && typeof j === "object") VOICE.clips = j; }).catch(() => {}); } catch (e) {}
 function voiceTalk(on) { const a = $("#adv"); if (a) a.classList.toggle("talk", !!on); const h = $("#advh"); if (h) h.classList.toggle("talk", !!on); if (typeof AU !== "undefined") { const d = on ? .22 : 1; if (AU.duck !== d) { AU.duck = d; try { applyAudio(); } catch (e) {} } } } // v334: music dips under her voice
