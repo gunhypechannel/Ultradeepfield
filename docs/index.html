@@ -722,6 +722,12 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 .vpc{position:relative;display:flex;gap:6px;align-items:center;padding:6px 8px;border-radius:9px;border:1px solid var(--line);background:rgba(4,10,16,.55);min-height:44px}.vpc span{font-size:16px}.vpc small{font-size:10.5px;line-height:1.25;color:#cfdbe4}
 .vpc.p{border-color:rgba(255,207,90,.35);background:linear-gradient(110deg,rgba(255,207,90,.08),rgba(4,10,16,.55))}.vpc.ready{border-color:#5dff9a;box-shadow:0 0 10px rgba(93,255,154,.3)}.vpc.got{opacity:.55}.vpc.lock{opacity:.6}
 .vpc em{position:absolute;top:3px;right:6px;font-style:normal;font-size:11px;color:#5dff9a}.vpc.lock em{color:#ffcf5a}
+/* v543 collections and buddies */
+.colsum{margin:8px 0 2px;padding:9px 12px;border-radius:12px;border:1px solid rgba(255,207,90,.45);background:linear-gradient(90deg,rgba(255,207,90,.14),rgba(8,14,22,.8));font-size:13px}.colsum b{color:#ffcf5a;font-size:16px}
+.arsec{display:flex;align-items:center;gap:8px}.colct{margin-left:auto;font-size:12px;letter-spacing:.06em;color:var(--muted);font-family:var(--f-ui,inherit)}.coldone{color:#ffcf5a}.coltro{font-style:normal;filter:drop-shadow(0 0 6px #ffcf5a)}
+.colbar{position:relative;display:flex;flex-direction:column;gap:4px;margin:4px 0 8px}.colbar i{display:block;height:6px;border-radius:3px;background:linear-gradient(90deg,#e2c48a,#ffcf5a);max-width:100%}.colbar::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;border-radius:3px;background:rgba(255,255,255,.08);z-index:-1}.colbar small{font-size:11.5px;color:var(--muted)}
+.colclaim{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;border:1px solid #ffcf5a;background:linear-gradient(110deg,rgba(255,207,90,.2),rgba(8,14,22,.9));margin:4px 0 8px;box-shadow:0 0 16px rgba(255,207,90,.25)}.colclaim b{color:#ffcf5a}.colclaim small{display:block;font-size:12px;color:var(--muted)}
+.buddy .bdr{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}.buddy .bdr small{display:block;font-size:11.5px;color:var(--muted)}
 .shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .sitem{position:relative;display:flex;flex-direction:column;gap:5px;padding:10px;border-radius:12px;border:1px solid color-mix(in srgb,var(--tc) 45%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 16%,transparent),rgba(8,18,28,.9) 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
 .sitem b{font-size:14px}.sitem small{font-size:12px;color:var(--muted);flex:1;line-height:1.35}
@@ -4443,7 +4449,8 @@ const allyLevel = a => a ? clamp(1 + Math.floor(Math.log2(1 + allyFund(a) / ALLY
 const allyNeed = L => ALLY_STEP * (2 ** L - 1); // fund value that reaches level L+1
 const ALLY_PASS = [[2, "Fleet Booster", "+5% fleet speed"], [3, "Shared Industry", "+3% resource output"], [4, "War Banners", "+3% fleet attack"], [5, "Fleet Booster II", "+10% fleet speed"], [6, "Shared Industry II", "+6% resource output"], [8, "War Banners II", "+6% fleet attack"]];
 function allyPass() { const L = S ? allyLevel(myAlly()) : 0; return { spd: L >= 5 ? 10 : L >= 2 ? 5 : 0, prod: L >= 6 ? 6 : L >= 3 ? 3 : 0, atk: L >= 8 ? 6 : L >= 4 ? 3 : 0 }; }
-const prodBonus = () => 1 + (runePct("spirit") + allyPass().prod + fsB("prod")) / 100;
+const collPct = () => S && S.coll ? Object.keys(S.coll).filter(k => S.coll[k]).length : 0; /* v543 +1% per completed Archives chapter */
+const prodBonus = () => 1 + (runePct("spirit") + allyPass().prod + fsB("prod") + collPct()) / 100;
 const RCAT = [["Basic", ["energyT", "laserT", "ionT", "hyperT", "plasmaT"]], ["Drive", ["drive", "impulse", "hyper"]], ["Advanced", ["espionage", "computer", "astro", "irn", "graviton"]], ["Combat", ["weapons", "shields", "armor"]], ["Our own", ["logistics", "command", "terraform", "repairT"]]];
 /* ---------- fog of war: the map starts greyed out; your planets, fleets and probes reveal it ---------- */
 const FOG_N = 96, FOG_R = 170 * 2.5 + 25, FOG_CELL = FOG_R * 2 / FOG_N;
@@ -4923,7 +4930,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 542;
+const GAME_V = 543;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8764,7 +8771,9 @@ function shArch() { const id = sheet.id; S.archR = S.archR || {};
   const n2 = ARCH_ORD.filter(k => archLv(k) >= 2).length, n1 = ARCH_ORD.filter(k => archLv(k)).length;
   const card = k => { const E = ARCH[k], lv = archLv(k), nu = lv > (S.archR[k] | 0); return `<button class="arcard lv${lv}" data-act="archEntry" data-id="${k}">${lv ? archImg(E, lv, k) : `<div class="arimg glyph lock">?</div>`}<span><b>${lv ? esc(E.t) : k === "testament" ? "A sealed testament" : "Unrecovered record"}</b><small>${lv ? esc(archName(k)) : k === "testament" ? "Unlocks after 10 interpretations" : "Encounter the entity to recover it"}</small><em>${lv >= 2 ? "Interpreted" : lv ? "Fragment" : "Sealed"}</em></span>${nu ? `<i class="arnew">NEW</i>` : ""}</button>`; };
   return `<div class="hd archd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#e2c48a">Echoes of Empire Origins</div><h2>The Ancient Archives</h2><p class="note">The oldest empires left records of things they saw in the sky. We called them myths. ${n1} of ${ARCH_ORD.length} records recovered · ${n2} interpreted.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
-    ${ARCH_CAT.map(([c, nm, d]) => { const ks = ARCH_ORD.filter(k => ARCH[k].cat === c); return `<h2 class="sec arsec">${esc(nm)}</h2><p class="note">${esc(d)}</p><div class="argrid">${ks.map(card).join("")}</div>`; }).join("")}`; }
+    <div class="colsum">🏆 <b>${collPct()}</b> of ${ARCH_CAT.filter(([c]) => ARCH_ORD.some(k => ARCH[k].cat === c)).length} collections complete · +${collPct()}% production on every world</div>
+    ${ARCH_CAT.map(([c, nm, d]) => { const ks = ARCH_ORD.filter(k => ARCH[k].cat === c); if (!ks.length) return ""; const full = ks.filter(k => archLv(k) >= 2).length, done = full >= ks.length, got = !!(S.coll || {})[c]; /* v543 collections */
+      return `<h2 class="sec arsec${got ? " coldone" : ""}">${got ? '<i class="coltro">🏆</i>' : ""}${esc(nm)}<span class="colct">${full}/${ks.length}</span></h2><p class="note">${esc(d)}</p>${done && !got ? `<div class="colclaim"><div><b>Collection complete!</b><small>◆${Math.min(60, ks.length * 10)} and +1% production on every world, for good.</small></div><button class="btn amber" data-act="collClaim" data-c="${c}">Claim</button></div>` : !done ? `<div class="colbar"><i style="width:${(full / ks.length * 100).toFixed(0)}%"></i><small>Recover every record (field notes too) to complete this collection: ◆${Math.min(60, ks.length * 10)} and +1% production for good.</small></div>` : ""}<div class="argrid">${ks.map(card).join("")}</div>`; }).join("")}`; }
 const DEMO_ALLY = { a: { name: "Crimson Armada", tag: "CRA", crest: 3 }, d: { name: "Iron Bastion", tag: "IRB", crest: 7 } };
 function cubeResult(T) {
   const ph = cubePhase(T), dm = G.lastDemo;
@@ -17493,10 +17502,17 @@ function allyListView() {
     ${pages > 1 ? `<div class="segc alpg2"><button data-act="allyPg" data-v="${pg - 1}" ${pg <= 1 ? "disabled" : ""} aria-label="Previous page">‹ Prev</button><button class="on" disabled>Page ${pg} of ${pages}</button><button data-act="allyPg" data-v="${pg + 1}" ${pg >= pages ? "disabled" : ""} aria-label="Next page">Next ›</button></div>` : ""}
     ${S.ally ? "" : `<div class="alfoot"><span>To found an alliance, your Commander must be at least level ${ALLY_LVL}${cmdLevel(score()) < ALLY_LVL ? ` (you are ${cmdLevel(score())})` : ""}.</span><button class="btn sm" data-act="allyView" data-v="create" ${cmdLevel(score()) >= ALLY_LVL ? "" : "disabled"}>Found</button></div>`}`;
 }
+/* v543 commanders near your level who played this week, to befriend */
+function buddyPicks(n = 3) { const lv = cmdLevel(score()), fr = new Set(S.friends || []), T = now(); return Object.entries(G.players || {}).filter(([id, p]) => id !== G.me && !isBot(id) && !fr.has(id) && p && (p.last || p.joined || 0) > T - 7 * 864e5).map(([id, p]) => [id, p, Math.abs(cmdLevel(p.score || 0) - lv)]).sort((a, b) => a[2] - b[2]).slice(0, n); }
+const buddyHTML = () => { const L = buddyPicks(); return L.length ? `<div class="mcard buddy"><h3>🤝 Commanders near your level</h3><p>Add a friend to see their worlds, send gifts and help each other. Your first three friends each bring a ◆3 buddy bonus.</p>${L.map(([id, p]) => `<div class="bdr">${avCanvas(id, "avc lbav")}<span><b>${esc(nameOf(id))}</b><small>Commander Lv.${cmdLevel(p.score || 0)}</small></span><button class="btn sm" data-act="befriend" data-u="${id}">Add friend</button></div>`).join("")}</div>` : ""; };
+setInterval(() => { try { if (!S || !G.ready || G.mode !== "online" || S.ally || S.starterAsk || tutOn() || sheet || battle || advLines || !S.tut || S.tut.k !== "done" || $("#starterask") || $("#pushask")) return; const a = quickAlly(); if (!a) return;
+  S.starterAsk = 1; dirty(); const w = document.createElement("div"); w.id = "starterask"; w.className = "toast rmd busy pushask";
+  w.innerHTML = `<span class="ric">🛡</span><span class="rtx"><small>Stronger together</small><b>Join [${esc(a.tag)}] ${esc(a.name)}?</b><em>An active alliance with room for you. Join now for a welcome gift: ◆10 and a Boost Pack ×5.</em></span><span class="rbt"><button class="btn sm amber" data-act="starterJoin">Join</button><button class="rx" data-act="starterLater" aria-label="Not now">✕</button></span>`;
+  const box = $("#toasts"); if (box) box.appendChild(w); setTimeout(() => { if (w.isConnected) w.remove(); }, 25000); } catch (e) {} }, 60000);
 function allyInfoView() {
   const lv = cmdLevel(score()), lvOk = lv >= ALLY_LVL, qa = G.mode === "online" ? quickAlly() : null;
   return `${allyHd("Alliance", "You have not joined or founded an alliance yet.")}
-    <div class="mcard qjoin"><h3>⚡ Quick join</h3><p>${qa ? `Join the strongest open alliance with room: <b>[${esc(qa.tag)}] ${esc(qa.name)}</b> · ${Object.keys(qa.members).length}/${allyCap(qa)} members.` : G.mode === "online" ? "No open alliance has room right now. Found your own below." : "Alliances with other players need the shared galaxy."}</p>
+    ${G.mode === "online" ? buddyHTML() : ""}<div class="mcard qjoin"><h3>⚡ Quick join</h3><p>${qa ? `Join the strongest open alliance with room: <b>[${esc(qa.tag)}] ${esc(qa.name)}</b> · ${Object.keys(qa.members).length}/${allyCap(qa)} members.` : G.mode === "online" ? "No open alliance has room right now. Found your own below." : "Alliances with other players need the shared galaxy."}</p>
       <button class="btn amber wide" data-act="allyQuick" ${qa ? "" : "disabled"}>⚡ Quick join</button></div>
     <div class="mcard"><h3>${NAVI.ally.replace("<svg", '<svg style="width:24px;height:24px;color:var(--cyan)"')}Why join?</h3><p>Alliance members share a chat channel and combine their fleets: joint strikes, the alliance depot for mutual defense, and the Battle for the Cube.</p>
       <div class="actbtns"><button class="btn" data-act="allyView" data-v="list">Find an alliance</button><button class="btn ghost" data-act="allyView" data-v="create">Found one</button></div></div>
@@ -22468,9 +22484,12 @@ const ACT = {
     if (a.open === false) return toast("That alliance is private: it isn't taking new members.", "warn");
     if (Object.keys(a.members).length >= allyCap(a)) return toast("That alliance is full.", "warn");
     S.ally = d.id; a.members[G.me] = now(); store.lastPlayer = ""; dirty(); closeSheet(); sub.allyView = ""; render(true);
-    G.db.doc("alliances/" + d.id).update({ members: { [G.me]: now() } }).then(() => toast(`You joined [${a.tag}] ${a.name}.`, "win"))
+    G.db.doc("alliances/" + d.id).update({ members: { [G.me]: now() } }).then(() => { toast(`You joined [${a.tag}] ${a.name}.`, "win"); if (!S.welcomeAlly && (G.welcomeAllyGo || (S.tut && S.tut.k !== "done") || cmdLevel(score()) < 15)) { S.welcomeAlly = now(); S.shards = (S.shards || 0) + 10; giveItem("boost5"); dirty(); setTimeout(() => toast("Welcome gift for joining an alliance: ◆10 and a Boost Pack ×5.", "win"), 1500); } }) /* v543 */
       .catch(() => { S.ally = null; delete a.members[G.me]; toast("Couldn't join that alliance.", "loss"); render(true); });
   },
+  collClaim: d => act(() => { const ks = ARCH_ORD.filter(k => ARCH[k].cat === d.c); if (!ks.length || ks.some(k => archLv(k) < 2)) return; S.coll = S.coll || {}; if (S.coll[d.c]) return; S.coll[d.c] = now(); const n = Math.min(60, ks.length * 10); S.shards = (S.shards || 0) + n; toast(`Collection complete: ◆${n} and +1% production on every world, for good.`, "win"); try { SFX.fanfare(true); } catch (e) {} }), /* v543 */
+  starterJoin: () => { const a = quickAlly(); const c = $("#starterask"); if (c) c.remove(); if (!a) return toast("No open alliance has room right now. Found your own from Alliances!", "warn"); G.welcomeAllyGo = 1; ACT.allyJoin({ id: a.id }); },
+  starterLater: () => { const c = $("#starterask"); if (c) c.remove(); },
   allyQuick: () => { const a = quickAlly(); if (!a) return toast("No open alliance has room right now. Found your own!", "warn"); ACT.allyJoin({ id: a.id }); },
   allyOpenSet: d => { const a = myAlly(); if (!a || !allyCan(a, "open")) return; const v = d.v === "1" || d.v === 1; allyMutate(a.id, x => { x.open = v; }, v ? "Your alliance is open: anyone can join." : "Your alliance is private: it isn't taking new members."); },
   allyMem: d => openSheet({ type: "allymem", id: d.id, u: d.u }),
@@ -22712,7 +22731,7 @@ const ACT = {
   ranksTab: d => { const st = sheet && sheet.type === "ranks" ? sheet : (sub.rk = sub.rk || {}); st.tab = d.v; st.pick = null; sheet && sheet.type === "ranks" ? renderSheet() : render(true); },
   friends: () => openSheet({ type: "friends", q: "" }),
   profile: d => openSheet({ type: "profile", u: d.u || G.me }),
-  befriend: d => { if (!d.u || d.u === G.me) return; S.friends = S.friends || []; if (S.friends.includes(d.u)) return; if (S.friends.length >= 100) return toast("Your friends list is full (100).", "warn");
+  befriend: d => { if (!d.u || d.u === G.me) return; S.friends = S.friends || []; if (S.friends.includes(d.u)) return; if ((S.buddyN || 0) < 3 && S.friends.length < 100) { S.buddyN = (S.buddyN || 0) + 1; S.shards = (S.shards || 0) + 3; setTimeout(() => toast("Buddy bonus: ◆3 for making a friend in the galaxy.", "win"), 900); } /* v543 */ if (S.friends.length >= 100) return toast("Your friends list is full (100).", "warn");
     S.friends.push(d.u); dirty(); toast(`${nameOf(d.u)} added to your friends.`, "win"); render(true); },
   unfriend: d => { S.friends = (S.friends || []).filter(u => u !== d.u); dirty(); render(true); },
   block: d => { S.blocked = (S.blocked || []).concat(d.u).filter((u, i, a) => a.indexOf(u) === i); dirty(); toast("Blocked. You won't see their messages."); render(true); },
