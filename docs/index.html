@@ -704,6 +704,24 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 .stiles .sbuy{margin-top:auto;flex-wrap:wrap;gap:4px}.stiles .sbuy .btn{flex:1 0 auto}
 .stiles .sbadge{top:12px;right:12px;font-size:9px}
 .send{text-align:center;padding:14px 0 6px}
+/* v542 the Void Pass */
+.vpban{height:auto;min-height:190px;border:1.5px solid color-mix(in srgb,var(--vc) 70%,transparent);border-radius:14px;background:radial-gradient(120% 90% at 80% 20%,color-mix(in srgb,var(--vc) 32%,#0b0f24),#05070f 70%);box-shadow:0 0 24px color-mix(in srgb,var(--vc) 30%,transparent);overflow:hidden}
+.vpglyph{position:absolute;right:-30px;top:50%;width:220px;height:220px;margin-top:-110px;border-radius:50%;border:1px solid color-mix(in srgb,var(--vc) 55%,transparent);animation:gwring 40s linear infinite;opacity:.85}
+.vpglyph i{position:absolute;left:50%;top:50%;font-style:normal;font-size:22px;color:var(--vc);text-shadow:0 0 10px var(--vc);transform:rotate(var(--a)) translateY(-96px) rotate(calc(-1 * var(--a)))}
+.vptop{position:absolute;top:10px;left:12px;right:12px;display:flex;gap:8px;align-items:center}.vptop small{font-size:11.5px;color:#d6e2ea}
+.vpbot{position:relative;padding:44px 12px 12px;display:flex;flex-direction:column;gap:3px;max-width:72%}.vpbot>b{font:800 28px var(--f-display,sans-serif);letter-spacing:.06em;color:#fff;text-shadow:0 0 16px var(--vc)}.vpbot>em{font-style:normal;color:color-mix(in srgb,var(--vc) 60%,#fff);font-size:13px}
+.vplv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 8px;align-items:center;margin-top:6px}.vplv span{font-size:12px;color:#d6e2ea}.vplv span b{font-size:18px;color:#fff}.vplv small{grid-column:2;font-size:10.5px;color:#aab8c4}
+.vpxp{height:10px;border-radius:5px;background:rgba(0,0,0,.55);overflow:hidden;border:1px solid color-mix(in srgb,var(--vc) 50%,transparent)}.vpxp i{display:block;height:100%;background:linear-gradient(90deg,#fff8,var(--vc));box-shadow:0 0 8px var(--vc)}
+.vpprem{position:absolute;right:10px;bottom:10px;font-size:10.5px;font-weight:800;letter-spacing:.1em;padding:3px 8px;border-radius:7px;background:#ffcf5a;color:#1a1000}
+.vpbuy{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px;border-radius:14px;border:1px solid rgba(255,207,90,.6);background:linear-gradient(110deg,rgba(255,207,90,.16),rgba(8,14,22,.9));margin-bottom:8px}.vpbuy b{color:#ffcf5a}.vpbuy small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.vpms{display:flex;flex-direction:column;gap:6px;margin:8px 0}.vpmh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:6px}.vpmh>b{font-size:15px}
+.vpm{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 11px;border-radius:11px;border:1px solid var(--line);background:rgba(4,10,16,.55)}.vpm b{font-size:13px}.vpm>span{text-align:right;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}.vpm>span small{display:block;font-weight:400;font-size:10.5px;color:var(--cyan)}
+.vpmb{height:6px;border-radius:3px;background:rgba(255,255,255,.08);margin-top:5px;overflow:hidden}.vpmb i{display:block;height:100%;background:var(--cyan)}.vpm.done{border-color:rgba(93,255,154,.5)}.vpm.done .vpmb i{background:#5dff9a}.vpm.done>span{color:#5dff9a}
+.vptrack{display:flex;flex-direction:column;gap:5px;max-height:460px;overflow-y:auto;padding-right:2px}
+.vpt{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:stretch}.vpt>b{display:grid;place-items:center;border-radius:9px;background:rgba(255,255,255,.05);font-size:13px;color:var(--muted)}.vpt.on>b{background:rgba(85,214,232,.2);color:var(--cyan)}.vpt.cur>b{box-shadow:0 0 0 1.5px var(--cyan)}
+.vpc{position:relative;display:flex;gap:6px;align-items:center;padding:6px 8px;border-radius:9px;border:1px solid var(--line);background:rgba(4,10,16,.55);min-height:44px}.vpc span{font-size:16px}.vpc small{font-size:10.5px;line-height:1.25;color:#cfdbe4}
+.vpc.p{border-color:rgba(255,207,90,.35);background:linear-gradient(110deg,rgba(255,207,90,.08),rgba(4,10,16,.55))}.vpc.ready{border-color:#5dff9a;box-shadow:0 0 10px rgba(93,255,154,.3)}.vpc.got{opacity:.55}.vpc.lock{opacity:.6}
+.vpc em{position:absolute;top:3px;right:6px;font-style:normal;font-size:11px;color:#5dff9a}.vpc.lock em{color:#ffcf5a}
 .shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .sitem{position:relative;display:flex;flex-direction:column;gap:5px;padding:10px;border-radius:12px;border:1px solid color-mix(in srgb,var(--tc) 45%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 16%,transparent),rgba(8,18,28,.9) 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
 .sitem b{font-size:14px}.sitem small{font-size:12px;color:var(--muted);flex:1;line-height:1.35}
@@ -4794,7 +4812,7 @@ function wheelPull() { if (G.wheel || (S.shopFree || "") === shopDay() || S.whee
   let r = Math.random() * WHEEL.reduce((a, W) => a + W.w, 0), idx = 0; for (let i = 0; i < WHEEL.length; i++) { r -= WHEEL[i].w; if (r < 0) { idx = i; break; } }
   const st = 360 / WHEEL.length, from = G.wheelRot || 0, aim = -(idx * st + st / 2) + (Math.random() - .5) * st * .6, to = from + 360 * 6 + (((aim - from) % 360) + 360) % 360;
   G.wheelWin = null; G.wheel = { from, to, t0: performance.now(), dur: 4800, idx, seg: -1 };
-  act(() => { S.shopFree = shopDay(); S.wheelPend = idx; }); crumb("glyph wheel spun");
+  act(() => { S.shopFree = shopDay(); S.wheelPend = idx; bump("wheelSpins"); }); crumb("glyph wheel spun");
   requestAnimationFrame(wheelAnim); }
 function wheelAnim() { const R = G.wheel; if (!R) return; const u = Math.min(1, (performance.now() - R.t0) / R.dur), e = 1 - Math.pow(1 - u, 4), rot = R.from + (R.to - R.from) * e; G.wheelRot = rot;
   const el = document.getElementById("gwheel"); if (el) el.style.transform = `rotate(${rot}deg)`;
@@ -4905,7 +4923,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 541;
+const GAME_V = 542;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8498,7 +8516,7 @@ function gwClaimable(T = now()) { const g = gwState(T), mile = GW_MILE.map(([nee
   const rank = L && !L.ranked && L.pts > 0 ? gwBoard(L.i).findIndex(r => r.me) + 1 : 0; return { mile, rank }; }
 /* events page: banners you switch between, an Overview of the chosen event (time, info, rules, rewards and one Claim button),
    and a Ranking tab, in the same layout as the classic space-strategy event screens */
-const EVS = [["sboss", "Super Boss Hunt", "☠"], ["tboss", "Titan Hunt", "☣"], ["eboss", "Convergence", "✪"], ["gw", "Galaxy War", "⚔"], ["cube", "Battle for the Cube", "■"], ["builder", "Bonus Builder", "▦"], ["online", "Online Bonus", "◷"], ["lvlb", "Level Bonus", "▲"], ["daily", "Daily Challenge", "★"], ["login", "Daily Login", "▣"], ["ach", "Achievements", "✦"], ["vip", "VIP", "♛"], ["gifts", "Alliance Gifts", "🎁"]];
+const EVS = [["pass", "Void Pass", "❖"], ["sboss", "Super Boss Hunt", "☠"], ["tboss", "Titan Hunt", "☣"], ["eboss", "Convergence", "✪"], ["gw", "Galaxy War", "⚔"], ["cube", "Battle for the Cube", "■"], ["builder", "Bonus Builder", "▦"], ["online", "Online Bonus", "◷"], ["lvlb", "Level Bonus", "▲"], ["daily", "Daily Challenge", "★"], ["login", "Daily Login", "▣"], ["ach", "Achievements", "✦"], ["vip", "VIP", "♛"], ["gifts", "Alliance Gifts", "🎁"]];
 /* v88: the red number on each event card: rewards waiting to be claimed there */
 function evCount(k) { if (!S) return 0; try {
   if (k === "sboss") return sbReady();
@@ -8508,9 +8526,10 @@ function evCount(k) { if (!S) return 0; try {
   if (k === "login") return loginState().claimed ? 0 : 1;
   if (k === "daily") { const s = soloState(); return SOLO_TIERS.filter(([need], i) => s.pts >= need && !s.claimed.includes(i)).length; }
   if (k === "gifts") return giftsOpen().length;
+  if (k === "pass") return vpReady(); /* v542 */
   if (k === "ach") return achReady();
   const b = bonusReady(); return k === "builder" ? b.bb : k === "online" ? b.ob : k === "lvlb" ? b.lb : 0; } catch (e) { return 0; } }
-function evBanner(k, T) { if (k === "sboss") return sbBanner(T); if (k === "tboss") return sbBanner(T, 2); if (k === "eboss") return sbBanner(T, 3);
+function evBanner(k, T) { if (k === "pass") return vpBanner(T); /* v542 */ if (k === "sboss") return sbBanner(T); if (k === "tboss") return sbBanner(T, 2); if (k === "eboss") return sbBanner(T, 3);
   const art = { gw: ART.dreadnought || ART.battleship, cube: ART.cube || null, daily: ART.destroyer || null, login: ART.hauler || null, vip: ART.supercarrier || null, gifts: ART.heavyCargo || null, builder: ART.colonyShip || ART.hauler || null, online: ART.cruiser || null, lvlb: ART.battlecruiser || ART.battleship || null, ach: ART.worldbreaker || ART.dreadnought || null }[k];
   let title = (EVS.find(e => e[0] === k) || [0, ""])[1], tail = "";
   if (k === "gw") { const i = gwIdx(T), live = gwLive(T); title = `Galaxy War ${["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][(i % 10 + 10) % 10]}`; tail = live ? `Event ends in: <b data-end="${gwEnd(i)}">${ftime(gwEnd(i) - T)}</b>` : `Next war in: <b data-end="${gwStart(i + 1)}">${ftime(gwStart(i + 1) - T)}</b>`; }
@@ -8843,6 +8862,51 @@ function evRankHTML(k) { const D = EVB[k], rows = evBoard(k), mi = rows.findInde
   if (k === "gifts" && !myAlly()) return `<p class="note" style="padding:10px">Join an alliance to see who sends the most gifts.</p>`;
   return `<div class="evrank"><div class="evrh"><span>Rank</span><span>${k === "gifts" ? "Member" : "Commander"}</span><span>${esc(D[0])}</span></div>${show.map(r => { const pos = rows.indexOf(r) + 1; return `<div class="evrr${r.me ? " me" : ""}"><span>${pos <= 3 ? ["🥇", "🥈", "🥉"][pos - 1] : pos + "."}</span><span>${esc(r.me ? (G.myName || "You") + " (you)" : r.bot ? BOT_BY[r.id].name : nameOf(r.id))}${r.bot ? ' <i class="botk">bot</i>' : ""}</span><span>${D[2](r.v)}</span></div>`; }).join("")}</div>
     ${rows.length < 2 ? `<p class="note" style="padding:6px 10px">${k === "gifts" ? "Gifts your alliance members send show up here." : "Other commanders show up here as they play."}</p>` : ""}`; }
+
+/* ---------- v542 the Void Pass ---------- */
+const VP_BASE = Date.UTC(2026, 10, 9), VP_LEN = 28 * 864e5, VP_TIERS = 40, VP_XP = 2000, VP_PREM = 500;
+const VP_SEASONS = [["Season of the Leviathan", "#ff8a4a", "blacksun"], ["Season of the Cube", "#5dff6a", "voidbloom"], ["Season of the Pentarch", "#e2d4ff", "magnetar"], ["Season of the Starhive", "#ffb02a", "phoenix"], ["Season of the Kraken", "#c890ff", "kraken"], ["Season of the Wyrm", "#ffa040", "dragon"]];
+const vpSeason = (T = now()) => Math.floor((T - VP_BASE) / VP_LEN), vpEnd = (i = vpSeason()) => VP_BASE + (i + 1) * VP_LEN, vpInfo = (i = vpSeason()) => VP_SEASONS[((i % VP_SEASONS.length) + VP_SEASONS.length) % VP_SEASONS.length];
+const VP_DAILY = [["built", 2, "Finish 2 constructions"], ["researched", 1, "Finish a research"], ["shipsBuilt", 20, "Build 20 ships or defences"], ["battlesWon", 3, "Win 3 battles"], ["monKills", 1, "Slay a space monster"], ["hiveWins", 2, "Beat 2 Hive garrisons"], ["fleetsSent", 4, "Send 4 fleets"], ["caches", 2, "Haul in 2 salvage pods"], ["trades", 1, "Make a trade at the Supply Depot"], ["wheelSpins", 1, "Spin the Holo Glyph Wheel"], ["spdMin", 30, "Use 30 minutes of speed-ups"]];
+const VP_WEEKLY = [["built", 15, "Finish 15 constructions"], ["researched", 5, "Finish 5 researches"], ["monKills", 6, "Slay 6 space monsters"], ["battlesWon", 20, "Win 20 battles"], ["bosses", 3, "Strike a boss 3 times"], ["pvpWins", 3, "Win 3 battles against commanders"], ["depContracts", 3, "Deliver 3 depot contracts"], ["shipsBuilt", 300, "Build 300 ships or defences"], ["fleetsSent", 25, "Send 25 fleets"], ["caches", 10, "Haul in 10 salvage pods"], ["spdMin", 300, "Use 5 hours of speed-ups"]];
+const vpStat = k => k === "spdMin" ? Math.floor(((S.stats || {}).spdMs || 0) / 60000) : k === "battlesWon" ? ((S.rec || {}).w || 0) : ((S.stats || {})[k] || 0);
+const vpPick = (pool, n, seed) => pool.map((m, i) => [hash(seed + "|" + i), m]).sort((a, b) => a[0] - b[0]).slice(0, n).map(x => x[1]);
+const vpWeek = (T = now()) => Math.floor((T - VP_BASE) / (7 * 864e5));
+function vpReward(i, prem, si = vpSeason()) { const t = i + 1;
+  if (!prem) return t % 10 === 0 ? { shards: 15, item: "mb2" } : t % 5 === 0 ? { shards: 5 } : [{ item: "crateM" }, { item: "xb_bronze" }, { item: "crateC" }, { item: "xf_bronze" }, { item: "crateG" }, { item: "xr_bronze" }, { m: 60000 * Math.ceil(t / 8), c: 40000 * Math.ceil(t / 8), g: 15000 * Math.ceil(t / 8) }, { item: "xs_bronze" }][i % 8];
+  if (t === VP_TIERS) return { shards: 100, skin: vpInfo(si)[2] };
+  if (t === 10) return { shards: 10, item: "o_staff_7" }; if (t === 20) return { shards: 10, item: "mb3" }; if (t === 30) return { shards: 10, item: "pAll_gold" };
+  return { shards: 10, item: ["xb_silver", "xs_silver", "xr_silver", "bf_silver", "mb2", "xf_gold", "boost5", "bm_gold", "bc_gold", "bg_gold"][i % 10] }; }
+const vpRwText = r => [r.shards ? `◆${r.shards}` : "", r.item && SHOP[r.item] ? SHOP[r.item].n + (ITIERS[SHOP[r.item].tier] ? " " + ITIERS[SHOP[r.item].tier][1] : "") : "", r.m ? `${fmt(r.m)} metal, ${fmt(r.c)} crystal, ${fmt(r.g)} gas` : "", r.skin ? `Exclusive skin: ${(typeof PXS !== "undefined" && PXS[r.skin] && PXS[r.skin].n) || r.skin}` : ""].filter(Boolean).join(" + ");
+function vpGrant(r) { if (r.shards) S.shards = (S.shards || 0) + r.shards; if (r.item && SHOP[r.item]) giveItem(r.item); if (r.m) { S.res.m += r.m; S.res.c += r.c; S.res.g += r.g; } if (r.skin) { S.pxOwn = S.pxOwn || {}; S.pxOwn[r.skin] = 1; } }
+function vpState(T = now()) { const si = vpSeason(T); let v = S.vp;
+  if (!v || v.s !== si) { if (v && typeof v.s === "number") { const lv = Math.min(VP_TIERS, Math.floor((v.xp || 0) / VP_XP)); let n = 0; for (let i = 0; i < lv; i++) { if (!(v.cf || []).includes(i)) { vpGrant(vpReward(i, false, v.s)); n++; } if (v.pr && !(v.cp || []).includes(i)) { vpGrant(vpReward(i, true, v.s)); n++; } } if (n) note(`Void Pass: ${n} unclaimed reward${n > 1 ? "s" : ""} from last season added to your stores.`, "win"); }
+    v = S.vp = { s: si, xp: 0, pr: 0, cf: [], cp: [] }; dirty(); }
+  const day = utcDay(), wk = vpWeek(T), snap = () => { const o = {}; for (const [k] of VP_DAILY.concat(VP_WEEKLY)) o[k] = vpStat(k); return o; };
+  if (!v.d || v.d.day !== day) { v.d = { day, base: snap(), done: [] }; dirty(); } if (!v.w || v.w.wk !== wk) { v.w = { wk, base: snap(), done: [] }; dirty(); }
+  return v; }
+const vpMissions = (v, kind) => { const daily = kind === "d", L = daily ? vpPick(VP_DAILY, 3, "vpd" + v.d.day) : vpPick(VP_WEEKLY, 5, "vpw" + v.w.wk), P = daily ? v.d : v.w;
+  return L.map(([k, need, t]) => ({ k, need, t, have: Math.min(need, Math.max(0, vpStat(k) - (P.base[k] || 0))), done: P.done.includes(k), xp: daily ? 400 : 2000 })); };
+function vpTick() { if (!S || !G.ready) return; try { const v = vpState(); let add = 0, msg = [];
+  for (const [kind, P] of [["d", v.d], ["w", v.w]]) for (const m of vpMissions(v, kind)) if (!m.done && m.have >= m.need) { P.done.push(m.k); add += m.xp; msg.push(m.t); }
+  if (v.d.done.length >= 3 && !v.d.all) { v.d.all = 1; add += 300; msg.push("All three daily missions"); }
+  if (add) { const lv0 = Math.floor(v.xp / VP_XP); v.xp += add; dirty(); const lv1 = Math.min(VP_TIERS, Math.floor(v.xp / VP_XP)); toast(`Void Pass +${fmt(add)} XP · ${msg[0]}${msg.length > 1 ? ` and ${msg.length - 1} more` : ""}${lv1 > lv0 ? `. Tier ${lv1} reached!` : ""}`, "win"); if (lv1 > lv0) try { SFX.research(); } catch (e) {} } } catch (e) {} }
+setInterval(vpTick, 5000);
+const vpReady = () => { try { const v = vpState(), lv = Math.min(VP_TIERS, Math.floor(v.xp / VP_XP)); let n = 0; for (let i = 0; i < lv; i++) { if (!v.cf.includes(i)) n++; if (v.pr && !v.cp.includes(i)) n++; } return n; } catch (e) { return 0; } };
+function vpBanner(T) { const v = vpState(T), si = vpSeason(T), [nm, col] = vpInfo(si), lv = Math.min(VP_TIERS, Math.floor(v.xp / VP_XP)), into = lv >= VP_TIERS ? VP_XP : v.xp - lv * VP_XP;
+  return `<div class="evban vpban" style="--vc:${col}"><div class="vpglyph" aria-hidden="true">${"ᚠᚱᛉᛗᚲᛟᚷᛞ".split("").map((g, i) => `<i style="--a:${i * 45}deg">${g}</i>`).join("")}</div>
+    <div class="vptop"><span class="vlive on">SEASON ${si + 1}</span><small>Ends in <b data-end="${vpEnd(si)}">${ftime(vpEnd(si) - T)}</b></small></div>
+    <div class="vpbot"><b>Void Pass</b><em>${esc(nm)}</em><div class="vplv"><span>Tier <b>${lv}</b>/${VP_TIERS}</span><div class="vpxp"><i style="width:${(into / VP_XP * 100).toFixed(1)}%"></i></div><small>${fmt(into)} / ${fmt(VP_XP)} XP</small></div></div>${v.pr ? '<span class="vpprem">♛ PREMIUM</span>' : ""}</div>`; }
+function vpBody(T) { const v = vpState(T), lv = Math.min(VP_TIERS, Math.floor(v.xp / VP_XP)), si = vpSeason(T), skin = vpInfo(si)[2];
+  const ms = (kind, head, end) => `<div class="vpms"><div class="vpmh"><b>${head}</b><span class="note">resets in <b data-end="${end}">${ftime(end - T)}</b></span></div>${vpMissions(v, kind).map(m => `<div class="vpm${m.done ? " done" : ""}"><div><b>${esc(m.t)}</b><div class="vpmb"><i style="width:${(m.have / m.need * 100).toFixed(0)}%"></i></div></div><span>${m.done ? "✓" : `${fmt(m.have)}/${fmt(m.need)}`}<small>+${fmt(m.xp)} XP</small></span></div>`).join("")}${kind === "d" ? `<p class="note">All three today: +300 XP bonus${v.d.all ? " ✓" : ""}.</p>` : ""}</div>`;
+  const dayEnd = Date.UTC(new Date(T).getUTCFullYear(), new Date(T).getUTCMonth(), new Date(T).getUTCDate() + 1), wkEnd = VP_BASE + (vpWeek(T) + 1) * 7 * 864e5;
+  const cell = (i, prem) => { const r = vpReward(i, prem, si), got = (prem ? v.cp : v.cf).includes(i), open = i < lv, lock = prem && !v.pr; return `<div class="vpc${prem ? " p" : ""}${got ? " got" : open && !lock ? " ready" : ""}${lock ? " lock" : ""}"><span>${r.skin ? "🪐" : r.shards && !r.item ? "◆" : r.m ? "▣" : "🎁"}</span><small>${esc(vpRwText(r))}</small>${got ? "<em>✓</em>" : lock ? "<em>♛</em>" : ""}</div>`; };
+  const track = Array.from({ length: VP_TIERS }, (_, i) => `<div class="vpt${i < lv ? " on" : ""}${i === lv ? " cur" : ""}"><b>${i + 1}</b>${cell(i, false)}${cell(i, true)}</div>`).join("");
+  return `<div class="evinfo vpw">
+    ${v.pr ? "" : `<div class="vpbuy"><div><b>♛ Unlock Premium</b><small>A second reward on every tier: ◆${VP_PREM} back in shards over the season, speed-ups, boosters, an officer, forge boxes and the exclusive <b>${esc((typeof PXS !== "undefined" && PXS[skin] && PXS[skin].n) || skin)}</b> planet skin at tier ${VP_TIERS}. Tiers you've already reached pay out at once.</small></div><button class="btn amber" data-act="vpPrem" ${(S.shards || 0) >= VP_PREM ? "" : "disabled"}>◆${VP_PREM}</button></div>`}
+    ${ms("d", "Daily missions", dayEnd)}${ms("w", "Weekly missions", wkEnd)}
+    <div class="vpmh"><b>Rewards</b><span class="note">Free · Premium</span></div><div class="vptrack">${track}</div>
+    <p class="note">XP comes from missions. Rewards you reach and don't claim are paid out when the season ends.</p></div>`; }
 /* v539 Events lives in the hub (the dock's Events tab); a boss event shows only in its week, while live, or with rewards waiting */
 const evState = () => sheet && sheet.type === "events" ? sheet : (sub.ev = sub.ev || {});
 const evShow = (key, T = now()) => { const g = key === "eboss" ? 3 : key === "tboss" ? 2 : key === "sboss" ? 1 : 0; if (!g) return true; try { return wbGroupOn(g, T) || wbGroupNext(g, T) - T <= 7 * 864e5 || sbReady(g) > 0; } catch (e) { return true; } };
@@ -8866,6 +8930,7 @@ function shEvents(inline) {
       : `<div class="evrank"><div class="evrh"><span>Rank</span><span>Alliance</span><span>Hold time</span></div>${stand.map(([aid, ms], j) => `<div class="evrr${aid === S.ally ? " me" : ""}"><span>${j + 1}.</span><span>${esc(allyTag(aid))}</span><span>${fmt(ms / 60000)} min</span></div>`).join("") || '<p class="note" style="padding:10px">No alliance has held the Cube this week yet.</p>'}</div>`;
     claim = ""; } // v91: Join lives on the video card
   else if (k === "sboss" || k === "tboss" || k === "eboss") { const g = k === "eboss" ? 3 : k === "tboss" ? 2 : 1; body = tab === "ov" ? sbOverview(T, g) : sbRanking(T, g); const n = sbReady(g); claim = `<button class="btn ${n ? "amber" : "ghost"} evclaim" data-act="sbClaim" data-g="${g}" ${n ? "" : "disabled"}>${n ? `Claim · ${n} milestone${n > 1 ? "s" : ""}` : "Claim"}</button>`; }
+  else if (k === "pass") { body = tab === "rk" ? `<p class="note" style="padding:10px">Season standings arrive with the next update. Climb the tiers in the meantime.</p>` : vpBody(T); const n = vpReady(); claim = `<button class="btn ${n ? "amber" : "ghost"} evclaim" data-act="vpClaim" ${n ? "" : "disabled"}>${n ? `Claim all · ${n} reward${n > 1 ? "s" : ""}` : "Claim"}</button>`; } /* v542 */
   else if (k === "builder" || k === "online" || k === "lvlb") body = tab === "rk" ? evRankHTML(k) : bonusBody(k, T);
   else if (k === "ach" && tab === "rk") body = evRankHTML(k);
   else if (k === "ach") { body = `<div class="evinfo"><h4>Achievement Points:</h4><p><b class="evscore">${fmt(achPts())}</b> · ${achReady()} tier${achReady() === 1 ? "" : "s"} ready to claim</p><p>Long-term goals for every part of the game: level, PvP, raids, recycling, relocating, speed-ups, ship production and more.</p></div>`;
@@ -21545,7 +21610,7 @@ const humanFoe = u => typeof u === "string" && u && u !== G.me && !isBot(u) && u
 /* every battle you fight counts toward your win/loss/draw record; fights against other commanders also earn PvP points from the damage you deal */
 function recordBattle(rep) {
   if (!rep || rep.recDone || !(rep.rounds && rep.rounds.length)) return; rep.recDone = 1;
-  S.rec = S.rec || { w: 0, l: 0, d: 0 }; if (rep.winner === "draw") S.rec.d++; else if (repWin(rep)) S.rec.w++; else S.rec.l++;
+  S.rec = S.rec || { w: 0, l: 0, d: 0 }; if (rep.winner === "draw") S.rec.d++; else if (repWin(rep)) { S.rec.w++; if (rep.mon) bump("monKills"); if ((rep.kind === "defense" || rep.kind === "raid" ? (rep.aUids || []) : [rep.dUid]).some(u => humanFoe(u))) bump("pvpWins"); } else S.rec.l++; /* v542 the pass counters */
   const side = rep.kind === "defense" || rep.kind === "raid" ? "d" : "a", foes = side === "a" ? [rep.dUid] : (rep.aUids || []);
   if (!foes.some(humanFoe)) return;
   let dmg = 0; const st = rep.sim && rep.sim.stats && rep.sim.stats[side];
@@ -22092,7 +22157,7 @@ function sendFleet(p, n, mission, extra) {
   const T = now(), tt = travelMs(h, p, n, S.r, pct), hp = pos(h, T);
   const f = Object.assign({ id: "f" + (S.seq++), pid: p.id, mission, n, out: T, arrive: T + (mission === "spy" ? tt : trainTT(p, tt)), tt, back: null, loot: null, phase: "out", ox: hp.x, oy: hp.y, from: h.kind !== "home" ? h.id : null, spd: pct, fuel }, extra || {});
   if (!f.form && sheet && FORMS[sheet.form]) f.form = sheet.form; // v274: the formation picked on the launch screen
-  S.fleets.push(f);
+  S.fleets.push(f); bump("fleetsSent"); /* v542 */
   if (Object.keys(n).some(k => CLASS_OF[k] === "frigate" && n[k] > 0) && typeof reveal === "function") { const q = pos(p, T); reveal(q.x, q.y, 12); } // frigates scout ahead
   if (mission === "attack" && p.owner && p.owner !== G.me && p.kind !== "home") publishInbound(p.owner, f);
   if (mission === "spy" && p.owner && p.owner !== G.me) publishInbound(p.owner, f); // v279: the target's screen flashes red
@@ -22176,7 +22241,7 @@ const ACT = {
   }),
   depSwap: () => { const t = menu.tr; [t.from, t.to] = [t.to, t.from]; t.amt = 0; renderMenu(); }, /* v536 */
   depFix: () => { advance(now()); const f = depFix(); if (!f) return; Object.assign(menu.tr, f); renderMenu(); },
-  depContract: () => act(() => { const C = depContract(); if (C.done || S.res[C.r] < C.amt) return; S.res[C.r] -= C.amt; S.depC = C.day; S.shards = (S.shards || 0) + 3; giveItem(C.crate); toast(`Contract delivered: ◆3 and a ${SHOP[C.crate].n}.`, "win"); try { SFX.research(); } catch (e) {} }),
+  depContract: () => act(() => { const C = depContract(); if (C.done || S.res[C.r] < C.amt) return; S.res[C.r] -= C.amt; S.depC = C.day; bump("depContracts"); S.shards = (S.shards || 0) + 3; giveItem(C.crate); toast(`Contract delivered: ◆3 and a ${SHOP[C.crate].n}.`, "win"); try { SFX.research(); } catch (e) {} }),
   buyBoost5: () => act(() => { let n = 0; for (; n < 5; n++) { if (!pay(boostPrice())) break; S.boosts++; S.boostBuys = (S.boostBuys || 0) + 1; } if (n) toast(`${n} boost${n > 1 ? "s" : ""} added to your inventory.`, "win"); else toast("Not enough resources.", "warn"); }),
   buyBoost: () => act(() => { if (!pay(boostPrice())) return toast("Not enough resources.", "warn"); S.boosts++; S.boostBuys = (S.boostBuys || 0) + 1; toast("Boost added to your inventory.", "win"); }),
   weeklyClaim: d => act(() => { ensureWeekly(); const w = S.weekly.tasks[+d.i]; if (!w || w.claimed || !dailyDone(w)) return; w.claimed = true; dirty(); grantRw(weeklyRw(), "Weekly mission"); SFX.research(); toast("Weekly mission claimed.", "win"); }), /* v338 */
@@ -22738,6 +22803,9 @@ const ACT = {
   allyOpen2: d => openSheet({ type: "ally", id: d.id }),
   fac4Battle: () => { if (!duelOwner()) return; toast("Building the 4 vs 4 faction war…"); setTimeout(() => { try { playBattle(fac4Battle()); } catch (e) { toast("Couldn't build the faction war on this device.", "warn"); } }, 60); }, /* v429 */
   labBattle: () => { if (!duelOwner()) return; toast("Building the 10 vs 10 battle…"); setTimeout(() => { try { const rep = labBattle(); dirty(); playBattle(rep); } catch (e) { toast("Couldn't build the test battle on this device.", "warn"); } }, 60); },
+  vpClaim: () => act(() => { const v = vpState(), lv = Math.min(VP_TIERS, Math.floor(v.xp / VP_XP)); let n = 0, sh = 0; for (let i = 0; i < lv; i++) { if (!v.cf.includes(i)) { const r = vpReward(i, false); vpGrant(r); sh += r.shards || 0; v.cf.push(i); n++; } if (v.pr && !v.cp.includes(i)) { const r = vpReward(i, true); vpGrant(r); sh += r.shards || 0; v.cp.push(i); n++; } }
+    if (n) { toast(`Void Pass: ${n} reward${n > 1 ? "s" : ""} claimed${sh ? ` (◆${sh} among them)` : ""}.`, "win"); try { SFX.research(); } catch (e) {} } }), /* v542 */
+  vpPrem: () => act(() => { const v = vpState(); if (v.pr) return; if ((S.shards || 0) < VP_PREM) return toast(`Premium costs ◆${VP_PREM} Void Shards.`, "warn"); S.shards -= VP_PREM; v.pr = 1; bump("shopBuys"); vipAdd(VP_PREM * 10); toast("Void Pass Premium unlocked! Claim the premium rewards for every tier you've reached.", "win"); try { SFX.fanfare(true); } catch (e) {} }),
   evPick: d => { evState().ev = d.v; sheet && sheet.type === "events" ? renderSheet() : render(true); },
   evTab: d => { evState().evTab = d.v; sheet && sheet.type === "events" ? renderSheet() : render(true); },
   sbPick: d => { evState().sbK = d.k; sheet && sheet.type === "events" ? renderSheet() : render(true); }, /* v539 */
