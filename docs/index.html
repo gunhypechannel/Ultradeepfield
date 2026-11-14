@@ -734,6 +734,12 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 #clipcard{position:fixed;inset:0;z-index:9998;display:grid;place-items:center;background:rgba(2,5,10,.78);padding:16px}
 .clipbx{display:flex;flex-direction:column;gap:8px;width:min(360px,100%);padding:14px;border-radius:16px;border:1px solid rgba(85,214,232,.5);background:#08121c}.clipbx video{width:100%;max-height:62vh;border-radius:10px;background:#000;object-fit:contain}.clipbx small{font-size:11.5px;color:var(--muted)}
 .clipbt{display:flex;gap:8px;flex-wrap:wrap}.clipbt>*{flex:1 0 auto;text-align:center;text-decoration:none}
+/* v545 Alliance Conquest */
+.cqban{height:auto;min-height:200px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:center;padding:10px;border:1.5px solid rgba(122,244,255,.5);border-radius:14px;background:radial-gradient(90% 90% at 25% 50%,#10203a,#04070e 75%)}
+.cqmap{width:100%;max-width:220px;justify-self:center;filter:drop-shadow(0 0 10px rgba(122,244,255,.25))}
+.cqtx{display:flex;flex-direction:column;gap:4px;min-width:0}.cqtx>b{font:800 21px var(--f-display,sans-serif);letter-spacing:.04em;color:#fff}.cqtx>small{font-size:12px;color:#c8d6e0}
+.cqleg{display:flex;flex-direction:column;gap:3px;margin-top:4px}.cqleg span{font-size:12px;color:#e9f1f7;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cqleg i,.cqdot{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none;margin-right:4px}
+@media (max-width:380px){.cqban{grid-template-columns:1fr}}
 .shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .sitem{position:relative;display:flex;flex-direction:column;gap:5px;padding:10px;border-radius:12px;border:1px solid color-mix(in srgb,var(--tc) 45%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 16%,transparent),rgba(8,18,28,.9) 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
 .sitem b{font-size:14px}.sitem small{font-size:12px;color:var(--muted);flex:1;line-height:1.35}
@@ -4936,7 +4942,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 544;
+const GAME_V = 545;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8529,7 +8535,7 @@ function gwClaimable(T = now()) { const g = gwState(T), mile = GW_MILE.map(([nee
   const rank = L && !L.ranked && L.pts > 0 ? gwBoard(L.i).findIndex(r => r.me) + 1 : 0; return { mile, rank }; }
 /* events page: banners you switch between, an Overview of the chosen event (time, info, rules, rewards and one Claim button),
    and a Ranking tab, in the same layout as the classic space-strategy event screens */
-const EVS = [["pass", "Void Pass", "❖"], ["sboss", "Super Boss Hunt", "☠"], ["tboss", "Titan Hunt", "☣"], ["eboss", "Convergence", "✪"], ["gw", "Galaxy War", "⚔"], ["cube", "Battle for the Cube", "■"], ["builder", "Bonus Builder", "▦"], ["online", "Online Bonus", "◷"], ["lvlb", "Level Bonus", "▲"], ["daily", "Daily Challenge", "★"], ["login", "Daily Login", "▣"], ["ach", "Achievements", "✦"], ["vip", "VIP", "♛"], ["gifts", "Alliance Gifts", "🎁"]];
+const EVS = [["pass", "Void Pass", "❖"], ["conq", "Alliance Conquest", "⚑"], ["sboss", "Super Boss Hunt", "☠"], ["tboss", "Titan Hunt", "☣"], ["eboss", "Convergence", "✪"], ["gw", "Galaxy War", "⚔"], ["cube", "Battle for the Cube", "■"], ["builder", "Bonus Builder", "▦"], ["online", "Online Bonus", "◷"], ["lvlb", "Level Bonus", "▲"], ["daily", "Daily Challenge", "★"], ["login", "Daily Login", "▣"], ["ach", "Achievements", "✦"], ["vip", "VIP", "♛"], ["gifts", "Alliance Gifts", "🎁"]];
 /* v88: the red number on each event card: rewards waiting to be claimed there */
 function evCount(k) { if (!S) return 0; try {
   if (k === "sboss") return sbReady();
@@ -8540,9 +8546,10 @@ function evCount(k) { if (!S) return 0; try {
   if (k === "daily") { const s = soloState(); return SOLO_TIERS.filter(([need], i) => s.pts >= need && !s.claimed.includes(i)).length; }
   if (k === "gifts") return giftsOpen().length;
   if (k === "pass") return vpReady(); /* v542 */
+  if (k === "conq") return cqClaimable() ? 1 : 0; /* v545 */
   if (k === "ach") return achReady();
   const b = bonusReady(); return k === "builder" ? b.bb : k === "online" ? b.ob : k === "lvlb" ? b.lb : 0; } catch (e) { return 0; } }
-function evBanner(k, T) { if (k === "pass") return vpBanner(T); /* v542 */ if (k === "sboss") return sbBanner(T); if (k === "tboss") return sbBanner(T, 2); if (k === "eboss") return sbBanner(T, 3);
+function evBanner(k, T) { if (k === "pass") return vpBanner(T); if (k === "conq") return cqBanner(T); /* v545 */ /* v542 */ if (k === "sboss") return sbBanner(T); if (k === "tboss") return sbBanner(T, 2); if (k === "eboss") return sbBanner(T, 3);
   const art = { gw: ART.dreadnought || ART.battleship, cube: ART.cube || null, daily: ART.destroyer || null, login: ART.hauler || null, vip: ART.supercarrier || null, gifts: ART.heavyCargo || null, builder: ART.colonyShip || ART.hauler || null, online: ART.cruiser || null, lvlb: ART.battlecruiser || ART.battleship || null, ach: ART.worldbreaker || ART.dreadnought || null }[k];
   let title = (EVS.find(e => e[0] === k) || [0, ""])[1], tail = "";
   if (k === "gw") { const i = gwIdx(T), live = gwLive(T); title = `Galaxy War ${["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][(i % 10 + 10) % 10]}`; tail = live ? `Event ends in: <b data-end="${gwEnd(i)}">${ftime(gwEnd(i) - T)}</b>` : `Next war in: <b data-end="${gwStart(i + 1)}">${ftime(gwStart(i + 1) - T)}</b>`; }
@@ -8922,6 +8929,30 @@ function vpBody(T) { const v = vpState(T), lv = Math.min(VP_TIERS, Math.floor(v.
     ${ms("d", "Daily missions", dayEnd)}${ms("w", "Weekly missions", wkEnd)}
     <div class="vpmh"><b>Rewards</b><span class="note">Free · Premium</span></div><div class="vptrack">${track}</div>
     <p class="note">XP comes from missions. Rewards you reach and don't claim are paid out when the season ends.</p></div>`; }
+
+/* ---------- v545 Alliance Conquest ---------- */
+const CQ_SL = 8, cqWeek = (T = now()) => Math.floor((T - VP_BASE) / (7 * 864e5)), cqEnd = (w = cqWeek()) => VP_BASE + (w + 1) * 7 * 864e5;
+const CQ_PAL = ["#ffcf5a", "#55d6e8", "#ff5ac8", "#5dff9a", "#ff8a3a", "#9a7bff", "#ff5a5a", "#c8ff5a", "#5a9aff", "#ffffff", "#ffa0d0", "#7affe0"];
+const cqCol = aid => (G.cqPal && G.cqPal[aid]) || `hsl(${hash("cq" + aid) % 360} 70% 60%)`;
+function cqMap() { const own = {}; for (const a of Object.values(G.alliances || {})) for (const u in a.members || {}) own[u] = a.id;
+  const sec = {}; for (const p of G.list || []) { if (!p.owner || p.owner === "pirates") continue; const aid = p.owner === G.me ? S.ally : own[p.owner]; if (!aid) continue; const L = layerOf(p.r || 0), sl = Math.floor(((((p.a0 || 0) % TAU) + TAU) % TAU) / TAU * CQ_SL) % CQ_SL, k = L.n + ":" + sl;
+    const pl = p.owner === G.me ? myPub() : (G.players || {})[p.owner] || {}, w = (p.kind === "home" ? 3 : 1) + Math.floor(cmdLevel(pl.score || 0) / 10); (sec[k] = sec[k] || {})[aid] = (sec[k][aid] || 0) + w; }
+  const ctl = {}, pts = {}; for (const k in sec) { const e = Object.entries(sec[k]).sort((a, b) => b[1] - a[1]); if (e.length && (e.length === 1 || e[0][1] > e[1][1])) { ctl[k] = e[0][0]; pts[e[0][0]] = (pts[e[0][0]] || 0) + (+k.split(":")[0] >= 5 ? 2 : 1); } }
+  const rank = Object.entries(pts).sort((a, b) => b[1] - a[1]); G.cqPal = {}; rank.forEach(([aid], i) => { if (i < CQ_PAL.length) G.cqPal[aid] = CQ_PAL[i]; }); return { sec, ctl, pts, rank }; }
+function cqSvg(M) { const R = [0, 32, 55, 80, 110, 140, 172], cx = 180, cy = 180, k = 1.02, arc = (r0, r1, a0, a1) => { const p = (r, a) => `${(cx + Math.cos(a) * r * k).toFixed(1)},${(cy + Math.sin(a) * r * k).toFixed(1)}`; return `M${p(r0, a0)} L${p(r1, a0)} A${r1 * k},${r1 * k} 0 0 1 ${p(r1, a1)} L${p(r0, a1)} A${r0 * k},${r0 * k} 0 0 0 ${p(r0, a0)}Z`; };
+  let out = ""; for (let ln = 1; ln <= 6; ln++) { const r1 = R[7 - ln], r0 = R[6 - ln]; for (let sl = 0; sl < CQ_SL; sl++) { const a0 = sl / CQ_SL * TAU, a1 = (sl + 1) / CQ_SL * TAU - .02, aid = M.ctl[ln + ":" + sl], mine = aid && aid === S.ally;
+    out += `<path d="${arc(Math.max(r0, 6), r1 - 1.5, a0, a1)}" fill="${aid ? cqCol(aid) : "rgba(255,255,255,.04)"}" fill-opacity="${aid ? (mine ? .85 : .55) : 1}" stroke="${mine ? "#fff" : "rgba(122,244,255,.18)"}" stroke-width="${mine ? 1.6 : .6}"><title>${esc(LAYERS[ln - 1].name)} · lane ${sl + 1}${aid && G.alliances[aid] ? " · [" + esc(G.alliances[aid].tag) + "]" : " · unclaimed"}</title></path>`; } }
+  return `<svg class="cqmap" viewBox="0 0 360 360" role="img" aria-label="Sector control map">${out}<circle cx="${cx}" cy="${cy}" r="6" fill="#c94ad6"/></svg>`; }
+function cqBanner(T) { const M = cqMap(), top = M.rank.slice(0, 3);
+  return `<div class="evban cqban">${cqSvg(M)}<div class="cqtx"><span class="vlive on">⚑ WEEK ${cqWeek(T) + 1}</span><b>Alliance Conquest</b><small>Ends in <b data-end="${cqEnd()}">${ftime(cqEnd() - T)}</b></small>
+    <div class="cqleg">${top.map(([aid, p], i) => `<span><i style="background:${cqCol(aid)}"></i>${["🥇", "🥈", "🥉"][i]} [${esc((G.alliances[aid] || {}).tag || "?")}] ${p}</span>`).join("") || "<span>No sector held yet</span>"}</div></div></div>`; }
+function cqBody(T, tab) { const M = cqMap(), my = S.ally && M.pts[S.ally] || 0, myR = S.ally ? M.rank.findIndex(r => r[0] === S.ally) + 1 : 0, lw = cqWeek(T) - 1, cl = S.cq === lw;
+  if (tab === "rk") return `<div class="evrank"><div class="evrh"><span>Rank</span><span>Alliance</span><span>Control</span></div>${M.rank.slice(0, 50).map(([aid, p], i) => `<div class="evrr${aid === S.ally ? " me" : ""}"><span>${i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1 + "."}</span><span><i class="cqdot" style="background:${cqCol(aid)}"></i>[${esc((G.alliances[aid] || {}).tag || "?")}] ${esc((G.alliances[aid] || {}).name || "")}</span><span>${p}</span></div>`).join("") || '<p class="note" style="padding:10px">No alliance holds a sector yet.</p>'}</div>`;
+  return `<div class="evinfo"><h4>Your alliance:</h4><p>${S.ally ? (my ? `<b class="evscore">${my}</b> points of control · rank #${myR} of ${M.rank.length}` : "No sectors held yet. Settle worlds, or take them from rivals, to claim sectors.") : "Join an alliance to fight for sectors."}</p>
+    <h4>Event Info:</h4><p>Every week alliances fight for the galaxy's 48 sectors: six layers, eight lanes each. The alliance whose members hold the most in a sector controls it. Inner Belt and Core sectors count double.</p>
+    <h4>Event Rules:</h4><p>A homeworld counts 3 in its sector, a colony 1, and every world adds 1 per 10 Commander levels of its owner. Ties leave a sector unclaimed. Take colonies from rival alliances to swing sectors your way.</p>
+    <h4>Weekly rewards:</h4><p>When the week ends (Monday 00:00 UTC), every member of an alliance that holds sectors claims ◆2 per point of control (up to ◆40). The top three alliances' members also get a Metal, Crystal or Gas Booster (Gold, Silver, Bronze).</p></div>`; }
+function cqClaimable(T = now()) { const lw = cqWeek(T) - 1; if (!S.ally || S.cq === lw || lw < 0) return null; const M = cqMap(), p = M.pts[S.ally] || 0; if (!p) return null; const r = M.rank.findIndex(x => x[0] === S.ally) + 1; return { lw, p, r, sh: Math.min(40, p * 2), item: r === 1 ? "bm_gold" : r === 2 ? "bc_silver" : r === 3 ? "bg_bronze" : null }; }
 /* v539 Events lives in the hub (the dock's Events tab); a boss event shows only in its week, while live, or with rewards waiting */
 const evState = () => sheet && sheet.type === "events" ? sheet : (sub.ev = sub.ev || {});
 const evShow = (key, T = now()) => { const g = key === "eboss" ? 3 : key === "tboss" ? 2 : key === "sboss" ? 1 : 0; if (!g) return true; try { return wbGroupOn(g, T) || wbGroupNext(g, T) - T <= 7 * 864e5 || sbReady(g) > 0; } catch (e) { return true; } };
@@ -8945,6 +8976,7 @@ function shEvents(inline) {
       : `<div class="evrank"><div class="evrh"><span>Rank</span><span>Alliance</span><span>Hold time</span></div>${stand.map(([aid, ms], j) => `<div class="evrr${aid === S.ally ? " me" : ""}"><span>${j + 1}.</span><span>${esc(allyTag(aid))}</span><span>${fmt(ms / 60000)} min</span></div>`).join("") || '<p class="note" style="padding:10px">No alliance has held the Cube this week yet.</p>'}</div>`;
     claim = ""; } // v91: Join lives on the video card
   else if (k === "sboss" || k === "tboss" || k === "eboss") { const g = k === "eboss" ? 3 : k === "tboss" ? 2 : 1; body = tab === "ov" ? sbOverview(T, g) : sbRanking(T, g); const n = sbReady(g); claim = `<button class="btn ${n ? "amber" : "ghost"} evclaim" data-act="sbClaim" data-g="${g}" ${n ? "" : "disabled"}>${n ? `Claim · ${n} milestone${n > 1 ? "s" : ""}` : "Claim"}</button>`; }
+  else if (k === "conq") { body = cqBody(T, tab); const c = cqClaimable(T); claim = `<button class="btn ${c ? "amber" : "ghost"} evclaim" data-act="cqClaim" ${c ? "" : "disabled"}>${c ? `Claim last week · ◆${c.sh}${c.item ? " + " + SHOP[c.item].n : ""}` : "Claim (after the week ends)"}</button>`; } /* v545 */
   else if (k === "pass") { body = tab === "rk" ? `<p class="note" style="padding:10px">Season standings arrive with the next update. Climb the tiers in the meantime.</p>` : vpBody(T); const n = vpReady(); claim = `<button class="btn ${n ? "amber" : "ghost"} evclaim" data-act="vpClaim" ${n ? "" : "disabled"}>${n ? `Claim all · ${n} reward${n > 1 ? "s" : ""}` : "Claim"}</button>`; } /* v542 */
   else if (k === "builder" || k === "online" || k === "lvlb") body = tab === "rk" ? evRankHTML(k) : bonusBody(k, T);
   else if (k === "ach" && tab === "rk") body = evRankHTML(k);
@@ -22860,6 +22892,7 @@ const ACT = {
   allyOpen2: d => openSheet({ type: "ally", id: d.id }),
   fac4Battle: () => { if (!duelOwner()) return; toast("Building the 4 vs 4 faction war…"); setTimeout(() => { try { playBattle(fac4Battle()); } catch (e) { toast("Couldn't build the faction war on this device.", "warn"); } }, 60); }, /* v429 */
   labBattle: () => { if (!duelOwner()) return; toast("Building the 10 vs 10 battle…"); setTimeout(() => { try { const rep = labBattle(); dirty(); playBattle(rep); } catch (e) { toast("Couldn't build the test battle on this device.", "warn"); } }, 60); },
+  cqClaim: () => act(() => { const c = cqClaimable(); if (!c) return; S.cq = c.lw; S.shards = (S.shards || 0) + c.sh; if (c.item) giveItem(c.item); toast(`Alliance Conquest: ◆${c.sh}${c.item ? " and a " + SHOP[c.item].n : ""} for last week's ${c.p} points of control.`, "win"); }), /* v545 */
   vpClaim: () => act(() => { const v = vpState(), lv = Math.min(VP_TIERS, Math.floor(v.xp / VP_XP)); let n = 0, sh = 0; for (let i = 0; i < lv; i++) { if (!v.cf.includes(i)) { const r = vpReward(i, false); vpGrant(r); sh += r.shards || 0; v.cf.push(i); n++; } if (v.pr && !v.cp.includes(i)) { const r = vpReward(i, true); vpGrant(r); sh += r.shards || 0; v.cp.push(i); n++; } }
     if (n) { toast(`Void Pass: ${n} reward${n > 1 ? "s" : ""} claimed${sh ? ` (◆${sh} among them)` : ""}.`, "win"); try { SFX.research(); } catch (e) {} } }), /* v542 */
   vpPrem: () => act(() => { const v = vpState(); if (v.pr) return; if ((S.shards || 0) < VP_PREM) return toast(`Premium costs ◆${VP_PREM} Void Shards.`, "warn"); S.shards -= VP_PREM; v.pr = 1; bump("shopBuys"); vipAdd(VP_PREM * 10); toast("Void Pass Premium unlocked! Claim the premium rewards for every tier you've reached.", "win"); try { SFX.fanfare(true); } catch (e) {} }),
