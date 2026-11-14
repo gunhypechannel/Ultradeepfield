@@ -402,6 +402,13 @@
     adminRevoke: function (id, note) { return need().then(function () { return run(sb.rpc("admin_revoke", { p_id: id, p_note: note || null })); }); },
     testerSet: function (uid, on, note) { return need().then(function () { return run(sb.rpc("tester_set", { p_uid: uid, p_on: !!on, p_note: note || null })); }); }
   };
+  /* v541 push notifications: this device's subscription, your own reminders (replaced as a whole), and an alert to a commander you attack */
+  window.udfPush = {
+    sub: function (json) { return need().then(function () { return run(sb.rpc("push_sub", { p_sub: json, p_ua: navigator.userAgent.slice(0, 200) })); }); },
+    unsub: function (endpoint) { return need().then(function () { return run(sb.rpc("push_unsub", { p_endpoint: endpoint })); }); },
+    sync: function (items) { return need().then(function () { return run(sb.rpc("push_sync", { p_items: items })); }); },
+    alert: function (uid, tag, title, body) { return need().then(function () { return run(sb.rpc("push_alert", { p_uid: uid, p_tag: tag, p_title: title, p_body: body })); }); }
+  };
   var signingOut = false;
   window.udfAccount = {
     label: function () { return me ? (me.email || nameOf(me) || "Signed in") : "Not signed in"; },

@@ -1,7 +1,7 @@
 /* Ultra Deep Field service worker: lets phones install the game and opens it fast.
    The game page is always fetched fresh when online (so updates show up), with the last copy as a fallback offline.
    Galaxy data never goes through here: Firebase handles that itself. */
-const CACHE = "udf-v340";
+const CACHE = "udf-v341";
 const LIBS = "udf-libs"; // v530 the 3D engine and fonts: kept across updates, so an update never downloads them again
 const MODELS = "udf-models"; // v356 3D models: fingerprinted file names, kept across updates
 const SHELL = ["./", "./index.html", "./udf-firebase.js", "./firebase-config.js", "./udf-supabase.js", "./udf-install.js", "./art/login.webp", "./supabase-config.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png"];
@@ -29,4 +29,14 @@ self.addEventListener("fetch", e => {
     // fonts, 3D engine and Firebase libraries rarely change: cache first
     e.respondWith(caches.match(r).then(m => m || fetch(r).then(res => { if (res.ok || res.type === "opaque") { const cp = res.clone(); caches.open(LIBS).then(c => c.put(r, cp)); } return res; })));
   }
+});
+
+/* v541 push notifications: show what the server sends, and open (or focus) the game when one is tapped */
+self.addEventListener("push", e => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch (er) { d = { title: "Ultra Deep Field", body: e.data ? e.data.text() : "" }; }
+  e.waitUntil(self.registration.showNotification(d.title || "Ultra Deep Field", { body: d.body || "", tag: d.tag || "udf", renotify: !!(d.tag && d.tag.indexOf("atk") === 0), icon: "./icons/icon-192.png", badge: "./icons/icon-192.png", data: { url: d.url || "./" } }));
+});
+self.addEventListener("notificationclick", e => {
+  e.notification.close(); const url = (e.notification.data && e.notification.data.url) || "./";
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(cs => { for (const c of cs) if ("focus" in c) return c.focus(); return self.clients.openWindow ? self.clients.openWindow(url) : null; }));
 });

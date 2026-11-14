@@ -4905,7 +4905,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 540;
+const GAME_V = 541;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9178,7 +9178,7 @@ function progress() {
 /* ---------- save / sync ---------- */
 const KEY = "novaDominion.save.v1";
 const store = { db: null, uid: null, dirty: false, writing: false, mode: "device", lastPlayer: "", ready: false }; // v200: ready once the account save has been read
-const dirty = () => { store.dirty = true; };
+const dirty = () => { store.dirty = true; try { pushSync(); } catch (e) {} }; /* v541 reminders follow every change */
 const SESS = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 function sessTakeover(why) { if (store.paused) return; store.paused = true; let el = document.getElementById("sessw"); if (el) return; el = document.createElement("div"); el.id = "sessw";
   el.innerHTML = `<div class="sessbox">${why === "shrink" ? `<b>Your saved empire is bigger</b><p>The empire on your account has much more progress than this copy, so the server refused to save over it. Reload to get your full empire back.</p>` : `<b>Playing on another device</b><p>Your empire was just saved from another phone, tablet or browser. This copy stopped saving so it can't overwrite that progress.</p>`}<button class="btn wide" id="sessgo">Continue here</button></div>`;
@@ -16404,6 +16404,10 @@ setInterval(() => { try { if (!IOS || !G.ready || document.hidden) return; const
     if (C3 && view !== "base" && T - lc > 8000 && (view === "galaxy" || lg > lc)) worldDrop("col", "one world on iPhone");
     if (typeof WBR !== "undefined" && WBR.r) wbArtFree(); }
   if (STU && !battle && T - (G.stuT || 0) > 15000) worldDrop("stu", "idle"); } catch (e) {} }, 2000);
+setInterval(() => { try { if (!S || !G.ready || S.pushAsk || pushOn() || !pushCan() || tutOn() || sheet || battle || advLines || !S.tut || S.tut.k !== "done" || $("#pushask")) return;
+  S.pushAsk = 1; dirty(); const w = document.createElement("div"); w.id = "pushask"; w.className = "toast rmd busy pushask";
+  w.innerHTML = `<span class="ric">🔔</span><span class="rtx"><small>Stay in the loop</small><b>Turn on notifications?</b><em>Know when builds finish, fleets land, bosses rise or someone attacks you.${pushNeedsHome() ? " Add the game to your Home Screen first." : ""}</em></span><span class="rbt"><button class="btn sm amber" data-act="pushOn">Turn on</button><button class="rx" data-act="pushLater" aria-label="Not now">✕</button></span>`;
+  const box = $("#toasts"); if (box) box.appendChild(w); setTimeout(() => { if (w.isConnected) w.remove(); }, 20000); } catch (e) {} }, 45000); /* v541 one offer, after the Academy */
 function render(keepScroll) {
   const m = $("#view"), st = m.scrollTop, ae = document.activeElement;
   const typing = ae && ae.tagName === "INPUT" && m.contains(ae);
@@ -19245,7 +19249,7 @@ function mGame() {
       ${volSliders()}${tg("sound", !AU.muted, "All sound")}${tg("musicToggle", AU.musicOn, "Music")}${tg("sfxToggle", AU.sfxOn, "Battle, construction and interface effects")}${tg("voiceToggle", VOICE.on, "Advisor voice")}${tg("remindToggle", remindOn(), "Pop-up reminders when jobs finish")}
 
       <p>Playing your music track. Construction, ship launches and finished research each have their own sound.</p></div>
-    <div class="mcard"><h3>${MI.grid.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Play on your phone</h3>
+    ${pushCard()}<div class="mcard"><h3>${MI.grid.replace("<svg", '<svg style="width:24px;height:24px;color:#38dfee"')}Play on your phone</h3>
       <p><b>iPhone and iPad:</b> open the game link in Safari, tap the Share button, then <b>Add to Home Screen</b>. It opens full screen like an app.</p>
       <p><b>Android:</b> open the link in Chrome, tap the ⋮ menu, then <b>Add to Home screen</b>.</p>
       <p>Your empire saves to your account, so you can switch between phone, tablet and computer.${IOS ? " On iPhone, sound follows the silent switch: flip it off to hear music and battles." : ""}</p>
@@ -22039,6 +22043,41 @@ function act(fn) { advance(now()); fn(); progress(); dirty(); render(true); save
    tutorial pointer moves to the next tap straight away */
 function doneCard() { if (sheet && (sheet.type === "bld" || sheet.type === "detail")) closeSheet(); guideNow(); }
 function takeShips(n) { const av = originAvail(), o = {}; for (const k in n) { const v = Math.min(n[k] || 0, av[k] || 0); if (v > 0) o[k] = v; } return o; }
+
+/* ---------- v541 push notifications ---------- */
+const PUSH_PUB = "BNBjfOGbHHdVS-JM2o0QdPsm_V_4VjfgGMvk3lZ8gfHs0Vo17ZqjOVNOiNbxPmRFiW2E9tGf5Ao7SsNLxBVTjt0";
+const pushCan = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window && G.mode === "online" && !!window.udfPush;
+const pushNeedsHome = () => IOS && !STANDALONE;
+const pushOn = () => { try { return localStorage.getItem("udf.push") === "1" && Notification.permission === "granted"; } catch (e) { return false; } };
+const b64u = s => { const p = "=".repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(b, c => c.charCodeAt(0)); };
+async function pushEnable() {
+  if (pushNeedsHome()) return toast("On iPhone and iPad, add the game to your Home Screen first (Share › Add to Home Screen), then open it from there and turn notifications on.", "warn");
+  if (!pushCan()) return toast("This browser can't receive notifications from the game.", "warn");
+  try { const perm = await Notification.requestPermission(); if (perm !== "granted") return toast("Notifications are blocked. Allow them for this site in your browser settings, then try again.", "warn");
+    const reg = await navigator.serviceWorker.ready; let sub = await reg.pushManager.getSubscription(); if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(PUSH_PUB) });
+    await window.udfPush.sub(sub.toJSON()); try { localStorage.setItem("udf.push", "1"); } catch (e) {} G.pushSig = null; pushSync(true); crumb("push notifications on");
+    toast("Notifications on: builds, research, fleets, boss hunts and attacks on your worlds.", "win"); render(true); } catch (e) { toast("Couldn't turn notifications on: " + String(e && e.message || e).slice(0, 80), "warn"); } }
+async function pushDisable() { try { localStorage.setItem("udf.push", "0"); const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription(); if (sub) { try { await window.udfPush.sync([]); await window.udfPush.unsub(sub.endpoint); } catch (e) {} await sub.unsubscribe(); } } catch (e) {} toast("Notifications off."); render(true); }
+function pushItems() { const T = now(), out = [], add = (tag, at, title, body) => { if (at > T + 30000 && at < T + 29 * 864e5) out.push({ tag, at: Math.round(at), title, body }); };
+  try { const b = nextIn("b"), r = nextIn("r"), q = nextIn("s");
+    if (b) add("bq", b.e, "Construction complete", `${b.n} is ready.${b.more ? "" : " Your builders are free for the next job."}`);
+    if (r) add("rq", r.e, "Research complete", `${r.n} is finished.${r.more ? "" : " The lab is free."}`);
+    if (q) add("sq", q.e, "Ships ready", `${q.n} rolled out of the shipyard.`); } catch (e) {}
+  for (const f of S.fleets || []) { if (f.demo) continue; const fb = fleetBounds(f); if (!fb) continue; const p = G.byId[f.pid] || (typeof PB !== "undefined" && PB[f.pid]) || {};
+    if (f.phase === "out") add("fl" + f.id, fb[1], f.mission === "spy" ? "Probe arrived" : f.mission === "attack" ? "Your fleet is attacking" : "Fleet arrived", `Your fleet reached ${p.name || "its target"}.`);
+    else if (f.phase === "back") add("fb" + f.id, fb[1], "Fleet home", `Your fleet is back home${f.loot ? " with its loot" : ""}.`); }
+  for (const g of [1, 2, 3]) { try { if (!wbGroupOn(g, T)) { const n = wbGroupNext(g, T); add("boss" + g, n - 10 * 60e3, `${SB_G[g].n} in 10 minutes`, `${wbMain(g).map(k => WB[k].n).join(", ")} rise soon. Gather your fleet.`); } } catch (e) {} }
+  try { if (!evActive(T)) add("cube", evStart(evWeek(T) + 1) - 10 * 60e3, "Battle for the Cube in 10 minutes", "The Cube descends at the heart of the galaxy. Rally your alliance."); } catch (e) {}
+  try { if ((S.shopFree || "") === shopDay()) add("wheel", shopDayEnd() + 60e3, "Free spin ready", "The Holo Glyph Wheel has a new free spin for you in the Void Shop."); } catch (e) {}
+  return out.sort((a, b) => a.at - b.at).slice(0, 40); }
+function pushSync(force) { if (G.pushT && !force) return; const T0 = Date.now(); if (!force && T0 - (G.pushChk || 0) < 5000) return; G.pushChk = T0; if (!pushOn() || !pushCan() || !S) return; clearTimeout(G.pushT); G.pushT = setTimeout(() => { G.pushT = null; try { const it = pushItems(), sig = JSON.stringify(it.map(x => [x.tag, Math.round(x.at / 30000)]));
+    if (!force && sig === G.pushSig) return; G.pushSig = sig; window.udfPush.sync(it).catch(() => { G.pushSig = null; }); } catch (e) {} }, force ? 50 : 4000); }
+document.addEventListener("visibilitychange", () => { if (document.hidden) pushSync(true); });
+setInterval(() => pushSync(), 120000);
+const pushCard = () => { if (G.mode !== "online") return ""; const on = pushOn();
+  return `<div class="mcard"><h3>🔔 Notifications</h3>${on ? `<p>On for this device: builds, research, shipyard, fleets landing and coming home, boss hunts and the Cube 10 minutes before they start, the free wheel spin, and attacks on your worlds.</p><button class="btn ghost" data-act="pushOff">Turn off on this device</button>`
+    : pushNeedsHome() ? `<p>Get a buzz when a build finishes, a fleet lands, a boss rises or someone attacks you. On iPhone and iPad this needs the game on your Home Screen: tap Share › <b>Add to Home Screen</b>, open it from there, then come back here.</p><button class="btn amber" data-act="pushOn">Turn on notifications</button>`
+    : `<p>Get a buzz when a build finishes, a fleet lands, a boss rises or someone attacks you, even with the game closed.</p><button class="btn amber" data-act="pushOn">Turn on notifications</button>`}</div>`; };
 function sendFleet(p, n, mission, extra) {
   const h = originPlanet(); if (!h) return null;
   const pct = spdPct(), fuel = fuelFor(h, p, n, pct);
@@ -22067,7 +22106,9 @@ function publishInbound(uid, f) {
     try { const ref = G.db.doc("inbound/" + uid), snap = await ref.get(), T = now();
       const items = (snap.exists && Array.isArray(snap.data().items) ? snap.data().items : []).filter(x => x && (+x.arrive > T || (x.spy && +x.arrive > T - 7 * 864e5))).slice(-39); // v279: probe visits wait a week for a target who is away
       items.push({ id: f.id + "-" + (hash(G.me || "x") % 1e6), from: G.me, pid: f.pid, out: f.out, arrive: f.arrive, ox: f.ox, oy: f.oy, n: f.n, src: launchSrc(f), spy: f.mission === "spy" ? 1 : 0 }); // the defender learns where the strike was launched from
-      await ref.set({ items }); } catch (e) {}
+      await ref.set({ items });
+      if (f.mission !== "spy" && window.udfPush) { const p = G.byId[f.pid] || {}; window.udfPush.alert(uid, "atk" + f.id + (hash(G.me || "x") % 1e5), "⚠ Incoming attack!", `${G.myName || "A commander"} launched a fleet at ${p.name || "your world"}. It lands in ${ftime(f.arrive - now())}. Open the game to prepare.`).catch(() => {}); } /* v541 */
+    } catch (e) {}
   });
 }
 const slotsFull = () => { if (fleetsUsed() >= maxFleets()) { toast(`All ${maxFleets()} fleet slots are in use. Research Computer Technology or settle a colony for more.`, "warn"); return true; } return false; };
@@ -23026,6 +23067,7 @@ const ACT = {
     finally { G.pkClaiming = 0; G.pkClaimId = null; const keep = G.packs; packsLoad(true); G.packs = keep; if (sheet) renderSheet(); } }),
   dMore: () => { if (sheet) { sheet.dmore = !sheet.dmore; renderSheet(); } },
   soundPanel: () => { if (!AU.started) audioStart(); openSheet({ type: "sound" }); },
+  pushOn: () => { pushEnable(); }, pushOff: () => { pushDisable(); }, pushLater: () => { S.pushAsk = 2; dirty(); const c = $("#pushask"); if (c) c.remove(); }, /* v541 */
   remindToggle: () => { remindPref = !remindPref; try { localStorage.setItem("void.remind", remindPref ? "1" : "0"); } catch (e) {} toast(remindPref ? "Reminders on: you'll get a pop-up when a job finishes." : "Reminders off."); render(true); },
   rmx: (d, el) => { const c = el && el.closest(".rmd"); if (c) c.remove(); },
   qgo: (d, el) => { const c = el && el.closest(".rmd"); if (c) c.remove(); const q = d.q;
