@@ -667,6 +667,29 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 .dpbt{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.dpbt>div:last-child{display:flex;gap:6px}
 .dpbo{display:flex;align-items:center;gap:6px}.dpbo span{color:var(--amber);display:inline-flex}.dpbo svg{width:20px;height:20px}
 .dplog{display:flex;flex-direction:column;gap:4px}.dplog>div{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;gap:6px;align-items:center;font-size:12.5px;padding:5px 8px;border-radius:8px;background:rgba(4,10,16,.45)}.dplog i{font-style:normal;color:var(--muted)}.dplog small{color:var(--muted);font-size:11px}
+/* v539 the Events hub and the boss banners */
+.hubsw{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:4px;border-radius:14px;border:1px solid var(--line);background:rgba(6,14,22,.7);margin-bottom:8px}
+.hubsw button{position:relative;padding:10px 6px;border-radius:10px;border:0;background:transparent;color:var(--muted);font:700 14px var(--f-display,sans-serif);letter-spacing:.04em}
+.hubsw button.on{background:linear-gradient(180deg,rgba(85,214,232,.22),rgba(85,214,232,.08));color:var(--cyan);box-shadow:inset 0 0 0 1px rgba(85,214,232,.5)}
+.hubsw i{position:absolute;top:4px;right:10px;font-style:normal;font-size:10px;min-width:16px;height:16px;line-height:16px;border-radius:8px;background:var(--red,#ff5a4a);color:#fff}
+.evhubv{display:flex;flex-direction:column;gap:8px}
+.bossban{height:auto;min-height:220px;aspect-ratio:16/10;max-height:330px;border:1.5px solid color-mix(in srgb,var(--bc) 75%,transparent);border-radius:14px;background:#05080e;box-shadow:0 0 22px color-mix(in srgb,var(--bc) 35%,transparent)}
+.bossban>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%;filter:saturate(1.1)}
+.bossban .bbglow{position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,7,12,.55),transparent 28%,transparent 45%,rgba(4,7,12,.93) 86%),radial-gradient(90% 60% at 50% 100%,color-mix(in srgb,var(--bc) 30%,transparent),transparent 70%)}
+.bossban.wait>img{filter:saturate(.75) brightness(.8)}.bossban.down>img{filter:grayscale(.7) brightness(.6)}
+.bbtop{position:absolute;top:10px;left:12px;right:12px;display:flex;align-items:center;gap:8px}.bbtop small{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#e9f1f7;text-shadow:0 1px 3px #000}
+.bbbot{position:absolute;left:12px;right:12px;bottom:10px;display:flex;flex-direction:column;gap:3px}
+.bbbot>b{font:800 24px var(--f-display,sans-serif);letter-spacing:.04em;color:#fff;text-shadow:0 0 14px var(--bc),0 2px 4px #000;line-height:1.05}
+.bbbot>em{font-style:normal;font-size:12.5px;color:color-mix(in srgb,var(--bc) 60%,#fff)}
+.bbhp{position:relative;height:16px;border-radius:8px;overflow:hidden;background:rgba(0,0,0,.6);border:1px solid color-mix(in srgb,var(--bc) 60%,transparent);margin-top:4px}
+.bbhp i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,color-mix(in srgb,var(--bc) 70%,#fff 0%),var(--bc));box-shadow:0 0 10px var(--bc)}.bossban.down .bbhp i{width:0!important}
+.bbhp span{position:relative;display:block;text-align:center;font-size:10.5px;line-height:14px;color:#fff;text-shadow:0 1px 2px #000;font-variant-numeric:tabular-nums}
+.bbbot .evend{position:static;align-self:flex-start;font-size:12px;color:#d6e2ea;background:rgba(4,7,12,.6);border-radius:7px;padding:2px 8px;margin-top:2px}
+.bbstrip{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0 4px}.bbstrip::-webkit-scrollbar{display:none}
+.bbs{position:relative;flex:1 0 84px;min-width:84px;height:84px;border-radius:12px;overflow:hidden;border:1px solid color-mix(in srgb,var(--bc) 45%,transparent);background:#05080e;padding:0;color:#fff;text-align:left}
+.bbs img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%;opacity:.75}.bbs::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(4,7,12,.92))}
+.bbs b,.bbs small{position:absolute;left:6px;right:4px;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bbs b{bottom:16px;font-size:11px}.bbs small{bottom:3px;font-size:10px;color:#c7d3dc}
+.bbs.on{border-color:var(--bc);box-shadow:0 0 12px color-mix(in srgb,var(--bc) 60%,transparent),inset 0 0 0 1px var(--bc)}.bbs.on img{opacity:1}.bbs.live small{color:#5dff9a}.bbs.down img{filter:grayscale(.8)}
 .shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .sitem{position:relative;display:flex;flex-direction:column;gap:5px;padding:10px;border-radius:12px;border:1px solid color-mix(in srgb,var(--tc) 45%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 16%,transparent),rgba(8,18,28,.9) 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
 .sitem b{font-size:14px}.sitem small{font-size:12px;color:var(--muted);flex:1;line-height:1.35}
@@ -4858,7 +4881,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 538;
+const GAME_V = 539;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8743,9 +8766,15 @@ function sbFeedAdd(prev, st) { if (!prev) return; for (const k in WB) { if (stCy
 const SB_ART = {}, SB_ART_GO = {};
 function sbArt(g = 1) { if (SB_ART[g] || SB_ART_GO[g] || typeof BOSS3D === "undefined" || battle) return SB_ART[g] || null; SB_ART_GO[g] = 1; // the banner, rendered once from the boss's model
   setTimeout(() => { try { const c = wbArt(SB_G[g].art, 760, 380, 5200, null); if (c) SB_ART[g] = c.toDataURL("image/webp", .86); } catch (e) {} wbArtFree(); if (SB_ART[g]) softRender(); }, 80); return null; }
-function sbBanner(T, g = 1) { const E = SB_G[g], st = wbState(T), main = wbMain(g), live = wbGroupOn(g, T), end = live ? wbGroupEnd(g, T) : wbGroupNext(g, T), up = main.filter(k => st.hp[k] > 0).length, art = BOSS_ART["g" + g];
-  return `<div class="evban ev-sboss sbban art${g === 2 ? " sb2" : ""}${live ? "" : " off"}"><img src="${art}" alt="${main.map(k => WB[k].n).join(", ")}"><div class="sbtop"><span class="vlive${live ? " on" : ""}">${live ? "● LIVE" : "NEXT HUNT"}</span><b>${E.n}</b><small>${!live ? `${g === 3 ? "A Wednesday great event" : "Saturday hunts"} · next in ${ftime(wbGroupNext(g, T) - T)}` : g === 3 ? (wbOn("epx", T) ? (wbSwept(T) ? "Clean Sweep! The Convergence never formed." : st.hp.epx > 0 ? `The Pentarch tears at the Void: ${wbPentLive(st).length} of 5 elements still in it. Bring it down!` : "The Pentarch has fallen. The Void is saved.") : `${WB_EL.filter(k => st.hp[k] > 0).length} of 5 Elementals still standing · they fuse in ${ftime(wbLiveEnd("eic", T) - T)}`) : up ? `${up} of ${main.length} ${g === 2 ? "titans" : "world bosses"} still standing` : `Every ${g === 2 ? "titan" : "world boss"} has fallen`}</small></div>
-    <span class="evend">${live ? "Event ends in" : "Starts in"}: <b data-end="${end}">${ftime(end - T)}</b></span></div>`; }
+function sbBanner(T, g = 1) { const E = SB_G[g], st = wbState(T), main = wbMain(g), live = wbGroupOn(g, T), ES = evState(); /* v539 a banner for every boss */
+  const sel = main.includes(ES.sbK) ? ES.sbK : main.find(k => wbOn(k, T) && st.hp[k] > 0) || main.slice().sort((a, b) => wbNext(a, T) - wbNext(b, T))[0];
+  const stat = k => { const on = wbOn(k, T), hp = Math.max(0, st.hp[k] || 0); return on ? (hp > 0 ? "live" : "down") : "wait"; };
+  const B = WB[sel], A = ARCH[sel] || {}, on = wbOn(sel, T), hp = Math.max(0, st.hp[sel] || 0), pc = on ? clamp(hp / B.hp * 100, 0, 100) : 100, end = on ? wbLiveEnd(sel, T) : wbNext(sel, T), sx = stat(sel), up = main.filter(k => stat(k) === "live").length;
+  return `<div class="evban bossban ${sx}" style="--bc:${B.col}"><img src="art/arch/${sel}.webp?v=1" alt="${esc(B.n)}" loading="lazy"><i class="bbglow"></i>
+    <div class="bbtop"><span class="vlive${on && hp > 0 ? " on" : ""}">${sx === "live" ? "● LIVE" : sx === "down" ? "✓ DEFEATED" : "NEXT"}</span><small>${esc(E.n)}${live ? ` · ${up} of ${main.length} standing` : ""}</small></div>
+    <div class="bbbot"><b>${esc(B.n)}</b>${A.t ? `<em>${esc(A.t)}</em>` : ""}<div class="bbhp"><i style="width:${pc.toFixed(1)}%"></i><span>${sx === "live" ? `${fmt(hp)} / ${fmt(B.hp)} HP` : sx === "down" ? "Brought down this week" : `${fmt(B.hp)} HP · ${esc(B.where || "")}`}</span></div>
+      <span class="evend">${sx === "wait" ? "Rises in" : sx === "live" ? "Leaves in" : "Gone for"}: <b data-end="${end}">${ftime(end - T)}</b></span></div></div>
+  <div class="bbstrip">${main.map(k => { const x = stat(k); return `<button class="bbs ${x}${k === sel ? " on" : ""}" style="--bc:${WB[k].col}" data-act="sbPick" data-k="${k}" aria-label="${esc(WB[k].n)}"><img src="art/arch/${k}.webp?v=1" alt="" loading="lazy"><b>${esc(WB[k].n)}</b><small>${x === "live" ? "● Live" : x === "down" ? "✓ Down" : ftime(wbNext(k, T) - T)}</small></button>`; }).join("")}</div>`; }
 /* v513 the reward track: points, a bar to the next reward, and a path of reward cards */
 function rwChips(rw) { const c = []; if (rw.shards) c.push(`<span class="mchip mc-sh">◆ ${fmt(rw.shards)} shards</span>`); if (rw.m || rw.c || rw.g) c.push(`<span class="mchip mc-rs">${costHTML({ m: rw.m || 0, c: rw.c || 0, g: rw.g || 0 })}</span>`);
   if (rw.boosts) c.push(`<span class="mchip mc-it">⚡ ${rw.boosts} boost${rw.boosts > 1 ? "s" : ""}</span>`); if (rw.item && SHOP[rw.item]) c.push(`<span class="mchip mc-it">🎁 ${esc(SHOP[rw.item].n)}</span>`); if (rw.vip) c.push(`<span class="mchip mc-vp">♛ VIP +${fmt(rw.vip)}</span>`);
@@ -8790,9 +8819,12 @@ function evRankHTML(k) { const D = EVB[k], rows = evBoard(k), mi = rows.findInde
   if (k === "gifts" && !myAlly()) return `<p class="note" style="padding:10px">Join an alliance to see who sends the most gifts.</p>`;
   return `<div class="evrank"><div class="evrh"><span>Rank</span><span>${k === "gifts" ? "Member" : "Commander"}</span><span>${esc(D[0])}</span></div>${show.map(r => { const pos = rows.indexOf(r) + 1; return `<div class="evrr${r.me ? " me" : ""}"><span>${pos <= 3 ? ["🥇", "🥈", "🥉"][pos - 1] : pos + "."}</span><span>${esc(r.me ? (G.myName || "You") + " (you)" : r.bot ? BOT_BY[r.id].name : nameOf(r.id))}${r.bot ? ' <i class="botk">bot</i>' : ""}</span><span>${D[2](r.v)}</span></div>`; }).join("")}</div>
     ${rows.length < 2 ? `<p class="note" style="padding:6px 10px">${k === "gifts" ? "Gifts your alliance members send show up here." : "Other commanders show up here as they play."}</p>` : ""}`; }
-function shEvents() {
-  const T = now(), tab = sheet.evTab === "rk" ? "rk" : "ov", k = EVS.some(e => e[0] === sheet.ev) ? sheet.ev : "sboss";
-  const chips = `<div class="evchips evhub">${EVS.filter(e => e[0] !== "gifts" || myAlly()).map(([key, n, ic]) => { const c = evCount(key); return `<button class="evcard ec-${key}${key === k ? " on" : ""}" data-act="evPick" data-v="${key}"><span class="eci">${ic}</span><span class="ecn">${n}</span>${c ? `<i class="ecb">${c}</i>` : ""}</button>`; }).join("")}</div>`;
+/* v539 Events lives in the hub (the dock's Events tab); a boss event shows only in its week, while live, or with rewards waiting */
+const evState = () => sheet && sheet.type === "events" ? sheet : (sub.ev = sub.ev || {});
+const evShow = (key, T = now()) => { const g = key === "eboss" ? 3 : key === "tboss" ? 2 : key === "sboss" ? 1 : 0; if (!g) return true; try { return wbGroupOn(g, T) || wbGroupNext(g, T) - T <= 7 * 864e5 || sbReady(g) > 0; } catch (e) { return true; } };
+function shEvents(inline) {
+  const T = now(), E = evState(), tab = E.evTab === "rk" ? "rk" : "ov", VIS = EVS.filter(e => (e[0] !== "gifts" || myAlly()) && evShow(e[0], T)), k = VIS.some(e => e[0] === E.ev) ? E.ev : (VIS[0] || ["cube"])[0];
+  const chips = `<div class="evchips evhub">${VIS.map(([key, n, ic]) => { const c = evCount(key); return `<button class="evcard ec-${key}${key === k ? " on" : ""}" data-act="evPick" data-v="${key}"><span class="eci">${ic}</span><span class="ecn">${n}</span>${c ? `<i class="ecb">${c}</i>` : ""}</button>`; }).join("")}</div>`;
   const tabs = `<div class="evtabs"><button class="${tab === "ov" ? "on" : ""}" data-act="evTab" data-v="ov">Overview</button><button class="${tab === "rk" ? "on" : ""}" data-act="evTab" data-v="rk">Ranking</button></div>`;
   let body = "", claim = "";
   if (k === "gw") { const i = gwIdx(T), g = gwState(T), live = gwLive(T), cl = gwClaimable(T), fmtD = x => new Date(x).toISOString().replace("T", " ").slice(0, 19).replace(/-/g, "/");
@@ -8815,7 +8847,7 @@ function shEvents() {
   else if (k === "ach") { body = `<div class="evinfo"><h4>Achievement Points:</h4><p><b class="evscore">${fmt(achPts())}</b> · ${achReady()} tier${achReady() === 1 ? "" : "s"} ready to claim</p><p>Long-term goals for every part of the game: level, PvP, raids, recycling, relocating, speed-ups, ship production and more.</p></div>`;
     claim = `<button class="btn amber evclaim" data-act="achOpen">Open Achievements</button>`; }
   else { body = tab === "rk" && EVB[k] ? evRankHTML(k) : `<div class="evinfo">${oldEvSection(k, T)}</div>`; }
-  return `<div class="hd evhd"><div><h2>Events</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${tabs}${chips}${evBanner(k, T)}${body}${claim}`;
+  return `${inline ? "" : `<div class="hd evhd"><div><h2>Events</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`}${tabs}${chips}${evBanner(k, T)}${body}${claim}`;
 }
 /* the other events keep their existing panels, shown under their banner */
 function oldEvSection(k) {
@@ -16214,7 +16246,7 @@ function drawAdvisor(c, t) {
 
 /* ---------- UI shell ---------- */
 let view = "base", sub = { build: "bld", fleet: "ships", gal: "targets", lab: "list" }, sheet = null, pick = {}, battle = null, rafId = 0, mapHost = null;
-const TABS = [["base", "Base"], ["galaxy", "Galaxy"], ["quests", "Quests"], ["fleets", "Fleets"], ["rank", "Rankings"], ["ally", "Alliances"], ["mail", "Mail"]]; // v123: Quests took the Build tab's place; Build opens from the top bar and your base
+const TABS = [["base", "Base"], ["galaxy", "Galaxy"], ["quests", "Quests"], ["fleets", "Fleets"], ["rank", "Events"], ["ally", "Alliances"], ["mail", "Mail"]]; // v123: Quests took the Build tab's place; Build opens from the top bar and your base
 const VIEWS = TABS.concat([["build", "Build"], ["cmd", "Commander"]]); // the Commander screen moved into the Game Menu
 NAVI.mail = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6l8.5 7 8.5-7"/></svg>';
 NAVI.fleets = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 15l6-3-6-3 2 3zM11 9l6-3-6-3 2 3zM13 21l6-3-6-3 2 3z"/><path d="M8 12h6M16 6h5M18 18h3" stroke-dasharray="1.5 2"/></svg>';
@@ -17305,7 +17337,8 @@ function stationArrive(f, p) {
   sendInbox(p.owner, { id: "g" + f.id + hash(G.me), at: f.arrive, kind: "guardIn", title: `Guards arrived at ${p.name}`, aUids: [G.me], dName: p.name, start: { a: {}, d: {} }, rounds: [], winner: "d", lossA: {}, lossD: {} });
 }
 /* the Rankings tab: the same leaderboards as before, now a full screen of their own */
-function vRank() { sub.rk = sub.rk || { tab: "players" }; return `<div class="gstack rankv">${shRanks(sub.rk)}</div>`; }
+function vRank() { sub.rk = sub.rk || { tab: "players" }; const h = sub.hub === "rk" ? "rk" : "ev", n = EVS.reduce((a, e) => a + (evShow(e[0]) ? evCount(e[0]) : 0), 0); /* v539 Events and Rankings in one hub */
+  return `<div class="gstack rankv"><div class="hubsw"><button class="${h === "ev" ? "on" : ""}" data-act="hubTab" data-v="ev">🏆 Events${n ? `<i>${n}</i>` : ""}</button><button class="${h === "rk" ? "on" : ""}" data-act="hubTab" data-v="rk">📊 Rankings</button></div>${h === "rk" ? shRanks(sub.rk) : `<div class="evhubv sheet-like">${shEvents(true)}</div>`}</div>`; }
 /* the Alliances tab: your alliance (or found / join one), the alliance depot for joint defense, open joint strikes and
    the alliance leaderboard */
 /* the alliance list, laid out like the classic alliance screen: a name search, a ranked table (rank, alliance and its leader,
@@ -22545,7 +22578,7 @@ const ACT = {
     if (d.id === "grand") { if (S.mast.grand || masteryList().some(m => !S.mast[m.id])) return; S.mast.grand = 1; S.shards = (S.shards || 0) + 25; toast("Grand Mastery! Every technology and ship type unlocked: ◆25.", "win"); SFX.research(); return; }
     const m = masteryList().find(x => x.id === d.id); if (!m || !m.done || S.mast[m.id]) return; const r = masteryReward(m);
     S.res.m += r.m; S.res.c += r.c; S.res.g += r.g; S.shards = (S.shards || 0) + r.sh; S.mast[m.id] = 1; logReward("Mastery · " + m.n, r, { shards: r.sh, kind: "quest" }); SFX.research(); toast(`Mastery: ${m.n}. +${fmt(r.m + r.c + r.g)} resources and ◆${r.sh}.`, "win"); }),
-  ranks: () => openSheet({ type: "ranks", tab: "players" }),
+  ranks: () => { if (sheet) closeSheet(); sub.hub = "rk"; ACT.nav({ v: "rank" }); }, /* v539 the hub */
   ranksTab: d => { const st = sheet && sheet.type === "ranks" ? sheet : (sub.rk = sub.rk || {}); st.tab = d.v; st.pick = null; sheet && sheet.type === "ranks" ? renderSheet() : render(true); },
   friends: () => openSheet({ type: "friends", q: "" }),
   profile: d => openSheet({ type: "profile", u: d.u || G.me }),
@@ -22632,7 +22665,7 @@ const ACT = {
   prodRate: d => { if (!PROD_K.includes(d.k)) return; S.prod = S.prod || {}; const v = Math.round(pf(d.k) * 100); S.prod[d.k] = v <= 0 ? 100 : v - 10; dirty(); renderSheet(); render(); },
   labs: () => openSheet({ type: "labs" }),
   rankPick: d => { const st = sheet && sheet.type === "ranks" ? sheet : (sub.rk = sub.rk || {}); st.pick = st.pick === d.u ? null : d.u; sheet && sheet.type === "ranks" ? renderSheet() : render(true); },
-  events: d => openSheet({ type: "events", ev: d && d.ev ? d.ev : undefined }),
+  events: d => { if (sheet) closeSheet(); sub.hub = "ev"; sub.ev = sub.ev || {}; if (d && d.ev) sub.ev.ev = d.ev; ACT.nav({ v: "rank" }); }, /* v539 the hub */
   loginClaim: () => act(() => { const ls = loginState(); if (ls.claimed) return; S.login = { day: utcDay(), streak: ls.next }; grantRw(loginRw(ls.idx), `Daily login · day ${ls.next}`); if (ls.idx === 6) S.d7Bonus = 1; vipAdd(Math.min(7, ls.next) * 50, "daily login"); SFX.research(); toast(`Day ${ls.next} reward claimed.`, "win"); }),
   allyView: d => { sub.allyView = d.v || ""; if (d.v === "list") sub.allyPg = 1; render(); },
   allySearch: () => { sub.allyQ = (($("#allyq") || {}).value || "").trim().slice(0, 24); sub.allyPg = 1; render(true); },
@@ -22640,8 +22673,10 @@ const ACT = {
   allyOpen2: d => openSheet({ type: "ally", id: d.id }),
   fac4Battle: () => { if (!duelOwner()) return; toast("Building the 4 vs 4 faction war…"); setTimeout(() => { try { playBattle(fac4Battle()); } catch (e) { toast("Couldn't build the faction war on this device.", "warn"); } }, 60); }, /* v429 */
   labBattle: () => { if (!duelOwner()) return; toast("Building the 10 vs 10 battle…"); setTimeout(() => { try { const rep = labBattle(); dirty(); playBattle(rep); } catch (e) { toast("Couldn't build the test battle on this device.", "warn"); } }, 60); },
-  evPick: d => { sheet.ev = d.v; renderSheet(); },
-  evTab: d => { sheet.evTab = d.v; renderSheet(); },
+  evPick: d => { evState().ev = d.v; sheet && sheet.type === "events" ? renderSheet() : render(true); },
+  evTab: d => { evState().evTab = d.v; sheet && sheet.type === "events" ? renderSheet() : render(true); },
+  sbPick: d => { evState().sbK = d.k; sheet && sheet.type === "events" ? renderSheet() : render(true); }, /* v539 */
+  hubTab: d => { sub.hub = d.v === "rk" ? "rk" : "ev"; render(); },
   gwClaim: () => act(() => { const T = now(), g = gwState(T), cl = gwClaimable(T); let n = 0;
     for (const m of cl.mile) { g.mile.push(m); grantRw(GW_MILE[m][1], `Galaxy War · milestone ${m + 1}`); n++; }
     if (cl.rank && g.last) { const rw = gwRankRw(cl.rank); g.last.ranked = true; if (rw) { grantRw(rw, `Galaxy War · rank #${cl.rank}`); n++; } }
@@ -22654,7 +22689,7 @@ const ACT = {
   archEntry: d => openSheet({ type: "archives", id: d.id }),
   archPlay: d => { const E = ARCH[d.id], lv = archLv(d.id); G.archTok = (G.archTok || 0) + 1; if (G.archRd === d.id || !E || !lv) { G.archRd = null; try { voiceStop(); } catch (e) {} const h = $("#advh"); if (h) h.classList.remove("on"); if (sheet && sheet.type === "archives") renderSheet(); return; }
     G.archRd = d.id; const L = [archFragLine(E)].concat(lv >= 2 ? [E.interp, E.adv] : [], E.enc, lv >= 2 ? E.def : []); archSeq(L, G.archTok, () => { if (G.archRd === d.id) { G.archRd = null; if (sheet && sheet.type === "archives") renderSheet(); } }); if (sheet && sheet.type === "archives") renderSheet(); },
-  evCube: () => openSheet({ type: "events", ev: "cube" }), // v91: the Cube and its banner open the event card first
+  evCube: () => ACT.events({ ev: "cube" }), // v91: the Cube and its banner open the event card first
   achClaim: d => act(() => { const a = ACH.find(x => x[0] === d.k); if (!a) return; const s = achState(a); if (!s.ready) return; const g = achGot(); g[a[0]] = s.got + 1;
     grantRw(achRw(a[0], s.got), `Achievement · ${a[1]} tier ${s.got + 1}`); SFX.research(); toast(`${a[1]} tier ${s.got + 1}: +${achAP(s.got)} Achievement Points.`, "win"); }),
   bbClaim: d => act(() => { const B = bonusState(), i = +d.i, t = BB_T[i]; if (!t || B.days < t[0] || B.bb.includes(i)) return; B.bb.push(i); grantRw(t[1], `Bonus Builder · day ${t[0]}`); SFX.research(); toast(`Bonus Builder day ${t[0]} claimed.`, "win"); }),
