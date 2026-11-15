@@ -5258,7 +5258,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 588;
+const GAME_V = 589;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -21930,7 +21930,7 @@ function titanBeamDraw(ctx, b, m, age, scr, W, d, lo, T) { const S0 = scr[m.s], 
   ctx.restore(); ctx.save(); ctx.globalCompositeOperation = "lighter"; // shockwaves at the target and at the muzzle
   for (let r = 0; r < 3; r++) { const u = clamp(k * 1.4 - r * .18, 0, 1); if (u <= 0 || u >= 1) continue; ctx.globalAlpha = (1 - u) * .8; ctx.strokeStyle = r ? "#ffcc70" : "#ffffff"; ctx.lineWidth = (5 - r) * d * (1 - u) + 1; ctx.beginPath(); ctx.ellipse(E0.x, E0.y, Lg * 1.2 * u, Lg * .6 * u, 0, 0, TAU); ctx.stroke(); }
   ctx.globalAlpha = .9 * (1 - k); const fr = Lg * .3; ctx.drawImage(glowSprite("#ffa62a"), bx - fr, by - fr, fr * 2, fr * 2); ctx.restore(); }
-function spawnVolley(b, v) {
+function spawnVolley(b, v) { fx589Spawn(b, v); /* v589 */
   if ((v.ab || (b.Q[v.s] && TITAN_LEN[b.Q[v.s].k])) && titanFx(b, v)) return; /* v556, v559 */
   const lo = b.lowFx, cap = PERF.battleCap, wk = v.wk, many = v.n + v.ic, mis = wk === "missile" || wk === "torpedo", q = b.Q[v.s], side = q.side, sz = q.sz != null ? q.sz : (q.sz = szOf(q));
   if (q.role === "carrier") (b.ctgt = b.ctgt || [])[v.s] = v.e; // its fighter wing flies at whatever the carrier is shooting
@@ -21963,6 +21963,53 @@ function spawnVolley(b, v) {
   else if (sz === 2 && !heavy && (wk === "laser" || wk === "ion" || wk === "plasma" || wk === "mass" || wk === "acid")) { if (b.beams.filter(m => m.lance && !m.sb).length < (b.Q.length > 60 ? 3 : 6)) b.beams.push({ t0: v.t, s: v.s, e: v.e, side, w: clamp(3.2 + Math.log10(1 + many * (q.pow || 1)) * 1.1, 3.2, 8), charge: .14, life: .3, lance: 1, wk }); }
   else if (!heavy && sz >= 1 && (wk === "laser" || wk === "mass" || wk === "ion" || wk === "flak" || wk === "plasma") && many >= 3) { b.salvos.push({ t0: v.t, s: v.s, e: v.e, side, wk, n: clamp(Math.round((1 + Math.log2(many) * .8) * cap), 1, 6), w: clamp(1 + Math.log10(1 + many) * .9, 1, 4), life: .26 }); if (b.salvos.length > (b.Q.length > 60 ? 5 : 18)) b.salvos.shift(); }
 }
+/* ---------- v589 battle effects remaster (owner's reference videos): skill banners over the ship that fires a special, violet chain
+   lightning that leaps between enemy formations, starburst light rays on big blasts, and bold game-style damage numbers ---------- */
+function fx589Spawn(b, v) { try { if (b.lowFx || v.bounce) return; const q = b.Q[v.s]; if (!q) return; const t = performance.now();
+    /* skill banners: a Titan's or super boss's named attack, at most one per formation every 6 s */
+    const sk = b.sk589 || (b.sk589 = {}); let name = null, col = null;
+    if (TITAN_INFO[q.k] && (v.ab || !sk[v.s])) { name = TITAN_INFO[q.k].ab; col = q.side === "a" ? "#7af4ff" : "#ff8a5a"; }
+    else if (typeof SBW !== "undefined" && SBW[q.k] && SBW[q.k].abil) { const A = SBW[q.k].abil; b.skN = b.skN || {}; const n = (b.skN[v.s] = ((b.skN[v.s] || 0) + 1)); name = A[n % Math.min(4, A.length)][0]; col = SBW[q.k].col || "#c890ff"; }
+    else if (v.crit && (q.role === "capital" || q.role === "battleship" || q.role === "titan")) { name = "Critical Salvo"; col = "#ffd36b"; }
+    if (name && (!sk[v.s] || t - sk[v.s] > 6000)) { sk[v.s] = t; (b.skb = b.skb || []).push({ i: v.s, t, txt: String(name).toUpperCase(), col }); if (b.skb.length > 4) b.skb.shift(); }
+    /* chain lightning: ion and acid weapons arc from the target to up to two nearby enemy formations */
+    if ((v.wk === "ion" || v.wk === "acid" || (q.k && /ion|storm|volt/i.test(q.k))) && (b.arcs589 || []).length < (b.Q.length > 60 ? 4 : 10)) (b.arcs589 = b.arcs589 || []).push({ s: v.s, e: v.e, t0: v.t, life: .42, col: v.wk === "acid" ? "140,255,120" : "190,130,255", seed: Math.random() * 1e4 });
+  } catch (e) {} }
+function fx589Draw(ctx, b, t, d, vs, scr, Q, T, vtx) { const dS = d / vs, lo = b.lowFx;
+  /* starbursts: thin light rays fanning out of a big blast, slowly turning, plus a white-hot core */
+  if (b.bursts589 && b.bursts589.length) { ctx.save(); ctx.globalCompositeOperation = "lighter"; b.bursts589 = b.bursts589.filter(o => t - o.t < o.life);
+    for (const o of b.bursts589) { const k = (t - o.t) / o.life; if (k < 0) continue; const a = (1 - k) * (k < .1 ? k / .1 : 1), R = o.r * (.55 + k * .75); ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.rot + k * .35);
+      for (let i = 0; i < o.n; i++) { const L = R * (.55 + ((i * 37) % 10) / 14), w = R * (.018 + ((i * 13) % 5) * .006); ctx.rotate(TAU / o.n); const g = ctx.createLinearGradient(0, 0, L, 0); g.addColorStop(0, `rgba(255,255,255,${.85 * a})`); g.addColorStop(.25, `rgba(${o.col},${.55 * a})`); g.addColorStop(1, `rgba(${o.col},0)`); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, -w); ctx.lineTo(L, 0); ctx.lineTo(0, w); ctx.fill(); }
+      ctx.restore(); ctx.globalAlpha = a; const cr = R * .28; ctx.drawImage(glowSprite("rgba(255,255,255,1)"), o.x - cr, o.y - cr, cr * 2, cr * 2); ctx.globalAlpha = 1; }
+    ctx.restore(); }
+  /* chain lightning */
+  if (b.arcs589 && b.arcs589.length) { b.arcs589 = b.arcs589.filter(m => T - m.t0 < m.life + .05); ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineJoin = "round"; ctx.lineCap = "round";
+    for (const m of b.arcs589) { const age = T - m.t0; if (age < 0) continue; const A = scr[m.e]; if (!A || !(b.n[m.e] > 0 || age < .2)) continue; const k = age / m.life, a = (1 - k) * (.7 + .3 * Math.sin(t * .09 + m.seed));
+      if (!m.hops) { const es = []; Q.forEach((q2, j) => { if (j !== m.e && q2.side === Q[m.e].side && b.n[j] > 0 && scr[j]) es.push([Math.hypot(scr[j].x - A.x, scr[j].y - A.y), j]); }); es.sort((x, y) => x[0] - y[0]); m.hops = [m.e].concat(es.slice(0, 2).map(x => x[1])); }
+      const pts = m.hops.map(j => scr[j]).filter(Boolean); if (pts.length < 2) { const r0 = 22 * dS; pts.push({ x: A.x + r0, y: A.y - r0 * .6 }); }
+      const jag = (P, Q2, seg, amp, sd) => { const out = [[P.x, P.y]]; for (let s = 1; s < seg; s++) { const u = s / seg, nx = -(Q2.y - P.y), ny = Q2.x - P.x, nl = Math.hypot(nx, ny) || 1, off = (Math.sin(sd + s * 12.9898 + Math.floor(t / 45) * 7.1) * 43758.5453 % 1) * amp; out.push([P.x + (Q2.x - P.x) * u + nx / nl * off, P.y + (Q2.y - P.y) * u + ny / nl * off]); } out.push([Q2.x, Q2.y]); return out; };
+      for (let h = 0; h + 1 < pts.length; h++) { const P = pts[h], Q2 = pts[h + 1], Ln = Math.hypot(Q2.x - P.x, Q2.y - P.y), seg = Math.max(4, Math.min(14, Math.round(Ln / (14 * dS)))), path = jag(P, Q2, seg, Math.min(26 * dS, Ln * .12), m.seed + h * 3.7);
+        for (const [w, al, c] of [[9, .22, m.col], [3.6, .55, m.col], [1.4, 1, "255,255,255"]]) { ctx.strokeStyle = `rgba(${c},${al * a})`; ctx.lineWidth = w * dS; ctx.beginPath(); path.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke(); }
+        const gr = 16 * dS * (1 + .3 * Math.sin(t * .05)); ctx.globalAlpha = a; ctx.drawImage(glowSprite(`rgba(${m.col},1)`), Q2.x - gr, Q2.y - gr, gr * 2, gr * 2); ctx.globalAlpha = 1; } }
+    ctx.restore(); }
+  /* skill banners: a slanted glowing ribbon over the ship that slides in, holds and fades */
+  if (b.skb && b.skb.length && !lo) { b.skb = b.skb.filter(o => t - o.t < 1900);
+    for (const o of b.skb) { const A = scr[o.i]; if (!A) continue; const k = (t - o.t) / 1900, slide = Math.min(1, (t - o.t) / 160), a = k > .8 ? (1 - k) / .2 : 1, fs = 13 * dS; let x = A.x - (1 - slide) * 40 * dS;
+      const y = A.y - 46 * dS - k * 8 * dS;
+      ctx.save(); ctx.font = `italic 800 ${fs}px Oxanium, sans-serif`; const tw = ctx.measureText(o.txt).width, hw = tw / 2 + 14 * dS, hh = fs * .78; ctx.globalAlpha = a; { const W0 = ctx.canvas.width, xs = clamp(x * vs + (vtx || 0), hw * vs + 10 * d, W0 - hw * vs - 10 * d); x = (xs - (vtx || 0)) / vs; }
+      const g = ctx.createLinearGradient(x - hw, 0, x + hw, 0); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(.15, "rgba(6,10,24,.82)"); g.addColorStop(.85, "rgba(6,10,24,.82)"); g.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - hw + 8 * dS, y - hh); ctx.lineTo(x + hw + 8 * dS, y - hh); ctx.lineTo(x + hw - 8 * dS, y + hh); ctx.lineTo(x - hw - 8 * dS, y + hh); ctx.closePath(); ctx.fill();
+      ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = o.col; ctx.globalAlpha = a * .9; ctx.fillRect(x - hw + 4 * dS, y + hh - 1.6 * dS, hw * 2 - 8 * dS, 1.6 * dS); ctx.fillRect(x - hw + 12 * dS, y - hh, hw * 2 - 8 * dS, 1.2 * dS); ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = a;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle"; const tg = ctx.createLinearGradient(0, y - fs / 2, 0, y + fs / 2); tg.addColorStop(0, "#ffffff"); tg.addColorStop(1, o.col); ctx.lineWidth = 3 * dS; ctx.strokeStyle = "rgba(0,0,0,.8)"; ctx.strokeText(o.txt, x, y + 1 * dS); ctx.fillStyle = tg; ctx.fillText(o.txt, x, y + 1 * dS); ctx.restore(); } } }
+/* the damage numbers, game-style: they pop in big and settle, bold with a gradient and a heavy outline; critical hits are huge and gold */
+function fx589Nums(ctx, b, t, d, vs, Q) { const dS = d / vs; b.nums = b.nums.filter(o => t - o.t < 1150); if (b.nums.length > 24) b.nums.splice(0, b.nums.length - 24);
+  const numR = []; for (let ni = b.nums.length - 1; ni >= 0; ni--) { const o = b.nums[ni]; if (t < o.t) continue; const age = t - o.t, p = age / 1150, crit = o.txt === "CRITICAL", kill = /^−/.test(o.txt), yy = o.y - (1 - Math.pow(1 - p, 2)) * 40 * dS;
+    if (numR.length >= (Q.length > 60 ? 7 : 99)) break; if (numR.some(([x2, y2]) => Math.abs(x2 - o.x) < 62 * dS && Math.abs(y2 - yy) < 18 * dS)) continue; numR.push([o.x, yy]);
+    const pop = age < 90 ? 1.9 - age / 90 * .9 : age < 170 ? 1 + Math.sin((age - 90) / 80 * Math.PI) * .12 : 1, base = crit ? 15 : kill ? 21 : o.big ? 19 : 15, fs = base * dS * pop;
+    ctx.save(); ctx.globalAlpha = p > .7 ? 1 - (p - .7) / .3 : 1; ctx.font = `${crit ? "italic " : ""}900 ${fs}px Oxanium, sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const c1 = crit ? "#fff6c2" : "#ffffff", c2 = crit ? "#ffb21f" : kill ? "#ff3b3b" : o.col, g = ctx.createLinearGradient(0, yy - fs / 2, 0, yy + fs / 2); g.addColorStop(0, c1); g.addColorStop(.55, c2); g.addColorStop(1, crit ? "#c46a00" : c2);
+    if (crit || kill) { ctx.globalCompositeOperation = "lighter"; const gr = fs * 1.6; ctx.globalAlpha *= .55; ctx.drawImage(glowSprite(crit ? "rgba(255,190,60,1)" : "rgba(255,60,60,1)"), o.x - gr, yy - gr * .6, gr * 2, gr * 1.2); ctx.globalAlpha = p > .7 ? 1 - (p - .7) / .3 : 1; ctx.globalCompositeOperation = "source-over"; }
+    ctx.lineJoin = "round"; ctx.lineWidth = 4.2 * dS; ctx.strokeStyle = "rgba(4,6,14,.92)"; ctx.strokeText(o.txt, o.x, yy); ctx.fillStyle = g; ctx.fillText(o.txt, o.x, yy); ctx.restore(); } }
 /* an explosion in layers: a white flash, rolling fireballs, sparks, a shockwave, and smoke that lingers and drifts */
 function bExplode(b, x, y, size, t, d) {
   const k = b.lowFx ? .35 : PERF.battleCap * (b.tier >= 2 ? .6 : 1), R = Math.random;
@@ -21971,6 +22018,7 @@ function bExplode(b, x, y, size, t, d) {
   /* v78 vacuum: no smoke rises in space. A blast leaves a cloud of vaporised hull that expands evenly and fades, faintly lit, and every
      blast is a little different (its colour temperature, spark count and, for bigger ones, opposed plasma jets) */
   const vr = R(), vcol = vr < .4 ? "255,170,110" : vr < .75 ? "255,205,150" : "190,215,255";
+  if (size >= 1.5 && !b.lowFx) { (b.bursts589 = b.bursts589 || []).push({ x, y, t, r: (46 + size * 46) * d, life: 380 + size * 140, rot: R() * TAU, n: 12 + Math.round(size * 3), col: vcol }); if (b.bursts589.length > 8) b.bursts589.shift(); } /* v589 */
   for (let i = 0, n = Math.round((1.2 + size * 2) * k); i < n; i++) { const a = R() * TAU, s2 = (.01 + R() * .02) * d * (1 + size * .3); b.smoke.push({ x, y, vx: Math.cos(a) * s2, vy: Math.sin(a) * s2, t: t + 80 + R() * 200, r0: (4 + size * 4) * d, r1: (16 + size * 26) * d, life: 1300 + size * 600 + R() * 600, c: R() < .5 ? "120,128,150" : "150,120,110" }); }
   if (size >= 1.2 && R() < .5 && !b.lowFx) { const a = R() * Math.PI; (b.jets = b.jets || []).push({ x, y, a, t, life: 260 + size * 110, len: (16 + size * 26) * d, col: vcol }); if (b.jets.length > 16) b.jets.shift(); }
   for (let i = 0, n = Math.round((4 + size * 6) * k); i < n; i++) { const a = R() * TAU, s = (.16 + R() * .36) * (1 + size * .5) * d; b.sparks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, t, life: 280 + R() * 420 }); }
@@ -22532,12 +22580,7 @@ function drawBattle(t) {
     b.fgL = b.fgL || fgRocks(W, H, d);
     ctx.drawImage(b.fgL.grade, 0, 0, W, H); }
   ctx.setTransform(vs, 0, 0, vs, vtx + shx, vty + shy);
-  b.nums = b.nums.filter(o => t - o.t < 1000); if (b.nums.length > 24) b.nums.splice(0, b.nums.length - 24);
-  const numR = [], dS = d / vs; // newest numbers win; any that would overlap one already drawn this frame are skipped (no "8.04MM" pile-ups)
-  for (let ni = b.nums.length - 1; ni >= 0; ni--) { const o = b.nums[ni]; if (t < o.t) continue; const p = (t - o.t) / 1000, yy = o.y - p * 34 * dS;
-    if (numR.length >= (Q.length > 60 ? 7 : 99)) break; // big fights: only the freshest few numbers, never a wall of digits
-    if (numR.some(([x2, y2]) => Math.abs(x2 - o.x) < 62 * dS && Math.abs(y2 - yy) < 16 * dS)) continue; numR.push([o.x, yy]); ctx.globalAlpha = 1 - p * p;
-    ctx.font = `800 ${(o.big ? 16 : 12.5) * dS}px Oxanium, sans-serif`; ctx.textAlign = "center"; ctx.lineWidth = 3 * dS; ctx.strokeStyle = "rgba(0,0,0,.85)"; ctx.strokeText(o.txt, o.x, yy); ctx.fillStyle = o.col; ctx.fillText(o.txt, o.x, yy); }
+  fx589Draw(ctx, b, t, d, vs, scr, Q, T, vtx); fx589Nums(ctx, b, t, d, vs, Q); /* v589 */
   ctx.globalAlpha = 1;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   // round transitions: a VS band sweeps across the middle of the field
