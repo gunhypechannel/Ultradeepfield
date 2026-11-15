@@ -5260,7 +5260,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 593;
+const GAME_V = 594;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6700,13 +6700,13 @@ const WB_RISE = .5, WB_RISE_E = .05; // v405: where a boss starts to rise to mee
 function wbRiseK(A, Dd) { const pw = st => st.reduce((a, s) => a + s.n * unitPow(s), 0), P = pw(A), B = pw(Dd); if (!(B > 0) || P <= B * WB_RISE) return { F: 1, x: 1 }; const x = P / (B * WB_RISE); return { F: x / Math.pow(x, WB_RISE_E), x }; }
 /* v408 the same for the Cube's Collective Warden: aim one attack at a share of its force (30% rising to 60%); a Warden worn to its
    limit (integrity 25% or less) can be broken and the Cube seized; frac(res) is the share of the defenders destroyed */
-function riseFight(mkA, mkD, frac, worn) { let { F, x } = wbRiseK(mkA(), mkD()); if (F <= 1 || worn) return { res: simulate(mkA(), mkD()), rise: 1 };
-  const tgt = clamp(.3 + .09 * Math.log10(x), .3, .6); let lo = 1, hi = 0, best = null;
+function riseFight(mkA, mkD, frac, worn, t0) { let { F, x } = wbRiseK(mkA(), mkD()); if (F <= 1 || worn) return { res: simulate(mkA(), mkD()), rise: 1 };
+  const tgt = t0 ? clamp(t0 + .08 * Math.log10(x), t0, .75) : clamp(.3 + .09 * Math.log10(x), .3, .6); /* v594 t0: the Cube's floor */ let lo = 1, hi = 0, best = null;
   for (let i = 0; i < 9; i++) { const A = mkA(), D = mkD(); for (const s of D) { s.atk *= F; s.hull *= F; } const res = simulate(A, D), f = frac(res), err = Math.abs(f - tgt);
     if (!best || err < best.err) best = { res, F, err }; if (err <= .05) break; if (f > tgt) lo = F; else hi = F; F = hi ? Math.sqrt(Math.max(lo, 1) * hi) : F * Math.max(1.5, Math.pow(f / tgt, 1.6)); if (hi && hi / Math.max(lo, 1) < 1.03) break; }
   return { res: best.res, rise: best.F }; }
 const cubeKilled = res => { const s0 = Object.values(res.start.d || {}).reduce((a, v) => a + v, 0), s1 = Object.values(res.dLeft || {}).reduce((a, v) => a + Math.max(0, v), 0); return s0 ? 1 - s1 / s0 : 1; };
-function cubeFight(A0, cur) { const D = nexusDefense(cur); if (!D.alien) return { D, res: simulate(A0(), D.stacks), rise: 1 }; const { res, rise } = riseFight(A0, () => nexusDefense(cur).stacks, cubeKilled, cubeIntegrity(cur) <= .25); return { D, res, rise }; }
+function cubeFight(A0, cur) { const D = nexusDefense(cur); if (!D.alien) return { D, res: simulate(A0(), D.stacks), rise: 1 }; const { res, rise } = riseFight(A0, () => nexusDefense(cur).stacks, cubeKilled, cubeIntegrity(cur) <= CUBE_BREAK, .5); return { D, res, rise }; }
 /* a fight against a boss that rises to meet the fleet: above the threshold one attack destroys a set share of its full hull, 30% at the
    threshold rising to 60% for the very largest fleets; when a fight overshoots, the boss is made tougher and it is fought again
    (only hull and attack: a shot too weak for a shield is deflected, so scaled shields would make a big fleet harmless) */
@@ -12994,9 +12994,10 @@ setInterval(() => { try { if (!S || !G.ready || !canPlay()) return; const T = no
   if (ph.i === 6 && S.cubeResWk !== evWeek(T) && !battle && !sheet && cubeResult(T)) { S.cubeResWk = evWeek(T); dirty(); openSheet({ type: "cuberes" }); }
   const cs = cubeStrike(T); if (cs && cs.p.owner === G.me) { if (T < cs.impact && S.cubeWarn !== cs.key) { S.cubeWarn = cs.key; note(`⚠ The Cube has targeted ${cs.p.name}! Its strike hits in ${ftime(cs.impact - T)}. Bring your fleets home to defend.`, "warn"); } else if (T >= cs.impact) cubeStrikeHit(cs); } } catch (e) {} }, 3000);
 /* the Collective Warden's integrity: damage from every fight against it persists for the week (shared record, field wd) */
-const cubeIntegrity = cur => 1 - clamp(+(cur && cur.wd) || 0, 0, .8);
+const CUBE_BREAK = .5; /* v594 at half strength the Warden stops rising */
+const cubeIntegrity = cur => 1 - clamp(+(cur && cur.wd) || 0, 0, .9);
 function wardenWear(cur, res) { const s0 = sumN(res.start.d || {}), s1 = sumN(cleanShips(res.dLeft || {})) + sumN(Object.fromEntries(Object.entries(res.dLeft || {}).filter(([k]) => !SH[k]))); if (!s0) return; const left = clamp(s1 / s0, 0, 1);
-  cur.wd = clamp(1 - cubeIntegrity(cur) * left, 0, .8); }
+  cur.wd = clamp(1 - cubeIntegrity(cur) * left, 0, .9); }
 /* ---------- the event's visuals on the map (all deterministic from the clock) ---------- */
 function cubeLiveFx(W, t, T) {
   const ph = cubePhase(T); let X = W.cubeX; if (!ph) { if (X) X.grp.visible = false; if (W.scene.userData.cubeSun) W.scene.userData.cubeSun.intensity = 0; return; }
