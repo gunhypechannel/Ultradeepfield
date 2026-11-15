@@ -5258,7 +5258,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 590;
+const GAME_V = 591;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8579,7 +8579,7 @@ function sbBoomTick(X, t) { for (const Bm of X.booms) { const a = (t - Bm.t) / 9
 /* v408 tapping the Super Cube */
 function shCubePick() { const T = now(), ph = cubePhase(T), live = evActive(T), cur = nexusNow(T), who = cur.holder ? `Held by ${esc(allyTag(cur.holder))}` : live ? "Unclaimed · the Collective Warden guards it" : `Next battle in ${ftime(evStart(evWeek(T) + 1) - T)}`;
   return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">${live ? "● LIVE · " : ""}Battle for the Cube</div><h2>The Super Cube</h2><p class="note">${who}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
-    <div class="cubepick"><button class="btn amber wide" data-act="cubeCine">🎬 ${live ? "Watch the battle live" : "Cinematic view"}</button>${live ? "" : `<button class="btn ghost wide" data-act="liveReplay">▶ Watch the Cube's arrival</button>`}
+    <div class="cubepick"><button class="btn amber wide" data-act="cubeCine">🎬 ${live ? "Watch the battle live" : "Cinematic view"}</button><button class="btn ghost wide" data-act="liveReplay">▶ Watch the Cube's arrival</button>
     <button class="btn wide" data-act="events" data-ev="cube">📅 Events page</button>${ph ? `<button class="btn ghost wide" data-act="cubeScanHere">◎ Scan the Cube</button>` : ""}</div>`; }
 /* v408 the owner's time-lapse of the whole Elemental Convergence, on a local copy of the boss state */
 const CONV_SIM = [[0, "start"], [4000, "say:wb3_new"], [7000, "cam:eic"], [9000, "hit:eic:6"], [14000, "hit:efi:8"], [17000, "cam:eli"], [19000, "hit:eli:14"], [24000, "hit:eli:14"], [27000, "cam:est"], [29000, "hit:est:16"],
@@ -12861,7 +12861,7 @@ function drawCubeWar(W, t, T) {
   // v108: driven by the event timeline: the defenders stage at Ironfall in the Approach, fight from the Assault on (harder in the
   // Escalation and Finale), and withdraw during the Aftermath while the winner is crowned
   const live = evActive(T), endAt = evStart(evWeek(T)) + EV_DUR, PH = cubePhase(T), LI = liveIntro(T), crowning = !!(PH && PH.i === 6), staging = !!(PH && PH.i === 2 && !LI);
-  const on = (PH && PH.i >= 2) || (LI && LI.s > 56000); let C = W.cwar;
+  const on = (PH && PH.i >= 2 && !(LI && LI.rep && LI.s <= 56000)) || (LI && LI.s > 56000); let C = W.cwar; /* v591 */
   if (!on || reduced) { if (C) C.grp.visible = false; return; }
   if (!C) C = W.cwar = cwBuild(W);
   const c = W.nexus.position, cd = W.camera.position.distanceTo(c); C.grp.visible = cd < 1400; if (!C.grp.visible) return;
@@ -13228,7 +13228,7 @@ function cubePanelHTML() {
       <div class="cprow"><span>Incoming</span><b>${cs && cs.p.owner === G.me && !cs.firing ? `<span style="color:var(--red)">⚠ Strike on your world</span> · ` : ""}${strikes.length} joint strike${strikes.length === 1 ? "" : "s"} · ${mine.length} of your fleets</b></div>
       <div class="cprow"><span>Objective</span><b>${ph.i === 6 ? (cur.holder ? `👑 ${esc(allyTag(cur.holder))} crowned` : "The Collective kept the Cube") : "Seize and hold the Cube for your alliance"}</b></div>
       ${st.length ? `<div class="cprow"><span>Standings</span><b>${st.map(([a, v], i) => `${i + 1}. ${esc((G.alliances[a] || {}).tag || "?")} ${ftime(v)}`).join(" · ")}</b></div>` : ""}
-      <div class="cpacts">${ph.i < 6 ? `<button class="btn sm" data-act="nexus">⚔ ${evActive(T) ? "Join battle" : "View"}</button>` : ""}<button class="btn ghost sm" data-act="cubeScan">◎ Inspect</button><button class="btn ghost sm" data-act="siegeWatch">🎥 Watch</button><button class="btn ghost sm" data-act="fxLite">${FX_LITE() ? "Effects: Lite" : "Effects: Full"}</button>${duelOwner() ? `<button class="btn ghost sm" data-act="cubeDemo" data-n="60">▶ 60 vs 60 test</button>` : ""}</div></div>` : ""}`; /* v185: the stress test right in the panel tapping the Cube opens */
+      <div class="cpacts">${ph.i < 6 ? `<button class="btn sm" data-act="nexus">⚔ ${evActive(T) ? "Join battle" : "View"}</button>` : ""}<button class="btn ghost sm" data-act="cubeScan">◎ Inspect</button><button class="btn ghost sm" data-act="siegeWatch">🎥 Watch</button><button class="btn ghost sm" data-act="liveReplay">▶ Arrival</button><button class="btn ghost sm" data-act="fxLite">${FX_LITE() ? "Effects: Lite" : "Effects: Full"}</button>${duelOwner() ? `<button class="btn ghost sm" data-act="cubeDemo" data-n="60">▶ 60 vs 60 test</button>` : ""}</div></div>` : ""}`; /* v185: the stress test right in the panel tapping the Cube opens */
 }
 setInterval(() => { try { const show = view === "galaxy" && G3 && !sheet && !battle && !(G3.cam.cine || G3.cam.live) && cubePhase(now()); /* v111: steps aside while a planet or other panel is open */ let el = $("#cubepanel"); if (!show) { if (el) el.remove(); return; }
   if (!el) { el = document.createElement("div"); el.id = "cubepanel"; $("#app").appendChild(el); } const h = cubePanelHTML(); if (el._h !== h) { el._h = h; el.innerHTML = h; } } catch (e) {} }, 1000);
@@ -13310,7 +13310,7 @@ setInterval(() => { try {
   let bar = $("#livebar");
   if (!LI || view !== "galaxy") { if (bar || (G3 && G3.cam.live && !G3.cam.siege)) liveEnd(); return; } // v110: the siege camera also uses the live flag; never end it from here
   if (G3 && G3.cam.cine) cineEnd(); closeSheet(); $("#app").classList.add("cine", "live");
-  if (!bar) { bar = document.createElement("div"); bar.id = "livebar"; bar.innerHTML = `<div class="lb-top"><span class="lb-live">● LIVE</span><span class="lb-t">BATTLE FOR THE CUBE</span><button data-act="liveSkip">Skip ›</button></div><div class="lb-cap" id="lbcap"></div><div class="lb-title" id="lbtitle"></div><div class="lb-cut" id="lbcut"></div><div class="lb-bot"></div>`; $("#app").appendChild(bar); }
+  if (!bar) { bar = document.createElement("div"); bar.id = "livebar"; bar.innerHTML = `<div class="lb-top"><span class="lb-live"${LI.rep ? ' style="background:#3a4a5a"' : ""}>${LI.rep ? "▶ REPLAY" : "● LIVE"}</span><span class="lb-t">${LI.rep ? "THE CUBE'S ARRIVAL" : "BATTLE FOR THE CUBE"}</span><button data-act="liveSkip">Skip ›</button></div><div class="lb-cap" id="lbcap"></div><div class="lb-title" id="lbtitle"></div><div class="lb-cut" id="lbcut"></div><div class="lb-bot"></div>`; $("#app").appendChild(bar); }
   const sh = liveShot(LI.s), cap = $("#lbcap"), title = $("#lbtitle"), cut = $("#lbcut");
   if (bar.dataset.sh !== String(sh)) { bar.dataset.sh = sh; cut.classList.remove("on"); void cut.offsetWidth; cut.classList.add("on"); cap.classList.remove("on"); void cap.offsetWidth; cap.textContent = LIVE_SHOTS[sh][1]; if (LIVE_SHOTS[sh][1]) cap.classList.add("on"); if (LI.s - LIVE_SHOTS[sh][0] < (sh ? 5000 : 8000)) speak(LIVE_SAY[sh]); }
   title.classList.toggle("on", LI.s > 74500); if (LI.s > 74500 && !title.textContent) title.innerHTML = `<small>LIVE EVENT</small>THE BATTLE FOR THE CUBE<br>HAS BEGUN<em>Hold the Cube for your alliance · 48 hours</em>`;
