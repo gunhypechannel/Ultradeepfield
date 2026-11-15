@@ -5147,7 +5147,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 578;
+const GAME_V = 579;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -20831,6 +20831,17 @@ function advMood(line) { const m = ADV_MOOD_L[line]; if (m) return m; const t = 
   if (/!/.test(t) && /(attack|incoming|brace|hurry|watch out|under fire|now!|run|careful|shields)/i.test(t)) return "urgent"; if (/!/.test(t)) return "excited";
   if (/(fallen|lost|destroyed|dead|never|warning|darkness|vanished|price|end)/i.test(t)) return "grave"; if (/\.\.\./.test(t)) return "tender"; if (/\?/.test(t)) return "warm"; return "calm"; }
 const advPk = (pre, n) => { G.advLast = G.advLast || {}; let i = Math.floor(Math.random() * n) + 1; if (n > 1 && G.advLast[pre] === i) i = i % n + 1; G.advLast[pre] = i; return pre + i; };
+/* v579 the Empire Origins bridge: ?eo=EO1-<10 x H/C/-><-5 seal digits> from Empire Origins' "Beyond the Stars" */
+Object.assign(ARCH, {"l_founder": {"cat": "ages", "t": "The Founder's Echo", "era": "The age of empires", "civ": "The Echo Stones", "loc": "The Ages of the Deep", "img": "art/season/s1-adv.webp", "th": "The canon", "frag": "Keep walking, Founder. There are more of me.", "interp": "Long before the Concord, in the age of empires, the Architects' voice spoke from obelisks called Echo Stones. The empire builders who listened called her nothing at all; she called them Founders. The ones who held their seals built the arks, and their children became the Concord. She remembers every Founder who reached the stars.", "adv": "You heard me in the stone, Commander. That was the first time anyone listened to the end.", "enc": [], "def": []}});
+const EO_IN = (() => { try { const m = location.search.match(/[?&]eo=(EO1-[HC-]{10}-[0-9a]{5})(?:&|$)/); if (!m) return null; try { const u = new URL(location.href); u.searchParams.delete("eo"); history.replaceState(null, "", u.pathname + u.search + u.hash); } catch (e) {} return m[1]; } catch (e) { return null; } })();
+const EO_L = {"found": "Founder... no. Commander. You found my stones once, a long time ago. I remember your voice.", "held": "In the age of empires, your people held the seals. That's why there is still a door to guard.", "mixed": "In the age of empires, some seals held and some cracked. I remember every one of them.", "cracked": "In the age of empires, the seals cracked. We've been paying for it ever since. Let's do better this time."};
+function eoBridge() { if (!S || !G.ready) return; if (EO_IN && (!S.eo || S.eo.code !== EO_IN)) { const r = EO_IN.slice(4, 14); S.eo = { code: EO_IN, at: now(), held: (r.match(/H/g) || []).length, cracked: (r.match(/C/g) || []).length, said: 0 }; dirty(); }
+  const E = S.eo; if (!E || E.said || tutOn() || battle) return; E.said = now(); dirty();
+  try { archUnlock("l_founder", 2, true); } catch (e) {}
+  const n = E.held + E.cracked, tail = !n ? null : E.held >= n * .7 ? EO_L.held : E.held <= n * .3 ? EO_L.cracked : EO_L.mixed;
+  setTimeout(() => { try { advHolo(EO_L.found, true); } catch (e) {} }, 2500);
+  if (tail) setTimeout(() => { try { advHolo(tail, true); } catch (e) {} }, 10500); }
+setInterval(() => { try { eoBridge(); } catch (e) {} }, 3000);
 function advOnce(k) { S.advOnce = S.advOnce || {}; if (S.advOnce[k]) return false; S.advOnce[k] = now(); dirty(); return true; }
 function advLive() { if (!S || !G.ready) return; const T = now(); S.advOnce = S.advOnce || {}; if (S.bondDay !== utcDay()) { S.bondDay = utcDay(); S.bondDays = (S.bondDays || 0) + 1; dirty(); } /* v567 the bond: days played together */
   if (!G.greeted && !tutOn() && !battle) { G.greeted = 1; if (T - (S.greetAt || 0) > 6 * 3600e3) { S.greetAt = T; dirty(); const h = new Date().getHours(), away = (G.awayMs || 0) >= 3 * 864e5, mem = S.advMem && S.advMem.at > (S.memSaid || 0) && T - S.advMem.at < 7 * 864e5 && ADV_NEWS["greet_mem_" + S.advMem.k] ? S.advMem : null;
