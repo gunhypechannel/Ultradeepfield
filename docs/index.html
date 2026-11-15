@@ -5147,7 +5147,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 579;
+const GAME_V = 580;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -7795,7 +7795,8 @@ function shFinale() { const k = sheet.k && FIN_EV[sheet.k] ? sheet.k : "lev", D 
     <h2 class="sec">${on ? "The event" : "How it unfolds"}</h2><ol class="dvtl fin" style="--fc:${D.col}">${tl}</ol><h2 class="sec">The Seal Ledger</h2><ol class="finled">${led}</ol>`; }
 function finBand(T) { const F = finNow(T); if (F) { const D = FIN_EV[F.k], fight = F.e >= D.set && D.typ !== "omen" && D.typ !== "eclipse", up = fight && (D.typ === "wb" ? wbUp(F.k, T) : sbOn(F.k, T)); return `<button class="omb fin" style="--fc:${D.col}" data-act="${D.typ === "omen" || D.typ === "eclipse" ? "finWatch" : "finOpen"}" data-k="${F.k}"><b>${D.ic} ${esc(D.n.toUpperCase())}</b><span>${esc(D.st[F.si][2])}</span>${up ? "<i>⚔ Attack</i>" : ""}</button>`; }
   for (const k in FIN_EV) { if (!FIN_EV[k].st || FIN_EV[k].typ === "sb" || FIN_EV[k].typ === "omen") continue; /* a super boss has its own band until its set piece starts */ const nx = finNext(k, T); if (nx - T < 72 * 3600e3 && nx > T) return `<button class="omb fin soon" style="--fc:${FIN_EV[k].col}" data-act="finOpen" data-k="${k}"><b>${FIN_EV[k].ic} ${esc(FIN_EV[k].n.toUpperCase())}</b><span>in ${ftime(nx - T)}</span></button>`; }
-  { const ok = omenKey(T), j = OMEN_K.indexOf(ok), E = ARCH["o_" + (j + 1)]; if (ok && E) return `<button class="omb fin omen" style="--fc:#8fb0e0" data-act="omenGo" data-k="${ok}"><b>☾ OMEN ${j + 1} OF ${OMEN_K.length}</b><span>${esc(E.t.replace(/^Omen \d+: /, ""))}</span><i>📜</i></button>`; } /* v577 the week's omen */
+  return ""; }
+function omenBand(T) { { const ok = omenKey(T), j = OMEN_K.indexOf(ok), E = ARCH["o_" + (j + 1)]; if (ok && E) return `<button class="omb fin omen" style="--fc:#8fb0e0" data-act="omenGo" data-k="${ok}"><b>☾ OMEN ${j + 1} OF ${OMEN_K.length}</b><span>${esc(E.t.replace(/^Omen \d+: /, ""))}</span><i>📜</i></button>`; } /* v577 the week's omen */
   return ""; }
 /* v577 where each omen shows on the map: fly there, then its Archives page */
 function omenFocus(k, T) { const s0 = omenWk0(T); try { if (k === "lev" || k === "wym") { const p = finP1(k, s0); return [p.x, p.y, p.z, 620]; } if (k === "aex" || k === "vae") { const p = SBX[k].p; return [p[0], p[1], p[2], 820]; } } catch (e) {} return [0, 0, 0, k === "krk" ? 1000 : k === "khz" ? 900 : 1250]; }
@@ -7811,6 +7812,7 @@ function omBand() { const T = now(), b = $("#omband"), live = dvNow(T), nx = dvN
       else html = `<button class="omb" data-act="omOpen"><b>Ω CUBE DEVASTATION</b><span>${esc(DVS[dvStage(e)][2])}</span></button>`; }
     else if (nx - T < 72 * 3600e3) { annOnce("dv", nx, DV_SOON); } if (!live && nx - T < 72 * 3600e3) html = `<button class="omb soon" data-act="omOpen"><b>Ω CUBE DEVASTATION</b><span>in ${ftime(nx - T)}</span></button>`; }
   if (!html && view === "galaxy" && !sheet && !battle && !G.sbSim && !cineOn) html = finBand(T); /* v571 */
+  if (!html && view === "base" && !sheet && !battle) html = omenBand(T); /* v580 the week's omen: on the planet only */
   if (!html) { if (b) b.remove(); return; } if (!b) { const A = $("#app"); if (!A) return; const el = document.createElement("div"); el.id = "omband"; el.innerHTML = html; A.appendChild(el); } else if (b.dataset.h !== html) { b.dataset.h = html; b.innerHTML = html; } }
 setInterval(() => { try { omBand(); omClaim(); } catch (e) {} }, 1000);
 /* the owner's preview: the whole event (awakening, migration, assembly, eruption, a turn of the finished Omega, and its break-up) in
@@ -17373,7 +17375,7 @@ function mountColony() {
   const use3 = TH && !C3fail;
   if (!colHost) { const d = document.createElement("div"); d.innerHTML = `<section class="planet colony" id="colwrap">${use3 ? '<canvas id="col3d"></canvas><canvas id="colfx" aria-label="Your base. Drag to look around, pinch or scroll to zoom, tap a building to upgrade it."></canvas>' : '<canvas id="planet"></canvas>'}<div class="meta" id="cmeta"></div></section>`; colHost = d.firstElementChild; }
   if (slot) slot.replaceWith(colHost);
-  if (!colHost.dataset.init) { colHost.dataset.init = "1"; if (use3) { C3 = initColony(colHost); if (C3) bindColony(colHost.querySelector("#colfx")); else colHost.innerHTML = '<canvas id="planet"></canvas><div class="meta" id="cmeta"></div>'; } }
+  if (!colHost.dataset.init) { colHost.dataset.init = "1"; if (use3) { if (IOS && G3) worldDrop("gal", "before the base is built"); /* v580 */ C3 = initColony(colHost); if (C3) bindColony(colHost.querySelector("#colfx")); else colHost.innerHTML = '<canvas id="planet"></canvas><div class="meta" id="cmeta"></div>'; } }
   const bt = baseTarget(), hp = bt.p, cm = colHost.querySelector("#cmeta"), isHome = bt.key === "home";
   if (cm) cm.innerHTML = `<div><h1>${esc(isHome ? S.homeName : hp.name)}</h1><div class="coords">${isHome ? "Homeworld" : TYPE_N[hp.type] + " colony"}${hp ? ` · Orbit ${Math.round(hp.r)}` : ""}${C3 ? " · tap a building" : ""}</div></div><div class="score">${isHome ? `Score<b>${fmt(score())}</b>` : `Fields<b>${usedOf(hp)}/${fieldsOf(hp)}</b>`}</div>`;
 }
@@ -17570,6 +17572,7 @@ function render(keepScroll) {
   const typing = ae && ae.tagName === "INPUT" && m.contains(ae);
   if (view === "galaxy") {
     m.classList.add("full");
+    if (IOS && !mapHost && C3) worldDrop("col", "before the map is built"); /* v580 never two worlds at a cold build */
     mapMount(m); { const pk = $("#mappark"); if (pk && !pk.firstChild) pk.remove(); } /* v383: a map built in the background just moves on screen */
     mapOverlay();
     if (render.last !== "galaxy" && !reduced) { m.classList.remove("fade"); void m.offsetWidth; m.classList.add("fade"); }
@@ -22516,7 +22519,7 @@ function finishBattle() {
    3D views grow back a moment later, and nothing pops up for a few seconds. */
 function battleFree(b) { try { const cs = [$("#bcv"), b.fxc, b.bg, b.dustL, b.fgL && b.fgL.grade].concat(b.bloomC || []); for (const c of cs) if (c && c.getContext) { c.width = c.height = 0; }
   b.fxc = b.bg = b.dustL = b.fgL = b.bloomC = null; for (const k of ["fx", "fire", "smoke", "sparks", "flashes", "embers", "debris", "parts", "trails", "booms", "flak", "beams", "salvos", "wrecks", "rings", "nums"]) if (Array.isArray(b[k])) b[k].length = 0; } catch (e) {} }
-function closeBattle() { if (battle) { crumb("battle closed"); battleFree(battle); wbArtFree(); G.btClosedAt = performance.now(); } ART_LIVE.clear(); battle = null; setTimeout(() => { if (!battle) { gpuNap(false); } }, 400); try { SFX.stopAll(); } catch (e) {} const w = $("#battle"); if (w) { if (reduced || IOS) w.remove(); else { w.id = ""; w.querySelectorAll("[id]").forEach(e => e.removeAttribute("id")); w.classList.add("closing"); setTimeout(() => w.remove(), 230); } } flushSay(); }
+function closeBattle() { if (battle) { crumb("battle closed"); battleFree(battle); wbArtFree(); G.btClosedAt = performance.now(); if (IOS) setTimeout(() => { try { if (!battle && STU) worldDrop("stu", "battle closed"); } catch (e) {} }, 800); /* v580 */ } ART_LIVE.clear(); battle = null; setTimeout(() => { if (!battle) { gpuNap(false); } }, 400); try { SFX.stopAll(); } catch (e) {} const w = $("#battle"); if (w) { if (reduced || IOS) w.remove(); else { w.id = ""; w.querySelectorAll("[id]").forEach(e => e.removeAttribute("id")); w.classList.add("closing"); setTimeout(() => w.remove(), 230); } } flushSay(); }
 
 /* ---------- animation loop ---------- */
 /* phones and tablets: when nobody has touched the screen for 4 seconds (and no battle is playing) the 3D views drop to 30 fps,
