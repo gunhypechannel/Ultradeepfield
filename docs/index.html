@@ -5260,7 +5260,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 595;
+const GAME_V = 596;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -21943,6 +21943,11 @@ const tx5 = {
     ctx.restore(); },
   bolt(ctx, x1, y1, x2, y2, seg, amp, seed, col, w, a) { ctx.globalAlpha = Math.min(1, a); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x1, y1); const nx = -(y2 - y1), ny = x2 - x1, nl = Math.hypot(nx, ny) || 1;
     for (let i = 1; i < seg; i++) { const u = i / seg, o = (((Math.sin(seed + i * 12.9898) * 43758.5453) % 1) - .25) * amp * 2; ctx.lineTo(x1 + (x2 - x1) * u + nx / nl * o, y1 + (y2 - y1) * u + ny / nl * o); } ctx.lineTo(x2, y2); ctx.stroke(); },
+  /* v596 a carrier craft from the studio (the same baked side view the carriers launch), washed in the Titan's colours */
+  craftT: new WeakMap(),
+  craft(ctx, k, acc, tint, x, y, an, L) { let art = shipArtSoon(k, acc, "side"); if (!art) return false; const fc = Math.cos(an) >= 0 ? 1 : -1, w = L * (DRAWK[k] || (AL[k] ? 2 : 1.8)), h = w / 2; let sc = 1; try { const m = ctx.getTransform(); sc = Math.hypot(m.a, m.b); } catch (e) {} art = sprMip(art, w * sc);
+    let M = tx5.craftT.get(art); if (!M) tx5.craftT.set(art, M = {}); let c = M[tint]; if (!c) { c = document.createElement("canvas"); c.width = art.width; c.height = art.height; const x2 = c.getContext("2d"); x2.drawImage(art, 0, 0); x2.globalCompositeOperation = "source-atop"; x2.fillStyle = tint; x2.fillRect(0, 0, c.width, c.height); M[tint] = c; }
+    ctx.save(); ctx.globalCompositeOperation = "source-over"; ctx.translate(x, y); ctx.rotate(an); ctx.scale(1, fc); ctx.drawImage(c, -w / 2, -h / 2, w, h); ctx.restore(); return true; },
   rnd: (s, i) => { const x = Math.sin(s * 9.13 + i * 78.233) * 43758.5453; return x - Math.floor(x); },
   ease: x => 1 - Math.pow(1 - x, 3),
   bez(p0, p1, p2, p3, u) { const v = 1 - u; return [v * v * v * p0[0] + 3 * v * v * u * p1[0] + 3 * v * u * u * p2[0] + u * u * u * p3[0], v * v * v * p0[1] + 3 * v * v * u * p1[1] + 3 * v * u * u * p2[1] + u * u * u * p3[1]]; },
@@ -21977,8 +21982,9 @@ const TX595 = {
       const [x, y] = pt(u), [x0, y0] = pt(Math.max(0, u - .01)), an = Math.atan2(y - y0, x - x0), fade = u > .85 ? (1 - u) / .15 : u < .05 ? u / .05 : 1;
       if (!lo) { ctx.globalAlpha = .55 * fade; ctx.strokeStyle = "rgba(110,190,255,1)"; ctx.lineWidth = 1.4 * d; ctx.beginPath(); for (let k = 0; k <= 8; k++) { const [tx, ty] = pt(Math.max(0, u - k * .012)); k ? ctx.lineTo(tx, ty) : ctx.moveTo(tx, ty); } ctx.stroke(); } // engine trail
       tx5.glow(ctx, x - Math.cos(an) * fs * .8, y - Math.sin(an) * fs * .8, fs * 1.3, "#5fc8ff", fade);
+      ctx.globalAlpha = fade; if (!tx5.craft(ctx, "fighter", "#ffcf5a", "rgba(255,226,150,.3)", x, y, an, fs * 1.5)) { /* v596 */
       ctx.save(); ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = fade; ctx.translate(x, y); ctx.rotate(an); const g = ctx.createLinearGradient(-fs, -fs, fs, fs); g.addColorStop(0, "#c9ced8"); g.addColorStop(.5, "#ffffff"); g.addColorStop(1, "#9aa2b0");
-      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(fs * 1.1, 0); ctx.lineTo(-fs * .7, -fs * .62); ctx.lineTo(-fs * .35, 0); ctx.lineTo(-fs * .7, fs * .62); ctx.closePath(); ctx.fill(); ctx.strokeStyle = "#ffcf5a"; ctx.lineWidth = Math.max(.8, .9 * d); ctx.stroke(); ctx.restore(); // a gold-trimmed strike fighter
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(fs * 1.1, 0); ctx.lineTo(-fs * .7, -fs * .62); ctx.lineTo(-fs * .35, 0); ctx.lineTo(-fs * .7, fs * .62); ctx.closePath(); ctx.fill(); ctx.strokeStyle = "#ffcf5a"; ctx.lineWidth = Math.max(.8, .9 * d); ctx.stroke(); ctx.restore(); } ctx.globalCompositeOperation = "lighter"; // a gold-trimmed strike fighter
       if (u > .45 && u < .66) { const k2 = ((u - .45) * 40 + i) % 1; tx5.beam(ctx, x, y, x + Math.cos(an) * Lg * .5 * k2 + Math.cos(an) * fs, y + Math.sin(an) * Lg * .5 * k2 + Math.sin(an) * fs, [[2.6 * d, "90,180,255", .6], [1 * d, "255,255,255", 1]], 1);
         tx5.star(ctx, T0.x + (tx5.rnd(i, Math.floor(u * 50)) - .5) * Lg * .3, T0.y + (tx5.rnd(i + 3, Math.floor(u * 50)) - .5) * Lg * .2, 7 * d, "#9fdcff", .8); } } }, // strafing run
   /* ---- Eclipse Harbinger: the Eclipse Pulse ---- */
@@ -22007,8 +22013,9 @@ const TX595 = {
       const a0 = tx5.rnd(m.seed || 5, i) * TAU, p0 = [S0.x, S0.y], p1 = [S0.x + Math.cos(a0) * Lg * .9, S0.y + Math.sin(a0) * Lg * .6], tp = [T0.x + (tx5.rnd(i, 2) - .5) * Lg * .2, T0.y + (tx5.rnd(i, 3) - .5) * Lg * .14], p2 = [tp[0] - fc * Lg * .5, tp[1] + (tx5.rnd(i, 7) - .5) * Lg * .8];
       const e = u * u * (3 - 2 * u), [bx0, by0] = tx5.bez(p0, p1, p2, tp, e), wob = Math.sin(u * 22 + i) * Lg * .04 * (1 - u), x = bx0 + wob, y = by0 + Math.cos(u * 17 + i * 2) * Lg * .03 * (1 - u), [xa, ya] = tx5.bez(p0, p1, p2, tp, Math.max(0, e - .02)), an = Math.atan2(y - ya, x - xa);
       P.push([x, y]); if (!lo) { ctx.globalAlpha = .5; ctx.strokeStyle = "rgba(176,107,255,1)"; ctx.lineWidth = 1.2 * d; ctx.beginPath(); for (let k = 0; k <= 6; k++) { const [tx, ty] = tx5.bez(p0, p1, p2, tp, Math.max(0, e - k * .018)); k ? ctx.lineTo(tx, ty) : ctx.moveTo(tx, ty); } ctx.stroke(); }
-      ctx.save(); ctx.globalCompositeOperation = "source-over"; ctx.translate(x, y); ctx.rotate(an); ctx.fillStyle = "#0b0f0d"; ctx.strokeStyle = "#3dff9a"; ctx.lineWidth = Math.max(.7, .8 * d); ctx.beginPath(); ctx.moveTo(ds * 1.2, 0); ctx.lineTo(-ds * .6, -ds * .8); ctx.lineTo(-ds * .2, 0); ctx.lineTo(-ds * .6, ds * .8); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
-      const fl = .5 + .5 * Math.sin(age * 70 + i * 2); tx5.glow(ctx, x + Math.cos(an) * ds * .35, y + Math.sin(an) * ds * .35, ds * 1.2, "#3dff9a", .9); tx5.glow(ctx, x - Math.cos(an) * ds * .5, y - Math.sin(an) * ds * .5, ds * 1.4 * fl, "#b06bff", .6); } // the green eye, the violet wing flicker
+      ctx.globalAlpha = 1; if (!tx5.craft(ctx, "drone", "#3dff9a", "rgba(14,40,28,.38)", x, y, an, ds * 2)) { /* v596 the Hive Drone in the Harbinger's black */
+      ctx.save(); ctx.globalCompositeOperation = "source-over"; ctx.translate(x, y); ctx.rotate(an); ctx.fillStyle = "#0b0f0d"; ctx.strokeStyle = "#3dff9a"; ctx.lineWidth = Math.max(.7, .8 * d); ctx.beginPath(); ctx.moveTo(ds * 1.2, 0); ctx.lineTo(-ds * .6, -ds * .8); ctx.lineTo(-ds * .2, 0); ctx.lineTo(-ds * .6, ds * .8); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); } ctx.globalCompositeOperation = "lighter";
+      const fl = .5 + .5 * Math.sin(age * 70 + i * 2); tx5.glow(ctx, x + Math.cos(an) * ds * .9, y + Math.sin(an) * ds * .9, ds * .55, "#3dff9a", .9); tx5.glow(ctx, x - Math.cos(an) * ds * 1.1, y - Math.sin(an) * ds * 1.1, ds * .8 * fl, "#b06bff", .55); /* v596 eye at the nose, engines behind */ } // the green eye, the violet wing flicker
     if (!lo) { ctx.strokeStyle = "rgba(61,255,154,1)"; ctx.lineWidth = .8 * d; for (let i = 0; i + 1 < P.length; i++) { const A = P[i], B = P[i + 1]; if (!A || !B) continue; const L = Math.hypot(B[0] - A[0], B[1] - A[1]); if (L > Lg * 1.2) continue; ctx.globalAlpha = .35 * (1 - L / (Lg * 1.2)); ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke(); } } }, // the neural web
   /* ---- Eclipse Harbinger: arm-tip lasers converging from all six arms ---- */
   HT(ctx, b, m, age, S0, E0, fc, Lg, d, lo, T) { if (!E0) return; const k = age / .42, a = k < .15 ? k / .15 : 1 - Math.max(0, (k - .5) / .5);
