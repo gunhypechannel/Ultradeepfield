@@ -3,5 +3,6 @@
 window.UDF_SUPABASE = {
   url: "https://slubtpfnimxtrfcozvhk.supabase.co",
   anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsdWJ0cGZuaW14dHJmY296dmhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0NzQ4MjEsImV4cCI6MjEwOTA1MDgyMX0.WL1KcDXjxF2hrUpjojUSooiMwffCI8HSzuVhlX3bQZw",
+  launch: "2026-11-09", /* v575 this server's launch day: Season 1 (the Omens prologue) starts that week. A new server sets its own date. */
   google: false /* true once Google sign-in is switched on in Supabase → Authentication → Providers */
 };
