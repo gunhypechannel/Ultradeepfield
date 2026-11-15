@@ -1,0 +1,40 @@
+# v578 The owner's Boss Lab previews every live event (owner: "Are we able to add preview to all the live events to owner account,
+# need to look for flaws or anything we can improve on"). The lab is grouped: The Omens (both teaser finales, each week's omen on the
+# map), The Ten Seals (all ten chapters in order: the set piece, and for world-boss chapters the fight on its own), super bosses,
+# world bosses (with their death), the Cube (Battle for the Cube demos, Cube Devastation, the Convergence), the Judge (his eyes open
+# one by one, the Ledger marks, the blaze) and every scar at once. The rotation calendar stays below. All on this device only.
+import sys, re
+P = sys.argv[1] if len(sys.argv) > 1 else 'docs/index.html'
+s = open(P, encoding='utf-8').read()
+def rep(a, b, n=1):
+    global s
+    c = s.count(a); assert c == n, (c, a[:90]); s = s.replace(a, b)
+# previews the map can show: a chosen omen, every scar, the Judge cycling
+rep('  const ok = omenKey(T), o2 = F && F.k === "om2";', '  const lab = G.labMap && performance.now() < G.labMap.until ? G.labMap : null, ok = lab && lab.omen ? lab.omen : omenKey(T), o2 = F && F.k === "om2", all = lab && lab.scars; /* v578 owner previews */')
+rep('  for (const k in FIN_SCAR) { const om = ok === k, s0 = om ? omenWk0(T) : finLast(k, T), on = s0 != null && !o2 && !(F && F.k === k) && (om || (T - s0 < FIN_YEAR && finOutcome(k, s0, T) === "cracked")), Y = W.finScars[k];',
+    '  for (const k in FIN_SCAR) { const om = ok === k, l0 = finLast(k, T), s0 = om ? omenWk0(T) : all ? (l0 != null ? l0 : Math.floor(T / WEEK) * WEEK) : l0, on = s0 != null && !o2 && !(F && F.k === k) && (om || all || (T - s0 < FIN_YEAR && finOutcome(k, s0, T) === "cracked")), Y = W.finScars[k];')
+rep('function judgeLit(T) { const wi = omenWk(T);', 'function judgeLit(T) { if (G.judgeSim) { const u = (performance.now() - G.judgeSim) / 1000; if (u < 60) return Math.min(6, Math.floor(u / 4)); G.judgeSim = 0; } if (G.finSim && FIN_EV[G.finSim.k] && FIN_EV[G.finSim.k].typ === "omen") return G.finSim.k === "om2" ? 6 : 3; /* the omen previews show him as he will be */ const wi = omenWk(T);')
+rep('function judgeBlaze(T, t) {', 'function judgeBlaze(T, t) { if (G.judgeSim) return (performance.now() - G.judgeSim) / 1000 > 34 ? 1 : 0;')
+rep('try { led = T >= ROT_SEA0 + 4 * PRO * WEEK ? finLedger(T) : []; } catch (er) {}', 'try { led = G.judgeSim ? ["held", "cracked", "held", "held", "cracked", "live", "soon", "soon", "soon", "soon"].map((st, i) => ({ ch: i + 1, st })) : T >= ROT_SEA0 + 4 * PRO * WEEK ? finLedger(T) : []; } catch (er) {}')
+# the lab
+rep('<button class="btn ghost wide" data-act="stressOpen">⚔ Battle tests and reports (every boss)</button><div class="strows">${rows}</div>`; }',
+    '<button class="btn ghost wide" data-act="stressOpen">⚔ Battle tests and reports (every boss)</button>${labAllHTML(T)}<h2 class="sec">The rotation calendar</h2><div class="strows">${rows}</div>`; }\n'
+    '/* v578 every live event, grouped, each with its preview */\n'
+    'function labAllHTML(T) { const row = (ic, n, sub, btns) => `<div class="strow"><div style="flex:1;min-width:0"><b>${ic} ${esc(n)}</b>${sub ? `<div class="note">${sub}</div>` : ""}</div>${btns}</div>`, b = (act, k, lbl, x = "") => `<button class="btn ghost" data-act="${act}" data-k="${k}"${x}>${lbl}</button>`, d = t => new Date(t).toLocaleDateString([], { month: "short", day: "numeric" }), sec = (t, h) => `<h2 class="sec">${t}</h2><div class="strows">${h}</div>`;\n'
+    '  const om = ["om1", "om2"].map(k => row(FIN_EV[k].ic, `Omen finale · ${FIN_EV[k].n}`, `Season ${FIN_EV[k].si + 1} finale · ${d(finWinOf(k, 0)[0])} · 30 min (preview: 2 min)`, b("finSim", k, "▶ Preview"))).join("") + OMEN_K.map((k, i) => { const E = ARCH["o_" + (i + 1)]; return row("☾", E ? E.t : k, `Season ${Math.floor(i / 4) + 1}, week ${i % 4 + 1} · on the map all week`, b("labOmen", k, "▶ Show")); }).join("");\n'
+    '  const ch = finKeys().map(k => { const D = FIN_EV[k], w = finWinOf(k, 0), wb = D.typ === "wb"; return row(D.ic, `Chapter ${D.ch} · ${D.n}`, `${esc(D.chap)} · ${d(w[0])}${D.st ? " · set piece (preview: 2 min)" : ""}`, b("labPrev", k, "▶ Preview") + (wb ? b("labPrev", k, "⚔ Fight", \' data-f="1"\') : "")); }).join("");\n'
+    '  const sbk = Object.keys(SBW).map(k => row(SBW[k].ic || "✦", SBW[k].n, "Wednesday super boss · its arrival and the whole fight", b("labPrev", k, "▶ Preview", \' data-f="1"\'))).join("");\n'
+    '  const wbk = [...ROTS, ...ROTS_X].map(k => row(WB[k].ic, WB[k].n, ROTS_X.includes(k) ? "Season finale world boss" : "Saturday world boss", b("labPrev", k, "▶ Show", \' data-f="1"\') + b("labDie", k, "✝ Death"))).join("");\n'
+    '  const cube = row("⬢", "Battle for the Cube", "Weekly, Friday to Sunday · the battle demo", b("cubeDemo", "", "▶ 20 vs 20") + b("cubeDemo", "", "▶ 60 vs 60", \' data-n="60"\')) + row("◼", "Cube Devastation", "The Omega Cube assembles, fights and breaks apart (preview: 5 min)", b("labPrev", "dv", "▶ Preview")) + row("✪", "The Elemental Convergence", "The five Elementals fuse into the Pentarch", b("labPrev", "conv", "▶ Preview"));\n'
+    '  const judge = row("👁", "The Judge", "His eyes open one by one, the Seal Ledger lights on his hand (gold held, red cracked, white live), then the blaze · 1 min", b("labJudge", "", "▶ Preview")) + row("✶", "Every scar at once", "What each cracked seal leaves on the map · 3 min", b("labScars", "", "▶ Show"));\n'
+    '  return sec("The Omens (Seasons 1 and 2)", om) + sec("The Ten Seals (Seasons 3 to 12)", ch) + sec("Super bosses", sbk) + sec("World bosses", wbk) + sec("The Cube", cube) + sec("The Judge and the scars", judge); }')
+rep('labPrev: d => { if (!duelOwner()) return; const k = d.k; if (FIN_EV[k] && FIN_EV[k].st) return finSimStart(k);',
+    'labPrev: d => { if (!duelOwner()) return; const k = d.k; if (FIN_EV[k] && FIN_EV[k].st && !d.f) return finSimStart(k); /* v578 data-f: the boss alone */ if (d.f && WB[k]) closeSheet();')
+rep('  labStop: () => {',
+    '''  labOmen: d => { if (!duelOwner()) return; const k = d.k; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } G.labMap = { omen: k, until: performance.now() + 180000 }; toast("Owner preview: this omen is on the map for 3 minutes, on this device only."); setTimeout(() => { try { const c = G3 && G3.cam, f = omenFocus(k, now()); if (c) { c.follow = null; c.followFleet = null; c.goal = { tx: f[0], ty: f[1], tz: f[2], dist: f[3], th: .7 }; } } catch (e) {} }, 400); },
+  labScars: () => { if (!duelOwner()) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } G.labMap = { scars: 1, until: performance.now() + 180000 }; toast("Owner preview: every scar is on the map for 3 minutes, on this device only."); setTimeout(() => { try { const c = G3 && G3.cam; if (c) { c.follow = null; c.followFleet = null; c.goal = { tx: 0, ty: 0, tz: 0, dist: 1500, th: .7 }; } } catch (e) {} }, 400); },
+  labJudge: () => { if (!duelOwner()) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); } G.judgeSim = performance.now(); toast("Owner preview: the Judge, one minute, on this device only."); const c = () => G3 && G3.cam; setTimeout(() => { try { if (c()) { c().follow = null; c().followFleet = null; c().goal = { tx: 0, ty: 0, tz: 0, dist: 1800, th: .7 }; } } catch (e) {} }, 400);
+    setTimeout(() => { try { const A = G3.celArt, cam = G3.camera; if (A && cam) { const R = new TH.Vector3().setFromMatrixColumn(cam.matrixWorld, 0), U = new TH.Vector3().setFromMatrixColumn(cam.matrixWorld, 1), h = A.grp.position.clone().addScaledVector(R, (500 / 1100 - .5) * CEL_ART_W).addScaledVector(U, (.5 - 330 / 619) * CEL_ART_W * CEL_ART_AR); c().goal = { tx: h.x * .65, ty: h.y * .65, tz: h.z * .65, dist: 1800, th: .7 }; } else toast("The Judge shows when the map is zoomed out; switch Graphics → Celestial to the painting to see the Ledger marks."); } catch (e) {} }, 6000); },
+  labStop: () => { G.labMap = null; G.judgeSim = 0;''')
+s2 = re.sub(r"GAME_V = 577\b", "GAME_V = 578", s); assert s2 != s; s = s2
+open(P, 'w', encoding='utf-8').write(s); print('ok')
