@@ -1727,6 +1727,7 @@ main.full{padding:0;overflow:hidden;gap:0}
 #app.imm .hud{position:absolute;top:0;left:0;right:0;z-index:16;background:linear-gradient(180deg,rgba(4,12,22,.86) 0%,rgba(4,12,22,.6) 62%,rgba(4,12,22,0) 100%)!important;border-bottom:0!important;padding-bottom:10px;pointer-events:none}
 #app.imm .hud > *{pointer-events:auto}
 #app.imm .hud .evbar{background:transparent;border-top-color:rgba(85,214,232,.14)}
+.glwait{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#9fd8e8;font:600 14px var(--f-display);letter-spacing:.08em;background:radial-gradient(circle,#0c1a2a,#03070d 70%);z-index:2}.glwait i{width:34px;height:34px;border-radius:50%;border:3px solid rgba(85,214,232,.25);border-top-color:#55d6e8;animation:glw .9s linear infinite}@keyframes glw{to{transform:rotate(360deg)}}
 .evbar.hb{gap:6px;padding:3px 8px 4px;cursor:default}.evbar.hb .omb{flex:1 1 0;min-width:0;justify-content:center;gap:8px;padding:4px 10px;border-radius:9px;font-size:11.5px;box-shadow:none;white-space:nowrap;overflow:hidden}
 .evbar.hb .omb b{letter-spacing:.08em}.evbar.hb .omb span{overflow:hidden;text-overflow:ellipsis;color:#cfe0f2}.evbar.hb .omb i{font-size:12px}.evbar.hb .omb.whb{flex:0 1 auto;animation:none;box-shadow:0 0 10px rgba(255,207,90,.35)}.evbar.hb .omb.whb span{display:none}#app.imm .hud .qbar{background:transparent}
 #app.imm .ov.tl,#app.imm .ov.tr{top:calc(var(--hudH,150px) + 4px)!important}
@@ -5257,7 +5258,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 587;
+const GAME_V = 588;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -11301,10 +11302,12 @@ function shipPrewarm(W) {
 /* v379 release one 3D world's graphics memory; it is built again the next time its view opens */
 function glFree(r) { try { if (r.domElement) r.domElement._udfFree = 1; } catch (e) {} try { r.dispose(); } catch (e) {} try { r.forceContextLoss(); } catch (e) {} try { const c = r.domElement; if (c) { c.width = 1; c.height = 1; } } catch (e) {} }
 function worldDrop(k, why) { try {
+  const glw0 = IOS && ((k === "gal" && G3 && view !== "galaxy") || (k === "col" && C3 && view !== "base")); /* v588 */
   if (k === "gal" && G3 && view !== "galaxy") { const old = G3, c = old.cam; G.camKeep = c ? { tx: c.tx, ty: c.ty, tz: c.tz, th: c.th, ph: c.ph, dist: c.dist } : G.camKeep; G3 = null; glFree(old.renderer);
     if (mapHost && mapHost.parentNode) mapHost.parentNode.removeChild(mapHost); mapHost = null; crumb("map released (" + why + ")"); }
   if (k === "col" && C3 && view !== "base") { const old = C3; C3 = null; glFree(old.renderer); if (colHost && colHost.parentNode) colHost.parentNode.removeChild(colHost); colHost = null; crumb("base released (" + why + ")"); }
   if (k === "stu" && STU) { const s = STU; G.stuCache = s.cache; STU = null; glFree(s.renderer); }
+  if (glw0) G.glWait = performance.now() + 1000; /* v588 the wait starts once the release is done */
 } catch (e) { try { crumb("release failed: " + (e && e.message)); } catch (er) {} } }
 const MEM_DIET = IOS;
 /* v425 the background diet: shed what comes back for free (drawing buffers, bloom targets, the boss renderer, the studio and its battle
@@ -17508,7 +17511,7 @@ function mountColony() {
   const use3 = TH && !C3fail;
   if (!colHost) { const d = document.createElement("div"); d.innerHTML = `<section class="planet colony" id="colwrap">${use3 ? '<canvas id="col3d"></canvas><canvas id="colfx" aria-label="Your base. Drag to look around, pinch or scroll to zoom, tap a building to upgrade it."></canvas>' : '<canvas id="planet"></canvas>'}<div class="meta" id="cmeta"></div></section>`; colHost = d.firstElementChild; }
   if (slot) slot.replaceWith(colHost);
-  if (!colHost.dataset.init) { colHost.dataset.init = "1"; if (use3) { if (IOS && G3) worldDrop("gal", "before the base is built"); /* v580 */ C3 = initColony(colHost); if (C3) bindColony(colHost.querySelector("#colfx")); else colHost.innerHTML = '<canvas id="planet"></canvas><div class="meta" id="cmeta"></div>'; } }
+  if (!colHost.dataset.init) { colHost.dataset.init = "1"; if (use3) { if (IOS && G3) worldDrop("gal", "before the base is built"); /* v580 */ if (IOS && G.glWait && performance.now() < G.glWait) { colHost.dataset.init = ""; if (!colHost.querySelector(".glwait")) { crumb("base waits for the map to be freed"); colHost.insertAdjacentHTML("beforeend", '<div class="glwait"><i></i><span>Opening your base…</span></div>'); } clearTimeout(G.glWaitT); G.glWaitT = setTimeout(() => { try { if (view === "base") { const w = colHost && colHost.querySelector(".glwait"); if (w) w.remove(); render(true); } } catch (e) {} }, G.glWait - performance.now() + 30); } /* v588 */ else { C3 = initColony(colHost); if (C3) bindColony(colHost.querySelector("#colfx")); else colHost.innerHTML = '<canvas id="planet"></canvas><div class="meta" id="cmeta"></div>'; } } }
   const bt = baseTarget(), hp = bt.p, cm = colHost.querySelector("#cmeta"), isHome = bt.key === "home";
   if (cm) cm.innerHTML = `<div><h1>${esc(isHome ? S.homeName : hp.name)}</h1><div class="coords">${isHome ? "Homeworld" : TYPE_N[hp.type] + " colony"}${hp ? ` · Orbit ${Math.round(hp.r)}` : ""}${C3 ? " · tap a building" : ""}</div></div><div class="score">${isHome ? `Score<b>${fmt(score())}</b>` : `Fields<b>${usedOf(hp)}/${fieldsOf(hp)}</b>`}</div>`;
 }
@@ -17706,8 +17709,10 @@ function render(keepScroll) {
   if (view === "galaxy") {
     m.classList.add("full");
     if (IOS && !mapHost && C3) worldDrop("col", "before the map is built"); /* v580 never two worlds at a cold build */
-    mapMount(m); { const pk = $("#mappark"); if (pk && !pk.firstChild) pk.remove(); } /* v383: a map built in the background just moves on screen */
-    mapOverlay();
+    const glw = IOS && !mapHost && G.glWait && performance.now() < G.glWait; /* v588 let Safari free the base first */
+    if (glw) { if (!m.querySelector(".glwait")) { crumb("map waits for the base to be freed"); m.innerHTML = '<div class="glwait"><i></i><span>Opening the galaxy…</span></div>'; } clearTimeout(G.glWaitT); G.glWaitT = setTimeout(() => { try { if (view === "galaxy") render(true); } catch (e) {} }, G.glWait - performance.now() + 30); }
+    else { mapMount(m); { const pk = $("#mappark"); if (pk && !pk.firstChild) pk.remove(); } /* v383: a map built in the background just moves on screen */
+    mapOverlay(); }
     if (render.last !== "galaxy" && !reduced) { m.classList.remove("fade"); void m.offsetWidth; m.classList.add("fade"); }
   } else {
     m.classList.toggle("full", view === "base");
