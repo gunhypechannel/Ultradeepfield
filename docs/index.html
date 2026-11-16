@@ -5266,7 +5266,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 598;
+const GAME_V = 599;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -18865,11 +18865,12 @@ function alHome(a) { const T = now(), mem = Object.keys(a.members), on = mem.fil
   return `<section class="alh2"><button class="alcrest" data-act="allyOpen2" data-id="${a.id}" aria-label="Members">${allyEmblem(a.tag, a.id)}<span>LV ${L}</span></button>
       <div class="alh2t"><small>ALLIANCE${ri >= 0 ? ` · RANK #${ri + 1}` : ""}</small><b><em>[${esc(a.tag)}]</em> ${esc(a.name)}</b><span>${mem.length}/${allyCap(a)} members · <i class="dotst on"></i> ${on} online${allyRank(a, G.me) !== "mem" ? ` · ${RANK_IC[r]} ${RANK_N[r]}` : ""}</span><div class="xp"><i style="width:${pct}%"></i></div></div></section>
     ${gloryBanner(a.id)}${a.bio ? `<p class="albio alb2">${esc(a.bio)}</p>` : ""}
-    ${evActive(T) ? `<button class="alneed cube" data-act="nexus"><b>◆ The Battle for the Cube is live</b><span>${nexusNow(T).holder === a.id ? "We hold the Cube. Reinforce it" : "Join the battle"} ›</span></button>` : ""}
+    ${evActive(T) ? `<div class="mcard tpcall alcube"><h3>◆ The Battle for the Cube is live</h3><p class="note">${nexusNow(T).holder === a.id ? "Your alliance holds the Cube. Reinforce the garrison before the rivals break it." : "The Cube is firing on the fleets around it. Every commander who joins raises your alliance's points."}</p>${tplotHTML(T)}<button class="btn amber wide" data-act="nexus">⚔ ${nexusNow(T).holder === a.id ? "Reinforce the Cube" : "Join the battle"}</button></div>` : ""} <!-- v599 the tactical plot -->
     ${need.map(([t, pg]) => `<button class="alneed" data-act="alPg" data-v="${pg}"><b>${t}</b><span>›</span></button>`).join("")}
     <div class="altiles">${tile("mem", "mem", "Members", `${mem.length} · ${on} online`, "allyOpen2")}${tile("chat", "chat", "Chat", "Talk to your alliance", "allyChat")}
       ${tile("def", "def", "Defense", posts.length ? `${posts.length} guard post${posts.length > 1 ? "s" : ""}` : "Guard an ally's world")}${tile("war", "war", "Strikes", st.length ? `<em>${st.length} open</em>` : wars.length ? `<em class="red">At war</em>` : "Joint attacks")}
       ${tile("fund", "fund", "Level & fund", L >= 10 ? "Max level" : `Lv.${L} · ${Math.round(pct)}% to Lv.${L + 1}`)}${boss ? tile("lead", "lead", r === "lead" ? "Leader" : "Captain", "Bio, war, emblem") : tile("rank", "rank", "Rankings", ri >= 0 ? `Rank #${ri + 1}` : "Top alliances")}</div>
+    ${evActive(T) ? "" : `<div class="mcard alcube"><h3>◆ The Cube</h3>${tplotHTML(T)}<button class="btn ghost wide" data-act="nexus">Open the Cube</button></div>`}
     <div class="allinks"><button data-act="allyView" data-v="list">Alliance list</button><button data-act="nav" data-v="rank">Rankings</button>${menu.allyLeave ? `<span class="alleave">Leave ${esc(a.name)}? <button class="red" data-act="allyLeave">Leave</button><button data-act="allyLeaveNo">Stay</button></span>` : `<button data-act="allyLeaveAsk">Leave</button>`}</div>`; }
 function alPage(a, pg) { const T = now(), back = t => `<div class="alpgh"><button class="btn ghost sm" data-act="alPg" data-v="">‹ Alliance</button><b>${t}</b></div>`;
   if (pg === "def") return back("Defense") + alDefense(a);
