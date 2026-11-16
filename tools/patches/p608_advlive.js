@@ -1,10 +1,10 @@
 /* ---------- v608 the Advisor comes alive (owner: "use all these to bring the advisor alive"). Her portrait is no longer one still:
    every line picks a face for its mood (shocked when it's urgent, determined or angry when it's fierce, disappointed or stern when
    it's grave, smiling when it's warm, relieved when it's tender, focused when she reads a report). While her voice plays she talks:
-   her lips follow the loudness of the clip (closed, parted, open) on one face so nothing jumps, and she blinks every few seconds.
+   her lips follow the loudness of the clip (closed, parted a little, parted a little more; v608 owner: the wide-open mouth was too big) on one face so nothing jumps, and she blinks every few seconds.
    For the big moments she steps out in full: a welcome, a salute when a Titan is commissioned, a victory, an alarm, a defeat, a
    command pose for the Cube and the battles, a briefing pose for long explanations and a pointing pose toward what she's showing. */
-const AF_V = 608, afUrl = k => `art/adv/${k}.webp?v=${AF_V}`, AF_TALK = ["n_0", "n_1", "n_2"], afCache = {};
+const AF_V = 608, afUrl = k => `art/adv/${k}.webp?v=${AF_V}`, AF_TALK = ["n_0", "n_h", "n_q"], afCache = {};
 function afPre(k) { let i = afCache[k]; if (!i) { i = afCache[k] = new Image(); i.src = afUrl(k); try { i.decode().catch(() => {}); } catch (e) {} } return i; }
 function afOn() { try { const d = S && cosDef(cosOf().eq.adv); return !(d && d.art); } catch (e) { return true; } } /* a skin with its own portrait keeps it */
 const AF_LOSS = /\b(lost|lose|fallen|fell|destroyed|defeat|defeated|gone|failed|wiped|ruins|broke through)\b/i, AF_WIN = /\b(victory|won|win|wins|first blood|broken|shattered|captured|taken|ours|did it|held|claimed)\b/i;
@@ -20,13 +20,13 @@ function afFace(line) { const m = advMood(line), t = String(line || "");
 const AF_SEL = { dlg: "#adv .advimg", holo: "#advh.on .advimg", tour: "#ftour .ftcard img" };
 function afSet(line, src) { if (!line) return; src = AF_SEL[src] ? src : "dlg"; const T = performance.now(), f = afFace(line);
   (G.afS = G.afS || {})[src] = { line, vk: voiceKey(line), r: f.r, hold: !!f.hold, react: T + (f.r === "n_0" ? 0 : 1100), blink: T + 1800 + Math.random() * 2500, lk: "", lt: 0 };
-  [f.r, "n_0", "n_1", "n_2", "n_b"].forEach(afPre); if (!G.afI) G.afI = setInterval(afTick, 40); afTick();
+  [f.r, "n_0", "n_h", "n_q", "n_b"].forEach(afPre); if (!G.afI) G.afI = setInterval(afTick, 40); afTick();
   try { afPoseFor(line, src); } catch (e) {} }
 function afFrame(st, T) { const a = VOICE.au, mk = a && /voice\/([a-z0-9]+)\.mp3/.exec(a.src || ""), talk = mk && mk[1] === st.vk && !a.paused && !a.ended && a.currentTime > 0; /* only the line being spoken moves its lips */
   if (st.hold || T < st.react) return st.r;
   if (talk) { let lip = 0; const env = VENV && VENV[mk[1]];
     if (env) { const i = Math.floor(a.currentTime * 25), c = env.charCodeAt(Math.min(env.length - 1, i)) - 48; lip = Math.max(0, c) / 42; } else lip = .3 + .3 * Math.sin(T / 70) * Math.sin(T / 173);
-    const k = lip < .16 ? "n_0" : lip < .42 ? "n_1" : "n_2"; if (k !== st.lk && T - st.lt > 75) { st.lk = k; st.lt = T; } return st.lk || "n_0"; }
+    const k = lip < .16 ? "n_0" : lip < .45 ? "n_h" : "n_q"; /* small, natural movements: closed, parted, a little more */ if (k !== st.lk && T - st.lt > 75) { st.lk = k; st.lt = T; } return st.lk || "n_0"; }
   if (st.r === "n_0") { if (T > st.blink + 140) st.blink = T + 2200 + Math.random() * 3800; if (T > st.blink) return "n_b"; }
   return st.r; }
 function afTick() { const T = performance.now(), on = afOn(); let any = 0;

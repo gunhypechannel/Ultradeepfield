@@ -1,6 +1,6 @@
 # v608 the Advisor comes alive: a face for every mood, lips that follow her voice, blinks, and full-body poses for the big moments
 # (see p608_advlive.js). Art: docs/art/adv/*.webp, cut from the owner's expression and pose sheets with the backgrounds removed;
-# the talking frames (n_1, n_2) and the blink (n_b) are her mouth and eyes laid onto the one neutral face (n_0) so nothing jumps.
+# the talking frames (n_h, n_q: n_0 blended 50% / 75% toward the sheet's "mouth slightly open" laid onto n_0) and the blink (n_b) share the one neutral face (n_0) so nothing jumps; the sheet's wide-open mouth was too big and is not used.
 import sys, re
 P = sys.argv[1] if len(sys.argv) > 1 else 'docs/index.html'
 s = open(P, encoding='utf-8').read()
