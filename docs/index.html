@@ -5287,7 +5287,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 605;
+const GAME_V = 606;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -21862,7 +21862,7 @@ function playBattle(r) {
   /* v341: every commander's squadrons fly in their own flagship's glow colour (a friend's or an ally's report shows their colours, not yours) */
   for (const q of R.squads) { const u = q.own; if (typeof u === "string" && u !== "pirates" && u !== "cube" && (u === G.me || G.players[u] || isBot(u) || FAC4_U[u])) { const f = playerFac(u); if (FLAG_GLOW[f] != null) Object.defineProperty(q, "acc", { value: "#" + FLAG_GLOW[f].toString(16).padStart(6, "0") + "@" + f, enumerable: false, writable: true, configurable: true }); } }
   fbBake(); battle.flags = battleFlags(r, R.squads); for (const sd of ["a", "d"]) for (const e of battle.flags[sd]) shipArtSoon("flagship", e.acc, "side"); // v250
-  battle.superSide = r.sbk || r.omega ? "d" : r.wb ? "d" : r.dName === "Collective Warden" ? "d" : r.aName === "The Cube" ? "a" : null; // v109: the Super Cube fights as one grand Cube
+  setTimeout(() => titAdvBattle(battle), 2600); /* v606 */ battle.superSide = r.sbk || r.omega ? "d" : r.wb ? "d" : r.dName === "Collective Warden" ? "d" : r.aName === "The Cube" ? "a" : null; // v109: the Super Cube fights as one grand Cube
   /* v401: your fleet is always nearest you. When you attack, the field is mirrored top to bottom (the recorded frames, once per record) and the two panels swap, so your ships and their panel sit at the bottom and the defender is across the field */
   { const mine = R.squads.find(q => q.own === G.me); battle.flip = !battle.notMine && !!mine && mine.side === "a"; if (!!R.flipY !== battle.flip) { for (const f of R.frames) for (const s of f.s) s[1] = 100 - s[1]; R.flipY = battle.flip; } w.classList.toggle("flip", battle.flip); }
   for (const q of R.squads) { if (isWbU(q.k)) continue; cardPal(q.k); shipArtSoon(q.k, q.acc || battle.acc[q.side], "side"); if (q.role === "carrier") shipArtSoon(q.k === "lord" ? "drone" : "fighter", q.acc || battle.acc[q.side], "side"); } // start baking every unit type now (and sample its card), and a carrier's fighter wing
@@ -22239,7 +22239,7 @@ function spawnVolley(b, v) { fx589Spawn(b, v); /* v589 */
 /* when a Titan unleashes its ultimate (Worldbreaker Cannon, Wing launch, Swarm) the battle drops into slow motion for a beat: the screen
    flashes in the weapon's colour, cinematic bars slide in, and speed lines rush toward the Titan */
 function fx590UltStart(b, v) { try { if (b.lowFx || reduced || !(v.ab === "wbc" || v.ab === "wing" || v.ab === "swarm")) return; const tn = performance.now(); if (b.ult590 && tn - b.ult590.t < 4000) return;
-  b.ult590 = { t: tn, i: v.s, col: v.ab === "wbc" ? "255,170,60" : v.ab === "wing" ? "122,244,255" : "93,255,168" }; b.slowUntil = Math.max(b.slowUntil || 0, tn + 1200); b.shake = Math.max(b.shake || 0, 10 * (b.qs || 1)); } catch (e) {} }
+  { const qq = b.Q[v.s], ms = b.r && (b.r.kind === "defense" || b.r.kind === "raid") ? "d" : "a"; b.tUlt = b.tUlt || {}; if (qq && qq.side === ms && !b.tUlt[qq.k] && b.r && ((b.r.aUids || []).includes(G.me) || b.r.dUid === G.me)) { b.tUlt[qq.k] = 1; titAdv("ult", v.ab); } } /* v606 */ b.ult590 = { t: tn, i: v.s, col: v.ab === "wbc" ? "255,170,60" : v.ab === "wing" ? "122,244,255" : "93,255,168" }; b.slowUntil = Math.max(b.slowUntil || 0, tn + 1200); b.shake = Math.max(b.shake || 0, 10 * (b.qs || 1)); } catch (e) {} }
 function fx590Ult(ctx, b, t, W, H, d, scr, vs, vtx, vty) { const u = b.ult590; if (!u) return; const age = t - u.t, L = 1700; if (age < 0 || age > L) { if (age > L) b.ult590 = null; return; }
   const k = age / L, inA = Math.min(1, age / 140), outA = k > .7 ? 1 - (k - .7) / .3 : 1, A = inA * outA, S0 = scr[u.i], cx = S0 ? S0.x * vs + vtx : W / 2, cy = S0 ? S0.y * vs + vty : H / 2;
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -22330,6 +22330,24 @@ function rs603Draw(ctx, b, t, d, W, H, pos) { if (b.lowFx) { b.rs603 = []; retur
     ctx.globalAlpha = a; ctx.strokeStyle = `rgba(${o.col},1)`; ctx.lineWidth = (o.boss ? 5 : 2.5) * d * a; ctx.beginPath(); ctx.ellipse(o.x, o.y, o.rx * (1 + ek * (o.boss ? .8 : 1.2)), o.ry * (1 + ek * (o.boss ? .8 : 1.2)), 0, 0, TAU); ctx.stroke(); // the shock ring
     if (o.boss && k < .5) tx5.flare(ctx, o.x, o.y, o.rx * 2 * (1 - k * 2), "#c8ffe0", 1 - k * 2); }
   ctx.restore(); ctx.globalAlpha = 1; }
+/* ---------- v606 the Advisor on the Titans ---------- */
+const TADV = {
+  built: { armageddon: ["The Armageddon is out of the dock, Commander. Six Warden hearts in its spine and one very large cannon. Point it at something.", "Armageddon commissioned. When it fires the Worldbreaker, I'd suggest everyone look away."],
+    sovereign: ["The Sovereign Ark has launched. I can feel every ship it commands, Commander. They fight as one now.", "Sovereign Ark commissioned. The fleet has a crown again."],
+    harbinger: ["The Eclipse Harbinger is awake. Its reactor beats in time with the Void, Commander. Use it before it starts using us.", "Eclipse Harbinger commissioned. Its drones are already restless."] },
+  cores: { armageddon: "We have enough Titan Cores for an Armageddon, Commander. The shipyard is waiting.", sovereign: "We have the Titan Cores for a Sovereign Ark. Imagine the whole fleet moving as one.", harbinger: "There are enough Titan Cores for the Eclipse Harbinger. I don't like it, Commander, but I understand why we'd build it." },
+  battle: { armageddon: ["The Armageddon is with us. Clear a line for the Worldbreaker.", "Armageddon on the line. Charge the cannon, Commander."],
+    sovereign: ["The Sovereign Ark takes command. Every ship, link up and hold formation.", "Sovereign Ark on the field. Shields up, fighters out."],
+    harbinger: ["The Harbinger is here. Release the swarm, Commander.", "Eclipse Harbinger on the field. Let the drones hunt."] },
+  foe: { armageddon: "Commander, they've brought an Armageddon. Break it with bombers and the Harbinger before its cannon charges.", sovereign: "Their Sovereign Ark is linking their fleet. Hit its hangars hard, Commander.", harbinger: "An enemy Harbinger. Spread the fleet before its swarm finds us." },
+  ult: { wbc: ["Worldbreaker Cannon, firing!", "There it goes. Worldbreaker away!"], wing: ["Fleet Command Uplink! Strike wing, launch!", "The Ark is calling its wing. Fighters away!"], swarm: ["Neural Swarm released. Six targets, one mind.", "The swarm is loose, Commander!"] } };
+const tadvPick = L => Array.isArray(L) ? L[(Math.random() * L.length) | 0] : L;
+function titAdv(kind, k) { try { if (!S || !G.ready) return; const L = (TADV[kind] || {})[k]; if (L) advHolo(tadvPick(L)); } catch (e) {} }
+/* a battle opening with a Titan in it: yours, or a warning about theirs */
+function titAdvBattle(b) { try { if (!b || !b.r || b.tAdv) return; const r = b.r, mine = r.kind === "defense" || r.kind === "raid" ? "d" : "a"; if (!((r.aUids || []).includes(G.me) || r.dUid === G.me)) return; b.tAdv = 1;
+  const my = b.Q.find(q => q.side === mine && TITAN_INFO[q.k]), foe = b.Q.find(q => q.side !== mine && TITAN_INFO[q.k]); if (foe) titAdv("foe", foe.k); else if (my) titAdv("battle", my.k); } catch (e) {} }
+/* enough Titan Cores for a Titan you don't have yet: once for each */
+setInterval(() => { try { if (!S || !G.ready || battle || typeof SH === "undefined") return; for (const k of ["armageddon", "sovereign", "harbinger"]) if (SH[k] && SH[k].tc && (S.tcore || 0) >= SH[k].tc && !((S.ships || {})[k] > 0) && advOnce("tcore_" + k)) { titAdv("cores", k); break; } } catch (e) {} }, 15000);
 /* ---------- v589 battle effects remaster (owner's reference videos): skill banners over the ship that fires a special, violet chain
    lightning that leaps between enemy formations, starburst light rays on big blasts, and bold game-style damage numbers ---------- */
 function fx589Spawn(b, v) { fx590UltStart(b, v); try { if (b.lowFx || v.bounce) return; const q = b.Q[v.s]; if (!q) return; const t = performance.now();
@@ -24220,7 +24238,7 @@ const ACT = {
     const T = now(), q = d.q; let rem = 0, apply = null;
     if (q === "b" && S.bq) { rem = S.bq.e - T; apply = () => { S.bq.e = T; }; }
     else if (q === "r" && S.rq) { rem = S.rq.e - T; apply = () => { S.rq.e = T; }; }
-    else if (q === "s" && S.sq[0]) { const h = S.sq[0]; rem = sqEnd(h) - T; apply = () => { const grp = h.kind === "def" ? S.def : h.kind === "mis" ? S.mis : S.ships; grp[h.k] = (grp[h.k] || 0) + h.left; bump("shipsBuilt"); S.sq.shift(); if (S.sq[0]) S.sq[0].next = T + S.sq[0].each; note(`${UDEF(h.k).n} ×${h.n} finished`); SFX.shipDone(); }; }
+    else if (q === "s" && S.sq[0]) { const h = S.sq[0]; rem = sqEnd(h) - T; apply = () => { const grp = h.kind === "def" ? S.def : h.kind === "mis" ? S.mis : S.ships; grp[h.k] = (grp[h.k] || 0) + h.left; bump("shipsBuilt"); S.sq.shift(); if (S.sq[0]) S.sq[0].next = T + S.sq[0].each; note(`${UDEF(h.k).n} ×${h.n} finished`); if (TITAN_INFO[h.k]) titAdv("built", h.k); /* v606 */ SFX.shipDone(); }; }
     else if (q.startsWith("cb:")) { const p = G.byId[q.slice(3)]; if (p && p.cq) { rem = p.cq.e - T; apply = () => { p.cq.e = T; }; } }
     else if (q.startsWith("cs:")) { const p = G.byId[q.slice(3)]; if (p && p.sq) { rem = colSqEnd(p) - T; apply = () => { p.sq.start = T - Math.ceil(p.sq.n / colLines(p)) * p.sq.each; }; } }
     if (!apply || rem <= 0) return;
