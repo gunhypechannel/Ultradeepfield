@@ -813,6 +813,21 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 #advh .hsay b,#adv .who{color:var(--amood);transition:color .6s}
 html[data-adv-mood=urgent] #advh.talk .advimg,html[data-adv-mood=excited] #advh.talk .advimg,html[data-adv-mood=fierce] #advh.talk .advimg{animation-duration:.8s,.26s}
 html[data-adv-mood=tender] #advh.talk .advimg,html[data-adv-mood=grave] #advh.talk .advimg,html[data-adv-mood=awe] #advh.talk .advimg{animation-duration:.8s,.7s}
+/* v608 her faces and poses */
+.adv .advimg.afc{height:auto;aspect-ratio:420/510;object-position:50% 0}
+#advh .advimg.afc{object-position:50% 0}
+.cbart.adv.pose{aspect-ratio:auto;height:min(260px,32vh);width:auto;max-width:100%;object-fit:contain;border:0;border-radius:0;filter:drop-shadow(0 10px 26px rgba(0,0,0,.55)) drop-shadow(0 0 22px rgba(255,200,120,.25))}
+#advpose{position:fixed;z-index:40;bottom:calc(env(safe-area-inset-bottom,0px) + 58px);right:max(0px,env(safe-area-inset-right,0px));height:min(50vh,540px);pointer-events:none;opacity:0;transform:translateX(40px);transition:opacity .45s ease,transform .55s cubic-bezier(.2,.9,.3,1)}
+#advpose.l{right:auto;left:max(0px,env(safe-area-inset-left,0px));transform:translateX(-40px)}
+#advpose.on{opacity:1;transform:none}
+#advpose img{display:block;height:100%;width:auto;max-width:62vw;object-fit:contain;object-position:50% 100%;-webkit-mask-image:linear-gradient(180deg,#000 78%,transparent);mask-image:linear-gradient(180deg,#000 78%,transparent);opacity:.92;filter:drop-shadow(0 0 16px rgba(85,214,232,.7)) grayscale(1) sepia(.6) hue-rotate(150deg) saturate(2.3) brightness(1.1) contrast(1.08)}
+#advpose.on img{animation:holoIn .8s cubic-bezier(.2,.9,.3,1) both,holoFlick 7s 1.2s infinite}
+#advpose.flip img{transform:scaleX(-1)}
+#advpose .apbeam{position:absolute;left:10%;right:10%;bottom:-8px;height:26px;background:radial-gradient(ellipse 50% 40% at 50% 55%,rgba(170,245,255,.9),rgba(85,214,232,.4) 45%,transparent 72%);filter:blur(1.5px)}
+#advpose.color img{opacity:1;filter:drop-shadow(0 10px 22px rgba(0,0,0,.6))}
+#advpose.color .apbeam{display:none}
+@media (prefers-reduced-motion:reduce){#advpose,#advpose.on img{transition:opacity .3s;transform:none;animation:none}#advpose.flip img{transform:scaleX(-1)}}
+
 html[data-adv-mood=urgent] #advh .holo{animation:amUrg .5s steps(2) infinite}@keyframes amUrg{50%{filter:drop-shadow(0 0 16px var(--amood))}}
 /* v563 the Fleet Registry and the Ages of the Deep */
 .arimg.ship,.arimg.lore{background:#05070d}.arimg.ship img{object-fit:cover}.arimg.lore img{object-fit:cover}.arimg.big.ship img,.arimg.big.lore img{object-fit:contain}
@@ -5287,7 +5302,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 607;
+const GAME_V = 608;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -10645,7 +10660,7 @@ async function maybeJoin() {
 function redAlert() {
   // every incoming attack on one of our worlds raises the alarm; who and when are only shown once it is inside radar range
   const T = now(), seen = new Set((typeof visibleInbound === "function" ? visibleInbound(T) : []).map(x => x.id)), v = (G.inbound || []).filter(x => x.arrive > T && x.from && !isBot(x.from) && x.from !== G.me && G.byId[x.pid] && G.byId[x.pid].owner === G.me); if (!v.length) return;
-  G.alertSeen = G.alertSeen || new Set(); const fresh = v.filter(x => !G.alertSeen.has(x.id)); if (!fresh.length) return; fresh.forEach(x => G.alertSeen.add(x.id));
+  G.alertSeen = G.alertSeen || new Set(); const fresh = v.filter(x => !G.alertSeen.has(x.id)); if (!fresh.length) return; fresh.forEach(x => G.alertSeen.add(x.id)); try { advPose("alarm", { force: 1 }); } catch (e) {} /* v608 */
   const first = v.slice().sort((a, b) => a.arrive - b.arrive)[0], p = G.byId[first.pid];
   let el = $("#redalert"); if (el) el.remove(); el = document.createElement("div"); el.id = "redalert"; el.className = "redalert";
   el.innerHTML = `<b data-act="nav" data-v="fleets">⚠ INCOMING ATTACK${v.length > 1 ? ` ×${v.length}` : ""}<br><small style="letter-spacing:.06em">${seen.has(first.id) ? `${esc(nameOf(first.from))}${first.src ? ` from ${esc(first.src.name)} [${esc(first.src.c)}]` : ""} → ${esc(p ? p.name : "your world")} · <span data-end="${first.arrive}">${ftime(first.arrive - T)}</span>` : `Hostile fleet bound for ${esc(p ? p.name : "your world")} · build a Radar Station to see who and when`}</small></b>`;
@@ -18968,7 +18983,7 @@ function finderTour(i, upd) { let w = $("#ftour"); if (i === 0 && !w) G.ftSteps 
     w.innerHTML = `<div class="ftspot"></div><div class="ftcard" role="dialog" aria-live="polite" aria-label="${ADV} shows you the Finder"><img src="${advArt()}" style="${advFx()}" alt=""><div class="fttx"><b>${ADV}</b><p></p><div class="ftnav"><span class="ftdots"></span><button class="btn ghost sm" data-act="fTourSkip">Skip</button><button class="btn sm ftgo" data-act="fTourNext"></button></div></div></div>`;
     $("#app").appendChild(w); G.ftI = setInterval(ftPlace, 250); }
   w.dataset.i = i; w.querySelector(".fttx p").textContent = FTOUR_[i][1]; w.querySelector(".ftgo").textContent = i === FTOUR_.length - 1 ? "Got it!" : "Next ›";
-  w.querySelector(".ftdots").innerHTML = FTOUR_.map((_, k) => `<i class="${k === i ? "on" : ""}"></i>`).join(""); speak(FTOUR_[i][1]); ftPlace(); setTimeout(ftPlace, 60); }
+  w.querySelector(".ftdots").innerHTML = FTOUR_.map((_, k) => `<i class="${k === i ? "on" : ""}"></i>`).join(""); speak(FTOUR_[i][1]); try { afSet(FTOUR_[i][1], "tour"); } catch (e) {} /* v608 */ ftPlace(); setTimeout(ftPlace, 60); }
 function ftPlace() { const w = $("#ftour"), FTOUR_ = G.ftSteps || FTOUR; if (!w) { clearInterval(G.ftI); G.ftI = 0; return; } if (!sheet || sheet.type !== "targets") return finderTour(-1);
   const el = $(FTOUR_[+w.dataset.i][0]); if (!el) return; const r = el.getBoundingClientRect(), p = 7, s = w.querySelector(".ftspot"), c = w.querySelector(".ftcard"), H = innerHeight, ch = c.offsetHeight;
   s.style.left = (r.left - p) + "px"; s.style.top = (r.top - p) + "px"; s.style.width = (r.width + 2 * p) + "px"; s.style.height = (r.height + 2 * p) + "px";
@@ -21136,7 +21151,7 @@ function advHolo(line, force) { if (!line) return; const T0 = Date.now(); G.holo
   if (!advFresh(line) && !(G.holoNext && G.holoNext.line === line)) return; // v386: not the same thing again within 30 s; v605: 2 minutes, shared with the dialog, live calls too
   { const a0 = VOICE.au; if (!force && a0 && !a0.paused && !a0.ended && G.holoCur && G.holoCur !== line && $("#advh.on")) { G.holoNext = { line, at: T0 }; // she finishes her sentence first
       if (!a0._q) { a0._q = 1; const go = () => { a0._q = 0; const n = G.holoNext; G.holoNext = null; if (n && Date.now() - n.at < 12000) setTimeout(() => advHolo(n.line), 400); }; a0.addEventListener("ended", go, { once: true }); a0.addEventListener("error", go, { once: true }); } return; } }
-  G.holoSaid[line] = T0; advMark(line); G.holoCur = line; let w = $("#advh"); try { document.documentElement.dataset.advMood = advMood(line); } catch (e) {} /* v566 */ // v334: her hologram for every spoken step line
+  G.holoSaid[line] = T0; advMark(line); G.holoCur = line; let w = $("#advh"); try { document.documentElement.dataset.advMood = advMood(line); } catch (e) {} /* v566 */ setTimeout(() => { try { afSet(line, "holo"); } catch (e) {} }, 0); /* v608 */ // v334: her hologram for every spoken step line
   if (!w) { w = document.createElement("div"); w.id = "advh"; w.setAttribute("aria-live", "polite"); w.innerHTML = `<div class="holo" data-act="advhX"><img class="advimg" src="${advArt()}" style="${advFx()}" alt=""><i class="hscan"></i><i class="hbeam"></i></div><div class="hsay" data-act="advhX" role="button" aria-label="Dismiss the Advisor"><b>${ADV}</b><span></span><i class="hx" aria-hidden="true">✕</i></div>`; $("#app").appendChild(w); }
   w.classList.toggle("color", force !== 1 && advColor()); /* v576 live-event calls stay the hologram */ w.querySelector(".hsay span").textContent = line; for (const im of w.querySelectorAll(".advimg,.hscan")) { im.style.animation = "none"; void im.offsetWidth; im.style.animation = ""; } w.classList.add("on"); document.body.classList.add("advtalk"); /* she materializes each time; the Academy card steps aside while she talks */ advHoloPlace(); clearTimeout(G.advhT); speak(line);
   const hide = () => { clearTimeout(G.advhT); G.advhT = setTimeout(() => { const x = $("#advh"); if (x) x.classList.remove("on", "talk"); document.body.classList.remove("advtalk"); }, 900); };
@@ -21162,18 +21177,18 @@ function say(lines) {
     $("#app").appendChild(w);
   }
   try { $("#adv").classList.toggle("color", advColor()); } catch (e) {} /* v576 */
-  $("#advt").textContent = advLines[0]; try { document.documentElement.dataset.advMood = advMood(advLines[0]); } catch (e) {} speak(advLines[0]);
+  $("#advt").textContent = advLines[0]; try { document.documentElement.dataset.advMood = advMood(advLines[0]); } catch (e) {} speak(advLines[0]); try { afSet(advLines[0], "dlg"); } catch (e) {} /* v608 */
   startAnim();
 }
 function advSkip() { voiceStop(); advLines = null; const a = $("#adv"); if (a) a.remove(); const th = G.advThen; G.advThen = null; if (th) try { th(); } catch (e) {} } /* v604 skip the whole conversation */
 function advhHide() { clearTimeout(G.advhT); voiceStop(); const x = $("#advh"); if (x) x.classList.remove("on", "talk"); document.body.classList.remove("advtalk"); }
 document.addEventListener("keydown", e => { if (e.key === "Escape") { if ($("#adv")) { advSkip(); e.preventDefault(); } else if ($("#advh.on")) advhHide(); } });
-function advNext() { advLines.shift(); if (advLines.length) { $("#advt").textContent = advLines[0]; try { document.documentElement.dataset.advMood = advMood(advLines[0]); } catch (e) {} speak(advLines[0]); } else { voiceStop(); advLines = null; $("#adv").remove(); const th = G.advThen; G.advThen = null; if (th) th(); } } // v318: G.advThen runs once the last line is read (the opening battle)
+function advNext() { advLines.shift(); if (advLines.length) { $("#advt").textContent = advLines[0]; try { document.documentElement.dataset.advMood = advMood(advLines[0]); } catch (e) {} speak(advLines[0]); try { afSet(advLines[0], "dlg"); } catch (e) {} /* v608 */ } else { voiceStop(); advLines = null; $("#adv").remove(); const th = G.advThen; G.advThen = null; if (th) th(); } } // v318: G.advThen runs once the last line is read (the opening battle)
 /* v328 celebrations: queued in S.celeb, shown one at a time when nothing else is on screen (before the Advisor's lines), with the
    moment's art, a burst of light, the reward and a Share button */
 function celebrate(c) { S.celeb = S.celeb || []; if (!S.celeb.some(x => x.k === c.k)) { S.celeb.push(c); dirty(); } }
-function showCeleb(c) { const w = document.createElement("div"); w.id = "celeb"; const fac = facOf(), art = c.art === "flag" ? FS_PORT[fac] : c.art === "adv" ? ADV_ART : null;
-  w.innerHTML = `<div class="cbscrim"></div><div class="cbbox ${c.k}"><div class="cbrays"></div>${art ? `<img class="cbart${c.art === "adv" ? " adv" : ""}" src="${art}" alt="">` : `<div class="cbicon">${c.ic || "★"}</div>`}
+function showCeleb(c) { const w = document.createElement("div"); w.id = "celeb"; const fac = facOf(), art = c.art === "flag" ? FS_PORT[fac] : c.art === "adv" ? advCelebArt(c) : null;
+  w.innerHTML = `<div class="cbscrim"></div><div class="cbbox ${c.k}"><div class="cbrays"></div>${art ? `<img class="cbart${c.art === "adv" ? " adv" + (afOn() ? " pose" : "") : ""}" src="${art}" alt="">` : `<div class="cbicon">${c.ic || "★"}</div>`}
     <div class="cbk">${esc(c.kick || "")}</div><h2 class="cbt">${esc(c.t)}</h2><p class="cbs">${esc(c.s)}</p>${c.rw ? `<div class="cbrw">${esc(c.rw)}</div>` : ""}
     <div class="cbbt"><button class="btn amber" data-act="celebX">${esc(c.go || "Onward")}</button>${c.rep && G.mode === "online" ? `<button class="btn ghost" data-act="celebShare" data-id="${esc(c.rep)}">↗ Share the battle</button>` : `<button class="btn ghost" data-act="celebShare">↗ Share</button>`}${c.chat && G.mode === "online" ? `<button class="btn ghost" data-act="celebChat">💬 Say hi in chat</button>` : ""}</div></div>`;
   $("#app").appendChild(w); try { SFX.gong(); } catch (e) {} try { speak(c.say || c.s); } catch (e) {} G.celebNow = c; }
@@ -22348,6 +22363,67 @@ function titAdvBattle(b) { try { if (!b || !b.r || b.tAdv) return; const r = b.r
   const my = b.Q.find(q => q.side === mine && TITAN_INFO[q.k]), foe = b.Q.find(q => q.side !== mine && TITAN_INFO[q.k]); if (foe) titAdv("foe", foe.k); else if (my) titAdv("battle", my.k); } catch (e) {} }
 /* enough Titan Cores for a Titan you don't have yet: once for each */
 setInterval(() => { try { if (!S || !G.ready || battle || typeof SH === "undefined") return; for (const k of ["armageddon", "sovereign", "harbinger"]) if (SH[k] && SH[k].tc && (S.tcore || 0) >= SH[k].tc && !((S.ships || {})[k] > 0) && advOnce("tcore_" + k)) { titAdv("cores", k); break; } } catch (e) {} }, 15000);
+/* ---------- v608 the Advisor comes alive (owner: "use all these to bring the advisor alive"). Her portrait is no longer one still:
+   every line picks a face for its mood (shocked when it's urgent, determined or angry when it's fierce, disappointed or stern when
+   it's grave, smiling when it's warm, relieved when it's tender, focused when she reads a report). While her voice plays she talks:
+   her lips follow the loudness of the clip (closed, parted, open) on one face so nothing jumps, and she blinks every few seconds.
+   For the big moments she steps out in full: a welcome, a salute when a Titan is commissioned, a victory, an alarm, a defeat, a
+   command pose for the Cube and the battles, a briefing pose for long explanations and a pointing pose toward what she's showing. */
+const AF_V = 608, afUrl = k => `art/adv/${k}.webp?v=${AF_V}`, AF_TALK = ["n_0", "n_1", "n_2"], afCache = {};
+function afPre(k) { let i = afCache[k]; if (!i) { i = afCache[k] = new Image(); i.src = afUrl(k); try { i.decode().catch(() => {}); } catch (e) {} } return i; }
+function afOn() { try { const d = S && cosDef(cosOf().eq.adv); return !(d && d.art); } catch (e) { return true; } } /* a skin with its own portrait keeps it */
+const AF_LOSS = /\b(lost|lose|fallen|fell|destroyed|defeat|defeated|gone|failed|wiped|ruins|broke through)\b/i, AF_WIN = /\b(victory|won|win|wins|first blood|broken|shattered|captured|taken|ours|did it|held|claimed)\b/i;
+function afFace(line) { const m = advMood(line), t = String(line || "");
+  if (m === "urgent") return { r: "shocked", hold: 1 };
+  if (m === "fierce") return { r: /!/.test(t) ? "angry" : "determined", hold: 1 };
+  if (m === "grave") return { r: AF_LOSS.test(t) ? "disappointed" : "stern", hold: 1 };
+  if (m === "warm" || m === "excited") return { r: "s_0" };
+  if (m === "playful") return { r: /\b(again|really|seriously|another)\b/i.test(t) ? "annoyed" : voiceKey(t).charCodeAt(0) % 2 ? "flustered" : "s_0" };
+  if (m === "tender") return { r: "relieved" };
+  if (/\b(scan|scans|radar|sensors?|reports?|reading|intel|data)\b/i.test(t)) return { r: "focused" };
+  return { r: "n_0" }; }
+const AF_SEL = { dlg: "#adv .advimg", holo: "#advh.on .advimg", tour: "#ftour .ftcard img" };
+function afSet(line, src) { if (!line) return; src = AF_SEL[src] ? src : "dlg"; const T = performance.now(), f = afFace(line);
+  (G.afS = G.afS || {})[src] = { line, vk: voiceKey(line), r: f.r, hold: !!f.hold, react: T + (f.r === "n_0" ? 0 : 1100), blink: T + 1800 + Math.random() * 2500, lk: "", lt: 0 };
+  [f.r, "n_0", "n_1", "n_2", "n_b"].forEach(afPre); if (!G.afI) G.afI = setInterval(afTick, 40); afTick();
+  try { afPoseFor(line, src); } catch (e) {} }
+function afFrame(st, T) { const a = VOICE.au, mk = a && /voice\/([a-z0-9]+)\.mp3/.exec(a.src || ""), talk = mk && mk[1] === st.vk && !a.paused && !a.ended && a.currentTime > 0; /* only the line being spoken moves its lips */
+  if (st.hold || T < st.react) return st.r;
+  if (talk) { let lip = 0; const env = VENV && VENV[mk[1]];
+    if (env) { const i = Math.floor(a.currentTime * 25), c = env.charCodeAt(Math.min(env.length - 1, i)) - 48; lip = Math.max(0, c) / 42; } else lip = .3 + .3 * Math.sin(T / 70) * Math.sin(T / 173);
+    const k = lip < .16 ? "n_0" : lip < .42 ? "n_1" : "n_2"; if (k !== st.lk && T - st.lt > 75) { st.lk = k; st.lt = T; } return st.lk || "n_0"; }
+  if (st.r === "n_0") { if (T > st.blink + 140) st.blink = T + 2200 + Math.random() * 3800; if (T > st.blink) return "n_b"; }
+  return st.r; }
+function afTick() { const T = performance.now(), on = afOn(); let any = 0;
+  for (const src in AF_SEL) { const ims = document.querySelectorAll(AF_SEL[src]), st = (G.afS || {})[src]; if (!ims.length || !st) continue; any = 1;
+    if (!on) { ims.forEach(im => { if (im.classList.contains("afc")) { im.classList.remove("afc"); im.src = advArt(); im.dataset.af = ""; } }); continue; }
+    const k = afFrame(st, T), pre = afPre(k);
+    ims.forEach(im => { const was = im.dataset.af || ""; if (was === k) return; if (was && !(pre.complete && pre.naturalWidth)) return; /* wait for the frame so nothing flashes */
+      im.classList.add("afc"); im.src = afUrl(k); im.dataset.af = k;
+      const fam = x => AF_TALK.includes(x) || x === "n_b" ? "n" : x; if (was && fam(was) !== fam(k)) try { im.animate([{ opacity: .3 }, { opacity: 1 }], { duration: 220, easing: "ease-out" }); } catch (e) {} }); }
+  if (!any) { clearInterval(G.afI); G.afI = 0; } }
+/* the full-body poses */
+const AP_K = ["welcome", "victory", "alarm", "explain", "defeated", "salute", "point", "cube", "command", "ready"];
+function advPose(k, o) { o = o || {}; if (!AP_K.includes(k) || !afOn()) return; const T = Date.now(), key = k === "point" ? "apP" : "apT";
+  if (!o.force && T - (G[key] || 0) < (k === "point" ? 75000 : 100000)) return; G[key] = T; if (k !== "point") G.apP = Math.max(G.apP || 0, T - 50000);
+  const im = new Image(); im.src = `art/adv/p_${k}.webp?v=${AF_V}`; const show = () => { const old = $("#advpose"); if (old) old.remove();
+    const side = o.side || "r", w = document.createElement("div"); w.id = "advpose"; w.className = `ap${side === "l" ? " l" : ""}${o.flip ? " flip" : ""}${advColor() ? " color" : ""} p-${k}`; w.setAttribute("aria-hidden", "true");
+    w.innerHTML = `<img src="${im.src}" alt="" style="${advFx()}"><i class="apbeam"></i>`; $("#app").prepend(w); requestAnimationFrame(() => requestAnimationFrame(() => w.classList.add("on")));
+    clearTimeout(G.apHide); G.apHide = setTimeout(() => { w.classList.remove("on"); setTimeout(() => w.remove(), 600); }, o.ms || 3800); };
+  try { im.decode().then(show, () => { im.onload = show; }); } catch (e) { im.onload = show; } }
+function afPoseFor(line, src) { const t = String(line || ""), m = advMood(line);
+  if (!G.apWel) { G.apWel = 1; let last = 0; try { last = +localStorage.getItem("udfApWel") || 0; } catch (e) {} if (Date.now() - last > 4 * 3600e3) { try { localStorage.setItem("udfApWel", Date.now()); } catch (e) {} return advPose("welcome", { force: 1 }); } }
+  let k = null;
+  if (/\bCube\b/.test(t) && /urgent|fierce|excited/.test(m)) k = "cube";
+  else if (m === "urgent") k = "alarm";
+  else if (m === "grave" && AF_LOSS.test(t)) k = "defeated";
+  else if (/\b(commissioned|launched|promoted|promotion|new rank|out of the dock)\b/i.test(t)) k = "salute";
+  else if (m === "excited" && AF_WIN.test(t)) k = "victory";
+  else if (m === "fierce") k = /!/.test(t) ? "command" : "ready";
+  if (k) return advPose(k);
+  if (src === "dlg") { const d = $("#adv"); if (d && !d.dataset.af) { d.dataset.af = 1; if ((advLines || []).length >= 3) return advPose("explain"); } }
+  if (src === "holo" && typeof GD !== "undefined" && GD.el && GD.el.isConnected && (m === "calm" || m === "warm")) { const r = GD.el.getBoundingClientRect(); if (r.width) advPose("point", r.left + r.width / 2 > innerWidth / 2 ? { side: "l" } : { side: "r", flip: 1 }); } }
+function advCelebArt(c) { return afOn() ? `art/adv/p_${c.k === "comeback" ? "welcome" : "victory"}.webp?v=${AF_V}` : ADV_ART; }
 /* ---------- v589 battle effects remaster (owner's reference videos): skill banners over the ship that fires a special, violet chain
    lightning that leaps between enemy formations, starburst light rays on big blasts, and bold game-style damage numbers ---------- */
 function fx589Spawn(b, v) { fx590UltStart(b, v); try { if (b.lowFx || v.bounce) return; const q = b.Q[v.s]; if (!q) return; const t = performance.now();
