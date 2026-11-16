@@ -817,9 +817,10 @@ html[data-adv-mood=tender] #advh.talk .advimg,html[data-adv-mood=grave] #advh.ta
 .adv .advimg.afc{height:auto;aspect-ratio:420/510;object-position:50% 0}
 #advh .advimg.afc{object-position:50% 0}
 .cbart.adv.pose{aspect-ratio:auto;height:min(260px,32vh);width:auto;max-width:100%;object-fit:contain;border:0;border-radius:0;filter:drop-shadow(0 10px 26px rgba(0,0,0,.55)) drop-shadow(0 0 22px rgba(255,200,120,.25))}
-#advpose{position:fixed;z-index:40;bottom:calc(env(safe-area-inset-bottom,0px) + 58px);right:max(0px,env(safe-area-inset-right,0px));height:min(50vh,540px);pointer-events:none;opacity:0;transform:translateX(40px);transition:opacity .45s ease,transform .55s cubic-bezier(.2,.9,.3,1)}
+#advpose{position:fixed;z-index:68;bottom:calc(env(safe-area-inset-bottom,0px) + 58px);right:max(0px,env(safe-area-inset-right,0px));height:min(50vh,540px);pointer-events:none;opacity:0;transform:translateX(40px);transition:opacity .45s ease,transform .55s cubic-bezier(.2,.9,.3,1)}
 #advpose.l{right:auto;left:max(0px,env(safe-area-inset-left,0px));transform:translateX(-40px)}
 #advpose.on{opacity:1;transform:none}
+#advpose.dlg{z-index:40}
 #advpose img{display:block;height:100%;width:auto;max-width:62vw;object-fit:contain;object-position:50% 100%;-webkit-mask-image:linear-gradient(180deg,#000 78%,transparent);mask-image:linear-gradient(180deg,#000 78%,transparent);opacity:.92;filter:drop-shadow(0 0 16px rgba(85,214,232,.7)) grayscale(1) sepia(.6) hue-rotate(150deg) saturate(2.3) brightness(1.1) contrast(1.08)}
 #advpose.on img{animation:holoIn .8s cubic-bezier(.2,.9,.3,1) both,holoFlick 7s 1.2s infinite}
 #advpose.flip img{transform:scaleX(-1)}
@@ -22407,7 +22408,7 @@ const AP_K = ["welcome", "victory", "alarm", "explain", "defeated", "salute", "p
 function advPose(k, o) { o = o || {}; if (!AP_K.includes(k) || !afOn()) return; const T = Date.now(), key = k === "point" ? "apP" : "apT";
   if (!o.force && T - (G[key] || 0) < (k === "point" ? 75000 : 100000)) return; G[key] = T; if (k !== "point") G.apP = Math.max(G.apP || 0, T - 50000);
   const im = new Image(); im.src = `art/adv/p_${k}.webp?v=${AF_V}`; const show = () => { const old = $("#advpose"); if (old) old.remove();
-    const side = o.side || "r", w = document.createElement("div"); w.id = "advpose"; w.className = `ap${side === "l" ? " l" : ""}${o.flip ? " flip" : ""}${advColor() ? " color" : ""} p-${k}`; w.setAttribute("aria-hidden", "true");
+    const side = o.side || "r", w = document.createElement("div"); w.id = "advpose"; w.className = `ap${$("#adv") ? " dlg" : ""}${side === "l" ? " l" : ""}${o.flip ? " flip" : ""}${advColor() ? " color" : ""} p-${k}`; w.setAttribute("aria-hidden", "true");
     w.innerHTML = `<img src="${im.src}" alt="" style="${advFx()}"><i class="apbeam"></i>`; $("#app").prepend(w); requestAnimationFrame(() => requestAnimationFrame(() => w.classList.add("on")));
     clearTimeout(G.apHide); G.apHide = setTimeout(() => { w.classList.remove("on"); setTimeout(() => w.remove(), 600); }, o.ms || 3800); };
   try { im.decode().then(show, () => { im.onload = show; }); } catch (e) { im.onload = show; } }

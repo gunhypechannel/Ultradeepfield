@@ -42,7 +42,7 @@ const AP_K = ["welcome", "victory", "alarm", "explain", "defeated", "salute", "p
 function advPose(k, o) { o = o || {}; if (!AP_K.includes(k) || !afOn()) return; const T = Date.now(), key = k === "point" ? "apP" : "apT";
   if (!o.force && T - (G[key] || 0) < (k === "point" ? 75000 : 100000)) return; G[key] = T; if (k !== "point") G.apP = Math.max(G.apP || 0, T - 50000);
   const im = new Image(); im.src = `art/adv/p_${k}.webp?v=${AF_V}`; const show = () => { const old = $("#advpose"); if (old) old.remove();
-    const side = o.side || "r", w = document.createElement("div"); w.id = "advpose"; w.className = `ap${side === "l" ? " l" : ""}${o.flip ? " flip" : ""}${advColor() ? " color" : ""} p-${k}`; w.setAttribute("aria-hidden", "true");
+    const side = o.side || "r", w = document.createElement("div"); w.id = "advpose"; w.className = `ap${$("#adv") ? " dlg" : ""}${side === "l" ? " l" : ""}${o.flip ? " flip" : ""}${advColor() ? " color" : ""} p-${k}`; w.setAttribute("aria-hidden", "true");
     w.innerHTML = `<img src="${im.src}" alt="" style="${advFx()}"><i class="apbeam"></i>`; $("#app").prepend(w); requestAnimationFrame(() => requestAnimationFrame(() => w.classList.add("on")));
     clearTimeout(G.apHide); G.apHide = setTimeout(() => { w.classList.remove("on"); setTimeout(() => w.remove(), 600); }, o.ms || 3800); };
   try { im.decode().then(show, () => { im.onload = show; }); } catch (e) { im.onload = show; } }
