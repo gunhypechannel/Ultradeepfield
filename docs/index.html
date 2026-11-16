@@ -11258,9 +11258,9 @@ function crumb(msg) { CRUMBS.open = true; CRUMBS.ev.push([Date.now(), String(msg
 /* fb-20261115 memory readout for crash reports (MB, estimated): textures per 3D world, cached ship pictures, decoded paintings, canvases */
 function memEst() { try { const T = Date.now(); if (G.memEst && T - G.memEst.t < 12000) return G.memEst.v;
   const px = im => !im ? 0 : Array.isArray(im) ? im.reduce((a, x) => a + px(x), 0) : (im.naturalWidth || im.width || 0) * (im.naturalHeight || im.height || 0), v = {};
-  for (const [k, W] of [["gal", G3], ["col", C3], ["stu", STU]]) { if (!W || !W.scene || !W.scene.traverse) continue; const seen = new Set(); let b = 0;
-    W.scene.traverse(o => { const ms = Array.isArray(o.material) ? o.material : o.material ? [o.material] : []; for (const m of ms) for (const q in m) { const t = m[q]; if (t && t.isTexture && !seen.has(t)) { seen.add(t); b += px(t.image) * 4 * (t.generateMipmaps === false ? 1 : 1.33); } } });
-    v[k] = Math.round(b / 1e6); v[k + "N"] = seen.size; }
+  for (const [k, W] of [["gal", G3], ["col", C3], ["stu", STU]]) { if (!W || !W.scene || !W.scene.traverse) continue; const seen = new Set(); let b = 0; const cap = W.renderer && W.renderer.capabilities && W.renderer.capabilities.maxTextureSize || 1e9; /* fb-20261115 count at the size the GPU holds */
+    W.scene.traverse(o => { const ms = Array.isArray(o.material) ? o.material : o.material ? [o.material] : []; for (const m of ms) for (const q in m) { const t = m[q]; if (t && t.isTexture && !seen.has(t)) { seen.add(t); b += (t.image && !Array.isArray(t.image) ? (() => { const w = t.image.naturalWidth || t.image.width || 0, h = t.image.naturalHeight || t.image.height || 0, s = Math.min(1, cap / Math.max(w, h, 1)); return Math.floor(w * s) * Math.floor(h * s); })() : px(t.image)) * 4 * (t.generateMipmaps === false ? 1 : 1.33); } } });
+    v[k] = Math.round(b / 1e6); v[k + "N"] = seen.size; if (cap < 2048) v[k + "C"] = cap; /* only when capped */ }
   { const C = (STU && STU.cache) || G.stuCache; let b = 0, n = 0; if (C) for (const k in C) { const c = C[k]; if (c && c.getContext) { b += c.width * c.height * 4; n++; } } v.art = Math.round(b / 1e6); v.artN = n; }
   { let b = 0, n = 0; for (const im of document.images) if (im.complete && im.naturalWidth && im.isConnected) { b += im.naturalWidth * im.naturalHeight * 4; n++; } v.img = Math.round(b / 1e6); v.imgN = n; }
   { let b = 0; for (const c of document.getElementsByTagName("canvas")) b += c.width * c.height * 4; v.cv = Math.round(b / 1e6); }
@@ -11499,7 +11499,7 @@ function init3D(host) {
   if (!TH || G3fail) return null;
   const cv = host.querySelector("#galaxy3d"); if (!cv) return null;
   let renderer;
-  try { renderer = glNew({ canvas: cv, antialias: GFX_AA, powerPreference: "high-performance" }); /* weaker phones skip MSAA; adaptive resolution keeps edges clean */ } catch (e) { G3fail = true; return null; }
+  try { renderer = glNew({ canvas: cv, antialias: GFX_AA, powerPreference: "high-performance" }, iosTexCap("gal")); /* weaker phones skip MSAA; adaptive resolution keeps edges clean */ } catch (e) { G3fail = true; return null; }
   renderer.setPixelRatio(Math.min(gfxMaxPR(), mobilePRCap())); // phones: up to 2x (v145), tablets by pixel budget (v163); v124: the chosen render scale
   const scene = new TH.Scene(); scene.background = new TH.Color(0x02040a);
   const camera = new TH.PerspectiveCamera(48, 1, .1, 9000);
@@ -16903,7 +16903,7 @@ function domeTex() {
 }
 function initColony(host) {
   const cv = host.querySelector("#col3d"); if (!cv) return null;
-  let renderer; try { renderer = glNew({ canvas: cv, antialias: GFX_AA || !MOBILE, powerPreference: "high-performance" }); } catch (e) { C3fail = true; return null; }
+  let renderer; try { renderer = glNew({ canvas: cv, antialias: GFX_AA || !MOBILE, powerPreference: "high-performance" }, iosTexCap("col")); } catch (e) { C3fail = true; return null; }
   cv.addEventListener("webglcontextlost", e => { e.preventDefault(); if (cv._udfFree) return; crumb("base GPU reset"); setTimeout(() => { if (C3 && C3.renderer === renderer) { const old = C3; C3 = null; glFree(old.renderer); if (colHost && colHost.parentNode) colHost.parentNode.removeChild(colHost); colHost = null; if (view === "base") render(); } }, 1500); }, false); /* v379: rebuild instead of staying black */
   renderer.setPixelRatio(Math.min(gfxMaxPR(), mobilePRCap())); // phones: up to 2x (v145) with soft shadows on, tablets by pixel budget (v163)
   renderer.toneMapping = TH.ACESFilmicToneMapping; renderer.toneMappingExposure = .78; renderer.outputEncoding = TH.sRGBEncoding;
@@ -23316,7 +23316,9 @@ function sessRestore() { let o = null; try { o = JSON.parse(localStorage.getItem
   if (o.sheet) setTimeout(() => { try { if (!sheet && !battle && !$("#adv")) openSheet(o.sheet); } catch (e) {} }, 2500); }
 document.addEventListener("visibilitychange", () => { if (document.hidden) sessSave(); }); addEventListener("pagehide", sessSave); setInterval(sessSave, 15000);
 setInterval(() => { if (!G.sessDone && G.ready && S && G.me) { const tn = performance.now(); G.sessT0 = G.sessT0 || tn; if (tn - G.sessT0 < 20000 && (tn - G.sessT0 < 4000 || GLB_RUN || GLB_Q.length)) return; /* v426 let the launch settle first */ try { sessRestore(); } catch (e) { G.sessDone = 1; } } }, 500);
-function glNew(o) { const r = new TH.WebGLRenderer(o); try { r.debug.checkShaderErrors = /[?&]gldebug/.test(location.search); } catch (e) {} try { glPace(r); } catch (e) {} return r; }
+function iosTexCap(k) { return k === "gal" ? 512 : 768; } /* fb-20261115 iPhone/iPad: largest texture side per 3D world (map, base); a function so it is ready before this line runs */
+function glCap(cv, cap) { const g0 = cv.getContext; cv.getContext = function (n, a) { const gl = g0.call(this, n, a); if (gl && !gl.__udfCap) { const gp = gl.getParameter; gl.__udfCap = cap; gl.getParameter = function (q) { const v = gp.call(this, q); return q === 3379 ? Math.min(v, cap) : v; }; } return gl; }; } /* 3379 = MAX_TEXTURE_SIZE */
+function glNew(o, cap) { if (cap && IOS && o && o.canvas) try { glCap(o.canvas, cap); } catch (e) {} const r = new TH.WebGLRenderer(o); try { r.debug.checkShaderErrors = /[?&]gldebug/.test(location.search); } catch (e) {} try { glPace(r); } catch (e) {} return r; }
 /* v530 shader pacing: a draw whose material has never been drawn may compile a shader (on an iPhone ~0.1 s each). While a scene is
    paced (r.pace.scene), once this frame has spent its compile budget the remaining never-drawn materials wait for the next frame. */
 function glPace(r) { const gl = r.getContext(), lp = gl.linkProgram, rbd = r.renderBufferDirect, seen = new WeakSet(); let links = 0;
