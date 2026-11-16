@@ -5266,7 +5266,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 597;
+const GAME_V = 598;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -14736,7 +14736,8 @@ function t3Start() { const slot = document.getElementById("t3slot"); if (!slot |
       const ec = ship.userData.engCol || [0xd8f2ff, 0x4f9fff], engs = (ship.userData.eng || []).map(([x, y, z, rr]) => { const s2 = new TH.Sprite(new TH.SpriteMaterial({ map: gt, color: ec[1], transparent: true, blending: TH.AdditiveBlending, depthWrite: false })); s2.position.set(x - rr * .6, y, z); s2.scale.setScalar(rr * 5); FX.add(s2); return s2; });
       V = G.t3 = { k: sheet.k, cv, rd, sc, ship, cam, R0, th: .8, ph: .35, dist: R0 * 2.6, tth: .8, tph: .35, tdist: R0 * 2.6, auto: 1, seq: null, engs, gt, FX, extra: [], t0: performance.now() };
       t3Wire(cv); } catch (e) { const c2 = document.getElementById("t3cap"); if (c2) c2.textContent = "3D view not available on this device."; return; } }
-  if (V.cv.parentNode !== slot) { slot.textContent = ""; slot.appendChild(V.cv); } if (!V.raf) V.raf = requestAnimationFrame(t3Frame); }
+  if (V.cv.parentNode !== slot) { slot.textContent = ""; slot.appendChild(V.cv); } if (!V.raf) V.raf = requestAnimationFrame(t3Frame);
+  { const cap = document.getElementById("t3cap"); if (cap) cap.textContent = TITAN_ROT[V.k] && glbOn() && !glbGet(V.k) ? "Loading the high-detail model…" : "Drag to turn · pinch to zoom"; } } /* v598 */
 function t3Free() { const V = G.t3; if (!V) return; cancelAnimationFrame(V.raf); for (const m of ((V.ship.userData.ti || {}).mats || [])) if (m.userData.c0) m.color.copy(m.userData.c0); for (const o of V.extra) { V.sc.remove(o); o.traverse && o.traverse(x => { if (x.geometry) x.geometry.dispose(); if (x.material && !x.material.userData.mn) x.material.dispose(); }); }
   V.sc.traverse(o => { if (o.geometry && !(o.material && o.material.userData && o.material.userData.mn)) o.geometry.dispose(); }); try { V.rd.dispose(); V.rd.forceContextLoss(); } catch (e) {} G.t3 = null; }
 function t3Wire(cv) { const pts = new Map(); let pd = 0; cv.style.touchAction = "none";
@@ -16315,7 +16316,7 @@ function glbGet(k) {
   GLB[k] = {}; GLB_Q.push(k); glbNext();
   return null;
 }
-function glbReady(k) {
+function glbReady(k) { if (TITAN_ROT[k] && G.t3 && G.t3.k === k && sheet && sheet.k === k) setTimeout(() => { try { if (G.t3 && G.t3.k === k && sheet && sheet.k === k) { t3Free(); t3Start(); } } catch (e) {} }, 0); /* v598 the viewer swaps in the model once it lands */
   if (GLB_SHIPS.has(k) || TITAN_ROT[k]) { const S = STU || null; if (S && S.cache) for (const key of Object.keys(S.cache)) if (key.startsWith(k + "|")) { delete S.cache[key]; ART_PEND.delete(key); for (const o of [S.order, S.orderSide]) if (o) { const i = o.indexOf(key); if (i >= 0) o.splice(i, 1); } }
     clearTimeout(glbReady.t); glbReady.t = setTimeout(() => { if (!battle && !sheet && typeof render === "function") try { render(); } catch (e) {} }, 400); }
   if (GLB_BLDS.has(k) && C3 && C3.keys) C3.keys[k] = null; // the base rebuilds that plot on its next frame
@@ -20553,19 +20554,31 @@ function labBattle() {
 /* v212 the owner's duel: one commander against one, 3 million of every warship each plus huge carrier wings (12 million Halo Escort
    Carriers and 9 million Citadel Supercarriers a side). Shown only in the game owner's Mail > Saved; rebuilt from a fixed seed on each
    device and kept in memory, never in the save, so it adds nothing to the cloud save. */
-const DUEL_ID = "lab-duel-1v1", DUEL_K = ["fighter", "heavyFighter", "lancer", "corvette", "bomber", "guardian", "battleship", "bastion", "destroyer", "dreadnought", "eclipse", "worldbreaker"];
+const DUEL_ID = "lab-duel-1v1", DUEL_K = ["fighter", "heavyFighter", "lancer", "corvette", "bomber", "guardian", "battleship", "bastion", "destroyer", "dreadnought", "eclipse", "worldbreaker", "armageddon", "sovereign", "harbinger"]; /* v598 the Titans */
 /* v214: DUEL_ALL shows the duel to every player (Mail > All and Saved) until the owner turns it off; false = owner only. v288: off, and duelOwner also gates the 10 vs 10, 20 vs 20 and 60 vs 60 tests */
 const DUEL_ALL = false;
 const duelOwner = () => !!(DUEL_ALL || G.owner || (S && S.ownerFree));
 function duelBattle() {
   if (G.duelRep) return G.duelRep;
   G.names.pduelA = "Grand Admiral Vexa Thorne"; G.names.pduelD = "Warlord Cato Brin";
-  const fleet = () => { const o = {}; for (const k of DUEL_K) if (SH[k]) o[k] = 3e6; o.escortCarrier = 12e6; o.supercarrier = 9e6; return o; };
+  const fleet = () => { const o = {}; for (const k of DUEL_K) if (SH[k]) o[k] = TITAN_INFO[k] ? 3e4 : 3e6; /* v598 Titans at 30,000 each, so it still ends with a winner */ o.escortCarrier = 12e6; o.supercarrier = 9e6; return o; };
   let res = null, tA = 16, n = 0; const A0 = fleet(), D0 = fleet(); for (const k in A0) n += A0[k] + D0[k];
   for (let i = 0; i < 5; i++) { res = simulate(stacksOf(fleet(), { weapons: tA, shields: tA, armor: tA }, "pduelA"), stacksOf(fleet(), { weapons: 15, shields: 15, armor: 15 }, "pduelD"), { seed: 31337 + i }); if (res.winner === "a" || res.winner === "d") break; tA += 2; } // one winner, never a draw
   return (G.duelRep = Object.assign(mkRep({ at: S.duelMail ? S.duelMail.t : now(), kind: "attack", title: `Duel · 1 vs 1 · ${n.toLocaleString("en-US")} units`, aUids: [], aName: G.names.pduelA, dName: G.names.pduelD, lvl: 30, ptype: "gas", fortL: 0, alien: false,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) }), { id: DUEL_ID, recDone: 1 }));
-}/* v429 the owner's faction war: 4 vs 4, one commander of every faction a side, 10 million mixed units */
+}/* v598 the owner's big mixed duel: 10 million against 5 million, every warship class in the same proportions on both sides */
+const DUEL2_ID = "lab-duel-10v5", DUEL2_MIX = { fighter: 2996000, heavyFighter: 2000000, lancer: 1600000, corvette: 1200000, bomber: 600000, guardian: 400000, battleship: 400000, bastion: 250000, destroyer: 250000, dreadnought: 150000, escortCarrier: 100000, supercarrier: 40000, eclipse: 6000, worldbreaker: 4000, armageddon: 1500, sovereign: 1500, harbinger: 1000 }; /* 10,000,000 */
+function duel2Battle() {
+  if (G.duel2Rep) return G.duel2Rep;
+  G.names.pd2A = "Imperator Rhaen Vos"; G.names.pd2D = "Admiral Liska Mourne";
+  const fleet = f => { const o = {}; let r = 0; for (const k in DUEL2_MIX) { if (SH[k]) o[k] = Math.round(DUEL2_MIX[k] * f); else r += Math.round(DUEL2_MIX[k] * f); } if (r) o.fighter = (o.fighter || 0) + r; return o; };
+  const A0 = fleet(1), D0 = fleet(.5); let n = 0; for (const k in A0) n += A0[k] + (D0[k] || 0);
+  const res = simulate(stacksOf(A0, { weapons: 16, shields: 16, armor: 16 }, "pd2A"), stacksOf(D0, { weapons: 16, shields: 16, armor: 16 }, "pd2D"), { seed: 105105 });
+  if (!S.duel2Mail) { S.duel2Mail = { t: now() }; dirty(); }
+  return (G.duel2Rep = Object.assign(mkRep({ at: S.duel2Mail.t, kind: "attack", title: `Duel · 1 vs 1 · ${n.toLocaleString("en-US")} units`, aUids: [], aName: G.names.pd2A, dName: G.names.pd2D, lvl: 30, ptype: "ice", fortL: 0, alien: false,
+    start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) }), { id: DUEL2_ID, recDone: 1 }));
+}
+/* v429 the owner's faction war: 4 vs 4, one commander of every faction a side, 10 million mixed units */
 const FAC4_ID = "lab-fac4v4", FAC4_N = { a: ["High Admiral Seren Vale", "Sunlord Idris Kaan", "Matriarch Vey Solenne", "Warden Thal Orrin"], d: ["Fleet Marshal Dax Corwen", "Solarch Mira Teve", "Shadow Regent Kael Vros", "Grovemaster Ysra Lune"] };
 function fac4Battle() {
   if (G.fac4Rep) return G.fac4Rep;
@@ -20585,20 +20598,22 @@ function mailItems() {
   const dms = Object.values(CHAT.dms || {}).filter(c => !blocked.has(c.with) && c.m.length).map(c => { const lm = c.m[c.m.length - 1]; return { t: lm.t, f: "dm", dm: c, un: c.m.filter(m => m.u !== G.me && m.t > (seen["d:" + c.id] || 0)).length }; });
   if (duelOwner() && !S.duelMail) { S.duelMail = { t: now() }; dirty(); } // v212: the owner's duel
   if (duelOwner() && !S.fac4Mail) { S.fac4Mail = { t: now() }; dirty(); } // v429 the faction war
+  if (duelOwner() && !S.duel2Mail) { S.duel2Mail = { t: now() }; dirty(); } // v598 10 million vs 5 million
   if (duelOwner() && !S.labMail) { S.labMail = { t: now() }; dirty(); } // the 10 vs 10 simulator test battle, delivered once so it can be watched on any device
   const inRecent = new Set(S.reports.map(r => r.id));
-  return S.reports.filter(r => r.id !== LAB_ID).map(r => ({ t: r.t || r.at, f: "battle", rep: r })).concat((S.savedReps || []).filter(r => !inRecent.has(r.id)).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))).concat(duelOwner() && S.labMail ? [{ t: S.labMail.t, f: "battle", lab: 1 }] : [], duelOwner() && S.duelMail ? [{ t: S.duelMail.t, f: "battle", duel: 1 }] : [], duelOwner() && S.fac4Mail ? [{ t: S.fac4Mail.t, f: "battle", fac4: 1 }] : [], (S.spyReps || []).map(s => ({ t: s.at, f: "spy", spy: s })), dms, S.log.map(l => ({ t: l.t, f: "alert", log: l }))).sort((a, b) => b.t - a.t);
+  return S.reports.filter(r => r.id !== LAB_ID).map(r => ({ t: r.t || r.at, f: "battle", rep: r })).concat((S.savedReps || []).filter(r => !inRecent.has(r.id)).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))).concat(duelOwner() && S.labMail ? [{ t: S.labMail.t, f: "battle", lab: 1 }] : [], duelOwner() && S.duelMail ? [{ t: S.duelMail.t, f: "battle", duel: 1 }] : [], duelOwner() && S.fac4Mail ? [{ t: S.fac4Mail.t, f: "battle", fac4: 1 }] : [], duelOwner() && S.duel2Mail ? [{ t: S.duel2Mail.t, f: "battle", duel2: 1 }] : [], (S.spyReps || []).map(s => ({ t: s.at, f: "spy", spy: s })), dms, S.log.map(l => ({ t: l.t, f: "alert", log: l }))).sort((a, b) => b.t - a.t);
 }
 const mailUnread = () => { const t0 = S.mailSeen || 0; let n = 0; try { for (const x of mailItems()) n += x.f === "dm" ? x.un : x.t > t0 ? 1 : 0; } catch (e) {} return n; };
 function vMail() {
   const f = MAIL_F.some(x => x[0] === sub.mail) ? sub.mail : (sub.mail = "all"), all = mailItems(), prev = G.mailPrev || 0, cnt = k => all.filter(x => x.f === k && (x.f === "dm" ? x.un : x.t > prev)).length;
-  const list = f === "saved" ? (duelOwner() && S.fac4Mail ? [{ t: S.fac4Mail.t, f: "battle", fac4: 1 }] : []).concat(duelOwner() && S.duelMail && S.duelSaved !== 0 ? [{ t: S.duelMail.t, f: "battle", duel: 1 }] : []).concat(duelOwner() && S.labSaved ? [{ t: S.labMail ? S.labMail.t : now(), f: "battle", lab: 1 }] : []).concat((S.savedReps || []).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))) : all.filter(x => f === "all" || x.f === f).slice(0, 80);
+  const list = f === "saved" ? (duelOwner() && S.duel2Mail ? [{ t: S.duel2Mail.t, f: "battle", duel2: 1 }] : []).concat(duelOwner() && S.fac4Mail ? [{ t: S.fac4Mail.t, f: "battle", fac4: 1 }] : []).concat(duelOwner() && S.duelMail && S.duelSaved !== 0 ? [{ t: S.duelMail.t, f: "battle", duel: 1 }] : []).concat(duelOwner() && S.labSaved ? [{ t: S.labMail ? S.labMail.t : now(), f: "battle", lab: 1 }] : []).concat((S.savedReps || []).map(r => ({ t: r.t || r.at, f: "battle", rep: r }))) : all.filter(x => f === "all" || x.f === f).slice(0, 80);
   const tabs = `<div class="segc mailtabs">${MAIL_F.map(([k, l]) => { const n = k === "all" ? 0 : cnt(k); return `<button class="${f === k ? "on" : ""}" data-act="sub" data-g="mail" data-v="${k}">${l}${n ? ` <i class="cbadge">${n}</i>` : ""}</button>`; }).join("")}</div>`;
   const row = x => { const nw = x.f === "dm" ? x.un > 0 : x.t > prev, tag = nw ? '<i class="mnew">NEW</i>' : "", when = `${ago(x.t)} ago`;
     if (x.spy) { const s = x.spy; return `<button class="mrowc spy${nw ? " unread" : ""}" data-act="spyOpen" data-id="${s.id}"><span class="mi">${AI.spy}</span><span class="mt"><b>Espionage report · ${esc(s.name)}</b><small>${s.res ? fmt(total(s.res)) + " resources · " : ""}${spySum(s)}</small></span><span class="mw">${tag}<time>${when}</time></span></button>`; }
     if (x.rep) { const r = x.rep, win = repWin(r); return `<button class="mrowc ${win ? "good" : "bad"}${nw ? " unread" : ""}" data-act="mreport" data-id="${r.id}"><span class="mi">${MI.swords}</span><span class="mt"><b>${esc(r.title)}</b><small>${r.captured ? (r.kind === "defense" ? "Planet lost" : "Planet captured") : win ? "Victory" : r.winner === "draw" ? "Draw" : "Defeat"}${r.loot && total(r.loot) ? ` · plunder ${fmt(total(r.loot))}` : ""}</small></span><span class="mw">${tag}<time>${when}</time></span></button>`; }
     if (x.fac4) return `<button class="mrowc good lab" data-act="fac4Battle"><span class="mi">⚔</span><span class="mt"><b>Faction war · 4 vs 4 · 10 million units</b><small>Your private test: Terran Union, Solar Dominion, Nyx Syndicate and Verdant Collective on both sides, 1.25 million mixed warships per commander, every flagship in the fight. Tap to build it and watch (it takes a moment).</small></span><span class="mw"><time>${ago(x.t)} ago</time></span></button>`;
-    if (x.duel) return `<button class="mrowc good lab" data-act="duelBattle"><span class="mi">👑</span><span class="mt"><b>Duel · 1 vs 1 · 3 million of every warship a side</b><small>${DUEL_ALL ? "The big stress test:" : "Your private stress test:"} two commanders, every class from Light Fighters to Cube Destroyers, plus 12 million escort carriers and 9 million Citadel Supercarriers each. Tap to build it and watch (it takes a moment).</small></span><span class="mw"><time>${ago(x.t)} ago</time></span></button>`;
+    if (x.duel2) return `<button class="mrowc good lab" data-act="duel2Battle"><span class="mi">⚔</span><span class="mt"><b>Duel · 1 vs 1 · 10 million vs 5 million mixed</b><small>Your private test: two commanders, every warship class from Light Fighters to Cube Destroyers, both carriers and all three Titans, the same mix on both sides at equal technology, 10 million against 5 million. Tap to build it and watch (it takes a moment).</small></span><span class="mw"><time>${ago(x.t)} ago</time></span></button>`;
+    if (x.duel) return `<button class="mrowc good lab" data-act="duelBattle"><span class="mi">👑</span><span class="mt"><b>Duel · 1 vs 1 · 3 million of every warship a side</b><small>${DUEL_ALL ? "The big stress test:" : "Your private stress test:"} two commanders, every class from Light Fighters to Cube Destroyers and the three Titans, plus 12 million escort carriers and 9 million Citadel Supercarriers each. Tap to build it and watch (it takes a moment).</small></span><span class="mw"><time>${ago(x.t)} ago</time></span></button>`;
     if (x.lab) return `<button class="mrowc good lab${nw ? " unread" : ""}" data-act="labBattle"><span class="mi">📽</span><span class="mt"><b>Simulator test · 10 vs 10 commanders · 20,658,867 units</b><small>The stress-test battle. Tap to rebuild it on this device and watch the full replay (a few seconds to load).</small></span><span class="mw">${tag}<time>${when}</time></span></button><button class="btn ${S.labSaved ? "amber" : "ghost"} sm labsv" data-act="labSave">${S.labSaved ? "★ Saved" : "☆ Save to favourites"}</button>`;
     if (x.dm) { const c = x.dm, lm = c.m[c.m.length - 1]; return `<button class="mrowc dm${nw ? " unread" : ""}" data-act="dmOpen" data-u="${esc(c.with)}"><span class="mi av">${avCanvas(c.with)}</span><span class="mt"><b>${esc(nameOf(c.with))}${x.un ? ` <i class="cbadge">${x.un}</i>` : ""}</b><small>${lm.u === G.me ? "You: " : ""}${esc(lm.x.slice(0, 70))}</small></span><span class="mw"><time>${when}</time></span></button>`; }
     const l = x.log; return `<div class="mrowc alert ${l.kind === "win" ? "good" : l.kind === "loss" ? "bad" : l.kind === "warn" ? "warn" : ""}${nw ? " unread" : ""}"><span class="mi">${l.kind === "warn" || l.kind === "loss" ? MI.alert : MI.mail}</span><span class="mt"><b>${esc(l.msg)}</b></span><span class="mw">${tag}<time>${when}</time></span></div>`; };
@@ -21688,7 +21703,7 @@ function battleAcc(r) { const mine = r.kind === "defense" || r.kind === "raid" ?
   return { [mine]: myAcc(), [foe]: SIDE_COL[foe].main + (ff ? "@" + ff : "") }; }
 /* v250 flagships in the battle replay: a picture only, the simulation and its result are untouched. Each commander in the fight gets their faction's
    flagship (up to 3 a side), which flies at the heart of their squadrons, fires its own tracers, and goes down when the last of them falls. Pirates, Hives and the Cube have none. */
-function battleFlags(r, Q) { const mineS = r.kind === "defense" || r.kind === "raid" ? "d" : "a", out = { a: [], d: [] }, lab = r.id === LAB_ID || r.id === DUEL_ID;
+function battleFlags(r, Q) { const mineS = r.kind === "defense" || r.kind === "raid" ? "d" : "a", out = { a: [], d: [] }, lab = r.id === LAB_ID || r.id === DUEL_ID || r.id === DUEL2_ID;
   const f4 = r.id === FAC4_ID, pf = u => f4 ? FAC4_U[u] || null : typeof u === "string" && u !== "pirates" && u !== "cube" && (u === G.me || G.players[u] || isBot(u)) && flagOK(u) ? playerFac(u) : null;
   for (const sd of ["a", "d"]) { const groups = new Map(); let any = 0;
     Q.forEach((q, i) => { if (q.side !== sd) return; any = 1; const sh = q.shr && Object.keys(q.shr).length ? q.shr : { [q.own]: q.n0 }, tot = Object.values(sh).reduce((a, b) => a + b, 0) || 1; /* v427 every commander with ships in a merged stack */
@@ -24739,6 +24754,7 @@ const ACT = {
   report: d => { S.unread = 0; dirty(); openSheet({ type: "report", id: d.id }); },
   replay: d => { const r = findRep(d.id); closeSheet(); if (r) { if (!S.tutReplay) { S.tutReplay = 1; dirty(); } playBattle(r); } },
   bsave: () => { const b = battle; if (!b) return; if (b.r.id === DUEL_ID) { S.duelSaved = S.duelSaved === 0 ? 1 : 0; dirty(); toast(S.duelSaved ? "Duel kept in Mail › Saved." : "Duel removed from Saved. Tap ☆ again during this replay to keep it.", S.duelSaved ? "win" : ""); battleCtl(); return; } if (b.r.id === LAB_ID) { S.labSaved = S.labSaved ? 0 : 1; dirty(); toast(S.labSaved ? "10 vs 10 saved. Find it under Mail › Saved." : "10 vs 10 removed from Saved.", S.labSaved ? "win" : ""); } else ACT.repSave({ id: b.r.id }); battleCtl(); },
+  duel2Battle: () => { if (!duelOwner()) return; toast("Building the 10 million vs 5 million duel…"); setTimeout(() => { try { playBattle(duel2Battle()); } catch (e) { toast("Couldn't build the duel on this device.", "warn"); } }, 60); }, /* v598 */
   duelBattle: () => { if (!duelOwner()) return; toast("Building the 1 vs 1 duel…"); setTimeout(() => { try { playBattle(duelBattle()); } catch (e) { toast("Couldn't build the duel on this device.", "warn"); } }, 60); },
   copyId: () => { const v = String(G.me || ""); try { navigator.clipboard.writeText(v).then(() => toast("Account ID copied."), () => toast("Account ID: " + v)); } catch (e) { toast("Account ID: " + v); } }, // v213: so the owner's account on each server can be added to OWNER_IDS
   labSave: () => { S.labSaved = S.labSaved ? 0 : 1; dirty(); toast(S.labSaved ? "10 vs 10 saved. Find it under Mail › Saved." : "10 vs 10 removed from Saved.", S.labSaved ? "win" : ""); render(true); },
