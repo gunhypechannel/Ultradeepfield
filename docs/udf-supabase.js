@@ -248,10 +248,12 @@
     var m = String((e && (e.message || e.error_description)) || e || "");
     if (/Invalid login credentials/i.test(m)) return "Wrong email or password.";
     if (/Email not confirmed/i.test(m)) return "Your email isn't confirmed yet. Open the link we emailed you (check Spam and Promotions too), then sign in. No email? Tap Resend below.";
-    if (/email rate limit|over_email_send_rate_limit/i.test(m) || (e && e.code === "over_email_send_rate_limit")) return "We can only send a few emails an hour, so no new one went out. Your account is already made: use the link in the email we sent before (check Spam), or try Resend again in an hour.";
+    if (/email rate limit|over_email_send_rate_limit/i.test(m) || (e && e.code === "over_email_send_rate_limit")) return "Our mail server is busy (it can only send a handful of emails per hour), so nothing was sent. If you were making an account, it wasn't made yet: try again in about an hour."; /* fb-20261116: a 429 sign-up keeps no account */
     if (/already registered|already been registered|User already exists/i.test(m)) return "That email already has an account. Sign in instead.";
     if (/Password should be|weak/i.test(m)) return "Use at least 6 characters.";
     if (/invalid format|valid email|Unable to validate email/i.test(m)) return "That email doesn't look right.";
+    if (/Email address .* is invalid|email_address_invalid/i.test(m) || (e && e.code === "email_address_invalid")) return "That email address can't receive mail. Use your real email."; /* fb-20261116 */
+    if (/Anonymous sign-ins|requires a valid password/i.test(m)) return "Type your email and a password (6+ characters)."; /* fb-20261116 */
     if (/rate limit|too many/i.test(m)) return "Too many tries. Wait a minute and try again.";
     if (/provider is not enabled|Unsupported provider/i.test(m)) return "Google sign-in isn't switched on yet. Use email for now.";
     if (/same_password|different from the old/i.test(m)) return "Pick a password different from your old one.";
@@ -316,6 +318,9 @@
         try { if (em) localStorage.setItem("udf.lastEmail", em); } catch (x) {}
         function go(p, then) { busy = true; say("…", true); p.then(function (r) { busy = false; if (r && r.error) { var em3 = authMsg(r.error); if (/confirmed|few emails/.test(em3) && !resendOn) { resendOn = true; if (mode === "up") mode = "in"; draw(em3); return; } return say(em3); } then(r && r.data); }, function (er) { busy = false; say(authMsg(er)); }); }
         if (mode === "newpw") { if (pw.length < 6) return say("Use at least 6 characters."); return go(sb.auth.updateUser({ password: pw }), function (d) { try { history.replaceState(null, "", HERE); } catch (x) {} done(d && d.user); }); }
+        if (!em) return say("Type your email."); /* fb-20261116: an empty form reached the server */
+        if (mode !== "reset" && !pw) return say("Type your password.");
+        if (mode === "up" && pw.length < 6) return say("Use at least 6 characters.");
         if (mode === "reset") return go(sb.auth.resetPasswordForEmail(em, { redirectTo: HERE }), function () { mode = "in"; draw("", "Check your email for the reset link."); });
         if (mode === "up") {
           var nm = (f.n.value || "").trim().slice(0, 24); if (nm.length < 2) return say("Pick a commander name (2+ characters).");
