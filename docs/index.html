@@ -5287,7 +5287,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 604;
+const GAME_V = 605;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -21133,10 +21133,10 @@ function advLive() { if (!S || !G.ready) return; const T = now(); S.advOnce = S.
 setInterval(() => { try { advLive(); } catch (e) {} }, 8000);
 const advColor = () => view === "base" && !battle && !(typeof G3 !== "undefined" && G3 && G3.cam && G3.cam.cine); /* v576 her full-colour self on your planet; the hologram on the map and in battle */
 function advHolo(line, force) { if (!line) return; const T0 = Date.now(); G.holoSaid = G.holoSaid || {}; for (const k in G.holoSaid) if (T0 - G.holoSaid[k] > 60000) delete G.holoSaid[k];
-  if (!force && G.holoSaid[line] && T0 - G.holoSaid[line] < 30000) return; // v386: not the same thing again within 30 s
+  if (!advFresh(line) && !(G.holoNext && G.holoNext.line === line)) return; // v386: not the same thing again within 30 s; v605: 2 minutes, shared with the dialog, live calls too
   { const a0 = VOICE.au; if (!force && a0 && !a0.paused && !a0.ended && G.holoCur && G.holoCur !== line && $("#advh.on")) { G.holoNext = { line, at: T0 }; // she finishes her sentence first
       if (!a0._q) { a0._q = 1; const go = () => { a0._q = 0; const n = G.holoNext; G.holoNext = null; if (n && Date.now() - n.at < 12000) setTimeout(() => advHolo(n.line), 400); }; a0.addEventListener("ended", go, { once: true }); a0.addEventListener("error", go, { once: true }); } return; } }
-  G.holoSaid[line] = T0; G.holoCur = line; let w = $("#advh"); try { document.documentElement.dataset.advMood = advMood(line); } catch (e) {} /* v566 */ // v334: her hologram for every spoken step line
+  G.holoSaid[line] = T0; advMark(line); G.holoCur = line; let w = $("#advh"); try { document.documentElement.dataset.advMood = advMood(line); } catch (e) {} /* v566 */ // v334: her hologram for every spoken step line
   if (!w) { w = document.createElement("div"); w.id = "advh"; w.setAttribute("aria-live", "polite"); w.innerHTML = `<div class="holo" data-act="advhX"><img class="advimg" src="${advArt()}" style="${advFx()}" alt=""><i class="hscan"></i><i class="hbeam"></i></div><div class="hsay" data-act="advhX" role="button" aria-label="Dismiss the Advisor"><b>${ADV}</b><span></span><i class="hx" aria-hidden="true">✕</i></div>`; $("#app").appendChild(w); }
   w.classList.toggle("color", force !== 1 && advColor()); /* v576 live-event calls stay the hologram */ w.querySelector(".hsay span").textContent = line; for (const im of w.querySelectorAll(".advimg,.hscan")) { im.style.animation = "none"; void im.offsetWidth; im.style.animation = ""; } w.classList.add("on"); document.body.classList.add("advtalk"); /* she materializes each time; the Academy card steps aside while she talks */ advHoloPlace(); clearTimeout(G.advhT); speak(line);
   const hide = () => { clearTimeout(G.advhT); G.advhT = setTimeout(() => { const x = $("#advh"); if (x) x.classList.remove("on", "talk"); document.body.classList.remove("advtalk"); }, 900); };
@@ -21149,8 +21149,12 @@ function lipRun(k) { const env = VENV && VENV[k]; if (!env) return; const R = do
 function speak(line) { if (!VOICE.on || (typeof AU !== "undefined" && AU.muted) || !line || !VOICE.clips) return; const k = voiceKey(line); if (!VOICE.clips[k]) return; voiceStop();
   try { const a = voiceEl(); a.muted = false; a.src = "voice/" + k + ".mp3?v=" + VOICE.clips[k]; try { lipRun(k); } catch (e) {} a.volume = Math.min(1, .95 * ((typeof AU !== "undefined" && AU.sfxVol != null) ? Math.max(.4, AU.sfxVol) : 1)); VOICE.au = a;
     VOICE.pend = (navigator.userActivation && !navigator.userActivation.hasBeenActive) ? { line, t: performance.now() } : null; /* no tap yet: the browser will refuse or hold it */ a.onplay = () => voiceTalk(1); a.onended = a.onpause = a.onerror = () => voiceTalk(0); a.play().catch(e => { voiceTalk(0); if (e && e.name === "NotAllowedError" && VOICE.au === a) VOICE.pend = { line, t: performance.now() }; }); } catch (e) {} }
+const ADV_REP = 120000; /* v605 */
+function advFresh(line) { const T = Date.now(), M = G.advSaid || (G.advSaid = {}); for (const k in M) if (T - M[k] > ADV_REP) delete M[k]; return !(M[line] && T - M[line] < ADV_REP); }
+function advMark(line) { (G.advSaid || (G.advSaid = {}))[line] = Date.now(); }
 function say(lines) {
-  if (!lines.length) return;
+  lines = (lines || []).filter((l, i, A) => l && A.indexOf(l) === i && !(advLines || []).includes(l) && advFresh(l)); lines.forEach(advMark); /* v605 nothing twice within 2 minutes */
+  if (!lines.length) { if (!$("#adv") && G.advThen) { const th = G.advThen; G.advThen = null; try { th(); } catch (e) {} } return; }
   advLines = (advLines || []).concat(lines);
   if (!$("#adv")) {
     const w = document.createElement("div"); w.id = "adv";
