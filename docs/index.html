@@ -5283,7 +5283,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 602;
+const GAME_V = 603;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -22274,6 +22274,51 @@ function fx590Tick(W, c, o, tn, fsC, e, k, q) { const f = o.f5; if (!f) return; 
   if (k > .86 && !f.vd && (c.winner === "a" || c.winner === "d")) { f.vd = 1; const lost = c.winner === "a" ? (o.bx || o.boss ? new TH.Vector3(q.x, q.y, q.z) : o.gd.position) : o.ga.position, win = c.winner === c.you;
     fx590Ring(f, lost, fsC * 6, c.you ? (win ? 0x7be39a : 0xff6b5a) : 0xffd66a, tn, 1100); fx590Ring(f, lost, fsC * 3.5, 0xffffff, tn + 120, 900); for (let j = 0; j < 3; j++) fx590Boom(o, lost.clone().add(new TH.Vector3(Math.random() - .5, Math.random() - .5, Math.random() - .5).multiplyScalar(fsC * 2)), 1, 0, tn, fsC); }
 }
+/* ---------- v603 reactive shields (owner: "remove the numbers and the critical hits and replace them with reactive shielding effects;
+   all ships should have a reactive shield animation and a shield break animation, especially for boss fights"). The floating
+   numbers, CRITICAL, kill counts and SHIELDS DOWN are gone. Every hit on a formation's shield lights its barrier: a rim-lit bubble,
+   a honeycomb of hex cells that flares from the point of impact outward, ripples crossing the bubble and a flash where the shot
+   struck (a critical hit strikes white-gold with a lens flare). The barrier's colour follows its real strength: blue when strong,
+   violet when strained, red as it fails. When it fails it shatters: a flash, crackling arcs, shards of barrier flying outward and a
+   shock ring. A boss's barrier is the whole hull's: it ripples across the colossus and its break is a cataclysm, with slow motion. */
+function rs603Hit(b, i, x, y, sx, sy, crit, big, t) { try { if (b.lowFx) return; const L = b.rs603 || (b.rs603 = []); L.push({ i, t, a: Math.atan2(sy - y, sx - x), x, y, crit: !!crit, big: !!big }); const cap = b.Q.length > 60 ? 10 : 36; if (L.length > cap) L.splice(0, L.length - cap); } catch (e) {} }
+function rs603Col(sv) { return sv > .5 ? "110,210,255" : sv > .2 ? "175,140,255" : "255,105,140"; }
+/* where a formation's barrier is: a normal squadron's ellipse is recorded as it is drawn; the boss side shares one great barrier */
+function rs603Geo(b, i, pos, W, H) { const q = b.Q[i]; if (!q) return null;
+  if (b.superSide && q.side === b.superSide && b.scC) { const bx = b.wbBox, R = bx ? Math.min(bx.aw, bx.ah) * .42 : Math.min(W, H) * .5; let s = 0, n = 0; b.Q.forEach((q2, k) => { if (q2.side === b.superSide && b.n[k] > 0 && pos[k]) { s += clamp(pos[k].sh, 0, 1); n++; } }); return [bx ? bx.cx : b.scC.x, bx ? bx.cy : b.scC.y, R, R * .92, n ? s / n : 0, 1]; }
+  const g = (b.shG || [])[i]; return g ? [g[0], g[1], g[2], g[3], g[4], 0] : null; }
+function rs603Draw(ctx, b, t, d, W, H, pos) { if (b.lowFx) { b.rs603 = []; return; }
+  const L = (b.rs603 || []).filter(h => t - h.t < (h.crit ? 850 : 620)); b.rs603 = L; const busy = b.Q.length > 60;
+  ctx.save(); ctx.globalCompositeOperation = "lighter";
+  /* the boss's barrier breaking: when the whole side's shields fall */
+  if (b.superSide && b.scC) { const g = rs603Geo(b, b.Q.findIndex(q => q.side === b.superSide), pos, W, H); if (g) { if (b.bsPv != null && b.bsPv > .1 && g[4] <= .02) { (b.brk603 = b.brk603 || []).push({ boss: 1, t, x: g[0], y: g[1], rx: g[2], ry: g[3], col: "120,255,170" }); b.slowUntil = Math.max(b.slowUntil || 0, t + 1500); b.shake = Math.max(b.shake || 0, 22 * d); b.flash = Math.max(b.flash || 0, .45); try { SFX.shield && SFX.shield(0); } catch (e) {} } b.bsPv = g[4]; } }
+  const seen = {}; for (let n = L.length - 1; n >= 0; n--) { const h = L[n], g = rs603Geo(b, h.i, pos, W, H); if (!g) continue; const key = h.i + (g[5] ? "B" : ""); seen[key] = (seen[key] || 0) + 1; if (seen[key] > (g[5] ? 6 : busy ? 1 : 3)) continue;
+    const [cx, cy, rx, ry, sv, boss] = g, life = h.crit ? 850 : 620, k = (t - h.t) / life, a = 1 - k, col = boss ? (sv > .5 ? "120,255,170" : sv > .2 ? "175,255,140" : "255,170,110") : rs603Col(sv);
+    const th = Math.atan2(Math.sin(h.a) / ry, Math.cos(h.a) / rx), px = cx + Math.cos(th) * rx * .96, py = cy + Math.sin(th) * ry * .96;
+    /* the rim-lit bubble */
+    ctx.save(); ctx.translate(cx, cy); ctx.scale(1, ry / rx); const rg = ctx.createRadialGradient(0, 0, rx * .2, 0, 0, rx); rg.addColorStop(0, `rgba(${col},0)`); rg.addColorStop(.72, `rgba(${col},${(boss ? .05 : .06) * a})`); rg.addColorStop(.94, `rgba(${col},${(h.crit ? .45 : .3) * a})`); rg.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = rg; ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(0, 0, rx, 0, TAU); ctx.fill(); ctx.restore();
+    /* inside the bubble: the hex cells flaring outward from the impact, and the ripples */
+    ctx.save(); ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU); ctx.clip();
+    const hs = Math.max(4 * d, rx * (boss ? .055 : .12)), R = rx * (boss ? .7 : 1.1) * (.25 + .75 * Math.min(1, k * 1.6)), wave = R; ctx.lineWidth = Math.max(.6, (boss ? 1.3 : 1) * d);
+    const cols = Math.ceil(R / (hs * 1.5)) + 1, rows = Math.ceil(R / (hs * 1.732)) + 1, gx0 = Math.round(px / (hs * 1.5)), gy0 = Math.round(py / (hs * 1.732)); let cnt = 0;
+    for (let gx = gx0 - cols; gx <= gx0 + cols && cnt < (boss ? 70 : 34); gx++) for (let gy = gy0 - rows; gy <= gy0 + rows; gy++) { const hx = gx * hs * 1.5, hy = gy * hs * 1.732 + (gx & 1 ? hs * .866 : 0), dd = Math.hypot(hx - px, hy - py); if (dd > R) continue; const e = Math.pow((hx - cx) / rx, 2) + Math.pow((hy - cy) / ry, 2); if (e > 1) continue;
+      const band = Math.max(0, 1 - Math.abs(dd - wave * .85) / (hs * 2.2)), I = (band * .9 + (1 - dd / R) * .35) * a * (.6 + .4 * Math.sqrt(e)); if (I < .05) continue; cnt++;
+      ctx.globalAlpha = Math.min(1, I); ctx.strokeStyle = band > .8 ? "#e8fff6" : `rgb(${col})`; ctx.beginPath(); for (let v = 0; v < 6; v++) { const an = v / 6 * TAU, x = hx + Math.cos(an) * hs * .9, y = hy + Math.sin(an) * hs * .9; v ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.closePath(); ctx.stroke(); if (band > .7) { ctx.globalAlpha = Math.min(.12, I * .12); ctx.fillStyle = `rgb(${col})`; ctx.fill(); } }
+    for (const [f, w] of [[1, 2.2], [.55, 1.2]]) { const rr = rx * (boss ? .9 : 1.4) * k * f; ctx.globalAlpha = a * .7; ctx.strokeStyle = `rgba(${col},1)`; ctx.lineWidth = w * d; ctx.beginPath(); ctx.ellipse(px, py, rr, rr * .8, 0, 0, TAU); ctx.stroke(); }
+    ctx.restore();
+    /* the strike */
+    const fr = (boss ? rx * .14 : rx * .32) * (h.crit ? 1.5 : 1) * (1 - k * .5); ctx.globalAlpha = a; ctx.drawImage(glowSprite(`rgba(${col},1)`), px - fr, py - fr, fr * 2, fr * 2); ctx.globalAlpha = a * (k < .3 ? 1 : 0); ctx.drawImage(glowSprite("#ffffff"), px - fr * .4, py - fr * .4, fr * .8, fr * .8);
+    if (h.crit) { tx5.flare(ctx, px, py, rx * (boss ? .5 : 1.1) * a, "#ffe6a0", a); tx5.glow(ctx, px, py, fr * 1.4, "#ffd36b", a * .8); } }
+  /* a barrier shattering */
+  const B = (b.brk603 || []).filter(o => t - o.t < (o.boss ? 1600 : 900)); b.brk603 = B;
+  for (const o of B) { const life = o.boss ? 1600 : 900, k = (t - o.t) / life, a = 1 - k, ek = 1 - Math.pow(1 - k, 3), N = o.boss ? (busy ? 26 : 48) : busy ? 8 : 18;
+    if (k < .18) { ctx.save(); ctx.translate(o.x, o.y); ctx.scale(1, o.ry / o.rx); ctx.globalAlpha = 1 - k / .18; ctx.fillStyle = `rgba(${o.col},.35)`; ctx.beginPath(); ctx.arc(0, 0, o.rx, 0, TAU); ctx.fill(); ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3 * d; ctx.stroke(); ctx.restore(); } // the flash of the whole barrier
+    if (k < .45) for (let j = 0; j < (o.boss ? 8 : 4); j++) { const a1 = tx5.rnd(o.t % 997, j) * TAU, a2 = a1 + 1 + tx5.rnd(o.t % 991, j + 5) * 2; tx5.bolt(ctx, o.x + Math.cos(a1) * o.rx, o.y + Math.sin(a1) * o.ry, o.x + Math.cos(a2) * o.rx * .6, o.y + Math.sin(a2) * o.ry * .6, 7, o.rx * .1, j * 3 + Math.floor(t / 40), "#ffffff", 1.4 * d, (1 - k / .45)); } // crackling arcs
+    for (let j = 0; j < N; j++) { const an = tx5.rnd(o.t % 983, j) * TAU, sp = .9 + tx5.rnd(o.t % 977, j) * .9, r = (1 + ek * (o.boss ? .9 : 1.3) * sp), x = o.x + Math.cos(an) * o.rx * r, y = o.y + Math.sin(an) * o.ry * r + ek * ek * o.ry * .25, s = (o.boss ? o.rx * .07 : Math.max(4 * d, o.rx * .12)) * (1 - k * .4), rot = an + k * (3 + j % 4);
+      ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.globalAlpha = a; ctx.fillStyle = `rgba(${o.col},.28)`; ctx.strokeStyle = j % 3 ? `rgb(${o.col})` : "#ffffff"; ctx.lineWidth = Math.max(.6, d); ctx.beginPath(); ctx.moveTo(s, 0); ctx.lineTo(-s * .6, -s * .55); ctx.lineTo(-s * .4, s * .7); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); } // shards of barrier
+    ctx.globalAlpha = a; ctx.strokeStyle = `rgba(${o.col},1)`; ctx.lineWidth = (o.boss ? 5 : 2.5) * d * a; ctx.beginPath(); ctx.ellipse(o.x, o.y, o.rx * (1 + ek * (o.boss ? .8 : 1.2)), o.ry * (1 + ek * (o.boss ? .8 : 1.2)), 0, 0, TAU); ctx.stroke(); // the shock ring
+    if (o.boss && k < .5) tx5.flare(ctx, o.x, o.y, o.rx * 2 * (1 - k * 2), "#c8ffe0", 1 - k * 2); }
+  ctx.restore(); ctx.globalAlpha = 1; }
 /* ---------- v589 battle effects remaster (owner's reference videos): skill banners over the ship that fires a special, violet chain
    lightning that leaps between enemy formations, starburst light rays on big blasts, and bold game-style damage numbers ---------- */
 function fx589Spawn(b, v) { fx590UltStart(b, v); try { if (b.lowFx || v.bounce) return; const q = b.Q[v.s]; if (!q) return; const t = performance.now();
@@ -22581,13 +22626,12 @@ function drawBattle(t) {
       const shA = b.shHit[i] != null ? 1 - (T - b.shHit[i]) / .35 : 0, huA = b.hullHit[i] != null ? 1 - (T - b.hullHit[i]) / .25 : 0, ex = cx - face * L * .25 * Math.min(vc - 1, 2), rx = L * (.62 + .22 * Math.min(vc - 1, 3)), ry = L * (.32 + .18 * Math.min(vc - 1, 2));
       /* v78 shields from the real shield state: blue when strong, violet when strained, red and flickering when about to fail. A hit
          bulges the bubble on the side facing the shooter; when the shield actually drops to nothing it shatters with a burst */
-      const sv = clamp(p.sh, 0, 1), sc = sv > .5 ? "110,210,255" : sv > .2 ? "175,140,255" : "255,105,140", fl2 = sv < .2 ? .55 + .45 * Math.sin(t * .09 + i) : 1;
-      if (shA > 0 && !lo) { const a0 = (b.shDir || [])[i]; ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.strokeStyle = `rgba(${sc},${.4 * shA * fl2})`; ctx.lineWidth = 1.4 * d; ctx.beginPath(); ctx.ellipse(ex, cy, rx, ry, 0, 0, TAU); ctx.stroke();
+      const sv = clamp(p.sh, 0, 1), sc = sv > .5 ? "110,210,255" : sv > .2 ? "175,140,255" : "255,105,140", fl2 = sv < .2 ? .55 + .45 * Math.sin(t * .09 + i) : 1; (b.shG = b.shG || [])[i] = [ex, cy, rx, ry, sv]; /* v603 */
+      if (shA > 0 && lo) { const a0 = (b.shDir || [])[i]; /* v603: the simple flare only in low effects; the reactive barrier otherwise */ ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.strokeStyle = `rgba(${sc},${.4 * shA * fl2})`; ctx.lineWidth = 1.4 * d; ctx.beginPath(); ctx.ellipse(ex, cy, rx, ry, 0, 0, TAU); ctx.stroke();
         ctx.fillStyle = `rgba(${sc},${.08 * shA * fl2})`; ctx.fill();
         if (a0 != null) { const th = Math.atan2(Math.sin(a0) / ry, Math.cos(a0) / rx), bul = 1 + (1 - shA) * .07; for (const [w2, al2, e2] of [[6, .22, 1.05], [2.6, .9, 1]]) { ctx.strokeStyle = `rgba(${sc},${al2 * shA * fl2})`; ctx.lineWidth = w2 * d; ctx.beginPath(); ctx.ellipse(ex, cy, rx * e2 * bul, ry * e2 * bul, 0, th - .7, th + .7); ctx.stroke(); } }
         ctx.restore(); }
-      { const shp = (b.shPv = b.shPv || [])[i]; if (shp != null && shp > .12 && p.sh <= .02 && !lo && (heavyT || !busy)) { b.rings.push({ x: ex, y: cy, t, col: "150,205,255", r0: rx * .8, r1: rx * 1.7, life: 480 }); b.hexes.push({ x: ex, y: cy, t, r: Math.max(5 * d, L * .1), cells: HEX_N });
-          b.nums.push({ x: ex, y: cy - ry - 12 * d, t, txt: "SHIELDS DOWN", col: "#9fd8ff", big: heavyT ? 1 : 0 }); SFX.shield(sp(ex, cy)); if (heavyT && !(b.focus && t < b.focus.until)) b.focus = { s: 1.3, x: ex / W, y: cy / H, until: t + 1400 }; }
+      { const shp = (b.shPv = b.shPv || [])[i]; if (shp != null && shp > .12 && p.sh <= .02 && !lo && (heavyT || !busy)) { b.rings.push({ x: ex, y: cy, t, col: "150,205,255", r0: rx * .8, r1: rx * 1.7, life: 480 }); (b.brk603 = b.brk603 || []).push({ t, x: ex, y: cy, rx, ry, col: rs603Col(.6) }); /* v603 the barrier shatters */ SFX.shield(sp(ex, cy)); if (heavyT && !(b.focus && t < b.focus.until)) b.focus = { s: 1.3, x: ex / W, y: cy / H, until: t + 1400 }; }
         b.shPv[i] = p.sh; }
       if (huA > 0 && !lo) { ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = huA * .6; const hr = L * .5; ctx.drawImage(glowSprite("fire"), ex - hr, cy - hr, hr * 2, hr * 2); ctx.restore(); }
     }
@@ -22802,7 +22846,7 @@ function drawBattle(t) {
     if (f.ic && p >= stop && !f.hit) { f.hit = true; b.booms.push({ x: px, y: py, t, small: 1 }); if (!lo) { (b.pdt = b.pdt || []).push({ x0: e.x, y0: e.y, x1: px, y1: py, t, life: 240 }); if (b.pdt.length > 30) b.pdt.shift(); } continue; } // shot down by point defense: v78 tracer bursts from the defender
     if (p >= 1 && !f.hit) { f.hit = true; const big = BIG_R.has(Q[v.e].role);
       if (f.fk) { const fl = b.flak || (b.flak = []), k2 = Math.max(.7, e.s); for (let i = 0; i < (lo ? 2 : 4); i++) { const a = Math.random() * TAU, rr = (10 + Math.random() * 46) * d * k2; fl.push({ x: ex + Math.cos(a) * rr, y: ey + Math.sin(a) * rr * .65, t: t + i * 55 + Math.random() * 30, r: (15 + Math.random() * 11) * d * k2, rot: Math.random() * TAU }); } if (fl.length > (lo ? 16 : 36)) fl.splice(0, fl.length - (lo ? 16 : 36)); if (f.j === 100) SFX.shield && SFX.shield(sp(ex, ey)); continue; } // v267 the flak shell bursts
-      if (v.bounce || v.sh > 0) { b.shHit[v.e] = T; (b.shDir = b.shDir || [])[v.e] = Math.atan2(sy - ey, sx - ex); if (b.rings.length < (b.Q.length > 60 ? 18 : 90)) b.rings.push({ x: ex, y: ey, t, col: "110,210,255", r0: 4 * d, r1: 18 * d, life: 320 });
+      if (v.bounce || v.sh > 0) { b.shHit[v.e] = T; (b.shDir = b.shDir || [])[v.e] = Math.atan2(sy - ey, sx - ex); rs603Hit(b, v.e, ex, ey, sx, sy, v.crit && f.last, f.hv || f.sw, t); /* v603 */ if (b.rings.length < (b.Q.length > 60 ? 18 : 90)) b.rings.push({ x: ex, y: ey, t, col: "110,210,255", r0: 4 * d, r1: 18 * d, life: 320 });
         // shots splashing on a shield light up a cluster of white hexagon cells
         if (!lo && (f.last || Math.random() < .35) && (!busy || Math.random() < .3)) { const nc = 2 + Math.floor(Math.random() * 4), cells = [HEX_N[0]].concat(HEX_N.slice(1).sort(() => Math.random() - .5).slice(0, nc)); b.hexes.push({ x: ex, y: ey, t, r: (5.5 + Math.min(5, Math.log10(1 + v.sh) * 1.3)) * d, cells }); if (b.hexes.length > (b.Q.length > 60 ? 8 : 60)) b.hexes.shift(); }
         if (f.last) SFX.shield(sp(ex, ey)); }
@@ -22866,7 +22910,7 @@ function drawBattle(t) {
     ctx.globalAlpha = a * .85; ctx.drawImage(glowSprite("rgba(255,190,140,1)"), o.x - sl, o.y - sh, sl * 2, sh * 2); ctx.globalAlpha = a * .55; ctx.drawImage(glowSprite("rgba(150,205,255,1)"), o.x - sl * .6, o.y - sh * .4, sl * 1.2, sh * .8);
     const gx = W / 2 - o.x, gy = H / 2 - o.y; for (const [f, r0, c] of [[.6, 14, "rgba(120,200,255,1)"], [1.25, 26, "rgba(255,160,90,1)"], [1.7, 9, "rgba(190,255,210,1)"]]) { const rr = r0 * d * (1 + o.s * .2); ctx.globalAlpha = a * .2; ctx.drawImage(glowSprite(c), o.x + gx * f - rr, o.y + gy * f - rr, rr * 2, rr * 2); } }
   ctx.strokeStyle = "rgba(255,214,150,1)"; ctx.lineWidth = 1.2 * d;
-  b.hexes = b.hexes.filter(h => t - h.t < 360); drawHexes(ctx, b, t, d);
+  b.hexes = b.hexes.filter(h => t - h.t < 360); if (b.lowFx) drawHexes(ctx, b, t, d); /* v603 the reactive barrier draws the hex cells now */
   ctx.restore(); ctx.globalAlpha = 1;
   /* v78 auto-exposure: the more light on screen (blasts, fireballs, beams), the lower the exposure of the light layer, like a camera iris,
      so a capital-ship death or a beam storm stays detailed instead of burning out to white */
@@ -22891,7 +22935,7 @@ function drawBattle(t) {
     b.fgL = b.fgL || fgRocks(W, H, d);
     ctx.drawImage(b.fgL.grade, 0, 0, W, H); }
   ctx.setTransform(vs, 0, 0, vs, vtx + shx, vty + shy);
-  fx589Draw(ctx, b, t, d, vs, scr, Q, T, vtx); fx589Nums(ctx, b, t, d, vs, Q); /* v589 */
+  fx589Draw(ctx, b, t, d, vs, scr, Q, T, vtx); b.nums.length = 0; rs603Draw(ctx, b, t, d, W, H, pos); /* v603 no numbers: reactive shields */
   ctx.globalAlpha = 1;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   fx590Ult(ctx, b, t, W, H, d, scr, vs, vtx, vty); /* v590 */
