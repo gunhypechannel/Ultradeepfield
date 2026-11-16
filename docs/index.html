@@ -5303,7 +5303,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 609;
+const GAME_V = 610;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -22370,39 +22370,40 @@ setInterval(() => { try { if (!S || !G.ready || battle || typeof SH === "undefin
    her lips follow the loudness of the clip (closed, parted a little, parted a little more; owner: the wide-open mouth was too big) on one face so nothing jumps, and she blinks every few seconds.
    For the big moments she steps out in full: a welcome, a salute when a Titan is commissioned, a victory, an alarm, a defeat, a
    command pose for the Cube and the battles, a briefing pose for long explanations and a pointing pose toward what she's showing. */
-const AF_V = 609, afUrl = k => `art/adv/${k}.webp?v=${AF_V}`, AF_TALK = ["n_0", "n_h", "n_q"], afCache = {};
+const AF_V = 610, afUrl = k => `art/adv/${k}.webp?v=${AF_V}`, AF_TALK = ["n_0", "n_h", "n_q"], afCache = {};
 function afPre(k) { let i = afCache[k]; if (!i) { i = afCache[k] = new Image(); i.src = afUrl(k); try { i.decode().catch(() => {}); } catch (e) {} } return i; }
 function afOn() { try { const d = S && cosDef(cosOf().eq.adv); return !(d && d.art); } catch (e) { return true; } } /* a skin with its own portrait keeps it */
 const AF_LOSS = /\b(lost|lose|fallen|fell|destroyed|defeat|defeated|gone|failed|wiped|ruins|broke through)\b/i, AF_WIN = /\b(victory|won|win|wins|first blood|broken|shattered|captured|taken|ours|did it|held|claimed)\b/i;
-function afFace(line) { const m = advMood(line), t = String(line || "");
-  if (m === "urgent") return { r: "shocked", hold: 1 };
-  if (m === "fierce") return { r: /!/.test(t) ? "angry" : "determined", hold: 1 };
-  if (m === "grave") return { r: AF_LOSS.test(t) ? "disappointed" : "stern", hold: 1 };
-  if (m === "warm" || m === "excited") return { r: "s_0" };
-  if (m === "playful") return { r: /\b(again|really|seriously|another)\b/i.test(t) ? "annoyed" : voiceKey(t).charCodeAt(0) % 2 ? "flustered" : "s_0" };
-  if (m === "tender") return { r: "relieved" };
-  if (/\b(scan|scans|radar|sensors?|reports?|reading|intel|data)\b/i.test(t)) return { r: "focused" };
-  return { r: "n_0" }; }
+/* v610 (owner: "remove this expression... make sure there are no weird transition expressions, she needs to be perfect"; and
+   "fix the mouth"). She now has exactly two faces, each with a closed mouth, an open mouth and a blink laid onto one head so
+   nothing jumps or ghosts: her warm smile (warm, excited, playful, tender and awe lines) and her calm face (every other line).
+   No reaction faces, no swaps to another head in the middle of a line. Her lips open and close with her voice. */
+const AF_FAM = { n: ["n_0", "n_1", "n_b"], s: ["s_0", "s_q", "s_b"] }, AF_SMILE = ["warm", "excited", "playful", "tender", "awe"];
+function afFace(line) { return AF_SMILE.includes(advMood(line)) ? "s" : "n"; }
 const AF_SEL = { dlg: "#adv .advimg", holo: "#advh.on .advimg", tour: "#ftour .ftcard img" };
 function afSet(line, src) { if (!line) return; src = AF_SEL[src] ? src : "dlg"; const T = performance.now(), f = afFace(line);
-  (G.afS = G.afS || {})[src] = { line, vk: voiceKey(line), r: f.r, hold: !!f.hold, react: T + (f.r === "n_0" ? 0 : 1100), blink: T + 1800 + Math.random() * 2500, lk: "", lt: 0 };
-  [f.r, "n_0", "n_h", "n_q", "n_b"].forEach(afPre); if (!G.afI) G.afI = setInterval(afTick, 40); afTick();
+  (G.afS = G.afS || {})[src] = { line, vk: voiceKey(line), f, blink: T + 1800 + Math.random() * 2500, open: 0, lt: 0 };
+  AF_FAM[f].forEach(afPre); if (!G.afI) G.afI = setInterval(afTick, 40); afTick();
   try { afPoseFor(line, src); } catch (e) {} }
-function afFrame(st, T) { const a = VOICE.au, mk = a && /voice\/([a-z0-9]+)\.mp3/.exec(a.src || ""), talk = mk && mk[1] === st.vk && !a.paused && !a.ended && a.currentTime > 0; /* only the line being spoken moves its lips */
-  if (st.hold || T < st.react) return st.r;
+function afFrame(st, T) { const [shut, open, blink] = AF_FAM[st.f], a = VOICE.au, mk = a && /voice\/([a-z0-9]+)\.mp3/.exec(a.src || ""), talk = mk && mk[1] === st.vk && !a.paused && !a.ended && a.currentTime > 0;
   if (talk) { let lip = 0; const env = VENV && VENV[mk[1]];
     if (env) { const i = Math.floor(a.currentTime * 25), c = env.charCodeAt(Math.min(env.length - 1, i)) - 48; lip = Math.max(0, c) / 42; } else lip = .3 + .3 * Math.sin(T / 70) * Math.sin(T / 173);
-    const k = lip < .16 ? "n_0" : lip < .45 ? "n_h" : "n_q"; /* small, natural movements: closed, parted, a little more */ if (k !== st.lk && T - st.lt > 75) { st.lk = k; st.lt = T; } return st.lk || "n_0"; }
-  if (st.r === "n_0") { if (T > st.blink + 140) st.blink = T + 2200 + Math.random() * 3800; if (T > st.blink) return "n_b"; }
-  return st.r; }
+    const want = st.open ? lip > .12 : lip > .22; /* a little hysteresis so the lips don't flutter */ if (want !== !!st.open && T - st.lt > 90) { st.open = want ? 1 : 0; st.lt = T; } return st.open ? open : shut; }
+  st.open = 0; if (T > st.blink + 140) st.blink = T + 2200 + Math.random() * 3800; return T > st.blink ? blink : shut; }
 function afTick() { const T = performance.now(), on = afOn(); let any = 0;
   for (const src in AF_SEL) { const ims = document.querySelectorAll(AF_SEL[src]), st = (G.afS || {})[src]; if (!ims.length || !st) continue; any = 1;
     if (!on) { ims.forEach(im => { if (im.classList.contains("afc")) { im.classList.remove("afc"); im.src = advArt(); im.dataset.af = ""; } }); continue; }
     const k = afFrame(st, T), pre = afPre(k);
     ims.forEach(im => { const was = im.dataset.af || ""; if (was === k) return; if (was && !(pre.complete && pre.naturalWidth)) return; /* wait for the frame so nothing flashes */
       im.classList.add("afc"); im.src = afUrl(k); im.dataset.af = k;
-      const fam = x => AF_TALK.includes(x) || x === "n_b" ? "n" : x; if (was && fam(was) !== fam(k)) try { im.animate([{ opacity: .3 }, { opacity: 1 }], { duration: 220, easing: "ease-out" }); } catch (e) {} }); }
+      if (was && was[0] !== k[0]) try { im.animate([{ opacity: .3 }, { opacity: 1 }], { duration: 220, easing: "ease-out" }); } catch (e) {} }); } /* only a new line can change her face */
   if (!any) { clearInterval(G.afI); G.afI = 0; } }
+/* v610 report a player (Google Play's rule for games with chat: players can block and report). A report goes to the developer's
+   inbox (Settings › Feedback inbox) with what they wrote; Block already hides their messages everywhere. */
+function reportPlayer(u, msgId) { if (!u || u === G.me) return; const rep = S.reported = S.reported || {}; if (rep[u + (msgId || "")]) return toast("You already reported this. Thank you.");
+  const all = [].concat(CHAT.g || [], CHAT.a || [], ...Object.values(CHAT.dms || {}).map(c => c.m || [])), mine = all.filter(m => m.u === u).slice(-8), msg = msgId ? all.find(m => m.id === msgId) : null;
+  hqPush({ kind: "report", status: "new", at: Date.now(), now: GAME_V, about: u, aboutName: String(nameOf(u)).slice(0, 60), text: `Report on ${nameOf(u)}${msg ? `: "${String(msg.x || "").slice(0, 300)}"` : ""}`.slice(0, 400), log: mine.map(m => new Date(m.t).toISOString().slice(0, 16) + " " + String(m.x || "").slice(0, 200)).join("\n").slice(0, 3000), device: hqDev() });
+  rep[u + (msgId || "")] = Date.now(); dirty(); try { hqFlush(); } catch (e) {} toast("Reported. The developer will review it. You can also block this commander.", "win"); }
 /* the full-body poses */
 const AP_K = ["welcome", "victory", "alarm", "explain", "defeated", "salute", "point", "cube", "command", "ready"];
 function advPose(k, o) { o = o || {}; if (!AP_K.includes(k) || !afOn()) return; const T = Date.now(), key = k === "point" ? "apP" : "apT";
@@ -23692,7 +23693,7 @@ function shProfile() {
     <div class="pstats"><div><b>${fmt(rec.w)}</b><small>Wins</small></div><div><b>${fmt(rec.l)}</b><small>Losses</small></div><div><b>${fmt(rec.d)}</b><small>Draws</small></div><div><b>${tot ? Math.round(rec.w / tot * 100) : 0}%</b><small>Win rate</small></div></div>
     <dl class="kv"><dt>Leaderboard</dt><dd>${rk ? "#" + rk : "–"} by score · ${rp ? "#" + rp : "–"} in PvP</dd><dt>Score</dt><dd>${fmt(P.score || 0)}</dd><dt>PvP points</dt><dd>${fmt(P.pvp || 0)}</dd><dt>Worlds</dt><dd>${P.planets || 1}</dd>${P.ally && G.alliances[P.ally] ? `<dt>Alliance</dt><dd>${esc(allyTag(P.ally))}${gloryPills(P.ally)}</dd>` : ""}</dl>
     ${me ? `<div class="row2"><button class="btn ghost wide" data-act="ranks">Leaderboards</button><button class="btn ghost wide" data-act="faction">Faction</button></div>` : `<div class="row2"><button class="btn wide" data-act="${friend ? "unfriend" : "befriend"}" data-u="${uid}">${friend ? "Remove friend" : "Add friend"}</button><button class="btn ghost wide" data-act="dmOpen" data-u="${uid}" ${G.mode === "online" && !bot ? "" : "disabled"}>Message</button></div>
-      <button class="btn ghost wide sm" data-act="${blocked ? "unblock" : "block"}" data-u="${uid}">${blocked ? "Unblock" : "Block messages from this commander"}</button>`}`;
+      <button class="btn ghost wide sm" data-act="${blocked ? "unblock" : "block"}" data-u="${uid}">${blocked ? "Unblock" : "Block messages from this commander"}</button><button class="btn ghost wide sm" data-act="reportU" data-u="${uid}">⚑ Report this commander</button>`}`;
 }
 /* v88: the avatar changer: a big hex preview of the portrait you are looking at, every portrait in a hex grid, and Use */
 function shAvatars() {
@@ -23835,7 +23836,7 @@ function shChat() {
           ${m.re ? `<span class="cre"><b>${esc(m.re.u === G.me ? "You" : nameOf(m.re.u))}</b> ${esc(m.re.x)}</span>` : ""}
           ${m.r ? `${mine ? "" : `<span class="cx csub">shared a battle report</span>`}${repCard(m)}` : `<span class="cx">${fmtX(m.x)}</span>`}<time>${clockAt(m.t)}</time></div></div>`;
       if (rx) html += `<div class="crx${mine ? " me" : ""}">${Object.entries(rx).map(([e, us]) => `<button class="${us.includes(G.me) ? "on" : ""}" data-act="chatReact" data-id="${m.id}" data-e="${e}" title="${esc(us.map(nameOf).join(", "))}">${e} ${us.length}</button>`).join("")}</div>`;
-      if (pick) html += `<div class="cbar${mine ? " me" : ""}">${CHAT_RX.map(e => `<button data-act="chatReact" data-id="${m.id}" data-e="${e}" aria-label="React ${e}">${e}</button>`).join("")}<button class="crep2" data-act="chatReply" data-id="${m.id}">↩ Reply</button></div>`;
+      if (pick) html += `<div class="cbar${mine ? " me" : ""}">${CHAT_RX.map(e => `<button data-act="chatReact" data-id="${m.id}" data-e="${e}" aria-label="React ${e}">${e}</button>`).join("")}<button class="crep2" data-act="chatReply" data-id="${m.id}">↩ Reply</button>${mine ? "" : `<button class="crep2" data-act="reportMsg" data-id="${m.id}" data-u="${esc(m.u)}">⚑ Report</button><button class="crep2" data-act="block" data-u="${esc(m.u)}">Block</button>`}</div>`;
       prev = m; }
     CHAT.view = L; return `<div class="chatlog">${html || '<p class="note" style="text-align:center">No messages yet. Say hello!</p>'}</div>`; };
   const input = `${sheet.reply ? `<div class="creply"><span>Replying to <b>${esc(sheet.reply.u === G.me ? "yourself" : nameOf(sheet.reply.u))}</b>: ${esc(String(sheet.reply.x).slice(0, 60))}</span><button data-act="chatReplyX" aria-label="Cancel reply">✕</button></div>` : ""}
@@ -24621,6 +24622,7 @@ const ACT = {
     S.friends.push(d.u); dirty(); toast(`${nameOf(d.u)} added to your friends.`, "win"); render(true); },
   unfriend: d => { S.friends = (S.friends || []).filter(u => u !== d.u); dirty(); render(true); },
   block: d => { S.blocked = (S.blocked || []).concat(d.u).filter((u, i, a) => a.indexOf(u) === i); dirty(); toast("Blocked. You won't see their messages."); render(true); },
+  reportU: d => reportPlayer(d.u), reportMsg: d => reportPlayer(d.u, d.id), // v610
   unblock: d => { S.blocked = (S.blocked || []).filter(u => u !== d.u); dirty(); render(true); },
   nameSave: () => { const v = (($("#cnin") || {}).value || "").replace(/[\u0000-\u001f<>]/g, "").replace(/\s+/g, " ").trim();
     if (v.length < 2 || v.length > 20) return toast("Pick a name of 2 to 20 characters.", "warn");
