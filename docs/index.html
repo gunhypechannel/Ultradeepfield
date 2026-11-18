@@ -21719,8 +21719,10 @@ const B_WHY = { metalMine: "metal pays for almost everything", crystalMine: "cry
 const bGoalTxt = k => { const st = tutOn() ? TUT[S.tut.i] : null, m = st && /Lv\.(\d+)/.exec(st.t), goal = m && (st.t.includes(B[k].n) || st.id === "econ-store") ? +m[1] : 0, nx = (S.b[k] || 0) + 1;
   return goal > nx ? `: Lv.${nx} of ${goal}` : goal === nx && goal > 1 ? `: up to Lv.${goal}` : ""; };
 const bPath = (k, cat) => () => bQd(k) ? [[`[data-act="finish"][data-free="1"]`, "Tap Free to finish it instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed it up"], [".qrow .t", S.bq.k === k ? "Under construction. It finishes on its own" : "Queued. It starts when the current build finishes"], ['[data-act="sub"][data-g="build"][data-v="bld"]', "Open Structures to watch it"], DOCKT("build", "Tap Build")]
+  : bqN() >= Q_MAX ? [[".qrow .t", `Build queue full (${Q_MAX}/${Q_MAX}). Queue ${B[k].n} when a slot frees up`], ['[data-act="sub"][data-g="build"][data-v="bld"]', "Open Structures to see the queue"], DOCKT("build", "Tap Build")] /* fb-20261118 */
   : storeFirst(cost(B[k], (S.b[k] || 0) + 1), B[k].n, k) || shortPath(cost(B[k], (S.b[k] || 0) + 1)) || [[`.sheet [data-act="up"][data-k="${k}"]`, `Tap ${S.b[k] ? "Upgrade" : "Build"}${bGoalTxt(k)}`], [`article.bn[data-kind="b"][data-k="${k}"]`, `Choose ${B[k].n}${B_WHY[k] ? ": " + B_WHY[k] : ""}`], [`[data-act="bcat"][data-v="${cat}"]`, `Open ${cat === "fac" ? "Facility" : "Resource"}`], ['[data-act="sub"][data-g="build"][data-v="bld"]', "Open Structures"], DOCKT("build", "Tap Build")];
 const rPath = (k, cat) => () => rQd(k) ? [['[data-act="finish"][data-free="1"]', "Tap Free to finish it instantly"], ['.qrow [data-act="boost"]', "Use a Boost to speed it up"], [".qrow .t", S.rq.k === k ? "Researching. It finishes on its own" : "Queued. It starts when the current research finishes"], ['[data-act="sub"][data-g="build"][data-v="research"]', "Open Research to watch it"], ['.qc[data-act="qgo"][data-q="r"]', "Tap Lab"], DOCKT("build", "Tap Build")]
+  : rqN() >= Q_MAX ? [[".qrow .t", `Research queue full (${Q_MAX}/${Q_MAX}). Queue ${R[k].n} when a slot frees up`], ['[data-act="sub"][data-g="build"][data-v="research"]', "Open Research to see the queue"], ['.qc[data-act="qgo"][data-q="r"]', "Tap Lab"], DOCKT("build", "Tap Build")] /* fb-20261118 */
   : storeFirst(cost(R[k], (S.r[k] || 0) + 1), R[k].n) || shortPath(cost(R[k], (S.r[k] || 0) + 1)) || [[`.sheet [data-act="research"][data-k="${k}"]`, "Tap Research"], [`article.bn[data-kind="r"][data-k="${k}"]`, `Choose ${R[k].n}`], ['.rhd [data-act="rcat"][data-v=""]', "Back to all research"], [`[data-act="rcat"][data-v="${cat}"]`, `Open ${cat === "Drive" ? "Engine" : cat} Research`], ['[data-act="sub"][data-g="build"][data-v="research"]', "Open Research"], ['.qc[data-act="qgo"][data-q="r"]', "Tap Lab"], DOCKT("build", "Tap Build")];
 /* v235: a fleet step that needs ships while every ship is still out (the fighters flying home from the first fight) waits on the
    Fleets tab instead of sending you round in circles */
@@ -21975,6 +21977,7 @@ function spBlocked(sp) {
   if (!sp) return true; const nd = sp.need, keep = tutKeep(), aca = tutOn(); // v322: in the Academy, a side task already under way hands back to the step in hand
   if (!nd) return S.sq.some(q => q.k === sp.k) ? aca : !canPayRes(addC(sp.d.c || {}, keep));
   if (nd.r ? rQd(nd.k) : bQd(nd.k)) return aca;
+  if ((nd.r ? rqN() : bqN()) >= Q_MAX) return true; /* fb-20261118: that queue is full, nothing to queue yet */
   return !canPayRes(addC(cost(nd.r ? R[nd.k] : B[nd.k], nd.cur + 1), keep));
 }
 function shipShow() { const sp = shipStep(); if (!sp) return; if (sheet) closeSheet(); ACT.nav(sp.go); if (sp.rcat) { sub.rcat = sp.rcat; render(); } }
