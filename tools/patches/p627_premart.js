@@ -28,5 +28,5 @@ function pxGoldMat(mat) { mat.onBeforeCompile = sh => { sh.uniforms.uPxT = PXG_U
     float ph = mod(uPxT * .32, 3.2) - 1.6, pg = smoothstep(.2, 0.0, abs((pn.x + pn.y) * .7071 - ph));
     vec2 pc = floor(vUv * vec2(260.0, 130.0)); float pr = fract(sin(dot(pc, vec2(12.9898, 78.233))) * 43758.5453);
     float ps = step(.975, pr) * smoothstep(.45, .75, pl) * pow(max(0.0, sin(uPxT * 2.3 + pr * 80.0)), 14.0);
-    totalEmissiveRadiance += vec3(1.0, .76, .3) * (pf * (1.0 + .4 * sin(uPxT * 1.7)) + pg * (.25 + pl * 1.1)) + vec3(1.0, .96, .85) * ps * 3.5; }`); };
+    totalEmissiveRadiance = totalEmissiveRadiance * .62 + vec3(1.0, .74, .28) * (pf * (.55 + .25 * sin(uPxT * 1.7)) + pg * (.1 + pl * .45)) + vec3(1.0, .96, .85) * ps * 2.6; }`); };
   mat.needsUpdate = true; return mat; }
