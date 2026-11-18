@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-17 (America/Phoenix). Current game version: **v620** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v403**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
+Last updated: 2026-11-17 (America/Phoenix). Current game version: **v621** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v403**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -39,6 +39,7 @@ Supabase project `slubtpfnimxtrfcozvhk`. Edge Function `settle_fight` (`supabase
 
 ## Pending work (as of 2026-11-07): start here in a new session
 
+- **v621 — Battle round and end stings** (p621_stings.py). The owner picked from four styles each: round gong "Starship bell", victory "Sci-fi synth", defeat "Sad cello" (docs/sfx/gong, win, loss .mp3). SFX.round and SFX.battleEnd now play them; levels in p620_sfx.json.
 - **v620 — Recorded battle sounds; the Leviathan shorter, slower, with a proper tail** (p620_sfx.py + p620_sfx.json, p620_lev.py).
   Sounds: the owner rated every battle sound on a page (laser bolts and both fanfares "sounds funny", nine "weak") and then picked from three ElevenLabs Sound Effects takes each (a restricted 1-day key "UDF sound effects", Sound Effects only, 3,000-credit cap). Picked and shipped in docs/sfx/ (mono 64 kb/s mp3): laser (B), laser_e (A), swarm (B), charge (B), shield (B), blast_b (C), boom (A). Kept on the old synthesis by choice: small and medium explosions. No pick yet: round gong, victory and defeat stings (SFX.round / SFX.battleEnd fall back to the old gong and fanfare until files exist; add a key to p620_sfx.json and a file to docs/sfx to switch one on). sbPrep fetches sfx/<k>.mp3?v=620 and decodes into SB.f; SFX_F holds each file's gain, calibrated in an offline render to the old sound's loudest-100 ms level (shield, charge and swarm +3 dB, as the owner called them weak). The synthesis stays as the fallback while files load.
   Leviathan (owner: "Slow the leviathan and make it half the length, fix his tail"): the ring spans 46.5% of a lap on 60 sections (48 at map LOD), a lap takes 8 h, the slither and drift run at half speed, the body tapers harder, and the tail is a vertical crescent fluke (two mirrored blades, scale s*.17) at the very end of the spine (the old sideways blade and the spine stub past it are hidden in ring mode).

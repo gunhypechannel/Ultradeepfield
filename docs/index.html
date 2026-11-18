@@ -21495,7 +21495,7 @@ function sbPrep() {
   const step = () => { const j = jobs.shift(); if (!j) return; try { j(); } catch (e) {} setTimeout(step, 24); }; setTimeout(step, 30);
   SB.f = SB.f || {}; for (const k of Object.keys(SFX_F)) fetch(`sfx/${k}.mp3?v=621`).then(r => r.ok ? r.arrayBuffer() : null).then(ab => ab && new Promise((ok, no) => c.decodeAudioData(ab, ok, no))).then(b => { if (b) SB.f[k] = [b]; }).catch(() => {}); /* v620 the recorded sounds */
 }
-const SFX_F = {"laser": 0.877, "laser_e": 0.699, "swarm": 0.87, "charge": 0.822, "shield": 1.155, "blast_b": 0.504, "boom": 0.592, "gong": 0.5, "win": 0.5, "loss": 0.5}; /* v620 recorded battle sounds and their levels */
+const SFX_F = {"laser": 0.877, "laser_e": 0.699, "swarm": 0.87, "charge": 0.822, "shield": 1.155, "blast_b": 0.504, "boom": 0.592, "gong": 0.727, "win": 0.738, "loss": 0.741}; /* v620 recorded battle sounds and their levels */
 const sfxF = k => SB.f && SB.f[k] && SFX_F[k] != null ? SB.f[k] : null;
 const SFX = {
   ok: () => !!(AU.ctx && AU.sfxOn && !AU.muted),
