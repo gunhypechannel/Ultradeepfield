@@ -1,0 +1,38 @@
+/* ---------- v626 Premium: ten tiers for players who support the game with real money (owner: "special premium planet skins only for 10
+   premium player tiers with extra buffs too", "Build it"). A tier never drops. Each tier unlocks one planet skin nobody can buy or earn,
+   and buffs that stack as you climb, mostly production and speed; combat stays within +5%. The tier comes from a Premium Tier pack the
+   owner gives (Pack tools: "Premium Tier N", so a friend who paid in person is covered) or, once the store is open, from lifetime
+   spend on purchased packs. The skins show existing paintings until the owner's art arrives (PXS[k].alias). ---------- */
+const PREM = [null,
+  { usd: 5, k: "pr1", n: "Aurora Veil", col: "#7dffb0", b: { prod: .02 } },
+  { usd: 15, k: "pr2", n: "Molten Core", col: "#ff7a3a", b: { prod: .04, build: .02, res: .02 } },
+  { usd: 30, k: "pr3", n: "Frostfire", col: "#8fd8ff", b: { prod: .06, build: .04, res: .04, march: 1 } },
+  { usd: 50, k: "pr4", n: "Celestial Tide", col: "#4fe0d0", b: { prod: .08, build: .06, res: .06, march: 1 } },
+  { usd: 100, k: "pr5", n: "Golden Dynasty", col: "#ffd25a", b: { prod: .10, build: .08, res: .08, march: 1, forge: .1, chest: 5 } },
+  { usd: 200, k: "pr6", n: "Nebula Heart", col: "#ff8ae0", b: { prod: .12, build: .10, res: .10, march: 1, forge: .1, fq: 1, chest: 5 } },
+  { usd: 350, k: "pr7", n: "Storm Crown", col: "#6ab8ff", b: { prod: .14, build: .12, res: .12, march: 1, forge: .1, fq: 1, chest: 5, spd: .02 } },
+  { usd: 500, k: "pr8", n: "Void Emperor", col: "#b070ff", b: { prod: .16, build: .14, res: .14, march: 1, forge: .1, fq: 1, chest: 10, spd: .02, atk: .02 } },
+  { usd: 750, k: "pr9", n: "Solar Sovereign", col: "#ffb347", b: { prod: .18, build: .16, res: .16, march: 1, forge: .1, fq: 1, chest: 10, spd: .02, atk: .03, def: .03 } },
+  { usd: 1000, k: "pr10", n: "Eternal Singularity", col: "#ff6a3a", b: { prod: .20, build: .18, res: .18, march: 1, forge: .1, fq: 1, chest: 10, spd: .02, atk: .05, def: .05, gold: 1 } }];
+const PREM_SKIN = { pr1: ["aurora", "Green and violet aurora bands over dark oceans, shimmering curtains of light."], pr2: ["ember", "A cracked volcanic world, rivers of bright lava between black basalt plates."], pr3: ["glacier", "Half glacial ice, half burning flame, a glowing seam where they meet."],
+  pr4: ["atoll", "Luminous turquoise seas with swirling bioluminescent currents."], pr5: ["aurum", "Gold-plated megacities glowing amber, an ornate golden ring in orbit."], pr6: ["amethyst", "A world of swirling pink, purple and blue nebula gas with stars inside."],
+  pr7: ["thunder", "A storm giant wrapped in electric-blue lightning and a crown of clouds."], pr8: ["abyss", "Obsidian black, torn by glowing purple rifts leaking dark energy."], pr9: ["blacksun", "White-gold fire with solar flares looping off its surface."], pr10: ["singular", "A dark world around a black hole, a blazing accretion ring bending the light."] };
+for (let t = 1; t <= 10; t++) { const P = PREM[t], sk = PREM_SKIN[P.k]; PXS[P.k] = { n: P.n, cost: 0, prem: t, alias: sk[0], img: 1, r: "all", b: +(.12 + .012 * t).toFixed(3), glow: P.col, ec: (PXS[sk[0]] || {}).ec || [255, 220, 160], d: sk[1] }; }
+function premUsdTier(usd) { let t = 0; for (let i = 1; i <= 10; i++) if (usd >= PREM[i].usd) t = i; return t; }
+function premT() { try { return S ? Math.min(10, Math.max(S.premT || 0, premUsdTier(S.premUsd || 0))) : 0; } catch (e) { return 0; } }
+function premB() { try { const t = premT(); return t ? PREM[t].b : {}; } catch (e) { return {}; } }
+/* the premium buffs join the VIP modifiers every system already reads */
+function premAdd(v) { const b = premB(); if (!premT()) return v; const o = Object.assign({}, v); for (const k of ["prod", "build", "res", "spd", "atk", "def"]) o[k] = (o[k] || 0) + (b[k] || 0); o.march = (o.march || 0) + (b.march || 0); return o; }
+const premChestReady = () => (premB().chest || 0) > 0 && S.premChest !== utcDay();
+function premBuffRows(b) { const r = []; if (b.prod) r.push(`+${Math.round(b.prod * 100)}% resource production`); if (b.build) r.push(`+${Math.round(b.build * 100)}% construction and research speed`); if (b.march) r.push(`+${b.march} fleet slot`); if (b.forge) r.push(`Forging ${Math.round(b.forge * 100)}% faster`); if (b.fq) r.push(`+${b.fq} forge queue slot`); if (b.chest) r.push(`Daily chest: ◆${b.chest}`); if (b.spd) r.push(`+${Math.round(b.spd * 100)}% fleet speed`); if (b.atk) r.push(`+${Math.round(b.atk * 100)}% fleet attack`); if (b.def) r.push(`+${Math.round(b.def * 100)}% fleet shields and armor`); if (b.gold) r.push("A gold name"); return r; }
+function premCrest(t, sz) { if (!t) return ""; const P = PREM[t]; return `<span class="prcrest" style="--c:${P.col};--s:${sz || 22}px" title="Premium Tier ${t}"><b>${t}</b></span>`; }
+function shPrem() { const t = premT(), nx = t < 10 ? PREM[t + 1] : null, usd = S.premUsd || 0, sel = Math.max(1, Math.min(10, G.premSel || Math.max(1, t)));
+  const hd = `<div class="hd prhd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#ffd25a">Premium</div><h2>${t ? `Tier ${t} · ${esc(PREM[t].n)}` : "Premium tiers"}</h2><p class="note">${t ? "Thank you for supporting the game. Your tier never drops." : "Ten tiers for commanders who support the game. Each unlocks a planet skin nobody can buy, and buffs that stack."}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
+  const prog = `<div class="prprog">${[...Array(10)].map((_, i) => `<button class="${i + 1 <= t ? "on" : ""}${i + 1 === sel ? " sel" : ""}" style="--c:${PREM[i + 1].col}" data-act="premSel" data-t="${i + 1}" aria-label="Tier ${i + 1}">${i + 1}</button>`).join("")}</div>${nx ? `<p class="note" style="text-align:center">${usd > 0 ? `$${usd.toFixed(2)} so far · ` : ""}Tier ${t + 1} at $${nx.usd} lifetime support</p>` : `<p class="note" style="text-align:center;color:#ffd25a">The top tier. You have everything.</p>`}`;
+  const P = PREM[sel], own = t >= sel, cur = premB(), all = premBuffRows(P.b), gain = premBuffRows(Object.fromEntries(Object.entries(P.b).filter(([k, v]) => v !== (PREM[sel - 1] ? PREM[sel - 1].b[k] : undefined))));
+  const card = `<div class="prcard${own ? " own" : ""}" style="--c:${P.col}"><div class="prsk"><canvas data-px="${P.k}" role="img" aria-label="${esc(P.n)} planet skin"></canvas><span class="prring"></span></div><div class="prct"><small>TIER ${sel} · $${P.usd} lifetime</small><b>${esc(P.n)}</b><em>${esc(PXS[P.k].d)}</em><span class="prperk">Skin: ${pxPerk(PXS[P.k])}</span></div>
+    <div class="prbuffs"><span>${own ? "Active buffs" : "Buffs at this tier"}</span>${all.map(x => `<i class="${gain.includes(x) ? "nw" : ""}">${esc(x)}</i>`).join("")}</div>
+    <div class="prst">${own ? `<button class="btn amber wide" data-act="skin">Apply the skin to a world</button>` : `<span class="prlock">🔒 Unlocks at Tier ${sel}</span>`}</div></div>`;
+  const chest = (cur.chest || 0) > 0 ? `<div class="prchest"><span>Daily Premium chest · ◆${cur.chest}</span><button class="btn amber sm" data-act="premChest" ${premChestReady() ? "" : "disabled"}>${premChestReady() ? "Claim" : "Claimed today"}</button></div>` : "";
+  const how = `<div class="prhow"><b>How to get a tier</b><p class="note">${window.udfShop && G.mode === "online" ? "Premium tiers come with real purchases once the store opens on Google Play: every purchase counts toward your lifetime support. Until then, the game's owner can give tiers." : "Premium tiers need the shared galaxy."}</p>${G.owner ? `<button class="btn ghost sm" data-act="packAdmin">Owner: give a Premium Tier pack ›</button>` : ""}</div>`;
+  return hd + prog + card + chest + how + `<div class="fgpad"></div>`; }
