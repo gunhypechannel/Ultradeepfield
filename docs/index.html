@@ -2840,7 +2840,7 @@ body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}
     const RC = [1, .5, .3], ORA = 0xffa040;
     const MA = LV ? hullMat("lev", { rows: 4, pal: ["#120e0d", "#1a1311", "#0d0a09", "#22170f"], slits: .62, sc: "#ffd080", sg: "#ff5a10", metal: .85, rough: .3, rc: [1, .42, .08], ei: 3.4, rep: [6, 1] }) : hullMat("wym", { rows: 4, pal: ["#1a1424", "#221a2e", "#140f1c", "#2c2234"], slits: .45, sc: "#ffe0b0", sg: "#ff9a40", metal: .92, rough: .26, rc: RC, ei: 2.6, rep: [6, 1] });
     const MJ = LV ? hullMat("levj", { rows: 5, pal: ["#120e0d", "#1c1410", "#0d0a09"], slits: .45, sc: "#ffd080", sg: "#ff5a10", metal: .85, rough: .3, rc: [1, .42, .08], ei: 3, rep: [2, 1], side: 1 }) : hullMat("wymj", { rows: 5, pal: ["#1a1424", "#251c30", "#14101c"], slits: .3, sc: "#ffe0b0", sg: "#ff8a30", metal: .9, rough: .28, rc: RC, ei: 2.4, rep: [2, 1], side: 1 });
-    const N = LOD === 1 ? 30 : 42, accM = () => new TH.MeshBasicMaterial({ map: accTex(), transparent: true, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false });
+    const N = LV ? (LOD === 1 ? 84 : 110) : LOD === 1 ? 30 : 42, accM = () => new TH.MeshBasicMaterial({ map: accTex(), transparent: true, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false });
     const photon = (sz) => ringSprite(sz, "photon", [[0, "rgba(255,255,255,0)"], [.42, "rgba(255,255,255,0)"], [.5, "rgba(255,230,190,1)"], [.58, "rgba(255,140,70,.55)"], [1, "rgba(160,60,220,0)"]]);
     // its own black hole: a black sphere, a tilted accretion disc and the bright photon ring
     const bh = new TH.Group(); bh.position.y = -1; body.add(bh); const hole = new TH.Mesh(new TH.SphereGeometry(2.4, 32, 20), new TH.MeshBasicMaterial({ color: 0 })); hole.userData.dyn = 1; bh.add(hole);
@@ -2881,8 +2881,13 @@ body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}
     const tick = t => { const fc = mv.f("coil", t), fl = mv.f("lens", t), fs = mv.f("sweep", t), fx = mv.f("hit", t);
       const coil = bell(fc, 0, .35, .75, 1), gape = bell(fl, 0, .22, .85, 1), fire = bell(fl, .25, .3, .82, .95), swing = fs < 0 ? 0 : Math.sin(ss(0, 1, fs) * Math.PI) * (fs < .5 ? 1 : 1);
       st.rot = t * .00011; st.coil = coil; st.sweep = swing * 1.4; st.strike = gape * 2 - fire * 1.5 + Math.sin(t * .0009) * .8;
-      for (let i = 0; i <= N + 1; i++) path(i / N, t, pts[i]);
-      for (let i = 0; i < N; i++) { const u = i / N, sc = 2.35 * (1 - u * .62) * (i === 0 ? 1.1 : 1); S.v.subVectors(pts[i + 1], i ? pts[i - 1] : pts[i]).normalize(); S.q.setFromUnitVectors(S.Z, S.v); S.q.multiply(tmpQ.setFromAxisAngle(S.Z, u * 6 + t * .0004));
+      const RG = LV && out.ring; /* v617 laid round the galaxy's edge */
+      const TW = RG ? Math.max(coil, gape) : 0, UT = .2; out.tw = TW; /* its attack: the front of the body coils up into a tower and the head looks down */
+      if (RG) { const k = Math.max(.04, RG.k), L = TAU * .93 * k, tb = RG.a - UT * L, bx = Math.cos(tb) * RG.R0, bz = Math.sin(tb) * RG.R0, HT = RG.s * 14, RC = RG.s * 2.4;
+        for (let i = 0; i <= N + 1; i++) { const u = i / N, th = RG.a - u * L, Rr = RG.R0 + (RG.Rh - RG.R0) * Math.exp(-u * 9), w = RG.s * .6 * (.3 + .7 * u) * Math.sin(u * TAU * 9 - t * .0024) + RG.s * 1.6 * Math.sin(th * 3 + t * .00017) * (1 - Math.exp(-u * 9)) /* drifting in and out along the edge */, y = RG.y + RG.s * .3 * Math.sin(u * TAU * 6 - t * .0017) + (RG.yh - RG.y) * Math.exp(-u * 9); pts[i].set(Math.cos(th) * (Rr + w), y, Math.sin(th) * (Rr + w));
+          if (TW > .001 && u < UT) { const q = 1 - u / UT, wgt = TW * Math.min(1, q * 4), ph = q * TAU * 2.6 + t * .0006; tmp.set(bx + Math.cos(ph) * RC * (1 - q * .35), RG.y + q * HT, bz + Math.sin(ph) * RC * (1 - q * .35)); pts[i].lerp(tmp, wgt); } } }
+      else for (let i = 0; i <= N + 1; i++) path(i / N, t, pts[i]);
+      for (let i = 0; i < N; i++) { const u = i / N, sc = (RG ? RG.s * (1 - u * .55) : 2.35 * (1 - u * .62)) * (i === 0 ? 1.1 : 1); S.v.subVectors(pts[i + 1], i ? pts[i - 1] : pts[i]).normalize(); S.q.setFromUnitVectors(S.Z, S.v); S.q.multiply(tmpQ.setFromAxisAngle(S.Z, u * 6 + t * .0004));
         S.s.setScalar(sc); S.m.compose(pts[i], S.q, S.s); segs.setMatrixAt(i, S.m);
         for (const e of [0, 1]) { S.w.copy(S.v).multiplyScalar((e ? .3 : -.3) * sc).add(pts[i]); S.s.setScalar(sc * 1.04); S.m.compose(S.w, S.q, S.s); rims.setMatrixAt(i * 2 + e, S.m); }
         S.s.setScalar(sc * 1.05); S.m.compose(pts[i], S.q, S.s); cores.setMatrixAt(i, S.m);
@@ -2892,7 +2897,7 @@ body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}
         const b = .5 + .2 * Math.sin(t * .004 - i * .5) + fire * .3 * (1 - u) + coil * .3; if (LV) c1.setRGB(b * 1.2, b * (.4 + hot * .35), b * (.08 + hot * .2)); else c1.setRGB(b * (1 + hot * .1), b * (.5 + hot * .5), b * (.22 + hot * .9)); rims.setColorAt(i * 2, c1); rims.setColorAt(i * 2 + 1, c1);
         vuln.put(i, pts[i].x, pts[i].y, pts[i].z, sc * 4.2 * hot, hot * (.75 + .25 * Math.sin(t * .012))); }
       for (const m of [segs, rims, cores, spine, fins]) m.instanceMatrix.needsUpdate = true; rims.instanceColor.needsUpdate = true; vuln.done();
-      head.position.copy(pts[0]); S.v.subVectors(pts[0], pts[1]).normalize(); head.quaternion.setFromUnitVectors(S.Z, S.v); head.rotateX(.75 - gape * .35); head.rotateZ(Math.sin(t * .0008) * .1); hd.rotation.x = -gape * .25;
+      head.position.copy(pts[0]); S.v.subVectors(pts[0], pts[1]).normalize(); head.quaternion.setFromUnitVectors(S.Z, S.v); if (RG) { /* searching: the head turns to look in over the galaxy, its gaze sweeping slowly */ const look = .5 + .3 * Math.sin(t * .00035), sw = .35 * Math.sin(t * .00021); tmp.set(-pts[0].x, 0, -pts[0].z).normalize(); S.w.subVectors(pts[0], pts[1]).normalize(); tmp2.position.set(-S.w.z, 0, S.w.x); tmp.addScaledVector(tmp2.position, sw).normalize(); tmp.y = -.18 + .1 * Math.sin(t * .0005); S.v.lerp(tmp, look * (1 - TW)).normalize(); head.quaternion.setFromUnitVectors(S.Z, S.v); } if (RG && TW > .001) { tmp.set(-pts[0].x, 0, -pts[0].z).normalize().multiplyScalar(.55); tmp.y = -1; tmp.normalize(); S.v.lerp(tmp, TW).normalize(); head.quaternion.setFromUnitVectors(S.Z, S.v); } head.rotateX(RG ? .12 * (1 - TW) - gape * .1 : .75 - gape * .35); head.scale.setScalar(RG ? RG.s * 1.1 / 2.35 : 1); tail.scale.setScalar(RG ? RG.s * .45 / 1.05 : 1); deb.visible = !RG; head.rotateZ(Math.sin(t * .0008) * .1); hd.rotation.x = -gape * .25;
       for (const J of jaws) J.j.rotation.x = -J.up * (.05 + Math.sin(t * .0021) * .03 + gape * .55 + coil * .12);
       maw.rotation.z = -t * (.002 + fire * .01); mawS.material.opacity = .6 + gape * .4; mawS.scale.setScalar(5 * (1 + fire * 1.2 + gape * .4)); eD.rotation.z = t * .0012; eP.material.opacity = .8 + Math.sin(t * .003) * .2;
       lens.visible = fire > .01; if (lens.visible) { lens.children[0].material.opacity = .45 * fire * (.85 + rnd() * .15); lens.children[1].material.opacity = .95 * fire; halos.forEach((h, k) => { const z = ((t * .03 + k * 12.5) % 50); h.position.z = z; h.scale.setScalar(1 + z * .02); h.material.opacity = .8 * fire * (1 - z / 50); }); lensS.material.opacity = fire; }
@@ -2903,7 +2908,7 @@ body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}
       for (let i = 0; i < DN; i++) { const d = dD[i], a = d.a + t * d.w * (1 + coil * 3), R = d.r * (1 + coil * .25); S.p.set(Math.cos(a) * R, d.y + Math.sin(t * .0007 + i) * .6, Math.sin(a) * R); S.q.setFromAxisAngle(d.ax, t * .0007 + i); S.s.setScalar(d.s); S.m.compose(S.p, S.q, S.s); deb.setMatrixAt(i, S.m); } deb.instanceMatrix.needsUpdate = true;
       bt(t, 1 + coil * 6 + fire * 2); hit(bell(fx, 0, .05, .4, 1), t); };
     const tmpQ = new TH.Quaternion(), tmpQ2 = new TH.Quaternion(), tmp2 = new TH.Object3D();
-    bake(body); const out = { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 15, h: 11, own: [hole, disc, disc2, phR, bhG], mouth, lens, open: null }; return out; } // own: its little black hole, hidden where a real one is
+    bake(body); const out = { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 15, h: 11, own: [hole, disc, disc2, phR, bhG], mouth, lens, open: null, N, ring: null }; return out; } // own: its little black hole, hidden where a real one is
 
   /* ---------- Shard Colossus: a golem of dark mine rock and violet and cyan crystal, grown up out of a Void Shard mine. Great
      crystal wings fan from its back round a fractured heart that burns pink-white; a crown of shards, clawed crystal hands, a
@@ -5401,7 +5406,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 616;
+const GAME_V = 617;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6915,7 +6920,7 @@ function wbPosRaw(key, T, out) { const o = out || {};
     if (key === "epx") { o.x = 0; o.z = 0; o.y = 70 + 3 * Math.sin(T / 9e5); return o; }
     if (key === "brd") { const L = LAYERS[1], r = L.r0 + (L.r1 - L.r0) * (.3 + .4 * (hash("brd" + c2) % 1000) / 1000), a = (hash("brdA" + c2) % 6283) / 1000 + TAU * T / period(r); o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 3; return o; }
     if (key === "wym") { o.x = 0; o.z = 0; o.y = (evActive(T) ? 72 : 2) + 1.2 * Math.sin(T / 9e5); return o; } // v391: coiled round the black hole at the centre (risen above it while the Cube sits there)
-    if (key === "lev") { const r = LAYERS[0].r1 + 10, a = (hash("lev" + c2) % 6283) / 1000 + TAU * T / (36 * 3600e3); o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 20 + 3 * Math.sin(T / 6e5); return o; } // v569 patrolling just beyond the Rim
+    if (key === "lev") { const r = LAYERS[0].r1 + 10, a = (hash("lev" + c2) % 6283) / 1000 + TAU * T / (4 * 3600e3); o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 20 + 3 * Math.sin(T / 6e5); return o; } // v569 patrolling just beyond the Rim; v617 a lap every 4 hours
     if (key === "krk") { const L = LAYERS[3], r = (L.r0 + L.r1) / 2, a = (hash("krk" + c2) % 6283) / 1000 + TAU * T / period(r); o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 9 + 2 * Math.sin(T / 5e5); return o; } // risen among the deep layers
     if (key === "col") { if (!WB_MINE) { WB_MINE = NODES.filter(n => n.res === "c" && layerOf(n.r).n === 4); if (!WB_MINE.length) WB_MINE = NODES.slice(0, 50); }
       const q = P3(WB_MINE[hash("col" + c2) % WB_MINE.length], T, WBS), r = Math.hypot(q.x, q.z) || 1; o.x = q.x - q.x / r * 14; o.z = q.z - q.z / r * 14; o.y = q.y; return o; }
@@ -7050,6 +7055,7 @@ function wbMapFx(W, t, T) {
     if (!M.b) continue; const g = M.b.grp; g.visible = near; if (!near) continue;
     g.position.set(q.x, q.y, q.z);
     if (key === "dev" || key === "tyr" || key === "lev" || key === "krk") { const q2 = wbPos(key, T + 60000, {}); g.rotation.y = -Math.atan2(q2.z - q.z, q2.x - q.x); if (key === "dev") g.rotation.z = -.16 - .04 * Math.sin(t * .0004); } // the Devourer noses down at the worlds below, maw first else if (key === "wym") g.rotation.y = -t * 2e-5; else if (key === "war") g.rotation.y = t * 4e-5; else g.rotation.y = Math.atan2(-q.x, -q.z); // the Overlord and its conduits face the Core
+    if (key === "lev" && !pdie && M.b.N) { const R0 = Math.hypot(q.x, q.z); M.b.ring = { R0, Rh: R0, a: Math.atan2(q.z, q.x), y: q.y, yh: q.y, k: 1, s: TAU * .93 * R0 / M.b.N * .52 }; g.position.set(0, 0, 0); g.rotation.set(0, 0, 0); g.scale.setScalar(1); } /* v617 */
     if (t > M.next && !pdie) { M.next = t + 9000 + Math.random() * 10000; const m = M.b.moves.filter(x => x !== "hit" && x !== "link"); M.b.act(m[(Math.random() * m.length) | 0]); } // alive: a move every few seconds
     if (key === "ovl") M.b.cons = [0, 1, 2, 3].filter(i => st.hp["c" + i] > 0 && wbOn("c" + i, T)).length; if (WB_EL.includes(key)) M.b.mech = { s: wbShOf(key, st, T), k: 0 }; if (key === "brd") M.b.pods = brdPods(st); if (key === "wym") M.b.open = wymOpen(T); if (key === "col") { const h = st.hp.col | 0; M.b.phase = h <= 10 ? 2 : h <= 20 ? 1 : 0; M.b.heart = h <= 20 && colHeart(T) ? 1 : 0; } if (key === "tyr") M.b.vault = wbVault(T); if (D.con != null) { const on = st.hp.ovl > 0; M.b.feed = on ? 1 : 0; if (on) { const tq = P3(WBO.ovl, T, {}), s = g.scale.x, lk = M.b.link; // the feed beam runs to the Overlord's crown
       const dx = tq.x - q.x, dz = tq.z - q.z, dy = (tq.y + 5 * WB.ovl.sc * 1.6) - (q.y + 9 * s), yaw = Math.atan2(dz, dx); lk.rotation.set(0, -yaw - g.rotation.y, Math.atan2(dy, Math.hypot(dx, dz))); lk.userData.len = Math.hypot(dx, dy, dz) / s; } }
@@ -7741,7 +7747,7 @@ function levSet(W, t, F) { const D = FIN_EV.lev, e = F.e, E = D.st.map(s => s[0]
   let a = X.aB - TAU, r = X.R + 90, y = 40, sc = 0;
   if (e >= E[1] && e < E[2]) { a = X.aB - TAU * (1 - u1); sc = fsm(u1 * 12); y = 34 + 10 * Math.sin(u1 * TAU * 3); } else if (e >= E[2]) { a = X.aB; const k = fsm(u2 * 1.4); r = X.R + 90 + (X.rB - X.R - 90) * k; y = 40 + (X.yB + 14 - 40) * k; sc = 1; }
   X.pos.set(Math.cos(a) * r, y, Math.sin(a) * r);
-  if (X.b) { finHand(X, X.b, e, D.set, 6 * sc, WB.lev.sc * 1.6, X.pos); X.b.grp.rotation.y = -a - Math.PI / 2; X.b.tick(t);
+  if (X.b) { finHand(X, X.b, e, D.set, 6 * sc, WB.lev.sc * 1.6, X.pos); X.b.grp.rotation.y = -a - Math.PI / 2; if (X.b.N) { const R0 = X.R + 60; X.b.ring = { R0, Rh: r, a, y: 30, yh: y, k: sc, s: TAU * .93 * R0 / X.b.N * .52 }; X.b.grp.position.set(0, 0, 0); X.b.grp.rotation.set(0, 0, 0); X.b.grp.scale.setScalar(1); } /* v617 round the wall */ X.b.tick(t);
     if (t > X.nx) { if (e >= E[3] && e < E[4]) { X.b.act("lens"); X.nx = t + 3600; } else if (e >= E[1] && e < E[3]) { X.b.act(Math.random() < .5 ? "coil" : "sweep"); X.nx = t + 6000 + Math.random() * 5000; } else X.nx = t + 2000; } }
   const hs = e < D.set ? sc * (1 - fsm((e - (D.set - 40e3)) / 40e3)) : 0; X.halo.position.copy(X.pos); X.halo.scale.setScalar(320 * hs); X.halo.material.opacity = .55 * hs * (.85 + .15 * Math.sin(t * .004));
   { const c = X.ring.C, base = fsm(e / E[1]) * .85 * fade, passed = e >= E[2] ? 1 : e >= E[1] ? u1 : 0, a0 = X.aB - TAU;
