@@ -5415,7 +5415,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 620;
+const GAME_V = 621;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -21493,9 +21493,9 @@ function sbPrep() {
       p1 += 55 * (1 + .01 * Math.sin(TAU * 3 * t)) / sr; p2 += 110.5 / sr; p3 += 221.7 / sr; const saw = (p1 % 1) * 2 - 1 + ((p2 % 1) * 2 - 1) * .6 + ((p3 % 1) * 2 - 1) * .3; lp += (saw - lp) * .12;
       D[i] = (lp * am + (R() * 2 - 1) * .03) * env * .9; } })]; /* v118: clean hum, no grit */
   const step = () => { const j = jobs.shift(); if (!j) return; try { j(); } catch (e) {} setTimeout(step, 24); }; setTimeout(step, 30);
-  SB.f = SB.f || {}; for (const k of Object.keys(SFX_F)) fetch(`sfx/${k}.mp3?v=620`).then(r => r.ok ? r.arrayBuffer() : null).then(ab => ab && new Promise((ok, no) => c.decodeAudioData(ab, ok, no))).then(b => { if (b) SB.f[k] = [b]; }).catch(() => {}); /* v620 the recorded sounds */
+  SB.f = SB.f || {}; for (const k of Object.keys(SFX_F)) fetch(`sfx/${k}.mp3?v=621`).then(r => r.ok ? r.arrayBuffer() : null).then(ab => ab && new Promise((ok, no) => c.decodeAudioData(ab, ok, no))).then(b => { if (b) SB.f[k] = [b]; }).catch(() => {}); /* v620 the recorded sounds */
 }
-const SFX_F = {"laser": 0.877, "laser_e": 0.699, "swarm": 0.87, "charge": 0.822, "shield": 1.155, "blast_b": 0.504, "boom": 0.592}; /* v620 recorded battle sounds and their levels */
+const SFX_F = {"laser": 0.877, "laser_e": 0.699, "swarm": 0.87, "charge": 0.822, "shield": 1.155, "blast_b": 0.504, "boom": 0.592, "gong": 0.5, "win": 0.5, "loss": 0.5}; /* v620 recorded battle sounds and their levels */
 const sfxF = k => SB.f && SB.f[k] && SFX_F[k] != null ? SB.f[k] : null;
 const SFX = {
   ok: () => !!(AU.ctx && AU.sfxOn && !AU.muted),
