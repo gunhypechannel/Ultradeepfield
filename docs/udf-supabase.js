@@ -414,6 +414,12 @@
     act: function (k, v, n) { return need().then(function () { return run(sb.rpc("story_act", { p_k: k, p_v: v || "", p_n: n | 0 })); }); },
     tally: function () { return need().then(function () { return run(sb.rpc("story_tally")); }); }
   };
+  /* v622 the Glyph Wheel's shared jackpot pot: a spin adds to it, a jackpot claims from it, and its total and last winners */
+  window.udfWheel = {
+    spin: function (n) { return need().then(function () { return run(sb.rpc("whl_spin", { p_n: n | 0 || 1 })); }); },
+    win: function (kind, name) { return need().then(function () { return run(sb.rpc("whl_win", { p_kind: kind, p_name: String(name || "").slice(0, 24) })); }); },
+    state: function () { return need().then(function () { return run(sb.rpc("whl_state")); }); }
+  };
   var signingOut = false;
   window.udfAccount = {
     label: function () { return me ? (me.email || nameOf(me) || "Signed in") : "Not signed in"; },
