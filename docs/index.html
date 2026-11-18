@@ -2104,6 +2104,30 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
 @keyframes prBeam{0%{transform:scaleY(0);opacity:1}15%{transform:scaleY(1)}70%{opacity:1}100%{opacity:0;transform:scaleY(1) scaleX(.3)}}
 @keyframes prFlash{0%{opacity:0}10%{opacity:.75}100%{opacity:0}}@keyframes prBoom{0%{opacity:0;transform:scale(.2)}20%{opacity:1}100%{opacity:0;transform:scale(1.6)}}
 .prshake{animation:prShake .5s linear 2}@keyframes prShake{25%{transform:translate(4px,-3px)}50%{transform:translate(-4px,2px)}75%{transform:translate(3px,3px)}}
+/* v613 the Matriarch on screen, the Seal Strain and your chronicle */
+#cine .cnqueen{width:min(46vw,230px);aspect-ratio:1;object-fit:cover;border-radius:50%;border:2px solid #a8ff3a88;box-shadow:0 0 40px #a8ff3a66,0 0 90px #c46aff55;filter:saturate(1.15);animation:cnQueen 2.4s ease both}
+@keyframes cnQueen{0%{opacity:0;transform:scale(.9);filter:hue-rotate(40deg) blur(6px)}35%{opacity:.7}50%{opacity:.35}100%{opacity:1;transform:none;filter:saturate(1.15)}}
+#cine .cnsub.queen p{color:#e6ffd0;text-shadow:0 0 12px #3a8a0a,0 2px 6px #000}#cine .cnsub.queen small{display:block;font:600 11px/1 system-ui;letter-spacing:.24em;text-transform:uppercase;color:#a8ff3a;margin-bottom:8px}
+#cine .cnfx.fx-qn{background:radial-gradient(circle at 50% 45%,transparent 20%,#04080288 60%,#000c);animation:cnQn 3s ease-in-out infinite alternate}@keyframes cnQn{to{filter:brightness(1.2)}}
+.strain{margin:10px 0 14px;padding:12px 14px;border-radius:12px;background:rgba(10,18,28,.75);border:1px solid rgba(226,196,138,.25)}
+.strain .sthd{display:flex;justify-content:space-between;align-items:baseline;font-size:15px}.strain .sthd span{font:800 20px/1 system-ui}
+.strain .stbar{height:8px;border-radius:5px;background:rgba(255,255,255,.08);margin:8px 0;overflow:hidden}.strain .stbar i{display:block;height:100%;border-radius:5px;transition:width .6s}
+.strain .chrh{margin:12px 0 6px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#e2c48a}
+.chron2{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}.chron2 li{display:flex;flex-direction:column;gap:2px;padding-left:12px;border-left:2px solid rgba(226,196,138,.4)}
+.chron2 b{font-size:13px}.chron2 span{font-size:13px;opacity:.85}.chron2 em{font-style:normal;color:#9fd8e8}
+#cine .cnpose{position:absolute;left:50%;bottom:0;height:min(66vh,620px);max-width:96vw;object-fit:contain;transform:translateX(-50%);filter:drop-shadow(0 0 22px #38dfee77) drop-shadow(0 0 2px #9ff3ff);-webkit-mask:linear-gradient(#000 80%,transparent);mask:linear-gradient(#000 80%,transparent);animation:cnPose 1.3s ease both}
+#cine .cnpose.ch{left:28%;height:min(52vh,470px);bottom:auto;top:0}
+@keyframes cnPose{0%{opacity:0;filter:brightness(2.6) blur(6px) drop-shadow(0 0 30px #38dfee)}40%{opacity:.75}55%{opacity:.45}100%{opacity:1}}
+#cine .cnmid.ch .cnqueen{width:min(38vw,180px);margin-bottom:22vh}
+#cine .cnch{flex-direction:column;align-items:stretch;max-width:440px;margin-inline:auto;bottom:calc(9vh + 92px + env(safe-area-inset-bottom,0px))}
+#cine .cncard{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:3px;text-align:left;padding:11px 14px 10px;border-radius:12px;border:1px solid #e2c48a66;background:linear-gradient(135deg,#0b1420ee,#141a10dd);color:#f3ead6;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;animation:cnCard .5s ease calc(var(--j)*.12s) both}
+#cine .cncard b{font:700 15px/1.2 system-ui;letter-spacing:.02em}#cine .cncard small{font:500 12px/1.3 system-ui}#cine .cncard .g{color:#9dffc8}#cine .cncard .c{color:#ffb38a}
+#cine .cncard em{position:absolute;right:12px;top:11px;font:600 10px/1 system-ui;letter-spacing:.12em;text-transform:uppercase;font-style:normal;color:#e2c48a99}
+#cine .cncard .hold{position:absolute;left:0;bottom:0;height:3px;width:0;background:linear-gradient(90deg,#ffd36b,#fff3cf);box-shadow:0 0 12px #ffd36b}
+#cine .cncard.holding{border-color:#ffd36b;transform:scale(.985)}#cine .cncard.holding .hold{animation:cnHold .85s linear forwards}
+@keyframes cnHold{to{width:100%}}@keyframes cnCard{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#cine.deciding .cnfx{animation:cnBeat 1.6s ease-in-out infinite}@keyframes cnBeat{0%,100%{box-shadow:inset 0 0 80px #000}14%{box-shadow:inset 0 0 140px #5a0c0c}28%{box-shadow:inset 0 0 90px #000}42%{box-shadow:inset 0 0 120px #4a0a0a}}
+body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="lib/GLTFLoader-r128.js"></script>
@@ -4755,7 +4779,7 @@ const allyNeed = L => ALLY_STEP * (2 ** L - 1); // fund value that reaches level
 const ALLY_PASS = [[2, "Fleet Booster", "+5% fleet speed"], [3, "Shared Industry", "+3% resource output"], [4, "War Banners", "+3% fleet attack"], [5, "Fleet Booster II", "+10% fleet speed"], [6, "Shared Industry II", "+6% resource output"], [8, "War Banners II", "+6% fleet attack"]];
 function allyPass() { const L = S ? allyLevel(myAlly()) : 0; return { spd: L >= 5 ? 10 : L >= 2 ? 5 : 0, prod: L >= 6 ? 6 : L >= 3 ? 3 : 0, atk: L >= 8 ? 6 : L >= 4 ? 3 : 0 }; }
 const collPct = () => S && S.coll ? Object.keys(S.coll).filter(k => S.coll[k]).length : 0; /* v543 +1% per completed Archives chapter */
-const prodBonus = () => 1 + (runePct("spirit") + allyPass().prod + fsB("prod") + collPct()) / 100;
+const prodBonus = () => 1 + (runePct("spirit") + allyPass().prod + fsB("prod") + collPct() + (typeof sealHold === "function" ? sealHold() : 0)) / 100; /* v613 */
 const RCAT = [["Basic", ["energyT", "laserT", "ionT", "hyperT", "plasmaT"]], ["Drive", ["drive", "impulse", "hyper"]], ["Advanced", ["espionage", "computer", "astro", "irn", "graviton"]], ["Combat", ["weapons", "shields", "armor"]], ["Our own", ["logistics", "command", "terraform", "repairT"]]];
 /* ---------- fog of war: the map starts greyed out; your planets, fleets and probes reveal it ---------- */
 const FOG_N = 96, FOG_R = 170 * 2.5 + 25, FOG_CELL = FOG_R * 2 / FOG_N;
@@ -5368,7 +5392,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 612;
+const GAME_V = 613;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9699,7 +9723,7 @@ function shArch() { const id = sheet.id; S.archR = S.archR || {};
   const n2 = ARCH_ORD.filter(k => archLv(k) >= 2).length, n1 = ARCH_ORD.filter(k => archLv(k)).length;
   const card = k => { const E = ARCH[k], lv = archLv(k), nu = lv > (S.archR[k] | 0); return `<button class="arcard lv${lv}" data-act="archEntry" data-id="${k}">${lv ? archImg(E, lv, k) : `<div class="arimg glyph lock">?</div>`}<span><b>${lv ? esc(E.t) : k === "testament" ? "A sealed testament" : "Unrecovered record"}</b><small>${lv ? esc(archName(k)) : E.hint ? esc(E.hint) : k === "testament" ? "Unlocks after 10 interpretations" : /^s_/.test(k) ? "Open its Shipyard card" : /^o_/.test(k) ? "Shows in its omen week" : /^c_/.test(k) ? "Opens at its season finale" : /^e_/.test(k) ? `Surfaces on day ${ARCH[k].day} together` : /^l_/.test(k) ? "Opens as the Archives fill" : "Encounter the entity to recover it"}</small><em>${lv >= 2 ? "Interpreted" : lv ? "Fragment" : "Sealed"}</em></span>${nu ? `<i class="arnew">NEW</i>` : ""}</button>`; };
   return `<div class="hd archd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#e2c48a">Echoes of Empire Origins</div><h2>The Ancient Archives</h2><p class="note">The oldest empires left records of things they saw in the sky. We called them myths. ${n1} of ${ARCH_ORD.length} records recovered · ${n2} interpreted.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
-    <div class="colsum">🏆 <b>${collPct()}</b> of ${ARCH_CAT.filter(([c]) => ARCH_ORD.some(k => ARCH[k].cat === c)).length} collections complete · +${collPct()}% production on every world</div>
+    ${S.intro ? storyPanel() : ""}<div class="colsum">🏆 <b>${collPct()}</b> of ${ARCH_CAT.filter(([c]) => ARCH_ORD.some(k => ARCH[k].cat === c)).length} collections complete · +${collPct()}% production on every world</div>
     ${ARCH_CAT.map(([c, nm, d]) => { const ks = ARCH_ORD.filter(k => ARCH[k].cat === c); if (!ks.length) return ""; const full = ks.filter(k => archLv(k) >= 2).length, done = full >= ks.length, got = !!(S.coll || {})[c]; /* v543 collections */
       return `<h2 class="sec arsec${got ? " coldone" : ""}">${got ? '<i class="coltro">🏆</i>' : ""}${esc(nm)}<span class="colct">${full}/${ks.length}</span></h2><p class="note">${esc(d)}</p>${done && !got ? `<div class="colclaim"><div><b>Collection complete!</b><small>◆${Math.min(60, ks.length * 10)} and +1% production on every world, for good.</small></div><button class="btn amber" data-act="collClaim" data-c="${c}">Claim</button></div>` : !done ? `<div class="colbar"><i style="width:${(full / ks.length * 100).toFixed(0)}%"></i><small>Recover every record (field notes too) to complete this collection: ◆${Math.min(60, ks.length * 10)} and +1% production for good.</small></div>` : ""}<div class="argrid">${ks.map(card).join("")}</div>`; }).join("")}`; }
 const DEMO_ALLY = { a: { name: "Crimson Armada", tag: "CRA", crest: 3 }, d: { name: "Iron Bastion", tag: "IRB", crest: 7 } };
@@ -17855,7 +17879,7 @@ Object.assign(ARCH, {
 });
 ARCH_ORD.splice(ARCH_ORD.indexOf("l_judge") + 1, 0, "l_queen", "a_1", "a_2", "a_3", "a_4", "h_terran", "h_solar", "h_nyx", "h_verdant", "d_pyr", "d_city", "d_warden", "d_ship", "d_cube", "d_lab", "d_star", "x_1", "x_2", "x_3", "x_4", "x_5");
 /* when each one surfaces (checked with the Archives' own tick, one record at a time) */
-function storyWant(want, lv) { if (!S.intro) return; const st = k => vpStat(k), d = S.bondDays || 0, fac = facOf(), others = ["terran", "solar", "nyx", "verdant"].filter(f => f !== fac);
+function storyWant(want, lv) { if (!S.intro) return; const st = k => vpStat(k), d = (S.bondDays || 0) + ((S.choices || {}).signal === "answer" ? 4 : (S.choices || {}).signal === "bury" ? -6 : 0), fac = facOf(), others = ["terran", "solar", "nyx", "verdant"].filter(f => f !== fac);
   want.push(["a_1", 1], ["h_" + fac, 1], ["a_2", lv("a_1") >= 2 && d >= 2], ["a_3", lv("a_2") >= 2 && st("pyramids") >= 1], ["a_4", lv("a_3") >= 2 && d >= 4]);
   others.forEach((f, i) => want.push(["h_" + f, d >= 3 + i * 2]));
   want.push(["l_queen", lv("c_4") >= 1 || st("hiveWins") >= 15], ["d_pyr", st("pyramids") >= 3], ["d_city", myPlanets().length >= 3], ["d_warden", st("bosses") >= 1], ["d_ship", st("recycled") >= 2 || st("caches") >= 3],
@@ -17965,22 +17989,29 @@ function cinema(beats, opt, done) { opt = opt || {}; const old = $("#cine"); if 
     const same = b.img && prev.dataset.src === src(b.img);
     if (b.img && !same) { flip ^= 1; img.dataset.src = src(b.img); img.style.backgroundImage = `url("${src(b.img)}")`; img.className = "cnimg " + (flip ? "b" : "a") + " on kb-" + (b.kb || "in") + (b.img === "art/faction/" ? " wide" : ""); prev.classList.remove("on"); }
     else if (same) prev.className = prev.className.replace(/kb-\S+/, "kb-" + (b.kb || "in"));
+    else if (!b.img && (b.adv || b.keep) && prev.dataset.src) { /* v613 the scene stays behind her, dimmed */ }
+    else if (!b.img && b.queen) { const qs = "art/arch/brd.webp"; if (prev.dataset.src !== qs) { flip ^= 1; img.dataset.src = qs; img.style.backgroundImage = `url("${qs}")`; img.className = "cnimg " + (flip ? "b" : "a") + " on kb-in"; prev.classList.remove("on"); } }
     else if (!b.img) { w.querySelectorAll(".cnimg").forEach(e => { e.classList.remove("on"); e.dataset.src = ""; }); }
     fx.className = "cnfx " + (b.fx || "").split(" ").map(x => "fx-" + x).join(" "); fx.innerHTML = /pods/.test(b.fx || "") ? Array.from({ length: 26 }, (_, j) => `<i style="--x:${(j * 37) % 100};--y:${20 + (j * 53) % 60};--d:${(j % 7) * .4}s"></i>`).join("") : "";
-    mid.innerHTML = b.title ? `<img class="cnlogo" src="art/logo-udf.webp" alt="Ultra Deep Field"><p class="cnq">What if the greatest monsters in the galaxy were the only things keeping us alive?</p>`
+    mid.classList.toggle("ch", !!b.choice); /* v613 room for the choice buttons */
+    const mh = b.title ? `<img class="cnlogo" src="art/logo-udf.webp" alt="Ultra Deep Field"><p class="cnq">What if the greatest monsters in the galaxy were the only things keeping us alive?</p>`
       : b.wardens ? `<div class="cnwd">${b.wardens.map((s, j) => `<img src="${s}" style="--j:${j}" alt="">`).join("")}</div>`
-      : b.adv ? `<img class="cnadv" src="${advArt()}" alt="${ADV}">` : b.inset ? `<img class="cninset" src="${b.inset}" alt="">` : "";
+      : b.queen ? `<img class="cnqueen" src="${VK_ART}" alt="Queen Vael'Khor">` : b.adv ? cnPose(b) : b.inset ? `<img class="cninset" src="${b.inset}" alt="">` : ""; if (mid.dataset.m !== mh) { mid.dataset.m = mh; mid.innerHTML = mh; } /* v613 the same pose stays put between lines */
     chip.textContent = b.chip || ""; chip.classList.toggle("on", !!b.chip); if (b.chip) { chip.style.animation = "none"; void chip.offsetWidth; chip.style.animation = ""; }
-    sub.innerHTML = b.txt ? `${b.who ? `<small>${esc(b.who)}</small>` : ""}<p class="cntx">${esc(b.txt)}</p>` : b.line ? `<p>${esc(b.line)}</p>` : ""; sub.className = "cnsub" + (b.txt ? " tx" : "") + (b.adv ? " adv" : "");
+    sub.innerHTML = b.txt ? `${b.who ? `<small>${esc(b.who)}</small>` : ""}<p class="cntx">${esc(b.txt)}</p>` : b.line ? `${b.queen ? "<small>Queen Vael'Khor</small>" : ""}<p>${esc(b.line)}</p>` : ""; sub.className = "cnsub" + (b.txt ? " tx" : "") + (b.adv ? " adv" : "") + (b.queen ? " queen" : ""); if (b.queen && !b.fx) fx.className = "cnfx fx-qn"; else if (b.adv && !b.fx && prev.dataset.src) fx.className = "cnfx fx-dim";
     if (b.line) { try { document.documentElement.dataset.advMood = advMood(b.line); speak(b.line); } catch (e) {} }
-    ch.innerHTML = ""; waitChoice = !!b.choice; /* a tap can't skip past a decision */
-    if (b.choice) { setTimeout(() => { if (tk !== token || !live) return; ch.innerHTML = b.choice.map(([lb, v], j) => `<button class="btn ${j ? "ghost" : "amber"}" data-cn="c" data-v="${v}">${esc(lb)}</button>`).join(""); }, 1200); }
+    ch.innerHTML = ""; waitChoice = !!b.choice; w.classList.toggle("deciding", !!b.choice); /* a tap can't skip past a decision */
+    if (b.choice) { setTimeout(() => { if (tk !== token || !live) return; ch.innerHTML = b.choice.map(([lb, v, gain, cost], j) => `<button class="cncard" data-cn="h" data-v="${v}" style="--j:${j}"><b>${esc(lb)}</b>${gain ? `<small class="g">${esc(gain)}</small>` : ""}${cost ? `<small class="c">${esc(cost)}</small>` : ""}<i class="hold"></i><em>Hold to choose</em></button>`).join(""); /* v613 a decision you hold to make */ }, 1200); }
     const len = (b.line || b.txt || "").length, minT = b.t || Math.max(b.txt ? 4200 : 3000, len * (b.txt ? 58 : 66) + 900);
     const t0 = Date.now(), wait = () => { if (tk !== token || !live) return; const a = VOICE.au, el = Date.now() - t0, busy = b.line && a && !a.paused && !a.ended && (a.currentTime > 0 || el < 2500) && el < minT * 2.5; /* a stalled clip never holds the scene */ if (b.choice) return; if (busy || Date.now() - t0 < (busy ? 0 : minT)) tmr = setTimeout(wait, 250); else tmr = setTimeout(next, b.line ? 700 : 300); }; tmr = setTimeout(wait, 600); };
   w.addEventListener("click", e => { const t = e.target.closest("[data-cn]"); if (t && t.dataset.cn === "skip") { e.stopPropagation(); if (opt.onSkip) { live = false; clearTimeout(tmr); try { voiceStop(); } catch (er) {} w.remove(); G.cineOn = 0; opt.onSkip(); return; } return end(); }
-    if (t && t.dataset.cn === "c") { e.stopPropagation(); waitChoice = false; const v = t.dataset.v; try { SFX.click(); } catch (er) {} if (opt.onChoice) { const more = opt.onChoice(v); if (more && more.length) { beats.splice(i + 1, beats.length, ...more); } } return next(); }
+    if (t && t.dataset.cn === "h" && !t.dataset.held && e.detail !== 0) { e.stopPropagation(); return; }
+    if (t && (t.dataset.cn === "c" || t.dataset.cn === "h")) { e.stopPropagation(); if (!waitChoice) return; waitChoice = false; const v = t.dataset.v; w.classList.remove("deciding"); try { SFX.click(); } catch (er) {} if (opt.onChoice) { const more = opt.onChoice(v); if (more && more.length) { beats.splice(i + 1, beats.length, ...more); } } return next(); }
     if (t && t.dataset.cn === "go") { e.stopPropagation(); t.closest(".cngate").remove(); return next(); }
     if (!waitChoice && i >= 0) next(); });
+  const hEnd = e => { const t = e.target.closest && e.target.closest('[data-cn=h]'); w.querySelectorAll('.cncard.holding').forEach(c => { clearTimeout(c._ht); c.classList.remove('holding'); }); };
+  w.addEventListener("pointerdown", e => { const t = e.target.closest('[data-cn=h]'); if (!t) return; t.classList.add('holding'); try { SFX.click(); } catch (er) {} t._ht = setTimeout(() => { t.dataset.held = 1; t.classList.remove('holding'); try { navigator.vibrate && navigator.vibrate(40); } catch (er) {} t.click(); }, 850); });
+  for (const ev of ["pointerup", "pointerleave", "pointercancel"]) w.addEventListener(ev, hEnd);
   if (opt.gate) { const g = document.createElement("div"); g.className = "cngate"; g.innerHTML = `<small>Ultra Deep Field</small><h2>Before the Darkness</h2><p>Sound on for the full story.</p><button class="btn amber" data-cn="go">▶ Begin</button>`; w.appendChild(g); } else next();
   return w; }
 function cinWhenClear(fn, n = 0) { if (n < 600 && ($("#authw") || $("#udfAuth") || $("#oldw"))) return void setTimeout(() => cinWhenClear(fn, n + 1), 1000); fn(); } /* never behind a sign-in screen */
@@ -18004,6 +18035,100 @@ function proScouts(replay) { const ours = { corvette: 12, heavyFighter: 30, batt
 function proWin(replay) { if (!replay && !S.proWin) { S.proWin = 1; grantRw({ m: 3000, c: 2000, g: 800, shards: 5 }, "The first defence"); dirty();
     celebrate({ k: "firstwin", kick: "Your first victory", t: "This World Is Ours", art: "adv", s: "The Hive scouts are scrap. Your colony has its first victory, and its first spoils.", say: PRO_WIN, rw: "3,000 metal, 2,000 crystal, 800 gas and ◆5. Already in your stores.", go: "Let's build" }); }
   S.say.push(INTRO[3], PRO_END, PRO_TEASE); dirty(); setTimeout(() => { try { flushSay(); } catch (e) {} }, 400); try { if (!replay) setTimeout(() => { try { archFleetTick(); } catch (e) {} }, 60000); } catch (e) {} }
+
+/* v613 consequences (owner: "Do it", for: the Titans as a moral trap / a shared Seal Strain, real choices that last, and a voice for
+   Vael'Khor). Every commander's choices and Titan count go to the server (story_act); the galaxy's tally comes back (story_tally) and
+   sets the Seal Strain that everyone sees. Offline, the strain counts this commander's own choices and the Seal Ledger. */
+const STRAIN_W = { titans: 3, warden: { kill: 4, spare: -3 }, pdata: { solar: 2, verdant: -2 }, signal: { answer: 1, bury: -1 }, queen: { hear: 2 } };
+const titansOwned = () => { try { return ["armageddon", "sovereign", "harbinger"].reduce((a, k) => a + (SH[k] ? own(k) : 0), 0); } catch (e) { return 0; } };
+function storyTally() { if (G.storyT) return G.storyT; const t = { titans: { _n: titansOwned(), _p: 1 } }, c = S.choices || {}; for (const k in c) t[k] = { _p: 1, [c[k]]: 1 }; return t; }
+function strainPts(t) { let P = ((t.titans || {})._n || 0) * STRAIN_W.titans; for (const k of ["warden", "pdata", "signal", "queen"]) for (const v in STRAIN_W[k]) P += ((t[k] || {})[v] || 0) * STRAIN_W[k][v];
+  try { for (const L of finLedger()) P += L.st === "cracked" ? 12 : L.st === "held" ? 4 : 0; } catch (e) {} return P; }
+function strainNow() { const P = strainPts(storyTally()); return P <= 0 ? 0 : Math.min(99, Math.round(100 * P / (P + 80))); }
+const sealHold = () => G.strain != null && G.strain < 25 ? 3 : 0; /* the seals holding well: +3% production on every world */
+const STRAIN_SAY = [[25, "Commander, the seals are under strain. Every Titan and every fallen Warden adds to it, ours and everyone else's. I'm only telling you so you know the price."],
+  [50, "The strain on the seals just passed halfway. I can hear the Cube counting faster."], [75, "Three quarters, Commander. If this keeps up, the door won't need anyone to open it."]];
+const STRAIN_LOW = "The seals are holding well. The galaxy is breathing easier, and our worlds can feel it.";
+function storySync(force) { if (!S || !G.ready) return; const T = Date.now(), su = window.udfStory, on = su && G.mode === "online";
+  if (on) { const n = titansOwned(); if (S.titRep !== n) { S.titRep = n; dirty(); su.act("titans", "", n).catch(() => {}); }
+    if (force || !G.storyAt || T - G.storyAt > 9 * 60e3) { G.storyAt = T; su.tally().then(t => { G.storyT = t || {}; strainCheck(); }).catch(() => {}); } }
+  strainCheck(); }
+function strainCheck() { const v = G.strain = strainNow(); if (!S.intro || (S.tut && S.tut.k !== "done")) return; S.strainHi = S.strainHi | 0;
+  for (const [th, l] of STRAIN_SAY) if (v >= th && S.strainHi < th) { S.strainHi = th; dirty(); S.say.push(l); try { flushSay(); } catch (e) {} return; }
+  if (v < 25 && !S.strainLow && S.choices && Object.keys(S.choices).length) { S.strainLow = 1; dirty(); try { advHolo(STRAIN_LOW, true); } catch (e) {} } }
+setInterval(() => { try { storySync(); } catch (e) {} }, 60000); setTimeout(() => { try { storySync(true); } catch (e) {} }, 20000);
+
+/* ---------- the choices: four moments, one at a time, each remembered by her and by the galaxy ---------- */
+const VK_ART = "art/chron/c4.webp";
+const STORY_CH = [
+  { id: "warden", t: "The Fallen Guardian", when: () => (vpStat("bosses") >= 1 || archLv("d_warden") >= 2) && (S.bondDays || 0) >= 3,
+    beats: [{ img: "art/boss/warden-skin.webp", kb: "in", chip: "A choice", txt: "Your salvage fleet has found a Warden, broken but alive. It is still bracing its seal with what's left of its body. Its heart is exposed." },
+      { adv: 1, line: "Commander, its heart would build us a Titan. But if it dies, its seal weakens. I won't choose for you.", pose: "explain", choice: [["Harvest its heart", "kill", "+1 Titan Core and ◆30", "Its seal weakens. Seal Strain rises."], ["Let it heal", "spare", "Nothing today", "The seal holds. Seal Strain eases."]] }],
+    out: { kill: { rw: { shards: 30, tc: 1 }, lines: ["It's done. We have its heart. I'll log what it cost, even if no one else does."], rec: "Harvested the heart of a living Warden." },
+      spare: { rw: {}, lines: ["We leave it be. It watched our ships the whole way out, Commander. I think it knows."], rec: "Let a wounded Warden live." } } },
+  { id: "pdata", t: "The Pyramid Map", when: () => archLv("d_pyr") >= 2 && (S.choices || {}).warden && Date.now() - ((S.choiceAt || {}).warden || 0) > 864e5,
+    beats: [{ img: "art/arch/ovl.webp", kb: "right", chip: "A choice", txt: "The pyramid network's map is decoded. The Solar Dominion and the Verdant Collective both want it, and both have sent envoys. Neither will share." },
+      { adv: 1, line: "The Dominion would use it to wake the pyramids. The Verdant would use it to mend the seals. Someone is going to be very disappointed in us.", pose: "point", choice: [["Give it to the Dominion", "solar", "⚡3 boosts and ◆30", "They wake a pyramid. Seal Strain rises."], ["Give it to the Verdant", "verdant", "Metal, crystal and ◆15", "They mend a seal. Seal Strain eases."], ["Keep it secret", "keep", "An Architect record, now, and ◆10", "Neither House will thank you."]] }],
+    out: { solar: { rw: { shards: 30, boosts: 3 }, lines: ["The Dominion is delighted. They've already started waking a pyramid. I hope they know how to put it back to sleep."], rec: "Gave the pyramid map to the Solar Dominion." },
+      verdant: { rw: { shards: 15, m: 6000, c: 4000 }, lines: ["The Verdant are mending a seal tonight, with our map. It won't make us richer. It might keep us alive."], rec: "Gave the pyramid map to the Verdant Collective." },
+      keep: { rw: { shards: 10 }, fx: () => archUnlock("x_1", 2), lines: ["We keep it. Secrets are safer with us than with either of them. The Syndicate would be proud, Commander. I'm not sure that's a compliment."], rec: "Kept the pyramid map secret." } } },
+  { id: "signal", t: "The Call", when: () => archLv("x_1") >= 2 && (S.bondDays || 0) >= 8,
+    beats: [{ img: "art/lore/architects.webp", kb: "up", chip: "A choice", txt: "The signal from the pyramids has found your comms array. It's asking for a reply, in a language only your Advisor can read." },
+      { adv: 1, line: "It wants us to answer, Commander. I could. I'm afraid of what answers back.", pose: "cube", choice: [["Answer it", "answer", "The Architects' story comes sooner, and ◆20", "Something will hear you."], ["Bury it", "bury", "Seal Strain eases a little, and ◆20", "The truth waits longer."]] }],
+    out: { answer: { rw: { shards: 20 }, lines: ["I answered. For a moment the whole array went quiet. Then something said thank you."], rec: "Answered the signal from the pyramids." },
+      bury: { rw: { shards: 20 }, lines: ["Buried. It's still calling, just not to us. Thank you, Commander. I wasn't ready."], rec: "Buried the signal from the pyramids." } } },
+  { id: "queen", t: "The Queen's Offer", when: () => archLv("l_queen") >= 2 && vpStat("hiveWins") >= 20 && (S.vk || {}).vk3,
+    beats: [{ queen: 1, chip: "Incoming transmission", line: "I don't hate you, Commander. I simply want my children to live." },
+      { queen: 1, line: "When the door opens, stand aside. Let my swarm pass, and yours will live too. That is all I ask.", choice: [["Refuse her", "refuse", "◆25", "She will remember."], ["Hear her out", "hear", "Her story, and ◆25", "Seal Strain rises."]] }],
+    out: { refuse: { rw: { shards: 25 }, q: ["Then we will meet at the door. I will be sorry when you fall. I truly will."], lines: ["Good. I've seen what happens to the ones who listen."], rec: "Refused the Matriarch's offer." },
+      hear: { rw: { shards: 25 }, q: ["Thank you. No one has listened to me in ten thousand years.", "My world was the only one it spared. My children are all that is left of it. Wouldn't you open any door for yours?"], lines: ["Commander... be careful. Kindness is how she wins."], rec: "Heard out Queen Vael'Khor." } } }];
+/* Vael'Khor's own transmissions, as the Hive war goes on */
+const VK_T = [{ id: "vk1", when: () => vpStat("hiveWins") >= 5, q: ["So. The commander who went back for the pods. I know your name now. I wonder if you know mine."], a: "That was her, Commander. Vael'Khor. She's never spoken to anyone before." },
+  { id: "vk2", when: () => vpStat("hiveWins") >= 15 && (S.vk || {}).vk1, q: ["You burn my nests and call it victory. I fed those children with my own hands, Commander."], a: "She wants you to feel guilty. Don't let her choose how you feel." },
+  { id: "vk3", when: () => archLv("l_queen") >= 2 && (S.vk || {}).vk2, q: ["I was there when the dark came. It looked at my world, and it chose to let us live. Do you know what that feels like? To be chosen?"], a: "She's telling the truth, Commander. That's what frightens me." },
+  { id: "vk4", when: () => (G.strain | 0) >= 50 && (S.vk || {}).vk1, q: ["Can you feel it? The seals are thinning. Your Titans sing to it, Commander. Every one of them."], a: "She can feel the strain too. I hate that she's right." }];
+const STORY_SPARE = ["Commander, the Warden we spared is standing over our homeworld. It hasn't moved in hours. I think it's guarding us."];
+function storyBeats(C) { return C.beats.map(b => Object.assign({}, b)); }
+function vkBeats(L, chip) { return L.map((line, i) => ({ queen: 1, chip: i ? undefined : chip, line })); }
+function storyPlay(C) { S.choices = S.choices || {}; S.choiceAt = S.choiceAt || {}; G.storyBusy = 1;
+  cinema(storyBeats(C), { onChoice: v => { const o = C.out[v]; if (!o || S.choices[C.id]) return []; S.choices[C.id] = v; S.choiceAt[C.id] = Date.now(); dirty();
+      try { if (o.rw && Object.keys(o.rw).length) grantRw(o.rw, C.t); } catch (e) {} try { o.fx && o.fx(); } catch (e) {} try { if (window.udfStory && G.mode === "online") window.udfStory.act(C.id, v, 0).then(() => storySync(true)).catch(() => {}); } catch (e) {}
+      const tt = (G.storyT || {})[C.id], split = tt && tt._p >= 2 ? Math.round(100 * ((tt[v] || 0) + 1) / (tt._p + 1)) : null; G.storySplitShown = split != null;
+      return (o.q ? vkBeats(o.q) : []).concat(o.lines.map(line => ({ adv: 1, line })), split != null ? [{ chip: "The galaxy remembers", txt: `${split}% of commanders made the same choice.`, t: 3800, keep: 1 }] : []); },
+    onSkip: () => { G.storyBusy = 0; } }, () => { G.storyBusy = 0; if (!G.storySplitShown) setTimeout(() => storySplit(C), 1500); }); }
+function storySplit(C) { const t = (G.storyT || {})[C.id], v = (S.choices || {})[C.id]; if (!t || !v || !(t._p > 1)) return; const pc = Math.round(100 * (t[v] || 0) / t._p), o = C.out[v];
+  try { toast(`${pc}% of commanders made the same choice as you: ${o.rec.replace(/\.$/, "").toLowerCase()}.`, "win"); } catch (e) {} }
+function storyTick() { try { if (!S || !G.ready || !S.intro || battle || sheet || advLines || G.cineOn || G.storyBusy || $("#celeb") || $("#adv") || (S.tut && S.tut.k !== "done") || G.mode === "connecting") return;
+    S.choices = S.choices || {}; S.vk = S.vk || {};
+    if (S.choices.warden === "spare" && !S.spareBack && Date.now() - ((S.choiceAt || {}).warden || 0) > 5 * 864e5) { S.spareBack = 1; grantRw({ shards: 50 }, "The Warden's watch"); S.vpTitles = S.vpTitles || []; if (!S.vpTitles.includes("Wardenfriend")) S.vpTitles.push("Wardenfriend"); dirty();
+      celebrate({ k: "wardenback", kick: "The Warden you spared", t: "It Came Back", art: "adv", s: "The Warden you let live has taken up a watch over your homeworld. It asks for nothing.", say: STORY_SPARE[0], rw: "◆50 and the title “Wardenfriend”.", go: "Onward" }); return; }
+    for (const V of VK_T) if (!S.vk[V.id] && V.when()) { S.vk[V.id] = Date.now(); dirty(); G.storyBusy = 1; cinema(vkBeats(V.q, "Incoming transmission").concat([{ adv: 1, line: V.a }]), { onSkip: () => { G.storyBusy = 0; } }, () => { G.storyBusy = 0; }); return; }
+    for (const C of STORY_CH) if (!S.choices[C.id] && C.when()) { storyPlay(C); return; } } catch (e) {} }
+setInterval(storyTick, 30000);
+
+/* ---------- the Archives: the Seal Strain and your own chronicle ---------- */
+function storyPanel() { const v = G.strain != null ? G.strain : strainNow(), t = storyTally(), c = S.choices || {}, col = v < 25 ? "#6dffb0" : v < 50 ? "#ffd36b" : v < 75 ? "#ff9a4a" : "#ff3b4a";
+  const rows = STORY_CH.filter(C => c[C.id]).map(C => { const o = C.out[c[C.id]], tt = t[C.id], pc = tt && tt._p > 1 ? Math.round(100 * (tt[c[C.id]] || 0) / tt._p) : null; return `<li><b>${esc(C.t)}</b><span>${esc(o.rec)}${pc != null ? ` <em>${pc}% of commanders chose the same.</em>` : ""}</span></li>`; });
+  return `<div class="strain"><div class="sthd"><b>Seal Strain</b><span style="color:${col}">${v}%</span></div><div class="stbar"><i style="width:${v}%;background:${col}"></i></div>
+    <p class="note">Every Titan built and every Warden that falls, anywhere in the galaxy, strains the seals. Cracked seals strain them most. Commanders who spare Wardens and help the Verdant ease it.${v < 25 ? " <b>The seals are holding: +3% production on every world.</b>" : ""}</p>
+    <h3 class="chrh">Your chronicle</h3><ul class="chron2"><li><b>The night of the ambush</b><span>Went back for the escape pods.</span></li>${rows.join("")}</ul></div>`; }
+/* her moods for the new lines (the Matriarch's are voiced by her own voice) */
+;[["Commander, its heart would build us a Titan. But if it dies, its seal weakens. I won't choose for you.", "grave"], ["It's done. We have its heart. I'll log what it cost, even if no one else does.", "grave"],
+ ["We leave it be. It watched our ships the whole way out, Commander. I think it knows.", "tender"], ["The Dominion would use it to wake the pyramids. The Verdant would use it to mend the seals. Someone is going to be very disappointed in us.", "playful"],
+ ["The Dominion is delighted. They've already started waking a pyramid. I hope they know how to put it back to sleep.", "grave"], ["The Verdant are mending a seal tonight, with our map. It won't make us richer. It might keep us alive.", "warm"],
+ ["We keep it. Secrets are safer with us than with either of them. The Syndicate would be proud, Commander. I'm not sure that's a compliment.", "playful"], ["It wants us to answer, Commander. I could. I'm afraid of what answers back.", "tender"],
+ ["I answered. For a moment the whole array went quiet. Then something said thank you.", "awe"], ["Buried. It's still calling, just not to us. Thank you, Commander. I wasn't ready.", "tender"],
+ ["Good. I've seen what happens to the ones who listen.", "grave"], ["Commander... be careful. Kindness is how she wins.", "grave"], [STORY_SPARE[0], "awe"],
+ [STRAIN_SAY[0][1], "grave"], [STRAIN_SAY[1][1], "grave"], [STRAIN_SAY[2][1], "urgent"], [STRAIN_LOW, "warm"],
+ ["That was her, Commander. Vael'Khor. She's never spoken to anyone before.", "grave"], ["She wants you to feel guilty. Don't let her choose how you feel.", "fierce"],
+ ["She's telling the truth, Commander. That's what frightens me.", "tender"], ["She can feel the strain too. I hate that she's right.", "grave"]].forEach(([l, m]) => { CIN_MOOD[l] = m; });
+
+/* her poses, only in the story scenes: one cut-out figure per mood, chosen line by line, kept while it doesn't change */
+const POSE_MOOD = { calm: "explain", tender: "welcome", warm: "welcome", excited: "victory", playful: "victory", urgent: "alarm", fierce: "ready", awe: "cube", grave: "explain" };
+const POSE_LINE = { "Your signal was very bright, Commander. I'm afraid something else heard it too.": "alarm", "You went back. Hold on to that, Commander. I think you're the one I've been waiting for.": "salute",
+  "The fleet is broken, Commander. Our warships are gone.": "defeated", "Every commander I've ever known gave that order. Every one.": "defeated", "It's done. We have its heart. I'll log what it cost, even if no one else does.": "defeated",
+  "Commander... be careful. Kindness is how she wins.": "alarm", "Good. I've seen what happens to the ones who listen.": "ready" };
+function cnPose(b) { let m = "calm"; try { m = advMood(b.line); } catch (e) {} const k = b.pose || POSE_LINE[b.line] || POSE_MOOD[m] || "explain"; return `<img class="cnpose${b.choice ? " ch" : ""}" src="art/adv/p_${k}.webp" alt="${ADV}">`; }
 
 const chProg = (C, m) => { if (m[0] !== "worlds" && C.base[m[0]] == null) C.base[m[0]] = chStat(m[0]); /* v612 a chapter added after you finished the book starts counting when you first see it */ return m[0] === "worlds" ? Math.min(m[1], chStat("worlds")) : Math.min(m[1], Math.max(0, chStat(m[0]) - (C.base[m[0]] || 0))); };
 function chronHTML() { if (!S || !S.tut || S.tut.k !== "done") return ""; const C = chState(); if (C.c >= CHRON.length) return `<article class="card chron done"><header>📖 Chronicles · complete</header><div class="chart" style="background-image:url(${chImg(CHRON.length - 1)})"></div><p>${esc(CHRON[CHRON.length - 1].end)}</p></article>`;

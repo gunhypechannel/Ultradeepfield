@@ -409,6 +409,11 @@
     sync: function (items) { return need().then(function () { return run(sb.rpc("push_sync", { p_items: items })); }); },
     alert: function (uid, tag, title, body) { return need().then(function () { return run(sb.rpc("push_alert", { p_uid: uid, p_tag: tag, p_title: title, p_body: body })); }); }
   };
+  /* v613 the shared story: each commander's choices and Titan count, and the galaxy's tally of them (for the Seal Strain and "62% spared it") */
+  window.udfStory = {
+    act: function (k, v, n) { return need().then(function () { return run(sb.rpc("story_act", { p_k: k, p_v: v || "", p_n: n | 0 })); }); },
+    tally: function () { return need().then(function () { return run(sb.rpc("story_tally")); }); }
+  };
   var signingOut = false;
   window.udfAccount = {
     label: function () { return me ? (me.email || nameOf(me) || "Signed in") : "Not signed in"; },
