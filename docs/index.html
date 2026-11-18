@@ -5368,7 +5368,7 @@ const WHL_RARE = W => !!W.jack || W.w <= 2.5;
 const whlDay = () => Math.round(shopDayEnd() / 864e5);
 const WHL_SET_PAY = 40, WHL_LK_MAX = 30;
 const WSND = { rn_socket: 1.2, rn_ring: 1.2, fg_whoosh: 1.15, fg_hammer: 1.2, fg_reveal: 1.25, lever: 1.23, spin: 1.1, tick: 1.15, land: 1.15, win: 1.3, rare: 1.3, jack: 1.2, mega: 1.2 }, WBUF = {};
-function wsLoad() { if (!AU.ctx || WBUF._l) return; WBUF._l = 1; for (const k in WSND) fetch(`sfx/w_${k}.mp3?v=625`).then(r => r.ok ? r.arrayBuffer() : null).then(ab => ab && new Promise((ok, no) => AU.ctx.decodeAudioData(ab, ok, no))).then(b => { if (b) WBUF[k] = b; }).catch(() => {}); }
+function wsLoad() { if (!AU.ctx) return; const T = performance.now(); WBUF._t = WBUF._t || {}; for (const k in WSND) { if (WBUF[k] || T - (WBUF._t[k] || -1e9) < 8000) continue; WBUF._t[k] = T; sfxGet(`sfx/w_${k}.mp3`, 625).then(b => { WBUF[k] = b; }).catch(() => {}); } } /* v630 */
 function wsPlay(k, at, gain, rate) { if (!WSFX.ok()) return true; const b = WBUF[k]; if (!b) return false; const c = AU.ctx, s = c.createBufferSource(), g = c.createGain(); s.buffer = b; s.playbackRate.value = rate || 1; g.gain.value = WSND[k] * (gain || 1); s.connect(g); g.connect(AU.sfx); s.start(Math.max(c.currentTime, at || 0)); s.onended = () => { try { s.disconnect(); g.disconnect(); } catch (e) {} }; return true; }
 const whlBuzz = p => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
 /* one Lucky Hour a day, at an hour picked by the day itself: returns when it ends, or 0 */
@@ -5557,7 +5557,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 629;
+const GAME_V = 630;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -21762,8 +21762,11 @@ function sbPrep() {
       p1 += 55 * (1 + .01 * Math.sin(TAU * 3 * t)) / sr; p2 += 110.5 / sr; p3 += 221.7 / sr; const saw = (p1 % 1) * 2 - 1 + ((p2 % 1) * 2 - 1) * .6 + ((p3 % 1) * 2 - 1) * .3; lp += (saw - lp) * .12;
       D[i] = (lp * am + (R() * 2 - 1) * .03) * env * .9; } })]; /* v118: clean hum, no grit */
   const step = () => { const j = jobs.shift(); if (!j) return; try { j(); } catch (e) {} setTimeout(step, 24); }; setTimeout(step, 30);
-  SB.f = SB.f || {}; for (const k of Object.keys(SFX_F)) fetch(`sfx/${k}.mp3?v=621`).then(r => r.ok ? r.arrayBuffer() : null).then(ab => ab && new Promise((ok, no) => c.decodeAudioData(ab, ok, no))).then(b => { if (b) SB.f[k] = [b]; }).catch(() => {}); /* v620 the recorded sounds */
+  sfxLoadF(); /* v620 the recorded sounds (v630 loader) */
 }
+function sfxGet(path, v) { const go = u => fetch(u).then(r => r.ok && !/html/.test(r.headers.get("content-type") || "") ? r.arrayBuffer() : Promise.reject(r.status));
+  return go(path + "?v=" + v).catch(() => go(path)).then(ab => new Promise((ok, no) => AU.ctx.decodeAudioData(ab, ok, no))); }
+function sfxLoadF() { if (!AU.ctx) return; SB.f = SB.f || {}; SB.fTry = SB.fTry || {}; const T = performance.now(); for (const k of Object.keys(SFX_F)) { if (SB.f[k] || T - (SB.fTry[k] || -1e9) < 8000) continue; SB.fTry[k] = T; sfxGet(`sfx/${k}.mp3`, 621).then(b => { SB.f[k] = [b]; }).catch(e => { try { crumb("sfx load failed: " + k + " " + e); } catch (er) {} }); } }
 const SFX_F = {"laser": 0.877, "laser_e": 0.699, "swarm": 0.87, "charge": 0.822, "shield": 1.155, "blast_b": 0.504, "boom": 0.592, "gong": 0.727, "win": 0.738, "loss": 0.741}; /* v620 recorded battle sounds and their levels */
 const sfxF = k => SB.f && SB.f[k] && SFX_F[k] != null ? SB.f[k] : null;
 const SFX = {
@@ -22740,7 +22743,7 @@ function playBattle(r) {
   { const mine = R.squads.find(q => q.own === G.me); battle.flip = !battle.notMine && !!mine && mine.side === "a"; if (!!R.flipY !== battle.flip) { for (const f of R.frames) for (const s of f.s) s[1] = 100 - s[1]; R.flipY = battle.flip; } w.classList.toggle("flip", battle.flip); }
   for (const q of R.squads) { if (isWbU(q.k)) continue; cardPal(q.k); shipArtSoon(q.k, q.acc || battle.acc[q.side], "side"); if (q.role === "carrier") shipArtSoon(q.k === "lord" ? "drone" : "fighter", q.acc || battle.acc[q.side], "side"); } // start baking every unit type now (and sample its card), and a carrier's fighter wing
   bindBattleCam(w.querySelector("#bcv"));
-  sbPrep(); SFX.att = 1; SFX.cut = 0; // and synthesise the battle sound bank (a few small steps, once)
+  sbPrep(); sfxLoadF(); SFX.att = 1; SFX.cut = 0; // and synthesise the battle sound bank (a few small steps, once)
   battleCtl(); startAnim();
 }
 /* v76: any replay can be saved to Mail › Saved from the replay toolbar. The 10 vs 10 is rebuilt on demand, so it is saved as a flag, not a copy */
@@ -23907,7 +23910,7 @@ function drawBattle(t) {
   fx590Ult(ctx, b, t, W, H, d, scr, vs, vtx, vty); /* v590 */
   // round transitions: a VS band sweeps across the middle of the field
   const rnd_ = Math.min(MAX_ROUNDS, Math.floor(T / ROUND_S) + 1);
-  if (b.intro <= 0 && rnd_ > b.roundShown && T < b.end) { b.roundShown = rnd_; b.roundAt = t; if (rnd_ > 1) SFX.round(); }
+  if (b.intro <= 0 && rnd_ > b.roundShown && T < b.end) { b.roundShown = rnd_; b.roundAt = t; } /* v630 no round gong */
   const ra = (t - b.roundAt) / 1400, intro = b.intro > 0;
   if (intro || (ra >= 0 && ra < 1)) { const k = intro ? 1 - Math.max(0, b.intro - 900) / 300 : ra < .15 ? ra / .15 : ra > .75 ? (1 - ra) / .25 : 1, mid = (top + bot) / 2, bh = 46 * d, slide = intro ? 0 : (1 - Math.min(1, ra / .15)) * W * .3;
     ctx.globalAlpha = clamp(k, 0, 1); const g = ctx.createLinearGradient(0, mid - bh / 2, 0, mid + bh / 2); g.addColorStop(0, "rgba(16,60,90,0)"); g.addColorStop(.5, "rgba(16,60,90,.85)"); g.addColorStop(1, "rgba(16,60,90,0)"); ctx.fillStyle = g; ctx.fillRect(0, mid - bh / 2, W, bh);
