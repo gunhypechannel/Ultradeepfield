@@ -2840,7 +2840,7 @@ body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}
     const RC = [1, .5, .3], ORA = LV ? 0xffa040 : 0xb898ff, GH = LV ? null : new TH.MeshBasicMaterial({ color: 0x4a2a9a, transparent: true, opacity: .26, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false }); /* v618 the ghost's glass */
     const MA = LV ? hullMat("lev", { rows: 4, pal: ["#120e0d", "#1a1311", "#0d0a09", "#22170f"], slits: .62, sc: "#ffd080", sg: "#ff5a10", metal: .85, rough: .3, rc: [1, .42, .08], ei: 3.4, rep: [6, 1] }) : hullMat("wym", { rows: 4, pal: ["#1a1424", "#221a2e", "#140f1c", "#2c2234"], slits: .45, sc: "#ffe0b0", sg: "#ff9a40", metal: .92, rough: .26, rc: RC, ei: 2.6, rep: [6, 1] });
     const MJ = LV ? hullMat("levj", { rows: 5, pal: ["#120e0d", "#1c1410", "#0d0a09"], slits: .45, sc: "#ffd080", sg: "#ff5a10", metal: .85, rough: .3, rc: [1, .42, .08], ei: 3, rep: [2, 1], side: 1 }) : hullMat("wymj", { rows: 5, pal: ["#1a1424", "#251c30", "#14101c"], slits: .3, sc: "#ffe0b0", sg: "#ff8a30", metal: .9, rough: .28, rc: RC, ei: 2.4, rep: [2, 1], side: 1 });
-    const N = LV ? (LOD === 1 ? 84 : 110) : LOD === 1 ? 30 : 42, accM = () => new TH.MeshBasicMaterial({ map: accTex(), transparent: true, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false });
+    const N = LV ? (LOD === 1 ? 48 : 60) : LOD === 1 ? 30 : 42, accM = () => new TH.MeshBasicMaterial({ map: accTex(), transparent: true, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false });
     const photon = (sz) => ringSprite(sz, "photon", [[0, "rgba(255,255,255,0)"], [.42, "rgba(255,255,255,0)"], [.5, "rgba(255,230,190,1)"], [.58, "rgba(255,140,70,.55)"], [1, "rgba(160,60,220,0)"]]);
     // its own black hole: a black sphere, a tilted accretion disc and the bright photon ring
     const bh = new TH.Group(); bh.position.y = -1; body.add(bh); const hole = new TH.Mesh(new TH.SphereGeometry(2.4, 32, 20), new TH.MeshBasicMaterial({ color: 0 })); hole.userData.dyn = 1; bh.add(hole);
@@ -2872,7 +2872,8 @@ body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}
     const mouth = new TH.Object3D(); mouth.position.set(0, .33, 2.6); hd.add(mouth); const lens = new TH.Group(); lens.position.set(0, .35, LV ? 7.4 : 2.4); hd.add(lens); lens.visible = false; for (const [r, o, c] of [[1.2, .35, ORA], [.35, .85, 0xfff2d8]]) { const g = new TH.CylinderGeometry(r * .7, r, 50, 20, 1, true); g.translate(0, 25, 0); g.rotateX(Math.PI / 2); const m = new TH.Mesh(g, glowMat(c, o)); m.userData.dyn = 1; lens.add(m); }
     const halos = []; for (let k = 0; k < 4; k++) { const h = new TH.Mesh(new TH.TorusGeometry(2.2, .1, 6, 40), glowMat(0xffe0b0, .8)); h.userData.dyn = 1; lens.add(h); halos.push(h); } const lensS = sprite(5, "rgba(255,240,210,1)", "hot2"); lens.add(lensS);
     // the tail blade
-    const tail = new TH.Group(); body.add(tail); if (!LV) { const s = sprite(7, "rgba(200,180,255,1)", "gwisp"); tail.add(s); } else { const b = new TH.Mesh(bladeGeo(8, 2.6, .35), MA); b.rotation.set(Math.PI / 2, 0, -Math.PI / 2 + .3); tail.add(b); const e = new TH.Mesh(bladeGeo(8, 2.6, .06), glowMat(ORA, .7)); e.rotation.copy(b.rotation); e.scale.set(1.01, 1.03, 1.5); tail.add(e); const s = sprite(4, "rgba(255,170,90,1)", "gorange"); tail.add(s); }
+    const tail = new TH.Group(); body.add(tail); if (!LV) { const s = sprite(7, "rgba(200,180,255,1)", "gwisp"); tail.add(s); } else { const b = new TH.Mesh(bladeGeo(8, 2.6, .35), MA); b.rotation.set(Math.PI / 2, 0, -Math.PI / 2 + .3); tail.add(b); const e = new TH.Mesh(bladeGeo(8, 2.6, .06), glowMat(ORA, .7)); e.rotation.copy(b.rotation); e.scale.set(1.01, 1.03, 1.5); tail.add(e);
+      const fl = new TH.Group(); fl.visible = false; tail.add(fl); tail.userData.fl = fl; tail.userData.old = [b, e]; for (const up of [1, -1]) { const f = new TH.Mesh(bladeGeo(7, 2.2, .3), MA); f.rotation.z = up * .32; f.scale.y = up; fl.add(f); const g = new TH.Mesh(bladeGeo(7, 2.2, .05), glowMat(ORA, .65)); g.rotation.z = up * .32; g.scale.set(1.01, up * 1.03, 1.4); fl.add(g); } b.userData.dyn = e.userData.dyn = 1; /* v620 the ring Leviathan's fluke (the old blade is kept whole so it can hide) */ const s = sprite(4, "rgba(255,170,90,1)", "gorange"); tail.add(s); }
     const trail = puffs(48, ORA); body.add(trail); const trH = []; for (let i = 0; i < 48; i++) trH.push(V(0, 0, 0));
     const well = new TH.Mesh(new TH.RingGeometry(1, 3.2, 64), new TH.MeshBasicMaterial({ map: swirlTex(), transparent: true, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false, opacity: 0 })); well.rotation.x = -Math.PI / 2 + .22; well.userData.dyn = 1; bh.add(well);
     const bt = bolts(bh, 8, () => { const a = rnd() * TAU, b = a + (rnd() - .5); return [V(Math.cos(a) * 2.6, 0, Math.sin(a) * 2.6), V(Math.cos(b) * (4 + rnd() * 5), (rnd() - .5) * 1.5, Math.sin(b) * (4 + rnd() * 5))]; }, LV ? 0xffd0a0 : 0xc8b0ff);
@@ -2890,11 +2891,11 @@ body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}
       const dvK = dvE < 0 ? -1 : dvE < .5 ? dvE * 2 * 1.35 - .2 : (dvE - .5) * 2 * 1.35 - .2, pull = u => dvE < 0 || st.dv <= 0 ? 0 : st.dv * ss(0, 1, (dvE < .5 ? dvK - u : u - dvK) / .18); /* how far into the hole each part of the body is */ st.sweep = swing * 1.4; st.strike = gape * 2 - fire * 1.5 + Math.sin(t * .0009) * .8;
       const RG = LV && out.ring; /* v617 laid round the galaxy's edge */
       const TW = RG ? Math.max(coil, gape) : 0, UT = .2; out.tw = TW; /* its attack: the front of the body coils up into a tower and the head looks down */
-      if (RG) { const k = Math.max(.04, RG.k), L = TAU * .93 * k, tb = RG.a - UT * L, bx = Math.cos(tb) * RG.R0, bz = Math.sin(tb) * RG.R0, HT = RG.s * 14, RC = RG.s * 2.4;
-        for (let i = 0; i <= N + 1; i++) { const u = i / N, th = RG.a - u * L, Rr = RG.R0 + (RG.Rh - RG.R0) * Math.exp(-u * 9), w = RG.s * .6 * (.3 + .7 * u) * Math.sin(u * TAU * 9 - t * .0024) + RG.s * 1.6 * Math.sin(th * 3 + t * .00017) * (1 - Math.exp(-u * 9)) /* drifting in and out along the edge */, y = RG.y + RG.s * .3 * Math.sin(u * TAU * 6 - t * .0017) + (RG.yh - RG.y) * Math.exp(-u * 9); pts[i].set(Math.cos(th) * (Rr + w), y, Math.sin(th) * (Rr + w));
+      if (RG) { const k = Math.max(.04, RG.k), L = TAU * .465 * k, tb = RG.a - UT * L, bx = Math.cos(tb) * RG.R0, bz = Math.sin(tb) * RG.R0, HT = RG.s * 14, RC = RG.s * 2.4;
+        for (let i = 0; i <= N + 1; i++) { const u = i / N, th = RG.a - u * L, Rr = RG.R0 + (RG.Rh - RG.R0) * Math.exp(-u * 9), w = RG.s * .6 * (.3 + .7 * u) * Math.sin(u * TAU * 5 - t * .0012) + RG.s * 1.6 * Math.sin(th * 3 + t * .00009) * (1 - Math.exp(-u * 9)) /* drifting in and out along the edge */, y = RG.y + RG.s * .3 * Math.sin(u * TAU * 4 - t * .0009) + (RG.yh - RG.y) * Math.exp(-u * 9); pts[i].set(Math.cos(th) * (Rr + w), y, Math.sin(th) * (Rr + w));
           if (TW > .001 && u < UT) { const q = 1 - u / UT, wgt = TW * Math.min(1, q * 4), ph = q * TAU * 2.6 + t * .0006; tmp.set(bx + Math.cos(ph) * RC * (1 - q * .35), RG.y + q * HT, bz + Math.sin(ph) * RC * (1 - q * .35)); pts[i].lerp(tmp, wgt); } } }
       else for (let i = 0; i <= N + 1; i++) { path(i / N, t, pts[i]); if (!LV) { const pl = pull(i / N); if (pl > 0) pts[i].lerp(tmp.set(0, -1, 0), pl); } }
-      for (let i = 0; i < N; i++) { const u = i / N, sc = (RG ? RG.s * (1 - u * .55) : 2.35 * (1 - u * .62)) * (i === 0 ? 1.1 : 1) * (LV ? 1 : Math.max(.001, 1 - pull(u))); S.v.subVectors(pts[i + 1], i ? pts[i - 1] : pts[i]).normalize(); S.q.setFromUnitVectors(S.Z, S.v); S.q.multiply(tmpQ.setFromAxisAngle(S.Z, u * 6 + t * .0004));
+      for (let i = 0; i < N; i++) { const u = i / N, sc = (RG ? RG.s * (1 - Math.pow(u, 1.6) * .8) : 2.35 * (1 - u * .62)) * (i === 0 ? 1.1 : 1) * (LV ? 1 : Math.max(.001, 1 - pull(u))); S.v.subVectors(pts[i + 1], i ? pts[i - 1] : pts[i]).normalize(); S.q.setFromUnitVectors(S.Z, S.v); S.q.multiply(tmpQ.setFromAxisAngle(S.Z, u * 6 + t * .0004));
         S.s.setScalar(sc); S.m.compose(pts[i], S.q, S.s); segs.setMatrixAt(i, S.m);
         for (const e of [0, 1]) { S.w.copy(S.v).multiplyScalar((e ? .3 : -.3) * sc).add(pts[i]); S.s.setScalar(sc * 1.04); S.m.compose(S.w, S.q, S.s); rims.setMatrixAt(i * 2 + e, S.m); }
         S.s.setScalar(sc * 1.05); S.m.compose(pts[i], S.q, S.s); cores.setMatrixAt(i, S.m);
@@ -2904,12 +2905,12 @@ body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}
         const b = .5 + .2 * Math.sin(t * .004 - i * .5) + fire * .3 * (1 - u) + coil * .3; if (LV) c1.setRGB(b * 1.2, b * (.4 + hot * .35), b * (.08 + hot * .2)); else c1.setRGB(b * (.55 + hot * .45), b * (.48 + hot * .5), b * (1.05 + hot * .1)); /* v618 cool violet starlight */ rims.setColorAt(i * 2, c1); rims.setColorAt(i * 2 + 1, c1);
         vuln.put(i, pts[i].x, pts[i].y, pts[i].z, sc * 4.2 * hot, hot * (.75 + .25 * Math.sin(t * .012))); }
       for (const m of [segs, rims, cores, spine, fins]) m.instanceMatrix.needsUpdate = true; rims.instanceColor.needsUpdate = true; vuln.done();
-      head.position.copy(pts[0]); S.v.subVectors(pts[0], pts[1]).normalize(); head.quaternion.setFromUnitVectors(S.Z, S.v); if (RG) { /* searching: the head turns to look in over the galaxy, its gaze sweeping slowly */ const look = .5 + .3 * Math.sin(t * .00035), sw = .35 * Math.sin(t * .00021); tmp.set(-pts[0].x, 0, -pts[0].z).normalize(); S.w.subVectors(pts[0], pts[1]).normalize(); tmp2.position.set(-S.w.z, 0, S.w.x); tmp.addScaledVector(tmp2.position, sw).normalize(); tmp.y = -.18 + .1 * Math.sin(t * .0005); S.v.lerp(tmp, look * (1 - TW)).normalize(); head.quaternion.setFromUnitVectors(S.Z, S.v); } if (RG && TW > .001) { tmp.set(-pts[0].x, 0, -pts[0].z).normalize().multiplyScalar(.55); tmp.y = -1; tmp.normalize(); S.v.lerp(tmp, TW).normalize(); head.quaternion.setFromUnitVectors(S.Z, S.v); } head.rotateX(RG ? .12 * (1 - TW) - gape * .1 : .75 - gape * .35); head.scale.setScalar(RG ? RG.s * 1.1 / 2.35 : LV ? 1 : Math.max(.001, 1 - pull(0))); tail.scale.setScalar(RG ? RG.s * .45 / 1.05 : LV ? 1 : Math.max(.001, 1 - pull(1))); deb.visible = !RG; head.rotateZ(Math.sin(t * .0008) * .1); hd.rotation.x = -gape * .25;
+      head.position.copy(pts[0]); S.v.subVectors(pts[0], pts[1]).normalize(); head.quaternion.setFromUnitVectors(S.Z, S.v); if (RG) { /* searching: the head turns to look in over the galaxy, its gaze sweeping slowly */ const look = .5 + .3 * Math.sin(t * .00035), sw = .35 * Math.sin(t * .00021); tmp.set(-pts[0].x, 0, -pts[0].z).normalize(); S.w.subVectors(pts[0], pts[1]).normalize(); tmp2.position.set(-S.w.z, 0, S.w.x); tmp.addScaledVector(tmp2.position, sw).normalize(); tmp.y = -.18 + .1 * Math.sin(t * .0005); S.v.lerp(tmp, look * (1 - TW)).normalize(); head.quaternion.setFromUnitVectors(S.Z, S.v); } if (RG && TW > .001) { tmp.set(-pts[0].x, 0, -pts[0].z).normalize().multiplyScalar(.55); tmp.y = -1; tmp.normalize(); S.v.lerp(tmp, TW).normalize(); head.quaternion.setFromUnitVectors(S.Z, S.v); } head.rotateX(RG ? .12 * (1 - TW) - gape * .1 : .75 - gape * .35); head.scale.setScalar(RG ? RG.s * 1.1 / 2.35 : LV ? 1 : Math.max(.001, 1 - pull(0))); tail.scale.setScalar(RG ? RG.s * .17 : LV ? 1 : Math.max(.001, 1 - pull(1))); if (tail.userData.fl) { tail.userData.fl.visible = !!RG; for (const m of tail.userData.old) m.visible = !RG; } deb.visible = !RG; head.rotateZ(Math.sin(t * .0008) * .1); hd.rotation.x = -gape * .25;
       lamp.forEach((g, k) => { g.rotation.z = t * .0007 * (k % 2 ? -1 : 1) * (1 + gape * 3); g.scale.setScalar(1 + gape * .35 - coil * .1); });
       for (const J of jaws) J.j.rotation.x = -J.up * (.05 + Math.sin(t * .0021) * .03 + gape * .55 + coil * .12);
       maw.rotation.z = -t * (.002 + fire * .01); mawS.material.opacity = .6 + gape * .4; mawS.scale.setScalar(5 * (1 + fire * 1.2 + gape * .4)); eD.rotation.z = t * .0012; eP.material.opacity = .8 + Math.sin(t * .003) * .2;
       lens.visible = fire > .01; if (lens.visible) { lens.children[0].material.opacity = .45 * fire * (.85 + rnd() * .15); lens.children[1].material.opacity = .95 * fire; halos.forEach((h, k) => { const z = ((t * .03 + k * 12.5) % 50); h.position.z = z; h.scale.setScalar(1 + z * .02); h.material.opacity = .8 * fire * (1 - z / 50); }); lensS.material.opacity = fire; }
-      tail.position.copy(pts[N - 1]); S.v.subVectors(pts[N - 1], pts[N - 2]).normalize(); tail.quaternion.setFromUnitVectors(S.X, S.v);
+      { const tn = RG ? N : N - 1; tail.position.copy(pts[tn]); S.v.subVectors(pts[tn], pts[tn - 1]).normalize(); } /* v620 the fluke sits at the very end of the spine */ tail.quaternion.setFromUnitVectors(S.X, S.v);
       trH.unshift(trH.pop().copy(tail.position).addScaledVector(S.v, 6)); trH.forEach((p, i) => trail.put(i, p.x, p.y, p.z, 2.6 * (1 - i / 48), (LV ? swing : Math.max(swing, .3 * Math.max(.001, 1 - pull(1)))) * (1 - i / 48) * .9)); trail.done();
       disc.rotation.z = t * .0005; disc2.rotation.z = -t * .0009; phR.material.opacity = .85 + Math.sin(t * .002) * .15 + coil * .3; phR.scale.setScalar(10 * (1 + coil * .2));
       well.material.opacity = Math.max(coil * .9, dvE < 0 ? 0 : st.dv * .75 * Math.sin(dvE * Math.PI)); well.scale.setScalar(fc < 0 ? 1 : 9 - 7 * ss(0, 1, fc)); well.rotation.z = -t * .004;
@@ -5414,7 +5415,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 619;
+const GAME_V = 620;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6928,7 +6929,7 @@ function wbPosRaw(key, T, out) { const o = out || {};
     if (key === "epx") { o.x = 0; o.z = 0; o.y = 70 + 3 * Math.sin(T / 9e5); return o; }
     if (key === "brd") { const L = LAYERS[1], r = L.r0 + (L.r1 - L.r0) * (.3 + .4 * (hash("brd" + c2) % 1000) / 1000), a = (hash("brdA" + c2) % 6283) / 1000 + TAU * T / period(r); o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 3; return o; }
     if (key === "wym") { o.x = 0; o.z = 0; o.y = (evActive(T) ? 72 : 2) + 1.2 * Math.sin(T / 9e5); return o; } // v391: coiled round the black hole at the centre (risen above it while the Cube sits there)
-    if (key === "lev") { const r = LAYERS[0].r1 + 10, a = (hash("lev" + c2) % 6283) / 1000 + TAU * T / (4 * 3600e3); o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 20 + 3 * Math.sin(T / 6e5); return o; } // v569 patrolling just beyond the Rim; v617 a lap every 4 hours
+    if (key === "lev") { const r = LAYERS[0].r1 + 10, a = (hash("lev" + c2) % 6283) / 1000 + TAU * T / (8 * 3600e3); o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 20 + 3 * Math.sin(T / 6e5); return o; } // v569 patrolling just beyond the Rim; v617 a lap every 4 hours
     if (key === "krk") { const L = LAYERS[3], r = (L.r0 + L.r1) / 2, a = (hash("krk" + c2) % 6283) / 1000 + TAU * T / period(r); o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 9 + 2 * Math.sin(T / 5e5); return o; } // risen among the deep layers
     if (key === "col") { if (!WB_MINE) { WB_MINE = NODES.filter(n => n.res === "c" && layerOf(n.r).n === 4); if (!WB_MINE.length) WB_MINE = NODES.slice(0, 50); }
       const q = P3(WB_MINE[hash("col" + c2) % WB_MINE.length], T, WBS), r = Math.hypot(q.x, q.z) || 1; o.x = q.x - q.x / r * 14; o.z = q.z - q.z / r * 14; o.y = q.y; return o; }
@@ -7063,7 +7064,7 @@ function wbMapFx(W, t, T) {
     if (!M.b) continue; const g = M.b.grp; g.visible = near; if (!near) continue;
     g.position.set(q.x, q.y, q.z);
     if (key === "dev" || key === "tyr" || key === "lev" || key === "krk") { const q2 = wbPos(key, T + 60000, {}); g.rotation.y = -Math.atan2(q2.z - q.z, q2.x - q.x); if (key === "dev") g.rotation.z = -.16 - .04 * Math.sin(t * .0004); } // the Devourer noses down at the worlds below, maw first else if (key === "wym") g.rotation.y = -t * 2e-5; else if (key === "war") g.rotation.y = t * 4e-5; else g.rotation.y = Math.atan2(-q.x, -q.z); // the Overlord and its conduits face the Core
-    if (key === "lev" && !pdie && M.b.N) { const R0 = Math.hypot(q.x, q.z); M.b.ring = { R0, Rh: R0, a: Math.atan2(q.z, q.x), y: q.y, yh: q.y, k: 1, s: TAU * .93 * R0 / M.b.N * .52 }; g.position.set(0, 0, 0); g.rotation.set(0, 0, 0); g.scale.setScalar(1); } /* v617 */
+    if (key === "lev" && !pdie && M.b.N) { const R0 = Math.hypot(q.x, q.z); M.b.ring = { R0, Rh: R0, a: Math.atan2(q.z, q.x), y: q.y, yh: q.y, k: 1, s: TAU * .465 * R0 / M.b.N * .57 }; g.position.set(0, 0, 0); g.rotation.set(0, 0, 0); g.scale.setScalar(1); } /* v617 */
     if (t > M.next && !pdie) { M.next = t + 9000 + Math.random() * 10000; const m = M.b.moves.filter(x => x !== "hit" && x !== "link"); M.b.act(m[(Math.random() * m.length) | 0]); } // alive: a move every few seconds
     if (key === "ovl") M.b.cons = [0, 1, 2, 3].filter(i => st.hp["c" + i] > 0 && wbOn("c" + i, T)).length; if (WB_EL.includes(key)) M.b.mech = { s: wbShOf(key, st, T), k: 0 }; if (key === "brd") M.b.pods = brdPods(st); if (key === "wym") M.b.open = wymOpen(T); if (key === "col") { const h = st.hp.col | 0; M.b.phase = h <= 10 ? 2 : h <= 20 ? 1 : 0; M.b.heart = h <= 20 && colHeart(T) ? 1 : 0; } if (key === "tyr") M.b.vault = wbVault(T); if (D.con != null) { const on = st.hp.ovl > 0; M.b.feed = on ? 1 : 0; if (on) { const tq = P3(WBO.ovl, T, {}), s = g.scale.x, lk = M.b.link; // the feed beam runs to the Overlord's crown
       const dx = tq.x - q.x, dz = tq.z - q.z, dy = (tq.y + 5 * WB.ovl.sc * 1.6) - (q.y + 9 * s), yaw = Math.atan2(dz, dx); lk.rotation.set(0, -yaw - g.rotation.y, Math.atan2(dy, Math.hypot(dx, dz))); lk.userData.len = Math.hypot(dx, dy, dz) / s; } }
@@ -7755,7 +7756,7 @@ function levSet(W, t, F) { const D = FIN_EV.lev, e = F.e, E = D.st.map(s => s[0]
   let a = X.aB - TAU, r = X.R + 90, y = 40, sc = 0;
   if (e >= E[1] && e < E[2]) { a = X.aB - TAU * (1 - u1); sc = fsm(u1 * 12); y = 34 + 10 * Math.sin(u1 * TAU * 3); } else if (e >= E[2]) { a = X.aB; const k = fsm(u2 * 1.4); r = X.R + 90 + (X.rB - X.R - 90) * k; y = 40 + (X.yB + 14 - 40) * k; sc = 1; }
   X.pos.set(Math.cos(a) * r, y, Math.sin(a) * r);
-  if (X.b) { finHand(X, X.b, e, D.set, 6 * sc, WB.lev.sc * 1.6, X.pos); X.b.grp.rotation.y = -a - Math.PI / 2; if (X.b.N) { const R0 = X.R + 60; X.b.ring = { R0, Rh: r, a, y: 30, yh: y, k: sc, s: TAU * .93 * R0 / X.b.N * .52 }; X.b.grp.position.set(0, 0, 0); X.b.grp.rotation.set(0, 0, 0); X.b.grp.scale.setScalar(1); } /* v617 round the wall */ X.b.tick(t);
+  if (X.b) { finHand(X, X.b, e, D.set, 6 * sc, WB.lev.sc * 1.6, X.pos); X.b.grp.rotation.y = -a - Math.PI / 2; if (X.b.N) { const R0 = X.R + 60; X.b.ring = { R0, Rh: r, a, y: 30, yh: y, k: sc, s: TAU * .465 * R0 / X.b.N * .57 }; X.b.grp.position.set(0, 0, 0); X.b.grp.rotation.set(0, 0, 0); X.b.grp.scale.setScalar(1); } /* v617 round the wall */ X.b.tick(t);
     if (t > X.nx) { if (e >= E[3] && e < E[4]) { X.b.act("lens"); X.nx = t + 3600; } else if (e >= E[1] && e < E[3]) { X.b.act(Math.random() < .5 ? "coil" : "sweep"); X.nx = t + 6000 + Math.random() * 5000; } else X.nx = t + 2000; } }
   const hs = e < D.set ? sc * (1 - fsm((e - (D.set - 40e3)) / 40e3)) : 0; X.halo.position.copy(X.pos); X.halo.scale.setScalar(320 * hs); X.halo.material.opacity = .55 * hs * (.85 + .15 * Math.sin(t * .004));
   { const c = X.ring.C, base = fsm(e / E[1]) * .85 * fade, passed = e >= E[2] ? 1 : e >= E[1] ? u1 : 0, a0 = X.aB - TAU;
@@ -21492,7 +21493,10 @@ function sbPrep() {
       p1 += 55 * (1 + .01 * Math.sin(TAU * 3 * t)) / sr; p2 += 110.5 / sr; p3 += 221.7 / sr; const saw = (p1 % 1) * 2 - 1 + ((p2 % 1) * 2 - 1) * .6 + ((p3 % 1) * 2 - 1) * .3; lp += (saw - lp) * .12;
       D[i] = (lp * am + (R() * 2 - 1) * .03) * env * .9; } })]; /* v118: clean hum, no grit */
   const step = () => { const j = jobs.shift(); if (!j) return; try { j(); } catch (e) {} setTimeout(step, 24); }; setTimeout(step, 30);
+  SB.f = SB.f || {}; for (const k of Object.keys(SFX_F)) fetch(`sfx/${k}.mp3?v=620`).then(r => r.ok ? r.arrayBuffer() : null).then(ab => ab && new Promise((ok, no) => c.decodeAudioData(ab, ok, no))).then(b => { if (b) SB.f[k] = [b]; }).catch(() => {}); /* v620 the recorded sounds */
 }
+const SFX_F = {"laser": 0.877, "laser_e": 0.699, "swarm": 0.87, "charge": 0.822, "shield": 1.155, "blast_b": 0.504, "boom": 0.592}; /* v620 recorded battle sounds and their levels */
+const sfxF = k => SB.f && SB.f[k] && SFX_F[k] != null ? SB.f[k] : null;
 const SFX = {
   ok: () => !!(AU.ctx && AU.sfxOn && !AU.muted),
   // play one sample from the bank on the battle bus: pitch, stereo place, reverb send and an optional low-pass for distance
@@ -21507,14 +21511,14 @@ const SFX = {
     out.connect(B.dry); if (wet) { const w = c.createGain(); w.gain.value = wet; out.connect(w); w.connect(B.conv); }
     s.start(t); s.onended = () => { try { s.disconnect(); g.disconnect(); } catch (e) {} }; return true; }, // v83: voices free their nodes when done
   env(node, t, peak, dur) { const g = AU.ctx.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + dur); node.connect(g); g.connect(AU.sfx); return g; },
-  laser(enemy) { if (!SFX.ok()) return; const c = AU.ctx, t = c.currentTime; if (t - lastZap < .055) return; lastZap = t; if (SFX.pb(enemy ? SB.heavy : SB.bolt, t, enemy ? .3 : .24, (Math.random() - .5) * .7, .94 + Math.random() * .12, .12)) return;
+  laser(enemy) { if (!SFX.ok()) return; const c = AU.ctx, t = c.currentTime; if (t - lastZap < .055) return; lastZap = t; { const F = sfxF(enemy ? "laser_e" : "laser"); if (F && SFX.pb(F, t, SFX_F[enemy ? "laser_e" : "laser"], (Math.random() - .5) * .7, .95 + Math.random() * .1, .12)) return; } if (SFX.pb(enemy ? SB.heavy : SB.bolt, t, enemy ? .3 : .24, (Math.random() - .5) * .7, .94 + Math.random() * .12, .12)) return;
     const o = c.createOscillator(), f = c.createBiquadFilter(), f0 = (enemy ? 820 : 1500) * (.85 + Math.random() * .3); o.type = enemy ? "sawtooth" : "square";
     o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * .16, t + .17); f.type = "bandpass"; f.frequency.value = enemy ? 900 : 1500; f.Q.value = 1.2; o.connect(f); SFX.env(f, t, .07, .19); o.start(t); o.stop(t + .21); },
   plasma(enemy) { if (!SFX.ok()) return; const c = AU.ctx, t = c.currentTime; if (t - lastZap < .07) return; lastZap = t; if (SFX.pb(SB.heavy, t, .34, (Math.random() - .5) * .7, .66 + Math.random() * .12, .38)) return;
     const o = c.createOscillator(); o.type = "sine"; const f0 = (enemy ? 180 : 240) * (.9 + Math.random() * .2); o.frequency.setValueAtTime(f0 * 2.2, t); o.frequency.exponentialRampToValueAtTime(f0 * .5, t + .22); SFX.env(o, t, .13, .26); o.start(t); o.stop(t + .28); },
   missile() { if (!SFX.ok()) return; const c = AU.ctx, t = c.currentTime; if (t - lastZap < .09) return; lastZap = t;
     const n = noiseSrc(), f = c.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 2; f.frequency.setValueAtTime(600, t); f.frequency.exponentialRampToValueAtTime(2600, t + .45); n.connect(f); SFX.env(f, t, .09, .5); n.start(t); n.stop(t + .52); },
-  boom(big) { if (!SFX.ok()) return; if (SB.boom && SB.boom.length && SFX.pb(SB.boom, AU.ctx.currentTime, big ? 1 : .6, 0, big ? .55 : .8, .55)) return; const c = AU.ctx, t = c.currentTime, dur = big ? 1.5 : .7, n = noiseSrc(), f = c.createBiquadFilter();
+  boom(big) { if (!SFX.ok()) return; { const F = sfxF(big ? "boom" : "blast_m"); if (F && SFX.pb(F, AU.ctx.currentTime, SFX_F[big ? "boom" : "blast_m"], 0, 1, .5)) return; } if (SB.boom && SB.boom.length && SFX.pb(SB.boom, AU.ctx.currentTime, big ? 1 : .6, 0, big ? .55 : .8, .55)) return; const c = AU.ctx, t = c.currentTime, dur = big ? 1.5 : .7, n = noiseSrc(), f = c.createBiquadFilter();
     f.type = "lowpass"; f.frequency.setValueAtTime(big ? 1600 : 1000, t); f.frequency.exponentialRampToValueAtTime(70, t + dur); n.connect(f); SFX.env(f, t, big ? .55 : .3, dur); n.start(t); n.stop(t + dur);
     if (big) { const o = c.createOscillator(); o.type = "sine"; o.frequency.setValueAtTime(75, t); o.frequency.exponentialRampToValueAtTime(28, t + dur); SFX.env(o, t, .5, dur); o.start(t); o.stop(t + dur); } },
   /* v248 a rune clicking into its socket: a stone knock, then a rising shimmer in the element's key (a full ring rings out in a chord) */
@@ -21522,6 +21526,8 @@ const SFX = {
     { const o = c.createOscillator(); o.type = "triangle"; o.frequency.setValueAtTime(180, t); o.frequency.exponentialRampToValueAtTime(70, t + .12); SFX.env(o, t, .22, .16); o.start(t); o.stop(t + .2); }
     const notes = full ? [1, 1.25, 1.5, 2, 2.5] : [1, 1.5, 2]; notes.forEach((m, i) => { const o = c.createOscillator(), tt = t + .05 + i * .07; o.type = i % 2 ? "triangle" : "sine"; o.frequency.value = base * m; SFX.env(o, tt, full ? .1 : .08, full ? 1.6 : .9); o.start(tt); o.stop(tt + (full ? 1.7 : 1)); });
     if (full) SFX.gong(); },
+  round() { if (!SFX.ok()) return; const F = sfxF("gong"); if (F && SFX.pb(F, AU.ctx.currentTime, SFX_F.gong, 0, 1, .35)) return; SFX.gong(); }, /* v620 a new battle round */
+  battleEnd(win) { if (!SFX.ok()) return; const k = win ? "win" : "loss", F = sfxF(k); if (F && SFX.pb(F, AU.ctx.currentTime, SFX_F[k], 0, 1, .2)) return; SFX.fanfare(win); }, /* v620 the battle's victory and defeat stings */
   gong() { if (!SFX.ok()) return; const c = AU.ctx, t = c.currentTime; for (const [f, a] of [[146.8, .18], [220, .12], [293.7, .07]]) { const o = c.createOscillator(); o.type = "sine"; o.frequency.value = f; SFX.env(o, t, a, 2.2); o.start(t); o.stop(t + 2.3); } },
   fanfare(win) { if (!SFX.ok()) return; const c = AU.ctx, t = c.currentTime, ns = win ? [60, 64, 67, 72, 76] : [64, 60, 57, 53];
     ns.forEach((m, i) => { const o = c.createOscillator(); o.type = "triangle"; o.frequency.value = 440 * Math.pow(2, (m - 69) / 12); SFX.env(o, t + i * .16, .12, win ? .9 : 1.1); o.start(t + i * .16); o.stop(t + i * .16 + 1.2); }); },
@@ -21582,7 +21588,7 @@ const SFX = {
     const n0 = noiseSrc(), hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 3200; n0.connect(hp); SFX.bv(hp, t, .07, .07, pan, .15); n0.start(t); n0.stop(t + .08);
     const b0 = c.createOscillator(); b0.type = "sine"; b0.frequency.setValueAtTime(160, t); b0.frequency.exponentialRampToValueAtTime(60, t + .12); SFX.bv(b0, t, .1, .14, pan, 0); b0.start(t); b0.stop(t + .15); },
   // the mega beam charging: a rising whine with a fast tremolo
-  charge(pan) { if (!SFX.ok() || SFX.busy("charge", .3)) return; const c = AU.ctx, t = c.currentTime, o = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain();
+  charge(pan) { if (!SFX.ok() || SFX.busy("charge", .3)) return; if (sfxF("charge") && SFX.pb(sfxF("charge"), AU.ctx.currentTime, SFX_F.charge, pan, 1, .3)) return; const c = AU.ctx, t = c.currentTime, o = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain();
     o.type = "sine"; o.frequency.setValueAtTime(220, t); o.frequency.exponentialRampToValueAtTime(1500, t + .36); lfo.frequency.value = 26; lg.gain.value = 60; lfo.connect(lg); lg.connect(o.frequency);
     SFX.bv(o, t, .08, .42, pan, .3, .3); o.start(t); lfo.start(t); o.stop(t + .44); lfo.stop(t + .44); },
   // the mega beam firing: a roaring, buzzing column of sound with a hiss on top and a deep punch
@@ -21593,12 +21599,13 @@ const SFX = {
     const n0 = noiseSrc(), bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 5200; bp.Q.value = .7; n0.connect(bp); SFX.bv(bp, t, .06, .9, pan, .3, .05); n0.start(t); n0.stop(t + .95);
     const k = c.createOscillator(); k.type = "sine"; k.frequency.setValueAtTime(90, t); k.frequency.exponentialRampToValueAtTime(30, t + .5); SFX.bv(k, t, .45, .6, pan, .2); k.start(t); k.stop(t + .62); },
   // a missile swarm leaving the racks: staggered ignition pops and rising whooshes
-  swarm(n, pan) { if (!SFX.ok() || SFX.busy("swarm", .12)) return; const c = AU.ctx, t = c.currentTime, k = clamp(Math.round(n / 2), 2, 6);
+  swarm(n, pan) { if (!SFX.ok() || SFX.busy("swarm", .12)) return; const c = AU.ctx, t = c.currentTime, k = clamp(Math.round(n / 2), 2, 6); if (sfxF("swarm") && SFX.pb(sfxF("swarm"), t, SFX_F.swarm * (n > 6 ? 1.15 : 1), pan, .96 + Math.random() * .08, .25)) return;
     for (let i = 0; i < k; i++) { const tt = t + i * .055 + Math.random() * .02, n0 = noiseSrc(), f = c.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 2.2; f.frequency.setValueAtTime(450, tt); f.frequency.exponentialRampToValueAtTime(2800 + Math.random() * 900, tt + .38);
       n0.connect(f); SFX.bv(f, tt, .07, .42, clamp(pan + (Math.random() - .5) * .4, -1, 1), .25, .02); n0.start(tt); n0.stop(tt + .44);
       const p = c.createOscillator(); p.type = "square"; p.frequency.setValueAtTime(240, tt); p.frequency.exponentialRampToValueAtTime(80, tt + .05); SFX.bv(p, tt, .04, .06, pan, 0); p.start(tt); p.stop(tt + .07); } },
   // an explosion in layers: a sub-bass thump, the fireball roar, a crackle of burning debris; big ones add a metal groan and a second blast
   blast(size, pan) { if (!SFX.ok()) return; const big = size >= 2.5, key = big ? "blastB" : "blast"; if (SFX.busy(key, big ? .25 : .06)) return; const c = AU.ctx, t = c.currentTime, dur = .55 + size * .45;
+    { const fk = size < 1.2 ? "blast_s" : size < 2.5 ? "blast_m" : "blast_b", F = sfxF(fk); if (F && SFX.pb(F, t, SFX_F[fk] * clamp(.8 + size * .12, .8, 1.2), pan, (.95 + Math.random() * .1) * (size < .8 ? 1.06 : 1), .4, size < 1 ? 3200 : 0)) return; } /* v620 */
     if (SB.boom && SB.boom.length) { const rate = clamp(1.22 - size * .17, .5, 1.25); SFX.pb(SB.boom, t, clamp(.28 + size * .14, .26, .78), pan, rate * (.94 + Math.random() * .12), .42, size < 1 ? 2600 : 0); // small blasts sound further off
       if (big) { SFX.pb(SB.boom, t + .28, .5, -pan * .5, rate * .72, .6); const g2 = c.createOscillator(), bp = c.createBiquadFilter(); g2.type = "sawtooth"; g2.frequency.setValueAtTime(68, t + .1); g2.frequency.linearRampToValueAtTime(51, t + 1.4); bp.type = "bandpass"; bp.frequency.value = 340; bp.Q.value = 3; g2.connect(bp); SFX.bv(bp, t + .1, .07, 1.4, pan, .5, .2); g2.start(t + .1); g2.stop(t + 1.55); }
       return; }
@@ -21610,7 +21617,7 @@ const SFX = {
     if (big) { const g2 = c.createOscillator(), bp = c.createBiquadFilter(); g2.type = "sawtooth"; g2.frequency.setValueAtTime(68, t + .1); g2.frequency.linearRampToValueAtTime(51, t + 1.4); bp.type = "bandpass"; bp.frequency.value = 340; bp.Q.value = 3; g2.connect(bp); SFX.bv(bp, t + .1, .08, 1.4, pan, .5, .2); g2.start(t + .1); g2.stop(t + 1.55);
       const n2 = noiseSrc(), lp2 = c.createBiquadFilter(); lp2.type = "lowpass"; lp2.frequency.setValueAtTime(900, t + .32); lp2.frequency.exponentialRampToValueAtTime(60, t + 1.9); n2.connect(lp2); SFX.bv(lp2, t + .32, .34, 1.6, -pan * .5, .55); n2.start(t + .32); n2.stop(t + 1.95); } },
   // shots splashing on a shield: a glassy ping with a shimmer
-  shield(pan) { if (!SFX.ok() || SFX.busy("shield", .085)) return; const c = AU.ctx, t = c.currentTime, f0 = 1700 + Math.random() * 600;
+  shield(pan) { if (!SFX.ok() || SFX.busy("shield", .085)) return; if (sfxF("shield") && SFX.pb(sfxF("shield"), AU.ctx.currentTime, SFX_F.shield, pan, .94 + Math.random() * .12, .35)) return; const c = AU.ctx, t = c.currentTime, f0 = 1700 + Math.random() * 600;
     for (const [f, a] of [[f0, .05], [f0 * 1.52, .03], [f0 * 2.31, .018]]) { const o = c.createOscillator(); o.type = "sine"; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * .82, t + .25); SFX.bv(o, t, a, .28, pan, .35); o.start(t); o.stop(t + .3); }
     const n0 = noiseSrc(), bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 6500; bp.Q.value = 4; n0.connect(bp); SFX.bv(bp, t, .03, .18, pan, .2); n0.start(t); n0.stop(t + .2); }
 };
@@ -23630,7 +23637,7 @@ function drawBattle(t) {
   fx590Ult(ctx, b, t, W, H, d, scr, vs, vtx, vty); /* v590 */
   // round transitions: a VS band sweeps across the middle of the field
   const rnd_ = Math.min(MAX_ROUNDS, Math.floor(T / ROUND_S) + 1);
-  if (b.intro <= 0 && rnd_ > b.roundShown && T < b.end) { b.roundShown = rnd_; b.roundAt = t; if (rnd_ > 1) SFX.gong(); }
+  if (b.intro <= 0 && rnd_ > b.roundShown && T < b.end) { b.roundShown = rnd_; b.roundAt = t; if (rnd_ > 1) SFX.round(); }
   const ra = (t - b.roundAt) / 1400, intro = b.intro > 0;
   if (intro || (ra >= 0 && ra < 1)) { const k = intro ? 1 - Math.max(0, b.intro - 900) / 300 : ra < .15 ? ra / .15 : ra > .75 ? (1 - ra) / .25 : 1, mid = (top + bot) / 2, bh = 46 * d, slide = intro ? 0 : (1 - Math.min(1, ra / .15)) * W * .3;
     ctx.globalAlpha = clamp(k, 0, 1); const g = ctx.createLinearGradient(0, mid - bh / 2, 0, mid + bh / 2); g.addColorStop(0, "rgba(16,60,90,0)"); g.addColorStop(.5, "rgba(16,60,90,.85)"); g.addColorStop(1, "rgba(16,60,90,0)"); ctx.fillStyle = g; ctx.fillRect(0, mid - bh / 2, W, bh);
@@ -23656,7 +23663,7 @@ function endingStart(b, t, W, H, d) {
     b.cracks = Array.from({ length: 7 }, () => { const pts = [[cx + (rr() - .5) * W * .3, cy + (rr() - .5) * H * .2]]; let a = rr() * TAU; for (let j = 0; j < 7; j++) { a += (rr() - .5) * 1.1; const L = (30 + rr() * 70) * d; const [px, py] = pts[pts.length - 1]; pts.push([px + Math.cos(a) * L, py + Math.sin(a) * L]); } return pts; });
     b.shake = 18 * d; SFX.boom(true); }
   else { for (let i = 0; i < 80; i++) P.push({ x: cx + (rr() - .5) * 40 * d, y: cy + (rr() - .5) * 20 * d, vx: (rr() < .5 ? -1 : 1) * (120 + rr() * 300) * d, vy: (rr() - .5) * 60 * d, g: 20 * d, s: (2 + rr() * 3) * d, r: 0, vr: 0, col: ["#9fd6ff", "#e8f4ff", "#6a8aa8"][i % 3], t0: .45 + rr() * .2, life: 1.6 }); }
-  SFX.fanfare(o === "win");
+  SFX.battleEnd(o === "win");
 }
 function endingFx(ctx, W, H, d, t, b) {
   const k = (t - b.ending) / 1000, o = b.outcome, cx = W / 2, cy = H * .45, ease = Math.min(1, k * 2.5);
@@ -23748,7 +23755,7 @@ function battleAnalysis(r, sim) {
     <dt>Duration</dt><dd>${Math.round(sim.dur)} s · ${r.rounds.length} round${r.rounds.length === 1 ? "" : "s"}${sim.quick ? " · large-fleet mode" : ""}</dd></dl>`;
 }
 function finishBattle() {
-  const b = battle; if (!b || b.done) return; b.done = true; const r = b.r, win = repWin(r), sim = (r.sim && r.sim.stats) ? r.sim : b.res.sim; if (!b.ending) SFX.fanfare(win);
+  const b = battle; if (!b || b.done) return; b.done = true; const r = b.r, win = repWin(r), sim = (r.sim && r.sim.stats) ? r.sim : b.res.sim; if (!b.ending) SFX.battleEnd(win);
   const mine = r.kind === "defense" || r.kind === "raid" ? "d" : "a", myL = mine === "a" ? r.lossA : r.lossD, foeL = mine === "a" ? r.lossD : r.lossA;
   const tl = (sim.ev || []).filter(e => e.kind !== "loss").slice(0, 16), col = win ? "var(--green)" : r.winner === "draw" ? "var(--amber)" : "var(--red)";
   const box = $("#bres"); box.hidden = false; box.className = "bres2";
