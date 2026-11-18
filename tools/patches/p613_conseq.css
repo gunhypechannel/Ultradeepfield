@@ -9,5 +9,16 @@
 .strain .chrh{margin:12px 0 6px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#e2c48a}
 .chron2{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}.chron2 li{display:flex;flex-direction:column;gap:2px;padding-left:12px;border-left:2px solid rgba(226,196,138,.4)}
 .chron2 b{font-size:13px}.chron2 span{font-size:13px;opacity:.85}.chron2 em{font-style:normal;color:#9fd8e8}
-#cine .cnmid.ch{justify-content:flex-start;padding-top:3vh}#cine .cnmid.ch .cnadv{height:min(36vh,300px)}#cine .cnmid.ch .cnqueen{width:min(36vw,170px)}
-#cine .cnch{bottom:calc(9vh + 96px + env(safe-area-inset-bottom,0px))}
+#cine .cnpose{position:absolute;left:50%;bottom:0;height:min(66vh,620px);max-width:96vw;object-fit:contain;transform:translateX(-50%);filter:drop-shadow(0 0 22px #38dfee77) drop-shadow(0 0 2px #9ff3ff);-webkit-mask:linear-gradient(#000 80%,transparent);mask:linear-gradient(#000 80%,transparent);animation:cnPose 1.3s ease both}
+#cine .cnpose.ch{left:28%;height:min(52vh,470px);bottom:auto;top:0}
+@keyframes cnPose{0%{opacity:0;filter:brightness(2.6) blur(6px) drop-shadow(0 0 30px #38dfee)}40%{opacity:.75}55%{opacity:.45}100%{opacity:1}}
+#cine .cnmid.ch .cnqueen{width:min(38vw,180px);margin-bottom:22vh}
+#cine .cnch{flex-direction:column;align-items:stretch;max-width:440px;margin-inline:auto;bottom:calc(9vh + 92px + env(safe-area-inset-bottom,0px))}
+#cine .cncard{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:3px;text-align:left;padding:11px 14px 10px;border-radius:12px;border:1px solid #e2c48a66;background:linear-gradient(135deg,#0b1420ee,#141a10dd);color:#f3ead6;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;animation:cnCard .5s ease calc(var(--j)*.12s) both}
+#cine .cncard b{font:700 15px/1.2 system-ui;letter-spacing:.02em}#cine .cncard small{font:500 12px/1.3 system-ui}#cine .cncard .g{color:#9dffc8}#cine .cncard .c{color:#ffb38a}
+#cine .cncard em{position:absolute;right:12px;top:11px;font:600 10px/1 system-ui;letter-spacing:.12em;text-transform:uppercase;font-style:normal;color:#e2c48a99}
+#cine .cncard .hold{position:absolute;left:0;bottom:0;height:3px;width:0;background:linear-gradient(90deg,#ffd36b,#fff3cf);box-shadow:0 0 12px #ffd36b}
+#cine .cncard.holding{border-color:#ffd36b;transform:scale(.985)}#cine .cncard.holding .hold{animation:cnHold .85s linear forwards}
+@keyframes cnHold{to{width:100%}}@keyframes cnCard{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#cine.deciding .cnfx{animation:cnBeat 1.6s ease-in-out infinite}@keyframes cnBeat{0%,100%{box-shadow:inset 0 0 80px #000}14%{box-shadow:inset 0 0 140px #5a0c0c}28%{box-shadow:inset 0 0 90px #000}42%{box-shadow:inset 0 0 120px #4a0a0a}}
+body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}

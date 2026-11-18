@@ -25,23 +25,23 @@ const VK_ART = "art/chron/c4.webp";
 const STORY_CH = [
   { id: "warden", t: "The Fallen Guardian", when: () => (vpStat("bosses") >= 1 || archLv("d_warden") >= 2) && (S.bondDays || 0) >= 3,
     beats: [{ img: "art/boss/warden-skin.webp", kb: "in", chip: "A choice", txt: "Your salvage fleet has found a Warden, broken but alive. It is still bracing its seal with what's left of its body. Its heart is exposed." },
-      { adv: 1, line: "Commander, its heart would build us a Titan. But if it dies, its seal weakens. I won't choose for you.", choice: [["Harvest its heart", "kill"], ["Let it heal", "spare"]] }],
+      { adv: 1, line: "Commander, its heart would build us a Titan. But if it dies, its seal weakens. I won't choose for you.", pose: "explain", choice: [["Harvest its heart", "kill", "+1 Titan Core and ◆30", "Its seal weakens. Seal Strain rises."], ["Let it heal", "spare", "Nothing today", "The seal holds. Seal Strain eases."]] }],
     out: { kill: { rw: { shards: 30, tc: 1 }, lines: ["It's done. We have its heart. I'll log what it cost, even if no one else does."], rec: "Harvested the heart of a living Warden." },
       spare: { rw: {}, lines: ["We leave it be. It watched our ships the whole way out, Commander. I think it knows."], rec: "Let a wounded Warden live." } } },
   { id: "pdata", t: "The Pyramid Map", when: () => archLv("d_pyr") >= 2 && (S.choices || {}).warden && Date.now() - ((S.choiceAt || {}).warden || 0) > 864e5,
     beats: [{ img: "art/arch/ovl.webp", kb: "right", chip: "A choice", txt: "The pyramid network's map is decoded. The Solar Dominion and the Verdant Collective both want it, and both have sent envoys. Neither will share." },
-      { adv: 1, line: "The Dominion would use it to wake the pyramids. The Verdant would use it to mend the seals. Someone is going to be very disappointed in us.", choice: [["Give it to the Dominion", "solar"], ["Give it to the Verdant", "verdant"], ["Keep it secret", "keep"]] }],
+      { adv: 1, line: "The Dominion would use it to wake the pyramids. The Verdant would use it to mend the seals. Someone is going to be very disappointed in us.", pose: "point", choice: [["Give it to the Dominion", "solar", "⚡3 boosts and ◆30", "They wake a pyramid. Seal Strain rises."], ["Give it to the Verdant", "verdant", "Metal, crystal and ◆15", "They mend a seal. Seal Strain eases."], ["Keep it secret", "keep", "An Architect record, now, and ◆10", "Neither House will thank you."]] }],
     out: { solar: { rw: { shards: 30, boosts: 3 }, lines: ["The Dominion is delighted. They've already started waking a pyramid. I hope they know how to put it back to sleep."], rec: "Gave the pyramid map to the Solar Dominion." },
       verdant: { rw: { shards: 15, m: 6000, c: 4000 }, lines: ["The Verdant are mending a seal tonight, with our map. It won't make us richer. It might keep us alive."], rec: "Gave the pyramid map to the Verdant Collective." },
       keep: { rw: { shards: 10 }, fx: () => archUnlock("x_1", 2), lines: ["We keep it. Secrets are safer with us than with either of them. The Syndicate would be proud, Commander. I'm not sure that's a compliment."], rec: "Kept the pyramid map secret." } } },
   { id: "signal", t: "The Call", when: () => archLv("x_1") >= 2 && (S.bondDays || 0) >= 8,
     beats: [{ img: "art/lore/architects.webp", kb: "up", chip: "A choice", txt: "The signal from the pyramids has found your comms array. It's asking for a reply, in a language only your Advisor can read." },
-      { adv: 1, line: "It wants us to answer, Commander. I could. I'm afraid of what answers back.", choice: [["Answer it", "answer"], ["Bury it", "bury"]] }],
+      { adv: 1, line: "It wants us to answer, Commander. I could. I'm afraid of what answers back.", pose: "cube", choice: [["Answer it", "answer", "The Architects' story comes sooner, and ◆20", "Something will hear you."], ["Bury it", "bury", "Seal Strain eases a little, and ◆20", "The truth waits longer."]] }],
     out: { answer: { rw: { shards: 20 }, lines: ["I answered. For a moment the whole array went quiet. Then something said thank you."], rec: "Answered the signal from the pyramids." },
       bury: { rw: { shards: 20 }, lines: ["Buried. It's still calling, just not to us. Thank you, Commander. I wasn't ready."], rec: "Buried the signal from the pyramids." } } },
   { id: "queen", t: "The Queen's Offer", when: () => archLv("l_queen") >= 2 && vpStat("hiveWins") >= 20 && (S.vk || {}).vk3,
     beats: [{ queen: 1, chip: "Incoming transmission", line: "I don't hate you, Commander. I simply want my children to live." },
-      { queen: 1, line: "When the door opens, stand aside. Let my swarm pass, and yours will live too. That is all I ask.", choice: [["Refuse her", "refuse"], ["Hear her out", "hear"]] }],
+      { queen: 1, line: "When the door opens, stand aside. Let my swarm pass, and yours will live too. That is all I ask.", choice: [["Refuse her", "refuse", "◆25", "She will remember."], ["Hear her out", "hear", "Her story, and ◆25", "Seal Strain rises."]] }],
     out: { refuse: { rw: { shards: 25 }, q: ["Then we will meet at the door. I will be sorry when you fall. I truly will."], lines: ["Good. I've seen what happens to the ones who listen."], rec: "Refused the Matriarch's offer." },
       hear: { rw: { shards: 25 }, q: ["Thank you. No one has listened to me in ten thousand years.", "My world was the only one it spared. My children are all that is left of it. Wouldn't you open any door for yours?"], lines: ["Commander... be careful. Kindness is how she wins."], rec: "Heard out Queen Vael'Khor." } } }];
 /* Vael'Khor's own transmissions, as the Hive war goes on */
@@ -55,8 +55,9 @@ function vkBeats(L, chip) { return L.map((line, i) => ({ queen: 1, chip: i ? und
 function storyPlay(C) { S.choices = S.choices || {}; S.choiceAt = S.choiceAt || {}; G.storyBusy = 1;
   cinema(storyBeats(C), { onChoice: v => { const o = C.out[v]; if (!o || S.choices[C.id]) return []; S.choices[C.id] = v; S.choiceAt[C.id] = Date.now(); dirty();
       try { if (o.rw && Object.keys(o.rw).length) grantRw(o.rw, C.t); } catch (e) {} try { o.fx && o.fx(); } catch (e) {} try { if (window.udfStory && G.mode === "online") window.udfStory.act(C.id, v, 0).then(() => storySync(true)).catch(() => {}); } catch (e) {}
-      return (o.q ? vkBeats(o.q) : []).concat(o.lines.map(line => ({ adv: 1, line }))); },
-    onSkip: () => { G.storyBusy = 0; } }, () => { G.storyBusy = 0; setTimeout(() => storySplit(C), 1500); }); }
+      const tt = (G.storyT || {})[C.id], split = tt && tt._p >= 2 ? Math.round(100 * ((tt[v] || 0) + 1) / (tt._p + 1)) : null; G.storySplitShown = split != null;
+      return (o.q ? vkBeats(o.q) : []).concat(o.lines.map(line => ({ adv: 1, line })), split != null ? [{ chip: "The galaxy remembers", txt: `${split}% of commanders made the same choice.`, t: 3800, keep: 1 }] : []); },
+    onSkip: () => { G.storyBusy = 0; } }, () => { G.storyBusy = 0; if (!G.storySplitShown) setTimeout(() => storySplit(C), 1500); }); }
 function storySplit(C) { const t = (G.storyT || {})[C.id], v = (S.choices || {})[C.id]; if (!t || !v || !(t._p > 1)) return; const pc = Math.round(100 * (t[v] || 0) / t._p), o = C.out[v];
   try { toast(`${pc}% of commanders made the same choice as you: ${o.rec.replace(/\.$/, "").toLowerCase()}.`, "win"); } catch (e) {} }
 function storyTick() { try { if (!S || !G.ready || !S.intro || battle || sheet || advLines || G.cineOn || G.storyBusy || $("#celeb") || $("#adv") || (S.tut && S.tut.k !== "done") || G.mode === "connecting") return;
@@ -83,3 +84,10 @@ function storyPanel() { const v = G.strain != null ? G.strain : strainNow(), t =
  [STRAIN_SAY[0][1], "grave"], [STRAIN_SAY[1][1], "grave"], [STRAIN_SAY[2][1], "urgent"], [STRAIN_LOW, "warm"],
  ["That was her, Commander. Vael'Khor. She's never spoken to anyone before.", "grave"], ["She wants you to feel guilty. Don't let her choose how you feel.", "fierce"],
  ["She's telling the truth, Commander. That's what frightens me.", "tender"], ["She can feel the strain too. I hate that she's right.", "grave"]].forEach(([l, m]) => { CIN_MOOD[l] = m; });
+
+/* her poses, only in the story scenes: one cut-out figure per mood, chosen line by line, kept while it doesn't change */
+const POSE_MOOD = { calm: "explain", tender: "welcome", warm: "welcome", excited: "victory", playful: "victory", urgent: "alarm", fierce: "ready", awe: "cube", grave: "explain" };
+const POSE_LINE = { "Your signal was very bright, Commander. I'm afraid something else heard it too.": "alarm", "You went back. Hold on to that, Commander. I think you're the one I've been waiting for.": "salute",
+  "The fleet is broken, Commander. Our warships are gone.": "defeated", "Every commander I've ever known gave that order. Every one.": "defeated", "It's done. We have its heart. I'll log what it cost, even if no one else does.": "defeated",
+  "Commander... be careful. Kindness is how she wins.": "alarm", "Good. I've seen what happens to the ones who listen.": "ready" };
+function cnPose(b) { let m = "calm"; try { m = advMood(b.line); } catch (e) {} const k = b.pose || POSE_LINE[b.line] || POSE_MOOD[m] || "explain"; return `<img class="cnpose${b.choice ? " ch" : ""}" src="art/adv/p_${k}.webp" alt="${ADV}">`; }
