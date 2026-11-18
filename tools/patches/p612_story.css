@@ -1,0 +1,64 @@
+/* v612 the cinematic player */
+#cine{position:fixed;inset:0;z-index:9500;background:#000;overflow:hidden;color:#eef3f8;cursor:pointer;animation:cnIn .9s ease both;-webkit-tap-highlight-color:transparent}
+#cine.out{animation:cnOut .7s ease both}
+@keyframes cnIn{from{opacity:0}to{opacity:1}}@keyframes cnOut{to{opacity:0}}
+#cine .cnbg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,#0b1430 0%,#02030a 70%);}
+#cine .cnbg::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 22%,#fff8 50%,transparent),radial-gradient(1px 1px at 72% 18%,#fff9 50%,transparent),radial-gradient(1.5px 1.5px at 38% 74%,#cfe6ff 50%,transparent),radial-gradient(1px 1px at 86% 64%,#fff7 50%,transparent),radial-gradient(1px 1px at 55% 42%,#fff6 50%,transparent),radial-gradient(1px 1px at 22% 58%,#fff5 50%,transparent);opacity:.8}
+#cine .cnimg{position:absolute;inset:-6%;background:center/cover no-repeat;opacity:0;transition:opacity 1.6s ease;will-change:transform,opacity}
+#cine .cnimg.on{opacity:1}
+#cine .cnimg.wide{background-size:contain}
+#cine .kb-in{animation:kbIn 16s ease-out both}#cine .kb-out{animation:kbOut 16s ease-out both}#cine .kb-left{animation:kbL 18s linear both}#cine .kb-right{animation:kbR 18s linear both}
+#cine .kb-up{animation:kbU 16s ease-out both}#cine .kb-deep{animation:kbD 12s cubic-bezier(.3,0,.2,1) both}#cine .kb-seal{animation:kbS 18s ease-out both}
+@keyframes kbIn{from{transform:scale(1)}to{transform:scale(1.14)}}@keyframes kbOut{from{transform:scale(1.18)}to{transform:scale(1.02)}}
+@keyframes kbL{from{transform:scale(1.12) translateX(4%)}to{transform:scale(1.12) translateX(-4%)}}@keyframes kbR{from{transform:scale(1.12) translateX(-4%)}to{transform:scale(1.12) translateX(4%)}}
+@keyframes kbU{from{transform:scale(1.1) translateY(4%)}to{transform:scale(1.16) translateY(-3%)}}@keyframes kbD{from{transform:scale(1.25)}to{transform:scale(2.1)}}@keyframes kbS{from{transform:scale(1.05) rotate(-2deg)}to{transform:scale(1.22) rotate(2deg)}}
+#cine .cnfx{position:absolute;inset:0;pointer-events:none}
+#cine .fx-dim~.cnmid,#cine .cnfx.fx-dim{background:linear-gradient(#0006,#000a)}
+#cine .cnfx.fx-ash{background:linear-gradient(#0000,#000c);backdrop-filter:grayscale(.8) brightness(.8)}
+#cine .cnfx.fx-flash{animation:cnFlash 4.5s ease-out both}@keyframes cnFlash{0%,40%{background:#fff0}55%{background:#fffd}100%{background:#fff0}}
+#cine .cnfx.fx-wake{background:radial-gradient(circle at 50% 50%,transparent 0 9%,#000 30%);animation:cnWake 7s ease-in both}
+#cine .cnfx.fx-wake::after{content:"";position:absolute;left:50%;top:50%;width:46px;height:10px;margin:-5px -23px;border-radius:50%;background:radial-gradient(#fff 0,#ff3b4a 35%,transparent 70%);opacity:0;animation:cnEye 7s ease-in both}
+@keyframes cnWake{from{opacity:.4}to{opacity:1}}@keyframes cnEye{0%,70%{opacity:0;transform:scaleY(.1)}85%{opacity:.9;transform:scaleY(1)}100%{opacity:0;transform:scaleY(.1)}}
+#cine .cnfx.fx-count::after{content:"00:00:00";position:absolute;left:50%;bottom:30%;transform:translateX(-50%);font:700 clamp(22px,6vw,44px)/1 ui-monospace,Menlo,monospace;color:#6dffb0;text-shadow:0 0 18px #2f9;letter-spacing:.12em;animation:cnCount 6s steps(30) both}
+@keyframes cnCount{0%{content:"00:00:00";opacity:.2}30%{content:"00:00:07"}60%{content:"00:00:41"}100%{content:"00:03:12";opacity:1}}
+#cine .cnfx.fx-seals{background:radial-gradient(circle,#0000 30%,#000a 80%);animation:cnPulse 2.4s ease-in-out infinite}@keyframes cnPulse{50%{filter:brightness(1.4)}}
+#cine .cnfx.fx-pods{background:linear-gradient(#03050cee,#03050c88 45%,#03050cdd)}
+#cine .cnfx.fx-pods i{position:absolute;left:calc(var(--x)*1%);top:calc(var(--y)*1%);width:6px;height:6px;border-radius:50%;background:#ffe9a8;box-shadow:0 0 10px 3px #ffb34788;animation:cnPod 3s ease-in-out var(--d) infinite alternate}
+@keyframes cnPod{to{transform:translate(8px,-6px);opacity:.55}}
+#cine .cnfx.fx-hive::before{content:"";position:absolute;right:-10%;top:-10%;width:70%;height:80%;background:radial-gradient(closest-side,#ff3b4a66 0,#a0102255 45%,transparent 100%);filter:blur(6px);animation:cnHive 5s ease-in both}@keyframes cnHive{from{transform:translate(30%,-20%);opacity:0}to{transform:none;opacity:1}}
+#cine .cnfx.fx-rescue i{animation:cnSave 4s ease-in calc(var(--d)*1.5) both}@keyframes cnSave{to{left:50%;top:78%;opacity:0;transform:scale(.3)}}
+#cine .cnbar{position:absolute;left:0;right:0;height:9vh;background:#000;z-index:3}#cine .cnbar.t{top:0}#cine .cnbar.u{bottom:0}
+#cine .cnchip{position:absolute;z-index:4;left:50%;top:calc(9vh + 18px + env(safe-area-inset-top,0px));transform:translateX(-50%);font:600 12px/1 system-ui;letter-spacing:.32em;text-transform:uppercase;color:#e2c48a;opacity:0}
+#cine .cnchip.on{animation:cnChip 4.5s ease both}@keyframes cnChip{0%{opacity:0;letter-spacing:.6em}20%,80%{opacity:1;letter-spacing:.32em}100%{opacity:.75}}
+#cine .cnmid{position:absolute;inset:9vh 0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;pointer-events:none}
+#cine .cnlogo{width:min(78vw,520px);animation:cnLogo 5s ease both;filter:drop-shadow(0 0 30px #38dfee66)}@keyframes cnLogo{from{opacity:0;transform:scale(1.08)}to{opacity:1;transform:none}}
+#cine .cnq{max-width:min(86vw,560px);margin:0;text-align:center;font:italic 500 clamp(14px,2.2vw,18px)/1.5 Georgia,serif;color:#c9d6e2;opacity:0;animation:cnIn 2s ease 1.8s both}
+#cine .cnwd{display:flex;gap:2vw;align-items:flex-end;justify-content:center;height:60vh}
+#cine .cnwd img{height:calc(46vh + var(--j)*4vh);max-width:30vw;object-fit:cover;border-radius:8px;filter:brightness(.42) contrast(1.35) saturate(.55) drop-shadow(0 0 22px #b48bffaa);opacity:0;animation:cnWd 3.4s ease calc(var(--j)*1s) both;-webkit-mask:linear-gradient(#000 70%,transparent)}
+@keyframes cnWd{from{opacity:0;transform:translateY(6%)}to{opacity:1;transform:none}}
+#cine .cnadv{height:min(62vh,560px);max-width:80vw;object-fit:contain;filter:drop-shadow(0 0 28px #38dfee88);animation:cnAdv 2.6s ease both}@keyframes cnAdv{0%{opacity:0;filter:brightness(3) blur(8px)}60%{opacity:1}100%{opacity:1;filter:drop-shadow(0 0 28px #38dfee88)}}
+#cine .cninset{width:min(34vw,220px);border-radius:10px;box-shadow:0 0 40px #2f9a,0 0 0 1px #6dffb066;animation:cnLogo 3s ease both}
+#cine .cnsub{position:absolute;z-index:4;left:0;right:0;bottom:calc(9vh + 14px + env(safe-area-inset-bottom,0px));padding-inline:max(18px,env(safe-area-inset-left,0px)) max(18px,env(safe-area-inset-right,0px));text-align:center;pointer-events:none}
+#cine .cnsub p{max-width:680px;margin:0 auto;font:500 clamp(15px,2.3vw,20px)/1.5 system-ui;text-shadow:0 2px 8px #000,0 0 2px #000;animation:cnIn .8s ease both}
+#cine .cnsub.tx{text-align:left}#cine .cnsub.tx p,#cine .cnsub.tx small{max-width:620px;display:block;margin-inline:auto}
+#cine .cnsub.tx p{font:400 clamp(14px,2vw,17px)/1.55 ui-monospace,Menlo,Consolas,monospace;color:#bff3ff;background:#02101acc;border:1px solid #38dfee44;border-radius:8px;padding:12px 14px}
+#cine .cnsub small{font:600 11px/1 system-ui;letter-spacing:.18em;text-transform:uppercase;color:#38dfee;margin-bottom:8px}
+#cine .cnch{position:absolute;z-index:5;left:0;right:0;bottom:calc(9vh + 110px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding-inline:16px}
+#cine .cnch .btn{min-width:200px;animation:cnIn .6s ease both}
+#cine .cnskip{position:absolute;z-index:6;right:max(14px,env(safe-area-inset-right,0px));top:calc(9vh + 10px + env(safe-area-inset-top,0px));background:#0008;border:1px solid #ffffff33;color:#cfd8e2;border-radius:16px;padding:6px 12px;font:600 12px system-ui;cursor:pointer}
+#cine .cngate{position:absolute;inset:0;z-index:7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(ellipse at 50% 55%,#0b1430,#000 70%);text-align:center;padding:16px}
+#cine .cngate small{font:600 11px system-ui;letter-spacing:.4em;text-transform:uppercase;color:#e2c48a}#cine .cngate h2{margin:0;font:600 clamp(26px,5vw,40px)/1.1 Georgia,serif;letter-spacing:.04em}#cine .cngate p{margin:0 0 8px;color:#9fb6c4}
+#cine .cngate .btn{min-width:180px}
+@media (prefers-reduced-motion:reduce){#cine .cnimg,#cine .cnimg.on{animation:none!important}}
+.fctxt em.fccreed{display:block;font-style:normal;font-size:11px;line-height:1.35;color:var(--fca,#e2c48a);opacity:.9;margin-top:4px}
+#prlance{position:absolute;z-index:30;left:50%;top:46%;transform:translate(-50%,-50%);border:2px solid #ffd36b;border-radius:50%;width:132px;height:132px;background:radial-gradient(circle,#ffd36b55,#3a2a0acc 70%);color:#fff3cf;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-shadow:0 0 30px #ffb347aa,inset 0 0 24px #ffd36b88;animation:prPulse 1s ease-in-out infinite}
+#prlance b{font:800 13px/1.1 system-ui;letter-spacing:.12em;text-align:center}#prlance small{font:600 11px system-ui;opacity:.85}
+@keyframes prPulse{50%{transform:translate(-50%,-50%) scale(1.08);box-shadow:0 0 50px #ffd36bdd,inset 0 0 30px #fff3}}
+.prsub{position:absolute;z-index:30;left:12px;right:12px;top:calc(46% + 86px);text-align:center;font:600 15px/1.4 system-ui;color:#fff;text-shadow:0 2px 6px #000,0 0 2px #000;pointer-events:none}
+.prbeam{position:absolute;z-index:29;inset:0;pointer-events:none}
+.prbeam::before{content:"";position:absolute;left:50%;top:0;bottom:30%;width:46px;margin-left:-23px;background:linear-gradient(90deg,transparent,#ffd36b 30%,#fff 50%,#ffd36b 70%,transparent);filter:blur(2px);box-shadow:0 0 60px 20px #ffd36b88;transform-origin:50% 100%;animation:prBeam 1.5s ease-out both}
+.prbeam::after{content:"";position:absolute;inset:0;background:#fff;animation:prFlash .6s ease-out both}
+.prbeam i{position:absolute;left:var(--x);top:var(--y);width:90px;height:90px;margin:-45px;border-radius:50%;background:radial-gradient(circle,#fff 0,#ffd36b 25%,#ff7a2a 50%,transparent 70%);opacity:0;animation:prBoom .9s ease-out var(--d) both}
+@keyframes prBeam{0%{transform:scaleY(0);opacity:1}15%{transform:scaleY(1)}70%{opacity:1}100%{opacity:0;transform:scaleY(1) scaleX(.3)}}
+@keyframes prFlash{0%{opacity:0}10%{opacity:.75}100%{opacity:0}}@keyframes prBoom{0%{opacity:0;transform:scale(.2)}20%{opacity:1}100%{opacity:0;transform:scale(1.6)}}
+.prshake{animation:prShake .5s linear 2}@keyframes prShake{25%{transform:translate(4px,-3px)}50%{transform:translate(-4px,2px)}75%{transform:translate(3px,3px)}}
