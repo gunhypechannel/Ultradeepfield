@@ -549,11 +549,11 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 .quest .rw{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .quest.done{border-color:var(--amber)}
 .queue{display:flex;flex-direction:column;gap:8px}
-.qrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:10px 12px;border:1px solid var(--line);background:var(--hull)}
+.qrow{display:grid;grid-template-columns:minmax(7.5em,1fr) auto;gap:4px 10px;align-items:center;padding:10px 12px;border:1px solid var(--line);background:var(--hull)}
 .qrow .lbl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .qrow .what{font-family:var(--f-display);font-weight:600;font-size:14px}
 .qrow .idle{color:var(--muted);font-size:13.5px}
-.qrow .acts{display:flex;gap:6px;align-items:center}
+.qrow .acts{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;align-items:center} /* fb-20261118: on narrow phones the buttons wrap instead of crushing the name */
 .qrow .t{font-family:var(--f-display);font-variant-numeric:tabular-nums;color:var(--cyan);font-size:14px}
 .bar{grid-column:1/-1;height:4px;background:var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),#a7f1fb);box-shadow:0 0 8px var(--cyan);width:0}
