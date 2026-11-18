@@ -5303,7 +5303,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 610;
+const GAME_V = 611;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -22372,7 +22372,7 @@ setInterval(() => { try { if (!S || !G.ready || battle || typeof SH === "undefin
    command pose for the Cube and the battles, a briefing pose for long explanations and a pointing pose toward what she's showing. */
 const AF_V = 610, afUrl = k => `art/adv/${k}.webp?v=${AF_V}`, AF_TALK = ["n_0", "n_h", "n_q"], afCache = {};
 function afPre(k) { let i = afCache[k]; if (!i) { i = afCache[k] = new Image(); i.src = afUrl(k); try { i.decode().catch(() => {}); } catch (e) {} } return i; }
-function afOn() { try { const d = S && cosDef(cosOf().eq.adv); return !(d && d.art); } catch (e) { return true; } } /* a skin with its own portrait keeps it */
+function afOn() { return false; /* v611: one portrait */ try { const d = S && cosDef(cosOf().eq.adv); return !(d && d.art); } catch (e) { return true; } } /* a skin with its own portrait keeps it */
 const AF_LOSS = /\b(lost|lose|fallen|fell|destroyed|defeat|defeated|gone|failed|wiped|ruins|broke through)\b/i, AF_WIN = /\b(victory|won|win|wins|first blood|broken|shattered|captured|taken|ours|did it|held|claimed)\b/i;
 /* v610 (owner: "remove this expression... make sure there are no weird transition expressions, she needs to be perfect"; and
    "fix the mouth"). She now has exactly two faces, each with a closed mouth, an open mouth and a blink laid onto one head so
