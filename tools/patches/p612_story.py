@@ -9,7 +9,7 @@ def rep(a, b, n=1):
     c = s.count(a); assert c == n, (c, a[:90]); s = s.replace(a, b)
 js = open('tools/patches/p612_story.js', encoding='utf-8').read()
 css = open('tools/patches/p612_story.css', encoding='utf-8').read()
-i = s.index('</style>'); s = s[:i] + css + s[i:]
+i = s.index('</style>', s.index('#celeb{position:fixed')); s = s[:i] + css + s[i:] # the main stylesheet (line 0 holds the page skeleton's reset style)
 # the story block, after the Chronicles (it extends CHRON, ARCH and ARCH_CAT)
 a = s.index('const chProg = (C, m) => ')
 s = s[:a] + js + '\n' + s[a:]
