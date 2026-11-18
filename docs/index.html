@@ -2128,6 +2128,13 @@ main#view{min-height:0;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px
 @keyframes cnHold{to{width:100%}}@keyframes cnCard{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 #cine.deciding .cnfx{animation:cnBeat 1.6s ease-in-out infinite}@keyframes cnBeat{0%,100%{box-shadow:inset 0 0 80px #000}14%{box-shadow:inset 0 0 140px #5a0c0c}28%{box-shadow:inset 0 0 90px #000}42%{box-shadow:inset 0 0 120px #4a0a0a}}
 body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}
+.omb.d1b{border-color:#9dffc8;background:linear-gradient(90deg,rgba(4,30,22,.94),rgba(10,24,40,.94));color:#dfffee}.card.d1 header{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.card.d1 header b{font-variant-numeric:tabular-nums;color:#9dffc8}.card.d1 .rw{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px}
+.dph2{position:relative;border-radius:18px;overflow:hidden;min-height:220px;display:flex;align-items:flex-end;gap:12px;padding:12px;border:1px solid rgba(255,207,90,.4);margin-bottom:6px}
+.dph2 .dpbn{filter:saturate(1.1) brightness(.8)}.dph2::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 35%,rgba(4,8,14,.85));pointer-events:none}
+.dpport{position:relative;z-index:1;flex:none;width:118px;height:150px;padding:0;border-radius:14px;overflow:hidden;border:2px solid rgba(255,207,90,.7);box-shadow:0 0 22px rgba(255,207,90,.35);background:#0b1118;cursor:pointer}
+.dpport img{width:100%;height:100%;object-fit:cover;object-position:50% 12%}
+.dpsay{position:relative;z-index:1;flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}.dpsay small{font-size:10px;letter-spacing:.16em;color:var(--amber)}
+.dpsay p{margin:0;font-size:14px;line-height:1.4;color:#eef4f8;background:rgba(6,14,22,.82);border:1px solid rgba(255,255,255,.12);border-radius:4px 14px 14px 14px;padding:8px 11px}.dpsay .btn{align-self:flex-start}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="lib/GLTFLoader-r128.js"></script>
@@ -5392,7 +5399,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 614;
+const GAME_V = 615;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6070,7 +6077,7 @@ const colLabs = () => { let n = 0; try { for (const p of myPlanets()) if (p.kind
 const labPower = () => (S.b.lab || 0) + colLabs();
 /* v321: while the Academy runs, jobs take a quarter of the time and never more than 10 minutes (for its first 3 days, so stopping
    short of the last step doesn't keep the speed for good) */
-const acadT = t => { if (!(S && S.tut && acadOn())) return t; if (!S.tutFast) S.tutFast = now(); return now() - S.tutFast < 3 * 864e5 ? Math.min(t * .25, 600000) : t; };
+const acadT = t => { if (!(S && S.tut && acadOn())) return t; if (!S.tutFast) S.tutFast = now(); return now() - S.tutFast < 3600e3 ? Math.min(t * .25, 240000) : now() - S.tutFast < 3 * 864e5 ? Math.min(t * .25, 600000) : t; }; /* v615 the first hour: every job finishes free */
 const uTime = c => acadT(Math.max(1, ((c.m || 0) + (c.c || 0)) * 1.44 * ECON_TK / (UNI * (1 + S.b.shipyard)) / Math.pow(2, S.b.nanite || 0)) * 1000); // OGame: (m+c) / (2500 (1+shipyard) 2^nanite) hours
 const RES_SLOW = 3; // v270: research takes 3x as long
 const rTimeL = (k, lvl) => { const c = cost(R[k], lvl); return acadT(Math.max(3, ((c.m || 0) + (c.c || 0)) * 3.6 * RES_SLOW * ECON_TK / (UNI * (1 + labPower()))) * 1000 * rTimeMul()); }; // OGame: (m+c) / (1000 (1+lab)) hours
@@ -8059,7 +8066,7 @@ function omBand() { const T = now(), b = $("#omband"), live = dvNow(T), nx = dvN
       else html = `<button class="omb" data-act="omOpen"><b>Ω CUBE DEVASTATION</b><span>${esc(DVS[dvStage(e)][2])}</span></button>`; }
     else if (nx - T < 72 * 3600e3) { annOnce("dv", nx, DV_SOON); } if (!live && nx - T < 72 * 3600e3) html = `<button class="omb soon" data-act="omOpen"><b>Ω CUBE DEVASTATION</b><span>in ${ftime(nx - T)}</span></button>`; }
   if (!html && view === "galaxy" && !sheet && !battle && !G.sbSim && !cineOn) html = finBand(T); /* v571 */
-  { let hb = ""; if (view === "base" && !battle) { hb = omenBand(T) + wheelBand(); } else if (view === "galaxy" && !battle && !cineOn) hb = cubeHB(T); /* v593 */ if ((G.hb || "") !== hb) { G.hb = hb; try { hud(); } catch (e) {} } } /* v587 on the planet: in the HUD strip */
+  { let hb = ""; if (view === "base" && !battle) { hb = omenBand(T) + d1Band(T) + wheelBand(); } else if (view === "galaxy" && !battle && !cineOn) hb = cubeHB(T); /* v593 */ if ((G.hb || "") !== hb) { G.hb = hb; try { hud(); } catch (e) {} } } /* v587 on the planet: in the HUD strip */
   if (!html) { if (b) b.remove(); return; } if (!b) { const A = $("#app"); if (!A) return; const el = document.createElement("div"); el.id = "omband"; el.innerHTML = html; A.appendChild(el); } else if (b.dataset.h !== html) { b.dataset.h = html; b.innerHTML = html; } }
 setInterval(() => { try { omBand(); omClaim(); } catch (e) {} }, 1000);
 /* the owner's preview: the whole event (awakening, migration, assembly, eruption, a turn of the finished Omega, and its break-up) in
@@ -17944,6 +17951,7 @@ const PRO_JUMP = [
 const PRO_BACK = [
   { img: "art/faction/", kb: "in", fx: "pods rescue", chip: "The Rescue", txt: "The last haulers turn into the swarm. One by one, the pods are pulled aboard." },
   { img: "art/faction/", kb: "in", fx: "pods rescue", line: "Got them! Every single pod, Commander. Every single one!" },
+  { img: "art/faction/", kb: "out", fx: "dim", chip: "The Flagship", line: "The flagship took the worst of it, Commander. She shielded the pods with her own hull. We'll rebuild her. I promise." },
   { adv: 1, chip: "The Selection", line: "Do you know how many commanders I've watched choose to run? I stopped counting." },
   { adv: 1, line: "You went back. Hold on to that, Commander. I think you're the one I've been waiting for." }];
 const PRO_LANCE = "The pyramid gave us one shot, Commander. Its lance is charged. Fire it!", PRO_LANCE2 = "Direct hit! It tore a hole right through them!";
@@ -18130,6 +18138,40 @@ const POSE_LINE = { "Your signal was very bright, Commander. I'm afraid somethin
   "Commander... be careful. Kindness is how she wins.": "alarm", "Good. I've seen what happens to the ones who listen.": "ready" };
 function cnPose(b) { let m = "calm"; try { m = advMood(b.line); } catch (e) {} const k = b.pose || POSE_LINE[b.line] || POSE_MOOD[m] || "explain"; return `<img class="cnpose${b.choice ? " ch" : ""}" src="art/adv/p_${k}.webp" alt="${ADV}">`; }
 
+/* v615 (owner: "Build all except your first rival"): first-day goals with a countdown, a come-back-tomorrow teaser and its payoff,
+   the signal log told one line a day with the daily login, the flagship seen (and lost) in the prologue, and quicker first jobs. */
+const D1_MS = 864e5, D1_RW = { shards: 60, boosts: 5, item: "xb_gold" };
+const D1_GOALS = [["Finish 10 Academy steps", () => S.tut && (S.tut.k === "done" || (S.tut.i | 0) >= 10)], ["Win 3 battles", () => vpStat("battlesWon") >= 3],
+  ["Explore 2 pyramid stations", () => vpStat("pyramids") >= 2], ["Reach Commander Lv.5", () => cmdLevel(score()) >= 5], ["Join an alliance", () => !!myAlly() || G.mode !== "online"]];
+const d1On = (T = now()) => !!(S && S.created && S.intro && !S.d1Done && T - S.created < D1_MS);
+const d1Got = () => D1_GOALS.filter(g => { try { return g[1](); } catch (e) { return false; } }).length;
+function d1HTML(T = now()) { if (!d1On(T)) return ""; const end = S.created + D1_MS, n = d1Got(), all = n >= D1_GOALS.length;
+  return `<article class="card d1${all ? " hi" : ""}"><header><span>⏳ Your first day</span><b data-end="${end}">${ftime(end - T)}</b></header><p class="note">Finish all five before the clock runs out for ◆60, ⚡5 boosts, a ${esc(SHOP[D1_RW.item] ? SHOP[D1_RW.item].n : "rare crate")} and the title “First Light”.</p>
+    ${D1_GOALS.map(([t, f]) => { let ok = false; try { ok = f(); } catch (e) {} return `<div class="vpm${ok ? " done" : ""}"><div><b>${esc(t)}</b></div><span>${ok ? "✓" : ""}</span></div>`; }).join("")}
+    <div class="rw"><span class="cost">${n}/${D1_GOALS.length} done</span><button class="btn ${all ? "amber" : "ghost"}" data-act="d1Claim" ${all ? "" : "disabled"}>${all ? "Claim" : "In progress"}</button></div></article>`; }
+function d1Band(T = now()) { if (!d1On(T) || G.mode === "demo") return ""; const n = d1Got(), left = S.created + D1_MS - T, h = Math.floor(left / 3600e3), m = Math.floor(left % 3600e3 / 60e3);
+  return `<button class="omb d1b" data-act="d1Go"><b>⏳ FIRST DAY · ${n}/${D1_GOALS.length}</b><span>${h}h ${m}m left</span></button>`; }
+function d1Claim() { if (!d1On() || d1Got() < D1_GOALS.length) return; S.d1Done = 1; grantRw(D1_RW, "Your first day"); S.vpTitles = S.vpTitles || []; if (!S.vpTitles.includes("First Light")) S.vpTitles.push("First Light"); dirty();
+  celebrate({ k: "firstday", kick: "Your first day", t: "First Light", art: "adv", s: "Five goals in your first day. The galaxy noticed, and so did I.", say: D1_SAY, rw: "◆60, ⚡5 boosts, a rare crate and the title “First Light”.", go: "Onward" }); try { flushSay(); } catch (e) {} }
+const D1_SAY = "Every goal, inside a single day. I've watched a lot of first days, Commander. That was one of the good ones.";
+/* the tease at the end of a first session, and the payoff the next day */
+const TEASE = "Commander, the pyramid's signal is getting clearer. By tomorrow I'll be able to read it. Come back, and I'll tell you what it says.";
+const D2_SAY = ["I promised I'd read the signal, Commander. I did.", "It's a war report, from the last time the stars went out. The full record is in the Archives. I think you should read it."];
+function teaseTick() { try { if (!S || !G.ready || !S.intro || battle || G.cineOn) return; const T = now(), d = S.bondDays || 0;
+    if (!S.d1Tease && d <= 1 && T - (S.created || T) > 25 * 60e3 && !advLines && !$("#adv")) { S.d1Tease = T; dirty(); holoSure(TEASE); return; }
+    if (S.d1Tease && !S.d2Said && d >= 2 && !advLines && !$("#adv") && !$("#celeb")) { S.d2Said = 1; dirty(); say(D2_SAY); } } catch (e) {} }
+setInterval(teaseTick, 20000);
+/* the signal log: one line with each of the first seven daily logins */
+const LOGIN_STORY = ["Day one of the signal log, Commander. Mostly static. And one word I recognise: home.", "Day two. The static has a rhythm now. Someone is counting, very slowly.",
+  "Day three. There are voices under the count. Hundreds of them, speaking at once.", "Day four. I separated one voice. She's asking if anyone is still out here.",
+  "Day five. She said a name I haven't heard in an age. I think it was mine.", "Day six. The voices have stopped counting. Now they're singing. I know the song.",
+  "Day seven. Two words, over and over: still holding. Whoever they are, they're still holding the door. For us."];
+function loginStory() { try { const i = S.logStory | 0; if (i >= LOGIN_STORY.length) return; S.logStory = i + 1; dirty(); holoSure(LOGIN_STORY[i]); } catch (e) {} }
+/* say it on the hologram, and keep trying until it has actually shown (another line may be up) */
+function holoSure(L, n = 0) { setTimeout(() => { try { const h = document.querySelector("#advh .hsay span"); if (h && h.textContent === L) return; if (!battle && !G.cineOn && !$("#adv")) advHolo(L, true); setTimeout(() => { const h2 = document.querySelector("#advh .hsay span"); if (!(h2 && h2.textContent === L) && n < 12) holoSure(L, n + 1); }, 600); } catch (e) {} }, n ? 5000 : 1200); }
+const FLAG_LOST = "The flagship took the worst of it, Commander. She shielded the pods with her own hull. We'll rebuild her. I promise.";
+[[D1_SAY, "warm"], [TEASE, "tender"], [D2_SAY[0], "tender"], [D2_SAY[1], "grave"], [FLAG_LOST, "tender"], [LOGIN_STORY[0], "tender"], [LOGIN_STORY[1], "calm"], [LOGIN_STORY[2], "awe"], [LOGIN_STORY[3], "tender"], [LOGIN_STORY[4], "tender"], [LOGIN_STORY[5], "awe"], [LOGIN_STORY[6], "tender"]].forEach(([l, m]) => { CIN_MOOD[l] = m; });
+
 const chProg = (C, m) => { if (m[0] !== "worlds" && C.base[m[0]] == null) C.base[m[0]] = chStat(m[0]); /* v612 a chapter added after you finished the book starts counting when you first see it */ return m[0] === "worlds" ? Math.min(m[1], chStat("worlds")) : Math.min(m[1], Math.max(0, chStat(m[0]) - (C.base[m[0]] || 0))); };
 function chronHTML() { if (!S || !S.tut || S.tut.k !== "done") return ""; const C = chState(); if (C.c >= CHRON.length) return `<article class="card chron done"><header>📖 Chronicles · complete</header><div class="chart" style="background-image:url(${chImg(CHRON.length - 1)})"></div><p>${esc(CHRON[CHRON.length - 1].end)}</p></article>`;
   const ch = CHRON[C.c], ms = ch.m.map(m => [m, chProg(C, m)]), all = ms.every(([m, p]) => p >= m[1]);
@@ -18154,7 +18196,7 @@ function vQuests() {
       if (soloN) r.push(`<button class="btn amber" data-act="qJump" data-ev="daily">★ ${soloN} event reward${soloN > 1 ? "s" : ""} ready</button>`);
       if (mN) r.push(`<button class="btn amber" data-act="mastery">◆ ${mN} Mastery reward${mN > 1 ? "s" : ""} ready</button>`);
       return r.length ? `<section class="qready"><b>Ready to claim</b><div>${r.join("")}</div></section>` : ""; })()}
-    ${chronHTML()}${S.retGift ? `<article class="card quest${S.retGift.at <= T ? " done hi" : ""}"><header>📦 Fleet Command supply convoy</header><p>${S.retGift.at <= T ? "The convoy has landed. Your supplies are waiting." : "On its way from Fleet Command for finishing the Academy."}</p>
+    ${d1HTML()}${chronHTML()}${S.retGift ? `<article class="card quest${S.retGift.at <= T ? " done hi" : ""}"><header>📦 Fleet Command supply convoy</header><p>${S.retGift.at <= T ? "The convoy has landed. Your supplies are waiting." : "On its way from Fleet Command for finishing the Academy."}</p>
       <div class="rw"><span class="cost">${costHTML(S.retGift.rw)} <span class="shard">◆${S.retGift.rw.shards}</span></span>${S.retGift.at <= T ? `<button class="btn amber" data-act="retClaim">Claim</button>` : `<span class="note">Lands in <span data-end="${S.retGift.at}">${ftime(S.retGift.at - T)}</span></span>`}</div></article>` : ""}
     ${st ? `<h2 class="sec">${tutCount()}</h2><article class="card quest${td ? " done hi" : ""}"><header>${esc(st.t)}</header><p>${esc(st.say)}</p>
       <div class="rw"><span class="cost">${costHTML(st.rw || {})}${st.rw && st.rw.shards ? ` <span class="shard">◆${st.rw.shards}</span>` : ""}</span>${td ? `<button class="btn amber" data-act="tutClaim">Collect</button>` : `<button class="btn ghost" data-act="tutShow">Show me</button>`}</div></article>` : ""}
@@ -20355,7 +20397,7 @@ function renderSheet() {
   if (G.rangeHeld && sheet) { G.rangeLate = 1; return; }
   let w = $("#sheetwrap");
   let html = ({ planet: shPlanet, report: shReport, settings: shSettings, void: shVoid, assault: shAssault, targets: shTargets, node: shNode, bld: shBld, nexus: shNexus, skin: shSkin, find: shFind, pirate: shPirate, pyramid: shPyramid, wboss: shWboss, omega: shOmega, finale: shFinale, sboss: shSboss, matbox: () => { const s = SHOP[sheet.k]; if (!s) return ""; const f = fsOf(), tt = s.mbT; return `<div class="hd"><div><div class="chapter" style="color:${FS_TIER[tt][1]}">Material Selection Box</div><h2>${esc(s.n)}</h2><p class="note">${sheet.all && (S.items || {})[sheet.k] > 1 ? `Pick one for all ${S.items[sheet.k]} boxes: you get ${fmt(MB_N[tt] * S.items[sheet.k])} × ${FS_TIER[tt][0]} of it.` : `Pick one: you get ${MB_N[tt]} × ${FS_TIER[tt][0]} of it.`}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div><div class="fsmb">${Object.keys(FS_MATS).map(m => `<button class="btn" data-act="matboxPick" data-v="${m}" style="--tc:${FS_TIER[tt][1]}"><i class="fsmi lg fsmat-${m}"></i><b>${FS_MATS[m][0]}</b><small>you have ${fmt(f.mats[fsMatKey(m, tt)] || 0)}</small></button>`).join("")}</div>`; }, fctl: shFctl, station: shStation, ally: shAlly, layers: shLayers, tile: shTile, graphics: shGfx, cuberes: shCubeRes, basedet: shBaseDet, planets: shPlanets, fo: shFo, allymem: shAllyMem, altools: () => { const a = myAlly(); return a ? `<div class="hd"><div><div class="chapter">[${esc(a.tag)}] ${esc(a.name)}</div><h2>${allyRank(a, G.me) === "lead" ? "Leader" : "Captain"} tools</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${allyTools(a) || '<p class="note">Only the leader and captains have these tools.</p>'}` : ""; },
-    yard: shYard, labs: shLabs, flagship: shFlag, sound: shSound, shop: shShop, pack: shPack, packadmin: shPackAdmin, vip: shVip, spyrep: shSpyRep, spysend: shSpySend, repshare: shRepShare, stress: shStress, bosslab: shBossLab, cubepick: shCubePick, health: shHealth, howto: shHowTo, fbinbox: shFbInbox, events: shEvents, ach: shAch, archives: shArch, avatars: shAvatars, detail: shDetail, faction: shFaction, profile: shProfile, wardrobe: shWardrobe, vault: shVault, titan3d: shTitan3D, ranks: shRanks, friends: shFriends, chat: shChat,
+    yard: shYard, labs: shLabs, flagship: shFlag, sound: shSound, shop: shShop, pack: shPack, packadmin: shPackAdmin, vip: shVip, spyrep: shSpyRep, spysend: shSpySend, repshare: shRepShare, stress: shStress, bosslab: shBossLab, cubepick: shCubePick, health: shHealth, howto: shHowTo, fbinbox: shFbInbox, events: shEvents, ach: shAch, archives: shArch, depot: shDepot, avatars: shAvatars, detail: shDetail, faction: shFaction, profile: shProfile, wardrobe: shWardrobe, vault: shVault, titan3d: shTitan3D, ranks: shRanks, friends: shFriends, chat: shChat,
     mastery: () => `<div class="hd"><div><div class="chapter">Progression</div><h2>Path to Mastery</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${mMastery()}` })[sheet.type]();
   if (!html) { closeSheet(); return; }
   html += sheet.type === "faction" && !S.faction ? "" : backBar(); html = `<div class="grab" aria-hidden="true"></div>` + html;
@@ -20861,7 +20903,7 @@ const bump = k => { S.stats = S.stats || {}; S.stats[k] = (S.stats[k] || 0) + 1;
 
 /* the old slide-out menu is now the Commander tab; these keep older call sites working */
 function closeMenu() {}
-function renderMenu() { if (view === "cmd") render(true); }
+function renderMenu() { if (view === "cmd") render(true); if (sheet && sheet.type === "depot") renderSheet(); }
 function vCmd() {
   ensureDaily();
   const sc = score(), L = cmdLevel(sc), mx = L >= CMD_MAX, a = lvlXP(L), b = mx ? a + 1 : lvlXP(L + 1), name = G.myName || "Commander", rank = myRank();
@@ -20885,7 +20927,7 @@ function vCmd() {
     ${acc("alliance", ic(MI.wings), "Alliance", myAlly() ? `<span class="pill ok">[${esc(myAlly().tag)}]</span>` : `<span class="pill">None</span>`, pactCard() + allySection())}
     ${acc("elements", ic(MI.shield, "#e06bd8"), "Elements (Runes)", `${Object.values(S.runes || {}).reduce((a, b) => a + b, 0) ? `<span class="pill amb">${Object.values(S.runes || {}).reduce((a, b) => a + b, 0)} to socket</span>` : ""}`, mElem())}
     ${acc("vshop", ic(MI.tag, "#c9a6ff"), "Void Shop", `<span class="shard">◆ ${fmt(S.shards || 0)}</span>`, mShopVoid())}
-    ${acc("depot", ic(MI.tag), "Supply Depot", "", mShop())}
+    <section class="acc"><button class="acch" data-act="depotOpen"><span class="ai">${ic(MI.tag)}</span><span class="at">Supply Depot</span><span class="pill amb">Open ›</span></button></section>
     ${duelOwner() ? `<button class="btn ghost wide" data-act="fbInbox">💬 Feedback inbox</button><button class="btn ghost wide" data-act="healthOpen">📉 Crash &amp; performance</button><button class="btn ghost wide" data-act="labOpen">📅 Boss Lab: the rotation, previews and battle reports</button><button class="btn ghost wide" data-act="stressOpen">⚔ Stress-test battles</button><button class="btn ghost wide" data-act="${G.convSim ? "convSimStop" : "convSim"}">${G.convSim ? "■ Stop the Convergence preview" : "▶ Watch the whole Elemental Convergence"}</button><button class="btn ghost wide" data-act="${G.dvSim ? "dvSimStop" : "dvSim"}">${G.dvSim ? "■ Stop the Cube Devastation preview" : "▶ Watch Cube Devastation (Omega Cube)"}</button><button class="btn ghost wide" data-act="${G.sbSim && G.sbSim.key === "vae" ? "sbStop" : "sbVae"}">${G.sbSim && G.sbSim.key === "vae" ? "■ Stop the Vaelthar preview" : "▶ Watch Vaelthar, the Celestial Ruin"}</button><button class="btn ghost wide" data-act="${G.sbSim && G.sbSim.key === "aex" ? "sbStop" : "sbAex"}">${G.sbSim && G.sbSim.key === "aex" ? "■ Stop the Aexion preview" : "▶ Watch Aexion, the Warform Sovereign"}</button><button class="btn ghost wide" data-act="${G.sbSim && G.sbSim.key === "khz" ? "sbStop" : "sbKhz"}">${G.sbSim && G.sbSim.key === "khz" ? "■ Stop the Khezaroth preview" : "▶ Watch Khezaroth, the Dark Matter Sphinx"}</button><button class="btn ghost wide" data-act="${G.sbSim && G.sbSim.key === "med" ? "sbStop" : "sbMed"}">${G.sbSim && G.sbSim.key === "med" ? "■ Stop the Medusara preview" : "▶ Watch Medusara, the Petrified Star"}</button><button class="btn ghost wide" data-act="elePrev">✪ Preview the Elemental Convergence: ${["off", "the five Elementals", "the Pentarch"][G.elePrev || 0]}</button>` : ""}
     ${acc("settings", ic(MI.grid), "Settings", "", mSave() + mGame())}</div>`;
 }
@@ -21046,6 +21088,21 @@ const DEP_LINES = [h => `Fresh crates in from the outer belts. ${RES_N[h]} is se
 function depLine() { const k = Math.floor(Date.now() / 90000); if (G.depLineK !== k) { G.depLineK = k; let n; do { n = (Math.random() * DEP_LINES.length) | 0; } while (n === G.depLineN && DEP_LINES.length > 1); G.depLineN = n; } return DEP_LINES[G.depLineN || 0](depHot()); }
 function depSpark(r) { const v = []; for (let d = 6; d >= 0; d--) v.push(depF(r, d)); const W = 64, H = 20, mn = .86, mx = 1.14, pts = v.map((y, i) => `${(i / 6 * W).toFixed(1)},${(H - (y - mn) / (mx - mn) * H).toFixed(1)}`).join(" ");
   return `<svg class="dpsp" viewBox="0 0 ${W} ${H}" aria-hidden="true"><polyline points="${pts}"/><circle cx="${W}" cy="${(H - (v[6] - mn) / (mx - mn) * H).toFixed(1)}" r="2.2"/></svg>`; }
+/* v615 the Supply Depot gets its own page (owner: "the depot should have its own page, and I thought the depot person was supposed to
+   be voiced; I provided art too"). Quartermaster Ondra Vey, in the owner's portrait, greets you, talks when you tap her, and reacts
+   to trades, contracts and a better rate, in her own voice. */
+const DEP_GREET = ["Commander! Welcome to the depot. Mind the crates, they bite.", "Back again? Good. Business is slow when you're away.",
+  "You look like someone with too much of one thing and not enough of another. I can fix that.", "Prices moved overnight, Commander. Come and see which way."];
+const DEP_TRADE = ["Pleasure doing business, Commander.", "Done. Don't spend it all on one dreadnought.", "Crates are loaded. Your haulers will have it before you blink."];
+const DEP_CONTRACT = "That hauler's full. Here's your cut, as promised.", DEP_RANKUP = "You've earned a better rate. Don't tell the others.";
+const depLines = () => DEP_LINES.flatMap(f => f.length ? ["m", "c", "g"].map(h => f(h)) : [f()]);
+function depSay(line) { if (!line) return; G.depSay = line; const p = $("#dpsay"); if (p) p.textContent = line; try { speak(line); } catch (e) {} }
+function depotOpen() { closeSheet(); openSheet({ type: "depot" }); const first = !S.depMet; S.depMet = 1; dirty();
+  setTimeout(() => depSay(first ? DEP_GREET[0] : DEP_GREET[1 + ((Math.random() * (DEP_GREET.length - 1)) | 0)]), 350); }
+function shDepot() { const body = mShop().replace(/^<div class="dpb">[\s\S]*?<\/p><\/div><\/div><\/div>/, "");
+  return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#ffcf5a">Supply Depot</div><h2>Ondra's Trading Post</h2><p class="note">Swap resources at today's prices, fill her contract, buy boosts.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
+    <div class="dph2"><div class="dpbn" style="background-image:url(art/allyDepot.webp)"></div><button class="dpport" data-act="depTalk" aria-label="Talk to Ondra"><img src="avatars/ondra.webp" alt="Quartermaster Ondra Vey"></button>
+      <div class="dpsay"><small>QUARTERMASTER ONDRA VEY</small><p id="dpsay">${esc(G.depSay || depLine())}</p><button class="btn ghost sm" data-act="depTalk">🔊 Talk to Ondra</button></div></div>${body}`; }
 function mShop() {
   const tr = menu.tr, have = Math.floor(S.res[tr.from]), amt = clamp(Math.floor(tr.amt || 0), 0, have), fee = depFee(), get = depGet(tr.from, tr.to, amt), rk = depRank(), R = DEP_RANK[rk], nx = DEP_RANK[rk + 1], vol = S.trVol || 0, hot = depHot();
   const bp = boostPrice(), aff = Math.min(...["m", "c", "g"].map(r => bp[r] ? Math.floor(S.res[r] / bp[r]) : 99)), nextK = Math.min(12, Math.pow(1.15, (S.boostBuys || 0) + 1)) / Math.min(12, Math.pow(1.15, S.boostBuys || 0));
@@ -21632,7 +21689,7 @@ function advLive() { if (!S || !G.ready) return; const T = now(); S.advOnce = S.
   for (const k of ["armageddon", "sovereign", "harbinger"]) { let n = 0; try { n = own(k); } catch (e) {} if (n > 0 && advOnce("tb:" + k)) { advNews("x_tb_" + k); break; } } }
 setInterval(() => { try { advLive(); } catch (e) {} }, 8000);
 const advColor = () => view === "base" && !battle && !(typeof G3 !== "undefined" && G3 && G3.cam && G3.cam.cine); /* v576 her full-colour self on your planet; the hologram on the map and in battle */
-function advHolo(line, force) { if (!line || G.cineOn) return; const T0 = Date.now(); G.holoSaid = G.holoSaid || {}; for (const k in G.holoSaid) if (T0 - G.holoSaid[k] > 60000) delete G.holoSaid[k];
+function advHolo(line, force) { if (!line || G.cineOn || (sheet && sheet.type === "depot")) return; /* v615 Ondra has the floor */ const T0 = Date.now(); G.holoSaid = G.holoSaid || {}; for (const k in G.holoSaid) if (T0 - G.holoSaid[k] > 60000) delete G.holoSaid[k];
   if (!advFresh(line) && !(G.holoNext && G.holoNext.line === line)) return; // v386: not the same thing again within 30 s; v605: 2 minutes, shared with the dialog, live calls too
   { const a0 = VOICE.au; if (!force && a0 && !a0.paused && !a0.ended && G.holoCur && G.holoCur !== line && $("#advh.on")) { G.holoNext = { line, at: T0 }; // she finishes her sentence first
       if (!a0._q) { a0._q = 1; const go = () => { a0._q = 0; const n = G.holoNext; G.holoNext = null; if (n && Date.now() - n.at < 12000) setTimeout(() => advHolo(n.line), 400); }; a0.addEventListener("ended", go, { once: true }); a0.addEventListener("error", go, { once: true }); } return; } }
@@ -21925,8 +21982,8 @@ const TUT = [
   { lv: 6, t: "Settle your first colony", say: "Send the Colony Ship along with your warships to a Hive world you can beat. Win the battle and the world becomes ours: our second planet, and the first world we take back from Vael'Khor.", ok: s => (s.captures || 0) >= 1 || myPlanets().length >= 2, hive: 1, path: tutInvade, fund: () => addC(own("ark") || S.fleets.some(f => f.pid && f.phase === "out") ? {} : uFund("ark", 1), armedFund(6)), rw: { m: 15000, c: 15000, g: 8000, shards: 5 } },
   /* v299: the Academy ends with your flagship. Its last three steps pay all the materials (and most of the resources) the Dock and the flagship need */
   { lv: 6, t: "Raid pirates for flagship materials", say: "Our flagship is built from rare materials, and pirates hoard them. Raid another hideout: what they drop goes to the Flagship Dock. After that, the Academy clears you to build the Dock.", ok: s => ((s.stats || {}).pirates || 0) >= 2, /* v321: was "Reach Commander Level 10", about three days of grinding */ find: "x", pirLvl: "5", pirN: 2, path: pirPath, fund: () => armedFund(3), rw: { m: 40000, c: 30000, g: 12000, shards: 5, fs: { alloy1: 6, circuit1: 4, crystal1: 3 } } },
-  { lv: 6, id: "dock", t: "Build the Flagship Dock", say: "The Flagship Dock is where our flagship is commissioned and where its gear is forged. Find it under Structures, in Facility.", ok: s => (s.b.flagDock || 0) >= 1, go: { v: "build", s: "fac" }, path: bPath("flagDock", "fac"), fund: () => addC(bFund("shipyard", 2), bFund("flagDock", 1)), rw: { m: 20000, c: 15000, g: 8000, shards: 3, fs: { alloy1: 4, circuit1: 2, crystal1: 1 } } },
-  { lv: 6, t: "Commission your flagship", say: "Everything's ready, Commander. Commission the flagship: from now on it leads every fleet we send, gains experience and wears the gear the Dock forges.", ok: s => !!(s.fs && s.fs.built), open: () => ACT.flagHero(), fund: () => fsOf().built ? {} : FS_BUILD.res, path: () => [['.sheet [data-act="fsBuild"]:not([disabled])', "Tap Commission the flagship"], ...(fsHasMats(fsOf(), FS_BUILD.mats) && !canPayRes(FS_BUILD.res) ? shortPath(FS_BUILD.res) || [['.sheet .fsrows.fscomm', "Not enough resources yet. Your mines keep working: check back in a few minutes"]] : []), ['.sheet .fsrows.fscomm', "Anything marked ✕ is still missing"], ['.sheet [data-act="fsTab"][data-v="over"]', "Open the Flagship tab to commission it"], SHOWME] /* v338: scoped; .fsrows also matched the forge's stat rows */, rw: { m: 15000, c: 10000, g: 5000, shards: 10 } }
+  { lv: 6, id: "dock", t: "Build the Flagship Dock", say: "The Flagship Dock is where we rebuild the flagship that shielded our pods, and where her gear is forged. Find it under Structures, in Facility.", ok: s => (s.b.flagDock || 0) >= 1, go: { v: "build", s: "fac" }, path: bPath("flagDock", "fac"), fund: () => addC(bFund("shipyard", 2), bFund("flagDock", 1)), rw: { m: 20000, c: 15000, g: 8000, shards: 3, fs: { alloy1: 4, circuit1: 2, crystal1: 1 } } },
+  { lv: 6, t: "Commission your flagship", say: "Everything's ready, Commander. Bring her back: commission the flagship. From now on she leads every fleet we send, gains experience and wears the gear the Dock forges.", ok: s => !!(s.fs && s.fs.built), open: () => ACT.flagHero(), fund: () => fsOf().built ? {} : FS_BUILD.res, path: () => [['.sheet [data-act="fsBuild"]:not([disabled])', "Tap Commission the flagship"], ...(fsHasMats(fsOf(), FS_BUILD.mats) && !canPayRes(FS_BUILD.res) ? shortPath(FS_BUILD.res) || [['.sheet .fsrows.fscomm', "Not enough resources yet. Your mines keep working: check back in a few minutes"]] : []), ['.sheet .fsrows.fscomm', "Anything marked ✕ is still missing"], ['.sheet [data-act="fsTab"][data-v="over"]', "Open the Flagship tab to commission it"], SHOWME] /* v338: scoped; .fsrows also matched the forge's stat rows */, rw: { m: 15000, c: 10000, g: 5000, shards: 10 } }
 ];
 ADV_MOOD_L[TUT.find(s => s.id === "events-hub").say] = "warm"; ADV_MOOD_L[TUT.find(s => s.id === "join-alliance").say] = "warm"; for (const k in FS_GUIDE) ADV_MOOD_L[FS_GUIDE[k]] = "calm"; /* v614 */
 TUT.forEach(s => { if (!s.id) s.id = s.t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }); // v333: a permanent id for every step
@@ -24489,7 +24546,7 @@ function trayRender() {
 }
 
 /* ---------- actions ---------- */
-function act(fn) { advance(now()); fn(); progress(); dirty(); render(true); saveSoon(); }
+function act(fn) { advance(now()); fn(); progress(); dirty(); render(true); if (sheet && sheet.type === "depot") try { renderSheet(); } catch (e) {} saveSoon(); }
 /* v190: starting a build, upgrade, research or ship order from its card closes the card (no swiping it away), and the
    tutorial pointer moves to the next tap straight away */
 function doneCard() { if (sheet && (sheet.type === "bld" || sheet.type === "detail")) closeSheet(); guideNow(); }
@@ -24517,6 +24574,7 @@ function pushItems() { const T = now(), out = [], add = (tag, at, title, body) =
   for (const f of S.fleets || []) { if (f.demo) continue; const fb = fleetBounds(f); if (!fb) continue; const p = G.byId[f.pid] || (typeof PB !== "undefined" && PB[f.pid]) || {};
     if (f.phase === "out") add("fl" + f.id, fb[1], f.mission === "spy" ? "Probe arrived" : f.mission === "attack" ? "Your fleet is attacking" : "Fleet arrived", `Your fleet reached ${p.name || "its target"}.`);
     else if (f.phase === "back") add("fb" + f.id, fb[1], "Fleet home", `Your fleet is back home${f.loot ? " with its loot" : ""}.`); }
+  try { if (S.d1Tease && !S.d2Said) add("signal", Math.max(S.d1Tease + 20 * 3600e3, T + 60e3), "The signal is clearer", "Your Advisor has read the pyramid signal. Come back and hear what it says."); } catch (e) {} /* v615 */
   for (const g of [1, 2, 3]) { try { if (!wbGroupOn(g, T)) { const n = wbGroupNext(g, T); add("boss" + g, n - 10 * 60e3, `${SB_G[g].n} in 10 minutes`, `${wbMain(g).map(k => WB[k].n).join(", ")} rise soon. Gather your fleet.`); } } catch (e) {} }
   try { if (!evActive(T)) add("cube", evStart(evWeek(T) + 1) - 10 * 60e3, "Battle for the Cube in 10 minutes", "The Cube descends at the heart of the galaxy. Rally your alliance."); } catch (e) {}
   try { if ((S.shopFree || "") === shopDay()) add("wheel", shopDayEnd() + 60e3, "Free spin ready", "The Holo Glyph Wheel has a new free spin for you in the Void Shop."); } catch (e) {}
@@ -24574,7 +24632,8 @@ const ACT = {
   healthDays: d => { if (sheet && sheet.type === "health") { sheet.d = +d.d; renderSheet(); } },
   fbInbox: () => { if (!duelOwner()) return; G.fbList = null; G.fbErr = 0; openSheet({ type: "fbinbox" }); fbLoad(); },
   fbDone: d => { if (!duelOwner() || !G.db) return; G.db.doc("feedback/" + d.id).update({ status: "done" }).then(() => { G.fbList = (G.fbList || []).filter(r => r.id !== d.id); if (sheet && sheet.type === "fbinbox") renderSheet(); }, () => toast("Couldn't update that report.", "warn")); },
-  mtab: d => { if (d.k === "msg") return ACT.nav({ v: "mail" }); if (d.k === "etc") return ACT.howto(); closeSheet(); const map = { alliance: "alliance", shop: "depot", inv: "inv", msg: "messages", quest: "quests", game: "settings", save: "settings" }; menu.open[map[d.k] || d.k] = true; view = "cmd"; render(true); },
+  depotOpen: () => depotOpen(), depTalk: () => { const L = depLines(); let l; do { l = L[(Math.random() * L.length) | 0]; } while (l === G.depSay && L.length > 1); depSay(l); }, /* v615 */
+  mtab: d => { if (d.k === "msg") return ACT.nav({ v: "mail" }); if (d.k === "depot" || d.k === "shop") return depotOpen(); if (d.k === "etc") return ACT.howto(); closeSheet(); const map = { alliance: "alliance", shop: "depot", inv: "inv", msg: "messages", quest: "quests", game: "settings", save: "settings" }; menu.open[map[d.k] || d.k] = true; view = "cmd"; render(true); },
   acc: d => { menu.open[d.k] = !menu.open[d.k]; if (d.k === "messages" && menu.open[d.k]) { S.unread = 0; dirty(); } render(true); },
   targets: () => { sub.gal = sub.gal || "targets"; openSheet({ type: "targets" }); },
   fTour: () => { sub.gal = "targets"; if (!sheet || sheet.type !== "targets") openSheet({ type: "targets" }); finderTour(0); },
@@ -24623,11 +24682,11 @@ const ACT = {
     const get = depGet(from, to, amt), rk0 = depRank(); /* v536 the live market and the trader's cut */
     S.res[from] -= amt; S.res[to] += get; bump("trades"); menu.tr.amt = 0; S.trVol = (S.trVol || 0) + Math.round(amt * TRADE_VAL[from]); S.trLog = [{ t: now(), f: from, a: amt, to, g: get }].concat(S.trLog || []).slice(0, 6); G.depFx = performance.now();
     setTimeout(() => { if (G.depFx && performance.now() - G.depFx >= 1400) renderMenu(); }, 1450); if (depRank() > rk0) setTimeout(() => toast(`Depot standing: ${DEP_RANK[depRank()][0]} trader. Ondra's cut is now ${Math.round(depFee() * 100)}%.`, "win"), 600);
-    toast(`Traded ${fmt(amt)} ${RES_N[from].toLowerCase()} for ${fmt(get)} ${RES_N[to].toLowerCase()}.`, "win");
+    toast(`Traded ${fmt(amt)} ${RES_N[from].toLowerCase()} for ${fmt(get)} ${RES_N[to].toLowerCase()}.`, "win"); setTimeout(() => depSay(depRank() > rk0 ? DEP_RANKUP : DEP_TRADE[(Math.random() * DEP_TRADE.length) | 0]), 400);
   }),
   depSwap: () => { const t = menu.tr; [t.from, t.to] = [t.to, t.from]; t.amt = 0; renderMenu(); }, /* v536 */
   depFix: () => { advance(now()); const f = depFix(); if (!f) return; Object.assign(menu.tr, f); renderMenu(); },
-  depContract: () => act(() => { const C = depContract(); if (C.done || S.res[C.r] < C.amt) return; S.res[C.r] -= C.amt; S.depC = C.day; bump("depContracts"); S.shards = (S.shards || 0) + 3; giveItem(C.crate); toast(`Contract delivered: ◆3 and a ${SHOP[C.crate].n}.`, "win"); try { SFX.research(); } catch (e) {} }),
+  depContract: () => act(() => { const C = depContract(); if (C.done || S.res[C.r] < C.amt) return; S.res[C.r] -= C.amt; S.depC = C.day; bump("depContracts"); S.shards = (S.shards || 0) + 3; giveItem(C.crate); toast(`Contract delivered: ◆3 and a ${SHOP[C.crate].n}.`, "win"); setTimeout(() => depSay(DEP_CONTRACT), 400); try { SFX.research(); } catch (e) {} }),
   buyBoost5: () => act(() => { let n = 0; for (; n < 5; n++) { if (!pay(boostPrice())) break; S.boosts++; S.boostBuys = (S.boostBuys || 0) + 1; } if (n) toast(`${n} boost${n > 1 ? "s" : ""} added to your inventory.`, "win"); else toast("Not enough resources.", "warn"); }),
   buyBoost: () => act(() => { if (!pay(boostPrice())) return toast("Not enough resources.", "warn"); S.boosts++; S.boostBuys = (S.boostBuys || 0) + 1; toast("Boost added to your inventory.", "win"); }),
   weeklyClaim: d => act(() => { ensureWeekly(); const w = S.weekly.tasks[+d.i]; if (!w || w.claimed || !dailyDone(w)) return; w.claimed = true; dirty(); grantRw(weeklyRw(), "Weekly mission"); SFX.research(); toast("Weekly mission claimed.", "win"); }), /* v338 */
@@ -25195,7 +25254,8 @@ const ACT = {
   labs: () => openSheet({ type: "labs" }),
   rankPick: d => { const st = sheet && sheet.type === "ranks" ? sheet : (sub.rk = sub.rk || {}); st.pick = st.pick === d.u ? null : d.u; sheet && sheet.type === "ranks" ? renderSheet() : render(true); },
   events: d => { if (S) S.tutEv = 1; if (sheet) closeSheet(); sub.hub = "ev"; sub.ev = sub.ev || {}; if (d && d.ev) sub.ev.ev = d.ev; ACT.nav({ v: "rank" }); }, /* v539 the hub */
-  loginClaim: () => act(() => { const ls = loginState(); if (ls.claimed) return; S.login = { day: utcDay(), streak: ls.next }; grantRw(loginRw(ls.idx), `Daily login · day ${ls.next}`); if (ls.idx === 6) S.d7Bonus = 1; vipAdd(Math.min(7, ls.next) * 50, "daily login"); SFX.research(); toast(`Day ${ls.next} reward claimed.`, "win"); }),
+  d1Claim: () => d1Claim(), d1Go: () => { closeSheet(); ACT.nav({ v: "quests" }); }, /* v615 */
+  loginClaim: () => act(() => { const ls = loginState(); if (ls.claimed) return; loginStory(); S.login = { day: utcDay(), streak: ls.next }; grantRw(loginRw(ls.idx), `Daily login · day ${ls.next}`); if (ls.idx === 6) S.d7Bonus = 1; vipAdd(Math.min(7, ls.next) * 50, "daily login"); SFX.research(); toast(`Day ${ls.next} reward claimed.`, "win"); }),
   allyView: d => { sub.allyView = d.v || ""; if (d.v === "list") sub.allyPg = 1; render(); },
   allySearch: () => { sub.allyQ = (($("#allyq") || {}).value || "").trim().slice(0, 24); sub.allyPg = 1; render(true); },
   allyPg: d => { sub.allyPg = Math.max(1, +d.v || 1); render(true); },
