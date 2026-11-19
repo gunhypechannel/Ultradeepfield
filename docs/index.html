@@ -4791,7 +4791,14 @@ const ringX = e => Math.min(RING_MAX, ((S && S.ringX) || {})[e] || 0), ringT = e
    Level lock: rings open at commander Lv.5, and each ring can take one step (an expansion or a tier) per 5 commander levels */
 const ELEM_LV = 5, RING_TK = .2;
 const elemSlots = e => ELEM[e].slots + ringX(e);
-const myCmdLv = () => { try { return cmdLevel(score()); } catch (e) { return 1; } };
+/* v644 level points: what your buildings (every world) and research are worth, in thousands of resources */
+const LVP = { t: -1e9, v: 0 };
+function lvPts() { const T = performance.now(); if (T - LVP.t < 1000) return LVP.v; let t = 0;
+  try { const sb = b => { for (const k in b || {}) { if (!B[k]) continue; const n = Math.min(+b[k] || 0, 200); for (let l = 1; l <= n; l++) t += total(cost(B[k], l)); } };
+    sb(S.b); for (const k in S.r || {}) { if (!R[k]) continue; const n = Math.min(+S.r[k] || 0, 200); for (let l = 1; l <= n; l++) t += total(cost(R[k], l)); }
+    for (const p of myPlanets()) if (p.kind !== "home") sb(p.b); } catch (e) {}
+  LVP.t = T; LVP.v = Math.floor(t / 1000); return LVP.v; }
+const myCmdLv = () => { try { return cmdLevel(lvPts()); } catch (e) { return 1; } };
 const ringSteps = () => Math.floor(myCmdLv() / ELEM_LV); // steps allowed per ring right now
 const ringUsed = e => ringX(e) + ringT(e), ringNextLv = e => (ringUsed(e) + 1) * ELEM_LV;
 const ringXCost = e => { const x = ringX(e) + 1; return { c: Math.round(60000 * x * x), g: Math.round(20000 * x * x), shards: 8 * x }; };
@@ -5009,7 +5016,7 @@ const myBurn = id => (S.burns || []).find(b => b.pid === id && b.mine && b.until
 const FIRE_PENALTY = .75; // a burning world of yours produces 25% less until the fire is out
 
 /* ---------- Void Shop: items bought with Void Shards ---------- */
-const crateAmt = () => Math.round(15000 + score() * 40);
+const crateAmt = () => { try { return Math.max(15000, Math.round(rates().m * 60 * 4)); } catch (e) { return 15000; } }; /* v644: 4 hours of metal production (was 15k + 40 per score point) */
 const SHOP = {
   crateM:   { n: "Metal Crate", ic: "m", cost: 4, d: () => `${fmt(crateAmt())} metal delivered to your homeworld.`, use: () => { S.res.m += crateAmt(); return "Metal crate unpacked."; } },
   crateC:   { n: "Crystal Crate", ic: "c", cost: 5, d: () => `${fmt(Math.round(crateAmt() * .7))} crystal for your homeworld.`, use: () => { S.res.c += Math.round(crateAmt() * .7); return "Crystal crate unpacked."; } },
@@ -5565,7 +5572,7 @@ function cacheGrab(id) {
   fsDrop(lootRoll(LOOT.pod()), "a salvage pod"); // v299; v338: from the LOOT table
   if (c.kind === "shard") { const n = Math.random() < .3 ? 2 : 1; S.shards = (S.shards || 0) + n; return `◆${n} Void Shard${n > 1 ? "s" : ""}`; }
   if (c.kind === "item") { const k = DROPS[(Math.random() * DROPS.length) | 0]; giveItem(k, k === "probe5" ? 5 : 1); return SHOP[k].n; }
-  const amt = Math.round((2500 + score() * 12) * (c.kind === "g" ? .5 : c.kind === "c" ? .75 : 1));
+  let amt = Math.round(2500 * (c.kind === "g" ? .5 : c.kind === "c" ? .75 : 1)); try { amt = Math.max(amt, Math.round(rates()[c.kind] * 60)); } catch (e) {} /* v644: an hour of that resource (was 2,500 + 12 per score point) */
   const P = actPlanet(); if (P) { settle(P); P.st[c.kind] += amt; try { putPlanet(P); } catch (e) {} return `${fmt(amt)} ${RES_N[c.kind].toLowerCase()} to ${P.name}`; } /* v341: it lands on the world you're on, not always the homeworld */
   S.res[c.kind] += amt; return `${fmt(amt)} ${RES_N[c.kind].toLowerCase()}`;
 }
@@ -5600,7 +5607,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 642;
+const GAME_V = 644;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6436,7 +6443,7 @@ function rates() {
   const fire = G.myHome && myBurn(G.myHome) ? FIRE_PENALTY : 1, hp = G.myHome && G.byId ? G.byId[G.myHome] : null;
   return { m: mProd(S.b.metalMine, e * pf("metalMine")) * gb * fire * resMul("m") * pxMul(hp, "m"), c: cProd(S.b.crystalMine, e * pf("crystalMine")) * gb * fire * resMul("c") * pxMul(hp, "c"), g: Math.max(0, gProd(S.b.gasSynth, e * pf("gasSynth")) * gb * fire * resMul("g") * pxMul(hp, "g") - fusionGas(S.b.fusion || 0) * pf("fusion")), ep: p, eu: u, eff: e, gb, fire: fire < 1 };
 }
-const lvlOf = k => k === "moon" ? (homePlanet() && homePlanet().moon ? 1 : 0) : k === "cmd" ? cmdLevel(score()) : (k in B ? S.b[k] : S.r[k]) || 0;
+const lvlOf = k => k === "moon" ? (homePlanet() && homePlanet().moon ? 1 : 0) : k === "cmd" ? myCmdLv() : (k in B ? S.b[k] : S.r[k]) || 0;
 const missing = req => Object.entries(req || {}).filter(([k, l]) => lvlOf(k) < l && !(k === "cmd" && acadFlag()));
 /* v272: research can be started from any planet. The "Research Center Lv.N" a technology needs is met by your best Research Center
    on any world (OGame: research starts at a planet whose lab is high enough), and all labs still add up for speed */
@@ -6502,7 +6509,7 @@ function unitStat(k, t, fortL) {
 function stacksOf(n, tech, own, fortL) {
   const out = [];
   // your commander's experience sharpens your gunners: +0.3% accuracy per commander level, up to +6%
-  const ab = own && own === G.me && S ? Math.min(.06, (cmdLevel(score()) - 1) * .0006) : 0;
+  const ab = own && own === G.me && S ? Math.min(.06, (myCmdLv() - 1) * .0006) : 0;
   for (const k in n) if (n[k] > 0) { const s = unitStat(k, tech, fortL || 0); out.push({ k, n: n[k], atk: s.atk, sh: s.sh, hull: s.hull, own, w: 0, ab }); }
   return out;
 }
@@ -9744,7 +9751,7 @@ const matsText = rolls => rolls.map(([k, tt, n, p]) => { const tn = FS_TIER[clam
 const stat = k => ((S && S.stats) || {})[k] || 0;
 const ACH = [
   ["glory", "Galaxy Glory", "Earn {n} Achievement Points", () => achPts(), [50, 120, 250, 500, 900]],
-  ["cmd", "Superior Commander", "Reach Commander level {n}", () => cmdLevel(score()), [5, 10, 20, 35, 50, 75, 100]],
+  ["cmd", "Superior Commander", "Reach Commander level {n}", () => myCmdLv(), [5, 10, 20, 35, 50, 75, 100]],
   ["pvp", "Warlord", "Earn {n} PvP points", () => ((S.pvp || {}).pts) || 0, [100, 1000, 10000, 50000, 200000]],
   ["days", "I am playing", "Play on {n} different days", () => (S.bonus || {}).days || 0, [3, 7, 15, 30, 60, 100]],
   ["friends", "Making Friends", "Have {n} friends", () => (S.friends || []).length, [1, 3, 5, 10, 20]],
@@ -9788,7 +9795,7 @@ const LB_T = Array.from({ length: 20 }, (_, i) => { const L = 5 * (i + 1), n = i
 function bonusState() { const B = S.bonus = S.bonus || { days: 0, last: "", bb: [], lv: [] }, d = utcDay(); if (B.last !== d) { B.last = d; B.days++; }
   if (!S.online || S.online.day !== d) S.online = { day: d, ms: 0, got: [] }; return B; }
 const obMin = () => Math.floor(((S && S.online) || { ms: 0 }).ms / 60000);
-function bonusReady() { if (!S) return { bb: 0, ob: 0, lb: 0 }; const B = bonusState(), L = cmdLevel(score()), m = obMin();
+function bonusReady() { if (!S) return { bb: 0, ob: 0, lb: 0 }; const B = bonusState(), L = myCmdLv(), m = obMin();
   return { bb: BB_T.filter(([d], i) => B.days >= d && !B.bb.includes(i)).length, ob: OB_T.filter(([t], i) => m >= t && !S.online.got.includes(i)).length, lb: LB_T.filter(([l], i) => L >= l && !(B.lv2 = B.lv2 || []).includes(i)).length }; }
 /* online time counts only while the game is open and on screen; checked every 5 s */
 let obTick = Date.now();
@@ -9800,11 +9807,11 @@ function bonusTiers(list, have, claimed, act, lab) {
     return `<div class="bnr${got ? " got" : ok ? " ready" : ""}"><span class="bnn">${lab(need)}</span><span class="trw">${rwText(rw)}</span>${got ? '<span class="pill ok">Awarded</span>' : ok ? `<button class="btn amber sm" data-act="${act}" data-i="${i}">Claim</button>` : '<span class="pill wait">Not achieved</span>'}</div>`; }).join("")}</div>`;
 }
 function bonusBody(k, T) {
-  const B = bonusState(), L = cmdLevel(score());
+  const B = bonusState(), L = myCmdLv();
   if (k === "builder") return `<div class="evinfo"><h4>Event Info:</h4><p>Every day you play adds one to your total. The days do not have to be in a row: come back whenever you can and the rewards keep building.</p><h4>Days played:</h4><p><b class="evscore">${B.days}</b> day${B.days === 1 ? "" : "s"}</p></div>${bonusTiers(BB_T, B.days, B.bb, "bbClaim", d => `Day ${d}`)}`;
   if (k === "online") { const e = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate() + 1);
     return `<div class="evinfo"><h4>Event Info:</h4><p>Stay in the game to earn rewards. Time counts while the game is open on your screen and resets every day at 00:00 UTC.</p><h4>Online today:</h4><p><b class="evscore">${ftime(S.online.ms)}</b> · refreshes in <b data-end="${e}">${ftime(e - T)}</b></p></div>${bonusTiers(OB_T, obMin(), S.online.got, "obClaim", m => `Online ${obLabel(m)}`)}`; }
-  if (k === "lvlb") return `<div class="evinfo"><h4>Event Info:</h4><p>Raise your Commander level by growing your score: buildings, research, fleets and victories all count. Every milestone pays out once.</p><h4>Commander level:</h4><p><b class="evscore">${L}</b> · ${titleOf(L)}</p></div>${bonusTiers(LB_T, L, B.lv2 = B.lv2 || [], "lbClaim", l => `Commander Lv.${l}`)}`;
+  if (k === "lvlb") return `<div class="evinfo"><h4>Event Info:</h4><p>Raise your Commander level by building and researching: every building level, on every world, and every research level counts. Fleets and battles raise your ranking score instead. Every milestone pays out once.</p><h4>Commander level:</h4><p><b class="evscore">${L}</b> · ${titleOf(L)}</p></div>${bonusTiers(LB_T, L, B.lv2 = B.lv2 || [], "lbClaim", l => `Commander Lv.${l}`)}`;
   return "";
 }
 /* alliance gifts: when a member destroys a Cube or wins the Battle for the Cube, every member gets a gift to open */
@@ -10202,7 +10209,7 @@ function evBoard(k) { const D = EVB[k], rows = [], T = now();
   else { const mine = evPub() || {};
     for (const [uid, p] of Object.entries(G.players || {})) { if (uid === G.me || !p) continue; const v = k === "lvlb" ? (p.lvl | 0) : p.ev && typeof p.ev === "object" ? (+D[1](p.ev) || 0) : 0; if (v > 0 || k === "lvlb") rows.push({ id: uid, v }); }
     if (k === "lvlb") for (const b of BOTS) rows.push({ id: b.id, v: cmdLevel(botScore(b)), bot: 1 });
-    rows.push({ id: G.me, v: k === "lvlb" ? cmdLevel(score()) : (+D[1](mine) || 0), me: 1 }); }
+    rows.push({ id: G.me, v: k === "lvlb" ? myCmdLv() : (+D[1](mine) || 0), me: 1 }); }
   return rows.sort((x, y) => y.v - x.v || (x.me ? -1 : y.me ? 1 : 0)); }
 function evRankHTML(k) { const D = EVB[k], rows = evBoard(k), mi = rows.findIndex(r => r.me), show = rows.slice(0, 50); if (mi >= 50) show.push(rows[mi]);
   if (k === "gifts" && !myAlly()) return `<p class="note" style="padding:10px">Join an alliance to see who sends the most gifts.</p>`;
@@ -10406,7 +10413,7 @@ const CQ_PAL = ["#ffcf5a", "#55d6e8", "#ff5ac8", "#5dff9a", "#ff8a3a", "#9a7bff"
 const cqCol = aid => (G.cqPal && G.cqPal[aid]) || `hsl(${hash("cq" + aid) % 360} 70% 60%)`;
 function cqMap() { const own = {}; for (const a of Object.values(G.alliances || {})) for (const u in a.members || {}) own[u] = a.id;
   const sec = {}; for (const p of G.list || []) { if (!p.owner || p.owner === "pirates") continue; const aid = p.owner === G.me ? S.ally : own[p.owner]; if (!aid) continue; const L = layerOf(p.r || 0), sl = Math.floor(((((p.a0 || 0) % TAU) + TAU) % TAU) / TAU * CQ_SL) % CQ_SL, k = L.n + ":" + sl;
-    const pl = p.owner === G.me ? myPub() : (G.players || {})[p.owner] || {}, w = (p.kind === "home" ? 3 : 1) + Math.floor(cmdLevel(pl.score || 0) / 10); (sec[k] = sec[k] || {})[aid] = (sec[k][aid] || 0) + w; }
+    const pl = p.owner === G.me ? myPub() : (G.players || {})[p.owner] || {}, w = (p.kind === "home" ? 3 : 1) + Math.floor((pl.lvl || cmdLevel(pl.score || 0)) / 10); (sec[k] = sec[k] || {})[aid] = (sec[k][aid] || 0) + w; }
   const ctl = {}, pts = {}; for (const k in sec) { const e = Object.entries(sec[k]).sort((a, b) => b[1] - a[1]); if (e.length && (e.length === 1 || e[0][1] > e[1][1])) { ctl[k] = e[0][0]; pts[e[0][0]] = (pts[e[0][0]] || 0) + (+k.split(":")[0] >= 5 ? 2 : 1); } }
   const rank = Object.entries(pts).sort((a, b) => b[1] - a[1]); G.cqPal = {}; rank.forEach(([aid], i) => { if (i < CQ_PAL.length) G.cqPal[aid] = CQ_PAL[i]; }); return { sec, ctl, pts, rank }; }
 function cqSvg(M) { const R = [0, 32, 55, 80, 110, 140, 172], cx = 180, cy = 180, k = 1.02, arc = (r0, r1, a0, a1) => { const p = (r, a) => `${(cx + Math.cos(a) * r * k).toFixed(1)},${(cy + Math.sin(a) * r * k).toFixed(1)}`; return `M${p(r0, a0)} L${p(r1, a0)} A${r1 * k},${r1 * k} 0 0 1 ${p(r1, a1)} L${p(r0, a1)} A${r0 * k},${r0 * k} 0 0 0 ${p(r0, a0)}Z`; };
@@ -10846,7 +10853,7 @@ function syncPlayer() {
   if (S && S.cname) G.myName = S.cname;
   if (G.mode !== "online" || !G.db || !G.me || !G.myHome) return;
   const d = { joined: G.joinedAt, last: Math.floor(now() / 600000) * 600000, score: score(), wins: S.wins, planets: myPlanets().length, home: G.myHome, ally: S.ally || null,
-    tech: { weapons: S.r.weapons, shields: S.r.shields, armor: S.r.armor, esp: S.r.espionage || 0, fsa: Math.round(fsB("atk")), fss: Math.round(fsB("shd")), fsh: Math.round(fsB("hul")), fl: fsBuilt() ? (acadFlag() ? 2 : 1) : 0, fsl: fsBuilt() ? fsLookCode(fsLookOf(fsOf())) : "" }, pvp: (S.pvp || {}).pts || 0, rec: S.rec || { w: 0, l: 0, d: 0 }, bio: (S.bio || "").slice(0, 160), nm: S.cname || "", fac: facOf(), lvl: cmdLevel(score()), ast: S.r.astro || 0, av: S.avatar || null, mv: myMoves(), iv: myIntel(), cf: secFlag(), hf: hullPubOf(), sh: hash(G.me) % SHARDS, gw: S.gw && S.gw.i === gwIdx(now()) ? { i: S.gw.i, p: S.gw.pts } : null, ev: evPub() };
+    tech: { weapons: S.r.weapons, shields: S.r.shields, armor: S.r.armor, esp: S.r.espionage || 0, fsa: Math.round(fsB("atk")), fss: Math.round(fsB("shd")), fsh: Math.round(fsB("hul")), fl: fsBuilt() ? (acadFlag() ? 2 : 1) : 0, fsl: fsBuilt() ? fsLookCode(fsLookOf(fsOf())) : "" }, pvp: (S.pvp || {}).pts || 0, rec: S.rec || { w: 0, l: 0, d: 0 }, bio: (S.bio || "").slice(0, 160), nm: S.cname || "", fac: facOf(), lvl: myCmdLv(), ast: S.r.astro || 0, av: S.avatar || null, mv: myMoves(), iv: myIntel(), cf: secFlag(), hf: hullPubOf(), sh: hash(G.me) % SHARDS, gw: S.gw && S.gw.i === gwIdx(now()) ? { i: S.gw.i, p: S.gw.pts } : null, ev: evPub() };
   const j = JSON.stringify(d); if (j === store.lastPlayer) return;
   const fast = JSON.stringify(Object.assign({}, d, { last: 0, score: 0, wins: 0, rec: 0, pvp: 0, lvl: 0, tech: 0, gw: 0, ev: 0 })); // v324+: what other players must see at once
   if (fast === store.lastFast && now() - (store.lastPW || 0) < 120000) return; // only the stats moved: they ride along within 2 minutes
@@ -13001,8 +13008,8 @@ const FLAG_LV = 10, FLAG_OLD = 15;
 /* v321: the Academy clears you for the flagship from its "Build the Flagship Dock" step on, whatever your commander level */
 const acadFlag = () => !!(S && S.tut && S.tut.i >= TUT.findIndex(s => s.id === "dock")), flagLvOK = L => L >= FLAG_LV || acadFlag();
 const flagOK = u => { try { if (!u) return false;
-  if (u === G.me || u === "local") { if (!S) return false; if (!S.fs || S.fs.built == null) fsOf(); return !!S.fs.built && flagLvOK(cmdLevel(score())); }
-  const P = G.players[u]; if (P && P.score != null) { const fl = P.tech ? P.tech.fl : null; return fl == null ? cmdLevel(P.score) >= FLAG_OLD : fl > 0 && (fl > 1 || cmdLevel(P.score) >= FLAG_LV); }
+  if (u === G.me || u === "local") { if (!S) return false; if (!S.fs || S.fs.built == null) fsOf(); return !!S.fs.built && flagLvOK(myCmdLv()); }
+  const P = G.players[u]; if (P && P.score != null) { const fl = P.tech ? P.tech.fl : null; return fl == null ? (P.lvl || cmdLevel(P.score)) >= FLAG_OLD : fl > 0 && (fl > 1 || (P.lvl || cmdLevel(P.score)) >= FLAG_LV); }
   const s = BOT_BY[u] ? botScore(BOT_BY[u]) : null; return s != null && cmdLevel(s) >= FLAG_LV; } catch (e) { return false; } };
 function fleet3D(W, n, col, hostile, big, cube, flag, look) { // big: a joint strike armada, more hulls in the formation; cube: v174 the Cube event's flagship formation; flag: v250 the faction whose flagship leads
   if (cube && !flag && flagOK(G.me)) flag = facOf(); if (flag && !FACTIONS[flag]) flag = null;
@@ -18543,7 +18550,7 @@ function cnPose(b) { let m = "calm"; try { m = advMood(b.line); } catch (e) {} c
    the signal log told one line a day with the daily login, the flagship seen (and lost) in the prologue, and quicker first jobs. */
 const D1_MS = 864e5, D1_RW = { shards: 60, boosts: 5, item: "xb_gold" };
 const D1_GOALS = [["Finish 10 Academy steps", () => S.tut && (S.tut.k === "done" || (S.tut.i | 0) >= 10)], ["Win 3 battles", () => vpStat("battlesWon") >= 3],
-  ["Explore 2 pyramid stations", () => vpStat("pyramids") >= 2], ["Reach Commander Lv.5", () => cmdLevel(score()) >= 5], ["Join an alliance", () => !!myAlly() || G.mode !== "online"]];
+  ["Explore 2 pyramid stations", () => vpStat("pyramids") >= 2], ["Reach Commander Lv.5", () => myCmdLv() >= 5], ["Join an alliance", () => !!myAlly() || G.mode !== "online"]];
 const d1On = (T = now()) => !!(S && S.created && S.intro && !S.d1Done && T - S.created < D1_MS);
 const d1Got = () => D1_GOALS.filter(g => { try { return g[1](); } catch (e) { return false; } }).length;
 function d1HTML(T = now()) { if (!d1On(T)) return ""; const end = S.created + D1_MS, n = d1Got(), all = n >= D1_GOALS.length;
@@ -18629,7 +18636,7 @@ function hudPlanet() { return actPlanet(); } // v184: on the map too (it was pin
 function hud() {
   const col = hudPlanet(), r = col ? colonyRates(col) : rates(), cp = col ? colCap(col) : caps(), have = col ? colStock(col) : S.res;
   const cell = (k, v, rate, cap) => `<div class="res r-${k}${cap && v >= cap ? " full" : ""}">${RI[k]}<div><b>${fmt(v)}</b><small>${rate}</small></div></div>`;
-  const net = Math.round(r.ep - r.eu), L = cmdLevel(score()), name = G.myName || "Commander";
+  const net = Math.round(r.ep - r.eu), L = myCmdLv(), name = G.myName || "Commander";
   const own = S.fleets.length, hostile = visibleInbound().length + (S.raid ? 1 : 0), friendly = G.mode === "online" ? openAssaults().length : 0;
   const html = `<div class="tb"><button class="ava" data-act="profile" data-u="${G.me}" aria-label="Your profile and avatar, level ${L}">${avCanvas(G.me)}<span class="lv">LV ${L}</span><span class="vipb${vipOn() ? "" : " off"}" data-act="vipOpen" role="button" aria-label="VIP ${vipLvl()}${vipOn() ? " active" : " inactive"}">VIP ${vipLvl()}</span></button>
     <div class="ttlw">${myPlanets().length > 1 ? `<button class="hop" data-act="hop" data-d="-1" aria-label="Previous planet">‹</button>` : ""}<button class="ttl" data-act="planets" aria-label="Switch planet. Showing ${esc(col ? col.name : S.homeName)}"><b>${esc(col ? col.name : S.homeName)}</b><small><span class="ptag${col ? " col" : ""}">${col ? "COLONY" : "HOMEWORLD"}</span>${myPlanets().length > 1 ? ` <span class="pn">${(() => { const l = sliderOrder(), i = l.findIndex(x => x[0] === (col ? col.id : "home")); return `${i + 1}/${l.length}`; })()}</span>` : ""} <span id="clock"></span></small></button>${myPlanets().length > 1 ? `<button class="hop" data-act="hop" data-d="1" aria-label="Next planet">›</button>` : ""}</div>
@@ -19709,17 +19716,17 @@ function allyListView() {
         <span class="alst"><span>${r.rank <= 3 ? ["🥇", "🥈", "🥉"][r.rank - 1] : "#" + r.rank} · ${fmt(r.val)}</span><span class="${full ? "full" : ""}">${a && a.open === false ? "🔒 " : ""}${NAVI.ally.replace("<svg", '<svg style="width:13px;height:13px"')} ${n}/${cap}</span></span></button>
         ${r.me ? '<span class="aljoin mine" aria-label="Your alliance">★</span>' : `<button class="aljoin" data-act="allyJoin" data-id="${r.id}" ${canJoin ? "" : "disabled"} aria-label="Join ${esc(a ? a.name : r.name)}">+</button>`}</div>`; }).join("") || `<p class="note" style="text-align:center;padding:18px 0">${q ? "No alliance matches that name." : "No alliances yet. Be the first to found one."}</p>`}</div>
     ${pages > 1 ? `<div class="segc alpg2"><button data-act="allyPg" data-v="${pg - 1}" ${pg <= 1 ? "disabled" : ""} aria-label="Previous page">‹ Prev</button><button class="on" disabled>Page ${pg} of ${pages}</button><button data-act="allyPg" data-v="${pg + 1}" ${pg >= pages ? "disabled" : ""} aria-label="Next page">Next ›</button></div>` : ""}
-    ${S.ally ? "" : `<div class="alfoot"><span>To found an alliance, your Commander must be at least level ${ALLY_LVL}${cmdLevel(score()) < ALLY_LVL ? ` (you are ${cmdLevel(score())})` : ""}.</span><button class="btn sm" data-act="allyView" data-v="create" ${cmdLevel(score()) >= ALLY_LVL ? "" : "disabled"}>Found</button></div>`}`;
+    ${S.ally ? "" : `<div class="alfoot"><span>To found an alliance, your Commander must be at least level ${ALLY_LVL}${myCmdLv() < ALLY_LVL ? ` (you are ${myCmdLv()})` : ""}.</span><button class="btn sm" data-act="allyView" data-v="create" ${myCmdLv() >= ALLY_LVL ? "" : "disabled"}>Found</button></div>`}`;
 }
 /* v543 commanders near your level who played this week, to befriend */
-function buddyPicks(n = 3) { const lv = cmdLevel(score()), fr = new Set(S.friends || []), T = now(); return Object.entries(G.players || {}).filter(([id, p]) => id !== G.me && !isBot(id) && !fr.has(id) && p && (p.last || p.joined || 0) > T - 7 * 864e5).map(([id, p]) => [id, p, Math.abs(cmdLevel(p.score || 0) - lv)]).sort((a, b) => a[2] - b[2]).slice(0, n); }
+function buddyPicks(n = 3) { const lv = myCmdLv(), fr = new Set(S.friends || []), T = now(); return Object.entries(G.players || {}).filter(([id, p]) => id !== G.me && !isBot(id) && !fr.has(id) && p && (p.last || p.joined || 0) > T - 7 * 864e5).map(([id, p]) => [id, p, Math.abs((p.lvl || cmdLevel(p.score || 0)) - lv)]).sort((a, b) => a[2] - b[2]).slice(0, n); }
 const buddyHTML = () => { const L = buddyPicks(); return L.length ? `<div class="mcard buddy"><h3>🤝 Commanders near your level</h3><p>Add a friend to see their worlds, send gifts and help each other. Your first three friends each bring a ◆3 buddy bonus.</p>${L.map(([id, p]) => `<div class="bdr">${avCanvas(id, "avc lbav")}<span><b>${esc(nameOf(id))}</b><small>Commander Lv.${cmdLevel(p.score || 0)}</small></span><button class="btn sm" data-act="befriend" data-u="${id}">Add friend</button></div>`).join("")}</div>` : ""; };
 setInterval(() => { try { if (!S || !G.ready || G.mode !== "online" || S.ally || S.starterAsk || tutOn() || sheet || battle || advLines || !S.tut || S.tut.k !== "done" || $("#starterask") || $("#pushask")) return; const a = quickAlly(); if (!a) return;
   S.starterAsk = 1; dirty(); const w = document.createElement("div"); w.id = "starterask"; w.className = "toast rmd busy pushask";
   w.innerHTML = `<span class="ric">🛡</span><span class="rtx"><small>Stronger together</small><b>Join [${esc(a.tag)}] ${esc(a.name)}?</b><em>An active alliance with room for you. Join now for a welcome gift: ◆10 and a Boost Pack ×5.</em></span><span class="rbt"><button class="btn sm amber" data-act="starterJoin">Join</button><button class="rx" data-act="starterLater" aria-label="Not now">✕</button></span>`;
   const box = $("#toasts"); if (box) box.appendChild(w); setTimeout(() => { if (w.isConnected) w.remove(); }, 25000); } catch (e) {} }, 60000);
 function allyInfoView() {
-  const lv = cmdLevel(score()), lvOk = lv >= ALLY_LVL, qa = G.mode === "online" ? quickAlly() : null;
+  const lv = myCmdLv(), lvOk = lv >= ALLY_LVL, qa = G.mode === "online" ? quickAlly() : null;
   return `${allyHd("Alliance", "You have not joined or founded an alliance yet.")}
     ${G.mode === "online" ? buddyHTML() : ""}<div class="mcard qjoin"><h3>⚡ Quick join</h3><p>${qa ? `Join the strongest open alliance with room: <b>[${esc(qa.tag)}] ${esc(qa.name)}</b> · ${Object.keys(qa.members).length}/${allyCap(qa)} members.` : G.mode === "online" ? "No open alliance has room right now. Found your own below." : "Alliances with other players need the shared galaxy."}</p>
       <button class="btn amber wide" data-act="allyQuick" ${qa ? "" : "disabled"}>⚡ Quick join</button></div>
@@ -19732,13 +19739,13 @@ const crestPicker = (cur, act) => `<div class="crestpk">${Array.from({ length: C
 /* alliance tag: 2-4 visible characters (letters, numbers, symbols, emoji); strips spaces, invisible and direction-override characters and the [ ] < > around tags; a whole emoji counts as one */
 const tagClean = v => { const s = String(v || "").replace(/[\s\p{Cc}\p{Co}\p{Cn}\u200B\u200E\u200F\u202A-\u202E\u2066-\u2069\u{FEFF}\[\]<>]/gu, "").normalize("NFC").toUpperCase(); if (!s || s.length > 24) return null; const g = typeof Intl !== "undefined" && Intl.Segmenter ? [...new Intl.Segmenter().segment(s)].map(x => x.segment) : Array.from(s); return { s, n: g.length }; };
 function allyCreateView() {
-  const ok = cmdLevel(score()) >= ALLY_LVL && canPlay();
+  const ok = myCmdLv() >= ALLY_LVL && canPlay();
   return `${allyHd("Found an alliance", "Pick a name and a short tag. The tag shows next to every member's name.", true)}
     <div class="mcard"><label class="note" for="alname">Alliance name</label><input class="minput" id="alname" maxlength="24" placeholder="e.g. Iron Covenant" aria-label="Alliance name">
       <label class="note" for="altag" style="margin-top:8px;display:block">Tag (2 to 4 characters, symbols allowed)</label><input class="minput" id="altag" maxlength="24" placeholder="e.g. ★IR or ⚔DF" aria-label="Alliance tag">
       <p class="note" style="margin-top:8px">Emblem</p>${crestPicker(G.crestPick || 1, "crestPick")}
       <p class="note" style="margin-top:8px">Cost:</p>${allyCost()}
-      <button class="btn wide" data-act="allyCreate" ${ok ? "" : "disabled"}>Found alliance</button>${G.mode !== "online" ? '<p class="note">Solo galaxy: your alliance is you and your bot allies. Sign in to recruit other commanders.</p>' : cmdLevel(score()) < ALLY_LVL ? `<p class="note">Reach Commander level ${ALLY_LVL} first.</p>` : ""}</div>`;
+      <button class="btn wide" data-act="allyCreate" ${ok ? "" : "disabled"}>Found alliance</button>${G.mode !== "online" ? '<p class="note">Solo galaxy: your alliance is you and your bot allies. Sign in to recruit other commanders.</p>' : myCmdLv() < ALLY_LVL ? `<p class="note">Reach Commander level ${ALLY_LVL} first.</p>` : ""}</div>`;
 }
 /* one alliance, opened from the list: members (with avatars, like Rankings), score and Join */
 function shAlly() {
@@ -20426,7 +20433,7 @@ const fsXpNeed = L => Math.round(200 * Math.pow(L, 1.5)); // XP from level L to 
 function fsOf() { if (!S) return null; if (!S.fs || typeof S.fs !== "object") S.fs = {}; const f = S.fs;
   f.xp = +f.xp || 0; f.lv = clamp(+f.lv || 1, 1, FS_MAX); f.sk = f.sk && typeof f.sk === "object" ? f.sk : {}; f.eq = f.eq && typeof f.eq === "object" ? f.eq : {};
   f.inv = Array.isArray(f.inv) ? f.inv : []; f.mats = f.mats && typeof f.mats === "object" ? f.mats : {}; f.q = Array.isArray(f.q) ? f.q : []; f.loads = Array.isArray(f.loads) ? f.loads : []; f.seq = +f.seq || 1; f.v = +f.v || 1;
-  if (f.built == null) f.built = cmdLevel(score()) >= FLAG_OLD ? 1 : 0; /* v299: veterans already flew one */ return f; }
+  if (f.built == null) f.built = myCmdLv() >= FLAG_OLD ? 1 : 0; /* v299: veterans already flew one */ return f; }
 const fsOn = () => { try { return !!S && flagOK(G.me || "local"); } catch (e) { return false; } };
 const fsSpent = f => Object.values(f.sk).reduce((a, v) => a + (+v || 0), 0), fsPts = f => Math.max(0, f.lv - 1 - fsSpent(f));
 const fsItemStats = it => { const sl = FS_SLOT[it.s]; if (!sl) return {}; const k = FS_TMUL[it.t] * (1 + FS_ENH_K * (it.lv || 0)), o = {}; for (const s in sl[3]) o[s] = +(sl[3][s] * k).toFixed(2);
@@ -20493,7 +20500,7 @@ const fsRoll = p => Math.random() < p;
    target cards are built from these same rolls, so what a card promises is what the fight pays. Old sources keep their v298 numbers. */
 const LOOT_PITY = 15, ELITE_K = { force: 1.6, loot: 2, up: 3, res: 1.5 };
 const fsTierL = (L, per) => clamp(1 + Math.floor(L / per), 1, 5);
-const fsPT = () => clamp(1 + Math.floor(cmdLevel(score()) / 12), 1, 5); // the player's own tier, for mission and event rewards
+const fsPT = () => clamp(1 + Math.floor(myCmdLv() / 12), 1, 5); // the player's own tier, for mission and event rewards
 const LOOT = {
   pirate: (L, el) => { const t = fsTierL(L, 8), k = el ? ELITE_K.loot : 1; return [["circuit", t, (1 + Math.floor(L / 5)) * k], ["alloy", t, (1 + Math.floor(L / 8)) * k], ["circuit", t + 1, 1, Math.min(1, .12 * (el ? ELITE_K.up : 1)), 1]]; },
   monster: (L, el, sp) => { const t = fsTierL(L, 8), k = el ? ELITE_K.loot : 1, x = MON_LOOT[sp]; return [["bio", t, (1 + Math.floor(L / 8)) * k], ["void", t, k, .35], ["cube", t, 1, .08], ["bio", t + 1, 1, Math.min(1, .1 * (el ? ELITE_K.up : 1)), 1]].concat(x ? [[x[0], t, k, x[1]]] : []); },
@@ -20665,7 +20672,7 @@ function fgReveal() { const q = G.fsRevQ || []; if (!q.length || document.getEle
   el.addEventListener("click", e => { const b = e.target.closest("[data-fg]"); if (!b) return; if (b.dataset.fg === "eq") { try { ACT.fsEquip({ id: it.id }); } catch (er) {} } el.remove(); setTimeout(fgReveal, 250); }); }
 
 function shFlag() {
-  const f = fsOf(), tab = sheet.tab || "over", on = fsOn(), L = (() => { try { return cmdLevel(score()); } catch (e) { return 1; } })(), fac = facOf();
+  const f = fsOf(), tab = sheet.tab || "over", on = fsOn(), L = (() => { try { return myCmdLv(); } catch (e) { return 1; } })(), fac = facOf();
   const tabs = `<div class="segc fstabs">${[["over", "Flagship", `fsmini fsmini-${facOf()}`], ["skills", "Skills", "fstr-war"], ["gear", "Gear", "fsimg s-weapon"], ["forge", "Forge", "fsti-forge"], ["mats", "Materials", "fsmat-crystal"]].map(([k, n, ic]) => `<button class="${tab === k ? "on" : ""}" data-act="fsTab" data-v="${k}"><i class="fsti ${ic}"></i>${n}${k === "skills" && fsPts(f) ? ` <i class="tb">${fsPts(f)}</i>` : ""}${k === "forge" && f.q.length ? ` <i class="tb">${f.q.length}</i>` : ""}</button>`).join("")}</div>`;
   const head = `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:${FS_TIER[Math.max(1, ...fsEquipped(f).map(x => x.t), 1)][1]}">Flagship Command</div><h2>${esc((FS_FAC[fac] || ["Union"])[0])} flagship · Lv.${f.lv}</h2>
     <p class="note">${!fsBuilt() ? `<b style="color:var(--amber)">Not commissioned yet.</b> Build it at the Flagship Dock from commander Lv.${FLAG_LV}${acadFlag() ? " (the Academy has cleared you already)" : ""}.` : on ? `Leads every fleet you send. Its skills and gear power your whole empire.` : `<b style="color:var(--amber)">Takes command at commander Lv.${FLAG_LV}</b> (you are Lv.${L}). Until then it earns nothing and its bonuses are off.`}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
@@ -21304,8 +21311,8 @@ let menu = { open: { quests: true }, tr: { from: "m", to: "c", amt: 0 } };
 const maxFleets = () => 2 + (S.r.computer || 0) + Math.max(0, myPlanets().length - 1) + (officer("admiral") ? 2 : 0) + (cmdClass() === "general" ? 2 : 0) + vipEff().march; // every colony adds a slot, active VIP 6 and 14 add more
 /* v128: steeper curve (score 10·(L-1)^2.5), capped at CMD_MAX: Lv.10 ≈ 2.4k, Lv.50 ≈ 168k, Lv.100 ≈ 975k */
 const CMD_MAX = 100;
-const lvlXP = L => Math.round(10 * Math.pow(Math.max(0, L - 1), 2.5));
-const cmdLevel = s => { let L = Math.min(CMD_MAX, Math.floor(Math.pow(Math.max(0, s) / 10, .4)) + 1); while (L < CMD_MAX && s >= lvlXP(L + 1)) L++; while (L > 1 && s < lvlXP(L)) L--; return L; };
+const lvlXP = L => Math.round(26 * Math.pow(Math.max(0, L - 1), 2.5)); /* v644 was 10·(L-1)^2.5 on total score */
+const cmdLevel = s => { let L = Math.min(CMD_MAX, Math.floor(Math.pow(Math.max(0, s) / 26, .4)) + 1); while (L < CMD_MAX && s >= lvlXP(L + 1)) L++; while (L > 1 && s < lvlXP(L)) L--; return L; };
 const TITLES = [[100, "Fleet Marshal"], [80, "Supreme Admiral"], [60, "Grand Admiral"], [40, "Admiral"], [30, "Vice Admiral"], [20, "Commodore"], [12, "Captain"], [6, "Commander"], [3, "Lieutenant"], [1, "Ensign"]];
 const titleOf = L => TITLES.find(([l]) => L >= l)[1];
 function myRank() { if (G.mode !== "online") return null; const ids = allCommanders().sort((a, b) => b[1].score - a[1].score).map(([id]) => id); const i = ids.indexOf(G.me); return i < 0 ? null : i + 1; }
@@ -21331,7 +21338,7 @@ function ensureDaily() {
   dirty();
 }
 const dailyDone = t => metric(t.k) - t.base >= t.n;
-const dailyReward = () => { const s = Math.max(1, score()); return { m: Math.round(600 + s * 25), c: Math.round(400 + s * 15), g: Math.round(150 + s * 6) }; };
+const dailyReward = () => { let R = { m: 0, c: 0, g: 0 }; try { R = rates(); } catch (e) {} return { m: Math.max(600, Math.round(R.m * 90)), c: Math.max(400, Math.round(R.c * 90)), g: Math.max(150, Math.round(R.g * 90)) /* v644: 1.5 hours of production (was 600 + 25 per score point) */ }; };
 const bump = k => { S.stats = S.stats || {}; S.stats[k] = (S.stats[k] || 0) + 1; };
 
 /* the old slide-out menu is now the Commander tab; these keep older call sites working */
@@ -21339,7 +21346,7 @@ function closeMenu() {}
 function renderMenu() { if (view === "cmd") render(true); if (sheet && sheet.type === "depot") renderSheet(); }
 function vCmd() {
   ensureDaily();
-  const sc = score(), L = cmdLevel(sc), mx = L >= CMD_MAX, a = lvlXP(L), b = mx ? a + 1 : lvlXP(L + 1), name = G.myName || "Commander", rank = myRank();
+  const sc = lvPts(), L = cmdLevel(sc), mx = L >= CMD_MAX, a = lvlXP(L), b = mx ? a + 1 : lvlXP(L + 1), name = G.myName || "Commander", rank = myRank();
   const ic = (svg, col) => svg.replace("<svg", `<svg style="width:26px;height:26px;color:${col || "#38dfee"}"`);
   /* v201 commander card: portrait and level, a slim progress bar, six stat tiles, the battle record as one split bar, and a 3 x 2 grid of actions */
   const rec = S.rec || {}, w = rec.w || 0, lo = rec.l || 0, dr = rec.d || 0, fights = w + lo + dr, pct = clamp((sc - a) / (b - a) * 100, 0, 100);
@@ -22730,7 +22737,7 @@ function coachRender(force) {
     if (!w) { w = document.createElement("div"); w.id = "coach"; $("#app").appendChild(w); force = true; } w.style.display = sheet || view === "quests" ? "none" : "";
     if (force || html !== coachHtml) { coachHtml = html; w.innerHTML = html; const c = w.querySelector(".cav"); if (c) try { drawAdvisor(c, 0); } catch (e) {} }
     return; }
-  const st = TUT[S.tut.i], done = st.ok(S), lv = cmdLevel(score()), open = S.tut.open && !sheet && !advLines;
+  const st = TUT[S.tut.i], done = st.ok(S), lv = myCmdLv(), open = S.tut.open && !sheet && !advLines;
   const html = open ? `<div class="cbox${done ? " done" : ""}"><div class="chd"><img class="cav" src="${ADV_BUST}" alt="${ADV}"><div class="cti"><small>ADVISOR · ${esc(tutCount().toUpperCase())}</small><b>${esc(st.t)}</b></div><button class="cx" data-act="tutMin" aria-label="Hide the Academy for 5 minutes">✕</button></div>
       <p>${done ? "Done! Collect your reward." : esc(st.say)}</p>
       <div class="cbar"><i style="width:${Math.min(100, acadOn() ? S.tut.i / (ACAD_END + 1) * 100 : (S.tut.i - ACAD_END - 1) / MIS_N * 100)}%"></i></div><div class="clv">Commander Lv.${lv} · reward ${fmt((st.rw.m || 0) + (st.rw.c || 0) + (st.rw.g || 0))} res${st.rw.shards ? ` · ◆${st.rw.shards}` : ""}</div>
@@ -24593,7 +24600,7 @@ function recordBattle(rep) {
   const pts = Math.round(dmg / 2000) + (repWin(rep) ? 25 : rep.winner === "draw" ? 8 : 3);
   S.pvp = S.pvp || { pts: 0, dmg: 0, n: 0 }; S.pvp.pts += pts; S.pvp.dmg += Math.round(dmg); S.pvp.n++; rep.pvp = pts; gwAdd(pts, rep.at); // Galaxy War counts PvP points earned while it runs
 }
-const myPub = () => ({ score: score(), pvp: (S.pvp || {}).pts || 0, rec: S.rec || { w: 0, l: 0, d: 0 }, bio: S.bio || "", fac: facOf(), lvl: cmdLevel(score()), ast: S.r.astro || 0, av: S.avatar || null, planets: myPlanets().length, ally: S.ally || null, last: now(), vp: S.vp ? { s: S.vp.s, xp: S.vp.xp || 0 } : null, ttl: S.vpTitle || null, cos: cosPubOf(), vpr: S.vp && S.vp.pr && S.vp.s === vpSeason() ? 1 : 0 }); /* v546 the pass tier and title */
+const myPub = () => ({ score: score(), pvp: (S.pvp || {}).pts || 0, rec: S.rec || { w: 0, l: 0, d: 0 }, bio: S.bio || "", fac: facOf(), lvl: myCmdLv(), ast: S.r.astro || 0, av: S.avatar || null, planets: myPlanets().length, ally: S.ally || null, last: now(), vp: S.vp ? { s: S.vp.s, xp: S.vp.xp || 0 } : null, ttl: S.vpTitle || null, cos: cosPubOf(), vpr: S.vp && S.vp.pr && S.vp.s === vpSeason() ? 1 : 0 }); /* v546 the pass tier and title */
 function boardRows(kind) {
   if (kind === "alliances") { const out = []; for (const a of Object.values(G.alliances || {})) { let s = 0, pv = 0; const mem = Object.keys(a.members); for (const u of mem) { const p = u === G.me ? myPub() : G.players[u]; if (p) { s += p.score || 0; pv += p.pvp || 0; } }
       out.push({ id: a.id, name: `[${a.tag}] ${a.name}`, val: s, sub: `${mem.length} / ${allyCap(a)} members · Lv.${allyLevel(a)} · PvP ${fmt(pv)}`, ally: true, me: a.id === S.ally }); }
@@ -24910,7 +24917,7 @@ function shChat() {
   const log = msgs => { const L = msgs.filter(m => !blocked.has(m.u)); let prev = null, html = "";
     for (const m of L) { const mine = m.u === G.me, run = prev && prev.u === m.u && m.t - prev.t < 300000 && day0(prev.t) === day0(m.t);
       if (!prev || day0(prev.t) !== day0(m.t)) html += `<div class="cday"><span>${day0(m.t) === day0(now()) ? "Today" : new Date(m.t).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</span></div>`;
-      const aid = allyOf(m.u), at = aid && G.alliances[aid] ? `<i class="ctag">[${esc(G.alliances[aid].tag)}]</i>` : "", pl = G.players[m.u], lv = m.u === G.me ? cmdLevel(score()) : pl && pl.score != null ? cmdLevel(pl.score) : 0;
+      const aid = allyOf(m.u), at = aid && G.alliances[aid] ? `<i class="ctag">[${esc(G.alliances[aid].tag)}]</i>` : "", pl = G.players[m.u], lv = m.u === G.me ? myCmdLv() : pl && pl.score != null ? (pl.lvl || cmdLevel(pl.score)) : 0;
       const ment = !mine && chatMentions(m.x), rx = m.rx ? Object.entries(m.rx).reduce((o, [u, e]) => { (o[e] = o[e] || []).push(u); return o; }, {}) : null, pick = sheet.pick === m.id;
       html += `<div class="cmr${mine ? " me" : ""}${run ? " run" : ""}">${!mine ? (run ? `<span class="cav0"></span>` : `<button class="cav" data-act="profile" data-u="${esc(m.u)}" aria-label="${esc(nameOf(m.u))}">${cosFrame(m.u, avCanvas(m.u, "avc cavc"))}</button>`) : ""}
         <div class="cm${mine ? " me" : ""}${ment ? " ment" : ""}${m.r ? " hasrep" : ""}${pick ? " pick" : ""}" data-act="chatPick" data-id="${m.id}">
@@ -25460,7 +25467,7 @@ const ACT = {
     if (name.length < 3) return toast("The name needs at least 3 characters.", "warn");
     if (!tg || tg.n < 2 || tg.n > 4) return toast("The tag needs 2 to 4 characters: letters, numbers or symbols.", "warn");
     if (Object.values(G.alliances).some(a => String(a.tag).toUpperCase() === tag)) return toast("That tag is already taken.", "warn");
-    if (cmdLevel(score()) < ALLY_LVL) return toast(`Your commander must be at least level ${ALLY_LVL} to found an alliance.`, "warn");
+    if (myCmdLv() < ALLY_LVL) return toast(`Your commander must be at least level ${ALLY_LVL} to found an alliance.`, "warn");
     advance(now()); if (!pay(ALLY_COST)) return toast(`Founding an alliance costs ${fmt(ALLY_COST.m)} metal, ${fmt(ALLY_COST.c)} crystal and ${fmt(ALLY_COST.g)} gas.`, "warn");
     const id = "al" + (hash(G.me) % 1e6).toString(36) + (Math.floor(now()) % 1e8).toString(36), doc = { name, tag, leader: G.me, members: { [G.me]: now() }, created: now(), crest: clamp(G.crestPick || 1, 1, CREST_N) };
     G.alliances[id] = cleanAlly(id, doc); S.ally = id; store.lastPlayer = ""; dirty(); render(true);
@@ -25473,7 +25480,7 @@ const ACT = {
     if (a.open === false) return toast("That alliance is private: it isn't taking new members.", "warn");
     if (Object.keys(a.members).length >= allyCap(a)) return toast("That alliance is full.", "warn");
     S.ally = d.id; a.members[G.me] = now(); store.lastPlayer = ""; dirty(); closeSheet(); sub.allyView = ""; render(true);
-    G.db.doc("alliances/" + d.id).update({ members: { [G.me]: now() } }).then(() => { toast(`You joined [${a.tag}] ${a.name}.`, "win"); if (!S.welcomeAlly && (G.welcomeAllyGo || (S.tut && S.tut.k !== "done") || cmdLevel(score()) < 15)) { S.welcomeAlly = now(); S.shards = (S.shards || 0) + 10; giveItem("boost5"); dirty(); setTimeout(() => toast("Welcome gift for joining an alliance: ◆10 and a Boost Pack ×5.", "win"), 1500); } }) /* v543 */
+    G.db.doc("alliances/" + d.id).update({ members: { [G.me]: now() } }).then(() => { toast(`You joined [${a.tag}] ${a.name}.`, "win"); if (!S.welcomeAlly && (G.welcomeAllyGo || (S.tut && S.tut.k !== "done") || myCmdLv() < 15)) { S.welcomeAlly = now(); S.shards = (S.shards || 0) + 10; giveItem("boost5"); dirty(); setTimeout(() => toast("Welcome gift for joining an alliance: ◆10 and a Boost Pack ×5.", "win"), 1500); } }) /* v543 */
       .catch(() => { S.ally = null; delete a.members[G.me]; toast("Couldn't join that alliance.", "loss"); render(true); });
   },
   collClaim: d => act(() => { const ks = ARCH_ORD.filter(k => ARCH[k].cat === d.c); if (!ks.length || ks.some(k => archLv(k) < 2)) return; S.coll = S.coll || {}; if (S.coll[d.c]) return; S.coll[d.c] = now(); const n = Math.min(60, ks.length * 10); S.shards = (S.shards || 0) + n; toast(`Collection complete: ◆${n} and +1% production on every world, for good.`, "win"); try { SFX.fanfare(true); } catch (e) {} }), /* v543 */
@@ -25509,7 +25516,7 @@ const ACT = {
   fsRespec: () => { const f = fsOf(); if (!fsSpent(f)) return; const free = !(f.resp && now() - f.resp < FS_RESPEC_MS);
     if (!free && (S.shards || 0) < FS_RESPEC_COST) return toast(`A second reset this week costs ◆${FS_RESPEC_COST}.`, "warn"); if (!sheet.rconf) { sheet.rconf = 1; return toast(`Tap again to reset all ${fsSpent(f)} skill points${free ? "" : ` for ◆${FS_RESPEC_COST}`}.`, "warn"); }
     if (!free) S.shards -= FS_RESPEC_COST; else f.resp = now(); f.sk = {}; sheet.rconf = 0; fsBump(); toast("Skill points reset. Spend them again any way you like.", "win"); renderSheet(); },
-  fsBuild: () => { const f = fsOf(); if (f.built) return; if (!flagLvOK(cmdLevel(score()))) return toast(`Reach commander Lv.${FLAG_LV} first.`, "warn");
+  fsBuild: () => { const f = fsOf(); if (f.built) return; if (!flagLvOK(myCmdLv())) return toast(`Reach commander Lv.${FLAG_LV} first.`, "warn");
     if (!fsDockL()) return toast("Build the Flagship Dock first. It's under Structures → Facility.", "warn");
     if (!fsHasMats(f, FS_BUILD.mats)) return toast("Not enough materials. Raid pirates, gather from fields and collect salvage pods.", "warn"); if (!pay(FS_BUILD.res)) return toast("Not enough resources.", "warn");
     fsTakeMats(f, FS_BUILD.mats); f.built = 1; f.bAt = now(); fsBump(); try { SFX.research(); } catch (e) {}
@@ -25869,7 +25876,7 @@ const ACT = {
     grantRw(achRw(a[0], s.got), `Achievement · ${a[1]} tier ${s.got + 1}`); SFX.research(); toast(`${a[1]} tier ${s.got + 1}: +${achAP(s.got)} Achievement Points.`, "win"); }),
   bbClaim: d => act(() => { const B = bonusState(), i = +d.i, t = BB_T[i]; if (!t || B.days < t[0] || B.bb.includes(i)) return; B.bb.push(i); grantRw(t[1], `Bonus Builder · day ${t[0]}`); SFX.research(); toast(`Bonus Builder day ${t[0]} claimed.`, "win"); }),
   obClaim: d => act(() => { bonusState(); const i = +d.i, t = OB_T[i]; if (!t || obMin() < t[0] || S.online.got.includes(i)) return; S.online.got.push(i); grantRw(t[1], `Online Bonus · ${obLabel(t[0])}`); SFX.research(); toast(`Online Bonus ${obLabel(t[0])} claimed.`, "win"); }),
-  lbClaim: d => act(() => { const B = bonusState(), i = +d.i, t = LB_T[i]; B.lv2 = B.lv2 || []; if (!t || cmdLevel(score()) < t[0] || B.lv2.includes(i)) return; B.lv2.push(i); grantRw(t[1], `Level Bonus · Lv.${t[0]}`); SFX.research(); toast(`Level ${t[0]} bonus claimed.`, "win"); }),
+  lbClaim: d => act(() => { const B = bonusState(), i = +d.i, t = LB_T[i]; B.lv2 = B.lv2 || []; if (!t || myCmdLv() < t[0] || B.lv2.includes(i)) return; B.lv2.push(i); grantRw(t[1], `Level Bonus · Lv.${t[0]}`); SFX.research(); toast(`Level ${t[0]} bonus claimed.`, "win"); }),
   avatars: () => openSheet({ type: "avatars" }),
   avSel: d => { if (!sheet) return; sheet.pick = d.id; renderSheet(); },
   avPhoto: () => {}, /* v238: own photos retired */
