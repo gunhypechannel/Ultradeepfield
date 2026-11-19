@@ -1894,6 +1894,12 @@ main.full{padding:0;overflow:hidden;gap:0}
 #omcine.fin{align-items:center}#omcine.fin .omcimg{filter:brightness(.25) saturate(.8);animation:none}#omcine.fin .omctx{background:none;padding-bottom:0}
 #omcine.fin .omctx small{font-size:11px;letter-spacing:.3em;color:#5fd8ff}#omcine.fin .q{font:500 21px/1.45 var(--f-display);letter-spacing:.02em;min-height:3em}
 #omcine.fin .after{opacity:0;transition:opacity 1.6s 1s}#omcine.fin.done .after{opacity:1}
+.mimforge{display:flex;flex-direction:column;gap:6px;flex:none}.mimfr{display:flex;gap:8px;align-items:center;padding:8px 9px;border-radius:10px;background:rgba(8,20,34,.55);border:1px solid rgba(95,216,255,.15)}
+.mimfr>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.mimfr small{font-size:12px;color:#9ab}.mimfr em{font-style:normal;font-size:12px;display:flex;gap:8px;flex-wrap:wrap}.mimfr.done{opacity:.6}
+.mimtrack{display:flex;flex-direction:column;gap:5px;flex:none}.mimtr{display:grid;grid-template-columns:48px 1fr 1fr;gap:5px;align-items:stretch;opacity:.6}.mimtr.on{opacity:1}.mimtr>b{align-self:center;font-size:12px;color:#7fc8e0;text-align:right}
+.mimtc{border:1px solid rgba(95,216,255,.2);background:rgba(8,20,34,.55);color:#cde;border-radius:9px;padding:6px 7px;font:inherit;font-size:11.5px;line-height:1.25;text-align:left}.mimtc.p{border-color:rgba(255,211,107,.35)}
+.mimtc.ready{border-color:#5fd8ff;box-shadow:0 0 10px rgba(95,216,255,.3);color:#fff;cursor:pointer}.mimtc.p.ready{border-color:#ffd36b;box-shadow:0 0 10px rgba(255,211,107,.3)}.mimtc.got{opacity:.55}
+.mimmedal{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0;flex:none}.mimmedal span{padding:5px 9px;border-radius:20px;background:rgba(255,211,107,.12);border:1px solid rgba(255,211,107,.4);color:#ffd36b;font-size:12px;font-weight:700}
 .arfly{position:fixed;left:50%;top:46%;z-index:9999;transform:translate(-50%,0);font:800 30px/1 var(--f-display);color:#e3b8ff;text-shadow:0 0 18px #b27aff,0 2px 0 #000;pointer-events:none;animation:arFly 1.3s ease-out forwards}@keyframes arFly{0%{opacity:0;transform:translate(-50%,10px) scale(.7)}20%{opacity:1;transform:translate(-50%,0) scale(1.15)}100%{opacity:0;transform:translate(-50%,-160px) scale(1)}}
 @media (prefers-reduced-motion:reduce){.arcard.back,.arcard.foil::after,.arcard.flip,.arpips i.due{animation:none}}.arcard.lv0 em{color:#8d8170}
 .arnew{position:absolute;top:6px;right:6px;font:700 9px/1 system-ui;letter-spacing:.1em;padding:4px 6px;border-radius:6px;background:#e2c48a;color:#1a1408;font-style:normal}
@@ -4847,6 +4853,7 @@ function shMimic() { const T = now(), M = mimS(), w = mimWeek(T), c = mimClock(T
   ${moHub(T, w)}
   ${mimHubBoss(T, w)}
   <h3>Season materials</h3><div class="mimmats">${mats}</div><p class="note" style="margin-top:6px">Invasion points: <b>${fmt(M.pts)}</b>. Every hive pays Mimic Tissue; mature hives also give up Assimilated Alloy and Neural Core Fragments.</p>
+  ${S.medals && S.medals.omega ? `<div class="mimmedal"><span>🏆 Omega Slayer ×${S.medals.omega}</span></div>` : ""}${mimForgeHTML()}${mimTrackHTML()}
   <h3>The swarm</h3><div class="mimcls">${cls.map(k => `<div class="mimcl"><canvas data-ship="${k}" width="224" height="112"></canvas><div><b>${AL[k].n}</b><small>${CD[k]}</small><em>From Stage ${CS[k]}</em></div></div>`).join("")}</div>
   ${own ? `<div class="mimown"><small>Owner preview: see the invasion as it will look in a given week.</small><div>${[0, 1, 2, 3, 4].map(n => `<button class="btn${((S.mimPrev || {}).w || 0) === n ? " pri" : ""}" data-act="mimPrev" data-w="${n}">${n ? "Week " + n : "Off"}</button>`).join("")}<button class="btn${(S.mimPrev || {}).om ? " pri" : ""}" data-act="mimPrev" data-w="4" data-om="1">Omega</button></div></div>` : ""}`; }
 function mimGo(x) { closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); }
@@ -5065,7 +5072,7 @@ const MO_PART = ["", "Participant", "Contender", "Champion"];
 function moClaimM() { if (!S || !G.ready) return; const T = now(), { st, o } = moSt(T), out = moOutcome(o), M = mimS(); if (!out) return; const id = "om" + o.s; M.got = M.got || {}; if (M.got[id]) return;
   const p = moPart(o, G.me), rk = mimTier(st.con[G.me] || 0)[0], rb = { Vanguard: 3, Warden: 2, Scout: 1 }[rk] || 0; M.got[id] = 1; M.moEnd = { s: o.s, out, seen: 0 }; dirty();
   if (!p && !rb) return; const base = out === "win" ? [0, 3, 6, 10] : out === "part" ? [0, 2, 3, 5] : [0, 1, 1, 2], osh = (p ? base[p] : 0) + (p ? rb : Math.min(1, rb)), sh = (out === "win" ? 30 : out === "part" ? 15 : 8) * Math.max(1, p);
-  M.m.osh = (M.m.osh || 0) + osh; S.shards = (S.shards || 0) + sh; logReward(`Omega: The Convergence · ${out === "win" ? "victory" : out === "part" ? "it escaped, wounded" : "it escaped"}`, null, { shards: sh, kind: "event" });
+  M.m.osh = (M.m.osh || 0) + osh; if (out === "win" && p) { S.medals = S.medals || {}; S.medals.omega = (S.medals.omega || 0) + 1; } /* v668 */ S.shards = (S.shards || 0) + sh; logReward(`Omega: The Convergence · ${out === "win" ? "victory" : out === "part" ? "it escaped, wounded" : "it escaped"}`, null, { shards: sh, kind: "event" });
   note(`Omega: The Convergence is over (${out === "win" ? "Omega is dead" : out === "part" ? "it escaped in its final phase" : "it escaped"}). As a ${p ? MO_PART[p] : "season " + rk}: ${osh} Omega Core Shard${osh === 1 ? "" : "s"} and ◆${sh}.`, "win"); }
 /* the cinematics: the arrival (once, when you first see the event live), each phase change, and the final transmission at the end. The
    owner's paintings, slow push-ins, lines that set each beat, a sting. Tap to skip; replayable from the hub. */
@@ -5100,6 +5107,36 @@ function moInfo(x, T) { const { st, o } = moSt(T), M0 = moMods(o, T), out = moOu
 function moHub(T, w) { const e = mimClock(T).e; if (w !== 4 && !(w === 5 && S.mim && S.mim.moEnd)) return ""; const { o } = moSt(T), out = moOutcome(o);
   if (e < MO_D0) return `<div class="omhub soon"><b>Omega: The Convergence</b><span>The final battle opens in <b data-end="${T + MO_D0 - e}">${ftime(MO_D0 - e)}</b>. Everything the server does before then weakens it.</span></div>`;
   return `<div class="omhub"><b>Omega: The Convergence${out ? "" : " · LIVE"}</b><span>${out ? (out === "win" ? "Omega is dead." : "Omega escaped.") : `Phase ${moPh(o.hp)} · ${MO_PHN[moPh(o.hp)]} · ${o.hp}/${MO_HP}`}</span><button class="btn pri" data-act="mimGoB" data-id="mo">${out ? "See the result" : "Join the fight"}</button></div>`; }
+/* ---------- v668 the Mimic economy: the Forge, the Mimic reward track, medals ----------
+   Everything the invasion drops is spent here. Two exclusive looks (the Neural Hive planet skin and the Mimic Bioweave hull finish) can
+   be forged by anyone from materials, or come free on the premium track (Void Pass Premium); the rest is convenience (accelerators,
+   shards, a Titan Core), never raw combat power. The track pays out by invasion points; the Omega medal goes to everyone who fought in a
+   victorious Convergence. */
+const MIM_FORGE = [
+  ["px", "Neural Hive planet skin", "A world wrapped in black cable and lit from inside by a cyan neural core. Yours forever.", { tis: 150, alloy: 40, ncf: 15 }],
+  ["hull", "Mimic Bioweave hull finish", "Plate your ships in the Mimics' segmented black weave, veined with neural light. Looks only.", { alloy: 60, ncf: 25, cat: 4 }],
+  ["acc", "Neural accelerator (silver)", "A silver time accelerator for your Void Shop inventory.", { tis: 40 }],
+  ["tcore", "Titan Core ⬢", "One Titan Core, refined from an Alpha's catalysts and Omega's own core.", { cat: 6, osh: 3 }],
+  ["sh", "Void Shards ◆25", "Omega Core Shards sell high.", { osh: 1 }]];
+const MIM_TRACK = [[100, { sh: 5 }, { tis: 20 }], [300, { tis: 15 }, { sh: 10 }], [600, { item: "crateM" }, { alloy: 10 }], [1000, { sh: 10 }, { px: 1 }], [1600, { alloy: 8 }, { ncf: 6 }], [2400, { sh: 15 }, { hull: 1 }], [3500, { ncf: 5 }, { sh: 30 }], [5000, { cat: 2 }, { tcore: 1 }]];
+const mimPrem = () => { try { const v = vpState(); return !!(v && v.pr); } catch (e) { return false; } };
+const mimHave = (c, M) => Object.entries(c).every(([k, n]) => (M.m[k] || 0) >= n);
+const mimCostTxt = c => Object.entries(c).map(([k, n]) => `<span style="color:${MIM_MAT[k][2]}">${MIM_MAT[k][1]} ${n}</span>`).join(" ");
+function mimGrant(r, why) { const M = mimS(), got = [];
+  for (const k of ["tis", "alloy", "ncf", "cat", "osh"]) if (r[k]) { M.m[k] = (M.m[k] || 0) + r[k]; got.push(`${r[k]} ${MIM_MAT[k][0]}`); }
+  if (r.sh) { S.shards = (S.shards || 0) + r.sh; got.push(`◆${r.sh}`); } if (r.item) { giveItem(r.item); got.push(SHOP[r.item] ? SHOP[r.item].n : r.item); }
+  if (r.tcore) { S.tcore = (S.tcore || 0) + r.tcore; got.push("a Titan Core ⬢"); }
+  if (r.px) { (S.pxOwn = S.pxOwn || {}).mimichive = 1; got.push("the Neural Hive planet skin"); }
+  if (r.hull) { (S.hullOwn = S.hullOwn || {}).mimic = 1; got.push("the Mimic Bioweave hull finish"); }
+  if (r.acc) { giveItem("xb_silver"); got.push("a silver time accelerator"); }
+  dirty(); if (got.length) { toast(`${why}: ${got.join(", ")}`, "win"); try { logReward(why, null, { shards: r.sh || 0, kind: "event" }); } catch (e) {} } return got; }
+function mimForgeHTML() { const M = mimS(), own = { px: !!(S.pxOwn || {}).mimichive, hull: !!(S.hullOwn || {}).mimic };
+  return `<h3>The Mimic Forge</h3><div class="mimforge">${MIM_FORGE.map(([k, n, d, c]) => { const done = own[k], ok = !done && mimHave(c, M);
+    return `<div class="mimfr${done ? " done" : ""}"><div><b>${esc(n)}</b><small>${esc(d)}</small><em>${mimCostTxt(c)}</em></div><button class="btn${ok ? " pri" : ""}" data-act="mimForge" data-k="${k}"${ok ? "" : " disabled"}>${done ? "Owned" : "Forge"}</button></div>`; }).join("")}</div>`; }
+function mimTrackHTML() { const M = mimS(), pr = mimPrem(), got = M.tr || {};
+  const cell = (r, i, p) => { const id = (p ? "p" : "f") + i, have = got[id], open = M.pts >= MIM_TRACK[i][0] && (!p || pr), t = Object.entries(r).map(([k, v]) => k === "px" ? "Neural Hive skin" : k === "hull" ? "Bioweave finish" : k === "item" ? (SHOP[v] ? SHOP[v].n : v) : k === "sh" ? `◆${v}` : k === "tcore" ? "Titan Core ⬢" : `${v} ${MIM_MAT[k][0]}`).join(", ");
+    return `<button class="mimtc${p ? " p" : ""}${have ? " got" : open ? " ready" : ""}" data-act="mimTrack" data-i="${i}" data-p="${p ? 1 : 0}"${open && !have ? "" : " disabled"}>${have ? "✓ " : ""}${esc(t)}</button>`; };
+  return `<h3>Mimic reward track</h3><p class="note">${fmt(M.pts)} invasion points. Premium rewards need Void Pass Premium${pr ? " (yours is active)" : ""}.</p><div class="mimtrack">${MIM_TRACK.map(([pts, f, p], i) => `<div class="mimtr${M.pts >= pts ? " on" : ""}"><b>${fmt(pts)}</b>${cell(f, i, 0)}${cell(p, i, 1)}</div>`).join("")}</div>`; }
 const monGone = x => x.mon === "slevi" || x.mon === "ctort" || x.mon === "gspider"; /* v616 the Gravity Spider too */ /* v612 the Star Leviathan and the Crystal Tortoise are retired */
 const PIRATES = PIRATES_ALL.filter(x => !cubeGone(x) && !pirGone(x)).concat(MON_EXTRA, MON_NEW, MON_SP, MIM_HIVES, MIM_BOSSES, MIM_OM).filter(x => !monGone(x));
 const findHit = x => (G.find === "x" && !x.boss && !x.mon) || (G.find === "q" && !!x.boss) || (G.find === "w" && !!x.mon);const PB = Object.fromEntries(PIRATES.map(p => [p.id, p]));
@@ -6016,9 +6053,9 @@ function invGridHTML() { const it = S.items || {}, ORD = Object.keys(SHOP), inv 
 function shInv() { return `<div class="hd invhd"><div style="flex:1;min-width:0"><div class="chapter">Your items</div><h2>Inventory · ${fmt(invCount())}</h2><p class="note">Boosters, crates, accelerators and spoils. Tap Use to use one.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${invGridHTML()}<button class="btn ghost wide" style="margin-top:12px" data-act="openShop">Get more in the Void Shop ›</button>`; }
 /* v657 the shop's first section: looks and status, not progress */
 function styleBody() { const pt = premT(), ks = Object.keys(SH).filter(k => { try { return own(k) > 0; } catch (e) { return false; } }), hk = SH[G.hullK] ? G.hullK : ks[0] || "battleship", nf = Object.values(HULL_F).filter(F => pt >= F.t).length;
-  const sw = Object.entries(HULL_F).map(([f, F]) => `<i class="${pt >= F.t || G.owner ? "" : "lk"}" style="background:url(art/hull/${f}.webp?v=${HULL_TV}) center/200%,${F.sw}" title="${esc(F.n)} · Premium Tier ${F.t}"></i>`).join("");
+  const sw = Object.entries(HULL_F).filter(([f]) => f !== "mimic").map(([f, F]) => `<i class="${pt >= F.t || G.owner ? "" : "lk"}" style="background:url(art/hull/${f}.webp?v=${HULL_TV}) center/200%,${F.sw}" title="${esc(F.n)} · Premium Tier ${F.t}"></i>`).join("");
   return `<p class="note">Make your empire unmistakable. Looks and status only: none of this changes a battle, and other commanders see all of it.</p>
-  <div class="sty"><div class="styc"><div class="stys">${sw}</div><b>Hull finishes</b><small>${nf ? `${nf} of ${Object.keys(HULL_F).length} unlocked at Premium Tier ${pt}.` : "Metal, gem and holo finishes for your warships, with a second trim colour."} Glyph Holo, Diamond, Obsidian and more, unlocked by Premium tier.</small><button class="btn amber sm" data-act="hullGo" data-k="${hk}">Style your ships</button></div>
+  <div class="sty"><div class="styc"><div class="stys">${sw}</div><b>Hull finishes</b><small>${nf ? `${nf} of ${(Object.keys(HULL_F).length - 1)} unlocked at Premium Tier ${pt}.` : "Metal, gem and holo finishes for your warships, with a second trim colour."} Glyph Holo, Diamond, Obsidian and more, unlocked by Premium tier.</small><button class="btn amber sm" data-act="hullGo" data-k="${hk}">Style your ships</button></div>
     <div class="styc"><div class="stypt"><span>${pt ? "Tier " + pt : "Premium"}</span></div><b>Premium tiers</b><small>${pt ? `You're at Premium Tier ${pt}. Each tier adds an exclusive planet skin, more hull finishes and a lasting bonus.` : "Every tier adds an exclusive planet skin, hull finishes and a lasting bonus. Tiers never expire."}</small><button class="btn ghost sm" data-act="premOpen">See the tiers</button></div>
     <div class="styc wide"><b>Fleet captains</b><small>A face for every fleet, each with a small perk. Recruit once, keep forever.</small>${capRow()}</div>
     <div class="styc"><div class="stypl">${PS_SKINS.slice(0, 4).map(x => `<canvas data-px="${x[0]}" role="img" aria-label="${esc(x[2])}"></canvas>`).join("")}</div><b>Planet skins</b><small>Premium looks for any world you hold, each with a small production perk.</small><button class="btn ghost sm" data-act="shopCat" data-v="skins">Browse skins</button></div></div>`; }
@@ -6107,7 +6144,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 667;
+const GAME_V = 668;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6316,6 +6353,7 @@ const HULL_F = { copper: { n: "Copper", t: 1, col: "#e8763e", rim: "#ffa070", me
   diamond: { n: "Diamond", t: 11, col: "#eef7ff", rim: "#bfe8ff", met: .9, rough: .05, k: 1.25, tm: .5, sw: "linear-gradient(135deg,#9fb8d0,#ffffff 40%,#c8f0ff 55%,#ffd8f4 70%,#ffffff)" },
   ruby: { n: "Ruby", t: 12, col: "#ff1438", rim: "#ff7a94", met: .5, rough: .08, k: .85, sw: "linear-gradient(135deg,#5a0614,#ff4a66 45%,#a8102c 60%,#ffc0cc)" },
   emerald: { n: "Emerald", t: 14, col: "#10d868", rim: "#86ffc0", met: .5, rough: .08, k: .85, sw: "linear-gradient(135deg,#053a1e,#3cff9a 45%,#0e8a48 60%,#c8ffe0)" },
+  mimic: { n: "Mimic Bioweave", t: 99, col: "#1a2836", rim: "#5fd8ff", met: .8, rough: .22, k: .85, gl: 1.25, sw: "linear-gradient(135deg,#05080c,#1a2836 40%,#5fd8ff 52%,#0a121a 64%,#3a6a80)" }, /* v668 forged */
   glyph: { n: "Glyph Holo", t: 16, col: "#30e8ff", rim: "#7afcff", met: .3, rough: .15, k: 1.1, tm: .3, gl: 1.6, sw: "linear-gradient(135deg,rgba(3,42,48,.55),rgba(58,240,255,.75) 30%,rgba(200,110,255,.7) 50%,rgba(255,210,90,.7) 68%,rgba(120,255,170,.75) 85%,rgba(200,252,255,.6))" } };
 const HULL_TEX = {}, HULL_TV = 1;
 const finHas = (key, f) => { const m = /~h([a-z.]+)/.exec(String(key)); return !!m && m[1].split(".").includes(f); };
@@ -6325,7 +6363,7 @@ function hullTex(f) { const e = HULL_TEX[f]; if (e) return e.t || null; if (!TH)
     try { if (G3 && G3.fkm) for (const key of Object.keys(G3.fkm)) if (finHas(key, f)) delete G3.fkm[key]; } catch (er) {}
     clearTimeout(hullTex.t); hullTex.t = setTimeout(() => { try { document.querySelectorAll("canvas[data-ship]").forEach(c => { c._dk = null; c._pend = null; }); if (!battle) render(true); } catch (er) {} }, 200); }, undefined, () => { HULL_TEX[f].fail = 1; });
   return null; }
-const hullOk = f => !!HULL_F[f] && (premT() >= HULL_F[f].t || !!G.owner);
+const hullOk = f => !!HULL_F[f] && (premT() >= HULL_F[f].t || !!G.owner || (f === "mimic" && !!((S && S.hullOwn) || {}).mimic));
 const hullOf = k => { const f = ((S && S.hullF) || {})[k]; return f && hullOk(f) ? f : null; };
 /* v638 two-tone: a trim finish on fins, wings and dark plating. A finish travels as a spec, "obsidian" or "obsidian.gold" */
 const hullTrimOf = k => { const t = ((S && S.hullT) || {})[k], f = hullOf(k); return f && t && t !== f && hullOk(t) ? t : null; };
@@ -6378,8 +6416,8 @@ function glyTex() { if (GLY_T) return GLY_T; const N = 512, c = document.createE
     x.stroke(); if (r() < .35) { x.beginPath(); x.arc((r() - .5) * u, (r() - .5) * u * 1.4, s * .05, 0, TAU); x.fill(); } x.restore(); }
   GLY_T = new TH.CanvasTexture(c); GLY_T.generateMipmaps = false; GLY_T.minFilter = TH.LinearFilter; GLY_T.magFilter = TH.LinearFilter; return GLY_T; }
 /* v643 livery materials */
-const LIV_K = { gold: 0, silver: 0, copper: 0, cobalt: 0, pink: 1, amethyst: 1, ruby: 1, emerald: 1, obsidian: 2, diamond: 3, glyph: 4 }; // 0 metal, 1 gem, 2 obsidian, 3 diamond, 4 holo
-const LIV_C = { gold: "#ffc23a", silver: "#e6edf5", copper: "#e07a3e", cobalt: "#2d63ff", pink: "#ff4fb8", obsidian: "#120d18", amethyst: "#9a45ff", diamond: "#eaf7ff", ruby: "#ff1035", emerald: "#0fe070", glyph: "#30e8ff" };
+const LIV_K = { gold: 0, silver: 0, copper: 0, cobalt: 0, pink: 1, amethyst: 1, ruby: 1, emerald: 1, obsidian: 2, diamond: 3, glyph: 4, mimic: 2 }; /* v668 the Bioweave wears as dark glass on titan liveries */ // 0 metal, 1 gem, 2 obsidian, 3 diamond, 4 holo
+const LIV_C = { gold: "#ffc23a", silver: "#e6edf5", copper: "#e07a3e", cobalt: "#2d63ff", pink: "#ff4fb8", obsidian: "#120d18", amethyst: "#9a45ff", diamond: "#eaf7ff", ruby: "#ff1035", emerald: "#0fe070", glyph: "#30e8ff", mimic: "#0c1620" };
 const LIV_MR = [[1, .13], [.25, .07], [.7, .05], [.15, .04], [.4, .15]]; // metalness, roughness per kind
 const LIV_P = { def: [.58, .6, .84, .05] }; // lateral fins, top, nose/tail, spine stripe half-width (shares of the half-size)
 function livMat(m, f, t, k, geo) { const F = HULL_F[f]; if (!F || !TH || !m || !m.isMeshStandardMaterial) return m; t = t && HULL_F[t] ? t : f;
@@ -6458,11 +6496,11 @@ function hullSection() { const ownN = k => { try { return own(k) || 0; } catch (
     ${fin && PS_SKINS.some(x => x[1] === fin) ? `<div class="hfpl"><small>Matching planets</small>${PS_SKINS.filter(x => x[1] === fin).map(([k, , n]) => `<button data-act="skin" title="${esc(n)}"><canvas data-px="${k}" role="img" aria-label="${esc(n)} planet skin"></canvas><span>${esc(n)}</span></button>`).join("")}</div>` : ""}<div class="hfprev"><canvas class="shipart" data-ship="${sel}" role="img" aria-label="${esc(SH[sel].n)}${fin ? " in " + HULL_F[fin].n : ""}"></canvas><span>${fin ? HULL_F[fin].n + (hullTrimOf(sel) ? " · " + HULL_F[hullTrimOf(sel)].n + " trim" : "") : "Standard"}</span></div>${hullPick(sel)}</div>`; }
 function hullTrimRow(k, ok) { const tr = hullTrimOf(k);
   return `<div class="hft"><b>Trim</b><small>${tr ? `${HULL_F[tr].n} on the fins, dark plating and glowing seams` : "A second finish for the fins, dark plating and glowing seams"}</small></div><div class="hfr">`
-    + [["", { n: "None", t: 0, sw: "linear-gradient(135deg,#3a4652,#9aa8b6 50%,#55626e)" }], ...Object.entries(HULL_F).filter(([f]) => f !== ok).sort((x, y) => x[1].t - y[1].t)].map(([f, F]) => { const lk = f && !hullOk(f), on = f === (tr || "");
+    + [["", { n: "None", t: 0, sw: "linear-gradient(135deg,#3a4652,#9aa8b6 50%,#55626e)" }], ...Object.entries(HULL_F).filter(([f]) => f !== ok && (f !== "mimic" || hullOk(f))).sort((x, y) => x[1].t - y[1].t)].map(([f, F]) => { const lk = f && !hullOk(f), on = f === (tr || "");
       return `<button class="hfb${on ? " on" : ""}${lk ? " lk" : ""}" data-act="hullTrim" data-k="${k}" data-t="${f}" aria-label="${F.n} trim${lk ? `, unlocks at Premium Tier ${F.t}` : ""}"><i style="background:${f ? `url(art/hull/${f}.webp?v=${HULL_TV}) center/200%` : F.sw}"></i><small>${lk ? `🔒 T${F.t}` : F.n}</small></button>`; }).join("") + `</div>`; }
 function hullPick(k) { const cur = (S.hullF || {})[k] || "", ok = hullOf(k);
   return `<div class="hfp"><div class="hfh"><b>Hull finish</b><small>${ok ? `${HULL_F[ok].n} · looks only` : "Premium players can plate their ships in gold and gems"}</small></div><div class="hfr">`
-    + [["", { n: "Standard", t: 0, sw: "linear-gradient(135deg,#3a4652,#9aa8b6 50%,#55626e)" }], ...Object.entries(HULL_F).sort((x, y) => x[1].t - y[1].t)].map(([f, F]) => { const lk = f && !hullOk(f), on = f === (ok || "") && !(f && cur !== f);
+    + [["", { n: "Standard", t: 0, sw: "linear-gradient(135deg,#3a4652,#9aa8b6 50%,#55626e)" }], ...Object.entries(HULL_F).filter(([f]) => f !== "mimic" || hullOk(f)).sort((x, y) => x[1].t - y[1].t)].map(([f, F]) => { const lk = f && !hullOk(f), on = f === (ok || "") && !(f && cur !== f);
       return `<button class="hfb${on ? " on" : ""}${lk ? " lk" : ""}" data-act="hullSet" data-k="${k}" data-f="${f}" aria-label="${F.n}${lk ? `, unlocks at Premium Tier ${F.t}` : ""}"><i style="background:${f ? `url(art/hull/${f}.webp?v=${HULL_TV}) center/200%` : F.sw}"></i><small>${lk ? `🔒 T${F.t}` : F.n}</small></button>`; }).join("")
     + `</div>${ok ? hullTrimRow(k, ok) : ""}${ok || Object.keys(HULL_F).some(hullOk) ? `<button class="gwlink" data-act="hullAll" data-k="${k}">Use ${ok ? HULL_F[ok].n.toLowerCase() : "standard"} on every ship type</button>` : `<button class="gwlink" data-act="premOpen">See the premium tiers ›</button>`}</div>`; }
 setTimeout(() => { try { for (const f of new Set([...Object.keys(SH).map(hullOf), ...Object.keys(SH).map(hullTrimOf)].filter(Boolean))) hullTex(f); } catch (e) {} }, 4000);
@@ -6639,6 +6677,7 @@ const PX2 = [
   ["sphinx", "Sphinx Sands", 2000, "all", .14, "#ffb340", "Gold dunes and black glass, crossed by glowing hieroglyph bands around a winged sigil.", "rock", ["#1a1004", "#8a6020", "#ffd080"], [255, 190, 80], { cracks: .01 }],
   ["petrified", "Petrified Star", 2000, "all", .14, "#ff5a4a", "A world turned to stone by a gorgon's gaze: temples, coiled serpents and a sleeping face, split by veins of burning crimson.", "rock", ["#141012", "#5a4a4e", "#c8b8b8"], [255, 70, 60], { cracks: .014 }], /* v570 */
   ["omen", "Omen Star", 2000, "all", .14, "#9ab8ff", "A pale world gone cold, haunted by the shadows of things that haven't arrived yet.", "ice", ["#2a3a5a", "#7a98c8", "#e8f0ff"], [150, 190, 255], { swirl: 1 }],
+  ["mimichive", "Neural Hive", 2400, "all", .12, "#5fd8ff", "A world wrapped in black cable and lit from inside by a cyan neural core. Forged from the Mimic swarm.", "ocean", ["#010308", "#04121e", "#0a2a3e", "#123848", "#1a4a5a"], [90, 220, 255], { sea: .92, veins: 1 }], /* v668 */
   ["countdown", "The Countdown", 2000, "all", .14, "#ffcf6a", "A brass world of turning rings, every gear counting down to the first seal.", "metal", ["#3a2410", "#a0702a", "#f0c070"], [255, 200, 110], { gears: 1 }] /* v575 */
 ];
 for (const [k, n, cost, r, b, glow, d, a, p, e, f] of PX2) PXS[k] = { n, cost, r, b, glow, d, a, p, ec: e, f, v2: 1 };
@@ -26826,6 +26865,9 @@ const ACT = {
   archOpen: () => { G.trayOpen = false; try { trayRender(); } catch (e) {} openSheet({ type: "archives" }); },
   archEntry: d => openSheet({ type: "archives", id: d.id }),
   mimOpen: () => openSheet({ type: "mimic" }), /* v663 */
+  mimForge: d => { const F = MIM_FORGE.find(r => r[0] === d.k), M = mimS(); if (!F) return; if ((d.k === "px" && (S.pxOwn || {}).mimichive) || (d.k === "hull" && (S.hullOwn || {}).mimic)) return toast("You already own it.", "warn");
+    if (!mimHave(F[3], M)) return toast("Not enough materials yet.", "warn"); for (const [k, n] of Object.entries(F[3])) M.m[k] -= n; mimGrant({ [d.k]: d.k === "sh" ? 25 : 1 }, "Forged"); try { SFX.build(); } catch (e) {} renderSheet(); }, /* v668 */
+  mimTrack: d => { const i = +d.i, p = d.p === "1", M = mimS(), T0 = MIM_TRACK[i]; if (!T0) return; const id = (p ? "p" : "f") + i; M.tr = M.tr || {}; if (M.tr[id] || M.pts < T0[0] || (p && !mimPrem())) return; M.tr[id] = 1; mimGrant(T0[p ? 2 : 1], "Mimic reward track"); renderSheet(); },
   moTgt: d => { S.moTgt = d.t; renderSheet(); }, /* v667 */
   moCine: d => moCine(d.k || "arr"), moFinal: () => moFinal(),
   mimGoB: d => { const x = PB[d.id]; if (x) mimGo(x); }, /* v665 */
