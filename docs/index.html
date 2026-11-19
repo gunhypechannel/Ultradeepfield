@@ -590,6 +590,7 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 .pth-rw .pg{display:inline-flex;align-items:center;gap:3px;color:#d9f6e4;font-weight:600}.pth-rw .pg svg,.pth-rw .pg img{width:16px;height:16px}.pth-rw .pg.shard{color:#d9a6ff}
 .pth-rw > span:first-child{font-family:var(--f-display);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 @media (max-width:360px){.pth{grid-template-columns:64px minmax(0,1fr);grid-template-areas:"a b" "g g" "q q" "r r"}.pth-art,.pth-art canvas{width:64px;height:44px}.pth-go{justify-self:stretch}}
+.podl{display:block;font-size:10.5px;color:var(--muted);text-align:center;margin-bottom:2px;white-space:nowrap}.podl.out{color:#ff8a7a}
 .chipq.met{border-color:rgba(113,223,144,.5);color:var(--green)}
 
 /* Galaxy map */
@@ -5100,11 +5101,17 @@ const myBurn = id => (S.burns || []).find(b => b.pid === id && b.mine && b.until
 const FIRE_PENALTY = .75; // a burning world of yours produces 25% less until the fire is out
 
 /* ---------- Void Shop: items bought with Void Shards ---------- */
+/* v656 a pod or crate fills storage up to its limit, no further; nothing fits, nothing is used */
+function podAdd(r, a) { let cap = Infinity; try { cap = caps()[r]; } catch (e) {} const room = Math.max(0, cap - (S.res[r] || 0)), g = Math.min(a, room); S.res[r] = (S.res[r] || 0) + g; return g; }
+function podMsg(got, want, what) { if (got <= 0) { toast(`${RN_FULL(what)} storage is full. Build more storage, or spend some first.`, "warn"); return null; } return got < want ? `${fmt(got)} ${what} delivered. Storage is now full: the rest didn't fit.` : null; }
+const RN_FULL = w => w.charAt(0).toUpperCase() + w.slice(1);
+const POD_DAY = 3; /* v656 each resource item: three a day from the shop */
+const podLeft = k => { const d = utcDay(), P = S.podBuy; return POD_DAY - (P && P.d === d ? P.n[k] || 0 : 0); };
 const crateAmt = () => { try { return Math.max(15000, Math.round(rates().m * 60 * 4)); } catch (e) { return 15000; } }; /* v644: 4 hours of metal production (was 15k + 40 per score point) */
 const SHOP = {
-  crateM:   { n: "Metal Crate", ic: "m", cost: 4, d: () => `${fmt(crateAmt())} metal delivered to your homeworld.`, use: () => { S.res.m += crateAmt(); return "Metal crate unpacked."; } },
-  crateC:   { n: "Crystal Crate", ic: "c", cost: 5, d: () => `${fmt(Math.round(crateAmt() * .7))} crystal for your homeworld.`, use: () => { S.res.c += Math.round(crateAmt() * .7); return "Crystal crate unpacked."; } },
-  crateG:   { n: "Gas Crate", ic: "g", cost: 6, d: () => `${fmt(Math.round(crateAmt() * .4))} gas for your homeworld.`, use: () => { S.res.g += Math.round(crateAmt() * .4); return "Gas crate unpacked."; } },
+  crateM:   { n: "Metal Crate", ic: "m", cost: 12, d: () => `${fmt(crateAmt())} metal delivered to your homeworld.`, use: () => { const a = crateAmt(), g = podAdd("m", a); return g > 0 ? podMsg(g, a, "metal") || "Metal crate unpacked." : podMsg(0, a, "metal"); } },
+  crateC:   { n: "Crystal Crate", ic: "c", cost: 14, d: () => `${fmt(Math.round(crateAmt() * .7))} crystal for your homeworld.`, use: () => { const a = Math.round(crateAmt() * .7), g = podAdd("c", a); return g > 0 ? podMsg(g, a, "crystal") || "Crystal crate unpacked." : podMsg(0, a, "crystal"); } },
+  crateG:   { n: "Gas Crate", ic: "g", cost: 16, d: () => `${fmt(Math.round(crateAmt() * .4))} gas for your homeworld.`, use: () => { const a = Math.round(crateAmt() * .4), g = podAdd("g", a); return g > 0 ? podMsg(g, a, "gas") || "Gas crate unpacked." : podMsg(0, a, "gas"); } },
   boost5:   { n: "Boost Pack ×5", ic: "⚡", cost: 16, /* v641 x2 */ d: () => "Five boosts, each cuts 5 minutes off a job.", use: () => { S.boosts += 5; return "+5 boosts."; } },
   runes3:   { n: "Rune Pouch ×3", ic: "◈", cost: 10, d: () => "Three random elemental runes.", use: () => { grantRunes(3, "Rune pouch"); return "Runes added."; } },
   probe5:   { n: "Probe Pack ×5", ic: "◎", cost: 5, d: () => "Five probes that fly for free.", stack: true },
@@ -5179,8 +5186,8 @@ const SHOP_CATS = [["vip", "♛ VIP"], ["boost", "Boosters"], ["accel", "Acceler
       SHOP[`x${q}_${tk}`] = { cat: "accel", tier: i, col, n: nm, ic, cost: [8, 20, 48][i], /* v641 x2 */ d: () => `Cuts ${ftime(ms)} off ${what}.`, use: () => accel(q, ms) && `${nm} ${tn}: ${ftime(ms)} saved.` }; });
   // resource pods: hours of your current production, delivered at once
   for (const r of ["m", "c", "g"]) ITIERS.slice(0, 3).forEach(([tk, tn, col], i) => { const h = [6, 24, 72][i], amt = () => Math.max(2000 * (i + 1), Math.round(rates()[r] * 60 * h));
-    SHOP[`p${r}_${tk}`] = { cat: "res", tier: i, col, n: `${RN[r][0]} Pod`, ic: r, cost: [5, 15, 36][i], d: () => `${fmt(amt())} ${RN[r][0].toLowerCase()} (${h} hours of production) for your homeworld.`, use: () => { const a = amt(); S.res[r] += a; return `${fmt(a)} ${RN[r][0].toLowerCase()} delivered.`; } }; });
-  SHOP.pAll_gold = { cat: "res", tier: 2, col: ITIERS[2][2], n: "Complete Supply Pod", ic: "▣", cost: 40, d: () => "24 hours of metal, crystal and gas production at once.", use: () => { const R0 = rates(); for (const r of ["m", "c", "g"]) S.res[r] += Math.max(6000, Math.round(R0[r] * 1440)); return "Complete supply pod unpacked."; } };
+    SHOP[`p${r}_${tk}`] = { cat: "res", tier: i, col, n: `${RN[r][0]} Pod`, ic: r, cost: [15, 45, 110][i], /* v656 x3 */ d: () => `${fmt(amt())} ${RN[r][0].toLowerCase()} (${h} hours of production) for your homeworld, up to its storage limit.`, use: () => { const a = amt(), w = RN[r][0].toLowerCase(), g = podAdd(r, a); return g > 0 ? podMsg(g, a, w) || `${fmt(g)} ${w} delivered.` : podMsg(0, a, w); } }; });
+  SHOP.pAll_gold = { cat: "res", tier: 2, col: ITIERS[2][2], n: "Complete Supply Pod", ic: "▣", cost: 150, /* v656 (was 40) */ d: () => "24 hours of metal, crystal and gas production at once, up to your storage limits.", use: () => { const R0 = rates(); let got = 0, full = 0; for (const r of ["m", "c", "g"]) { const a = Math.max(6000, Math.round(R0[r] * 1440)), g = podAdd(r, a); got += g; if (g < a) full = 1; } if (got <= 0) { toast("Your storage is full. Build more storage, or spend some first.", "warn"); return null; } return full ? "Supply pod unpacked. Some storage is now full: what didn't fit was lost." : "Complete supply pod unpacked."; } };
   // planet and moon fields: permanent extra building fields on the planet you're viewing
   ITIERS.slice(0, 3).forEach(([tk, tn, col], i) => { const n = [4, 9, 15][i];
     SHOP[`f_${tk}`] = { cat: "planet", tier: i, col, n: "Planet Fields", ic: "⬚", cost: [25, 45, 70][i], d: () => `+${n} permanent building fields on ${esc((shopPlanet() || {}).name || "your homeworld")}.`, use: () => { const p = shopPlanet(); if (!p) return false; S.xf = S.xf || {}; S.xf[p.id] = (S.xf[p.id] || 0) + n; return `${p.name}: +${n} building fields.`; } };
@@ -5615,7 +5622,7 @@ function shShop() { setTimeout(shopWire, 0);
   const SECS = (window.udfShop && G.mode === "online" ? [["packs", "Packs"]] : []).concat(SHOP_CATS.filter(([k]) => k === "vip" || Object.values(SHOP).some(x => x.cat === k))).concat([["skins", "Planet skins"]]); /* v540 one long page */
   const strip = `<div class="shopstrip sticky" role="tablist">${SECS.map(([k, l]) => `<button role="tab" aria-selected="${k === cat}" class="${k === cat ? "on" : ""}" data-act="shopCat" data-v="${k}" data-sec="${k}"><i>${SHOP_CI[k] || "✦"}</i>${esc(l.replace(/^[♛◆]\s*/, ""))}</button>`).join("")}</div>`;
   const art = (k, s) => { const a = shopArtOf(k); return a ? `<span class="sart" style="background-image:url(${a})"></span>` : `<span class="sart g" style="--tc:${s.col || "#55d6e8"}">${s.ic.length === 1 && "mcg".includes(s.ic) ? RI[s.ic] : s.ic}</span>`; };
-  const buyBtn = (k, s, c) => s.cost ? `<button class="btn amber sm" data-act="buy" data-k="${k}" ${sh >= (c || s.cost) ? "" : "disabled"}>◆${c || s.cost}</button>` : `<span class="note">Packs & events</span>`;
+  const buyBtn = (k, s, c) => s.cost ? (s.cat === "res" ? `<small class="podl${podLeft(k) > 0 ? "" : " out"}">${Math.max(0, podLeft(k))}/${POD_DAY} today</small>` : "") + `<button class="btn amber sm" data-act="buy" data-k="${k}" ${sh >= (c || s.cost) && !(s.cat === "res" && podLeft(k) <= 0) ? "" : "disabled"}>◆${c || s.cost}</button>` : `<span class="note">Packs & events</span>`;
   const one = (k, s, extra) => `<div class="scard" data-card="${k}" style="--tc:${s.col || "#55d6e8"}">${art(k, s)}<div class="sbody"><b>${esc(s.n)}</b>${extra || ""}<small>${s.d()}</small><div class="sbuy">${it[k] ? `<span class="own">Owned ×${it[k]}${s.use ? ` · <a data-act="useItem" data-k="${k}">Use now</a>` : ""}</span>` : "<span></span>"}${buyBtn(k, s)}</div></div></div>`;
   const grouped = list => { const G2 = new Map(); for (const [k, s] of list) { const g = s.tier != null ? s.cat + "|" + s.n : k; if (!G2.has(g)) G2.set(g, []); G2.get(g).push([k, s]); }
     return [...G2.entries()].map(([g, L]) => { if (L.length < 2) return one(L[0][0], L[0][1]); L.sort((a, b) => a[1].tier - b[1].tier); const sel = clamp((G.shopSel || {})[g] != null ? G.shopSel[g] : Math.min(1, L.length - 1), 0, L.length - 1), [k, s] = L[sel], U = SHOP_UNITS[s.cat];
@@ -5691,7 +5698,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 655;
+const GAME_V = 656;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -26072,7 +26079,8 @@ const ACT = {
     p.r = e.r; p.a0 = e.a0; p.tid = e.id; S.tpCd = S.tpCd || {}; S.tpCd[p.id] = T + TELEPORT_CD; putPlanet(p); reveal(pos(p, T).x, pos(p, T).y, 50); bump("teleports");
     closeSheet(); toast(`${p.name} jumped to [${coordStr(e)}] in ${zoneOf(e.r)}.`, "win"); if (G3) { G3.cam.follow = p.id; G3.cam.goal = { dist: 40 }; }
   }),
-  buy: d => act(() => { const s = SHOP[d.k]; if (!s || !s.cost) return; if ((S.shards || 0) < s.cost) return toast(`That costs ◆${s.cost}.`, "warn"); S.shards -= s.cost; giveItem(d.k, d.k === "probe5" ? 5 : 1); bump("shopBuys"); if (s.cat !== "vip") vipAdd(s.cost * 10); toast(`${s.n} added to your inventory.`, "win"); shopFx(d.k, s.cost); }),
+  buy: d => act(() => { const s = SHOP[d.k]; if (!s || !s.cost) return; if (s.cat === "res" && podLeft(d.k) <= 0) return toast(`${s.n}: ${POD_DAY} a day from the shop. More tomorrow (UTC midnight).`, "warn"); if ((S.shards || 0) < s.cost) return toast(`That costs ◆${s.cost}.`, "warn"); S.shards -= s.cost;
+    if (s.cat === "res") { const dd = utcDay(); if (!S.podBuy || S.podBuy.d !== dd) S.podBuy = { d: dd, n: {} }; S.podBuy.n[d.k] = (S.podBuy.n[d.k] || 0) + 1; } /* v656 */ giveItem(d.k, d.k === "probe5" ? 5 : 1); bump("shopBuys"); if (s.cat !== "vip") vipAdd(s.cost * 10); toast(`${s.n} added to your inventory.`, "win"); shopFx(d.k, s.cost); }),
   useAll: d => act(() => { const s = SHOP[d.k]; if (!s || !s.use || !useAllOk(d.k)) return; const n0 = (S.items || {})[d.k] || 0; if (n0 < 1) return; // v367
     if (s.mbT) return openSheet({ type: "matbox", k: d.k, all: 1 });
     let n = 0, last = ""; while ((S.items[d.k] || 0) > 0 && n < 9999) { S.items[d.k]--; const msg = s.use(); if (!msg) { S.items[d.k]++; break; } n++; last = msg; }
