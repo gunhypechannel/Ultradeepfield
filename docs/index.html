@@ -1876,6 +1876,7 @@ main.full{padding:0;overflow:hidden;gap:0}
 .mimal>div:first-child{flex:1;min-width:0;display:flex;flex-direction:column}.mimal small{font-size:11px;color:#9ab}.mimalb{display:flex;flex-direction:column;gap:4px}.mimalb .btn{padding:5px 10px;font-size:12px}
 .mimboss{padding:9px 10px;border-radius:11px;border:1px solid rgba(127,240,255,.3);background:rgba(6,22,38,.6);margin:6px 0 10px;display:flex;flex-direction:column;gap:4px}
 .mimanc{display:grid;grid-template-columns:62px 1fr 40px;gap:6px;align-items:center;font-size:12px}.mimanc small{text-align:right;color:#9ab}
+.mimecho{display:flex;gap:9px;align-items:center;padding:7px;border-radius:11px;border:1px solid rgba(255,120,120,.35);background:rgba(40,10,20,.45);margin:8px 0;flex:none}.mimecho canvas{width:112px;height:56px;flex:none}.mimecho div{display:flex;flex-direction:column;gap:2px;min-width:0}.mimecho small{font-size:12px;color:#cab}
 .arfly{position:fixed;left:50%;top:46%;z-index:9999;transform:translate(-50%,0);font:800 30px/1 var(--f-display);color:#e3b8ff;text-shadow:0 0 18px #b27aff,0 2px 0 #000;pointer-events:none;animation:arFly 1.3s ease-out forwards}@keyframes arFly{0%{opacity:0;transform:translate(-50%,10px) scale(.7)}20%{opacity:1;transform:translate(-50%,0) scale(1.15)}100%{opacity:0;transform:translate(-50%,-160px) scale(1)}}
 @media (prefers-reduced-motion:reduce){.arcard.back,.arcard.foil::after,.arcard.flip,.arpips i.due{animation:none}}.arcard.lv0 em{color:#8d8170}
 .arnew{position:absolute;top:6px;right:6px;font:700 9px/1 system-ui;letter-spacing:.1em;padding:4px 6px;border-radius:6px;background:#e2c48a;color:#1a1408;font-style:normal}
@@ -4784,7 +4785,7 @@ function mimStage(x, T) { const c = mimClock(T), down = ((S && S.pir) || {})[x.i
 function mimForce(x, T) { const st = mimStage(x, T || now()), n = 1 + Math.floor(x.lvl / 4), o = { mnest: 1, mstalk: 2 + n, mharv: 1 };
   if (st >= 2) { o.mstalk += 1; o.mharv = 2; o.mhunt = 1 + (n >> 1); }
   if (st >= 3) { o.massim = 1 + Math.floor(n / 3); o.mguard = 1 + Math.floor(n / 3); }
-  if (st >= 4) { o.mtitan = 1; o.mguard += 1; } return o; }
+  if (st >= 4) { o.mtitan = 1; o.mguard += 1; } { const e = st >= 2 && mimEchoOn(T || now()); if (e) o["e_" + e.k] = e.n; } return o; }
 const mimForceTxt = x => Object.entries(mimForce(x)).filter(([k]) => k !== "mnest").map(([k, v]) => `${v} ${AL[k].n.replace("Mimic ", "")}`).join(" · ");
 /* the season's own loot: Mimic Tissue from every hive, Assimilated Alloy from Stage 2, Neural Core Fragments from Stage 3 (more from a Brood Titan) */
 const MIM_MAT = { tis: ["Mimic Tissue", "❋", "#7fe0ff"], alloy: ["Assimilated Alloy", "▰", "#9fb4cc"], ncf: ["Neural Core Fragment", "✺", "#5fd8ff"], cat: ["Alpha Neural Catalyst", "✹", "#b48cff"], osh: ["Omega Core Shard", "◈", "#e8f6ff"] };
@@ -4818,6 +4819,7 @@ function shMimic() { const T = now(), M = mimS(), w = mimWeek(T), c = mimClock(T
   ${w >= 1 && w <= 4 ? `<div class="mimst">${[1, 2, 3, 4].map(s => `<div class="s${s}"><b>${byS[s]}</b><small>Stage ${s}<br>${MIM_STAGE[s]}</small></div>`).join("")}</div>
   <button class="btn pri wide" data-act="mimFind"${up.length ? "" : " disabled"}>Find the nearest hive</button>` : ""}
   ${obj}
+  ${(() => { const e = mimEchoOn(T); return e ? `<div class="mimecho"><canvas data-ship="e_${e.k}" width="224" height="112"></canvas><div><b>Mimic Echoes: ${e.n} × ${AL["e_" + e.k].n}</b><small>The Assimilators copied our ${SH[e.k].n}s. They fight in every hive we attack for <span data-end="${e.until}">${ftime(e.until - T)}</span>. Destroy a Stage 3+ hive to wipe them (+2 Alloy each).</small></div></div>` : ""; })()}
   ${mimHubBoss(T, w)}
   <h3>Season materials</h3><div class="mimmats">${mats}</div><p class="note" style="margin-top:6px">Invasion points: <b>${fmt(M.pts)}</b>. Every hive pays Mimic Tissue; mature hives also give up Assimilated Alloy and Neural Core Fragments.</p>
   <h3>The swarm</h3><div class="mimcls">${cls.map(k => `<div class="mimcl"><canvas data-ship="${k}" width="224" height="112"></canvas><div><b>${AL[k].n}</b><small>${CD[k]}</small><em>From Stage ${CS[k]}</em></div></div>`).join("")}</div>
@@ -4938,6 +4940,21 @@ function mimHubBoss(T, w) { const st = mimStC(T), pct = mimSupPct(st), fx = mimS
   const rows = [0, 1, 2, 3].map(i => { const A = st.a["ma" + i], X = st.x["mx" + i]; return `<div class="mimal"><div><b style="color:${MON["alpha" + (i + 1)].col}">Alpha Sovereign ${MIM_AN[i]}</b><small>${A.dead ? "Slain this week" : `${A.hp}/100 sections · ${X.open ? `<span style="color:var(--green)">Nexus broken</span>` : `Nexus ${X.anc.filter(v => v > 0).length}/4 anchors`}`}</small><div class="mimbar"><i style="width:${A.dead ? 0 : A.hp}%"></i></div></div>
     <div class="mimalb">${A.dead ? "" : `<button class="btn" data-act="mimGoB" data-id="ma${i}">Alpha</button>`}<button class="btn" data-act="mimGoB" data-id="mx${i}">Nexus</button></div></div>`; }).join("");
   return sup + `<h3>The Alphas</h3>${rows}`; }
+/* ---------- v666 Mimic Echoes: the Assimilators copy our ships ----------
+   When a fight at a Stage 3+ hive ends with its Assimilators still alive and our ships lost, they absorb the wrecks: for 6 hours a few
+   Mimic Echoes of the class we lost most of fight in every hive we attack (per player, at most 6). An Echo has the silhouette of that
+   class and 60% of its base stats with none of our research, cosmetics or loadout (the spec: "limited combat characteristics", never a
+   player's own equipment). Counter: the same counters as the original class; destroying a Stage 3+ hive with its Echoes aboard wipes
+   them and pays 2 Assimilated Alloy an Echo. */
+const ECHO_BASE = ["fighter", "heavyFighter", "corvette", "bomber", "destroyer", "battleship", "bastion", "dreadnought"];
+function mimEcho(x, rep, res, T) { const M = mimS(), st = mimStage(x, T), had = Object.keys(rep.lossD || {}).filter(k => /^e_/.test(k));
+  if (res.winner === "a" && had.length) { const n = had.reduce((a, k) => a + (rep.lossD[k] || 0), 0); M.m.alloy = (M.m.alloy || 0) + 2 * n; M.echo = null; rep.echoWipe = n; note(`The Mimic Echoes went down with ${x.name}: +${2 * n} Assimilated Alloy. The swarm has no copies of our ships left.`, "win"); dirty(); return; }
+  if (st < 3 || !(((res.dLeft || {}).massim || 0) > 0)) return;
+  let best = null, bn = 0; for (const k of ECHO_BASE) { const n = (rep.lossA || {})[k] || 0; if (n > bn) { bn = n; best = k; } } if (!best) return;
+  const n = Math.min(6, Math.max(1, Math.ceil(bn / 25))); M.echo = { k: best, n, until: T + 6 * 3600e3 }; rep.echo = best; dirty();
+  note(`The Assimilators absorbed the wrecks of our ${SH[best].n}s. For 6 hours, ${n} Mimic Echo${n > 1 ? "es" : ""} of them will fight in the hives. Destroy a Stage 3 hive to wipe them out.`, "warn"); }
+const mimEchoOn = T => { const e = S && S.mim && S.mim.echo; return e && e.until > T ? e : null; };
+for (const b of ECHO_BASE) { AL["e_" + b] = { n: "Echo " + SH[b].n, atk: Math.round(SH[b].atk * .6), sh: Math.round(SH[b].sh * .6), hull: Math.round(SH[b].hull * .6), val: Math.round(((SH[b].c.m || 0) + (SH[b].c.c || 0) + (SH[b].c.g || 0)) * .3), one: 1 }; } /* v666 */
 const monGone = x => x.mon === "slevi" || x.mon === "ctort" || x.mon === "gspider"; /* v616 the Gravity Spider too */ /* v612 the Star Leviathan and the Crystal Tortoise are retired */
 const PIRATES = PIRATES_ALL.filter(x => !cubeGone(x) && !pirGone(x)).concat(MON_EXTRA, MON_NEW, MON_SP, MIM_HIVES, MIM_BOSSES).filter(x => !monGone(x));
 const findHit = x => (G.find === "x" && !x.boss && !x.mon) || (G.find === "q" && !!x.boss) || (G.find === "w" && !!x.mon);const PB = Object.fromEntries(PIRATES.map(p => [p.id, p]));
@@ -5945,7 +5962,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 665;
+const GAME_V = 666;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -7516,6 +7533,7 @@ function pirateArrive(f) {
     logReward(`${x.mon ? "Monster slain" : x.boss ? "Cube destroyed" : "Pirates beaten"} · ${x.name}`, null, { shards: rep.shards, item: rep.item || null, kind: "battle" });
     note(`${x.name} ${x.mon ? "slain" : x.boss ? "destroyed" : "raided"}. ${ratio < 1 ? "Holds full: " : ""}${fmt(rep.loot.m)} metal, ${fmt(rep.loot.c)} crystal, ${fmt(rep.loot.g)} gas on the way home${rep.shards ? `, plus ◆${rep.shards}` : ""}.`, "win");
   } else note(res.winner === "d" ? (x.mon ? `${x.name} shrugged off our hunters and drove them away.` : `Our raid on ${x.name} was beaten off.`) : `Stalemate at ${x.name}. Survivors are pulling back.`, "loss");
+  if (mimSt) try { mimEcho(x, rep, res, f.arrive); } catch (e) {} /* v666 */
   addReport(rep); mapClash(x, rep); addBurn({ xid: x.id, at: f.arrive, n: mine0, win: res.winner === "a", debris: 1 });
   if (!Object.values(f.n).some(v => v > 0)) S.fleets = S.fleets.filter(y => y !== f);
 }
@@ -16673,6 +16691,7 @@ function mimMats(t) { const C = t ? (MIMM[t] || (MIMM[t] = {})) : MIMM; if (C.ca
   C.core.userData.pulse = "(.72 + .28 * sin(uMT * 2.1))";
   C.sac = new TH.MeshPhysicalMaterial({ color: 0x020a14, emissive: 0x1aa0f0, emissiveIntensity: .55, roughness: .3, metalness: 0, clearcoat: .6, clearcoatRoughness: .3, envMapIntensity: .3 }); C.sac.userData.pulse = "(.7 + .3 * sin(uMT * 1.4))";
   C.mouth = new TH.MeshBasicMaterial({ color: 0x46c8ff, toneMapped: false });
+  C.ecorr = new TH.MeshPhysicalMaterial({ map: sC, color: 0x9aa4b4, emissiveMap: sE, emissive: 0x46ccff, emissiveIntensity: 1.6, metalness: .85, roughness: .3, clearcoat: 1, clearcoatRoughness: .15, envMapIntensity: 1.1 }); /* v666 corrupted plating */
   C.egg = new TH.MeshPhysicalMaterial({ color: 0x050208, emissive: 0x5a1fd0, emissiveIntensity: .75, roughness: .35, clearcoat: .3, envMapIntensity: .2, transparent: true, opacity: .9 });
   C.egg.userData.pulse = "(.6 + .4 * sin(uMT * 1.3 + vViewPosition.x))";
   C.plate = new TH.MeshStandardMaterial({ color: 0x6f7c8c, metalness: .85, roughness: .4 });
@@ -16728,6 +16747,18 @@ function buildMimic(cls) {
     for (let i = 0; i < 9; i++) { const a = 2.1 + i * .5 + r() * .3, R = 1.9 + r() * .7; const e = orb(.3 + r() * .14, C.egg, V(Math.cos(a) * R, -1.15 + r() * .15, Math.sin(a) * R), 14); e.scale.y = 1.25; }
     bundle([V(0, -1.4, 0), V(0, -.6, 0), V(0, .2, 0)], 10, .35, { r0: .07, r1: .04 });
     g.userData.mimR = 3.6; return g; }
+  if (/^e_/.test(cls)) { /* v666 a Mimic Echo: the silhouette of one of our ship classes, its plating gone black and veined with neural light,
+       cables wound round the hull and trailing from its engines like a corrupted drive plume */
+    const base = cls.slice(2), ship = buildShip(base, shipMats("#3fc8ff")); g.add(ship); g.userData.eng = (ship.userData.eng || []).slice();
+    ship.traverse(o => { if (!o.isMesh || (o.userData && o.userData.fx)) return; const m = o.material; if (m && !m.isMeshBasicMaterial && !(m.transparent && m.opacity < .9)) o.material = C.ecorr; });
+    const b = new TH.Box3().setFromObject(ship), Lx = b.max.x - b.min.x, R = Math.max(b.max.y - b.min.y, b.max.z - b.min.z) * .5, cy = (b.max.y + b.min.y) / 2, cz = (b.max.z + b.min.z) / 2, rr = Math.max(.03, R * .07);
+    for (let i = 0; i < 10; i++) { const a0 = r() * TAU, tw = (r() - .5) * 4, pts = [];
+      for (let j = 0; j <= 6; j++) { const t = j / 6, x = b.max.x - Lx * (.1 + r() * .15) - t * Lx * .85, a = a0 + tw * t, rad = R * (.75 + r() * .2); pts.push(V(x, cy + Math.cos(a) * rad, cz + Math.sin(a) * rad)); }
+      const e = pts[pts.length - 1]; for (let j = 1; j <= 3; j++) pts.push(V(e.x - Lx * .22 * j, e.y + (r() - .5) * R * j * .5, e.z + (r() - .5) * R * j * .7));
+      tube(pts, rr, rr * .3, i % 4 === 1 ? C.cableL : C.cable, 0, 1.2); }
+    for (let i = 0; i < 6; i++) { const x = b.min.x + Lx * (.2 + r() * .6), z = cz + (r() - .5) * R; tube([V(x, b.min.y + R * .1, z), V(x - Lx * .05, b.min.y - R * .6, z * 1.1), V(x - Lx * .12, b.min.y - R * 1.1, z * 1.2 + (r() - .5) * R)], rr * .8, rr * .2, C.cable, 0, 1.3); }
+    for (let i = 0; i < 3; i++) { const p = V(b.min.x + Lx * (.3 + i * .2), cy + R * .55, cz + (r() - .5) * R * .4); orb(R * .16, C.core, p, 12); orb(R * .32, C.glowS, p, 10); }
+    return g; }
   if (cls === "mnexus") { /* the Neural Nexus (the fourth painting) */
     const beam = (a, b, rad, mat) => { const d = b.clone().sub(a), m = add(new TH.Mesh(new TH.CylinderGeometry(rad, rad, d.length(), 6, 1, true), mat)); m.position.copy(a).addScaledVector(d, .5); m.quaternion.setFromUnitVectors(V(0, 1, 0), d.normalize()); return m; };
     add(new TH.Mesh(new TH.CylinderGeometry(3.2, 3.6, .5, 32), C.shell), 0, -1.6, 0);
@@ -16805,7 +16836,7 @@ function mimWave(k) { const D = MIM_D[k], f = v => (+v).toFixed(4), W1 = "2.0944
 for (const k in MIM_U) MON_WAVE[k] = mimWave(k);
 MON_WAVE.mimic = mimWave("mnest"); for (let i = 1; i <= 4; i++) MON_WAVE["alpha" + i] = mimWave("malpha" + i); MON_WAVE.nexus = mimWave("mnexus"); /* v665 */
 function buildAlien(k) {
-  if (MIM_U[k]) return buildMimic(k);
+  if (MIM_U[k] || /^e_/.test(k)) return buildMimic(k);
   if (k === "swasp" || k === "snest") return buildMonster("swasp", k === "snest" ? "nest" : "swarm");
   if (MON[k]) return buildMonster(k);
   if (k === "cube" || k === "sphere" || k === "cdrone") return buildCollective(k);
@@ -23746,6 +23777,7 @@ const CAP2 = {
   // v418 the Cube Destroyer has no second battery: its beam is the whole show
 };
 /* v538 the monsters' signature attacks: [weapon look, shots, colour, delay s, flags], two per monster, alternating volley by volley */
+try { for (const b of ECHO_BASE) if (CPROF[b]) CPROF["e_" + b] = CPROF[b].slice(); } catch (e) {} /* v666 */
 const MON_ATK = {
   mstalk: [["flak", 4, "#7fe0ff", .12, {}], ["laser", 2, "#bff3ff", .16, {}]], mharv: [["acid", 3, "#5fd8ff", .2, {}], ["flak", 3, "#9fe8ff", .14, {}]], mhunt: [["laser", 3, "#9fe8ff", .1, {}], ["flak", 5, "#7fe0ff", .1, {}]],
   massim: [["ion", 3, "#9fe4ff", .18, {}], ["missile", 3, "#7fd4ff", .2, {}]], mguard: [["flak", 6, "#5fd8ff", .12, {}], ["ion", 2, "#9fe8ff", .22, {}]], mtitan: [["plasma", 3, "#b48cff", .24, { hv: 1 }], ["missile", 6, "#5fd8ff", .2, { flank: 1 }]],
