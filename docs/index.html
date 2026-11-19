@@ -5221,7 +5221,28 @@ const SHOP_ART = { bm: "metalMine", bc: "crystalMine", bg: "gasSynth", be: "sola
   repairKit: "repairYard", pirIntel: "espionage", teleport: "jumpGate", moonSeed: "lunarBase",
   runes3: "shop/runes", vipAct1: "shop/vip1", vipAct7: "shop/vip7", vipAct30: "shop/vip30", vipPts100: "shop/vp100", vipPts500: "shop/vp500", vipPts2500: "shop/vp2500", vipPts10k: "shop/vp10k", /* v550 */
   mb1: "shop/mb1", mb2: "shop/mb2", mb3: "shop/mb3", mb4: "shop/mb4", mb5: "shop/mb5", mb6: "shop/mb6" };
+SHOP_ART.peace = SHOP_ART.peace || "shields";
 const shopArtOf = k => { const b = k.replace(/_(bronze|silver|gold|platinum|7|30)$/, ""), a = SHOP_ART[b] || SHOP_ART[b.replace(/_[a-z]+$/, "")]; return a ? `art/${a}.webp` : null; };
+/* v642 Peace Shield: empire-wide, bought in the shop and used from the inventory */
+const PEACE = [[8, 70], [24, 200], [72, 330]], PEACE_CD = 12 * 3600e3, PEACE_MAX = 7 * 864e5;
+const peaceLeft = () => { const P = (S && S.peace) || {}, T = now(); return P.until > T ? P.until - T : 0; };
+const peaceCdLeft = () => { const P = (S && S.peace) || {}, T = now(); return !peaceLeft() && P.cd > T ? P.cd - T : 0; };
+const peaceHrs = h => h < 24 ? h + " hours" : h === 24 ? "24 hours" : h / 24 + " days";
+ITIERS.slice(0, 3).forEach(([tk, tn, col], i) => { const [h, c] = PEACE[i];
+  SHOP[`peace_${tk}`] = { cat: "special", tier: i, col, n: "Peace Shield", ic: "🛡", cost: c, stack: true,
+    d: () => `Shields every world you hold from other commanders for ${peaceHrs(h)}. Attacking, spying on or firing missiles at another commander drops it. Pirates and monsters still come. 12-hour recharge after it ends.${peaceLeft() ? ` Up now: ${ftime(peaceLeft())} left.` : peaceCdLeft() ? ` Recharging: ready in ${ftime(peaceCdLeft())}.` : ""}`,
+    use: () => peaceUp(h) }; });
+function peaceUp(h) { const T = now(), P = S.peace || {}, cd = peaceCdLeft();
+  if (cd) { toast(`Your Peace Shield is recharging. Ready in ${ftime(cd)}.`, "warn"); return null; }
+  const base = P.until > T ? P.until : T, until = Math.min(T + PEACE_MAX, base + h * 3600e3); if (until <= base) { toast("Your Peace Shield already runs for the longest time it can (7 days).", "warn"); return null; }
+  for (const q of myPlanets()) if (!(q.shieldUntil >= until)) { q.shieldUntil = until; putPlanet(q); }
+  S.peace = { until, cd: until + PEACE_CD }; bump("shields"); try { syncPlayer(); } catch (e) {}
+  return `Peace Shield up for ${ftime(until - T)}. Commander fleets heading for your worlds will turn back. Attacking another commander drops it.`; }
+/* attacking, spying on or firing at another commander drops the Peace Shield (shields from other sources stay) */
+function peaceBreak(tgt) { const P = S.peace, T = now(); if (!P || !(P.until > T)) return; const U = P.until;
+  for (const q of myPlanets()) if (q.shieldUntil === U) { q.shieldUntil = T; putPlanet(q); }
+  S.peace = { until: T, cd: T + PEACE_CD }; note(`Your Peace Shield dropped: you moved against ${tgt && tgt.name ? tgt.name : "another commander"}. It can go up again in 12 hours.`, "warn"); }
+const peaceHits = p => { if (!p || !p.owner || p.owner === G.me) return false; const st = pStatus(p); return st === "player" || st === "shielded" || st === "home"; };
 const SHOP_UNITS = { boost: i => i + 1, accel: i => [.5, 2, 8][i], res: i => [6, 24, 72][i], planet: i => [4, 9, 15][i] };
 const SHOP_CI = { packs: "◆", vip: "♛", boost: "⇑", accel: "⏩", res: "⬢", forge: "⚒", planet: "⬚", officer: "✪", class: "⚔", special: "✦", skins: "◐" };
 const shopDay = () => utcDay(), shopDayEnd = () => { const d = new Date(); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1); };
@@ -5579,7 +5600,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 641;
+const GAME_V = 642;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -21168,7 +21189,7 @@ function shPlanet() {
     body = `<h2 class="sec" id="strike">Strike fleet</h2>${originBar()}${picker(avail)}
     <div class="callout${arks ? " cy" : ""}">${arks ? (count >= worldCap() ? `You hold ${count} / ${worldCap()} worlds. ${worldCap() < MAX_PLANETS ? `Research Astrophysics Lv.${worldCap() * 2} so the Colony Ship can settle here.` : "The Colony Ship can't land until you abandon one."}` : `Invasion: if the defenders fall, ${esc(p.name)} becomes yours, shielded for 7 days. Surviving ships stay as its garrison.`) : `Raid only. Add a Colony Ship to take the planet. You hold ${count} / ${worldCap()} worlds.`}</div>
     ${jointOK ? `<button class="toggle${sheet.joint ? " on" : ""}" data-act="jointToggle"><span><b style="font-family:var(--f-display)">⚔ Start a joint strike</b><br><span class="note">Your ships wait at ${esc(h.name)} while bot allies, alliance members and friends send theirs there. When the timer ends the whole joint strike marches as one fleet. Holds ${fmt(rallyCap(S.r.command, empB("allyDepot")))} ships from up to ${rallySlots(S.r.command)} commanders.</span></span><span class="sw"></span></button>${sheet.joint ? rallyTimerUI(h, p, sel) : ""}` : ""}
-    ${st !== "shielded" ? strikeReqSection(p, p.lvl) : ""}
+    ${st !== "shielded" && peaceLeft() && peaceHits(p) ? `<div class="callout">🛡 Launching drops your Peace Shield (${ftime(peaceLeft())} left).</div>` : ""}${st !== "shielded" ? strikeReqSection(p, p.lvl) : ""}
     ${speedBar(p, sel)}
     <dl class="kv"><dt>Cargo space</dt><dd>${fmt(cargoOf(sel))}</dd></dl>
     ${oddsBlock(o, !kn)}${kn && kn.rep ? `<p class="note">From your espionage report ${ago(kn.rep.at) === "now" ? "just now" : ago(kn.rep.at) + " ago"}${kn.rep.tech ? "" : ". Their research is hidden, so these odds assume none"}.</p>` : ""}
@@ -25117,6 +25138,7 @@ function sendFleet(p, n, mission, extra) {
   S.fleets.push(f); bump("fleetsSent"); /* v542 */
   if (Object.keys(n).some(k => CLASS_OF[k] === "frigate" && n[k] > 0) && typeof reveal === "function") { const q = pos(p, T); reveal(q.x, q.y, 12); } // frigates scout ahead
   if (mission === "attack" && p.owner && p.owner !== G.me && p.kind !== "home") publishInbound(p.owner, f);
+  if ((mission === "attack" || mission === "spy") && peaceHits(p)) peaceBreak(p); /* v642 */
   if (mission === "spy" && p.owner && p.owner !== G.me) publishInbound(p.owner, f); // v279: the target's screen flashes red
   if (tutOn() && !["attack-a-hive-garrison", "tap", "rush", "cine"].includes(TUT[S.tut.i] && TUT[S.tut.i].id)) setTimeout(() => { try { if (S.fleets.includes(f)) ACT.fleetMap({ id: f.id }); } catch (e) {} }, 450); // v335: during the Academy the camera follows what you send (the first attack teaches tapping it yourself)
   return f;
@@ -25948,7 +25970,7 @@ const ACT = {
     const p = G.byId[d.id], h = homePlanet(); if (!p || !h || !canPlay() || pStatus(p) !== "player" || isAlly(p.owner)) return;
     const have = (S.mis || {}).ballistic || 0, n = clamp(Math.floor(+(($("#misn") || {}).value) || 1), 1, have); if (!have) return;
     if (p.shieldUntil > now()) return toast(`${p.name} is shielded.`, "warn");
-    const T = now(), tt = misTime(h, p); S.mis.ballistic -= n; S.strikes = S.strikes || []; S.strikes.push({ id: "m" + (S.seq++), pid: p.id, n, out: T, at: T + tt });
+    const T = now(), tt = misTime(h, p); peaceBreak(p); S.mis.ballistic -= n; S.strikes = S.strikes || []; S.strikes.push({ id: "m" + (S.seq++), pid: p.id, n, out: T, at: T + tt });
     sheet.misn = 1; toast(`${n} missile${n > 1 ? "s" : ""} launched at ${p.name}. Impact in ${ftime(tt)}.`, "win");
   }),
   mmake: d => act(() => {
