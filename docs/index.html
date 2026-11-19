@@ -5712,7 +5712,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 657;
+const GAME_V = 658;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5953,7 +5953,7 @@ function finMat(m, f, obj, o) { o = o || {}; const F = HULL_F[f]; if (!F || !TH 
   const gly = f === "glyph"; /* v654 */
   const n = m.clone(); if (gly) { n.transparent = true; n.depthWrite = true; } n.metalness = tex ? (F.tm != null ? F.tm : .2) : F.met; n.roughness = tex ? .32 : F.rough; n.envMapIntensity = tex ? .8 : 1.7;
   if (sm) n.extensions = Object.assign({}, n.extensions, { derivatives: true });
-  const br = (i, tx) => tx ? `{ vec3 t = texture2D(uHT${i}, vHW.zy * uTs${i}).rgb * bw.x + texture2D(uHT${i}, vHW.xz * uTs${i}).rgb * bw.y + texture2D(uHT${i}, vHW.xy * uTs${i}).rgb * bw.z; t = pow(t, vec3(2.2)); float tl = dot(t, vec3(.3, .59, .11)); t = max(mix(vec3(tl), t, 1.35), 0.0); c${i} = t * (0.35 + 0.75 * smoothstep(0.0, 0.85, hl)); g${i} = t * pow(tl, 3.0) * uGl${i}; }`
+  const br = (i, tx) => tx ? `{ vec3 t = texture2D(uHT${i}, vHW.zy * uTs${i}).rgb * bw.x + texture2D(uHT${i}, vHW.xz * uTs${i}).rgb * bw.y + texture2D(uHT${i}, vHW.xy * uTs${i}).rgb * bw.z; t = pow(t, vec3(2.2)); float tl = dot(t, vec3(.3, .59, .11)); t = max(mix(vec3(tl), t, 1.35), 0.0); c${i} = t * (0.35 + 0.75 * smoothstep(0.0, 0.85, hl)); g${i} = t * pow(tl, 3.0) * uGl${i};${obj ? ` c${i} = mix(c${i}, uFin${i} * (0.3 + 0.8 * smoothstep(0.0, 0.85, hl)), .45); g${i} *= .3;` : ""} }`
     : `{ c${i} = mix(diffuseColor.rgb, uFin${i} * clamp(pow(hl, 1.35) * uFk${i} + .04, 0.0, 1.5), .94); g${i} = vec3(0.0); }`;
   const dec = i => ` uniform vec3 uFin${i}; uniform float uFk${i}; uniform float uTs${i}; uniform float uGl${i};` + ((i === 1 ? tex : tex2) ? ` uniform sampler2D uHT${i};` : "");
   n.onBeforeCompile = sh => { const U = sh.uniforms; U.uFin1 = { value: new TH.Color(F.col) }; U.uFk1 = { value: F.k }; U.uTs1 = { value: F.ts || .8 }; U.uGl1 = { value: F.gl || .45 }; if (tex) U.uHT1 = { value: tex };
@@ -5966,10 +5966,10 @@ function finMat(m, f, obj, o) { o = o || {}; const F = HULL_F[f]; if (!F || !TH 
           /* v638 armour plating: staggered panels with dark seams; a few panels are outlined in glowing inlay that pulses slowly */
           + (sm ? "\n { vec3 an = abs(vHL); vec2 q = an.x > an.y && an.x > an.z ? vHO.yz : (an.y > an.z ? vHO.xz : vHO.xy); q *= vec2(16.0, 11.0); q.x += mod(floor(q.y), 2.0) * .5; vec2 ce = floor(q); vec2 d2 = .5 - abs(fract(q) - .5); float d = min(d2.x, d2.y);"
             + " float w = fwidth(d) + 1e-4; hSm = (1.0 - smoothstep(w * .6, w * 1.8, d)) * (1.0 - smoothstep(.1, .28, w)); hPh = fract(sin(dot(ce, vec2(12.9898, 78.233))) * 43758.5453); hIn = (1.0 - smoothstep(w * .8, w * 3.2, d)) * (1.0 - smoothstep(.1, .28, w)) * step(.68, hPh); diffuseColor.rgb *= 1.0 - hSm * .72; }" : "") + (gly ? "\n { vec3 gq = " + (sm ? "vHO * 2.2; vec3 gn = vHL;" : "vHW * .9; vec3 gn = vHN;") + " fgM = lvGly(gq, gn, uT, fgC); diffuseColor.rgb = mix(diffuseColor.rgb * .55, fgC * .5, fgM * .6); }" : ""))
-        .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n { float hf = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.2); totalEmissiveRadiance += uRim * hf * (" + (tex ? ".35" : ".85") + ") + hGl + uInl * (hf * 1.2 + .25) * uGlw;"
+        .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n { float hf = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.2); totalEmissiveRadiance += uRim * hf * (" + (obj ? "1.1" : tex ? ".35" : ".85") + ") + hGl + uInl * (hf * 1.2 + .25) * uGlw;"
           + (sm ? " totalEmissiveRadiance += uInl * hIn * (.55 + .45 * sin(uT * 1.6 + hPh * 6.283)) * 2.4;" : "")
           + (gly ? " totalEmissiveRadiance += fgC * fgM * 1.5 + lvHsv(fract(hf * 1.5 + uT * .05), .55, 1.0) * pow(hf, 1.3) * .9; diffuseColor.a *= clamp(.24 + .76 * pow(hf, 1.3) + fgM * .75, 0.0, 1.0);" : "") + " }"); };
-  n.customProgramCacheKey = () => "hullfin2-" + f + (tex ? "-t" : "") + (obj ? "-o" : "") + (o.glow ? "-g" : "") + (T2 ? "-a" + T2 + (tex2 ? "t" : "") : "") + (sm ? "-s" : ""); n.needsUpdate = true; return n; }
+  n.customProgramCacheKey = () => "hullfin3-" + f + (tex ? "-t" : "") + (obj ? "-o" : "") + (o.glow ? "-g" : "") + (T2 ? "-a" + T2 + (tex2 ? "t" : "") : "") + (sm ? "-s" : ""); n.needsUpdate = true; return n; }
 /* v654 the Glyph Holo's runes: 64 procedural runes in an 8 x 8 atlas, white on black */
 let GLY_T = null;
 const GLY_GLSL = "float lvGly(vec3 qi, vec3 on, float t, out vec3 col) { vec3 an = abs(on); vec2 g = an.x > an.y && an.x > an.z ? qi.zy : (an.y > an.z ? qi.xz : qi.xy); g *= 9.0;\n  vec2 ce = floor(g), f = fract(g); float h = fract(sin(dot(ce, vec2(12.99, 78.23))) * 43758.55); col = vec3(0.0); if (h < .3) return 0.0;\n  float ph = t * .22 + h * 9.0, cy = floor(ph), env = sin(fract(ph) * 3.14159); float id = floor(fract(sin((cy + h * 31.0) * 12.99) * 43758.55) * 64.0);\n  vec2 uv = (vec2(mod(id, 8.0), floor(id / 8.0)) + .08 + f * .84) / 8.0; float m = texture2D(uGA, uv).r;\n  col = lvHsv(fract(h * 5.7 + cy * .13 + t * .02), 1.0, 1.0); return m * (.3 + .7 * env); }\n";
@@ -13472,8 +13472,9 @@ function drawClashes(W, t, T) {
       const bolts = new TH.LineSegments(boltsG, new TH.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 1, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); bolts.frustumCulled = false; bolts.renderOrder = 14; W.scene.add(bolts);
       const boomT = W.glow.boom || (W.glow.boom = glowTex("255,170,80", 1)), booms = [];
       for (let i = 0; i < 14; i++) { const sp = new TH.Sprite(W.additive(boomT, 0xffffff, 0)); sp.renderOrder = 15; W.scene.add(sp); booms.push({ sp, t0: -1e9 }); }
-      const mk = (n, col, hostile, fg) => { const g = fleet3D(W, clashShips(n) || genComp(clashCnt(n)), col, hostile, false, false, fg); g.userData.size = (.75 + Math.min(1.1, Math.log10(clashCnt(n) + 1) * .3)) * .5; W.scene.add(g); return g; };
-      c.o = { ga: mk(c.a, c.aCol, c.you !== "a", c.aF || (c.aCmd === false ? null : DEMO_FAC[hash(String(c.key) + "a") % 4])), gd: mk(c.d, c.dCol, c.you === "a", c.dF || (c.dCmd === false ? null : DEMO_FAC[hash(String(c.key) + "d") % 4])), /* v258: every commander's side leads with a flagship (v261: not Cube bosses, monsters, pirates or the Hive) */ bolts, booms, bl: [], la: -1, ld: -1, ended: 0 }; if (beastKind(c.loc)) { c.o.bx = beastInit(W, c); c.o.gd.visible = false; } if (bossLocKey(c.loc)) { c.o.boss = 1; c.o.gd.visible = false; } if (!reduced) c.o.f5 = fx590Init(W, c); /* v590 */ }
+      const mk = (n, col, hostile, fg, sd) => { const ff0 = FLEET_FIN, sn = clashShips(n); FLEET_FIN = sd === c.you && !c.demo ? (() => { try { return hullFleet(G.me, sn || n); } catch (e) { return null; } })() : null; /* v658 your side wears your finish */
+        let g; try { g = fleet3D(W, sn || genComp(clashCnt(n)), col, hostile, false, false, fg); } finally { FLEET_FIN = ff0; } g.userData.size = (.75 + Math.min(1.1, Math.log10(clashCnt(n) + 1) * .3)) * .5; W.scene.add(g); return g; };
+      c.o = { ga: mk(c.a, c.aCol, c.you !== "a", c.aF || (c.aCmd === false ? null : DEMO_FAC[hash(String(c.key) + "a") % 4]), "a"), gd: mk(c.d, c.dCol, c.you === "a", c.dF || (c.dCmd === false ? null : DEMO_FAC[hash(String(c.key) + "d") % 4]), "d"), /* v258: every commander's side leads with a flagship (v261: not Cube bosses, monsters, pirates or the Hive) */ bolts, booms, bl: [], la: -1, ld: -1, ended: 0 }; if (beastKind(c.loc)) { c.o.bx = beastInit(W, c); c.o.gd.visible = false; } if (bossLocKey(c.loc)) { c.o.boss = 1; c.o.gd.visible = false; } if (!reduced) c.o.f5 = fx590Init(W, c); /* v590 */ }
     const atCube = c.loc === NEXUS, angN = ang + (atCube ? e * .00007 : 0), o = c.o, dx = Math.cos(angN), dz = Math.sin(angN), wob = Math.sin(e * .0011) * (atCube ? 7 : .6); /* v194 strafing runs round the Cube */
     // attackers sweep in during the first 2 s, then hold a firing line; defenders hold in front of the target
     // v178 at the Cube the defenders hold a line just outside its hull (they used to hold 11 units from its centre: inside it)
@@ -14702,7 +14703,7 @@ function draw3D(t) {
   W.camera.lookAt(cam.tx, cam.ty, cam.tz);
   MAPPROF.mark("fleets");
   fleetLod(W, pxK);
-  { const B = W.renderer.pace; if (B) { B.scene = W.scene; B.used = 0; B.skips = 0; B.ms = MOBILE ? 22 : 45; } W.renderer.render(W.scene, W.camera); if (B) { B.scene = null; W.compSkip = B.skips; if (B.skips && !W.paceN) { W.paceN = 1; try { crumb("map shaders paced over several frames"); } catch (e) {} } } } /* v530 */
+  { const B = W.renderer.pace; if (B) { B.scene = W.scene; B.used = 0; B.skips = 0; B.ms = MOBILE ? 22 : 45; } if (!mapBloom(W)) W.renderer.render(W.scene, W.camera); if (B) { B.scene = null; W.compSkip = B.skips; if (B.skips && !W.paceN) { W.paceN = 1; try { crumb("map shaders paced over several frames"); } catch (e) {} } } } /* v530 */
   if (W.snapReq) { W.snapReq = 0; cineSnap(W); } // v96: a screenshot is grabbed right after the frame is drawn, while the buffer still holds it
   MAPPROF.mark("GPU submit");
   overlay3D(W, fx, w, h, dpr, t, T);
@@ -18112,6 +18113,9 @@ function colDayNight(W) {
   for (const k in POOL_MATS) POOL_MATS[k].opacity = POOL_MATS[k].userData.op * (.22 + .78 * n);
   DN_NIGHT = n; W.dnKey = key; W.dnBg = W.scene.background.getHex();
 }
+/* v658 a cinematic raises the phone's resolution; when it ends, the resolution drops straight back to the safe budget */
+function mapBloom(W) { const on = !!(W.cam && (W.cam.cine || W.cam.cineObj)); if (on) { W.cineWas = 1; return false; }
+  if (W.cineWas) { W.cineWas = 0; try { const m = Math.min(gfxMaxPR(), mobilePRCap()); if (W.renderer.getPixelRatio() > m + .01) { W.renderer.setPixelRatio(m); W.size = [0, 0]; } } catch (e) {} } return false; }
 function colBloom(W) {
   if (W.bloom !== undefined) return W.bloom; W.bloom = null;
   try {
@@ -20256,10 +20260,11 @@ function followMvEnd(W, keep) { const c = W.cam; c.followMv = null; if (W.mvObj)
 const CINE_M = [["chase", "Chase"], ["side", "Side"], ["front", "Head-on"], ["top", "Overhead"], ["orbit", "Orbit"], ["free", "Free"]];
 function cineAngle(m, yaw, c) { const back = Math.atan2(-Math.cos(yaw), -Math.sin(yaw));
   return m === "chase" ? { th: back, ph: 1.28 } : m === "side" ? { th: back + Math.PI / 2, ph: 1.42 } : m === "front" ? { th: back + Math.PI, ph: 1.36 } : m === "top" ? { th: back, ph: .2 } : m === "orbit" ? { th: c.th + .05, ph: 1.25 + .12 * Math.sin(performance.now() * .0004) } : null; }
-function cineStart(m) { if (!G3 || !(G3.cam.followFleet || G3.cam.followMv)) return toast("Tap a fleet to follow it first.", "warn"); const c = G3.cam; closeSheet(); if (!S.tutCine && S.fleets.some(f => f.id === c.followFleet)) { S.tutCine = 1; dirty(); } c.cine = { m: m || "chase" }; c.goal = { dist: 7 }; $("#app").classList.add("cine"); cineBar(); fleetHud(true); }
+function cineSharp() { setTimeout(() => { try { if (!G3 || !G3.renderer) return; const m = Math.min(gfxMaxPR(), mobilePRCap()); if (G3.renderer.getPixelRatio() < m - .01) { G3.renderer.setPixelRatio(m); G3.size = [0, 0]; } } catch (e) {} }, 60); } /* v658 */
+function cineStart(m) { cineSharp(); if (!G3 || !(G3.cam.followFleet || G3.cam.followMv)) return toast("Tap a fleet to follow it first.", "warn"); const c = G3.cam; closeSheet(); if (!S.tutCine && S.fleets.some(f => f.id === c.followFleet)) { S.tutCine = 1; dirty(); } c.cine = { m: m || "chase" }; c.goal = { dist: 7 }; $("#app").classList.add("cine"); cineBar(); fleetHud(true); }
 /* v135: film a Cube boss, a pyramid station or a space monster: the camera circles it, with the same angle buttons and free look */
 const cineBtn = id => `<button class="btn ghost wide" style="margin:6px 0" data-act="cineObj" data-id="${esc(id)}">🎥 Cinematic view</button>`;
-function cineObjStart(id, n) { const it = PB[id] || YB[id] || G.byId[id] || wbById(id) || (id[0] === "r" ? NB[id] : null); if (!it) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); }
+function cineObjStart(id, n) { cineSharp(); const it = PB[id] || YB[id] || G.byId[id] || wbById(id) || (id[0] === "r" ? NB[id] : null); if (!it) return; closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); }
   if (!G3) { if ((n || 0) < 20) setTimeout(() => cineObjStart(id, (n || 0) + 1), 300); return; }
   const c = G3.cam; if (c.followMv) followMvEnd(G3, 1); c.follow = null; c.followFleet = null; c.vel = null; c.cineObj = { id }; c.cine = { m: "orbit" }; c.head = it.a0 || 0; if (it.wb) { c.cineObj.fit = 1; c.goal = { dist: (WB[it.wb].con != null ? 45 : WB[it.wb].cam || 105) * WB[it.wb].sc }; $("#app").classList.add("cine"); G.wbWide = 0; cineBar(); wbScanOn(it.wb); return; } /* v384: a world boss gets its scan */
   c.goal = { dist: 40 }; $("#app").classList.add("cine"); cineBar(); } // the distance is fitted to the model's real size once it is in view
@@ -24597,7 +24602,8 @@ const gfxMaxPR = () => clamp((window.devicePixelRatio || 1) * gfx("scale"), .6, 
    The budget (3.4M pixels, 2M on weak devices) leaves phones at 2x and puts tablets near 1.5-1.8x; it follows the window, so rotating
    the tablet or using split screen re-sizes on the next resolution check. */
 const STRONG = () => MOBILE && !WEAK && !G.glSafe && (navigator.deviceMemory || 8) >= 6 && (navigator.hardwareConcurrency || 8) >= 8; /* v466 */
-const mobilePRCap = () => { if (!MOBILE) return 9; const px = Math.max(1, innerWidth * innerHeight), st = STRONG(); return clamp(Math.sqrt((IOS ? [1e6, .75e6, .55e6, .4e6][MEMT] : (WEAK ? 2e6 : G.glSafe ? 1.4e6 : st ? 4.6e6 : 3.4e6) * [1, .75, .55, .4][MEMT]) / px), 1, /* v537 the iPhone budget */ (st ? Math.min(window.devicePixelRatio || 2, IOS ? 2.5 : 3) : 2) * FZ()); }; // v166: a smaller budget after a GPU reset
+const cineK = () => { try { return MOBILE && view === "galaxy" && G3 && G3.cam && (G3.cam.cine || G3.cam.cineObj) ? 1.35 : 1; } catch (e) { return 1; } }; /* v658 */
+const mobilePRCap = () => { if (!MOBILE) return 9; const px = Math.max(1, innerWidth * innerHeight), st = STRONG(); return clamp(cineK() * Math.sqrt((IOS ? [1e6, .75e6, .55e6, .4e6][MEMT] : (WEAK ? 2e6 : G.glSafe ? 1.4e6 : st ? 4.6e6 : 3.4e6) * [1, .75, .55, .4][MEMT]) / px), 1, /* v537 the iPhone budget */ (st ? Math.min(window.devicePixelRatio || 2, IOS ? 2.5 : 3) : 2) * FZ()); }; // v166: a smaller budget after a GPU reset
 // v164 live, not fixed at launch: a Z Fold is a phone folded and a small tablet unfolded, and it can change mid-game
 const isTablet = () => MOBILE && Math.min(innerWidth, innerHeight) >= 560;
 const isFoldOpen = () => MOBILE && isTablet() && Math.max(innerWidth, innerHeight) / Math.min(innerWidth, innerHeight) < 1.45; // an unfolded foldable is nearly square
@@ -24704,12 +24710,12 @@ function adaptRes(t) {
   if ((frame.n = (frame.n || 0) + 1) % 30) return; // v95: react within half a second, not six
   const W = view === "galaxy" ? G3 : view === "base" ? C3 : null; if (!W || !W.renderer || battle) return;
   // v124: aims at the preset's frame target (120 Hz panels included) and the chosen render scale, instead of a fixed 60 fps / 2x
-  const close = W === G3 && W.cam && W.cam.dist < 12, R = W.renderer, cur = R.getPixelRatio(), max = Math.min(gfxMaxPR(), mobilePRCap(), MOBILE && close ? 1.5 : 9); let nx = cur; // v145 phones: up to 2x, and 1.5x for a world filling the screen (was 1.5x and 1x)
+  const close = W === G3 && W.cam && W.cam.dist < 12, R = W.renderer, cur = R.getPixelRatio(), max = Math.min(gfxMaxPR(), mobilePRCap(), MOBILE && close && cineK() === 1 ? 1.5 : 9); let nx = cur; // v145 phones: up to 2x, and 1.5x for a world filling the screen (was 1.5x and 1x)
   // v129: resolution is only given up to hold 60 fps (a 120 Hz panel no longer drives it to 0.6x), drops need two slow checks in a row, and it
   // climbs back only after 3 s of real headroom and a hold that doubles each time a climb has to be undone (each change resizes the buffers: a hitch)
   /* v172 a crowded map (a 60 vs 60 battle) first trims how many distant worlds get a full sphere (they keep their glow markers), down to
      40% of the detail setting's count, before any resolution is given up; the count grows back when frames have headroom again */
-  if (W === G3) { const aim0 = Math.max(gfxAimMs(), 1000 / 125); W.nearK = clamp((W.nearK || 1) * (frame.ema > aim0 * 1.08 ? .85 : frame.ema < aim0 * .8 ? 1.08 : 1), .4, 1); }
+  if (W === G3) { const aim0 = Math.max(gfxAimMs(), 1000 / 125); W.nearK = clamp((W.nearK || 1) * (frame.ema > aim0 * 1.08 ? .85 : frame.ema < aim0 * .8 ? 1.08 : 1), .4, cineK() > 1 ? .6 : 1); }
   const aim = Math.max(gfxAimMs(), 1000 / 125), A = adaptRes.s /* v165: chases the frame target, 120 on fast screens (it held only 60) */ || (adaptRes.s = { bad: 0, good: 0, at: 0, hold: 4000, up: 0 });
   if (W === C3 && MOBILE && !capped()) { /* v412: a phone sheds the base's bloom before any resolution */ if (!W.bloomOff && W.bloom && frame.ema > aim * 1.2) { if ((A.bb = (A.bb || 0) + 1) >= 2) { W.bloomOff = t; A.bb = 0; A.bad = 0; crumb("base bloom off (frame " + frame.ema.toFixed(1) + " ms)"); return; } } else A.bb = 0;
     if (W.bloomOff && frame.ema < aim * .75 && R.getPixelRatio() >= max - .01 && t - W.bloomOff > 30000) { W.bloomOff = 0; crumb("base bloom back"); } }
