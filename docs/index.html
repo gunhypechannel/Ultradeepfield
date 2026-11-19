@@ -1303,6 +1303,11 @@ canvas.dthumb{display:block}
 .sheet .fachd h2{font:700 clamp(22px,4.4vw,31px)/1.12 var(--f-display);letter-spacing:.015em;color:#f2fbff;text-shadow:0 0 16px rgba(120,210,255,.55)}
 .fachd p{margin:5px 0 0;font-size:clamp(14px,2.2vw,16px);line-height:1.35;color:#dcecf8}.fachd .gem{color:#fff;font-weight:600;white-space:nowrap}.fachd .gem i{font-style:normal;color:#58c8ff;text-shadow:0 0 8px #58c8ff}
 .facs{position:relative;display:grid;grid-template-columns:1fr;gap:14px}
+.faccf{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:60;max-width:520px;margin:0 auto;animation:faccf .22s ease-out;padding:14px;border:1px solid rgba(255,200,110,.55);border-radius:12px;background:#0a101e;opacity:1;isolation:isolate;box-shadow:0 0 0 100vmax rgba(2,5,12,.55),0 10px 30px rgba(0,0,0,.6),0 0 24px rgba(255,180,80,.18);display:grid;gap:12px}
+@keyframes faccf{from{transform:translateY(16px);opacity:0}}
+.faccf p{margin:0;font-size:15px;color:#fff;line-height:1.4}.faccf small{display:block;margin-top:4px;font-size:12px;color:#9fb6c4}
+.faccf>div{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.btn.pxarm{animation:pxarm 1s ease-in-out infinite;box-shadow:0 0 0 2px #ffd36b}@keyframes pxarm{50%{filter:brightness(1.35)}}
 @media (min-width:560px){.facs{grid-template-columns:1fr 1fr}}
 .fpk{--cc:14px;position:relative;display:block;width:100%;padding:0;border:0;background:none;color:#eef6fb;text-align:left;cursor:pointer;-webkit-appearance:none;appearance:none;transition:transform .16s ease}
 .fpk[data-f=terran]{--fc:#20e4ff;--fd:#06294a}.fpk[data-f=solar]{--fc:#ffc23a;--fd:#352004}.fpk[data-f=nyx]{--fc:#ff2a3c;--fd:#4a0710}.fpk[data-f=verdant]{--fc:#4dff7a;--fd:#06361f}
@@ -5561,7 +5566,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 636;
+const GAME_V = 637;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -5709,8 +5714,11 @@ const OWNER_IDS = ["u_yGzkQJxSJSPopEz8xWm8SQ"]; // the game owner's account on t
 const ownerFree = () => { if (!G.owner && OWNER_IDS.includes(G.me)) G.owner = true; if (G.owner && S && !S.ownerFree) { S.ownerFree = 1; dirty(); } return !!(G.owner || (S && S.ownerFree) || G.mode === "offline"); }; // a solo galaxy has no one else to be fair to: every skin is open there
 function ownerCheck(user) { try { Promise.resolve(user && user.isOwner && user.isOwner()).then(v => { if (v) { G.owner = true; ownerFree(); try { render(true); if (sheet) renderSheet(); } catch (e) {} } }).catch(() => {}); } catch (e) {} }
 /* v210: pre-release, every player on the server can wear every premium skin for free. At release this flag goes false and skins become a paid unlock. */
-const FREE_SKINS = true;
-const pxOwned = k => PXS[k] && PXS[k].prem ? !!(ownerFree() || premT() >= PXS[k].prem) : !!(FREE_SKINS || ownerFree() || (S && S.pxOwn || {})[k]); /* v626 premium skins come only with the tier */
+const FREE_SKINS = false; /* v637: shop skins cost shards again (◆200 and up) */
+const FAC_COST = 100; /* v637: changing faction (was ◆10) */
+const pxOwned = k => PXS[k] && PXS[k].prem ? !!(ownerFree() || premT() >= PXS[k].prem) : !!(FREE_SKINS || ownerFree() || (S && S.pxOwn || {})[k] || pxKeep(k));
+/* v637: a skin a world already wore while skins were free stays the player's own */
+function pxKeep(k) { try { if (!S || !G.me || typeof myPlanets !== "function" || !myPlanets().some(p => p && p.px === k)) return false; (S.pxOwn = S.pxOwn || {})[k] = 1; dirty(); return true; } catch (e) { return false; } } /* v626 premium skins come only with the tier */
 const pxMul = (p, r) => { const s = pxOf(p); return s && (s.r === r || s.r === "all") ? 1 + s.b : 1; };
 const pxPerk = s => `+${Math.round(s.b * 100)}% ${{ m: "metal", c: "crystal", g: "gas", all: "metal, crystal and gas" }[s.r]} output on the world wearing it`;
 /* ---------- v626 Premium: ten tiers for players who support the game with real money (owner: "special premium planet skins only for 10
@@ -5823,6 +5831,7 @@ for (const [k, f, n, d, g] of PS_SKINS) { const F = HULL_F[f]; PXS[k] = { n, cos
 const premSkinsAt = t => PS_SKINS.filter(([, f]) => HULL_F[f].t === t).map(x => x[2]);
 const hullsAt = t => Object.entries(HULL_F).filter(([, F]) => F.t <= t).map(([, F]) => F.n);
 const PXG_FX = `<i class="pxglint"></i><i class="pxspk">${"<s></s>".repeat(8)}</i>`;
+const pxArmed = k => !!(G.pxArm && G.pxArm.k === k && Date.now() - G.pxArm.t < 8000); /* v637 */
 const pxGoldWrap = (k, inner) => PXS[k] && PXS[k].gold ? `<span class="pxgw">${inner}${PXG_FX}</span>` : inner;
 /* and on the 3D map: a gold rim that breathes, a glint sweeping across, and sparkles winking on the bright gold and gems */
 const PXG_U = { uT: { value: 0 } };
@@ -6113,7 +6122,7 @@ function pxGrid(mode) {
   const p = mode === "sheet" && sheet ? G.byId[sheet.id] : null, sel = mode === "sheet" ? (sheet.px != null ? sheet.px : (p && p.px) || "") : null;
   return `${FREE_SKINS ? `<p class="note" style="color:#8affb4">Pre-release: every premium skin is free for everyone on this server. After release they become a paid unlock.</p>` : ownerFree() ? `<p class="note" style="color:#8affb4">Every premium skin is unlocked for you, free${G.mode === "offline" ? " in your solo galaxy" : ", as the game's owner"}.</p>` : ""}<p class="note pxdiag">Skin status · ${G.mode === "online" ? "shared galaxy" : G.mode === "offline" ? "solo galaxy" : G.mode} · owner ${G.owner ? "confirmed on this device" : S && S.ownerFree ? "remembered from another device" : "not confirmed"} · ${Object.keys(PXC).filter(k => PXC[k] && PXC[k].art).length}/${Object.keys(PXS).length} skins rendered</p><div class="pxlist">${Object.entries(PXS).map(([k, s]) => { const o = pxOwned(k), on = sel === k;
     const btn = o ? (mode === "sheet" ? `<button class="btn sm${on ? " amber" : ""}" data-act="pxPick" data-k="${k}">${on ? "✓ Selected" : "Apply"}</button>` : `<span class="own">${(S.pxOwn || {})[k] ? "Owned" : FREE_SKINS ? "Free in pre-release" : "Free for you"}</span><button class="btn sm" data-act="skin">Apply</button>`)
-      : s.prem ? `<button class="btn ghost sm" data-act="premOpen">🔒 Premium Tier ${s.prem}</button>` : `<button class="btn amber sm" data-act="pxBuy" data-k="${k}" ${(S.shards || 0) >= s.cost ? "" : "disabled"}><span class="shard">◆</span>${fmt(s.cost)}</button>`;
+      : s.prem ? `<button class="btn ghost sm" data-act="premOpen">🔒 Premium Tier ${s.prem}</button>` : `<button class="btn amber sm${pxArmed(k) ? " pxarm" : ""}" data-act="pxBuy" data-k="${k}" ${(S.shards || 0) >= s.cost ? "" : "disabled"}>${pxArmed(k) ? "Confirm " : ""}<span class="shard">◆</span>${fmt(s.cost)}</button>`;
     return `<div class="pxcard${on ? " on" : ""}${s.gold ? " gold" : ""}" style="--pc:${s.glow}">${pxGoldWrap(k, `<canvas data-px="${k}" role="img" aria-label="${esc(s.n)}"></canvas>`)}<div class="pxt"><b>${esc(s.n)}</b><small>${esc(s.d)}</small><em>${pxPerk(s)}</em><div class="pxb">${btn}</div></div></div>`; }).join("")}</div>`;
 }
 /* v72: each skin's decorations as two camera-facing layers for planet view: "back" (far half of rings and disks, coronas, beams,
@@ -24494,8 +24503,9 @@ function shFaction() {
   const first = !S.faction, cur = facOf();
   return `<div class="facf"><div class="facin"><i class="facstars" aria-hidden="true"></i>
     <div class="factop"><div class="factab"><span>${first ? "Choose your people" : "Faction"}</span></div>${first ? "" : `<button class="facx" data-act="close" aria-label="Close">✕</button>`}</div>
-    <div class="fachd"><h2>${first ? "Which faction do you lead?" : "Change Faction"}</h2><p>Your faction sets the look of your ships and buildings. It does not change their stats.${first ? ` You can change it later for <span class="gem"><i>◆</i>10</span>.` : ` Changing costs <span class="gem"><i>◆</i>10</span>.`}</p></div>
+    <div class="fachd"><h2>${first ? "Which faction do you lead?" : "Change Faction"}</h2><p>Your faction sets the look of your ships and buildings. It does not change their stats.${first ? ` You can change it later for <span class="gem"><i>◆</i>${FAC_COST}</span>.` : ` Changing costs <span class="gem"><i>◆</i>${FAC_COST}</span>.`}</p></div>
     <div class="facs">${Object.entries(FACTIONS).map(([k, F], i) => { const on = k === cur && !first; return `<button class="fpk${on ? " on" : ""}" data-act="facPick" data-f="${k}" style="--i:${i}"${on ? ' aria-current="true"' : ""}><span class="fcglow"></span><span class="fcedge"><span class="fcbody"><span class="fcscene"><img src="art/faction/${k}.webp?v=310" alt="${F.n} flagship" decoding="async"><i class="fcsheen"></i></span><span class="fcinfo"><img class="fccrest" src="art/faction/${k}-crest.webp" alt="" decoding="async"><span class="fctxt"><b>${F.n}</b><small>${F.d}</small>${F.creed ? `<em class="fccreed">${F.creed}</em>` : ""}</span></span><span class="fcflash"></span></span></span>${on ? `<span class="fcsel">✓ SELECTED</span>` : ""}</button>`; }).join("")}</div>
+    ${!first && sheet && sheet.fcf && FACTIONS[sheet.fcf] ? `<div class="faccf" role="alertdialog" aria-label="Confirm faction change"><p>Switch to <b>${FACTIONS[sheet.fcf].n}</b> for <span class="gem"><i>◆</i>${FAC_COST}</span>?<small>You have ◆${fmt(S.shards || 0)}. Your ships and buildings change look; stats stay the same.</small></p><div><button class="btn ghost" data-act="facNo">Cancel</button><button class="btn amber" data-act="facPick" data-f="${sheet.fcf}" data-ok="1">Switch for ◆${FAC_COST}</button></div></div>` : ""}
   </div></div>`;
 }
 
@@ -25217,6 +25227,7 @@ const ACT = {
     const p = G.byId[sheet.id]; if (p && p.owner === G.me) { p.px = d.k || null; putPlanet(p); pxNeed(d.k); toast(d.k ? `${PXS[d.k].n} applied to ${p.name}.` : `${p.name} is back to its own surface.`, "win"); }
     renderSheet(); },
   pxBuy: d => act(() => { const s = PXS[d.k]; if (!s) return; if (s.prem) return toast(`${s.n} comes with Premium Tier ${s.prem}.`, "warn"); S.pxOwn = S.pxOwn || {}; if (pxOwned(d.k)) return; if ((S.shards || 0) < s.cost) return toast(`${s.n} costs ◆${fmt(s.cost)}.`, "warn");
+    if (!pxArmed(d.k)) { G.pxArm = { k: d.k, t: Date.now() }; toast(`Tap again to spend ◆${fmt(s.cost)} on ${s.n}.`); if (sheet) renderSheet(); else render(true); setTimeout(() => { if (G.pxArm && G.pxArm.k === d.k && !pxArmed(d.k)) { G.pxArm = null; if (sheet) renderSheet(); else render(true); } }, 8100); return; } G.pxArm = null;
     S.shards -= s.cost; S.pxOwn[d.k] = 1; vipAdd(s.cost * 10); bump("shopBuys"); if (sheet && sheet.type === "skin") { sheet.px = d.k; const p = G.byId[sheet.id]; if (p && p.owner === G.me) { p.px = d.k; putPlanet(p); } }
     toast(sheet && sheet.type === "skin" ? `${s.n} unlocked and applied.` : `${s.n} unlocked. Apply it from Rename & reskin on any world you hold.`, "win"); }),
   skinSave: () => {
@@ -25671,10 +25682,12 @@ const ACT = {
       advance(now()); if (!pay(c)) return toast("Not enough resources.", "warn"); paid = true; await ref.update({ station: L + 1 }); a.station = L + 1; dirty(); SFX.build(); toast(`Space Station Lv.${L + 1}: room for ${allyCap(a)} members.`, "win"); render(true);
     } catch (e) { if (paid) refundRes(c); toast("Couldn't upgrade the station.", "warn"); render(true); } },
   faction: () => openSheet({ type: "faction" }),
+  facNo: () => { if (sheet) { sheet.fcf = null; renderSheet(); } },
   facPick: d => { const f = d.f; if (!FACTIONS[f] || G.facBusy) return; const first = !S.faction;
-    if (!first) { if (f === S.faction) return closeSheet(); if ((S.shards || 0) < 10) return toast("Changing faction costs ◆10.", "warn"); }
+    if (!first) { if (f === S.faction) return closeSheet(); if ((S.shards || 0) < FAC_COST) return toast(`Changing faction costs ◆${FAC_COST}. You have ◆${fmt(S.shards || 0)}.`, "warn");
+      if (d.ok !== "1") { sheet.fcf = f; renderSheet(); return; } sheet.fcf = null; }
     const commit = () => { G.facBusy = 0; if (!sheet || sheet.type !== "faction") return; /* closed during the flare: nothing is chosen or charged */
-      if (!first) { if ((S.shards || 0) < 10) return toast("Changing faction costs ◆10.", "warn"); S.shards -= 10; }
+      if (!first) { if ((S.shards || 0) < FAC_COST) return toast(`Changing faction costs ◆${FAC_COST}.`, "warn"); S.shards -= FAC_COST; }
       S.faction = f; dirty(); store.lastPlayer = ""; syncPlayer(); closeSheet(); if (C3) C3.fac = null; toast(`You lead the ${FACTIONS[f].n}.`, "win"); render(true); saveSoon(); setTimeout(flushSay, 80); };
     /* v249: the chosen card flares with a chord before the sheet closes */
     SFX.rune({ terran: "water", solar: "fire", nyx: "spirit", verdant: "earth" }[f], true); try { navigator.vibrate && navigator.vibrate([20, 40, 30]); } catch (x) {}
