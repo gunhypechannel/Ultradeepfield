@@ -2153,6 +2153,19 @@ body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}
 .hft{display:flex;flex-direction:column;gap:2px;margin-top:4px;padding-top:10px;border-top:1px solid rgba(255,210,90,.2)}.hft b{font-size:14px;font-weight:700;color:#ffd36b;letter-spacing:.04em}.hft small{font-size:12px;color:#9fb6c4}
 .invcats{flex-shrink:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:2px 0 12px;padding-bottom:2px}.invcats::-webkit-scrollbar{display:none}.invcats button{all:unset;flex:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12.5px;padding:7px 11px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#cfe3ee}.invcats button.on{border-color:#55d6e8;color:#fff;background:rgba(85,214,232,.15)}.invcats i{font-style:normal;opacity:.85}.invcats em{font-style:normal;font-size:11px;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,.08);color:#9fb6c4}
 .invsec{flex-shrink:0;display:flex;flex-direction:column;gap:8px;margin-bottom:16px}.invsec h4{margin:0;display:flex;align-items:center;gap:8px;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:#7fe6f3}.invsec h4 i{font-style:normal;letter-spacing:0}.invsec h4 small{margin-left:auto;font-size:11px;letter-spacing:0;color:#9fb6c4}
+.xsc{display:flex;flex-direction:column;gap:10px}.xsc>*{flex-shrink:0}.xsh{display:flex;align-items:baseline;justify-content:space-between;margin-top:6px;border-bottom:1px solid rgba(125,255,184,.18);padding-bottom:4px}.xsh b{font:700 15px var(--f-display);color:#7dffb8;letter-spacing:.04em}.xsh small{color:var(--muted);font-size:12px}
+.xsincs{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.xsinc{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 8px;border-radius:14px;background:radial-gradient(80% 70% at 50% 30%,rgba(125,255,184,.14),transparent 70%),rgba(6,14,16,.7);border:1px solid rgba(125,255,184,.3);text-align:center}.xsinc b{font-size:13px}.xsinc small{font-size:11.5px;color:var(--muted)}.xsinc.empty{opacity:.75;border-style:dashed}.xsinc.ready{border-color:#ffd25a;box-shadow:0 0 16px rgba(255,210,90,.35)}
+.xsbar{width:100%;height:6px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}.xsbar i{display:block;height:100%;background:linear-gradient(90deg,#3ce88e,#b8ffdc)}
+.xsegg{display:inline-block;width:26px;height:33px;border-radius:50% 50% 46% 46%/58% 58% 42% 42%;background:radial-gradient(40% 30% at 35% 30%,rgba(255,255,255,.85),transparent 70%),radial-gradient(circle at 60% 70%,rgba(0,0,0,.35),transparent 60%),radial-gradient(18% 14% at 65% 40%,rgba(255,255,255,.35),transparent),var(--c);box-shadow:0 0 14px color-mix(in srgb,var(--c) 60%,transparent);flex:none}.xsegg.big{width:44px;height:56px}.xsegg.ghost{--c:#2a3a40;box-shadow:none;opacity:.5}.xsegg.pr{background:radial-gradient(40% 30% at 35% 30%,rgba(255,255,255,.9),transparent 70%),conic-gradient(from 0deg,#ff7ad9,#7af4ff,#9dff7a,#ffd36b,#ff7ad9);animation:xspr 4s linear infinite}.xsinc.ready .xsegg{animation:xswob 1.2s ease-in-out infinite}
+@keyframes xswob{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}@keyframes xspr{to{filter:hue-rotate(360deg)}}
+.xsegs{display:flex;flex-direction:column;gap:6px}.xsegc{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.035)}.xsegc>div{flex:1;min-width:0;display:flex;flex-direction:column}.xsegc b{font-size:13px}.xsegc small{font-size:11.5px}
+.xshab{display:flex;flex-direction:column;gap:8px}.xscr{display:flex;align-items:center;gap:10px;padding:8px;border-radius:14px;border:1px solid color-mix(in srgb,var(--r) 45%,transparent);background:linear-gradient(90deg,color-mix(in srgb,var(--c) 14%,transparent),rgba(6,12,18,.6))}.xscr.on{border-color:#ffd25a;box-shadow:0 0 12px rgba(255,210,90,.35)}
+.xsart{width:72px;height:72px;flex:none;border-radius:12px;overflow:hidden;background:#040a10}.xsart img{width:100%;height:100%;object-fit:cover}.xscr.pr .xsart img{animation:xspr 5s linear infinite}
+.xsci{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.xsci b{font-size:14px}.xsci small{font-size:11.5px}.xsci em{font-style:normal;font-size:12px;color:#8affb4}.xscb{display:flex;flex-direction:column;gap:4px}
+.xsel{display:inline-block;width:max-content;font-size:11px;padding:1px 7px;border-radius:8px;color:var(--c);border:1px solid color-mix(in srgb,var(--c) 55%,transparent)}
+.xsbr{display:flex;flex-direction:column;gap:8px;align-items:stretch}.xspair{display:flex;align-items:center;justify-content:center;gap:12px}.xspair img,.xspair i{width:68px;height:68px;border-radius:14px;object-fit:cover;background:#040a10;border:1px solid rgba(125,255,184,.3);display:grid;place-items:center;font-style:normal;color:var(--muted);font-size:24px}.xspair span{font-size:22px;color:#ffd25a}
+.xsbon{display:flex;flex-wrap:wrap;gap:6px}.xsbook{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}.xsbk{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}.xsbk img{width:62px;height:62px;border-radius:12px;object-fit:cover;background:#040a10}.xsbk.un img{filter:brightness(0) drop-shadow(0 0 4px rgba(125,255,184,.4));opacity:.7}.xsbk small{font-size:10.5px;line-height:1.2}
+@media (prefers-reduced-motion:reduce){.xsegg.pr,.xsinc.ready .xsegg,.xscr.pr .xsart img{animation:none}}
 .hfp{flex-shrink:0;margin:10px 0 4px;padding:10px 12px;border-radius:14px;background:rgba(6,12,20,.78);border:1px solid rgba(255,210,90,.35);display:flex;flex-direction:column;gap:8px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}.hfh{display:flex;flex-direction:column}.hfh b{font:700 14px var(--f-display);color:#ffd25a}.hfh small{font-size:11.5px;color:var(--muted)}.hfr{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}.hfb{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}.hfb i{width:40px;height:40px;border-radius:12px;border:2px solid rgba(255,255,255,.18);box-shadow:inset 0 0 8px rgba(0,0,0,.4);position:relative;overflow:hidden}.hfb i::after{content:"";position:absolute;inset:-30%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.7) 50%,transparent 60%);background-size:300% 100%;animation:pxglint 3s ease-in-out infinite}.hfb small{font-size:10.5px;color:#cfdbe6;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.hfb.on i{border-color:#ffd25a;box-shadow:0 0 12px rgba(255,210,90,.7)}.hfb.on small{color:#ffd25a;font-weight:700}.hfb.lk i{filter:grayscale(.75) brightness(.55)}.hfb.lk i::after{display:none}.hfb.lk small{color:var(--muted)}.hfp .gwlink{align-self:flex-start}.sheet.full.pic.uart[data-fin]:not([data-fin=""]){background-blend-mode:normal,overlay,color,normal,normal!important;background:linear-gradient(180deg,rgba(3,8,16,.96) 0%,rgba(3,8,16,.82) 14%,rgba(3,8,16,.06) 30%,rgba(3,8,16,.04) 66%,rgba(3,8,16,.85) 82%,rgba(3,8,16,.96) 100%),var(--fint) center/260px repeat,linear-gradient(var(--fin),var(--fin)),var(--dart) center 50%/auto 68% no-repeat,radial-gradient(ellipse at 50% 45%,#16304c,#03070d 70%)!important}@media (prefers-reduced-motion:reduce){.hfb i::after{animation:none}}
 .hfsec{flex-shrink:0;margin-top:12px;padding:12px;border-radius:16px;border:1px solid rgba(255,210,90,.4);background:radial-gradient(90% 60% at 50% 0,rgba(255,200,80,.12),transparent 70%),rgba(6,12,20,.6);display:flex;flex-direction:column;gap:10px}.hfsec>*{flex-shrink:0}.hfsh b{font:700 16px var(--f-display);color:#ffd25a;display:block}.hfsh small{font-size:11.5px;color:var(--muted)}.hfsec .hfp{margin:0;background:none;border:0;padding:0;-webkit-backdrop-filter:none;backdrop-filter:none}.hfsec .hfh{display:none}.hfks{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.hfks::-webkit-scrollbar{display:none}.hfks button{all:unset;flex:none;cursor:pointer;font-size:12px;padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:6px}.hfks button.on{border-color:#ffd25a;color:#ffd25a;background:rgba(255,210,90,.1)}.hfks i{width:12px;height:12px;border-radius:4px}.hfprev{position:relative;border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 55%,#13253a,#03070d 75%)}.hfprev canvas{display:block;width:100%;height:150px}.hfprev span{position:absolute;left:10px;top:8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#ffd25a}.hflink{all:unset;box-sizing:border-box;cursor:pointer;flex-shrink:0;margin:10px 0 4px;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:12px;background:rgba(6,12,20,.78);border:1px solid rgba(255,210,90,.35);font-size:13px}.hflink i{width:26px;height:26px;border-radius:8px;flex:none}.hflink b{color:#ffd25a}.hflink em{margin-left:auto;font-style:normal;font-size:12px;color:#ffd25a}
 .hfpl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.hfpl small{font-size:11px;color:var(--muted);flex-basis:100%}.hfpl button{all:unset;cursor:pointer;display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,210,90,.3);font-size:12px}.hfpl canvas{width:34px;height:34px}
@@ -4293,6 +4306,7 @@ const BI = {
   astro: '<circle cx="20" cy="20" r="5"/><ellipse cx="20" cy="20" rx="16" ry="6" transform="rotate(-25 20 20)"/><circle cx="33" cy="12" r="2"/><path d="M6 6l2 2M34 32l-2-2M8 32l1-1"/>',
   command: '<path d="M20 4l4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1z"/>'
 };
+try { BI.sanct = BI.sanct || '<path d="M6 30a14 14 0 0 1 28 0z"/><path d="M3 30h34"/><ellipse cx="20" cy="23" rx="3.2" ry="4.2"/><path d="M13 30a7 7 0 0 1 4-10"/>'; } catch (e) {}
 const bicon = k => `<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">${BI[k] || ""}</svg>`;
 
 /* ---------- game data ---------- */
@@ -4319,6 +4333,7 @@ const B = {
   lunarBase:   { n: "Lunar Outpost", cat: "fac", c: { m: 20000, c: 40000, g: 20000 }, f: 2, req: { moon: 1 }, d: "Pressurised habitats on this planet's moon (our Lunar Base). +3 moon building fields per level. Needs a moon." },
   phalanx:     { n: "Phalanx Array", cat: "fac", c: { m: 20000, c: 40000, g: 20000 }, f: 2, req: { lunarBase: 1, moon: 1 }, d: "A deep-space sensor lattice on the moon (our Sensor Phalanx). Charts space around this world and adds a radar level per level." },
   flagDock:    { n: "Flagship Dock", cat: "fac", c: { m: 20000, c: 15000, g: 6000 }, f: 1.8, req: { cmd: 10, shipyard: 2 }, d: "Where your faction flagship is commissioned and its gear is forged. Higher levels open rarer gear tiers, more forge queue slots and faster forging. Homeworld only. Unlocks at commander Lv.10." },
+  sanct:       { n: "Xeno Sanctuary", cat: "fac", c: { m: 12000, c: 9000, g: 3000 }, f: 1.75, req: { cmd: 5, lab: 3 }, d: "Bio-domes where eggs from monster hunts hatch and rare creatures live. Every creature strengthens its element, and pairs can be bred into new species." },
   jumpGate:    { n: "Warp Gate", cat: "fac", c: { m: 2000000, c: 4000000, g: 2000000 }, f: 2, req: { lunarBase: 1, moon: 1, hyper: 7 }, d: "Folds space between your gated worlds (our Jump Gate). Moves ships instantly between two planets with gates. Recharges after each jump." }
 };
 const CB = ["metalMine", "crystalMine", "gasSynth", "solar", "fusion", "metalStore", "crystalStore", "gasTank", "robotics", "shipyard", "lab", "nanite", "radar", "repairYard", "missileSilo", "allyDepot", "fortress", "terraformer", "lunarBase", "phalanx", "jumpGate"]; // what colonies can build
@@ -4856,7 +4871,54 @@ const mastOpen = e => ringT(e) >= RING_MAX && ringFull(e);
 const EL_PAIRS = [["Wildfire", "fire", "air", { fire: 2, air: 2 }, "+2% attack, +2% speed"], ["Bulwark", "water", "earth", { water: 2, earth: 2 }, "+2% shields, +2% armor"], ["Soulfire", "fire", "spirit", { fire: 2, spirit: 1 }, "+2% attack, +1% output"],
   ["Tidewind", "water", "air", { water: 2, air: 2 }, "+2% shields, +2% speed"], ["Living Stone", "earth", "spirit", { earth: 2, spirit: 1 }, "+2% armor, +1% output"]];
 const pairOn = P => ringFull(P[1]) && ringFull(P[2]), harmonyOn = () => Object.keys(ELEM).every(ringFull);
-function elExtra(e) { let v = ringM(e) * MAST_PER; for (const P of EL_PAIRS) if (pairOn(P)) v += P[3][e] || 0; if (harmonyOn()) v += 2; return v; }
+/* ---------- v646 Xeno Sanctuary ---------- */
+const XS = { swhale: ["water", 0], ssquid: ["water", 0], swasp: ["air", 0], reat: ["earth", 0], vmanta: ["spirit", 1], smoth: ["fire", 1], cram: ["air", 1], kegg: ["water", 1],
+  gwhale: ["spirit", 2], cserp: ["fire", 2], sent: ["earth", 2], ctort: ["earth", 3, 1], gspider: ["air", 3, 1], slevi: ["fire", 3, 1] }; // [element, rarity, breed-only]
+const XR = [["Common", "#9fb6c4", 4, .5], ["Rare", "#5ab8ff", 8, 1], ["Epic", "#c07aff", 16, 1.5], ["Legendary", "#ffc94a", 24, 2.5]]; // name, colour, hatch hours, % per creature
+const XS_RCP = [["earth", "water", "ctort"], ["air", "spirit", "gspider"], ["fire", "water", "slevi"]]; // element pair → breed-only legendary
+const XS_CAP_PCT = 15, XS_EGGS = 12, XS_BR_CD = 8 * 3600e3, XS_DROP = .15;
+const xsIncN = L => L ? Math.min(4, 1 + Math.floor(L / 3)) : 0, xsCap = L => L ? Math.min(14, 2 + L) : 0;
+const xsOf = () => { const X = (S.xs = S.xs || {}); X.eggs = X.eggs || []; X.inc = X.inc || []; X.hab = X.hab || []; X.seen = X.seen || {}; return X; };
+const xsName = k => (MON[k] && MON[k].n) || k, xsCol = k => (MON[k] && MON[k].col) || "#7dffb8", xsImg = k => `art/mon/${monImg(k)}.webp?v=1`;
+const xsLvl = () => (S && S.b && S.b.sanct) || 0;
+function xsPct(e) { if (!S || !S.xs || !xsLvl()) return 0; let v = 0; for (const c of S.xs.hab || []) { const D = XS[c.sp]; if (D && D[0] === e) v += XR[D[1]][3] * (c.pr ? 1.5 : 1); } return Math.min(XS_CAP_PCT, Math.round(v * 10) / 10); }
+function xsEggDrop(x, rep) { const sp = x.mon; if (!XS[sp] || XS[sp][2]) return; const X = xsOf(); if (X.eggs.length >= XS_EGGS) return;
+  if (Math.random() >= XS_DROP * (isElite(x) ? 2 : 1)) return; const pr = Math.random() < .05; X.eggs.push({ sp, pr: pr ? 1 : 0 }); X.seen[sp] = X.seen[sp] || 1; if (rep) rep.egg = sp; dirty();
+  setTimeout(() => { try { toast(`${pr ? "A Prismatic " : "An "}${xsName(sp)} egg was left in the wreckage!${xsLvl() ? " It's waiting at the Xeno Sanctuary." : " Build a Xeno Sanctuary to hatch it."}`, "win");
+    advHolo(xsLvl() ? "An egg, Commander. Still warm. I've sent it to the Sanctuary." : "An egg, Commander. Still warm. We'll need a Xeno Sanctuary to hatch it.", true); } catch (e) {} }, 2200); }
+function xsEggHTML(sp, pr, big) { const c = xsCol(sp); return `<i class="xsegg${pr ? " pr" : ""}${big ? " big" : ""}" style="--c:${c}"></i>`; }
+function sanctCard() { const X = xsOf(), L = xsLvl(), T = now(), slots = xsIncN(L), cap = xsCap(L);
+  if (!L) return `<div class="dp"><p class="note">Build the Xeno Sanctuary to hatch eggs from monster hunts.${X.eggs.length ? ` You have <b>${X.eggs.length}</b> egg${X.eggs.length > 1 ? "s" : ""} waiting.` : " Every monster hunt you win has a chance to leave an egg."}</p></div>`;
+  const sel = G.xsSel || [], R = e => `<span class="xsel" style="--c:${ELEM[e].col}">${ELEM[e].n}</span>`;
+  const inc = [...Array(slots)].map((_, i) => { const it = X.inc[i]; if (!it) return `<div class="xsinc empty"><i class="xsegg ghost"></i><small>Empty incubator</small>${X.eggs.length ? `<small class="note">Pick an egg below</small>` : ""}</div>`;
+    const done = it.e <= T, left = Math.max(0, it.e - T), hn = Math.max(1, Math.ceil(left / 3600e3 * 2)), k = "xsh|" + i;
+    return `<div class="xsinc${done ? " ready" : ""}">${xsEggHTML(it.sp, it.pr, 1)}<b>${it.pr ? "✦ " : ""}${esc(xsName(it.sp))}</b>${done ? `<button class="btn amber sm" data-act="xsHatch" data-i="${i}">Hatch!</button>`
+      : `<div class="xsbar"><i style="width:${Math.min(100, (T - it.s) / (it.e - it.s) * 100).toFixed(1)}%"></i></div><small><span data-end="${it.e}">${ftime(left)}</span> left</small><button class="btn sm${buyArmed(k) ? " pxarm" : ""}" data-act="xsRush" data-i="${i}" ${(S.shards || 0) >= hn ? "" : "disabled"}>${buyArmed(k) ? "Confirm" : "Hatch now"} ◆${hn}</button>`}</div>`; }).join("");
+  const eg = {}; for (const x of X.eggs) { const key = x.sp + (x.pr ? "*" : ""); eg[key] = (eg[key] || 0) + 1; }
+  const free = X.inc.filter(Boolean).length < slots;
+  const eggs = Object.keys(eg).length ? Object.entries(eg).map(([key, n]) => { const sp = key.replace("*", ""), pr = key.endsWith("*"), r = XR[XS[sp][1]];
+    return `<div class="xsegc">${xsEggHTML(sp, pr)}<div><b>${pr ? "✦ Prismatic " : ""}${esc(xsName(sp))} ×${n}</b><small style="color:${r[1]}">${r[0]} · hatches in ${r[2]} h</small></div><button class="btn sm" data-act="xsInc" data-sp="${sp}" data-pr="${pr ? 1 : 0}" ${free && X.hab.length < cap ? "" : "disabled"}>Incubate</button></div>`; }).join("")
+    : `<p class="note">No eggs yet. Win monster hunts: each one has a chance to leave an egg.</p>`;
+  const hab = X.hab.length ? X.hab.map(c => { const D = XS[c.sp], r = XR[D[1]], on = sel.includes(c.id), pct = Math.round(r[3] * (c.pr ? 1.5 : 1) * 10) / 10, rk = "xsr|" + c.id;
+    return `<div class="xscr${on ? " on" : ""}${c.pr ? " pr" : ""}" style="--c:${xsCol(c.sp)};--r:${r[1]}"><div class="xsart"><img src="${xsImg(c.sp)}" alt="" loading="lazy"></div><div class="xsci"><b>${c.pr ? "✦ " : ""}${esc(xsName(c.sp))}</b><small style="color:${r[1]}">${r[0]}${c.pr ? " · Prismatic" : ""}</small>${R(D[0])}<em>+${pct}% ${esc(ELEM[D[0]].stat.toLowerCase())}</em></div>
+      <div class="xscb"><button class="btn sm${on ? " amber" : ""}" data-act="xsSel" data-id="${c.id}">${on ? "✓ Breeding" : "Breed"}</button><button class="btn ghost sm${buyArmed(rk) ? " pxarm" : ""}" data-act="xsRel" data-id="${c.id}">${buyArmed(rk) ? "Confirm" : "Release"}</button></div></div>`; }).join("")
+    : `<p class="note">The habitat is empty. Hatched creatures live here.</p>`;
+  const a = X.hab.find(c => c.id === sel[0]), b = X.hab.find(c => c.id === sel[1]), bc = xsBrCost(), cd = Math.max(0, (X.brT || 0) - T);
+  const rc = a && b ? XS_RCP.find(([x, y]) => (XS[a.sp][0] === x && XS[b.sp][0] === y) || (XS[a.sp][0] === y && XS[b.sp][0] === x)) : null;
+  const breed = `<div class="xsbr"><div class="xspair">${a ? `<img src="${xsImg(a.sp)}" alt="">` : "<i>?</i>"}<span>×</span>${b ? `<img src="${xsImg(b.sp)}" alt="">` : "<i>?</i>"}</div>
+    <p class="note">${a && b ? `${esc(xsName(a.sp))} × ${esc(xsName(b.sp))}: the egg is usually one parent's kind, sometimes Prismatic.${rc ? ` <b style="color:#ffc94a">This pairing of ${ELEM[rc[0]].n} and ${ELEM[rc[1]].n} can hatch something legendary.</b>` : ""}` : "Pick two creatures with Breed. Some pairings of elements can hatch a species found nowhere in the wild."}</p>
+    ${cd ? `<p class="note">The breeding chamber is resting: <b data-end="${X.brT}">${ftime(cd)}</b>.</p>` : `<button class="btn wide amber" data-act="xsBreed" ${a && b && can(bc) && X.eggs.length < XS_EGGS ? "" : "disabled"}>Breed · ${costHTML(bc)}</button>`}</div>`;
+  const book = Object.keys(XS).map(k => { const seen = X.seen[k], r = XR[XS[k][1]]; return `<div class="xsbk${seen ? "" : " un"}" title="${seen ? esc(xsName(k)) : "Undiscovered"}"><img src="${xsImg(k)}" alt="" loading="lazy"><small style="color:${seen ? r[1] : "var(--muted)"}">${seen ? esc(xsName(k)) : XS[k][2] ? "Bred only" : "???"}</small></div>`; }).join("");
+  const bon = Object.keys(ELEM).map(e => [e, xsPct(e)]).filter(x => x[1] > 0).map(([e, v]) => `<span class="xsel" style="--c:${ELEM[e].col}">${ELEM[e].n} +${v}%</span>`).join("") || '<span class="note">None yet</span>';
+  return `<div class="dp xsc"><div class="xsh"><b>Incubators</b><small>${X.inc.filter(Boolean).length}/${slots}</small></div><div class="xsincs">${inc}</div>
+    <div class="xsh"><b>Eggs</b><small>${X.eggs.length}/${XS_EGGS}</small></div><div class="xsegs">${eggs}</div>
+    <div class="xsh"><b>Habitat</b><small>${X.hab.length}/${cap}</small></div><div class="xshab">${hab}</div>
+    <div class="xsh"><b>Breeding chamber</b></div>${breed}
+    <div class="xsh"><b>Creature bonuses</b><small>up to +${XS_CAP_PCT}% per element</small></div><div class="xsbon">${bon}</div>
+    <div class="xsh"><b>Collection</b><small>${Object.keys(XS).filter(k => X.seen[k]).length}/${Object.keys(XS).length}</small></div><div class="xsbook">${book}</div></div>`; }
+const xsBrCost = () => { const L = Math.max(1, xsLvl()); return { m: 30000 * L, c: 30000 * L, g: 10000 * L }; };
+const xsRe = () => { if (sheet) renderSheet(); else render(true); };
+function elExtra(e) { let v = ringM(e) * MAST_PER + xsPct(e); /* v646 Sanctuary creatures */ for (const P of EL_PAIRS) if (pairOn(P)) v += P[3][e] || 0; if (harmonyOn()) v += 2; return v; }
 const runePct = e => S ? Math.round((runePct0(e) + elExtra(e)) * 10) / 10 : 0;
 /* affinity: the ring that counters a foe's element adds half its bonus as extra attack against it (up to +12%) */
 function elAff(foe) { if (!ELEM[foe]) return null; const c = elCounter(foe); return { foe, c, pct: Math.min(EL_AFF_MAX, Math.round(runePct(c) * EL_AFF_K * 10) / 10) }; }
@@ -5607,7 +5669,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 645;
+const GAME_V = 646;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -7071,6 +7133,7 @@ function pirateArrive(f) {
   if (x.boss) cubeDebris(x, rep); // v277: win or lose, the wrecks stay at the Cube
   if (res.winner === "a") {
     fsLootPB(x); // v298
+    if (x.mon) try { xsEggDrop(x, rep); } catch (e) {} /* v646 */
     const L = xLoot(x), cap = cargoOf(f.n), ratio = Math.min(1, cap / total(L));
     rep.loot = { m: Math.floor(L.m * ratio), c: Math.floor(L.c * ratio), g: Math.floor(L.g * ratio) }; f.loot = rep.loot;
     S.pir = S.pir || {}; S.pir[x.id] = f.arrive + xRegroup(x); S.wins++; bump(x.mon ? "monsters" : x.boss ? "cubes" : "pirates"); evPts("hunt", x.lvl * (x.boss ? 120 : x.mon ? 60 : 20)); if (x.boss) sendGift(x.lvl >= 20 ? 2 : 1, "destroyed " + x.name);
@@ -14814,7 +14877,7 @@ Object.assign(BPOS, { repairYard: [-19, -15.8], crystalMine: [-10.5, -16.7], fla
   terraformer: [-20.05, -8.7], metalMine: [-10.5, -8.7], solar: [0, -8.7], radar: [10.5, -8.7], fusion: [20.05, -8.7],
   metalStore: [-20.05, 0], crystalStore: [-10.5, 0], gasTank: [10.5, 0], phalanx: [20.05, 0],
   allyDepot: [-20.05, 8.7], lab: [-10.5, 8.7], robotics: [0, 8.7], shipyard: [10.5, 8.7], fortress: [20.05, 8.7],
-  lunarBase: [-10.5, 16.7], nanite: [0, 16.7], jumpGate: [10.5, 16.7] });
+  lunarBase: [-10.5, 16.7], nanite: [0, 16.7], jumpGate: [10.5, 16.7], sanct: [19, 15.8] }); /* v646 the Sanctuary takes the free corner opposite the Repair Yard */
 const onRoad = (x, z, pad) => { pad = pad || 0; const w = .625 + pad; return (GRID_X.some(v => Math.abs(x - v) < w) || GRID_Z.some(v => Math.abs(z - v) < w)) && deckIn(x, z) > .7 - pad; };
 /* v367 the deck outline: an octagon, its corners cut on a circle inside the transit ring. deckPoly(inset) gives its corners, deckIn the distance inside it */
 const DECK = { X: 24.5, Z: 20.6, R: 28.4 };
@@ -17308,6 +17371,14 @@ function artBld(k, b, e, C, anim) {
       if (e >= 3) for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + .26, w = cbox(.06, H * .6, .02, C.windows, Math.cos(a) * .63, H * .2, z0 + Math.sin(a) * .63); w.rotation.y = -a + Math.PI / 2; add(w); }
       if (e >= 4) { for (const s of [-1, 1]) { cyl(.18, .26, H * .45, A.silver, s * 1.25, 0, z0 - .7, 14); add(new TH.Mesh(new TH.ConeGeometry(.18, .4, 14), A.silver)).position.set(s * 1.25, H * .45 + .2, z0 - .7); } halo(1.3, 1.8, .15); }
       break; }
+    case "sanct": { /* v646 Xeno Sanctuary: green glass bio-domes, glowing eggs inside, joined by tubes */
+      const gl = new TH.MeshStandardMaterial({ color: 0x7dffb8, emissive: 0x1d7a50, emissiveIntensity: .7, roughness: .12, metalness: .1, transparent: true, opacity: .55 });
+      const egg = new TH.MeshStandardMaterial({ color: 0xffe9a8, emissive: 0xffb84a, emissiveIntensity: 1.4, roughness: .4 });
+      const dome = (x, z, R) => { cyl(R * 1.02, R * 1.05, R * .22, C.dark, x, 0, z, 16); const d = add(new TH.Mesh(new TH.SphereGeometry(R, 14, 7, 0, TAU, 0, Math.PI / 2), gl)); d.position.set(x, R * .22, z);
+        cyl(R * 1.06, R * 1.06, .05, C.steel, x, R * .2, z, 16); for (let i = 0; i < 3; i++) { const a = i * 2.1 + x, eg = add(new TH.Mesh(new TH.SphereGeometry(R * .14, 8, 6), egg)); eg.scale.y = 1.3; eg.position.set(x + Math.cos(a) * R * .42, R * .4, z + Math.sin(a) * R * .42); } };
+      const spots = [[0, 0, .95 + (e >= 3 ? .35 : 0)], [-1.3, .6, .55], [1.2, .7, .6], [-1, -1.2, .5], [1.25, -1, .55]], n = Math.min(5, 1 + e);
+      for (let i = 0; i < n; i++) { dome(...spots[i]); if (i) { const [x, z] = spots[i]; const t = add(new TH.Mesh(new TH.CylinderGeometry(.1, .1, Math.hypot(x, z) - .6, 8), C.steel)); t.position.set(x / 2, .16, z / 2); t.rotation.set(Math.PI / 2, 0, 0); t.rotation.order = "YXZ"; t.rotation.y = Math.atan2(x, z); } }
+      break; }
     case "lunarBase": { // geodesic domes with bands of lit windows round their base, joined by tubes, a mast with a dish and beacon
       const dome = (x, z, R) => { cyl(R * 1.01, R * 1.03, R * .32, C.windows, x, 0, z, 16); const d = add(new TH.Mesh(new TH.SphereGeometry(R, 10, 5, 0, TAU, 0, Math.PI / 2), A.dome)); d.position.set(x, R * .32, z); cyl(R * 1.05, R * 1.05, .06, C.dark, x, R * .3, z, 16); };
       const spots = [[0, 0, .85 + (e >= 4 ? .3 : 0)], [-1.25, .55, .52], [1.15, .65, .58], [-.9, -1.15, .5], [1.2, -.95, .55]], n = Math.min(5, 1 + e);
@@ -18811,7 +18882,7 @@ function shDetail() { if (sheet.kind === "s" && ARCH["s_" + sheet.k] && !archLv(
   const c = unit ? mul(D.c, n) : cost(D, lvl), time = kind === "b" ? bTimeL(k, lvl, P) : kind === "r" ? rTimeL(k, lvl) : (P ? colShipTime(P, D.c) : uTime(D.c)) * n;
   const H = P ? colStock(P) : S.res, miss = P ? missingAt(D.req, P) : missing(D.req), maxed = kind === "r" && rMaxed(k, lvl), afford = ["m", "c", "g"].every(r => H[r] >= (c[r] || 0));
   const art = kind === "b" ? `data-bld="${k}|${L}|0"` : kind === "r" ? `data-rs="${k}|${L}"` : `data-ship="${k}"`, pic = ART[k];
-  const tabs = P ? null : kind === "b" ? (k === "lab" ? ["Overview", "Research"] : k === "shipyard" ? ["Overview", "Production", "Repair"] : k === "radar" ? ["Overview", "Warning"] : k === "allyDepot" ? ["Overview", "Fleets", "Invite"] : k === "repairYard" ? ["Overview", "Repair bay"] : k === "flagDock" ? ["Overview", "Flagship"] : null) : null, tab = sheet.tab || 0;
+  const tabs = P ? null : kind === "b" ? (k === "lab" ? ["Overview", "Research"] : k === "shipyard" ? ["Overview", "Production", "Repair"] : k === "radar" ? ["Overview", "Warning"] : k === "allyDepot" ? ["Overview", "Fleets", "Invite"] : k === "repairYard" ? ["Overview", "Repair bay"] : k === "flagDock" ? ["Overview", "Flagship"] : k === "sanct" ? ["Overview", "Sanctuary"] : null) : null, tab = sheet.tab || 0;
   let mid;
   if (unit) { const st = unitStat(k, techOf(null)), sp = kind === "s" ? spdNum(k) : 0, fu = kind === "s" ? drvOf(k).fu : 0, si = (ic, l, v, cl) => `<p class="${cl}">${DSI[ic]}<span>${l}:</span> <b>${fmt(v)}</b></p>`;
     mid = `${kind === "s" && TITAN_INFO[k] ? `<div class="tcreq${(S.tcore || 0) >= SH[k].tc ? " ok" : ""}"><b>⬢ Titan Cores ${S.tcore || 0} / ${SH[k].tc}</b><small>Needed for every Titan, on top of resources. Earned from super bosses: every boss you help defeat, top damage, boss milestones, Alliance Conquest and Void Caches. Built at your homeworld only.</small></div><button class="btn amber wide t3open" data-act="t3Open" data-k="${k}">◎ Inspect in 3D · ${esc(TITAN_INFO[k].ab)}</button>` : ""}<div class="dstat"><div class="dp">${si("atk", "Attack", st.atk, "s-a")}${si("sh", "Shields", st.sh, "s-s")}${si("def", "Defence", st.hull, "s-d")}</div><div class="dp">${si("cap", "Capacity", D.cargo || 0, "s-c")}${si("spd", "Speed", sp, "s-c")}${si("gas", "Gas use", fu, "s-c")}</div></div>
@@ -18823,7 +18894,7 @@ function shDetail() { if (sheet.kind === "s" && ARCH["s_" + sheet.k] && !archLv(
   const extra = tabs && tab > 0 ? (k === "lab" ? `<div class="dp"><p class="note">Every Research Lab level makes research faster and unlocks new technologies.</p><button class="btn wide" data-act="labs">Open research</button></div>`
     : k === "shipyard" ? tab === 2 ? repairCard() : `<div class="dp"><p class="note">${shipLines()} production line${shipLines() > 1 ? "s" : ""}. Every 3 levels adds one.</p><button class="btn wide" data-act="nav" data-v="build" data-s="ships">Open shipyard</button></div>`
     : k === "radar" ? `<div class="dp">${radarCard() || '<p class="note">No hostile fleets detected.</p>'}<p class="note">Radar Lv.${radarLevel()} warns you ${radarLevel() * 5} minutes earlier.</p></div>`
-    : k === "repairYard" ? repairCard() : k === "flagDock" ? fsDockCard() : tab === 1 ? `<div class="dp">${gateCard() || '<p class="note">No fleets stationed. Each level saves 3% fuel on every flight.</p>'}</div>` : `<div class="dp"><p class="note">Invite allies from Commander → Alliance.</p><button class="btn wide" data-act="allyOpen">Open alliance</button></div>`) : "";
+    : k === "repairYard" ? repairCard() : k === "flagDock" ? fsDockCard() : k === "sanct" ? sanctCard() : tab === 1 ? `<div class="dp">${gateCard() || '<p class="note">No fleets stationed. Each level saves 3% fuel on every flight.</p>'}</div>` : `<div class="dp"><p class="note">Invite allies from Commander → Alliance.</p><button class="btn wide" data-act="allyOpen">Open alliance</button></div>`) : "";
   const res = `<div class="dp dres"><h4>Resources Required</h4><div class="drow"><span class="dl">Need:</span>${["m", "c", "g"].map(r => `<span class="r-${r}">${RI[r]} ${fmt(c[r] || 0)}</span>`).join("")}</div>
     <div class="drow"><span class="dl">Have:</span>${["m", "c", "g"].map(r => `<span>${fmt(Math.floor(H[r]))} ${H[r] >= (c[r] || 0) ? '<i class="ok">✓</i>' : '<i class="no">✕</i>'}</span>`).join("")}</div></div>`;
   const icon = kind === "r" ? "⚗" : unit ? "⚒" : "⇧", label = kind === "r" ? "Research" : unit ? "Build" : L ? "Upgrade" : "Build";
@@ -19032,6 +19103,7 @@ function effect(k, L) {
     case "lunarBase": return `+${3 * L} → <em>+${3 * (L + 1)}</em> moon fields`;
     case "phalanx": return `Sensor range ${fmt(18 + 8 * L)} → <em>${fmt(18 + 8 * (L + 1))}</em> · +1 radar level`;
     case "jumpGate": return `Recharge ${ftime(gateCd(L || 1))} → <em>${ftime(gateCd(L + 1))}</em>`;
+    case "sanct": return `Incubators ${xsIncN(L)} → <em>${xsIncN(L + 1)}</em> · habitat ${xsCap(L)} → <em>${xsCap(L + 1)}</em> creatures`;
     case "flagDock": return `Forges up to ${FS_TIER[fsDockTier(L)][0]} → <em>${FS_TIER[fsDockTier(L + 1)][0]}</em> · queue ${fsQMax(L || 1)} → <em>${fsQMax(L + 1)}</em> · forging −${Math.round((1 - fsForgeK(L + 1)) * 100)}%`;
     case "repairYard": return `Repairs ${fmt(2500 * (1 + 1.6 * L))} → <em>${fmt(2500 * (1 + 1.6 * (L + 1)))}</em> hull/min · puts out fires`;
     case "robotics": return `Build speed ×${L + 1} → <em>×${L + 2}</em>`;
@@ -19055,7 +19127,8 @@ const ART = Object.fromEntries(("drive impulse ionT plasmaT shields weapons astr
   
   "eclipse rocket laser gasSynth lab repairYard missileSilo fortress terraformer lunarBase phalanx jumpGate laserT hyper computer graviton armor logistics terraform " + // v60: cinematic scene renders for every card that had none
   "radar robotics dome bigDome metalMine metalStore nanite interceptor ballistic flagDock").split(" ").map(k => [k, `art/${k}.webp`]));
-for (const k of ["armageddon", "sovereign", "harbinger"]) ART[k] = `art/${k}.webp?v=592`; /* v592 the owner's new Titan paintings */
+for (const k of ["armageddon", "sovereign", "harbinger"]) ART[k] = `art/${k}.webp?v=592`;
+ART.sanct = ART.sanct || "art/lunarBase.webp"; /* v646 until the Sanctuary has its own painting */ /* v592 the owner's new Titan paintings */
 /* full-screen backdrops for everything without a painting: a tall studio render of the same model, baked once and kept as an image */
 const POSTER = {};
 function posterOf(kind, k) {
@@ -22382,6 +22455,7 @@ const HOLO = {
   allyDepot: "The Coalition Depot fuels allied fleets and cuts the fuel of every flight. Its Fleets tab shows allies stationed here.",
   lunarBase: "The Lunar Outpost opens building room on this world's moon. Every level adds three moon fields.",
   phalanx: "The Phalanx Array scans the space around this moon and adds a radar level for every level we build.",
+  sanct: "The Xeno Sanctuary. Eggs from our monster hunts hatch here, and every creature we raise makes its element stronger. Breed the right pair and something rare might hatch.",
   flagDock: "The Flagship Dock is where our flagship is commissioned and equipped. Its Flagship tab holds its gear.",
   jumpGate: "The Warp Gate moves ships instantly between two gated worlds. It recharges after each jump.",
   fighter: "Light Fighters are cheap, fast and the backbone of an early fleet. Build them in numbers.",
@@ -25192,6 +25266,23 @@ const ACT = {
   hbCh: d => { G.hbCh = d.k || null; const c = HB.find(x => x.k === d.k); if (c && !hbRead()[c.k]) { S.hbRead = Object.assign({}, S.hbRead, { [c.k]: 1 }); S.shards = (S.shards || 0) + 1; toast(`Chapter read: +◆1`, "win"); dirty(); } render(true); const sc = document.querySelector(".sheet .body, .sheet"); if (sc) sc.scrollTop = 0; document.querySelectorAll(".sheet *").forEach(e => { if (e.scrollTop) e.scrollTop = 0; }); },
   hullSet: d => { const k = d.k, f = d.f || ""; if (f && !hullOk(f)) { toast(`${HULL_F[f].n} hulls unlock at Premium Tier ${HULL_F[f].t}.`, "warn"); return; } S.hullF = Object.assign({}, S.hullF, { [k]: f }); if (!f) delete S.hullF[k]; else hullTex(f); dirty(); if (f) toast(`${SH[k] ? SH[k].n : k}: ${HULL_F[f].n} hull.`, "win"); try { if (f) fgSnd("fg_reveal"); } catch (e) {} render(true); },
   hullK: d => { G.hullK = d.k; render(true); },
+  xsInc: d => act(() => { const X = xsOf(), L = xsLvl(), slots = xsIncN(L), i = [...Array(slots).keys()].find(j => !X.inc[j]); if (i == null) return toast("Every incubator is busy.", "warn");
+    if (X.hab.length + X.inc.filter(Boolean).length >= xsCap(L)) return toast("The habitat is full. Raise the Sanctuary's level or release a creature.", "warn");
+    const pr = d.pr === "1" ? 1 : 0, ei = X.eggs.findIndex(x => x.sp === d.sp && (x.pr ? 1 : 0) === pr); if (ei < 0) return; X.eggs.splice(ei, 1); const T = now(), h = XR[XS[d.sp][1]][2];
+    X.inc[i] = { sp: d.sp, pr, s: T, e: T + h * 3600e3 }; toast(`${xsName(d.sp)} egg in the incubator. It hatches in ${h} hours.`); }),
+  xsRush: d => act(() => { const X = xsOf(), i = +d.i, it = X.inc[i]; if (!it) return; const left = it.e - now(); if (left <= 0) return; const n = Math.max(1, Math.ceil(left / 3600e3 * 2));
+    if ((S.shards || 0) < n) return toast(`Hatching now costs ◆${n}.`, "warn"); if (!armBuy("xsh|" + i, n)) return; S.shards -= n; it.e = now(); }),
+  xsHatch: d => act(() => { const X = xsOf(), i = +d.i, it = X.inc[i]; if (!it || it.e > now()) return; X.inc[i] = null; const c = { id: "c" + (S.seq++), sp: it.sp, pr: it.pr || 0, at: now() };
+    X.hab.push(c); X.seen[it.sp] = 1; const r = XR[XS[it.sp][1]]; toast(`${it.pr ? "✦ Prismatic " : ""}${xsName(it.sp)} hatched! ${r[0]} · +${Math.round(r[3] * (it.pr ? 1.5 : 1) * 10) / 10}% ${ELEM[XS[it.sp][0]].stat.toLowerCase()}.`, "win");
+    try { SFX.research(); if (XS[it.sp][1] >= 2 || it.pr) advHolo(XS[it.sp][2] ? "Commander... that species hasn't been seen alive in a thousand years. And it hatched in our dome." : "Look at it, Commander. Something that rare, raised by us.", true); } catch (e) {} }),
+  xsSel: d => { const s0 = G.xsSel || []; G.xsSel = s0.includes(d.id) ? s0.filter(x => x !== d.id) : s0.concat(d.id).slice(-2); xsRe(); },
+  xsRel: d => act(() => { const X = xsOf(), c = X.hab.find(x => x.id === d.id); if (!c) return; const n = [1, 2, 4, 8][XS[c.sp][1]] * (c.pr ? 2 : 1); const rk = "xsr|" + c.id; if (!buyArmed(rk)) { G.buyArm = { k: rk, t: Date.now() }; toast(`Tap Release again to let the ${xsName(c.sp)} go (+◆${n}).`); return; } G.buyArm = null;
+    X.hab = X.hab.filter(x => x.id !== c.id); G.xsSel = (G.xsSel || []).filter(x => x !== c.id); S.shards = (S.shards || 0) + n; toast(`${xsName(c.sp)} released to the wild. The ranger guild sent ◆${n} in thanks.`); }),
+  xsBreed: d => act(() => { const X = xsOf(), [ia, ib] = G.xsSel || [], a = X.hab.find(c => c.id === ia), b = X.hab.find(c => c.id === ib), T = now(); if (!a || !b || a === b || (X.brT || 0) > T) return;
+    if (X.eggs.length >= XS_EGGS) return toast("The egg store is full. Incubate some first.", "warn"); if (!pay(xsBrCost())) return toast("Not enough resources.", "warn");
+    const rc = XS_RCP.find(([x, y]) => (XS[a.sp][0] === x && XS[b.sp][0] === y) || (XS[a.sp][0] === y && XS[b.sp][0] === x)), leg = rc && Math.random() < .2;
+    const sp = leg ? rc[2] : Math.random() < .5 ? a.sp : b.sp, pr = !leg && Math.random() < ((a.pr || b.pr) ? .35 : .12) ? 1 : 0; X.eggs.push({ sp, pr }); X.brT = T + XS_BR_CD; X.seen[sp] = X.seen[sp] || 1; G.xsSel = [];
+    toast(leg ? `Something new is in the egg chamber, Commander: a ${xsName(sp)} egg!` : `A ${pr ? "Prismatic " : ""}${xsName(sp)} egg from the breeding chamber.`, "win"); if (leg) try { advHolo("I've never seen an egg like it. The records say this species died out before the convoy wars.", true); } catch (e) {} }),
   invCat: d => { G.invCat = d.v || ""; if (sheet) renderSheet(); else render(true); },
   hullTrim: d => { const k = d.k, t = d.t || "", f = hullOf(k); if (!f) return; if (t && !hullOk(t)) { toast(`${HULL_F[t].n} unlocks at Premium Tier ${HULL_F[t].t}.`, "warn"); return; }
     S.hullT = Object.assign({}, S.hullT, { [k]: t }); if (!t) delete S.hullT[k]; else hullTex(t); dirty(); toast(t ? `${SH[k] ? SH[k].n : k}: ${HULL_F[f].n} with ${HULL_F[t].n} trim.` : `${SH[k] ? SH[k].n : k}: no trim.`, "win"); try { if (t) fgSnd("fg_reveal"); } catch (e) {} render(true); },
