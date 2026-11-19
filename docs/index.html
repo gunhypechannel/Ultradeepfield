@@ -5673,7 +5673,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 650;
+const GAME_V = 651;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -11427,7 +11427,7 @@ function sprMip(art, dw) { if (!(dw > 0) || art.width < 96) return art; let f = 
     return (art._mip[f] = src); } catch (e) { return art; } }
 function drawSide(ctx, k, x, y, L, accent, face, glow) {
   // realistic baked render when WebGL is available; the vector drawing below is the fallback
-  if (SH[k] || AL[k]) { let art = shipArtSoon(k, accent, "side"); accent = String(accent).split("@")[0]; if (art) { const w = L * (DRAWK[k] || (AL[k] ? 2 : 1.8)), h = w / 2; let sc = 1; try { const m = ctx.getTransform(); sc = Math.hypot(m.a, m.b); } catch (e) {} art = sprMip(art, w * sc); ctx.save(); ctx.translate(x, y); ctx.scale(face, 1); ctx.drawImage(art, -w / 2, -h / 2, w, h); ctx.restore(); return; } }
+  if (SH[k] || AL[k]) { let art = shipArtSoon(k, accent, "side"); accent = String(accent).split("@")[0]; if (art) { const w = L * (DRAWK[k] || (AL[k] ? 2 : 1.8)) * (/~f\d+$/.test(accent) ? MBF_Z : 1), h = w / 2; /* v651 */ let sc = 1; try { const m = ctx.getTransform(); sc = Math.hypot(m.a, m.b); } catch (e) {} art = sprMip(art, w * sc); ctx.save(); ctx.translate(x, y); ctx.scale(face, 1); ctx.drawImage(art, -w / 2, -h / 2, w, h); ctx.restore(); return; } }
   ctx.save(); ctx.translate(x, y); ctx.scale(face * L / 100, L / 100);
   const P = (pts, fill) => { ctx.beginPath(); ctx.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]); ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); };
   const alien = isAlien(k);
@@ -12747,6 +12747,37 @@ const MON_WAVE = {
   smoth: "float sp = abs(position.z); if (sp > .38) { float a = .7 * sin(mt * 2.4), d = sp - .38; transformed.y += d * sin(a); transformed.z = sign(position.z) * (.38 + d * cos(a)); } transformed.y += .18 * sin(mt * 2.4 + 1.4);",
   cram: "float tl = clamp((-2.2 - position.x) / 6., 0., 1.); transformed.z += tl * tl * .8 * sin(position.x * .9 + mt * 4.); transformed.y += tl * tl * .45 * cos(position.x * .7 + mt * 3.3); float hb = smoothstep(.8, 2.8, position.x); transformed.y += hb * .1 * sin(mt * 1.6);",
   ssquid: "float ar = clamp((-.9 - position.x) / 3., 0., 1.), ang = atan(position.z, position.y), e = pow(ar, 1.4); transformed.y += .36 * e * sin(position.x * 2.2 + mt * 4. + ang * 2.); transformed.z += .36 * e * cos(position.x * 2. + mt * 3.6 + ang * 3.); transformed.yz *= 1. + .24 * ar * sin(mt * 2.);" };
+/* v651 battle frames: MON_WAVE with every rhythm rounded to a whole number of beats in MBF_P seconds, so the loop closes */
+const MBF_P = 3, MBF_Z = 1.25, MBF_N = (typeof WEAK !== "undefined" && WEAK) || (typeof IOS !== "undefined" && IOS) ? 10 : 16, MBF_W = 2 * Math.PI / MBF_P;
+const mbfQ = src => String(src).replace(/mt \* \(1\.5 - rr \* \.18\)/g, "mt * " + MBF_W.toFixed(5)).replace(/(uMT|mt) \* (\d+\.\d*|\.\d+|\d+)/g, (m, v, f) => v + " * " + (Math.max(+f >= .6 ? 1 : 0, Math.round(+f / MBF_W)) * MBF_W).toFixed(5));
+function monBatPose(root, kind, f) { if (!MON_WAVE[kind]) return null; const U = { value: f / MBF_N * MBF_P }, done = new Map(), wave = mbfQ(MON_WAVE[kind]);
+  root.traverse(o => { if (!o.isMesh || !o.material || Array.isArray(o.material)) return; let m = done.get(o.material);
+    if (!m) { m = o.material.clone(); const pu = m.userData && m.userData.pulse ? mbfQ(m.userData.pulse) : null;
+      m.onBeforeCompile = sh => { sh.uniforms.uMT = U; sh.vertexShader = "uniform float uMT;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\nfloat mt = uMT;\n" + wave);
+        if (pu) sh.fragmentShader = "uniform float uMT;\n" + sh.fragmentShader.replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n totalEmissiveRadiance *= " + pu + ";"); };
+      m.customProgramCacheKey = () => "monbat-" + kind + (pu ? "-p" + hash(pu) : ""); done.set(o.material, m); } o.material = m; });
+  return [...done.values()]; }
+/* which frame a monster in battle shows: its own phase, a little faster while it moves; the nearer of two frames full, the other over it */
+function monBatFrame(b, i, k, real, moving) { if (!MON_WAVE[k]) return null; const pre = b.mfPre || (b.mfPre = {}); if (!pre[k]) { pre[k] = 1; for (let f = 0; f < MBF_N; f++) shipArtSoon(k, "~f" + f, "side"); }
+  const P = b.mph || (b.mph = []); P[i] = ((P[i] == null ? (i * .37) % 1 : P[i]) + Math.min(80, real || 16) / 1000 / MBF_P * (moving ? 1.35 : 1)) % 1;
+  const x = P[i] * MBF_N, f0 = Math.floor(x) % MBF_N, f1 = (f0 + 1) % MBF_N, w = x - Math.floor(x), a0 = shipArtSoon(k, "~f" + f0, "side"), a1 = shipArtSoon(k, "~f" + f1, "side");
+  if (!a0 && !a1) return null; if (!a1) return ["~f" + f0, null, 0]; if (!a0) return ["~f" + f1, null, 0]; return w < .5 ? ["~f" + f0, "~f" + f1, w] : ["~f" + f1, "~f" + f0, 1 - w]; }
+/* v651 a monster's shield: the ellipse round the solid part of its picture, over every frame of its loop (in picture units) */
+const MFIT = {}, MF_GX = 64, MF_GY = 32;
+function mfitCv(cv) { if (cv._fit !== undefined) return cv._fit; let F = null; try { const w = cv.width, h = cv.height, D = cv.getContext("2d").getImageData(0, 0, w, h).data, st = w > 400 ? 2 : 1; F = new Uint8Array(MF_GX * MF_GY); let any = 0;
+    for (let y = 0; y < h; y += st) for (let x = 0; x < w; x += st) if (D[(y * w + x) * 4 + 3] > 70) { F[((y * MF_GY / h) | 0) * MF_GX + ((x * MF_GX / w) | 0)] = 1; any = 1; }
+    if (!any) F = null; } catch (e) { F = null; } return (cv._fit = F); }
+/* the smallest upright ellipse round the occupied cells (centred on them), in picture units: [cx, cy, rx, ry] */
+function mfitEll(O) { let x0 = MF_GX, x1 = -1, y0 = MF_GY, y1 = -1; for (let y = 0; y < MF_GY; y++) for (let x = 0; x < MF_GX; x++) if (O[y * MF_GX + x]) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (x1 < 0) return null; const cx = (x0 + x1 + 1) / 2 / MF_GX, cy = (y0 + y1 + 1) / 2 / MF_GY, P = [];
+  for (let y = 0; y < MF_GY; y++) for (let x = 0; x < MF_GX; x++) if (O[y * MF_GX + x]) { const dx = Math.max(Math.abs(x / MF_GX - cx), Math.abs((x + 1) / MF_GX - cx)), dy = Math.max(Math.abs(y / MF_GY - cy), Math.abs((y + 1) / MF_GY - cy)) * .5; P.push(dx, dy); } /* y in units of the picture's width */
+  let best = null; for (let a = .12; a <= 1.6; a += .02) { let r = 0; for (let n = 0; n < P.length; n += 2) { const v = Math.hypot(P[n], P[n + 1] / a); if (v > r) r = v; } const A = r * r * a; if (!best || A < best[0]) best = [A, r, r * a]; }
+  return [cx, cy, best[1], best[2] * 2]; }
+function monShFit(k, cx, cy, L, face) { const S0 = studio(); if (!S0) return null; let M = MFIT[k]; if (!M) M = MFIT[k] = { done: {}, O: null, e: null, t: 0 };
+  const now = performance.now(); if (now - M.t > 250) { M.t = now; for (let f = 0; f < MBF_N; f++) { if (M.done[f]) continue; const cv = S0.cache[k + "|~f" + f + "|side"]; if (!cv || !cv.getContext) continue; M.done[f] = 1; const F = mfitCv(cv); if (!F) continue;
+      if (!M.O) M.O = F.slice(); else for (let n = 0; n < F.length; n++) M.O[n] |= F[n]; M.e = mfitEll(M.O); break; } }
+  const e = M.e; if (!e) return null; const w = L * (DRAWK[k] || 2) * MBF_Z, h = w / 2, rx = e[2] * w * 1.08, ry = Math.max(e[3] * h * 1.08, rx * .3);
+  return [cx + face * (e[0] - .5) * w, cy + (e[1] - .5) * h, rx, ry]; }
 function monAnimate(master, kind, U) { const done = new Map();
   master.traverse(o => { if (!o.isMesh || !o.material || Array.isArray(o.material)) return; let m = done.get(o.material);
     if (!m) { m = o.material.clone(); m.onBeforeCompile = sh => { sh.uniforms.uMT = U; sh.vertexShader = "uniform float uMT;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\nfloat mt = uMT + modelMatrix[3].x * .37 + modelMatrix[3].z * .23;\n" + MON_WAVE[kind]); };
@@ -16438,10 +16469,11 @@ function shipArt(k, accent, view) {
   const kind = SH[k] || k === "flagship" ? "s" : AL[k] ? "a" : DF[k] || k === "fortress" ? "d" : MS[k] ? "m" : null;
   accent = hullAccK(k, accent); const S = studio(); if (!S || !kind) return null; const key = k + "|" + accent + "|" + view; if (S.cache[key] !== undefined) return S.cache[key];
   let fin = null; { const mh = /~h([a-z.]+)/.exec(String(accent)); if (mh) { fin = finSplit(mh[1])[0] ? mh[1] : null; accent = String(accent).replace(mh[0], ""); } } /* v633 */
-  let rotK = 0; { const mr = /~p(\d+)$/.exec(String(accent)); if (mr) { rotK = +mr[1]; accent = String(accent).slice(0, mr.index); } } /* v416 a Cube Destroyer turned to aim rotK x 30 degrees round from its rest pose */
+  let rotK = 0; { const mr = /~p(\d+)$/.exec(String(accent)); if (mr) { rotK = +mr[1]; accent = String(accent).slice(0, mr.index); } }
+  let mfr = -1; { const mf = /~f(\d+)$/.exec(String(accent)); if (mf) { mfr = +mf[1]; accent = String(accent).slice(0, mf.index); } } /* v651 a monster's battle frame */ /* v416 a Cube Destroyer turned to aim rotK x 30 degrees round from its rest pose */
   try {
     let M = shipMats(accent); if (k === "flagship") { const F2 = flagMats(M.fac, 2.9); M = Object.assign(Object.create(M), F2); Object.defineProperty(M, "fac", { value: Object.getPrototypeOf(M).fac }); } /* v256 the portrait wears the plated metal */
-    const ship = kind === "s" ? (glbShip(k) || buildShip(k, M)) : kind === "a" ? buildAlien(k) : kind === "m" ? buildMissile(k, M) : buildDefense(k, M); if (fin && kind === "s") hullFinish(ship, fin, k); S.scene.add(ship);
+    const ship = kind === "s" ? (glbShip(k) || buildShip(k, M)) : kind === "a" ? buildAlien(k) : kind === "m" ? buildMissile(k, M) : buildDefense(k, M); if (fin && kind === "s") hullFinish(ship, fin, k); const mfM = mfr >= 0 && kind === "a" ? monBatPose(ship, k, mfr) : null; S.scene.add(ship);
     if ((kind === "d" || kind === "m") && view === "side") ship.rotation.y = -.5; // turrets read better turned a little toward the camera
     if (k === "eclipse" && view === "side") ship.rotation.x = .42; if (view === "side" && TITAN_INFO[k]) ship.rotation.x = k === "harbinger" ? 1.0 : .38; /* v556 */ if (k === "smoth" && view === "side") { ship.rotation.order = "ZYX"; ship.rotation.set(Math.PI / 2, 0, Math.PI / 2); } /* v528 its back: head up, wings spread */ /* v522 the Solar Moth shows its wings in battle, not their edge */ // v170 the Discovery's saucer reads as a disc, not a sliver, tilted a little toward the camera
     const gl = S.glowT || (S.glowT = glowTex("150,215,255", 1)), FG = k === "flagship" ? M.neon.color : null, gc = !FG && fin && kind === "s" ? finEng(fin) : FG ? [new TH.Color(0xffffff).lerp(FG, .5), FG] : ship.userData.engCol ? ship.userData.engCol : kind === "a" ? [0xd8ff9a, 0x7aff3a] : [0x9fdcff, 0x4f9fff];
@@ -16452,7 +16484,7 @@ function shipArt(k, accent, view) {
     const hero = view === "hero", grand = !hero && (k === "worldbreaker" || k === "flagship" || BOSSK[k]), W = k === "flagship" ? (WEAK ? 640 : IOS ? 768 : 1024) : hero || grand ? (grand && WEAK ? 512 : 640) : WEAK ? 352 : 448, H = W / 2, ss = hero ? SSAA : WEAK ? 1.25 : 1.5; /* v86: bosses and the Cube Destroyer bake at hero size */ /* v79: weaker phones bake lighter sprites */ /* v76: ultra HD battle sprites, sharp even when the fit scale makes ships big */ /* v66: battle sprites at 352 px, lighter supersampling: sharp at their on-screen size, a third of the memory, twice as fast to bake */ S.renderer.setSize(Math.round(W * ss), Math.round(H * ss), false); S.camera.aspect = W / H;
     const dir = hero ? new TH.Vector3(.62, .45, 1) : FG ? new TH.Vector3(.34, .46, 1) : new TH.Vector3(.06, .32, 1); dir.normalize(); // v256 a three-quarter view from above shows the flagship's deck, turrets and depth
     const span = Math.max(size.x, size.z * (hero ? .9 : .4), size.y * 2.2), dist = span * (hero ? 1.2 : 1.12) * (kind === "d" ? 1.38 : kind === "m" ? .78 : 1); // batteries stand tall: pull back so the whole gun fits
-    S.camera.position.copy(dir.multiplyScalar(dist)); S.camera.lookAt(0, 0, 0); S.camera.updateProjectionMatrix();
+    S.camera.position.copy(dir.multiplyScalar(dist * (mfr >= 0 ? MBF_Z : 1))); S.camera.lookAt(0, 0, 0); S.camera.updateProjectionMatrix(); /* v651 room for the limbs in motion */
     /* v256 flagship lighting: a hard key for crisp specular, and a rim of its faction's light from behind and below that edges the metal */
     let fgL = null; if (FG) { fgL = [new TH.DirectionalLight(FG, 6), new TH.DirectionalLight(FG, 1.6), new TH.DirectionalLight(0xffffff, .9)]; fgL[0].position.set(-3, -1.5, -5); fgL[1].position.set(4, -4, 1); fgL[2].position.set(1.5, 7, 3.5); for (const L0 of fgL) S.scene.add(L0); }
     if (rotK) { const R = phi => { const yp = cdYawPitch(phi); return new TH.Matrix4().makeRotationX(yp[1]).multiply(new TH.Matrix4().makeRotationY(yp[0])); }, M = R(CD_PHI0 + rotK * Math.PI / 6).multiply(R(CD_PHI0).invert());
@@ -16461,7 +16493,7 @@ function shipArt(k, accent, view) {
     const out = document.createElement("canvas"); out.width = W; out.height = H; const ox = out.getContext("2d"); ox.imageSmoothingQuality = "high"; ox.drawImage(S.cv, 0, 0, W, H); if (hero || FG || fin) hdrBloom(ox, W, H, S.renderer.toneMappingExposure, FG ? .42 : fin ? .4 : 1); else if (kind === "s") { const hid = []; ship.traverse(o => { if (o.isSprite && o.visible) { o.visible = false; hid.push(o); } }); hdrBloom(ox, W, H, S.renderer.toneMappingExposure, .6); hid.forEach(o => o.visible = true); } // v359 the windows' glow (not the engines')
     if (FG) { ship.updateMatrixWorld(true); out.guns = (ship.userData.guns || []).map(([x, y, z]) => { const v = new TH.Vector3(x, y, z).applyMatrix4(ship.matrixWorld).project(S.camera); return [v.x, -v.y * .5]; }); const pr = (x, y, z) => { const v = new TH.Vector3(x, y, z).applyMatrix4(ship.matrixWorld).project(S.camera); return [v.x, -v.y * .5]; }; out.thr = ship.userData.eng.slice(0, 3).map(e => pr(e[0], e[1], e[2])); out.bow = pr(6.1, -.12, 0); const st = pr(-7, -.12, 0); out.ang = Math.atan2(st[1] - out.bow[1], st[0] - out.bow[0]); } // where each muzzle and nozzle lands on the picture, and the way the hull points /* the battle adds its own bloom to sprites */
     if (fin) finSpark(out, fin, k); if (view === "side" && kind === "s" && k !== "eclipse" && k !== "flagship" && !ship.userData.glb && !fin) { const P = cardPal(k); if (P) cardGrade(out, P, k); } // v78: battle hulls take their card's look (v170: not the Discovery, whose own plating, windows and lights already match its card)
-    S.scene.remove(ship); ship.traverse(o => { if (o.geometry && !ship.userData.glb) o.geometry.dispose(); if (o.isSprite) o.material.dispose(); if (ship.userData.glb && o.isMesh && o.material) for (const t of [o.material.map, o.material.normalMap, o.material.roughnessMap, o.material.metalnessMap, o.material.emissiveMap]) if (t) t.dispose(); }); /* v345 a model shares its geometry with the loaded copy */
+    S.scene.remove(ship); if (mfM) mfM.forEach(m => m.dispose()); ship.traverse(o => { if (o.geometry && !ship.userData.glb) o.geometry.dispose(); if (o.isSprite) o.material.dispose(); if (ship.userData.glb && o.isMesh && o.material) for (const t of [o.material.map, o.material.normalMap, o.material.roughnessMap, o.material.metalnessMap, o.material.emissiveMap]) if (t) t.dispose(); }); /* v345 a model shares its geometry with the loaded copy */
     return cachePut(S, key, out);
   } catch (e) { return cachePut(S, key, null); }
 }
@@ -23934,6 +23966,7 @@ function drawBattle(t) {
       /* v255 a hull never turns on screen: it used to squash flat and flip through edge-on, which looked like folding in on itself. Each squadron takes its heading from its first advance and keeps it; to go the other way it fires its retro thrusters and backs up */
       const nx = bPos(b, i, T + .5), lk = b.lk || (b.lk = []); if (!lk[i]) { lk[i] = 1; const n3 = bPos(b, i, T + 3); if (Math.abs(n3.x - p.x) > .2) b.face[i] = n3.x > p.x ? 1 : -1; } const face = b.face[i];
       const L = Math.max(8 * d, clamp(W * .1 * bLen(q.k), 11 * d, W * (BOSSK[q.k] || q.k === "worldbreaker" ? .55 : .3)) * zs * bVsK(b, q)), /* v645 */ vc = MON[q.k] ? 1 : Math.min(busy ? 3 : 6, Math.max(1, visN(q.role, Math.max(n, 1)))), moving = Math.hypot(nx.x - p.x, nx.y - p.y) > .2;
+      const mf = MON[q.k] && !dying ? monBatFrame(b, i, q.k, real, moving) : null; /* v651 */
       /* v78 inertia: hulls swing round through edge-on instead of flipping, and bank into climbs and dives along their real flight
          path; heavy hulls turn and bank slowly, so a dreadnought feels massive and a fighter nimble */
       const heavyT = BIG_R.has(q.role) || bLen(q.k) > .8, bk = b.bk || (b.bk = Q.map(() => 0)), rvA = b.rv || (b.rv = Q.map(() => 0));
@@ -23954,8 +23987,9 @@ function drawBattle(t) {
         ctx.save(); { const ba = bang + (small ? Math.cos(t * .0024 + i * 1.7 + j * 2.3) * .2 * face : 0) ; acc3 = null; acc3b = null;
           if (q.k === "worldbreaker") { const base = (q.acc || b.acc[q.side]); if (!b.cdPre) { b.cdPre = 1; for (let k = 1; k < 12; k++) shipArtSoon("worldbreaker", base + "~p" + k, "side"); } /* v416 bake every pose up front */
             const phi = j ? ((b.cdPhi || {})[i] == null ? CD_PHI0 : b.cdPhi[i]) : cdTurn(b, i, cx, cy, face, scr, T, real); if (Math.abs(phi - CD_PHI0) > .01) { const P = cdPose(phi, base); acc3 = P[0]; acc3b = P[1]; w3 = P[2]; } if (!j) (b.cdPt || (b.cdPt = []))[i] = Math.abs(phi - CD_PHI0) > .01 ? cdPortDrawn(phi, base) : CD_PORT[0]; } /* v431 where the lead hull's gun port is on screen */
+          if (mf) { acc3 = mf[0]; acc3b = mf[1]; w3 = mf[2]; } /* v651 the monster's body in motion */
           if (ba) { ctx.translate(sx, sy); ctx.rotate(ba); ctx.translate(-sx, -sy); } }
-        if (!lo && !(busy && j > 1)) { /* v83: big fights give plumes to the front two hulls only. v75 engines: a tapered plume with a white-hot core that flickers, longer under thrust */ const ex0 = sx - face * sz * .48, fl = 1 + .22 * Math.sin(t * .031 + i * 2.1 + j), pl = sz * (moving ? .7 : .32) * fl * (1 - rv * .78), pw = sz * (moving ? .09 : .07) * (1 - rv * .35);
+        if (!lo && !MON[q.k] && !(busy && j > 1)) { /* v651 living things have no engines. v83: big fights give plumes to the front two hulls only. v75 engines: a tapered plume with a white-hot core that flickers, longer under thrust */ const ex0 = sx - face * sz * .48, fl = 1 + .22 * Math.sin(t * .031 + i * 2.1 + j), pl = sz * (moving ? .7 : .32) * fl * (1 - rv * .78), pw = sz * (moving ? .09 : .07) * (1 - rv * .35);
           ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha *= .9; ctx.drawImage(glowSprite(col.gk || (col.gk = `rgba(${col.glow},1)`)), face > 0 ? ex0 - pl * 1.6 : ex0 - pl * .4, sy - pw * 1.6, pl * 2, pw * 3.2);
           ctx.drawImage(glowSprite("#ffffff"), ex0 - pw * 1.3, sy - pw * 1.3, pw * 2.6, pw * 2.6);
           if (rv > .03 && !dying) { /* v255 retro thrust: the main drive drops to a glow and paired jets fire forward from the bow, angled a little outward */ const rx = sx + face * sz * .34, rl = sz * .34 * rv * fl, rw = sz * .05; for (const oy of [-.055, .055]) { const ry = sy + oy * sz; ctx.save(); ctx.translate(rx, ry); ctx.rotate(oy * 1.9 * face); ctx.globalAlpha = .95 * rv; ctx.drawImage(glowSprite(col.gk), face > 0 ? -rl * .08 : -rl * 1.92, -rw, rl * 2, rw * 2); ctx.globalAlpha = rv; ctx.drawImage(glowSprite("#ffffff"), face > 0 ? 0 : -rl * .7, -rw * .4, rl * .7, rw * .8); ctx.restore(); } }
@@ -23978,17 +24012,17 @@ function drawBattle(t) {
         if (heavyT && p.wd > .5 && (t * .004 + i) % 3 < .3) { ctx.globalAlpha = .9; ctx.strokeStyle = "rgba(175,215,255,.95)"; ctx.lineWidth = 1.1 * d; ctx.beginPath(); let ax = cx - L * .32, ay = cy + (Math.random() - .5) * L * .1; ctx.moveTo(ax, ay); for (let s2 = 0; s2 < 7; s2++) { ax += L * .09; ay += (Math.random() - .5) * L * .08; ctx.lineTo(ax, ay); } ctx.stroke(); }
         ctx.restore(); }
       // shield flare where shots are being absorbed, a hot flash where the hull takes hits
-      const shA = b.shHit[i] != null ? 1 - (T - b.shHit[i]) / .35 : 0, huA = b.hullHit[i] != null ? 1 - (T - b.hullHit[i]) / .25 : 0, ex = cx - face * L * .25 * Math.min(vc - 1, 2), rx = L * (.62 + .22 * Math.min(vc - 1, 3)), ry = L * (.32 + .18 * Math.min(vc - 1, 2));
+      const shA = b.shHit[i] != null ? 1 - (T - b.shHit[i]) / .35 : 0, huA = b.hullHit[i] != null ? 1 - (T - b.hullHit[i]) / .25 : 0, sf = MON[q.k] && vc === 1 ? monShFit(q.k, cx, cy, L, face) : null, /* v651 */ ex = sf ? sf[0] : cx - face * L * .25 * Math.min(vc - 1, 2), ecy = sf ? sf[1] : cy, rx = sf ? sf[2] : L * (.62 + .22 * Math.min(vc - 1, 3)), ry = sf ? sf[3] : L * (.32 + .18 * Math.min(vc - 1, 2));
       /* v78 shields from the real shield state: blue when strong, violet when strained, red and flickering when about to fail. A hit
          bulges the bubble on the side facing the shooter; when the shield actually drops to nothing it shatters with a burst */
-      const sv = clamp(p.sh, 0, 1), sc = sv > .5 ? "110,210,255" : sv > .2 ? "175,140,255" : "255,105,140", fl2 = sv < .2 ? .55 + .45 * Math.sin(t * .09 + i) : 1; (b.shG = b.shG || [])[i] = [ex, cy, rx, ry, sv]; /* v603 */
-      if (shA > 0 && lo) { const a0 = (b.shDir || [])[i]; /* v603: the simple flare only in low effects; the reactive barrier otherwise */ ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.strokeStyle = `rgba(${sc},${.4 * shA * fl2})`; ctx.lineWidth = 1.4 * d; ctx.beginPath(); ctx.ellipse(ex, cy, rx, ry, 0, 0, TAU); ctx.stroke();
+      const sv = clamp(p.sh, 0, 1), sc = sv > .5 ? "110,210,255" : sv > .2 ? "175,140,255" : "255,105,140", fl2 = sv < .2 ? .55 + .45 * Math.sin(t * .09 + i) : 1; (b.shG = b.shG || [])[i] = [ex, ecy, rx, ry, sv]; /* v603 */
+      if (shA > 0 && lo) { const a0 = (b.shDir || [])[i]; /* v603: the simple flare only in low effects; the reactive barrier otherwise */ ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.strokeStyle = `rgba(${sc},${.4 * shA * fl2})`; ctx.lineWidth = 1.4 * d; ctx.beginPath(); ctx.ellipse(ex, ecy, rx, ry, 0, 0, TAU); ctx.stroke();
         ctx.fillStyle = `rgba(${sc},${.08 * shA * fl2})`; ctx.fill();
-        if (a0 != null) { const th = Math.atan2(Math.sin(a0) / ry, Math.cos(a0) / rx), bul = 1 + (1 - shA) * .07; for (const [w2, al2, e2] of [[6, .22, 1.05], [2.6, .9, 1]]) { ctx.strokeStyle = `rgba(${sc},${al2 * shA * fl2})`; ctx.lineWidth = w2 * d; ctx.beginPath(); ctx.ellipse(ex, cy, rx * e2 * bul, ry * e2 * bul, 0, th - .7, th + .7); ctx.stroke(); } }
+        if (a0 != null) { const th = Math.atan2(Math.sin(a0) / ry, Math.cos(a0) / rx), bul = 1 + (1 - shA) * .07; for (const [w2, al2, e2] of [[6, .22, 1.05], [2.6, .9, 1]]) { ctx.strokeStyle = `rgba(${sc},${al2 * shA * fl2})`; ctx.lineWidth = w2 * d; ctx.beginPath(); ctx.ellipse(ex, ecy, rx * e2 * bul, ry * e2 * bul, 0, th - .7, th + .7); ctx.stroke(); } }
         ctx.restore(); }
-      { const shp = (b.shPv = b.shPv || [])[i]; if (shp != null && shp > .12 && p.sh <= .02 && !lo && (heavyT || !busy)) { b.rings.push({ x: ex, y: cy, t, col: "150,205,255", r0: rx * .8, r1: rx * 1.7, life: 480 }); (b.brk603 = b.brk603 || []).push({ t, x: ex, y: cy, rx, ry, col: rs603Col(.6) }); /* v603 the barrier shatters */ SFX.shield(sp(ex, cy)); if (heavyT && !(b.focus && t < b.focus.until)) b.focus = { s: 1.3, x: ex / W, y: cy / H, until: t + 1400 }; }
+      { const shp = (b.shPv = b.shPv || [])[i]; if (shp != null && shp > .12 && p.sh <= .02 && !lo && (heavyT || !busy)) { b.rings.push({ x: ex, y: ecy, t, col: "150,205,255", r0: rx * .8, r1: rx * 1.7, life: 480 }); (b.brk603 = b.brk603 || []).push({ t, x: ex, y: ecy, rx, ry, col: rs603Col(.6) }); /* v603 the barrier shatters */ SFX.shield(sp(ex, ecy)); if (heavyT && !(b.focus && t < b.focus.until)) b.focus = { s: 1.3, x: ex / W, y: ecy / H, until: t + 1400 }; }
         b.shPv[i] = p.sh; }
-      if (huA > 0 && !lo) { ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = huA * .6; const hr = L * .5; ctx.drawImage(glowSprite("fire"), ex - hr, cy - hr, hr * 2, hr * 2); ctx.restore(); }
+      if (huA > 0 && !lo) { ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = huA * .6; const hr = L * .5; ctx.drawImage(glowSprite("fire"), ex - hr, ecy - hr, hr * 2, hr * 2); ctx.restore(); }
     }
     ctx.globalAlpha = 1;
     if (n > 0 && bLblOn()) (b.lblQ = b.lblQ || []).push([n * (q.pow || 1), () => { // v315 the badges can be switched off // labels are drawn after all squadrons, biggest first, skipping any that would overlap
