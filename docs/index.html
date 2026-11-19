@@ -4891,7 +4891,7 @@ function xsEggDrop(x, rep, f) { const sp = x.mon; if (!XS[sp] || XS[sp][2]) retu
   setTimeout(() => { try { toast(`${pr ? "A Prismatic " : "An "}${xsName(sp)} egg was left in the wreckage!${xsLvl() ? " It's waiting at the Xeno Sanctuary." : " Build a Xeno Sanctuary to hatch it."}`, "win");
     advHolo(xsLvl() ? "An egg, Commander. Still warm. I've sent it to the Sanctuary." : "An egg, Commander. Still warm. We'll need a Xeno Sanctuary to hatch it.", true); } catch (e) {} }, 2200); }
 function xsEggHTML(sp, pr, big) { const c = xsCol(sp); return `<i class="xsegg${pr ? " pr" : ""}${big ? " big" : ""}" style="--c:${c}"></i>`; }
-function sanctCard() { const X = xsOf(), L = xsLvl(), T = now(), slots = xsIncN(L), cap = xsCap(L);
+function sanctCard() { const X = xsOf(), L = xsLvl(), T = now(), slots = xsIncN(L), cap = xsCap(L); if (L) advSay1("sanct");
   if (!L) return `<div class="dp"><p class="note">Build the Xeno Sanctuary to hatch eggs from monster hunts.${X.eggs.length ? ` You have <b>${X.eggs.length}</b> egg${X.eggs.length > 1 ? "s" : ""} waiting.` : " Every monster hunt you win has a chance to leave an egg."}</p></div>`;
   const sel = G.xsSel || [], R = e => `<span class="xsel" style="--c:${ELEM[e].col}">${ELEM[e].n}</span>`;
   const inc = [...Array(slots)].map((_, i) => { const it = X.inc[i]; if (!it) return `<div class="xsinc empty"><i class="xsegg ghost"></i><small>Empty incubator</small>${X.eggs.length ? `<small class="note">Pick an egg below</small>` : ""}</div>`;
@@ -5673,7 +5673,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 647;
+const GAME_V = 648;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -22324,7 +22324,9 @@ function advBattle(rep) { if (!rep || rep.test || !S || !G.ready) return; const 
   if (battle) G.advBtQ = line; else setTimeout(() => { try { advHolo(line, true); } catch (e) {} }, 1600); }
 /* v645 a one-line welcome the first time a few screens open */
 const ADV_FIRST = {"premium": "The Premium page. Each tier adds a planet skin, hull finishes and lasting bonuses. Pick a hull, then a finish, then a trim to make it yours.", "inv": "Your inventory, sorted by kind. Tap a tab to see one kind of item, or Use to put it to work right away."};
-function advFirst(k) { try { if (!S || !G.ready || !ADV_FIRST[k] || tutOn()) return; S.advOnce = S.advOnce || {}; if (S.advOnce["f_" + k]) return; S.advOnce["f_" + k] = now(); dirty(); setTimeout(() => { try { advHolo(ADV_FIRST[k]); } catch (e) {} }, 1200); } catch (e) {} }
+const ADV_SAY1 = {"premium": ["Welcome to the premium deck, Commander. This is where our supporters' worlds and warships get their finest looks.", "Every tier unlocks planet skins, hull finishes and bonuses that never expire. The higher the tier, the rarer the finish.", "Pick a ship, plate it in a finish, then give it a trim. Every commander who sees our fleet will know exactly who we are."], "sanct": ["Welcome to the Xeno Sanctuary, Commander. Every egg we bring home from a hunt can hatch here.", "Raise them, and each one makes its element stronger. Pair the right two in the breeding chamber, and we might bring back a species the galaxy thought was gone."]};
+function advSay1(k) { try { if (!S || !G.ready || !ADV_SAY1[k] || tutOn()) return false; S.advOnce = S.advOnce || {}; if (S.advOnce["s_" + k]) return false; S.advOnce["s_" + k] = S.advOnce["f_" + k] = now(); dirty(); setTimeout(() => { try { say(ADV_SAY1[k].slice()); } catch (e) {} }, 900); return true; } catch (e) { return false; } }
+function advFirst(k) { if (advSay1(k)) return; try { if (!S || !G.ready || !ADV_FIRST[k] || tutOn()) return; S.advOnce = S.advOnce || {}; if (S.advOnce["f_" + k]) return; S.advOnce["f_" + k] = now(); dirty(); setTimeout(() => { try { advHolo(ADV_FIRST[k]); } catch (e) {} }, 1200); } catch (e) {} }
 /* v645 what changed, once, for commanders who were already playing */
 const ADV_V645 = ["Commander, a few things changed while you were away.", "Your commander level now counts what we've built and researched, on every world. Fleets raise our ranking score instead. If your level looks lower, that's why, and nothing was taken from you.", "Crates, salvage pods and daily rewards now pay out in hours of our own production. Grow the mines and they grow with them.", "The Void Shop sells a Peace Shield now. It drops the moment we attack, spy on or fire at another commander, so use it to rest, not to hide.", "Teleports cost ◆200 to a chosen orbit, or ◆70 for a random jump, and shard purchases ask you to tap twice. Premium commanders can also give their hulls a trim finish now."];
 function advNews645() { try { if (!S || !G.ready || !S.intro || tutOn() || score() < 200) return; S.advOnce = S.advOnce || {}; if (S.advOnce.v645) return; S.advOnce.v645 = now(); dirty(); say(ADV_V645.slice()); } catch (e) {} }
@@ -25289,7 +25291,7 @@ const ACT = {
   hullK: d => { G.hullK = d.k; render(true); },
   capSel: d => { if (!CAPS[d.k] || !capOwned(d.k)) return; if (capBusy(d.k)) return toast(`${capName(d.k)} is leading another fleet.`, "warn"); S.capSel = d.k; dirty(); if (sheet) renderSheet(); else render(true); },
   capBuy: d => { const C = CAPS[d.k]; if (!C || capOwned(d.k)) return; if ((S.shards || 0) < C.cost) return toast(`${capName(d.k)} joins for ◆${C.cost}.`, "warn"); if (!armBuy("cap|" + d.k, C.cost)) return;
-    act(() => { S.shards -= C.cost; S.caps = Object.assign({}, S.caps, { [d.k]: 1 }); S.capSel = d.k; }); toast(`${capName(d.k)} joins your fleet. ${C.perk}.`, "win"); try { advHolo(`${capName(d.k)} reporting, Commander. Give them a fleet and they'll earn their keep.`, true); } catch (e) {} },
+    act(() => { S.shards -= C.cost; S.caps = Object.assign({}, S.caps, { [d.k]: 1 }); S.capSel = d.k; }); toast(`${capName(d.k)} joins your fleet. ${C.perk}.`, "win"); try { advHolo("Your new captain is reporting for duty, Commander. Give them a fleet and they'll earn their keep.", true); } catch (e) {} },
   xsInc: d => act(() => { const X = xsOf(), L = xsLvl(), slots = xsIncN(L), i = [...Array(slots).keys()].find(j => !X.inc[j]); if (i == null) return toast("Every incubator is busy.", "warn");
     if (X.hab.length + X.inc.filter(Boolean).length >= xsCap(L)) return toast("The habitat is full. Raise the Sanctuary's level or release a creature.", "warn");
     const pr = d.pr === "1" ? 1 : 0, ei = X.eggs.findIndex(x => x.sp === d.sp && (x.pr ? 1 : 0) === pr); if (ei < 0) return; X.eggs.splice(ei, 1); const T = now(), h = XR[XS[d.sp][1]][2];
