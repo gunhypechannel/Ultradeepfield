@@ -5856,13 +5856,51 @@ function finMat(m, f, obj, o) { o = o || {}; const F = HULL_F[f]; if (!F || !TH 
         .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n { float hf = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.2); totalEmissiveRadiance += uRim * hf * (" + (tex ? ".35" : ".85") + ") + hGl;"
           + (sm ? " totalEmissiveRadiance += uInl * hIn * (.55 + .45 * sin(uT * 1.6 + hPh * 6.283)) * 2.4;" : "") + " }"); };
   n.customProgramCacheKey = () => "hullfin-" + f + (tex ? "-t" : "") + (obj ? "-o" : "") + (T2 ? "-a" + T2 + (tex2 ? "t" : "") : "") + (sm ? "-s" : ""); n.needsUpdate = true; return n; }
-function hullFinish(obj, sp) { const [f, t] = finSplit(sp); if (!f || !TH) return; const inl = finInl(f, t), pc = new TH.Color(0xffffff).lerp(inl, .35), v = new TH.Vector3();
+/* v643 livery materials */
+const LIV_K = { gold: 0, silver: 0, copper: 0, cobalt: 0, pink: 1, amethyst: 1, ruby: 1, emerald: 1, obsidian: 2, diamond: 3, glyph: 4 }; // 0 metal, 1 gem, 2 obsidian, 3 diamond, 4 holo
+const LIV_C = { gold: "#ffc23a", silver: "#e6edf5", copper: "#e07a3e", cobalt: "#2d63ff", pink: "#ff4fb8", obsidian: "#120d18", amethyst: "#9a45ff", diamond: "#eaf7ff", ruby: "#ff1035", emerald: "#0fe070", glyph: "#30e8ff" };
+const LIV_MR = [[1, .2], [.25, .08], [.7, .05], [.15, .04], [.4, .15]]; // metalness, roughness per kind
+const LIV_P = { def: [.58, .6, .84, .05] }; // lateral fins, top, nose/tail, spine stripe half-width (shares of the half-size)
+function livMat(m, f, t, k, geo) { const F = HULL_F[f]; if (!F || !TH || !m || !m.isMeshStandardMaterial) return m; t = t && HULL_F[t] ? t : f;
+  if (!geo.boundingBox) geo.computeBoundingBox(); const bb = geo.boundingBox, c = bb.getCenter(new TH.Vector3()), h = bb.getSize(new TH.Vector3()).multiplyScalar(.5);
+  const ka = LIV_K[f], kb = LIV_K[t], P = LIV_P[k] || LIV_P.def, lt = new TH.Color(HULL_F[t].rim);
+  const n = m.clone(); n.envMapIntensity = 1.35; n.extensions = Object.assign({}, n.extensions, { derivatives: true });
+  const lin = h => new TH.Color(h).convertSRGBToLinear(); /* colours were going in as if already linear: everything came out pale */
+  n.onBeforeCompile = sh => { const U = sh.uniforms; U.uA = { value: lin(LIV_C[f]) }; U.uB = { value: lin(LIV_C[t]) }; U.uRA = { value: lin(F.rim) }; U.uRB = { value: lin(HULL_F[t].rim) };
+      U.uK = { value: new TH.Vector2(ka, kb) }; U.uMR = { value: new TH.Vector4(LIV_MR[ka][0], LIV_MR[ka][1], LIV_MR[kb][0], LIV_MR[kb][1]) }; U.uLt = { value: lt.clone().convertSRGBToLinear() };
+      U.uBc = { value: c }; U.uBh = { value: h }; U.uLP = { value: new TH.Vector4(P[0], P[1], P[2], P[3]) }; U.uT = HULL_TU;
+      sh.vertexShader = "uniform vec3 uBc; uniform vec3 uBh; varying vec3 vLN; varying vec3 vON;\n" + sh.vertexShader.replace("#include <project_vertex>", "#include <project_vertex>\n vLN = (position - uBc) / max(uBh, vec3(1e-4)); vON = normalize(normal);");
+      sh.fragmentShader = `uniform vec3 uA; uniform vec3 uB; uniform vec3 uRA; uniform vec3 uRB; uniform vec2 uK; uniform vec4 uMR; uniform vec3 uLt; uniform vec4 uLP; uniform float uT; varying vec3 vLN; varying vec3 vON;
+vec3 lvHsv(float h, float s, float v) { vec3 k = clamp(abs(mod(h * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0); return v * mix(vec3(1.0), k, s); }
+float lvEdge(float e, float v) { float w = fwidth(v) + 1e-4; return smoothstep(e - w, e + w, v); }
+vec3 lvShade(vec3 base, float kd, float d, vec3 q, float fr, out vec3 em, vec3 rim) { em = vec3(0.0);
+  if (kd < .5) return base * (0.16 + 0.95 * d);
+  if (kd < 1.5) { em = base * (0.06 + 0.22 * fr); return base * (0.10 + 0.70 * d); }
+  if (kd < 2.5) { em = rim * pow(fr, 3.0) * 0.16; return base * (0.55 + 0.5 * d); }
+  if (kd < 3.5) { float sp = fract(sin(dot(floor(q * 46.0), vec3(12.99, 78.23, 37.71))) * 43758.55); em = lvHsv(fract(sp * 3.1 + fr * 1.5 + uT * .05), .7, 1.0) * pow(sp, 14.0) * (0.6 + 0.4 * sin(uT * 2.3 + sp * 40.0)) * 3.5 + lvHsv(fract(q.x * 1.3 + fr * 2.0), .35, 1.0) * pow(fr, 2.0) * .45; return base * (0.18 + 0.7 * d); }
+  vec3 hc = lvHsv(fract(q.x * .45 + q.y * .3 + fr * .7 + uT * .03), .55, 1.0); em = hc * .28; return hc * (0.22 + 0.6 * d); }
+` + sh.fragmentShader
+        .replace("#include <map_fragment>", `#include <map_fragment>
+ vec3 lvE = vec3(0.0); float lvTr = 0.0, lvLt = 0.0;
+ { float hl = dot(diffuseColor.rgb, vec3(.3, .59, .11)), d = clamp(hl / .32, .12, 1.7); vec3 q = vLN;
+   float fr = pow(1.0 - clamp(abs(dot(normalize(vNormal), normalize(vViewPosition))), 0.0, 1.0), 1.6);
+   lvTr = max(lvTr, lvEdge(uLP.x, abs(q.z))); lvTr = max(lvTr, lvEdge(uLP.y, q.y)); lvTr = max(lvTr, lvEdge(uLP.z, abs(q.x)));
+   lvTr = max(lvTr, (1.0 - lvEdge(uLP.w, abs(q.z))) * step(.5, vON.y) * step(.0, q.y));
+   lvLt = smoothstep(.55, .85, hl);
+   vec3 eA, eB; vec3 cA = lvShade(uA, uK.x, d, q, fr, eA, uRA), cB = lvShade(uB, uK.y, d, q, fr, eB, uRB);
+   diffuseColor.rgb = mix(mix(cA, cB, lvTr), uLt * .25, lvLt); lvE = mix(eA, eB, lvTr) + uLt * lvLt * 2.2; }`)
+        .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n roughnessFactor = mix(mix(uMR.y, uMR.w, lvTr), .6, lvLt);")
+        .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\n metalnessFactor = mix(mix(uMR.x, uMR.z, lvTr), 0.0, lvLt);")
+        .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n totalEmissiveRadiance += lvE;"); };
+  n.customProgramCacheKey = () => "livery1"; n.needsUpdate = true; return n; }
+function hullFinish(obj, sp, k) { const [f, t] = finSplit(sp); if (!f || !TH) return; const inl = finInl(f, t), pc = new TH.Color(0xffffff).lerp(inl, .35), v = new TH.Vector3();
   obj.updateMatrixWorld(true); const sz = new TH.Box3().setFromObject(obj).getSize(new TH.Vector3()), L = Math.max(sz.x, sz.y, sz.z) || 1;
   obj.traverse(o => { if (!o.isMesh || !o.material) return; const ps = o.getWorldScale(v).x / L;
     const one = m => { if (!m) return m; const nm = m.userData && m.userData.sm;
       if (nm === "accent") { const n = m.clone(); n.color.copy(inl); if (n.emissive) n.emissive.copy(inl); return n; } /* glow strips take the inlay colour */
       if (nm === "plume") { const n = m.clone(); n.color.copy(inl); return n; } if (nm === "plumeCore") { const n = m.clone(); n.color.copy(pc); return n; }
       if (nm === "glass" || nm === "bell") return m;
+      if (!nm && o.geometry && o.geometry.attributes.uv) return livMat(m, f, t, k, o.geometry); /* v643 */
       return finMat(m, t && (nm === "dark" || nm === "trim" || nm === "gold") ? t : f, false, { ps, inl, auto: !nm && t ? t : null }); }; /* untagged (imported) models: the darker plating takes the trim */
     o.material = Array.isArray(o.material) ? o.material.map(one) : one(o.material); }); }
 /* sparkles on the brightest parts of a finished render */
@@ -16302,7 +16340,7 @@ function shipArt(k, accent, view) {
   let rotK = 0; { const mr = /~p(\d+)$/.exec(String(accent)); if (mr) { rotK = +mr[1]; accent = String(accent).slice(0, mr.index); } } /* v416 a Cube Destroyer turned to aim rotK x 30 degrees round from its rest pose */
   try {
     let M = shipMats(accent); if (k === "flagship") { const F2 = flagMats(M.fac, 2.9); M = Object.assign(Object.create(M), F2); Object.defineProperty(M, "fac", { value: Object.getPrototypeOf(M).fac }); } /* v256 the portrait wears the plated metal */
-    const ship = kind === "s" ? (glbShip(k) || buildShip(k, M)) : kind === "a" ? buildAlien(k) : kind === "m" ? buildMissile(k, M) : buildDefense(k, M); if (fin && kind === "s") hullFinish(ship, fin); S.scene.add(ship);
+    const ship = kind === "s" ? (glbShip(k) || buildShip(k, M)) : kind === "a" ? buildAlien(k) : kind === "m" ? buildMissile(k, M) : buildDefense(k, M); if (fin && kind === "s") hullFinish(ship, fin, k); S.scene.add(ship);
     if ((kind === "d" || kind === "m") && view === "side") ship.rotation.y = -.5; // turrets read better turned a little toward the camera
     if (k === "eclipse" && view === "side") ship.rotation.x = .42; if (view === "side" && TITAN_INFO[k]) ship.rotation.x = k === "harbinger" ? 1.0 : .38; /* v556 */ if (k === "smoth" && view === "side") { ship.rotation.order = "ZYX"; ship.rotation.set(Math.PI / 2, 0, Math.PI / 2); } /* v528 its back: head up, wings spread */ /* v522 the Solar Moth shows its wings in battle, not their edge */ // v170 the Discovery's saucer reads as a disc, not a sliver, tilted a little toward the camera
     const gl = S.glowT || (S.glowT = glowTex("150,215,255", 1)), FG = k === "flagship" ? M.neon.color : null, gc = !FG && fin && kind === "s" ? finEng(fin) : FG ? [new TH.Color(0xffffff).lerp(FG, .5), FG] : ship.userData.engCol ? ship.userData.engCol : kind === "a" ? [0xd8ff9a, 0x7aff3a] : [0x9fdcff, 0x4f9fff];
@@ -16852,7 +16890,7 @@ function glbGet(k) {
 }
 function glbReady(k) { if (TITAN_ROT[k] && G.t3 && G.t3.k === k && sheet && sheet.k === k) setTimeout(() => { try { if (G.t3 && G.t3.k === k && sheet && sheet.k === k) { t3Free(); t3Start(); } } catch (e) {} }, 0); /* v598 the viewer swaps in the model once it lands */
   if (GLB_SHIPS.has(k) || TITAN_ROT[k]) { const S = STU || null; if (S && S.cache) for (const key of Object.keys(S.cache)) if (key.startsWith(k + "|")) { delete S.cache[key]; ART_PEND.delete(key); for (const o of [S.order, S.orderSide]) if (o) { const i = o.indexOf(key); if (i >= 0) o.splice(i, 1); } }
-    clearTimeout(glbReady.t); glbReady.t = setTimeout(() => { if (!battle && !sheet && typeof render === "function") try { render(); } catch (e) {} }, 400); }
+    clearTimeout(glbReady.t); glbReady.t = setTimeout(() => { try { document.querySelectorAll(`canvas[data-ship="${k}"]`).forEach(c => { c._dk = null; c._pend = null; }); if (sheet) thumbs(document); } catch (e) {} if (!battle && !sheet && typeof render === "function") try { render(); } catch (e) {} }, 400); }
   if (GLB_BLDS.has(k) && C3 && C3.keys) C3.keys[k] = null; // the base rebuilds that plot on its next frame
 }
 /* a hull for the studio: the model turned nose-first along +X, centred, with an engine glow at its tail */
