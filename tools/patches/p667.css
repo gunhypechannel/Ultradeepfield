@@ -1,0 +1,17 @@
+.mimboss.om{border-color:rgba(232,251,255,.45);box-shadow:0 0 22px rgba(95,216,255,.15)}.mimboss small{font-size:11px;color:#9ab}
+.omtg{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0}.omtg .btn{padding:6px 9px;font-size:12px}
+.omhub{display:flex;flex-direction:column;gap:4px;padding:10px;border-radius:12px;margin:8px 0;flex:none;background:linear-gradient(90deg,rgba(4,10,20,.92),rgba(4,10,20,.5)),url(art/mimic/titan.webp) center/cover;border:1px solid rgba(191,246,255,.5)}
+.omhub b{font:700 16px/1.2 var(--f-display);color:#e8fbff;text-shadow:0 0 10px rgba(95,216,255,.7)}.omhub span{font-size:12px;color:#bde}.omhub .btn{align-self:flex-start;margin-top:4px}.omhub.soon{opacity:.85}
+#omcine{position:fixed;inset:0;z-index:9000;background:#000;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;animation:omcin .6s ease both;cursor:pointer}
+#omcine.out{animation:omcout .6s ease both}@keyframes omcin{from{opacity:0}}@keyframes omcout{to{opacity:0}}
+#omcine .omcimg{position:absolute;inset:-6%;background:center/cover no-repeat;animation:omkb 5.5s ease-out both;filter:saturate(1.15) contrast(1.05)}
+@keyframes omkb{from{transform:scale(1.02) translateY(1%);filter:brightness(.4) saturate(1.1)}to{transform:scale(1.14) translateY(-1%);filter:brightness(1) saturate(1.2)}}
+#omcine .omcrift{position:absolute;left:50%;top:38%;width:70vmin;height:70vmin;margin:-35vmin 0 0 -35vmin;border-radius:50%;background:radial-gradient(circle,rgba(190,250,255,.35),rgba(60,180,255,.12) 40%,transparent 70%);mix-blend-mode:screen;animation:omrift 4s ease-in-out infinite}
+@keyframes omrift{50%{transform:scale(1.15);opacity:.6}}
+#omcine .omctx{position:relative;z-index:2;width:100%;padding:28px max(22px,env(safe-area-inset-left,0px)) calc(54px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,4,10,.92) 40%);display:flex;flex-direction:column;gap:8px;text-align:center;animation:omtx 1.2s .4s ease both}
+@keyframes omtx{from{opacity:0;transform:translateY(14px)}}
+#omcine .omctx b{font:700 22px/1.2 var(--f-display);letter-spacing:.06em;color:#e8fbff;text-shadow:0 0 18px rgba(95,216,255,.8)}#omcine .omctx.big b{font-size:54px;letter-spacing:.3em}
+#omcine .omctx span{font-size:15px;color:#bfe6f5;max-width:34em;margin:0 auto}#omcine>small{position:absolute;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;font-size:11px;color:#6a8aa0;z-index:3;letter-spacing:.12em;text-transform:uppercase}
+#omcine.fin{align-items:center}#omcine.fin .omcimg{filter:brightness(.25) saturate(.8);animation:none}#omcine.fin .omctx{background:none;padding-bottom:0}
+#omcine.fin .omctx small{font-size:11px;letter-spacing:.3em;color:#5fd8ff}#omcine.fin .q{font:500 21px/1.45 var(--f-display);letter-spacing:.02em;min-height:3em}
+#omcine.fin .after{opacity:0;transition:opacity 1.6s 1s}#omcine.fin.done .after{opacity:1}

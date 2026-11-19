@@ -1877,6 +1877,23 @@ main.full{padding:0;overflow:hidden;gap:0}
 .mimboss{padding:9px 10px;border-radius:11px;border:1px solid rgba(127,240,255,.3);background:rgba(6,22,38,.6);margin:6px 0 10px;display:flex;flex-direction:column;gap:4px}
 .mimanc{display:grid;grid-template-columns:62px 1fr 40px;gap:6px;align-items:center;font-size:12px}.mimanc small{text-align:right;color:#9ab}
 .mimecho{display:flex;gap:9px;align-items:center;padding:7px;border-radius:11px;border:1px solid rgba(255,120,120,.35);background:rgba(40,10,20,.45);margin:8px 0;flex:none}.mimecho canvas{width:112px;height:56px;flex:none}.mimecho div{display:flex;flex-direction:column;gap:2px;min-width:0}.mimecho small{font-size:12px;color:#cab}
+.mimboss.om{border-color:rgba(232,251,255,.45);box-shadow:0 0 22px rgba(95,216,255,.15)}.mimboss small{font-size:11px;color:#9ab}
+.omtg{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0}.omtg .btn{padding:6px 9px;font-size:12px}
+.omhub{display:flex;flex-direction:column;gap:4px;padding:10px;border-radius:12px;margin:8px 0;flex:none;background:linear-gradient(90deg,rgba(4,10,20,.92),rgba(4,10,20,.5)),url(art/mimic/titan.webp) center/cover;border:1px solid rgba(191,246,255,.5)}
+.omhub b{font:700 16px/1.2 var(--f-display);color:#e8fbff;text-shadow:0 0 10px rgba(95,216,255,.7)}.omhub span{font-size:12px;color:#bde}.omhub .btn{align-self:flex-start;margin-top:4px}.omhub.soon{opacity:.85}
+#omcine{position:fixed;inset:0;z-index:9000;background:#000;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;animation:omcin .6s ease both;cursor:pointer}
+#omcine.out{animation:omcout .6s ease both}@keyframes omcin{from{opacity:0}}@keyframes omcout{to{opacity:0}}
+#omcine .omcimg{position:absolute;inset:-6%;background:center/cover no-repeat;animation:omkb 5.5s ease-out both;filter:saturate(1.15) contrast(1.05)}
+@keyframes omkb{from{transform:scale(1.02) translateY(1%);filter:brightness(.4) saturate(1.1)}to{transform:scale(1.14) translateY(-1%);filter:brightness(1) saturate(1.2)}}
+#omcine .omcrift{position:absolute;left:50%;top:38%;width:70vmin;height:70vmin;margin:-35vmin 0 0 -35vmin;border-radius:50%;background:radial-gradient(circle,rgba(190,250,255,.35),rgba(60,180,255,.12) 40%,transparent 70%);mix-blend-mode:screen;animation:omrift 4s ease-in-out infinite}
+@keyframes omrift{50%{transform:scale(1.15);opacity:.6}}
+#omcine .omctx{position:relative;z-index:2;width:100%;padding:28px max(22px,env(safe-area-inset-left,0px)) calc(54px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,4,10,.92) 40%);display:flex;flex-direction:column;gap:8px;text-align:center;animation:omtx 1.2s .4s ease both}
+@keyframes omtx{from{opacity:0;transform:translateY(14px)}}
+#omcine .omctx b{font:700 22px/1.2 var(--f-display);letter-spacing:.06em;color:#e8fbff;text-shadow:0 0 18px rgba(95,216,255,.8)}#omcine .omctx.big b{font-size:54px;letter-spacing:.3em}
+#omcine .omctx span{font-size:15px;color:#bfe6f5;max-width:34em;margin:0 auto}#omcine>small{position:absolute;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;font-size:11px;color:#6a8aa0;z-index:3;letter-spacing:.12em;text-transform:uppercase}
+#omcine.fin{align-items:center}#omcine.fin .omcimg{filter:brightness(.25) saturate(.8);animation:none}#omcine.fin .omctx{background:none;padding-bottom:0}
+#omcine.fin .omctx small{font-size:11px;letter-spacing:.3em;color:#5fd8ff}#omcine.fin .q{font:500 21px/1.45 var(--f-display);letter-spacing:.02em;min-height:3em}
+#omcine.fin .after{opacity:0;transition:opacity 1.6s 1s}#omcine.fin.done .after{opacity:1}
 .arfly{position:fixed;left:50%;top:46%;z-index:9999;transform:translate(-50%,0);font:800 30px/1 var(--f-display);color:#e3b8ff;text-shadow:0 0 18px #b27aff,0 2px 0 #000;pointer-events:none;animation:arFly 1.3s ease-out forwards}@keyframes arFly{0%{opacity:0;transform:translate(-50%,10px) scale(.7)}20%{opacity:1;transform:translate(-50%,0) scale(1.15)}100%{opacity:0;transform:translate(-50%,-160px) scale(1)}}
 @media (prefers-reduced-motion:reduce){.arcard.back,.arcard.foil::after,.arcard.flip,.arpips i.due{animation:none}}.arcard.lv0 em{color:#8d8170}
 .arnew{position:absolute;top:6px;right:6px;font:700 9px/1 system-ui;letter-spacing:.1em;padding:4px 6px;border-radius:6px;background:#e2c48a;color:#1a1408;font-style:normal}
@@ -4505,6 +4522,10 @@ const AL = {
   malpha2:   { n: "Alpha Sovereign II", atk: 1100, sh: 2000, hull: 28000, val: 300000, one: 1 },
   malpha3:   { n: "Alpha Sovereign III", atk: 800, sh: 3200, hull: 34000, val: 300000, one: 1 },
   malpha4:   { n: "Alpha Sovereign IV", atk: 950, sh: 2600, hull: 30000, val: 300000, one: 1 },
+  momega:    { n: "Omega", atk: 1400, sh: 3500, hull: 38000, val: 500000, one: 1 },
+  momegax:   { n: "Omega Unbound", atk: 2200, sh: 1500, hull: 30000, val: 500000, one: 1 },
+  mnode:     { n: "Neural Node", atk: 200, sh: 900, hull: 9000, val: 60000, one: 1 },
+  mpylon:    { n: "Assimilation Pylon", atk: 350, sh: 1400, hull: 11000, val: 60000, one: 1 },
   mnexus:    { n: "Neural Nexus", atk: 300, sh: 2000, hull: 20000, val: 120000, one: 1 },
   mnest:     { n: "Mimic Hive", atk: 700, sh: 2400, hull: 48000, val: 90000, one: 1 }
 };
@@ -4775,8 +4796,11 @@ const MIM_WEEKS = [["First Contact", "The infestation begins. Small hives are em
 const MIM_HIVES = (() => { const out = [], GOLD = Math.PI * (3 - Math.sqrt(5)), lo = Math.max(LAYERS[LAYERS.length - 1].r0, 18 * SC) + 6, hi = LAYERS[0].r1 - 6;
   for (let j = 0; j < MIM_N; j++) { const u = (j + .45) / MIM_N, rad = Math.sqrt(lo * lo + u * (hi * hi - lo * lo)), a = (5.3 + j * GOLD) % TAU, lvl = (layerOf(rad).n - 1) * 5 + 2 + (j * 3) % 4;
     out.push({ id: "mh" + j, kind: "pirate", mon: "mimic", mj: j, lvl, r: +rad.toFixed(2), a0: +a.toFixed(4), name: `Mimic Hive ${String.fromCharCode(65 + (j * 7) % 26)}-${10 + j}` }); } return out; })();
-const mimT0 = () => VP_BASE + VP_LEN; /* the second Void Pass season */
-function mimClock(T) { const p = S && S.mimPrev; if (p && p.w && ownerFree()) return { e: (p.w - 1) * MIM_WK + 3600e3 + Math.max(0, T - p.at), prev: 1 }; return { e: T - mimT0(), prev: 0 }; }
+/* v667 the runs: the first in the second Void Pass season (the prologue's Countdown), then every Season of the Mimic (the fifth season of
+   the ten-season year, which was the Kraken's): mimT0 is the run under way, or the next one */
+const MIM_RUN = k => k === 1 || (k >= PRO && seaCyc(k) === 4);
+function mimT0(T = now()) { const c = vpSeason(T); for (let k = Math.max(0, c - 1); k <= c + 12; k++) if (MIM_RUN(k) && VP_BASE + k * VP_LEN + MIM_LEN > T) return VP_BASE + k * VP_LEN; return VP_BASE + VP_LEN; }
+function mimClock(T) { const p = S && S.mimPrev; if (p && p.w && ownerFree()) return { e: (p.om ? MO_D0 : (p.w - 1) * MIM_WK) + 3600e3 + Math.max(0, T - p.at), prev: 1 }; return { e: T - mimT0(), prev: 0 }; }
 const mimWeek = T => { const e = mimClock(T).e; return e < 0 ? 0 : e >= MIM_LEN ? 5 : 1 + Math.floor(e / MIM_WK); };
 const mimEm = x => Math.floor(Math.min(x.mj, 119) / 40) * MIM_WK + (x.mj % 40) * 1.1 * 3600e3;
 function mimLive(x, T) { const e = mimClock(T).e; return e >= mimEm(x) && e < MIM_LEN; }
@@ -4799,7 +4823,7 @@ function mimWin(x, rep, T) { const st = mimStage(x, T), M = mimS(), L = mimLoot(
 const MIM_OBJ = [[1, 3, 5, 10], [2, 5, 10, 20], [3, 3, 15, 30], [4, 5, 20, 40]];
 const mimObjN = w => { const M = mimS(), o = MIM_OBJ[w - 1], a = (M.wk || {})[w] || []; let n = 0; for (let s = o[0]; s <= 4; s++) n += a[s] || 0; return n; };
 /* the band on the map and the planet while the invasion runs (and for three days before it) */
-function mimBand(T) { const w = mimWeek(T), c = mimClock(T); if (w === 5) return ""; if (w === 0) { if (-c.e > 3 * 864e5) return ""; return `<button class="omb fin mimb soon" data-act="mimOpen"><b>⬢ THE MIMIC PROTOCOL</b><span>in ${ftime(-c.e)}</span></button>`; }
+function mimBand(T) { if (!G.moCC || Date.now() - G.moCC > 4000) { G.moCC = Date.now(); setTimeout(() => { try { moCineCheck(); } catch (e) {} }, 400); } /* v667 */ const w = mimWeek(T), c = mimClock(T); if (w === 5) return ""; if (w === 0) { if (-c.e > 3 * 864e5) return ""; return `<button class="omb fin mimb soon" data-act="mimOpen"><b>⬢ THE MIMIC PROTOCOL</b><span>in ${ftime(-c.e)}</span></button>`; }
   return `<button class="omb fin mimb" data-act="mimOpen"><b>⬢ THE MIMIC PROTOCOL</b><span>Week ${w} · ${MIM_WEEKS[w - 1][0]}</span></button>`; }
 function mimNearest(T) { const h = originPlanet() || myPlanets()[0]; if (!h) return null; const hp = pos(h, T); let best = null, bd = 1e9;
   for (const x of MIM_HIVES) { if (!mimLive(x, T) || pirDown(x) > T) continue; const q = pos(x, T), d = Math.hypot(q.x - hp.x, q.y - hp.y) * (fogSeen(q.x, q.y) ? 1 : 3); if (d < bd) { bd = d; best = x; } } return best; }
@@ -4820,10 +4844,11 @@ function shMimic() { const T = now(), M = mimS(), w = mimWeek(T), c = mimClock(T
   <button class="btn pri wide" data-act="mimFind"${up.length ? "" : " disabled"}>Find the nearest hive</button>` : ""}
   ${obj}
   ${(() => { const e = mimEchoOn(T); return e ? `<div class="mimecho"><canvas data-ship="e_${e.k}" width="224" height="112"></canvas><div><b>Mimic Echoes: ${e.n} × ${AL["e_" + e.k].n}</b><small>The Assimilators copied our ${SH[e.k].n}s. They fight in every hive we attack for <span data-end="${e.until}">${ftime(e.until - T)}</span>. Destroy a Stage 3+ hive to wipe them (+2 Alloy each).</small></div></div>` : ""; })()}
+  ${moHub(T, w)}
   ${mimHubBoss(T, w)}
   <h3>Season materials</h3><div class="mimmats">${mats}</div><p class="note" style="margin-top:6px">Invasion points: <b>${fmt(M.pts)}</b>. Every hive pays Mimic Tissue; mature hives also give up Assimilated Alloy and Neural Core Fragments.</p>
   <h3>The swarm</h3><div class="mimcls">${cls.map(k => `<div class="mimcl"><canvas data-ship="${k}" width="224" height="112"></canvas><div><b>${AL[k].n}</b><small>${CD[k]}</small><em>From Stage ${CS[k]}</em></div></div>`).join("")}</div>
-  ${own ? `<div class="mimown"><small>Owner preview: see the invasion as it will look in a given week.</small><div>${[0, 1, 2, 3, 4].map(n => `<button class="btn${((S.mimPrev || {}).w || 0) === n ? " pri" : ""}" data-act="mimPrev" data-w="${n}">${n ? "Week " + n : "Off"}</button>`).join("")}</div></div>` : ""}`; }
+  ${own ? `<div class="mimown"><small>Owner preview: see the invasion as it will look in a given week.</small><div>${[0, 1, 2, 3, 4].map(n => `<button class="btn${((S.mimPrev || {}).w || 0) === n ? " pri" : ""}" data-act="mimPrev" data-w="${n}">${n ? "Week " + n : "Off"}</button>`).join("")}<button class="btn${(S.mimPrev || {}).om ? " pri" : ""}" data-act="mimPrev" data-w="4" data-om="1">Omega</button></div></div>` : ""}`; }
 function mimGo(x) { closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); }
   setTimeout(() => { try { const c = G3 && G3.cam, q = P3(x, now()); if (c) { c.follow = null; c.followFleet = null; c.goal = { tx: q.x, ty: q.y, tz: q.z, dist: 26, th: .8 }; } } catch (e) {} }, 300);
   setTimeout(() => { try { if (view === "galaxy" && !sheet && !battle) openSheet({ type: "pirate", id: x.id }); } catch (e) {} }, 2600); }
@@ -4857,7 +4882,7 @@ function mimNorm(src, T) { const k = mimKey(), w = Math.max(1, Math.min(4, mimWe
   return o; }
 const mimSt = T => mimStC(T);
 const mimBossOn = T => { const w = mimWeek(T); return w >= 2 && w <= 4; };
-function mimHid(x, T) { if (x.mon === "mimic") return !mimLive(x, T); const B = MIM_BOSS[x.id]; if (!B) return false; if (!mimBossOn(T)) return true; if (B.mon !== "nexus") { const A = mimSt(T).a[B.id]; return !!(A && A.dead); } return false; }
+function mimHid(x, T) { if (x.mon === "mimic") return !mimLive(x, T); const B = MIM_BOSS[x.id]; if (!B) return false; if (B.om) return !moWin(T) || !!moOutcome(moSt(T).o); /* v667 */ if (!mimBossOn(T)) return true; if (B.mon !== "nexus") { const A = mimSt(T).a[B.id]; return !!(A && A.dead); } return false; }
 const mimOpen = (st, reg) => st.x["mx" + reg].open || 0;
 function mimSupPct(st) { const n = Object.keys(st.con).length; return Math.min(1, st.sup / (250 + 80 * n)); }
 function mimSupFx(p) { return { sh: Math.round(50 * p), rg: Math.round(60 * p), sw: Math.round(50 * p) }; }
@@ -4865,7 +4890,7 @@ const mimTier = p => p >= 200 ? ["Vanguard", "#ffd36b"] : p >= 60 ? ["Warden", "
 /* points earned this fight, held to the daily cap; returns what counts */
 function mimCon(st, pts, T) { const day = Math.floor(T / 864e5), c = st.cday[G.me] && st.cday[G.me][0] === day ? st.cday[G.me] : [day, 0], add = Math.max(0, Math.min(pts, MIM_DAYCAP - c[1]));
   c[1] += add; st.cday[G.me] = c; st.con[G.me] = (st.con[G.me] || 0) + add; st.sup += add; return add; }
-function alphaForce(x, T) { const st = mimSt(T || now()), B = MIM_BOSS[x.id]; if (B.mon === "nexus") { const X = st.x[B.id]; const n = X.anc.find(v => v > 0) || MIM_ANC; return { mnexus: n, mguard: 2, mharv: 2 }; }
+function alphaForce(x, T) { const st = mimSt(T || now()), B = MIM_BOSS[x.id]; if (B.om) { const { o } = moSt(T || now()); return B.om === 2 ? { mnexus: o.nx.anc.find(v => v > 0) || MO_ANC, mguard: 2, mharv: 2 } : { [moPh(o.hp) === 3 ? "momegax" : "momega"]: Math.max(1, o.shd > 0 ? o.shd : o.hp), mstalk: 6, mhunt: 3 }; } if (B.mon === "nexus") { const X = st.x[B.id]; const n = X.anc.find(v => v > 0) || MIM_ANC; return { mnexus: n, mguard: 2, mharv: 2 }; }
   const A = st.a[B.id], live = MIM_HIVES.filter(h => mimReg(h) === B.reg && mimLive(h, T || now())).length; return { [B.u]: Math.max(1, A.hp), mguard: 2 + Math.floor(live / 10), mstalk: 4 }; }
 /* the hives the player destroys feed the meter in batches (one shared write every few minutes at most) */
 function mimQueue(pts, reg) { const M = mimS(); M.pend = (M.pend || 0) + pts; M.prk = M.prk || [0, 0, 0, 0]; M.prk[reg]++; dirty(); mimFlush(); }
@@ -4915,12 +4940,12 @@ async function mimBossResolve(f) { const B = MIM_BOSS[f.xid], x = PB[f.xid]; G.r
   } catch (e) { if (e === CAS_RETRY && await casAgain(f, mimBossResolve)) return; note(`Lost contact with the ${B.name} fight. Fleet returning.`, "warn"); home(); }
   finally { G.resolving.delete(f.id); dirty(); progress(); softRender(); } }
 /* a fallen Alpha: everyone who broke a section claims once, by share: Alpha Neural Catalysts, shards, Mimic Tissue; the final blow +2 Catalysts */
-function mimClaim() { if (!S || !G.ready) return; const T = now(); if (!mimBossOn(T) && mimWeek(T) !== 5) return; const st = mimSt(T), M = mimS(); M.got = M.got || {};
+function mimClaim() { if (!S || !G.ready) return; try { moClaimM(); } catch (e) {} const T = now(); if (!mimBossOn(T) && mimWeek(T) !== 5) return; const st = mimSt(T), M = mimS(); M.got = M.got || {};
   for (let i = 0; i < 4; i++) { const A = st.a["ma" + i], my = (A.dmg || {})[G.me] || 0, id = `a${i}w${A.w}`; if (!A.dead || !my || M.got[id]) continue; M.got[id] = 1;
     const tot = Object.values(A.dmg).reduce((a, b) => a + b, 0) || 1, share = my / tot, cat = Math.min(8, 2 + Math.round(share * 20)) + (A.last === G.me ? 2 : 0), sh = Math.min(40, 10 + Math.round(share * 60));
     M.m.cat = (M.m.cat || 0) + cat; M.m.tis = (M.m.tis || 0) + 20; S.shards = (S.shards || 0) + sh; logReward(`Alpha Sovereign ${MIM_AN[i]} slain`, null, { shards: sh, kind: "event" });
     note(`Alpha Sovereign ${MIM_AN[i]} is dead. Your share (${Math.round(share * 100)}%): ${cat} Alpha Neural Catalyst${cat > 1 ? "s" : ""}, ◆${sh} and 20 Mimic Tissue${A.last === G.me ? ", with the final blow" : ""}.`, "win"); dirty(); } }
-function mimBossInfo(x, T) { const st = mimSt(T), B = MIM_BOSS[x.id], X = st.x["mx" + B.reg], A = st.a["ma" + B.reg], nx = B.mon === "nexus";
+function mimBossInfo(x, T) { if (MIM_BOSS[x.id].om) return moInfo(x, T); const st = mimSt(T), B = MIM_BOSS[x.id], X = st.x["mx" + B.reg], A = st.a["ma" + B.reg], nx = B.mon === "nexus";
   const live = MIM_HIVES.filter(h => mimReg(h) === B.reg && mimLive(h, T)).length, weak = Math.round(Math.min(.4, (st.rk[B.reg] || 0) / 250) * 100);
   const bar = (v, mx, col) => `<div class="mimbar"><i style="width:${v / mx * 100}%;background:${col}"></i></div>`;
   if (nx) return `<div class="mimboss"><b>${X.open ? `Collapsed · reconnects in <span data-end="${X.open}">${ftime(X.open - T)}</span>` : `Anchors ${X.anc.filter(v => v > 0).length} of 4 standing`}</b>
@@ -4955,8 +4980,128 @@ function mimEcho(x, rep, res, T) { const M = mimS(), st = mimStage(x, T), had = 
   note(`The Assimilators absorbed the wrecks of our ${SH[best].n}s. For 6 hours, ${n} Mimic Echo${n > 1 ? "es" : ""} of them will fight in the hives. Destroy a Stage 3 hive to wipe them out.`, "warn"); }
 const mimEchoOn = T => { const e = S && S.mim && S.mim.echo; return e && e.until > T ? e : null; };
 for (const b of ECHO_BASE) { AL["e_" + b] = { n: "Echo " + SH[b].n, atk: Math.round(SH[b].atk * .6), sh: Math.round(SH[b].sh * .6), hull: Math.round(SH[b].hull * .6), val: Math.round(((SH[b].c.m || 0) + (SH[b].c.c || 0) + (SH[b].c.g || 0)) * .3), one: 1 }; } /* v666 */
+/* ---------- v667 Omega: The Convergence (the Mimic Protocol's live finale) ----------
+   The last weekend of every Mimic run (day 26 to the end of day 28, Saturday and Sunday UTC): Omega, the First Mimic, comes through a
+   dimensional rift beside its central Neural Nexus. One shared fight for the whole server, kept in the same record (event/mimic, field o):
+   300 sections in three phases fixed by what is left (deterministic, never bouncing back across a boundary):
+     Phase 1 · The Swarm (300-201): three Neural Nodes feed its regeneration (10 sections an hour at full, less per node broken).
+     Phase 2 · Assimilation (200-101): four Assimilation Pylons. While any stands it keeps only half the damage, and it adapts to the
+               ship class that hit it hardest last (that class fires at 40% against it) and fields Echoes of it.
+     Phase 3 · Omega Unbound (100-0): the core is exposed (x1.5 damage) and the final countdown runs: 6 hours, then it escapes.
+   Shields first: it arrives with up to 60 shield sections, fewer the more Hive Suppression the server earned (and its regeneration and
+   swarm are cut by the same meter). The central Neural Nexus (4 anchors of 30): break it and Omega is cut off from its Alphas for 30
+   minutes: no regeneration, no adaptation, double damage. Small fleets help by clearing its swarm (each clear slows its regeneration),
+   or breaking nodes, pylons and anchors, which are far weaker than its body. Every commander who took part claims once at the end, by
+   outcome (Omega slain / it escaped in phase 3 / it escaped earlier) and by participation, not just damage. */
+const MO_D0 = 26 * 864e5, MO_D1 = 28 * 864e5, MO_HP = 300, MO_P3 = 6 * 3600e3, MO_NODE = 20, MO_PYL = 20, MO_ANC = 30;
+Object.assign(MIM_U, { momega: 1, momegax: 1, mnode: 1, mpylon: 1 });
+MON.omega = { n: "Omega, the First Mimic", sp: "Omega", ic: "⬢", col: "#bff6ff", rgb: "191,246,255", per: 99, d: "The hive consciousness of the Mimic Protocol. It commands every Alpha and every hive, adapts to whatever hurts it, and grows stronger for every hive the galaxy left alive.", names: ["Omega"] };
+const MIM_OM = [{ id: "mo", kind: "pirate", mon: "omega", u: "momega", om: 1, name: "Omega, the First Mimic" }, { id: "mxo", kind: "pirate", mon: "nexus", u: "mnexus", om: 2, name: "The Central Neural Nexus" }];
+(() => { const lo = Math.max(LAYERS[LAYERS.length - 1].r0, 18 * SC) + 6, hi = LAYERS[0].r1 - 6, rad = Math.sqrt(lo * lo + .2 * (hi * hi - lo * lo)), lvl = (layerOf(rad).n - 1) * 5 + 8;
+  MIM_OM[0].r = +rad.toFixed(2); MIM_OM[0].a0 = Math.PI; MIM_OM[0].lvl = lvl; MIM_OM[1].r = +(rad * .9).toFixed(2); MIM_OM[1].a0 = Math.PI + .06; MIM_OM[1].lvl = lvl;
+  for (const x of MIM_OM) MIM_BOSS[x.id] = x; })();
+const moWin = T => { const e = mimClock(T).e; return e >= MO_D0 && e < MO_D1; };
+const moStart = () => mimT0() + MO_D0;
+const moPh = hp => hp > 200 ? 1 : hp > 100 ? 2 : 3;
+const MO_PHN = ["", "The Swarm", "Assimilation", "Omega Unbound"];
+function moNorm(st, T) { const s0 = moStart(); let o = st.o; const fx = mimSupFx(mimSupPct(st));
+  if (!o || o.s !== s0) o = st.o = { s: s0, hp: MO_HP, sh0: Math.round(60 * (1 - fx.sh / 100)), shd: Math.round(60 * (1 - fx.sh / 100)), nodes: [MO_NODE, MO_NODE, MO_NODE], pyl: [MO_PYL, MO_PYL, MO_PYL, MO_PYL], nx: { anc: [MO_ANC, MO_ANC, MO_ANC, MO_ANC], open: 0 }, swarm: 0, dmg: {}, hits: {}, adapt: "", t: T, dead: 0, last: "", p3: 0, end: "" };
+  if (o.nx.open && T >= o.nx.open) { o.nx = { anc: [MO_ANC, MO_ANC, MO_ANC, MO_ANC], open: 0 }; }
+  const ph = moPh(o.hp); if (!o.dead && !o.end && ph < 3 && !o.nx.open && T > o.t) { const nodes = o.nodes.filter(v => v > 0).length, rate = 10 * (1 - fx.rg / 100) * Math.max(.3, 1 - o.swarm / 150) * (ph === 1 ? nodes / 3 : .5), add = Math.floor((T - o.t) / 3600e3 * rate);
+    if (add > 0) { o.hp = Math.min(ph === 1 ? MO_HP : 200, o.hp + add); o.t = T; } } else o.t = T;
+  if (!o.dead && !o.end) { const e = mimClock(T).e; if (o.p3 && T > o.p3 + MO_P3) o.end = "p3"; else if (e >= MO_D1) o.end = ph === 3 ? "p3" : "early"; }
+  return o; }
+const moSt = T => { const st = mimStC(T); return { st, o: moNorm(st, T) }; };
+const moOutcome = o => o.dead ? "win" : o.end === "p3" ? "part" : o.end ? "fail" : "";
+function moMods(o, T) { const ph = moPh(o.hp), cut = !!o.nx.open, pylUp = ph === 2 && o.pyl.some(v => v > 0) && !cut; return { ph, cut, pylUp, mul: (ph === 3 ? 1.5 : 1) * (pylUp ? .5 : 1) * (cut ? 2 : 1), adapt: pylUp && o.adapt ? o.adapt : "" }; }
+function moTargets(o) { const ph = moPh(o.hp), t = [["core", o.shd > 0 ? "Its shield" : ph === 3 ? "The exposed core" : "Omega's body", null]];
+  if (ph === 1) o.nodes.forEach((v, i) => v > 0 && t.push(["node" + i, `Neural Node ${i + 1}`, v]));
+  if (ph === 2) o.pyl.forEach((v, i) => v > 0 && t.push(["pyl" + i, `Assimilation Pylon ${i + 1}`, v]));
+  t.push(["swarm", "Clear the swarm (small fleets)", null]); return t; }
+async function moResolve(f) { const B = MIM_BOSS[f.xid], x = PB[f.xid]; G.resolving.add(f.id); const T0 = now();
+  const home = () => { f.phase = "back"; f.back = Math.max(T0, f.arrive) + (f.tt || 60000); if (!Object.values(f.n || {}).some(v => v > 0)) S.fleets = S.fleets.filter(q => q !== f); };
+  try { const at = f.arrive; if (!moWin(at)) { note(`${B.name} was not there when our fleet arrived. Returning.`, "warn"); return home(); }
+    const ref = adb().doc(mimDoc()); for (let i = 0; i < 8; i++) { const r = ref.acquire ? await ref.acquire({ holder: G.me, ttlMs: 15000 }) : { acquired: 1 }; if (r.acquired) break; await sleep(1500); }
+    const snap = await casGet(ref), cur = mimNorm(snap.exists ? snap.data() : null, at), o = moNorm(cur, at);
+    if (o.dead || o.end) { note(`The fight with Omega is over. Fleet returning.`, "warn"); return home(); }
+    const M0 = moMods(o, at), nx = B.om === 2; let tgt = nx ? "nx" : f.omT || "core"; if (!nx && !moTargets(o).some(t => t[0] === tgt)) tgt = "core";
+    if (nx && o.nx.open) { note(`The Central Nexus is already broken. It reconnects in ${ftime(o.nx.open - at)}. Fleet returning.`, "warn"); return home(); }
+    const sw = 1 - mimSupFx(mimSupPct(cur)).sw / 100, lvl = B.lvl; let u, n0, esc;
+    if (tgt === "core") { u = M0.ph === 3 ? "momegax" : "momega"; n0 = Math.max(1, o.shd > 0 ? o.shd : o.hp - (M0.ph === 1 ? 200 : M0.ph === 2 ? 100 : 0)); esc = { mstalk: Math.round(6 * sw), mhunt: Math.round(3 * sw) }; if (M0.ph === 1 && Math.floor(at / 3600e3) % 3 === 0) esc.malpha1 = 1; if (M0.adapt) esc["e_" + M0.adapt] = 2; }
+    else if (/^node/.test(tgt)) { u = "mnode"; n0 = o.nodes[+tgt.slice(4)]; esc = { mstalk: 3 }; } else if (/^pyl/.test(tgt)) { u = "mpylon"; n0 = o.pyl[+tgt.slice(3)]; esc = { mguard: 2 }; }
+    else if (tgt === "nx") { u = "mnexus"; const ai = o.nx.anc.findIndex(v => v > 0); n0 = o.nx.anc[ai]; esc = { mguard: 2, mharv: 2 }; }
+    else { u = "mstalk"; n0 = 0; esc = { mstalk: Math.max(3, Math.round(6 * sw)), mhunt: Math.round(2 * sw), mharv: 1 }; }
+    const mine0 = Object.assign({}, f.n), mkA = () => { const st = stacksOf(f.n, techVs(x), G.me); if (M0.adapt) for (const s of st) if (s.k === M0.adapt) s.atk *= .4; return st; };
+    const mkD = () => stacksOf(Object.assign(n0 ? { [u]: n0 } : {}, esc), { mon: tgt === "swarm" ? Math.max(1, Math.round(lvl / 4)) : lvl }, "monster");
+    const { res, rise } = n0 ? mimRise(mkA, mkD, u, n0, n0) : { res: simulate(mkA(), mkD()), rise: 1 };
+    const left = n0 ? clamp(Math.round(((res.dLeft || {})[u]) || 0), 0, n0) : 0, raw = n0 - left; let seg = 0, pts = 0, msg = "";
+    if (tgt === "swarm") { if (res.winner === "a") { o.swarm++; pts = 2; msg = `Our fleet cleared a wave of Omega's swarm (${o.swarm} cleared): its regeneration slows.`; } else msg = "The swarm held. Bring a few more warships."; }
+    else if (raw) { seg = tgt === "core" ? Math.min(n0, Math.max(1, Math.round(raw * M0.mul))) : raw;
+      if (tgt === "core") { if (o.shd > 0) { o.shd = Math.max(0, o.shd - seg); msg = o.shd ? `Our fleet stripped ${seg} shield section${seg > 1 ? "s" : ""} off Omega (${o.shd} left).` : "Omega's shield is down! Its body is open to every fleet."; }
+        else { const ph0 = moPh(o.hp); o.hp = Math.max(0, o.hp - seg); const ph1 = moPh(o.hp); if (ph1 === 3 && !o.p3) o.p3 = at; if (!o.hp) { o.dead = at; o.last = G.me; }
+          msg = o.dead ? "We brought down Omega, the First Mimic!" : ph1 > ph0 ? `Omega is breaking: phase ${ph1}, ${MO_PHN[ph1]}!${ph1 === 3 ? " Its core is exposed and the final countdown has begun: 6 hours." : " Its Assimilation Pylons are rising."}` : `Our fleet broke ${seg} section${seg > 1 ? "s" : ""} off Omega (${o.hp} of ${MO_HP} left).`; }
+        pts = 4 * seg;
+        { let best = "", bv = 0; for (const k in mine0) { const v = (mine0[k] || 0) * ((SH[k] || {}).atk || 0); if (ECHO_BASE.includes(k) && v > bv) { bv = v; best = k; } } if (best && moPh(o.hp) === 2) o.adapt = best; } }
+      else if (/^node/.test(tgt)) { const i = +tgt.slice(4); o.nodes[i] -= seg; pts = 3 * seg; msg = o.nodes[i] <= 0 ? `Neural Node ${i + 1} is destroyed! Omega's regeneration weakens.` : `Neural Node ${i + 1}: ${o.nodes[i]} of ${MO_NODE} left.`; }
+      else if (/^pyl/.test(tgt)) { const i = +tgt.slice(3); o.pyl[i] -= seg; pts = 3 * seg; msg = o.pyl[i] <= 0 ? `Assimilation Pylon ${i + 1} is down!${o.pyl.every(v => v <= 0) ? " Omega can no longer adapt: its body takes full damage." : ""}` : `Assimilation Pylon ${i + 1}: ${o.pyl[i]} of ${MO_PYL} left.`; }
+      else { const ai = o.nx.anc.findIndex(v => v > 0); o.nx.anc[ai] -= seg; pts = 3 * seg; if (o.nx.anc.every(v => v <= 0)) { o.nx.open = at + MIM_OPEN; msg = "The Central Neural Nexus collapsed! Omega is cut off from its Alphas for 30 minutes: no healing, no adapting, double damage. Everyone, strike now!"; } else msg = `Anchor ${ai + 1} of the Central Nexus: ${Math.max(0, o.nx.anc[ai])} of ${MO_ANC} left.`; }
+      if (seg) o.dmg[G.me] = (o.dmg[G.me] || 0) + Math.min(100, seg); }
+    else msg = `Our fleet couldn't break a section off ${tgt === "core" ? "Omega" : "its target"}. Send more firepower${M0.adapt ? `, and not ${SH[M0.adapt].n}s: Omega has adapted to them` : ""}.`;
+    o.hits[G.me] = (o.hits[G.me] || 0) + 1; const counted = pts ? mimCon(cur, pts, at) : 0;
+    if (!(await casSet(ref, snap, cur))) throw CAS_RETRY; f.casN = 0; mimLocal(cur);
+    const rep = mkRep({ at, kind: "attack", simLeft: left, title: `Omega: The Convergence · ${{ core: "Omega", swarm: "the swarm", nx: "the Central Nexus" }[tgt] || (/^node/.test(tgt) ? `Neural Node ${+tgt.slice(4) + 1}` : `Assimilation Pylon ${+tgt.slice(3) + 1}`)}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: B.name, mimB: B.id, omegaM: 1, omRise: rise > 1.01 ? Math.round(rise) : undefined,
+      start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
+    f.n = cleanShips(res.aLeft); repairDocks(rep, lossesOf(mine0, f.n), 1);
+    if (seg || pts) { const k = Math.max(1, seg), L = { m: 30000 * k, c: 20000 * k, g: 10000 * k }, ratio = Math.min(1, fCargo(f) / Math.max(1, total(L))); rep.loot = { m: Math.floor(L.m * ratio), c: Math.floor(L.c * ratio), g: Math.floor(L.g * ratio) }; f.loot = rep.loot;
+      const sh = 2 * k; S.shards = (S.shards || 0) + sh; rep.shards = sh; S.wins++; evPts("hunt", k * 50); const M = mimS(); M.m.ncf = (M.m.ncf || 0) + k; M.pts += counted; logReward("Omega: The Convergence", rep.loot, { shards: sh, kind: "battle" }); }
+    note(msg + (counted ? ` +${counted} Hive Suppression.` : ""), seg || pts ? "win" : "warn"); if (rise > 1.01) note(`Omega rose to meet our fleet: ×${fmt(Math.round(rise))} toughness and firepower against a force this size.`, "warn");
+    addReport(rep); try { mapClash(fleetTarget(f), rep); } catch (e) {} moClaimM(); moCineCheck(); home();
+  } catch (e) { if (e === CAS_RETRY && await casAgain(f, moResolve)) return; note(`Lost contact with the Omega fight. Fleet returning.`, "warn"); home(); }
+  finally { G.resolving.delete(f.id); dirty(); progress(); softRender(); } }
+/* participation, not just damage: everyone who attacked at least once is a Participant; 5+ sections or 4+ attacks a Contender; 20+
+   sections or a top-ten damage share a Champion; the season rank (Scout/Warden/Vanguard) adds a bonus Omega Core Shard each */
+function moPart(o, uid) { const d = o.dmg[uid] || 0, h = o.hits[uid] || 0; if (!h) return 0; const top = Object.entries(o.dmg).sort((a, b) => b[1] - a[1]).slice(0, 10).some(([u]) => u === uid); return d >= 20 || top ? 3 : d >= 5 || h >= 4 ? 2 : 1; }
+const MO_PART = ["", "Participant", "Contender", "Champion"];
+function moClaimM() { if (!S || !G.ready) return; const T = now(), { st, o } = moSt(T), out = moOutcome(o), M = mimS(); if (!out) return; const id = "om" + o.s; M.got = M.got || {}; if (M.got[id]) return;
+  const p = moPart(o, G.me), rk = mimTier(st.con[G.me] || 0)[0], rb = { Vanguard: 3, Warden: 2, Scout: 1 }[rk] || 0; M.got[id] = 1; M.moEnd = { s: o.s, out, seen: 0 }; dirty();
+  if (!p && !rb) return; const base = out === "win" ? [0, 3, 6, 10] : out === "part" ? [0, 2, 3, 5] : [0, 1, 1, 2], osh = (p ? base[p] : 0) + (p ? rb : Math.min(1, rb)), sh = (out === "win" ? 30 : out === "part" ? 15 : 8) * Math.max(1, p);
+  M.m.osh = (M.m.osh || 0) + osh; S.shards = (S.shards || 0) + sh; logReward(`Omega: The Convergence · ${out === "win" ? "victory" : out === "part" ? "it escaped, wounded" : "it escaped"}`, null, { shards: sh, kind: "event" });
+  note(`Omega: The Convergence is over (${out === "win" ? "Omega is dead" : out === "part" ? "it escaped in its final phase" : "it escaped"}). As a ${p ? MO_PART[p] : "season " + rk}: ${osh} Omega Core Shard${osh === 1 ? "" : "s"} and ◆${sh}.`, "win"); }
+/* the cinematics: the arrival (once, when you first see the event live), each phase change, and the final transmission at the end. The
+   owner's paintings, slow push-ins, lines that set each beat, a sting. Tap to skip; replayable from the hub. */
+const MO_CINE = { arr: [["art/mimic/hive.webp", "The surviving hives wake at once.", "Every Alpha hive left alive sends its neural energy toward one point in the dark."], ["art/mimic/nexus.webp", "The Central Nexus ignites.", "A dimensional rift opens over the old vault."], ["art/mimic/stalker.webp", "Something reaches through.", "Tendrils first. Then the claws."], ["art/mimic/titan.webp", "OMEGA", "The First Mimic. Every fleet in the galaxy is needed now."]],
+  p2: [["art/mimic/titan.webp", "Phase 2 · Assimilation", "Omega's armour shifts to whatever hurts it. Break the Assimilation Pylons, and bring every kind of ship."]],
+  p3: [["art/mimic/nexus.webp", "Phase 3 · Omega Unbound", "Its core is exposed and it is drawing in everything it has. Six hours, Commander. Then it's gone."]] };
+function moCine(key, done) { const L = MO_CINE[key]; if (!L || document.getElementById("omcine")) return; const w = document.createElement("div"); w.id = "omcine"; document.body.appendChild(w); let i = 0, tm = 0;
+  const show = () => { if (i >= L.length) { w.classList.add("out"); setTimeout(() => { w.remove(); done && done(); }, 600); return; } const [img, t, s] = L[i];
+    w.innerHTML = `<div class="omcimg" style="background-image:url(${img})"></div><div class="omcrift"></div><div class="omctx${t === "OMEGA" ? " big" : ""}"><b>${esc(t)}</b><span>${esc(s)}</span></div><small>Tap to continue</small>`; try { (t === "OMEGA" ? SFX.megaBeam : i ? SFX.charge : SFX.alarm)(); } catch (e) {} i++; clearTimeout(tm); tm = setTimeout(show, t === "OMEGA" ? 5200 : 4200); };
+  w.addEventListener("click", () => { clearTimeout(tm); show(); }); show(); }
+function moFinal() { if (document.getElementById("omcine")) return; const T = now(), { o } = moSt(T), out = moOutcome(o), w = document.createElement("div"); w.id = "omcine"; w.className = "fin"; document.body.appendChild(w);
+  const head = out === "win" ? "Omega is dead." : "Omega withdrew into the dark.";
+  w.innerHTML = `<div class="omcimg" style="background-image:url(art/mimic/nexus.webp)"></div><div class="omctx tx"><small>INTERCEPTED TRANSMISSION</small><b class="q"></b><span class="after">${esc(head)} But as its body failed, a fragment of its consciousness escaped into the ancient Cube network.</span></div><small>Tap to close</small>`;
+  const q = "“I did not create the swarm. I was created to survive what is coming.”", el = w.querySelector(".q"); let n = 0; const tick = () => { if (!document.body.contains(w)) return; el.textContent = q.slice(0, ++n); if (n < q.length) setTimeout(tick, 45); else w.classList.add("done"); };
+  try { SFX.gong(); } catch (e) {} setTimeout(tick, 900); w.addEventListener("click", () => { if (n < q.length) { n = q.length - 1; } else { w.classList.add("out"); setTimeout(() => w.remove(), 600); } }); }
+function moCineCheck() { if (!S || !G.ready || G.cineOn || battle || document.getElementById("omcine")) return; const T = now(); if (!moWin(T) && !(S.mim && S.mim.moEnd && !S.mim.moEnd.seen)) return; const M = mimS(), { o } = moSt(T), k = "c" + o.s; M.cine = M.cine || {};
+  if (M.moEnd && !M.moEnd.seen) { M.moEnd.seen = 1; dirty(); return moFinal(); }
+  if (!M.cine[k + "a"]) { M.cine[k + "a"] = 1; dirty(); return moCine("arr"); }
+  const ph = moPh(o.hp); if (ph >= 2 && !M.cine[k + "2"]) { M.cine[k + "2"] = 1; dirty(); return moCine("p2"); } if (ph >= 3 && !M.cine[k + "3"]) { M.cine[k + "3"] = 1; dirty(); return moCine("p3"); } }
+function moInfo(x, T) { const { st, o } = moSt(T), M0 = moMods(o, T), out = moOutcome(o), fx = mimSupFx(mimSupPct(st)), B = MIM_BOSS[x.id];
+  const bar = (v, mx, col) => `<div class="mimbar"><i style="width:${Math.max(0, v) / mx * 100}%;background:${col}"></i></div>`;
+  if (B.om === 2) return `<div class="mimboss"><b>${o.nx.open ? `Collapsed · Omega cut off for <span data-end="${o.nx.open}">${ftime(o.nx.open - T)}</span>` : `Anchors ${o.nx.anc.filter(v => v > 0).length} of 4 standing`}</b>${o.nx.anc.map((v, i) => `<div class="mimanc"><span>Anchor ${i + 1}</span>${bar(v, MO_ANC, "linear-gradient(90deg,#2fa8ff,#9ff0ff)")}<small>${Math.max(0, v)}/${MO_ANC}</small></div>`).join("")}
+    <p class="note">Break all four anchors and Omega is cut off from its Alphas for 30 minutes: no healing, no adapting, double damage. Then the network reconnects.</p></div>`;
+  if (out) return `<div class="mimboss"><b>${out === "win" ? "Omega is dead." : out === "part" ? "Omega escaped in its final phase." : "Omega escaped."}</b><p class="note">Everyone who took part has claimed their share.</p><button class="btn wide" data-act="moFinal">Replay the final transmission</button></div>`;
+  const tg = moTargets(o), cur = (S.moTgt && tg.some(t => t[0] === S.moTgt)) ? S.moTgt : "core";
+  return `<div class="mimboss om"><b>Phase ${M0.ph} · ${MO_PHN[M0.ph]}</b>${o.shd > 0 ? `<small>Shield ${o.shd}/${o.sh0} (Hive Suppression cut it by ${fx.sh}%)</small>${bar(o.shd, 60, "linear-gradient(90deg,#9ff0ff,#fff)")}` : ""}<small>${o.hp} of ${MO_HP} sections</small>${bar(o.hp, MO_HP, "linear-gradient(90deg,#7a3cff,#5fd8ff,#e8fbff)")}
+    <dl class="kv">${M0.ph === 1 ? `<dt>Neural Nodes</dt><dd>${o.nodes.filter(v => v > 0).length} of 3 feeding its regeneration</dd>` : ""}${M0.ph === 2 ? `<dt>Assimilation Pylons</dt><dd>${o.pyl.filter(v => v > 0).length} of 4 standing${M0.pylUp ? " · it keeps half the damage" : ""}</dd>${M0.adapt ? `<dt>Adapted to</dt><dd style="color:var(--amber)">${SH[M0.adapt].n}s (40% firepower against it)</dd>` : ""}` : ""}
+    ${M0.ph === 3 ? `<dt>Final countdown</dt><dd style="color:var(--red)"><span data-end="${o.p3 + MO_P3}">${ftime(o.p3 + MO_P3 - T)}</span> until it escapes</dd>` : ""}<dt>Central Nexus</dt><dd>${o.nx.open ? `<span style="color:var(--green)">Broken: Omega cut off, double damage</span>` : `${o.nx.anc.filter(v => v > 0).length}/4 anchors`}</dd><dt>Swarm cleared</dt><dd>${o.swarm}</dd>
+    <dt>Ends</dt><dd><span data-end="${T + MO_D1 - mimClock(T).e}">${ftime(MO_D1 - mimClock(T).e)}</span></dd><dt>You</dt><dd>${o.dmg[G.me] || 0} sections · ${o.hits[G.me] || 0} attacks · ${MO_PART[moPart(o, G.me)] || "not yet in the fight"}</dd></dl>
+    <div class="omtg">${tg.map(t => `<button class="btn${t[0] === cur ? " pri" : ""}" data-act="moTgt" data-t="${t[0]}">${esc(t[1])}${t[2] != null ? ` · ${t[2]}` : ""}</button>`).join("")}</div>
+    <button class="btn ghost wide" data-act="moCine" data-k="arr">Replay the arrival</button></div>`; }
+function moHub(T, w) { const e = mimClock(T).e; if (w !== 4 && !(w === 5 && S.mim && S.mim.moEnd)) return ""; const { o } = moSt(T), out = moOutcome(o);
+  if (e < MO_D0) return `<div class="omhub soon"><b>Omega: The Convergence</b><span>The final battle opens in <b data-end="${T + MO_D0 - e}">${ftime(MO_D0 - e)}</b>. Everything the server does before then weakens it.</span></div>`;
+  return `<div class="omhub"><b>Omega: The Convergence${out ? "" : " · LIVE"}</b><span>${out ? (out === "win" ? "Omega is dead." : "Omega escaped.") : `Phase ${moPh(o.hp)} · ${MO_PHN[moPh(o.hp)]} · ${o.hp}/${MO_HP}`}</span><button class="btn pri" data-act="mimGoB" data-id="mo">${out ? "See the result" : "Join the fight"}</button></div>`; }
 const monGone = x => x.mon === "slevi" || x.mon === "ctort" || x.mon === "gspider"; /* v616 the Gravity Spider too */ /* v612 the Star Leviathan and the Crystal Tortoise are retired */
-const PIRATES = PIRATES_ALL.filter(x => !cubeGone(x) && !pirGone(x)).concat(MON_EXTRA, MON_NEW, MON_SP, MIM_HIVES, MIM_BOSSES).filter(x => !monGone(x));
+const PIRATES = PIRATES_ALL.filter(x => !cubeGone(x) && !pirGone(x)).concat(MON_EXTRA, MON_NEW, MON_SP, MIM_HIVES, MIM_BOSSES, MIM_OM).filter(x => !monGone(x));
 const findHit = x => (G.find === "x" && !x.boss && !x.mon) || (G.find === "q" && !!x.boss) || (G.find === "w" && !!x.mon);const PB = Object.fromEntries(PIRATES.map(p => [p.id, p]));
 /* ---------- abandoned pyramids: 1,500 ancient vaults scattered evenly over the map ----------
    Send any fleet to explore one. From Lv.3 up, Hive guardians still haunt the halls and must be beaten first. The vault pays
@@ -5962,7 +6107,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 666;
+const GAME_V = 667;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6989,7 +7134,7 @@ const WPN = {
 };
 /* combat profile per unit: role, weapon, armor (damage reduction), evasion, speed, point-defense rating */
 const CPROF = {
-  malpha1: ["titan", "plasma", .34, 0, 1.4, 4], malpha2: ["titan", "acid", .3, .05, 2.2, 3], malpha3: ["titan", "acid", .4, 0, 1.2, 5], malpha4: ["titan", "plasma", .34, 0, 1.4, 4], mnexus: ["station", "ion", .3, 0, 0, 4], /* v665 */
+  malpha1: ["titan", "plasma", .34, 0, 1.4, 4], malpha2: ["titan", "acid", .3, .05, 2.2, 3], malpha3: ["titan", "acid", .4, 0, 1.2, 5], malpha4: ["titan", "plasma", .34, 0, 1.4, 4], mnexus: ["station", "ion", .3, 0, 0, 4], /* v665 */ momega: ["titan", "plasma", .38, 0, 1.2, 6], momegax: ["titan", "plasma", .2, 0, 1.6, 4], mnode: ["station", "ion", .25, 0, 0, 2], mpylon: ["station", "laser", .3, 0, 0, 3], /* v667 */
   mstalk: ["fighter", "acid", .08, .24, 7, 0], mharv: ["support", "acid", .12, .08, 3, 0], mhunt: ["interceptor", "acid", .05, .3, 9, 0], massim: ["cruiser", "ion", .15, .1, 4, 1], mguard: ["cruiser", "acid", .3, .04, 3, 2], mtitan: ["titan", "plasma", .32, 0, 1.6, 4], mnest: ["station", "acid", .3, 0, 0, 2], /* v663 */
   fighter: ["interceptor", "laser", 0, .34, 9, .1], heavyFighter: ["fighter", "laser", .08, .26, 8, .2],
   hauler: ["support", "laser", .04, .08, 3.2, 0], tender: ["support", "none", .12, .05, 3, 1], heavyCargo: ["support", "laser", .07, .05, 2.6, 0], recycler: ["support", "none", .12, .04, 2.6, 0], ark: ["support", "none", .1, .04, 2.5, 0],
@@ -7368,11 +7513,11 @@ const EV_BASE = Date.UTC(2026, 0, 2, 18), WEEK = 7 * 864e5, EV_DUR = 48 * 3600e3
 /* v575 every server counts its seasons from its own launch (supabase-config.js: launch: "YYYY-MM-DD"), taken back to that Monday 00:00 UTC */
 const SRV0 = (() => { try { const v = (window.UDF_SUPABASE || {}).launch || window.UDF_LAUNCH, m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v || ""); if (m) { const t = Date.UTC(+m[1], +m[2] - 1, +m[3]); return t - ((new Date(t).getUTCDay() + 6) % 7) * 864e5; } } catch (e) {} return Date.UTC(2026, 10, 9); })(), PRO = 2; /* v575 seasons 1 and 2 are the prologue */
 const seaCyc = si => si < PRO ? -1 : (si - PRO) % 10, seaCos = si => si < PRO ? 10 + Math.max(0, si) : seaCyc(si); /* the ten-season year; the cosmetics set of a season (10, 11: the prologue) */
-const ROT0 = SRV0 + 9 * 864e5 + 18 * 3600e3, ROT = ["vae", "dv", "aex", "conv", "khz", "med"], ROTS0 = ROT0 + 3 * 864e5, ROTS = ["ovl", "dev", "war", "brd", "tyr", "wym", "col"], ROTS_X = ["lev", "krk"]; /* v569 the finale-only Saturday bosses */
+const ROT0 = SRV0 + 9 * 864e5 + 18 * 3600e3, ROT = ["vae", "dv", "aex", "conv", "khz", "med"], ROTS0 = ROT0 + 3 * 864e5, ROTS = ["ovl", "dev", "war", "brd", "tyr", "wym", "col"], ROTS_X = ["lev"]; /* v569 the finale-only Saturday bosses */
 const FIN_EV = {"lev": {"ch": 1, "typ": "wb", "n": "The Leviathan Rises", "chap": "The Wall Breaks", "ic": "≋", "col": "#ff7a2a", "set": 9000000.0, "d": "The Warden of the Architects' outer wall has turned inward. Watch it circle the galaxy and break through the wall, then bring it down before the hunt ends, or the first seal cracks.", "st": [[0.0, "burn", "The Rim Burns", "Fire runs along the Rim as the Architects' outer wall begins to fail."], [1800000.0, "hunt", "The Hunt", "The Leviathan circles the whole galaxy along the wall, setting the Rim alight behind it."], [5400000.0, "breach", "The Breach", "It turns inward and smashes through the Architects' wall."], [7200000.0, "tide", "The Fire Tide", "Its breath sweeps across the outer layer in a ring of fire."], [9000000.0, "fight", "The Fight", "It holds at the breach. Every fleet can strike it until the hunt ends."]]}, "dv": {"ch": 2, "typ": "dv", "n": "Cube Devastation", "chap": "The Count Speeds Up", "ic": "Ω", "col": "#5dff6a", "set": 0.0}, "conv": {"ch": 3, "typ": "conv", "n": "The Elemental Convergence", "chap": "The Five Seals", "ic": "✦", "col": "#c8a8ff", "set": 0.0}, "brd": {"ch": 4, "typ": "wb", "n": "The Swarm Ascendant", "chap": "The Cult", "ic": "☣", "col": "#a8ff3a", "set": 9000000.0, "d": "Queen Vael'Khor's Hive is breaking a seal on purpose. Every nest in the galaxy ignites, the swarms fuse into a living Starhive, and the Brood Matriarch is born from it. Kill her before the hunt ends, or the fourth seal cracks.", "st": [[0.0, "ignite", "Hive Nests Ignite", "Every Hive nest in the galaxy bursts into green fire at the same moment."], [1800000.0, "migrate", "The Migration", "The swarms leave their nests and stream across the galaxy to one point."], [5400000.0, "fuse", "The Fusion", "The swarms fuse into one vast, living Starhive."], [7800000.0, "rise", "The Brood Rises", "The Brood Matriarch is born from the Starhive's heart."], [9000000.0, "fight", "The Fight", "The Matriarch is loose. Every fleet can strike her until the hunt ends."]]}, "krk": {"ch": 5, "typ": "wb", "n": "From the Deep", "chap": "The Deep Seal", "ic": "✵", "col": "#c46aff", "set": 9000000.0, "d": "The Warden of the deep layers is waking. The deep goes dark, eight giant arms break up through it all around the galaxy, and the Kraken rises. Bring it down before the hunt ends, or the fifth seal cracks.", "st": [[0.0, "dark", "The Deep Goes Dark", "The lights of the deep layers go out, one sector at a time."], [1800000.0, "arms", "The Arms Rise", "Eight giant arms break up through the deep, all around the galaxy."], [4800000.0, "drag", "The Drag", "The arms curl and drag the whole layer round with them."], [7200000.0, "ink", "Ink Storm", "A storm of void ink and lightning floods the deep."], [8400000.0, "ascend", "The Kraken Ascends", "The arms draw together and the Kraken's body rises where they meet."], [9000000.0, "fight", "The Fight", "Sever its arms. Every fleet can strike it until the hunt ends."]]}, "wym": {"ch": 6, "typ": "wb", "n": "Eclipse", "chap": "The Door", "ic": "❂", "col": "#ffa040", "set": 9000000.0, "d": "The Warden of the door itself is waking. The black hole's light dies and the galaxy darkens, the Wyrm's segments break loose to hunt, then it coils round the door again. Bring it down before the hunt ends, or the sixth seal cracks.", "st": [[0.0, "dies", "The Light Dies", "The black hole's light fades and the whole galaxy darkens."], [1800000.0, "eclipse", "Eclipse", "The light is swallowed completely."], [4200000.0, "hunt", "The Segments Hunt", "The Wyrm's segments break loose and spiral out across the galaxy."], [7200000.0, "ret", "The Return", "The segments come home and the Wyrm rebuilds itself round the door."], [9000000.0, "fight", "The Fight", "The Wyrm is whole. Every fleet can strike it until the hunt ends."]]}, "aex": {"ch": 7, "typ": "sb", "n": "Aeon Fracture", "chap": "Echoes of Every Eclipse", "ic": "⬡", "col": "#7ac8ff", "set": 9000000.0, "d": "The Warden of time is coming. Time stutters past the Rim, crystal shock rings freeze space and show the Eclipses of older ages, then everything runs backwards as Aexion tears through. Defeat it before its hunt ends, or the seventh seal cracks.", "st": [[0.0, "stutter", "Time Stutters", "Light past the Rim freezes and starts again, over and over."], [2400000.0, "shock", "Crystal Shock", "Rings of crystal sweep out and freeze space solid behind them."], [5400000.0, "frozen", "The Frozen Galaxy", "Space hangs frozen in crystal, and older Eclipses glimmer inside it."], [7800000.0, "reverse", "Time Reverses", "Everything runs backwards, into the point where Aexion will break through."], [9000000.0, "fight", "Aexion Arrives", "Aexion tears through. Every fleet can strike it until its hunt ends."]]}, "vae": {"ch": 8, "typ": "sb", "n": "The Ruin Tide", "chap": "What Failure Looks Like", "ic": "◈", "col": "#c890ff", "set": 9000000.0, "d": "The ruins of every empire that lost its Eclipse are coming. A violet nebula rolls in like a sea, golden ruins drift on it and lock into a floating cathedral, and Vaelthar descends. Defeat it before its hunt ends, or the eighth seal cracks.", "st": [[0.0, "tide", "The Nebula Tide", "A violet nebula rolls in from beyond the Rim like a sea."], [2400000.0, "drift", "The Ruins Drift In", "Golden ruins of fallen empires drift in on the tide."], [6000000.0, "cathedral", "The Cathedral Forms", "The ruins lock together into a floating cathedral."], [8400000.0, "wheel", "The Wheel Turns", "The celestial wheel turns above it."], [9000000.0, "fight", "Vaelthar Descends", "Vaelthar arrives. Every fleet can strike it until its hunt ends."]]}, "khz": {"ch": 9, "typ": "sb", "n": "Trial of the Gate", "chap": "The Last Gate", "ic": "☥", "col": "#ffb340", "set": 9000000.0, "d": "The last gate before the door. Seven rings of glyphs light up round the galaxy, the seven seals break one by one, and the gate opens for Khezaroth. Defeat it before its hunt ends, or the ninth seal cracks.", "st": [[0.0, "wake", "The Glyphs Wake", "Seven rings of glowing glyphs light up round the galaxy."], [2400000.0, "seals", "Seven Seals Break", "The rings shatter one after another."], [6600000.0, "gate", "The Gate Opens", "The last gate opens past the Rim, and the sands of the galaxy pour toward it."], [9000000.0, "fight", "Khezaroth Arrives", "Khezaroth comes through the gate. Every fleet can strike it until its hunt ends."]]}, "med": {"ch": 10, "typ": "sb", "n": "The Gaze", "chap": "The Gaze", "ic": "✺", "col": "#ff5a4a", "set": 9000000.0, "d": "The most desperate Warden would freeze the whole galaxy to keep the Unmade asleep. Her eyes open past the Rim and her gaze sweeps the galaxy, turning worlds to stone. Defeat Medusara before her hunt ends, or the tenth seal cracks.", "st": [[0.0, "eyes", "Her Eyes Open", "Two burning eyes open past the Rim."], [1800000.0, "sweep", "The Gaze Sweeps", "A red gaze sweeps across the galaxy, and every world it touches turns to stone."], [6600000.0, "stone", "The Stone Galaxy", "Half the galaxy stands petrified, cracks glowing red."], [9000000.0, "fight", "Medusara Arrives", "Medusara comes. Every fleet can strike her until her hunt ends."]]}}; /* v571/v572 The Ten Seals: the season finales' great events */ /* v467 the Wednesday great events; v469 the Saturday world bosses between them */
 /* v561 the calendar follows the seasons: rotation week w is week (w + 1) of the season calendar (season 1 began on Monday Nov 9; its
    first Wednesday had no event). Week 4 of every season is its finale. */
-const SEA_FIN = [["khz", "lev"], ["dv", "ovl"], ["conv", "war"], ["aex", "brd"], ["med", "krk"], ["vae", "wym"], ["aex", "tyr"], ["vae", "col"], ["khz", "war"], ["med", "dev"]], ROT_SEA0 = SRV0;
+const SEA_FIN = [["khz", "lev"], ["dv", "ovl"], ["conv", "war"], ["aex", "brd"], ["med", null], ["vae", "wym"], ["aex", "tyr"], ["vae", "col"], ["khz", "war"], ["med", "dev"]], ROT_SEA0 = SRV0;
 const SEA_PLAN = {}; function seaPlan(si, sat) { const key = si + (sat ? "s" : "w"); if (SEA_PLAN[key]) return SEA_PLAN[key];
   if (si < PRO) return (SEA_PLAN[key] = sat ? (si > 0 ? ["dev", "ovl", "war", "ovl"] : ["ovl", "ovl", "dev", "war"]) : [null, null, null, null]); /* v575 the prologue: no super bosses yet, the usual Saturday bosses */
   const NF = SEA_FIN.length, x = seaCyc(si), L = sat ? ROTS : ROT, fin = SEA_FIN[x][sat ? 1 : 0], pf = SEA_FIN[(x + NF - 1) % NF][sat ? 1 : 0], pool = L.filter(k => k !== fin && k !== pf), o = ((si * 3) % pool.length + pool.length) % pool.length;
@@ -7468,7 +7613,7 @@ function advance(T) {
     produce(Math.max(e.at, S.t)); e.run(); any = true;
   }
   produce(T);
-  for (const f of S.fleets) if (f.phase === "resolving" && !G.resolving.has(f.id) && G.ready) { if (f.wb) wbResolve(f); else if (f.om) omResolve(f); else if (f.sb) sbResolve(f); else if (f.xid && MIM_BOSS[f.xid]) mimBossResolve(f); else if (f.pid === "nexus" && !f.assault) resolveNexus(f); else resolveAssault(f); }
+  for (const f of S.fleets) if (f.phase === "resolving" && !G.resolving.has(f.id) && G.ready) { if (f.wb) wbResolve(f); else if (f.om) omResolve(f); else if (f.sb) sbResolve(f); else if (f.xid && MIM_BOSS[f.xid]) (MIM_BOSS[f.xid].om ? moResolve(f) : mimBossResolve(f)); else if (f.pid === "nexus" && !f.assault) resolveNexus(f); else resolveAssault(f); }
   if (any) { changed = true; progress(); }
   const c = changed; changed = false; return c || any;
 }
@@ -7665,7 +7810,7 @@ const isWbU = k => typeof k === "string" && k.startsWith("wb") && !!AL[k];
 const wbCyc = T => Math.floor((T - WB_BASE) / WEEK), wbEnd = c => WB_BASE + (c + 1) * WEEK;
 const WB2_BASE = WB_BASE + 2 * 864e5, wbG2 = k => !!WB[k], wbG3 = k => !!(WB[k] && WB[k].g === 3), wbCyc2 = T => Math.floor((T - WB2_BASE) / WEEK), wbEnd2 = c => WB2_BASE + (c + 1) * WEEK;
 const wbCycOf = (k, T) => wbG2(k) ? wbCyc2(T) : wbCyc(T), wbEndOf = (k, c) => wbG2(k) ? wbEnd2(c) : wbEnd(c), wbStartOf = (k, T) => wbG2(k) ? WB2_BASE + wbCyc2(T) * WEEK : WB_BASE + wbCyc(T) * WEEK, stCyc = (st, k) => wbG2(k) ? st.cyc2 : st.cyc;
-const wbKeys = g => Object.keys(WB).filter(k => (WB[k].g || 1) === g), wbMain = g => g === 3 ? ["eic", "efi", "eli", "est", "ena", "epx"] : g === 2 ? ["brd", "tyr", "wym", "col", "lev", "krk"] : ["ovl", "dev", "war"];
+const wbKeys = g => Object.keys(WB).filter(k => (WB[k].g || 1) === g), wbMain = g => g === 3 ? ["eic", "efi", "eli", "est", "ena", "epx"] : g === 2 ? ["brd", "tyr", "wym", "col", "lev"] : ["ovl", "dev", "war"];
 const wymOpen = T => ((T - WB2_BASE) % 3600e3 + 3600e3) % 3600e3 < 20 * 60e3, wymNext = T => { const ph = ((T - WB2_BASE) % 3600e3 + 3600e3) % 3600e3; return ph < 20 * 60e3 ? T - ph + 20 * 60e3 : T - ph + 3600e3; };
 const wbVault = T => 1 + 1.5 * clamp((T - wbStartOf("tyr", T)) / (48 * 3600e3), 0, 1);
 /* how much tougher a boss is right now: the Overlord's conduits, the Matriarch's swarm, the Wyrm's hidden segments, the Colossus's fragments */
@@ -8493,7 +8638,7 @@ const FIN_SAY = {"lev": {"burn": "Commander, the Rim is burning. Every sensor al
    state; the Omega Cube's. Otherwise the seal cracks when the hunt ends. ---------- */
 const finR = seed => { let a = (seed | 0) + 0x9E3779B9; return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
 const fsm = u => u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u), fseg = (e, a, b) => (e - a) / (b - a), FIN_YEAR = 40 * WEEK;
-const finKeys = () => Object.keys(FIN_EV).filter(k => FIN_EV[k].typ !== "omen" && FIN_EV[k].typ !== "eclipse").sort((a, b) => FIN_EV[a].ch - FIN_EV[b].ch);
+const finKeys = () => Object.keys(FIN_EV).filter(k => k !== "krk" && FIN_EV[k].typ !== "omen" && FIN_EV[k].typ !== "eclipse").sort((a, b) => FIN_EV[a].ch - FIN_EV[b].ch);
 /* the event's window in year n: [origin, fight start, end] */
 function finWinOf(k, n) { const D = FIN_EV[k]; if (D.typ === "omen") { const wed = ROT0 + (4 * D.si + 2) * WEEK; return [wed, wed + D.set, wed + D.set + 60e3]; } if (D.typ === "eclipse") { const sun = ROTS0 + (4 * (PRO + 9 + 10 * n) + 2) * WEEK + 864e5; return [sun, sun + D.set, sun + D.set + 60e3]; } /* v579 */ /* v575 once, in the prologue */ const w = 4 * (PRO + D.ch - 1 + 10 * n) + 2;
   if (D.typ === "sb") { const wed = ROT0 + w * WEEK; return [wed - D.set, wed, sbEnd(k, wed)]; }
@@ -10679,7 +10824,7 @@ function evRankHTML(k) { const D = EVB[k], rows = evBoard(k), mi = rows.findInde
 
 /* ---------- v542 the Void Pass ---------- */
 const VP_BASE = SRV0, VP_LEN = 28 * 864e5, VP_TIERS = 40, VP_XP = 2000, VP_PREM = 500;
-const VP_SEASONS = [["Season of the Leviathan", "#ff8a4a", "blacksun", "Leviathan Slayer"], ["Season of the Cube", "#5dff6a", "voidbloom", "Cubebreaker"], ["Season of the Pentarch", "#e2d4ff", "magnetar", "Sealbreaker"], ["Season of the Starhive", "#ffb02a", "phoenix", "Hivebane"], ["Season of the Kraken", "#c890ff", "kraken", "Kraken Hunter"], ["Season of the Wyrm", "#ffa040", "dragon", "Wyrmrider"], ["Season of the Aeon", "#7ac8ff", "aeon", "Aeonbreaker"], ["Season of the Ruin", "#c890ff", "ruin", "Ruinwalker"], ["Season of the Sphinx", "#ffb340", "sphinx", "Gatekeeper"], ["Season of the Petrified Star", "#ff5a4a", "petrified", "Stoneheart"], ["Season of Omens", "#8fb0e0", "omen", "Omen Seeker"], ["Season of the Countdown", "#ffcf6a", "countdown", "Countdown Keeper"]]; /* v575 10, 11: the prologue */ const SEAN = VP_SEASONS.length; /* v568 ten seasons */
+const VP_SEASONS = [["Season of the Leviathan", "#ff8a4a", "blacksun", "Leviathan Slayer"], ["Season of the Cube", "#5dff6a", "voidbloom", "Cubebreaker"], ["Season of the Pentarch", "#e2d4ff", "magnetar", "Sealbreaker"], ["Season of the Starhive", "#ffb02a", "phoenix", "Hivebane"], ["Season of the Mimic", "#5fd8ff", "kraken", "Swarmbreaker"], ["Season of the Wyrm", "#ffa040", "dragon", "Wyrmrider"], ["Season of the Aeon", "#7ac8ff", "aeon", "Aeonbreaker"], ["Season of the Ruin", "#c890ff", "ruin", "Ruinwalker"], ["Season of the Sphinx", "#ffb340", "sphinx", "Gatekeeper"], ["Season of the Petrified Star", "#ff5a4a", "petrified", "Stoneheart"], ["Season of Omens", "#8fb0e0", "omen", "Omen Seeker"], ["Season of the Countdown", "#ffcf6a", "countdown", "Countdown Keeper"]]; /* v575 10, 11: the prologue */ const SEAN = VP_SEASONS.length; /* v568 ten seasons */
 const VP_LOOKS = ["vpa", "vpb", "vpc", "vpd", "vpe", "vpf"], vpLookOf = si => VP_LOOKS[((si % 6) + 6) % 6]; /* v546 */
 const vpSeason = (T = now()) => Math.floor((T - VP_BASE) / VP_LEN), vpEnd = (i = vpSeason()) => VP_BASE + (i + 1) * VP_LEN, vpInfo = (i = vpSeason()) => VP_SEASONS[seaCos(i)];
 const VP_DAILY = [["built", 2, "Finish 2 constructions"], ["researched", 1, "Finish a research"], ["shipsBuilt", 20, "Build 20 ships or defences"], ["battlesWon", 3, "Win 3 battles"], ["monKills", 1, "Slay a space monster"], ["hiveWins", 2, "Beat 2 Hive garrisons"], ["fleetsSent", 4, "Send 4 fleets"], ["caches", 2, "Haul in 2 salvage pods"], ["trades", 1, "Make a trade at the Supply Depot"], ["wheelSpins", 1, "Spin the Holo Glyph Wheel"], ["spdMin", 30, "Use 30 minutes of speed-ups"]];
@@ -10696,7 +10841,7 @@ function vpReward(i, prem, si = vpSeason()) { const t = i + 1, sx = seaCos(si); 
   if (COS_PT[t]) r.cos = COS_PT[t] + sx; return r; }
 
 /* ---------- v553 cosmetics and the Wardrobe ---------- */
-const COS_SEA = ["Leviathan", "Cube", "Pentarch", "Starhive", "Kraken", "Wyrm", "Aeon", "Ruin", "Sphinx", "Petrified Star", "Omens", "Countdown"], COS_C2 = ["#ffd36b", "#b8ffcf", "#9fb4ff", "#ff6a3a", "#ff6ad5", "#ff3b2a", "#e8f6ff", "#ffd36b", "#c890ff", "#ffb0a0", "#dfe9ff", "#ffe9b0"];
+const COS_SEA = ["Leviathan", "Cube", "Pentarch", "Starhive", "Mimic", "Wyrm", "Aeon", "Ruin", "Sphinx", "Petrified Star", "Omens", "Countdown"], COS_C2 = ["#ffd36b", "#b8ffcf", "#9fb4ff", "#ff6a3a", "#ff6ad5", "#ff3b2a", "#e8f6ff", "#ffd36b", "#c890ff", "#ffb0a0", "#dfe9ff", "#ffe9b0"];
 const COS_K = { banner: ["Banner", "⚑", "b"], frame: ["Portrait frame", "◎", "f"], trail: ["Warp trail", "☄", "t"], aura: ["Homeworld aura", "◍", "a"], laser: ["Laser colour", "⌁", "l"], adv: ["Advisor outfit", "✧", "v"], wheel: ["Wheel theme", "☸", "w"], clip: ["Clip frame", "▣", "c"], skinx: ["Animated skin", "🪐", "x"] };
 const COS_ORDER = ["banner", "frame", "trail", "aura", "laser", "adv", "wheel", "clip", "skinx"];
 const COS_PT = { 1: "banner", 5: "frame", 10: "trail", 12: "wheel", 15: "adv", 20: "laser", 22: "clip", 30: "aura" }; /* premium tier -> kind (tier 40: skinx) */
@@ -11748,7 +11893,7 @@ const bBig = k => /^wb[A-Z]/.test(k) || k === "cube" || k === "worldbreaker"; /*
 function bVsK(b, q) { if (!b || !q || bBeast(q.k)) return 1; const C = b.vsK || (b.vsK = {}); if (C[q.side] != null) return C[q.side];
   const foes = (b.Q || []).filter(x => x && x.side !== q.side); return (C[q.side] = foes.some(x => bBig(x.k)) ? 1 /* v659: the boss side is drawn bigger instead */ : foes.some(x => (MON[x.k] || BOSSK[x.k]) && !bBig(x.k) && x.k !== "sphere" && x.k !== "cdrone") ? 1.6 : 1); }
 const bLen = k => TITAN_LEN[k] ? TITAN_LEN[k] : k === "worldbreaker" ? 4.3 /* v531 the biggest thing on the field */ : k === "eclipse" ? 2.6 /* v531 the Discovery Class well above the Reaper (1.72); v533 kept */ : Math.pow(SIDE_LEN[k] || .5, 1.15) * (BOSSK[k] || 1);
-Object.assign(BOSSK, { mstalk: 1.55, mharv: 1.6, mhunt: 1.55, massim: 1.7, mguard: 1.8, mtitan: 2.5, mnest: 2.1, malpha1: 3.2, malpha2: 3.2, malpha3: 3.2, malpha4: 3.2, mnexus: 2.8 }); Object.assign(BOSS_GLOW, { malpha1: "95,216,255", malpha2: "180,140,255", malpha3: "228,244,255", malpha4: "95,255,200", mnexus: "127,240,255", mstalk: "95,216,255", mharv: "95,216,255", mhunt: "95,216,255", massim: "95,216,255", mguard: "95,216,255", mtitan: "150,120,255", mnest: "95,216,255" }); /* v663 */
+Object.assign(BOSSK, { mstalk: 1.55, mharv: 1.6, mhunt: 1.55, massim: 1.7, mguard: 1.8, mtitan: 2.5, mnest: 2.1, malpha1: 3.2, malpha2: 3.2, malpha3: 3.2, malpha4: 3.2, mnexus: 2.8, momega: 4.2, momegax: 4.2, mnode: 2.2, mpylon: 2.4 }); Object.assign(BOSS_GLOW, { momega: "191,246,255", momegax: "232,251,255", mnode: "127,240,255", mpylon: "127,240,255", malpha1: "95,216,255", malpha2: "180,140,255", malpha3: "228,244,255", malpha4: "95,255,200", mnexus: "127,240,255", mstalk: "95,216,255", mharv: "95,216,255", mhunt: "95,216,255", massim: "95,216,255", mguard: "95,216,255", mtitan: "150,120,255", mnest: "95,216,255" }); /* v663 */
 for (const k in MON) BOSSK[k] = (BOSSK[k] || 1) * 1.35; BOSSK.snest = (BOSSK.snest || 1) * 1.35; /* v528 space monsters loom larger in battle */
 const SIDE_LEN = { armageddon: 2.2, sovereign: 2.2, harbinger: 2.1, wbOvl: 1.8, wbDev: 1.8, wbWar: 1.8, wbCon: 1.4, wbBrd: 1.8, wbTyr: 1.8, wbWym: 1.8, wbCol: 1.8, spyProbe: .3, cube: 1.2, sphere: .8, cdrone: .4, tender: .6, guardian: .82, escortCarrier: .9, supercarrier: 1.42, eclipse: 1.75, fighter: .38, heavyFighter: .46, hauler: .5, heavyCargo: .7, recycler: .72, lancer: .55, ark: .6, corvette: .66, battleship: .96, bastion: 1.04, bomber: .78, destroyer: 1.14, dreadnought: 1.6, worldbreaker: 1.5, drone: .38, spitter: .42, brute: .6, lord: .8, leviathan: 1.2, swhale: 1.5, slevi: 1.5, ssquid: 1.05, vmanta: 1.3, swasp: .9, snest: 1.2, ctort: 1.4, gspider: 1.3, smoth: 1.2, cram: 1.5, kegg: 1.1, gwhale: 1.5, reat: 1.2, cserp: 1.3, sent: 1.4 };
 /* v260 battle sprite mip levels: a ship drawn small used to be squeezed out of its full-size render every frame. That resample scales with the
@@ -14781,7 +14926,7 @@ function draw3D(t) {
         const dx = ca * RX, dz = Math.cos(2 * a) * RZ, ddx = -sa * RX, ddz = -2 * Math.sin(2 * a) * RZ, curv = (dx * ddz - dz * ddx) / Math.pow(dx * dx + dz * dz + 1e-3, 1.5);
         W.monU.value = t * .001; o.body.position.set(sa * RX, Math.sin(t * .0007 + it.a0) * .5, sa * ca * RZ); o.body.rotation.set(clamp(curv * 1.6, -.4, .4), Math.atan2(-dz, dx), 0);
         if (it.mon === "sent") { o.body.position.set(0, Math.sin(t * .0003 + it.a0) * .15, 0); o.body.rotation.set(0, it.a0, 0); }
-        if (MIM_BOSS[it.id]) { o.body.position.set(0, Math.sin(t * .0003 + it.a0) * .25, 0); o.body.rotation.set(0, it.mon === "nexus" ? 0 : it.a0 + Math.sin(t * .0001 + it.a0) * .5, 0); o.body.scale.setScalar((.6 + it.lvl * .0082) * (it.mon === "nexus" ? 1.5 : 1.8)); } /* v665 the Alphas and Nexuses loom */
+        if (MIM_BOSS[it.id]) { o.body.position.set(0, Math.sin(t * .0003 + it.a0) * .25, 0); o.body.rotation.set(0, it.mon === "nexus" ? 0 : it.a0 + Math.sin(t * .0001 + it.a0) * .5, 0); o.body.scale.setScalar((.6 + it.lvl * .0082) * (it.om === 1 ? 4.2 : it.om === 2 ? 2.6 : it.mon === "nexus" ? 1.5 : 1.8)); } /* v665 the Alphas and Nexuses loom */
         if (it.mon === "mimic") { o.body.position.set(0, Math.sin(t * .0004 + it.a0) * .2, 0); o.body.rotation.set(0, t * .00003 + it.a0, 0); o.body.scale.setScalar((.6 + it.lvl * .0082) * (.5 + .17 * mimStage(it, T))); } /* v663 a hive stays put and grows with its stage */ /* v529 the Sentinel does not move */
         if (it.mon === "swasp") { o.body.position.set(0, Math.sin(t * .0005 + it.a0) * .3, 0); o.body.rotation.set(0, t * .00008 + it.a0, 0); } // v515 a Starhive hangs where it is; its swarm does the moving
         if (it.mon === "ssquid") { const p = 1 + .07 * Math.sin(t * .006 + it.a0); o.body.scale.set(o.body.scale.y * p, o.body.scale.y, o.body.scale.y / Math.sqrt(p)); }
@@ -16351,7 +16496,7 @@ function taperTube(pts, f, seg, rad) {
 }
 function buildMonster(k, part) {
   if (k === "mimic") return buildMimic("mnest"); /* v663 */
-  if (/^alpha\d$/.test(k)) return buildMimic("malpha" + k.slice(5)); if (k === "nexus") return buildMimic("mnexus"); /* v665 */
+  if (/^alpha\d$/.test(k)) return buildMimic("malpha" + k.slice(5)); if (k === "nexus") return buildMimic("mnexus"); if (k === "omega") return buildMimic("momega"); /* v665, v667 */
   const C = monMats(), g = new TH.Group(); g.userData.eng = [];
   /* v515 a flat part with rounded bevelled edges, outlined by quadratic curves (moveTo, then control/end pairs) in its own x/y plane */
   const slab = (pts, th) => { const sh = new TH.Shape(); sh.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i += 2) sh.quadraticCurveTo(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]); sh.closePath();
@@ -16667,7 +16812,8 @@ const MIM_D = { mstalk: { s: 1, legs: 4, mane: 26, hump: .5, len: 1, gape: .55, 
    crystal anchors at its foot (the anchors fleets break). */
 Object.assign(MIM_D, { malpha1: { s: 1.35, legs: 4, mane: 46, hump: .9, len: 1.15, gape: .8, tail: 14, alpha: 1 }, malpha2: { s: 1.3, legs: 2, mane: 36, hump: .3, len: 1.45, gape: .9, tail: 24, alpha: 1 },
   malpha3: { s: 1.4, legs: 4, mane: 30, hump: .5, len: 1.0, gape: .6, tail: 10, armour: 1, alpha: 1 }, malpha4: { s: 1.35, legs: 4, mane: 40, hump: .8, len: 1.1, gape: .7, tail: 12, brood: 1, alpha: 1 } });
-const MIM_TINT = { malpha2: 0x9b6bff, malpha3: 0xd8f0ff, malpha4: 0x3fffc0 };
+const MIM_TINT = { malpha2: 0x9b6bff, malpha3: 0xd8f0ff, malpha4: 0x3fffc0, momegax: 0xd8f8ff };
+Object.assign(MIM_D, { momega: { s: 2.0, legs: 4, mane: 70, hump: 1.2, len: 1.3, gape: 1.0, tail: 30, alpha: 1, omega: 1 }, momegax: { s: 2.0, legs: 4, mane: 70, hump: 1.2, len: 1.3, gape: 1.1, tail: 30, alpha: 1, omega: 2 } }); /* v667 */
 function mimMats(t) { const C = t ? (MIMM[t] || (MIMM[t] = {})) : MIMM; if (C.cable) return C;
   const tex = (w, h, draw) => { const t = texCanvas(w, h, draw); t.wrapS = t.wrapT = TH.RepeatWrapping; return t; };
   /* a cable: u runs along it (one segment per unit), v round it. Each segment is a ribbed metal sleeve with a dark seam at both ends */
@@ -16747,6 +16893,14 @@ function buildMimic(cls) {
     for (let i = 0; i < 9; i++) { const a = 2.1 + i * .5 + r() * .3, R = 1.9 + r() * .7; const e = orb(.3 + r() * .14, C.egg, V(Math.cos(a) * R, -1.15 + r() * .15, Math.sin(a) * R), 14); e.scale.y = 1.25; }
     bundle([V(0, -1.4, 0), V(0, -.6, 0), V(0, .2, 0)], 10, .35, { r0: .07, r1: .04 });
     g.userData.mimR = 3.6; return g; }
+  if (cls === "mnode" || cls === "mpylon") { /* v667 Omega's Neural Nodes (a caged crystal of neural light) and Assimilation Pylons (a hooked black spire with a burning tip) */
+    if (cls === "mnode") { const cp = V(0, .9, 0), c = orb(.75, C.core, cp, 20); c.scale.set(1, 1.9, 1); orb(1.5, C.glowS, cp, 14);
+      for (let i = 0; i < 6; i++) { const a = i / 6 * TAU; tube([V(Math.cos(a) * 1.4, -1.3, Math.sin(a) * 1.4), V(Math.cos(a) * 1.15, .9, Math.sin(a) * 1.15), V(Math.cos(a) * .3, 2.8, Math.sin(a) * .3)], .14, .04, i % 2 ? C.cable : C.cableL, 0, 1); }
+      for (const [rr, y] of [[1.3, .2], [1.0, 1.7]]) { const t = add(new TH.Mesh(new TH.TorusGeometry(rr, .025, 6, 48), C.holo), 0, y, 0); t.rotation.x = Math.PI / 2; } }
+    else { const b = V(0, -1.4, 0), mid = V(.7, 1.2, 0), tip = V(-.1, 3.6, 0); tube([b, V(.4, -.2, 0), mid, V(.3, 2.6, 0), tip], .55, .04, C.shell, 6, .8); bundle([b, mid, tip], 5, .5, { t1: .8, r0: .08, r1: .05 });
+      orb(.3, C.glow, tip, 12); orb(.75, C.glowS, tip, 12); const t = add(new TH.Mesh(new TH.TorusGeometry(1.1, .03, 6, 48), C.holo), .5, 1.0, 0); t.rotation.x = Math.PI / 2; }
+    for (let i = 0; i < 9; i++) { const a = i / 9 * TAU + r() * .3, R = 1.8 + r() * 1.2; tube([V(Math.cos(a) * .4, -1.35, Math.sin(a) * .4), V(Math.cos(a) * 1.4, -1.5, Math.sin(a) * 1.4), V(Math.cos(a + .25) * R, -1.6, Math.sin(a + .25) * R)], .16, .05); }
+    return g; }
   if (/^e_/.test(cls)) { /* v666 a Mimic Echo: the silhouette of one of our ship classes, its plating gone black and veined with neural light,
        cables wound round the hull and trailing from its engines like a corrupted drive plume */
     const base = cls.slice(2), ship = buildShip(base, shipMats("#3fc8ff")); g.add(ship); g.userData.eng = (ship.userData.eng || []).slice();
@@ -16754,7 +16908,7 @@ function buildMimic(cls) {
     const b = new TH.Box3().setFromObject(ship), Lx = b.max.x - b.min.x, R = Math.max(b.max.y - b.min.y, b.max.z - b.min.z) * .5, cy = (b.max.y + b.min.y) / 2, cz = (b.max.z + b.min.z) / 2, rr = Math.max(.03, R * .07);
     for (let i = 0; i < 10; i++) { const a0 = r() * TAU, tw = (r() - .5) * 4, pts = [];
       for (let j = 0; j <= 6; j++) { const t = j / 6, x = b.max.x - Lx * (.1 + r() * .15) - t * Lx * .85, a = a0 + tw * t, rad = R * (.75 + r() * .2); pts.push(V(x, cy + Math.cos(a) * rad, cz + Math.sin(a) * rad)); }
-      const e = pts[pts.length - 1]; for (let j = 1; j <= 3; j++) pts.push(V(e.x - Lx * .22 * j, e.y + (r() - .5) * R * j * .5, e.z + (r() - .5) * R * j * .7));
+      const e = pts[pts.length - 1]; for (let j = 1; j <= 3; j++) pts.push(V(e.x - Lx * .13 * j, e.y + (r() - .5) * R * j * .5, e.z + (r() - .5) * R * j * .7));
       tube(pts, rr, rr * .3, i % 4 === 1 ? C.cableL : C.cable, 0, 1.2); }
     for (let i = 0; i < 6; i++) { const x = b.min.x + Lx * (.2 + r() * .6), z = cz + (r() - .5) * R; tube([V(x, b.min.y + R * .1, z), V(x - Lx * .05, b.min.y - R * .6, z * 1.1), V(x - Lx * .12, b.min.y - R * 1.1, z * 1.2 + (r() - .5) * R)], rr * .8, rr * .2, C.cable, 0, 1.3); }
     for (let i = 0; i < 3; i++) { const p = V(b.min.x + Lx * (.3 + i * .2), cy + R * .55, cz + (r() - .5) * R * .4); orb(R * .16, C.core, p, 12); orb(R * .32, C.glowS, p, 10); }
@@ -16800,6 +16954,11 @@ function buildMimic(cls) {
     if (D.plates) /* the Assimilator: torn starship plating fused into its body, running lights still lit, and a wrecked hull in its tendrils */
       for (let i = 0; i < 7; i++) { const b = add(new TH.Mesh(new TH.BoxGeometry(.5 + r() * .5, .08, .3 + r() * .3), C.plate), (-1.8 + i * .55) * L, .9 + r() * .4, (r() - .5) * .8); b.rotation.set((r() - .5) * 1.2, r() * 3, (r() - .5) * .8);
         const l = add(new TH.Mesh(new TH.BoxGeometry(.08, .03, .08), C.plateL)); l.position.copy(b.position).add(V(0, .06, 0)); }
+    if (D.omega) { /* v667 Omega: a second, greater pair of arms raised over its head, long grappling tendrils reaching forward, and (unbound) its neural core torn open */
+      for (const sd of [1, -1]) { const sh = V(1.0 * L, 1.3 + D.hump * .5, sd * .55), el = V(2.0 * L, 2.6, sd * 1.6), wr = V(3.1 * L, 1.9, sd * 1.2); tube([sh, el, wr], .32, .2, C.shell, 3); bundle([sh, el, wr], 9, .34, { r0: .12, r1: .08 });
+        for (let i = 0; i < 4; i++) { const a = (i - 1.5) * .5; cone(1.3 + r() * .4, .1, C.claw, wr, V(1, -.6 + a * .3, sd * a), -.35); } }
+      for (let i = 0; i < 8; i++) { const z = (r() - .5) * 1.6, y = .6 + r() * 1.2, Lg = 3 + r() * 2; tube([V(2.0 * L, y, z), V(2.8 * L + Lg * .4, y + (r() - .5), z * 1.5), V(3 * L + Lg * .8, y - .3 + (r() - .5) * 1.5, z * 2), V(3 * L + Lg, y - .8, z * 2.2 + (r() - .5))], .11, .02, i % 3 ? C.cable : C.cableL, 0, 1.3); }
+      if (D.omega === 2) { const cp = V(-.2 * L, 1.9 + D.hump, 0); orb(1.2, C.core, cp, 28); orb(2.3, C.glowS, cp, 18); for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; cone(1.2, .14, C.shell, cp.clone().add(V(Math.cos(a) * 1.1, Math.sin(a) * .9, Math.sin(a) * 1.0)), V(Math.cos(a), Math.sin(a) * .7 + .4, Math.sin(a)), .3); } } }
     if (D.alpha) { /* an Alpha: a crown of great hooked spines swept back from the skull, and its neural core laid open along its back */
       for (let i = 0; i < 7; i++) { const a = (i - 3) * .32; cone(1.6 + (3 - Math.abs(i - 3)) * .45, .16, C.shell, V(1.55 * L, 1.35, a * .55), V(-1, 1.1 - Math.abs(a) * .3, a * 1.4), .35); }
       const cp = V(-.3 * L, 1.5 + D.hump, 0), co = orb(.55, C.core, cp, 24); co.scale.set(1.6, .8, 1); orb(1.0, C.glowS, cp, 14);
@@ -16812,6 +16971,7 @@ function buildMimic(cls) {
    together, each foot swinging forward lifted and planting back on the ground, the claws riding with it; the body bobs twice a stride and
    snakes a little; the head nods and the jaw works; tendrils, mane and tail ripple outward from the body, later the further out they reach */
 function mimWave(k) { const D = MIM_D[k], f = v => (+v).toFixed(4), W1 = "2.0944", W2 = "4.18879";
+  if (k === "mnode" || k === "mpylon") return `vec3 p = position; transformed.y += .12 * sin(mt * 2.0944) * smoothstep(-1., 2., p.y); transformed.x += .05 * sin(mt * 2.0944 + p.y) * smoothstep(0., 3., p.y);`; /* v667 */
   if (k === "mnexus") return `vec3 p = position; float rr = length(p.xz), hc = (1. - smoothstep(2.75, 2.95, rr)) * step(-.35, p.y) * (1. - step(3.15, p.y)), th = mt * .349066, c = cos(th), s = sin(th);
     transformed.xz = mix(transformed.xz, vec2(c * transformed.x - s * transformed.z, s * transformed.x + c * transformed.z), hc);
     float ob = step(3.0, p.y) * (1. - smoothstep(1.7, 2.3, rr)); transformed.y += ob * .2 * sin(mt * 2.0944);
@@ -16834,7 +16994,7 @@ function mimWave(k) { const D = MIM_D[k], f = v => (+v).toFixed(4), W1 = "2.0944
     transformed.z += tw * .3 * sin(mt * ${W1} - dd * 1.6 + p.x * .6); transformed.y += tw * .2 * sin(mt * ${W2} - dd * 1.3 + p.z * 1.2); transformed.x += tw * .12 * sin(mt * ${W1} - dd);`;
   return w; }
 for (const k in MIM_U) MON_WAVE[k] = mimWave(k);
-MON_WAVE.mimic = mimWave("mnest"); for (let i = 1; i <= 4; i++) MON_WAVE["alpha" + i] = mimWave("malpha" + i); MON_WAVE.nexus = mimWave("mnexus"); /* v665 */
+MON_WAVE.mimic = mimWave("mnest"); for (let i = 1; i <= 4; i++) MON_WAVE["alpha" + i] = mimWave("malpha" + i); MON_WAVE.nexus = mimWave("mnexus"); MON_WAVE.omega = mimWave("momega"); /* v665 */
 function buildAlien(k) {
   if (MIM_U[k] || /^e_/.test(k)) return buildMimic(k);
   if (k === "swasp" || k === "snest") return buildMonster("swasp", k === "snest" ? "nest" : "swarm");
@@ -23782,6 +23942,7 @@ const MON_ATK = {
   mstalk: [["flak", 4, "#7fe0ff", .12, {}], ["laser", 2, "#bff3ff", .16, {}]], mharv: [["acid", 3, "#5fd8ff", .2, {}], ["flak", 3, "#9fe8ff", .14, {}]], mhunt: [["laser", 3, "#9fe8ff", .1, {}], ["flak", 5, "#7fe0ff", .1, {}]],
   massim: [["ion", 3, "#9fe4ff", .18, {}], ["missile", 3, "#7fd4ff", .2, {}]], mguard: [["flak", 6, "#5fd8ff", .12, {}], ["ion", 2, "#9fe8ff", .22, {}]], mtitan: [["plasma", 3, "#b48cff", .24, { hv: 1 }], ["missile", 6, "#5fd8ff", .2, { flank: 1 }]],
   malpha1: [["plasma", 4, "#7fe0ff", .22, { hv: 1 }], ["missile", 6, "#5fd8ff", .2, { flank: 1 }]], malpha2: [["laser", 4, "#c6a8ff", .12, {}], ["plasma", 3, "#9b6bff", .22, { hv: 1 }]], malpha3: [["ion", 4, "#e4f4ff", .2, {}], ["flak", 8, "#cfe8ff", .12, {}]], malpha4: [["acid", 5, "#5fffc8", .2, {}], ["missile", 6, "#3fffc0", .2, { flank: 1 }]],
+  momega: [["plasma", 5, "#e8fbff", .26, { hv: 1 }], ["missile", 8, "#5fd8ff", .2, { flank: 1 }]], momegax: [["plasma", 6, "#ffffff", .3, { hv: 1 }], ["laser", 6, "#9ff0ff", .12, {}]], mnode: [["ion", 3, "#7ff0ff", .2, {}]], mpylon: [["laser", 4, "#9ff0ff", .14, {}]], /* v667 */
   mnexus: [["ion", 6, "#7ff0ff", .16, {}], ["laser", 4, "#bff8ff", .12, {}]], /* v665 */
   mnest: [["missile", 4, "#5fd8ff", .2, { flank: 1 }], ["plasma", 2, "#9b4dff", .26, { hv: 1 }]], /* v663 the Mimics */
   swhale:  [["torpedo", 2, "#9fe8ff", .2, {}], ["flak", 6, "#bff3ff", .14, {}]],          // laser turrets · hull torpedoes · tail-gun tracers
@@ -26665,9 +26826,11 @@ const ACT = {
   archOpen: () => { G.trayOpen = false; try { trayRender(); } catch (e) {} openSheet({ type: "archives" }); },
   archEntry: d => openSheet({ type: "archives", id: d.id }),
   mimOpen: () => openSheet({ type: "mimic" }), /* v663 */
+  moTgt: d => { S.moTgt = d.t; renderSheet(); }, /* v667 */
+  moCine: d => moCine(d.k || "arr"), moFinal: () => moFinal(),
   mimGoB: d => { const x = PB[d.id]; if (x) mimGo(x); }, /* v665 */
   mimFind: () => { const x = mimNearest(now()); if (x) mimGo(x); else toast("No hive within reach right now."); },
-  mimPrev: d => { if (!ownerFree()) return; const w = +d.w; S.mimPrev = w ? { w, at: now() } : null; dirty(); toast(w ? `Previewing week ${w} of the Mimic Protocol.` : "Preview off."); renderSheet(); },
+  mimPrev: d => { if (!ownerFree()) return; const w = +d.w; S.mimPrev = w ? { w, at: now(), om: d.om ? 1 : 0 } : null; MSC = {}; dirty(); toast(w ? `Previewing week ${w} of the Mimic Protocol.` : "Preview off."); renderSheet(); },
   mimClaim: d => { const w = +d.w, M = mimS(), o = MIM_OBJ[w - 1]; if (!o || M.got["w" + w] || mimObjN(w) < o[1]) return; M.got["w" + w] = 1; M.pend = (M.pend || 0) + 10; setTimeout(() => mimFlush(1), 50); S.shards = (S.shards || 0) + o[2]; M.m.tis = (M.m.tis || 0) + o[3]; dirty(); toast(`+◆${o[2]} and ${o[3]} Mimic Tissue`, "win"); try { logReward(`Mimic Protocol · week ${w} objective`, null, { shards: o[2], kind: "event" }); } catch (e) {} renderSheet(); },
 
   archFlip: d => { if (!ARCH[d.id]) return; const n = archClaim(d.id); if (n) { toast(`+◆${n} · ${ARCH[d.id].t}`, "win"); renderSheet(); } else openSheet({ type: "archives", id: d.id }); }, /* v661 */
@@ -26741,7 +26904,7 @@ const ACT = {
     if (slotsFull()) return;
     const n = takeShips(pick); if (!Object.keys(n).length) return;
     if (sheet && sheet.joint && (x.boss || x.mon) && !MIM_BOSS[x.id]) { const mins = RALLY_T.includes(sheet.jt) ? sheet.jt : 10, rf = startRally(x, n, mins); if (!rf) return; openStrike(rf); toast(`Joint strike started on ${x.name}. It launches in ${mins} min: allies can join until then.`, "win"); return; }
-    const f = sendFleet(x, n, "pirate", { xid: x.id }); if (!f) return; callAllies(f); closeSheet(); toast(`Raid launched on ${x.name}. Arrival in ${ftime(f.tt)}.`);
+    const f = sendFleet(x, n, "pirate", MIM_BOSS[x.id] && MIM_BOSS[x.id].om === 1 ? { xid: x.id, omT: S.moTgt || "core" } : { xid: x.id }); if (!f) return; callAllies(f); closeSheet(); toast(`Raid launched on ${x.name}. Arrival in ${ftime(f.tt)}.`);
   }),
   pirLvl: d => { G.pirLvl = d.v === G.pirLvl ? null : d.v; renderSheet(); },
   sbOpen: d => { const k = d.id; if (!SBW[k]) return; pick = {}; for (const q in S.ships) if (S.ships[q] && SH[q]) pick[q] = S.ships[q]; if (view !== "galaxy") { view = "galaxy"; render(); } const p = SBX[k].p; if (G3) { G3.cam.followFleet = null; G3.cam.follow = null; G3.cam.goal = { tx: p[0], ty: p[1] + 30, tz: p[2], dist: 640 }; } openSheet({ type: "sboss", id: k }); }, /* v451 */
