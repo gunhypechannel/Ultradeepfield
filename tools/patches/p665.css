@@ -1,0 +1,7 @@
+.mimbar{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin:4px 0}.mimbar i{display:block;height:100%;background:linear-gradient(90deg,#7a3cff,#5fd8ff)}
+.mimbar.big{height:12px;border-radius:6px;flex:1;margin:0}.mimsup{display:flex;align-items:center;gap:10px;flex:none}.mimsup b{font:700 18px/1 var(--f-display);color:#bfefff}
+.mimme{display:flex;flex-direction:column;gap:2px;padding:7px 9px;border-radius:9px;background:rgba(10,30,50,.45);flex:none}.mimme span{font-weight:700}.mimme small{color:#9ab;font-size:11px}
+.mimal{display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:10px;border:1px solid rgba(95,216,255,.15);background:rgba(8,20,34,.5);margin-bottom:6px;flex:none}
+.mimal>div:first-child{flex:1;min-width:0;display:flex;flex-direction:column}.mimal small{font-size:11px;color:#9ab}.mimalb{display:flex;flex-direction:column;gap:4px}.mimalb .btn{padding:5px 10px;font-size:12px}
+.mimboss{padding:9px 10px;border-radius:11px;border:1px solid rgba(127,240,255,.3);background:rgba(6,22,38,.6);margin:6px 0 10px;display:flex;flex-direction:column;gap:4px}
+.mimanc{display:grid;grid-template-columns:62px 1fr 40px;gap:6px;align-items:center;font-size:12px}.mimanc small{text-align:right;color:#9ab}
