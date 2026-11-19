@@ -5712,7 +5712,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 659;
+const GAME_V = 660;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -23300,7 +23300,7 @@ function battleCtl() {
 }
 const bPos = (b, i, tt) => { const F = b.R.frames, fd = b.R.dt, k = Math.min(F.length - 1, Math.max(0, Math.floor(tt / fd + 1e-6))), f0 = F[k], f1 = F[Math.min(F.length - 1, k + 1)];
   const u = f1.t > f0.t ? clamp((tt - f0.t) / (f1.t - f0.t), 0, 1) : 0, a = f0.s[i], c = f1.s[i]; return { x: a[0] + (c[0] - a[0]) * u, y: a[1] + (c[1] - a[1]) * u, sh: a[2], wd: a[3], fl: a[4] }; };
-const visN = (role, n) => n <= 0 ? 0 : Math.min(role === "titan" || role === "station" ? 1 : BIG_R.has(role) ? 2 : role === "turret" ? 1 : role === "support" || role === "cruiser" || role === "frigate" ? 3 : 4, 1 + Math.floor(Math.log2(n) / 1.6));
+const visN = (role, n) => n <= 0 ? 0 : Math.min(role === "titan" || role === "station" || role === "turret" ? 1 : BIG_R.has(role) ? 2 : 3, n < 10 ? 1 : n < 100 ? 2 : 3); /* v660 one hull under 10, two under 100, three at most */
 /* a volley becomes a handful of visible shots; the last one carries its real effects */
 /* v54 battle effects: a big volley also becomes a laser-rail salvo (parallel beams sweeping across the field), a missile swarm
    (many missiles with smoke trails), or, for stations, titans and beam weapons, a charged mega beam */
@@ -23974,15 +23974,15 @@ function drawBattle(t) {
   if (!b.ord) b.ord = Q.map((q, i) => i).sort((i, j) => b.z[i] - b.z[j]);
   if (!lo) { b.dustL = b.dustL || dustLayer(W, H, d); const dr = reduced ? 0 : Math.sin(t * .00009) * W * .02; ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .55; ctx.drawImage(b.dustL, -W * .05 + dr, -H * .04 + dr * .3, W * 1.1, H * 1.08); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over"; }
   // big fights: same-type squadrons of one side flying in the same patch of sky are drawn as one formation with their combined count
-  const grp = busy ? new Map() : null, tot = [], rep = []; if (busy) { const cell = W * (W < H ? .3 : .21); for (let o = b.ord.length - 1; o >= 0; o--) { const i = b.ord[o], q = Q[i]; if (b.n[i] <= 0 || (pos[i].fl & 6)) continue;
-      const key = q.side + q.k + "|" + Math.round(scr[i].x / cell) + "|" + Math.round(scr[i].y / cell), g = grp.get(key); if (g != null) { tot[g] += b.n[i]; tot[i] = -1; rep[i] = g; } else { grp.set(key, i); tot[i] = b.n[i]; } } }
+  const grp = new Map(), tot = [], rep = [], giant = k => k === "worldbreaker" || !!TITAN_LEN[k]; { const cell = W * (W < H ? .3 : .21); for (let o = b.ord.length - 1; o >= 0; o--) { const i = b.ord[o], q = Q[i]; if (b.n[i] <= 0 || (pos[i].fl & 6)) continue; if (!busy && !giant(q.k)) continue; /* v660 a side's giants are always one ship */
+      const key = q.side + q.k + (giant(q.k) ? "" : "|" + Math.round(scr[i].x / cell) + "|" + Math.round(scr[i].y / cell)), g = grp.get(key); if (g != null) { tot[g] += b.n[i]; tot[i] = -1; rep[i] = g; } else { grp.set(key, i); tot[i] = b.n[i]; } } }
   /* v75 layout (art only, the simulation is untouched): every visible formation gets an on-screen footprint, a fit scale grows all
      ships until the formations fill about a third of the field, then overlapping footprints are pushed apart. The push is eased
      over time so formations glide apart instead of jittering, and merged squadrons follow their formation (shots still land on it) */
   const fpOf = i => { const q = Q[i], zs = scr[i].s; if (q.role === "station") return [W * .21 * zs, W * .1 * zs, .15]; if (q.role === "turret") return [W * .1 * zs, W * .05 * zs, .4];
-    const n = busy && tot[i] > 0 ? tot[i] : Math.max(1, b.n[i]), vc = MON[q.k] ? 1 : Math.min(busy ? 3 : 6, Math.max(1, visN(q.role, n))), L = Math.max(8 * d, clamp(W * .1 * bLen(q.k), 11 * d, W * (BOSSK[q.k] || q.k === "worldbreaker" ? .55 : .3)) * zs * bVsK(b, q));
+    const n = tot[i] > 0 ? tot[i] : Math.max(1, b.n[i]), vc = MON[q.k] || giant(q.k) ? 1 : Math.min(3, Math.max(1, visN(q.role, n))), L = Math.max(8 * d, clamp(W * .1 * bLen(q.k), 11 * d, W * (BOSSK[q.k] || q.k === "worldbreaker" ? .55 : .3)) * zs * bVsK(b, q));
     const fk = FOOTK(q.k); return [L * fk * (.62 + .32 * Math.min(vc - 1, 3)), L * fk * (.36 + .26 * Math.min(vc - 1, 2)) + 9 * d, 1]; }; /* v86: giants claim the room they are drawn at */
-  { const reps = b.ord.filter(i => !(pos[i].fl & 6) && (b.n[i] > 0 || (b.deadAt[i] != null && T - b.deadAt[i] < .5)) && !(busy && tot[i] === -1));
+  { const reps = b.ord.filter(i => !(pos[i].fl & 6) && (b.n[i] > 0 || (b.deadAt[i] != null && T - b.deadAt[i] < .5)) && !(tot[i] === -1));
     let A0 = 0; for (const i of reps) { const [rx, ry] = fpOf(i); A0 += rx * ry * 4; }
     const fitT = A0 ? clamp(crowd * Math.sqrt((W * .88 * (bot - top)) * (busy ? .44 : .42) / A0), .4, 1.85) : crowd;
     b.fit = b.fit ? b.fit + (fitT - b.fit) * Math.min(1, real / 700) : fitT;
@@ -24004,7 +24004,7 @@ function drawBattle(t) {
       for (const p of P) { p.x = clamp(p.x, x0 + p.rx * .8, x1 - p.rx * .8); p.y = clamp(p.y, y0 + p.ry * .6, y1 - p.ry * (BOSSK[Q[p.i].k] ? 1.05 : .6)); } } /* v86: giants stay clear of the bottom panel */
     const ease = reduced ? 1 : Math.min(1, real / 380);
     for (const p of P) { const L0 = lay[p.i]; L0.x += (p.x - scr[p.i].x - L0.x) * ease; L0.y += (p.y - scr[p.i].y - L0.y) * ease; scr[p.i].x += L0.x; scr[p.i].y += L0.y; scr[p.i].fp = p; }
-    if (busy) Q.forEach((q, i) => { if (tot[i] === -1 && rep[i] != null) scr[i] = scr[rep[i]]; }); }
+    Q.forEach((q, i) => { if (tot[i] === -1 && rep[i] != null) scr[i] = scr[rep[i]]; }); }
   // v109 the Super Cube: its whole side is one colossal Cube; every one of its squads fires from, and is hit on, that one hull
   if (b.superSide) { const sd = b.superSide, idx = Q.map((q, i) => q.side === sd ? i : -1).filter(i => i >= 0), live = idx.filter(i => b.n[i] > 0), use = live.length ? live : idx;
     // v126: the Cube follows the battle camera: its centre is the live defenders' centre in this frame's view, eased, kept on screen
@@ -24028,8 +24028,8 @@ function drawBattle(t) {
           if (SA) ctx.drawImage(SA, -aw / 2, -ah / 2, aw, ah); b.wbBox = { cx, cy, aw, ah }; } else if (art) ctx.drawImage(art, -Lc, -Lc / 2, Lc * 2, Lc); else drawUnit(ctx, "cube", 0, 0, Lc * .4, SIDE_COL[b.superSide].main, -1); ctx.restore();
       if (!alive.length && !lo) { ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .9 * fade; const fr = Lc * (1.4 - fade * .6); ctx.drawImage(glowSprite("fire"), cx - fr, cy - fr, fr * 2, fr * 2); ctx.restore(); }
       ctx.save(); ctx.fillStyle = "rgba(0,0,0,.55)"; ctx.fillRect(cx - Lc * .4, cy + Lc * .36, Lc * .8, 6 * d); ctx.fillStyle = wbk ? (WB[wbk] || SBW[wbk] || { col: wbk === "omg" || wbk === "scb" ? "#5dff7a" : "#c890ff" }).col : "#5dff6a"; ctx.fillRect(cx - Lc * .4, cy + Lc * .36, Lc * .8 * clamp(hp, 0, 1), 6 * d); ctx.restore(); ctx.globalAlpha = 1; return; }
-    if (busy && tot[i] === -1) return; // merged into a nearby formation of the same type
-    const p = pos[i], n = busy && tot[i] > 0 ? tot[i] : b.n[i]; if (p.fl & 6) return; // escaped, or reinforcements not here yet
+    if (tot[i] === -1) return; // merged into a nearby formation of the same type
+    const p = pos[i], n = tot[i] > 0 ? tot[i] : b.n[i]; if (p.fl & 6) return; // escaped, or reinforcements not here yet
     // an allied commander's fleet entering the fight: a warp streak in, a flash, a banner, and a name tag while it fights
     const prim = b.prim || (b.prim = { a: (Q.find(x => x.side === "a") || {}).own, d: (Q.find(x => x.side === "d") || {}).own }), allyIn = q.own && typeof q.own === "string" && q.own !== prim[q.side] && q.own !== "pirates" && q.own !== "cube";
     if (allyIn) { b.seen = b.seen || {}; if (b.seen[i] == null) { b.seen[i] = t; if (T > .6 && !(b.joinT || {})[q.own]) { (b.joinT = b.joinT || {})[q.own] = t; const ic = q.side === "a" ? "⚔" : "🛡", wh = q.side === "a" ? "the attack" : "the defense";
@@ -24046,7 +24046,7 @@ function drawBattle(t) {
       if (dying && b.wreckd && b.wreckd[i]) return; // a capital ship that broke apart is drawn as its wreck
       /* v255 a hull never turns on screen: it used to squash flat and flip through edge-on, which looked like folding in on itself. Each squadron takes its heading from its first advance and keeps it; to go the other way it fires its retro thrusters and backs up */
       const nx = bPos(b, i, T + .5), lk = b.lk || (b.lk = []); if (!lk[i]) { lk[i] = 1; const n3 = bPos(b, i, T + 3); if (Math.abs(n3.x - p.x) > .2) b.face[i] = n3.x > p.x ? 1 : -1; } const face = b.face[i];
-      const L = Math.max(8 * d, clamp(W * .1 * bLen(q.k), 11 * d, W * (BOSSK[q.k] || q.k === "worldbreaker" ? .55 : .3)) * zs * bVsK(b, q)), /* v645 */ vc = MON[q.k] ? 1 : Math.min(busy ? 3 : 6, Math.max(1, visN(q.role, Math.max(n, 1)))), moving = Math.hypot(nx.x - p.x, nx.y - p.y) > .2;
+      const L = Math.max(8 * d, clamp(W * .1 * bLen(q.k), 11 * d, W * (BOSSK[q.k] || q.k === "worldbreaker" ? .55 : .3)) * zs * bVsK(b, q)), /* v645 */ vc = MON[q.k] || giant(q.k) ? 1 : Math.min(3, Math.max(1, visN(q.role, Math.max(n, 1)))), moving = Math.hypot(nx.x - p.x, nx.y - p.y) > .2;
       const mf = MON[q.k] && !dying ? monBatFrame(b, i, q.k, real, moving) : null; /* v651 */
       /* v78 inertia: hulls swing round through edge-on instead of flipping, and bank into climbs and dives along their real flight
          path; heavy hulls turn and bank slowly, so a dreadnought feels massive and a fighter nimble */
@@ -24133,10 +24133,10 @@ function drawBattle(t) {
      target with little darts and returning to land. Art only: the carrier's own volleys still carry its real damage */
   if (!b.superSide) { b.wclk = (b.wclk || 0) + (b.paused || b.done || b.intro > 0 ? 0 : real * b.speed);
     const liveFoe = sd => { for (const j of b.ord) if (Q[j].side !== sd && b.n[j] > 0 && !(pos[j].fl & 6) && scr[j]) return j; return -1; };
-    for (let i = 0; i < Q.length; i++) { const q = Q[i]; if (q.role !== "carrier" || b.n[i] <= 0 || (pos[i].fl & 6) || (busy && tot[i] === -1)) continue;
+    for (let i = 0; i < Q.length; i++) { const q = Q[i]; if (q.role !== "carrier" || b.n[i] <= 0 || (pos[i].fl & 6) || (tot[i] === -1)) continue;
       const g = b.geo && b.geo[i]; if (!g || g.f !== b.gf) continue;
       let j = (b.ctgt || [])[i]; if (j == null || b.n[j] <= 0 || (pos[j].fl & 6)) j = liveFoe(q.side);
-      const wk = q.k === "lord" ? "drone" : "fighter", acc = (q.acc || b.acc[q.side]), col = SIDE_COL[q.side], n = busy && tot[i] > 0 ? tot[i] : b.n[i];
+      const wk = q.k === "lord" ? "drone" : "fighter", acc = (q.acc || b.acc[q.side]), col = SIDE_COL[q.side], n = tot[i] > 0 ? tot[i] : b.n[i];
       /* v210: slower, flown sorties instead of a spinning orbit. Fighters roll out of the hangar, accelerate onto a strafing run past
          the target, bank round and make a second pass back toward the carrier, then glide home. Pairs fly lead and wingman. */
       const sup = q.k === "supercarrier", nD = lo ? 2 : busy ? (sup ? 12 : 2) : sup ? clamp(16 + 2 * Math.floor(Math.log2(n)) & ~1, 16, 28) : clamp(2 + Math.floor(Math.log2(n)) & ~1, 2, 6), P = sup ? 13000 : 11000; // v212/v215: the Citadel Supercarrier launches a full air wing, twice as many smaller fighters (16-28)
