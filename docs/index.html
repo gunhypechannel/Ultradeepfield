@@ -4968,7 +4968,7 @@ function openOrbitScan(T, near, layerF, k) {
   best.sort((a, b) => a[0] - b[0]);
   return { total, byL, near: best.map(([d, i]) => Object.assign(emptyAt(i), { d: Math.sqrt(d) })) };
 }
-const TELEPORT_SHARDS = 200, TELEPORT_RAND = 100, TELEPORT_CD = 24 * 3600e3; /* v640 owner: aimed ◆200, random ◆100 (was ◆25 both) */
+const TELEPORT_SHARDS = 200, TELEPORT_RAND = 70, TELEPORT_CD = 24 * 3600e3; /* v640 owner: aimed ◆200, random ◆100 (was ◆25 both) */
 const buyArmed = k => !!(G.buyArm && G.buyArm.k === k && Date.now() - G.buyArm.t < 8000);
 function armBuy(k, cost) { if (buyArmed(k)) { G.buyArm = null; return true; } G.buyArm = { k, t: Date.now() }; toast(`Tap again to spend ◆${fmt(cost)}.`); if (sheet) renderSheet(); else render(true);
   setTimeout(() => { if (G.buyArm && G.buyArm.k === k && !buyArmed(k)) { G.buyArm = null; if (sheet) renderSheet(); else render(true); } }, 8100); return false; }
@@ -5014,7 +5014,7 @@ const SHOP = {
   crateM:   { n: "Metal Crate", ic: "m", cost: 4, d: () => `${fmt(crateAmt())} metal delivered to your homeworld.`, use: () => { S.res.m += crateAmt(); return "Metal crate unpacked."; } },
   crateC:   { n: "Crystal Crate", ic: "c", cost: 5, d: () => `${fmt(Math.round(crateAmt() * .7))} crystal for your homeworld.`, use: () => { S.res.c += Math.round(crateAmt() * .7); return "Crystal crate unpacked."; } },
   crateG:   { n: "Gas Crate", ic: "g", cost: 6, d: () => `${fmt(Math.round(crateAmt() * .4))} gas for your homeworld.`, use: () => { S.res.g += Math.round(crateAmt() * .4); return "Gas crate unpacked."; } },
-  boost5:   { n: "Boost Pack ×5", ic: "⚡", cost: 8, d: () => "Five boosts, each cuts 5 minutes off a job.", use: () => { S.boosts += 5; return "+5 boosts."; } },
+  boost5:   { n: "Boost Pack ×5", ic: "⚡", cost: 16, /* v641 x2 */ d: () => "Five boosts, each cuts 5 minutes off a job.", use: () => { S.boosts += 5; return "+5 boosts."; } },
   runes3:   { n: "Rune Pouch ×3", ic: "◈", cost: 10, d: () => "Three random elemental runes.", use: () => { grantRunes(3, "Rune pouch"); return "Runes added."; } },
   probe5:   { n: "Probe Pack ×5", ic: "◎", cost: 5, d: () => "Five probes that fly for free.", stack: true },
   chart:    { n: "Star Chart", ic: "✦", cost: 6, d: () => "Charts a wide region of unexplored space.", use: () => { const a = Math.random() * TAU, r = 80 + Math.random() * (MAP_R - 100), n = reveal(Math.cos(a) * r, Math.sin(a) * r, 90 * (cmdClass() === "discoverer" ? 1.5 : 1)); return `Star chart: ${n} sectors revealed.`; } },
@@ -5066,7 +5066,7 @@ function accel(q, ms) {
 const shopPlanet = () => hudPlanet() || homePlanet();
 /* v74 VIP items, after Game of War: activation time (perks only work while VIP is active) and VIP point packs */
 for (const [k, n, cost, ms, pts] of [["vipAct1", "VIP Activation · 24 h", 30, DAY, 0], ["vipAct7", "VIP Activation · 7 days", 150, 7 * DAY, 0], ["vipAct30", "VIP Activation · 30 days", 500, 30 * DAY, 0],
-  ["vipPts100", "100 VIP Points", 8, 0, 100], ["vipPts500", "500 VIP Points", 35, 0, 500], ["vipPts2500", "2,500 VIP Points", 150, 0, 2500], ["vipPts10k", "10,000 VIP Points", 550, 0, 10000]])
+  ["vipPts100", "100 VIP Points", 16, 0, 100], ["vipPts500", "500 VIP Points", 70, 0, 500], ["vipPts2500", "2,500 VIP Points", 300, 0, 2500], ["vipPts10k", "10,000 VIP Points", 1100, 0, 10000]] /* v641 x2 */)
   SHOP[k] = { cat: "vip", n, ic: ms ? "♛" : "✦", col: ms ? "#ffd66a" : "#c88aff", cost, stack: true, vipMs: ms, vipPts: pts,
     d: () => ms ? `Turns your VIP ${vipLvl()} perks on for ${ms / DAY >= 1 ? `${ms / DAY} day${ms / DAY > 1 ? "s" : ""}` : "24 hours"}. Stacks with any VIP time you already have.` : `Adds ${fmt(pts)} VIP points: permanent progress toward the next VIP level.`,
     use: () => ms ? (vipActivate(ms), `VIP ${vipLvl()} active for ${ftime(vipUntil() - now())}.`) : (vipAdd(pts, "VIP points"), `+${fmt(pts)} VIP points. You are VIP ${vipLvl()}.`) };
@@ -5081,11 +5081,11 @@ const SHOP_CATS = [["vip", "♛ VIP"], ["boost", "Boosters"], ["accel", "Acceler
     SHOP[`bf_${tk}`] = { cat: "boost", tier: i, col, n: "Fleet Booster", ic: "➤", cost: [6, 12, 20, 32][i], d: () => `+${pct}% flight speed for every fleet you send, for 7 days.`, use: () => activateBuff("bf", pct, 7 * DAY) && `Fleet Booster ${tn} active: your fleets fly ${pct}% faster for 7 days.` }; });
   // v534 Afterburner Fuel: time off a fleet already in flight
   ITIERS.slice(0, 3).forEach(([tk, tn, col], i) => { const ms = [15 * 60e3, HOUR, 4 * HOUR][i];
-    SHOP[`xf_${tk}`] = { cat: "accel", tier: i, col, n: "Afterburner Fuel", ic: "🚀", cost: [2, 6, 15][i], fuelMs: ms, fuelL: ["15 min", "1 hour", "4 hours"][i], d: () => `Cuts ${ftime(ms)} off a fleet in flight. Use it from the fleet's controls, or from here for the fleet that lands next.`, use: () => fuelUse(ms) && `Afterburner Fuel ${tn}: ${ftime(ms)} cut.` }; });
+    SHOP[`xf_${tk}`] = { cat: "accel", tier: i, col, n: "Afterburner Fuel", ic: "🚀", cost: [4, 12, 30][i], /* v641 x2 */ fuelMs: ms, fuelL: ["15 min", "1 hour", "4 hours"][i], d: () => `Cuts ${ftime(ms)} off a fleet in flight. Use it from the fleet's controls, or from here for the fleet that lands next.`, use: () => fuelUse(ms) && `Afterburner Fuel ${tn}: ${ftime(ms)} cut.` }; });
   // accelerators: cut time off the running job (our take on KRAKEN, DETROID and NEWTRON)
   for (const [q, nm, ic, what] of [["b", "Forge Swarm", "⚒", "the building under construction"], ["s", "Yard Overdrive", "⚙", "the shipyard queue"], ["r", "Insight Matrix", "✺", "the research in progress"]])
     ITIERS.slice(0, 3).forEach(([tk, tn, col], i) => { const ms = [30 * 60e3, 2 * HOUR, 8 * HOUR][i];
-      SHOP[`x${q}_${tk}`] = { cat: "accel", tier: i, col, n: nm, ic, cost: [4, 10, 24][i], d: () => `Cuts ${ftime(ms)} off ${what}.`, use: () => accel(q, ms) && `${nm} ${tn}: ${ftime(ms)} saved.` }; });
+      SHOP[`x${q}_${tk}`] = { cat: "accel", tier: i, col, n: nm, ic, cost: [8, 20, 48][i], /* v641 x2 */ d: () => `Cuts ${ftime(ms)} off ${what}.`, use: () => accel(q, ms) && `${nm} ${tn}: ${ftime(ms)} saved.` }; });
   // resource pods: hours of your current production, delivered at once
   for (const r of ["m", "c", "g"]) ITIERS.slice(0, 3).forEach(([tk, tn, col], i) => { const h = [6, 24, 72][i], amt = () => Math.max(2000 * (i + 1), Math.round(rates()[r] * 60 * h));
     SHOP[`p${r}_${tk}`] = { cat: "res", tier: i, col, n: `${RN[r][0]} Pod`, ic: r, cost: [5, 15, 36][i], d: () => `${fmt(amt())} ${RN[r][0].toLowerCase()} (${h} hours of production) for your homeworld.`, use: () => { const a = amt(); S.res[r] += a; return `${fmt(a)} ${RN[r][0].toLowerCase()} delivered.`; } }; });
@@ -5579,7 +5579,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 640;
+const GAME_V = 641;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -19308,7 +19308,7 @@ function shFind() {
       <div class="cin"><input id="coordin" class="minput" inputmode="text" autocomplete="off" spellcheck="false" placeholder="e.g. 3:82:5" value="${esc(cs)}" aria-label="Coordinates, Layer:System:Position"><button class="btn" data-act="coordGo">Locate</button></div>
       <dl class="kv"><dt>Teleport</dt><dd>Ticket (${tickets} owned) or ◆${TELEPORT_SHARDS} to a chosen orbit, ◆${TELEPORT_RAND} for a random jump · you have ◆${fmt(shards)}</dd></dl>
       ${res}
-      <h3 class="sec">🎲 Random jump</h3><p class="note">Jump a planet to a random free orbit anywhere in the galaxy, in any layer. Half the price of an aimed jump (◆${TELEPORT_RAND}, or a ticket); same 24-hour recharge.</p>
+      <h3 class="sec">🎲 Random jump</h3><p class="note">Jump a planet to a random free orbit anywhere in the galaxy, in any layer. Cheaper than an aimed jump: ◆${TELEPORT_RAND}, or a ticket. Same 24-hour recharge.</p>
       <div class="list">${mine.map(p => { const cd = (S.tpCd || {})[p.id] || 0; return `<div class="crow"><canvas data-p="${p.id}" style="width:30px;height:30px"></canvas><span class="nm">${esc(p.name)}${p.kind === "home" ? " ⌂" : ""}<small>[${coordStr(p)}] → somewhere new</small></span>${cd > T ? `<span class="req">Ready in <span data-end="${cd}">${ftime(cd - T)}</span></span>` : `<span class="tpb"><button class="btn sm" data-act="tpRandom" data-pay="ticket" data-id="${p.id}" ${tickets && canPlay() ? "" : "disabled"}>Ticket${tickets ? ` ×${tickets}` : ""}</button><button class="btn amber sm${buyArmed("tpr|" + p.id) ? " pxarm" : ""}" data-act="tpRandom" data-pay="buy" data-id="${p.id}" ${shards >= TELEPORT_RAND && canPlay() ? "" : "disabled"}>${buyArmed("tpr|" + p.id) ? "Confirm " : ""}◆${TELEPORT_RAND}</button></span>`}</div>`; }).join("")}</div>
       <h3 class="sec">Your worlds</h3><div class="list">${mine.map(p => `<button class="orow" data-act="coordSet" data-v="${coordStr(p)}"><span class="oic">⌂</span><span class="nm">${esc(p.name)}<small>[${coordStr(p)}]</small></span><span class="go">Use ›</span></button>`).join("")}</div>
       <h3 class="sec">Nearest charted open orbits</h3><div class="list">${sc.near.map(e => `<button class="orow" data-act="coordSet" data-v="${coordStr(e)}"><span class="oic">⊕</span><span class="nm">[${coordStr(e)}]<small>${Math.round(e.d)} away · L${layerOf(e.r).n} ${layerOf(e.r).name}</small></span><span class="go">Select ›</span></button>`).join("") || '<p class="note">Explore to chart open orbits near you, or type any coordinates above.</p>'}</div>`;
