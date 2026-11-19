@@ -5673,7 +5673,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 651;
+const GAME_V = 652;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -12750,6 +12750,10 @@ const MON_WAVE = {
 /* v651 battle frames: MON_WAVE with every rhythm rounded to a whole number of beats in MBF_P seconds, so the loop closes */
 const MBF_P = 3, MBF_Z = 1.25, MBF_N = (typeof WEAK !== "undefined" && WEAK) || (typeof IOS !== "undefined" && IOS) ? 10 : 16, MBF_W = 2 * Math.PI / MBF_P;
 const mbfQ = src => String(src).replace(/mt \* \(1\.5 - rr \* \.18\)/g, "mt * " + MBF_W.toFixed(5)).replace(/(uMT|mt) \* (\d+\.\d*|\.\d+|\d+)/g, (m, v, f) => v + " * " + (Math.max(+f >= .6 ? 1 : 0, Math.round(+f / MBF_W)) * MBF_W).toFixed(5));
+const MMERGE = {};
+function monMerged(k) { let M = MMERGE[k]; if (!M) { const s0 = buildAlien(k); M = MMERGE[k] = mergeGroup(s0); M.userData = s0.userData; M.position.copy(s0.position); M.quaternion.copy(s0.quaternion); M.scale.copy(s0.scale);
+    s0.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
+  const c = M.clone(); c.userData = Object.assign({}, M.userData, { keepGeo: 1 }); return c; } /* v652 one piece, as on the map, so the body motion moves every part with the body; merged once per species */
 function monBatPose(root, kind, f) { if (!MON_WAVE[kind]) return null; const U = { value: f / MBF_N * MBF_P }, done = new Map(), wave = mbfQ(MON_WAVE[kind]);
   root.traverse(o => { if (!o.isMesh || !o.material || Array.isArray(o.material)) return; let m = done.get(o.material);
     if (!m) { m = o.material.clone(); const pu = m.userData && m.userData.pulse ? mbfQ(m.userData.pulse) : null;
@@ -16100,7 +16104,7 @@ function buildMonster(k, part) {
       for (let i = 0; i < 9; i++) { const t = (i + 1) / 10, px = 1.7 + (-.2 - 1.7) * t, pz = 3.4 * t; add(new TH.Mesh(new TH.SphereGeometry(.05 * (1 - t * .5), 8, 6), C.glowM), px + .05, .06, s * pz * .97); } }
     const tp = []; for (let i = 0; i <= 8; i++) { const t = i / 8; tp.push([-1.9 - t * 4.8, Math.sin(t * 3) * .12, 0]); }
     add(new TH.Mesh(taperTube(tp, t => .1 * (1 - t * .8), 60, 8), C.manta));
-    const st = add(new TH.Mesh(new TH.ConeGeometry(.08, .5, 10), C.glowM), -6.85, .36, 0); st.rotation.z = Math.PI / 2;
+    const st = add(new TH.Mesh(new TH.ConeGeometry(.08, .5, 10), C.glowM), -6.85, .02, 0); /* v652 on the tail's tip, not floating above it */ st.rotation.z = Math.PI / 2;
     for (let i = 0; i < 5; i++) { const gl = add(new TH.Mesh(new TH.BoxGeometry(.04, .02, .22), C.glowM), .6 - i * .16, -.33, .42); gl.rotation.y = .2; add(new TH.Mesh(new TH.BoxGeometry(.04, .02, .22), C.glowM), .6 - i * .16, -.33, -.42).rotation.y = -.2; } // gill slits that glow underneath
   } else if (k === "swasp") { // a Starhive: a resin nest the size of a station, its cells lit from inside, with the swarm circling it
     const NP = [[1.75, 0], [1.6, .55], [1.15, 1.1], [.45, 1.42], [-.3, 1.45], [-.95, 1.2], [-1.45, .78], [-1.7, .3], [-1.78, 0]], nr = y => { for (let i = 1; i < NP.length; i++) if (y >= NP[i][0]) { const [x0, r0] = NP[i - 1], [x1, r1] = NP[i]; return r1 + (r0 - r1) * (y - x1) / (x0 - x1); } return 0; };
@@ -16473,7 +16477,7 @@ function shipArt(k, accent, view) {
   let mfr = -1; { const mf = /~f(\d+)$/.exec(String(accent)); if (mf) { mfr = +mf[1]; accent = String(accent).slice(0, mf.index); } } /* v651 a monster's battle frame */ /* v416 a Cube Destroyer turned to aim rotK x 30 degrees round from its rest pose */
   try {
     let M = shipMats(accent); if (k === "flagship") { const F2 = flagMats(M.fac, 2.9); M = Object.assign(Object.create(M), F2); Object.defineProperty(M, "fac", { value: Object.getPrototypeOf(M).fac }); } /* v256 the portrait wears the plated metal */
-    const ship = kind === "s" ? (glbShip(k) || buildShip(k, M)) : kind === "a" ? buildAlien(k) : kind === "m" ? buildMissile(k, M) : buildDefense(k, M); if (fin && kind === "s") hullFinish(ship, fin, k); const mfM = mfr >= 0 && kind === "a" ? monBatPose(ship, k, mfr) : null; S.scene.add(ship);
+    const ship = kind === "s" ? (glbShip(k) || buildShip(k, M)) : kind === "a" ? (mfr >= 0 && MON_WAVE[k] ? monMerged(k) : buildAlien(k)) : kind === "m" ? buildMissile(k, M) : buildDefense(k, M); if (fin && kind === "s") hullFinish(ship, fin, k); const mfM = mfr >= 0 && kind === "a" ? monBatPose(ship, k, mfr) : null; S.scene.add(ship);
     if ((kind === "d" || kind === "m") && view === "side") ship.rotation.y = -.5; // turrets read better turned a little toward the camera
     if (k === "eclipse" && view === "side") ship.rotation.x = .42; if (view === "side" && TITAN_INFO[k]) ship.rotation.x = k === "harbinger" ? 1.0 : .38; /* v556 */ if (k === "smoth" && view === "side") { ship.rotation.order = "ZYX"; ship.rotation.set(Math.PI / 2, 0, Math.PI / 2); } /* v528 its back: head up, wings spread */ /* v522 the Solar Moth shows its wings in battle, not their edge */ // v170 the Discovery's saucer reads as a disc, not a sliver, tilted a little toward the camera
     const gl = S.glowT || (S.glowT = glowTex("150,215,255", 1)), FG = k === "flagship" ? M.neon.color : null, gc = !FG && fin && kind === "s" ? finEng(fin) : FG ? [new TH.Color(0xffffff).lerp(FG, .5), FG] : ship.userData.engCol ? ship.userData.engCol : kind === "a" ? [0xd8ff9a, 0x7aff3a] : [0x9fdcff, 0x4f9fff];
@@ -16493,7 +16497,7 @@ function shipArt(k, accent, view) {
     const out = document.createElement("canvas"); out.width = W; out.height = H; const ox = out.getContext("2d"); ox.imageSmoothingQuality = "high"; ox.drawImage(S.cv, 0, 0, W, H); if (hero || FG || fin) hdrBloom(ox, W, H, S.renderer.toneMappingExposure, FG ? .42 : fin ? .4 : 1); else if (kind === "s") { const hid = []; ship.traverse(o => { if (o.isSprite && o.visible) { o.visible = false; hid.push(o); } }); hdrBloom(ox, W, H, S.renderer.toneMappingExposure, .6); hid.forEach(o => o.visible = true); } // v359 the windows' glow (not the engines')
     if (FG) { ship.updateMatrixWorld(true); out.guns = (ship.userData.guns || []).map(([x, y, z]) => { const v = new TH.Vector3(x, y, z).applyMatrix4(ship.matrixWorld).project(S.camera); return [v.x, -v.y * .5]; }); const pr = (x, y, z) => { const v = new TH.Vector3(x, y, z).applyMatrix4(ship.matrixWorld).project(S.camera); return [v.x, -v.y * .5]; }; out.thr = ship.userData.eng.slice(0, 3).map(e => pr(e[0], e[1], e[2])); out.bow = pr(6.1, -.12, 0); const st = pr(-7, -.12, 0); out.ang = Math.atan2(st[1] - out.bow[1], st[0] - out.bow[0]); } // where each muzzle and nozzle lands on the picture, and the way the hull points /* the battle adds its own bloom to sprites */
     if (fin) finSpark(out, fin, k); if (view === "side" && kind === "s" && k !== "eclipse" && k !== "flagship" && !ship.userData.glb && !fin) { const P = cardPal(k); if (P) cardGrade(out, P, k); } // v78: battle hulls take their card's look (v170: not the Discovery, whose own plating, windows and lights already match its card)
-    S.scene.remove(ship); if (mfM) mfM.forEach(m => m.dispose()); ship.traverse(o => { if (o.geometry && !ship.userData.glb) o.geometry.dispose(); if (o.isSprite) o.material.dispose(); if (ship.userData.glb && o.isMesh && o.material) for (const t of [o.material.map, o.material.normalMap, o.material.roughnessMap, o.material.metalnessMap, o.material.emissiveMap]) if (t) t.dispose(); }); /* v345 a model shares its geometry with the loaded copy */
+    S.scene.remove(ship); if (mfM) mfM.forEach(m => m.dispose()); ship.traverse(o => { if (o.geometry && !ship.userData.glb && !ship.userData.keepGeo) o.geometry.dispose(); if (o.isSprite) o.material.dispose(); if (ship.userData.glb && o.isMesh && o.material) for (const t of [o.material.map, o.material.normalMap, o.material.roughnessMap, o.material.metalnessMap, o.material.emissiveMap]) if (t) t.dispose(); }); /* v345 a model shares its geometry with the loaded copy */
     return cachePut(S, key, out);
   } catch (e) { return cachePut(S, key, null); }
 }
