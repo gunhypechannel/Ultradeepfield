@@ -577,7 +577,7 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 .pth.pr{--pc:85,214,232}.pth.rdy{--pc:113,223,144;box-shadow:inset 3px 0 0 rgba(var(--pc),.9),0 0 18px rgba(var(--pc),.22);animation:pthGlow 2.8s ease-in-out infinite}
 @keyframes pthGlow{50%{box-shadow:inset 3px 0 0 rgba(var(--pc),.9),0 0 26px rgba(var(--pc),.38)}}
 .pth-art{grid-area:a;width:84px;height:56px;border-radius:10px;background:radial-gradient(circle at 50% 60%,rgba(var(--pc),.22),#02060c 72%);border:1px solid rgba(var(--pc),.3);display:grid;place-items:center;overflow:hidden}
-.pth-art canvas{width:84px;height:56px;display:block}
+.pth-art canvas{width:84px;height:56px;display:block}.pth-art img{width:100%;height:100%;object-fit:cover;display:block}.pth-art{position:relative}.pth-art::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),inset 0 -14px 18px -10px rgba(0,0,0,.55);pointer-events:none}
 .pth-b{grid-area:b;min-width:0;display:flex;flex-direction:column;gap:3px}.pth-k{font-family:var(--f-display);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:rgb(var(--pc))}
 .pth-n{font-size:16px;font-weight:700;color:#eef8fc;line-height:1.15;overflow-wrap:anywhere}
 .pth-bar{height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:2px}.pth-bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,rgba(var(--pc),.55),rgb(var(--pc)));box-shadow:0 0 8px rgba(var(--pc),.6)}
@@ -589,8 +589,14 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 .pth-rw{grid-area:r;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:7px 10px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.06);font-size:13px}
 .pth-rw .pg{display:inline-flex;align-items:center;gap:3px;color:#d9f6e4;font-weight:600}.pth-rw .pg svg,.pth-rw .pg img{width:16px;height:16px}.pth-rw .pg.shard{color:#d9a6ff}
 .pth-rw > span:first-child{font-family:var(--f-display);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-@media (max-width:360px){.pth{grid-template-columns:64px minmax(0,1fr);grid-template-areas:"a b" "g g" "q q" "r r"}.pth-art,.pth-art canvas{width:64px;height:44px}.pth-go{justify-self:stretch}}
+@media (max-width:360px){.pth{grid-template-columns:72px minmax(0,1fr);grid-template-areas:"a b" "g g" "q q" "r r"}.pth-art,.pth-art canvas{width:72px;height:54px}.pth-go{justify-self:stretch}}
 .podl{display:block;font-size:10.5px;color:var(--muted);text-align:center;margin-bottom:2px;white-space:nowrap}.podl.out{color:#ff8a7a}
+.pchip.bp{cursor:default;border-color:var(--bc);color:var(--bc);background:color-mix(in srgb,var(--bc) 10%,transparent)}.bpreq{border-color:color-mix(in srgb,var(--bc) 60%,transparent)!important}.bpreq b{color:var(--bc)}
+.sty{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:10px;margin:8px 0 4px}.styc{display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:14px;border:1px solid rgba(255,210,120,.28);background:radial-gradient(120% 120% at 0 0,rgba(255,200,110,.12),transparent 60%),rgba(6,12,22,.6);min-width:0}
+.styc.wide{grid-column:1/-1}.styc b{font-family:var(--f-display);letter-spacing:.06em;color:#ffe2a8}.styc small{color:var(--muted);font-size:12px;line-height:1.4}.styc .btn{align-self:flex-start;margin-top:auto}
+.stys{display:flex;gap:4px;flex-wrap:wrap}.stys i{width:26px;height:26px;border-radius:6px;border:1px solid rgba(255,255,255,.25);box-shadow:inset 0 0 6px rgba(255,255,255,.25)}.stys i.lk{opacity:.35;filter:grayscale(.6)}
+.stypt span{display:inline-block;font-family:var(--f-display);font-size:13px;letter-spacing:.12em;padding:4px 12px;border-radius:999px;color:#1a1200;background:linear-gradient(135deg,#7a5410,#ffe08a 45%,#c8901e 60%,#fff3c0)}
+.stypl{display:flex;gap:6px}.stypl canvas{width:56px;height:56px;border-radius:50%;display:block}
 .chipq.met{border-color:rgba(113,223,144,.5);color:var(--green)}
 
 /* Galaxy map */
@@ -5342,7 +5348,7 @@ function peaceBreak(tgt) { const P = S.peace, T = now(); if (!P || !(P.until > T
   S.peace = { until: T, cd: T + PEACE_CD }; note(`Your Peace Shield dropped: you moved against ${tgt && tgt.name ? tgt.name : "another commander"}. It can go up again in 12 hours.`, "warn"); }
 const peaceHits = p => { if (!p || !p.owner || p.owner === G.me) return false; const st = pStatus(p); return st === "player" || st === "shielded" || st === "home"; };
 const SHOP_UNITS = { boost: i => i + 1, accel: i => [.5, 2, 8][i], res: i => [6, 24, 72][i], planet: i => [4, 9, 15][i] };
-const SHOP_CI = { packs: "◆", vip: "♛", boost: "⇑", accel: "⏩", res: "⬢", forge: "⚒", planet: "⬚", officer: "✪", class: "⚔", special: "✦", skins: "◐" };
+const SHOP_CI = { style: "✧", packs: "◆", vip: "♛", boost: "⇑", accel: "⏩", res: "⬢", forge: "⚒", planet: "⬚", officer: "✪", class: "⚔", special: "✦", skins: "◐" };
 const shopDay = () => utcDay(), shopDayEnd = () => { const d = new Date(); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1); };
 function shopDeal() { const L = Object.keys(SHOP).filter(k => { const s = SHOP[k]; return s.cost >= 10 && s.tier != null && ["boost", "accel", "res", "officer", "planet"].includes(s.cat); }).sort(); if (!L.length) return null;
   const k = L[hash("deal" + shopDay()) % L.length], s = SHOP[k]; return { k, s, cost: Math.max(1, Math.ceil(s.cost * .65)), bought: (S.dealDay || "") === shopDay() }; }
@@ -5613,13 +5619,21 @@ function invGridHTML() { const it = S.items || {}, ORD = Object.keys(SHOP), inv 
   if (sel || cats.length < 2) return chips + `<div class="shopgrid">${inv.filter(k => !sel || catOf(k) === sel).map(card).join("")}</div>`;
   return chips + cats.map(([c, l]) => `<div class="invsec"><h4><i>${SHOP_CI[c] || "✦"}</i>${lab(l)}<small>${fmt(n(c))}</small></h4><div class="shopgrid">${inv.filter(k => catOf(k) === c).map(card).join("")}</div></div>`).join(""); }
 function shInv() { return `<div class="hd invhd"><div style="flex:1;min-width:0"><div class="chapter">Your items</div><h2>Inventory · ${fmt(invCount())}</h2><p class="note">Boosters, crates, accelerators and spoils. Tap Use to use one.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${invGridHTML()}<button class="btn ghost wide" style="margin-top:12px" data-act="openShop">Get more in the Void Shop ›</button>`; }
+/* v657 the shop's first section: looks and status, not progress */
+function styleBody() { const pt = premT(), ks = Object.keys(SH).filter(k => { try { return own(k) > 0; } catch (e) { return false; } }), hk = SH[G.hullK] ? G.hullK : ks[0] || "battleship", nf = Object.values(HULL_F).filter(F => pt >= F.t).length;
+  const sw = Object.entries(HULL_F).map(([f, F]) => `<i class="${pt >= F.t || G.owner ? "" : "lk"}" style="background:url(art/hull/${f}.webp?v=${HULL_TV}) center/200%,${F.sw}" title="${esc(F.n)} · Premium Tier ${F.t}"></i>`).join("");
+  return `<p class="note">Make your empire unmistakable. Looks and status only: none of this changes a battle, and other commanders see all of it.</p>
+  <div class="sty"><div class="styc"><div class="stys">${sw}</div><b>Hull finishes</b><small>${nf ? `${nf} of ${Object.keys(HULL_F).length} unlocked at Premium Tier ${pt}.` : "Metal, gem and holo finishes for your warships, with a second trim colour."} Glyph Holo, Diamond, Obsidian and more, unlocked by Premium tier.</small><button class="btn amber sm" data-act="hullGo" data-k="${hk}">Style your ships</button></div>
+    <div class="styc"><div class="stypt"><span>${pt ? "Tier " + pt : "Premium"}</span></div><b>Premium tiers</b><small>${pt ? `You're at Premium Tier ${pt}. Each tier adds an exclusive planet skin, more hull finishes and a lasting bonus.` : "Every tier adds an exclusive planet skin, hull finishes and a lasting bonus. Tiers never expire."}</small><button class="btn ghost sm" data-act="premOpen">See the tiers</button></div>
+    <div class="styc wide"><b>Fleet captains</b><small>A face for every fleet, each with a small perk. Recruit once, keep forever.</small>${capRow()}</div>
+    <div class="styc"><div class="stypl">${PS_SKINS.slice(0, 4).map(x => `<canvas data-px="${x[0]}" role="img" aria-label="${esc(x[2])}"></canvas>`).join("")}</div><b>Planet skins</b><small>Premium looks for any world you hold, each with a small production perk.</small><button class="btn ghost sm" data-act="shopCat" data-v="skins">Browse skins</button></div></div>`; }
 function shShop() { setTimeout(shopWire, 0);
   if (sheet.cat === "packs" && !G.pkSeen) { G.pkSeen = 1; packsDeliver(); }
-  const cat = sheet.cat = sheet.cat || (window.udfShop && G.mode === "online" ? "packs" : "boost"), it = S.items || {}, T = now(), inv = Object.keys(it).filter(k => it[k] > 0 && SHOP[k]), invN = inv.reduce((a, k) => a + it[k], 0), sh = S.shards || 0;
+  const cat = sheet.cat = sheet.cat || "style", it = S.items || {}, T = now(), inv = Object.keys(it).filter(k => it[k] > 0 && SHOP[k]), invN = inv.reduce((a, k) => a + it[k], 0), sh = S.shards || 0;
   const bars = Object.keys(BUFF_N).filter(k => buffOn(k)).map(k => { const u = buffs()[k].until, span = k[0] === "b" && k.length === 2 ? 7 * DAY : 30 * DAY; return `<div class="sbar"><i style="width:${Math.min(100, (u - T) / span * 100).toFixed(1)}%"></i><b>${esc(BUFF_N[k])}${buffPct(k) ? ` +${buffPct(k)}%` : ""}</b><span data-end="${u}">${ftime(u - T)}</span></div>`; })
     .concat(cmdClass() ? [`<div class="sbar cls"><i style="width:100%"></i><b>${esc(SHOP["cl_" + cmdClass()].n)}</b><span>Permanent</span></div>`] : []);
   const free = (S.shopFree || "") !== shopDay();
-  const SECS = (window.udfShop && G.mode === "online" ? [["packs", "Packs"]] : []).concat(SHOP_CATS.filter(([k]) => k === "vip" || Object.values(SHOP).some(x => x.cat === k))).concat([["skins", "Planet skins"]]); /* v540 one long page */
+  const SECS = [["style", "Style"]].concat(window.udfShop && G.mode === "online" ? [["packs", "Packs"]] : []).concat(SHOP_CATS.filter(([k]) => k === "vip" || Object.values(SHOP).some(x => x.cat === k))).concat([["skins", "Planet skins"]]); /* v540 one long page */
   const strip = `<div class="shopstrip sticky" role="tablist">${SECS.map(([k, l]) => `<button role="tab" aria-selected="${k === cat}" class="${k === cat ? "on" : ""}" data-act="shopCat" data-v="${k}" data-sec="${k}"><i>${SHOP_CI[k] || "✦"}</i>${esc(l.replace(/^[♛◆]\s*/, ""))}</button>`).join("")}</div>`;
   const art = (k, s) => { const a = shopArtOf(k); return a ? `<span class="sart" style="background-image:url(${a})"></span>` : `<span class="sart g" style="--tc:${s.col || "#55d6e8"}">${s.ic.length === 1 && "mcg".includes(s.ic) ? RI[s.ic] : s.ic}</span>`; };
   const buyBtn = (k, s, c) => s.cost ? (s.cat === "res" ? `<small class="podl${podLeft(k) > 0 ? "" : " out"}">${Math.max(0, podLeft(k))}/${POD_DAY} today</small>` : "") + `<button class="btn amber sm" data-act="buy" data-k="${k}" ${sh >= (c || s.cost) && !(s.cat === "res" && podLeft(k) <= 0) ? "" : "disabled"}>◆${c || s.cost}</button>` : `<span class="note">Packs & events</span>`;
@@ -5631,7 +5645,7 @@ function shShop() { setTimeout(shopWire, 0);
       const chips = `<div class="schips">${L.map(([, x], i) => `<button class="${i === sel ? "on" : ""}" style="--cc:${x.col}" data-act="shopTier" data-g="${esc(g)}" data-i="${i}">${/_(\d+)$/.test(L[i][0]) ? L[i][0].match(/_(\d+)$/)[1] + " days" : ITIERS[x.tier] ? ITIERS[x.tier][1] : x.tier}</button>`).join("")}</div>`;
       const badge = best === sel ? `<em class="sbadge best">Best value</em>` : sel === 1 && L.length > 2 ? `<em class="sbadge pop">Popular</em>` : save > 0 ? `<em class="sbadge sv">Save ${save}%</em>` : "";
       return one(k, s, chips + badge); }).join(""); };
-  let body; const secBody = k => k === "packs" ? packsBody() : k === "skins" ? `<p class="note">Premium looks for any world you hold. Buy once with Void Shards, then apply from Rename & reskin on the planet. Each adds a small production perk to the world wearing it.</p>${pxGrid("shop")}` : k === "vip" ? vipShopBody() : `<div class="sgrid2 stiles">${grouped(Object.entries(SHOP).filter(([, s]) => s.cat === k))}</div>`;
+  let body; const secBody = k => k === "style" ? styleBody() : k === "packs" ? packsBody() : k === "skins" ? `<p class="note">Premium looks for any world you hold. Buy once with Void Shards, then apply from Rename & reskin on the planet. Each adds a small production perk to the world wearing it.</p>${pxGrid("shop")}` : k === "vip" ? vipShopBody() : `<div class="sgrid2 stiles">${grouped(Object.entries(SHOP).filter(([, s]) => s.cat === k))}</div>`;
   if (cat !== "inv") body = SECS.map(([k, l]) => `<section class="ssec" id="ssec-${k}" data-sec="${k}"><h3 class="ssech"><i>${SHOP_CI[k] || "✦"}</i>${esc(l.replace(/^[♛◆]\s*/, ""))}</h3>${secBody(k)}</section>`).join("") + `<p class="note send">That's the whole shop. New items arrive with updates.</p>`;
   else if (cat === "packs") body = packsBody();
   else if (cat === "skins") body = `<p class="note">Premium looks for any world you hold. Buy once with Void Shards, then apply from Rename & reskin on the planet. Each adds a small production perk to the world wearing it.</p>${pxGrid("shop")}`;
@@ -5698,7 +5712,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 656;
+const GAME_V = 657;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9741,7 +9755,7 @@ function battleXP(rep) {
   if (st) for (const k in st) v += st[k].killV || 0; else for (const [k, n] of Object.entries(side === "a" ? rep.lossD || {} : rep.lossA || {})) v += n * unitCost(k);
   const xp = Math.round(v / 2500) + (repWin(rep) ? 5 : 1); rep.xp = xp; S.bxp = (S.bxp || 0) + xp; return xp;
 }
-function addReport(rep) { battleXP(rep); recordBattle(rep); try { advBattle(rep); } catch (e) {} S.reports.unshift(rep); if (S.reports.length > 25) S.reports.length = 25; S.unread++; }
+function addReport(rep) { battleXP(rep); recordBattle(rep); try { advBattle(rep); } catch (e) {} try { bpDrop(rep); } catch (e) {} S.reports.unshift(rep); if (S.reports.length > 25) S.reports.length = 25; S.unread++; }
 
 /* ---------- joint strikes (shared) ---------- */
 const memberCount = a => Object.keys(a.members || {}).length;
@@ -19039,7 +19053,7 @@ function shDetail() { if (sheet.kind === "s" && ARCH["s_" + sheet.k] && !archLv(
   const tabs = P ? null : kind === "b" ? (k === "lab" ? ["Overview", "Research"] : k === "shipyard" ? ["Overview", "Production", "Repair"] : k === "radar" ? ["Overview", "Warning"] : k === "allyDepot" ? ["Overview", "Fleets", "Invite"] : k === "repairYard" ? ["Overview", "Repair bay"] : k === "flagDock" ? ["Overview", "Flagship"] : k === "sanct" ? ["Overview", "Sanctuary"] : null) : null, tab = sheet.tab || 0;
   let mid;
   if (unit) { const st = unitStat(k, techOf(null)), sp = kind === "s" ? spdNum(k) : 0, fu = kind === "s" ? drvOf(k).fu : 0, si = (ic, l, v, cl) => `<p class="${cl}">${DSI[ic]}<span>${l}:</span> <b>${fmt(v)}</b></p>`;
-    mid = `${kind === "s" && TITAN_INFO[k] ? `<div class="tcreq${(S.tcore || 0) >= SH[k].tc ? " ok" : ""}"><b>⬢ Titan Cores ${S.tcore || 0} / ${SH[k].tc}</b><small>Needed for every Titan, on top of resources. Earned from super bosses: every boss you help defeat, top damage, boss milestones, Alliance Conquest and Void Caches. Built at your homeworld only.</small></div><button class="btn amber wide t3open" data-act="t3Open" data-k="${k}">◎ Inspect in 3D · ${esc(TITAN_INFO[k].ab)}</button>` : ""}<div class="dstat"><div class="dp">${si("atk", "Attack", st.atk, "s-a")}${si("sh", "Shields", st.sh, "s-s")}${si("def", "Defence", st.hull, "s-d")}</div><div class="dp">${si("cap", "Capacity", D.cargo || 0, "s-c")}${si("spd", "Speed", sp, "s-c")}${si("gas", "Gas use", fu, "s-c")}</div></div>
+    mid = `${kind === "s" && BP[k] ? bpBox(k) : ""}${kind === "s" && TITAN_INFO[k] ? `<div class="tcreq${(S.tcore || 0) >= SH[k].tc ? " ok" : ""}"><b>⬢ Titan Cores ${S.tcore || 0} / ${SH[k].tc}</b><small>Needed for every Titan, on top of resources. Earned from super bosses: every boss you help defeat, top damage, boss milestones, Alliance Conquest and Void Caches. Built at your homeworld only.</small></div><button class="btn amber wide t3open" data-act="t3Open" data-k="${k}">◎ Inspect in 3D · ${esc(TITAN_INFO[k].ab)}</button>` : ""}<div class="dstat"><div class="dp">${si("atk", "Attack", st.atk, "s-a")}${si("sh", "Shields", st.sh, "s-s")}${si("def", "Defence", st.hull, "s-d")}</div><div class="dp">${si("cap", "Capacity", D.cargo || 0, "s-c")}${si("spd", "Speed", sp, "s-c")}${si("gas", "Gas use", fu, "s-c")}</div></div>
       <div class="dp dqty"><span class="dow">${DSI.own}${P ? `On ${esc(P.name)}` : "Owned"}: <b>${fmt(owned)}</b></span><span class="dtm">${ftime(time)} ⏱</span><input type="number" id="${P ? "cq" : "q"}-${k}" class="dqn" min="1" value="${n}" inputmode="numeric" aria-label="Quantity">
         <input type="range" id="dqr" min="1" max="${Math.max(1, Math.min(9999, D.max ? D.max - owned : 999))}" value="${n}" aria-label="Quantity slider"></div>`; }
   else { const [cur, nxt] = kind === "b" ? [effect(k, L).split("→")[0] || "—", effect(k, L)] : rEffect(k, L);
@@ -25223,13 +25237,32 @@ const masteryReward = m => ({ m: Math.round((m.c.m || 0) * .6 + 600), c: Math.ro
 const masteryReady = () => masteryList().filter(m => m.done && !(S.mast || {})[m.id]).length;
 /* v653 one step on the path, as a card */
 const pathKind = k => k in B ? "b" : k in R ? "r" : null;
-function pathCard(m, miss, rw) { const E = Object.entries(m.req || {}).filter(([k]) => ANY[k]), tot = E.length, met = E.filter(([k, l]) => lvlOf(k) >= l).length, ready = !miss,
+/* ---------- v657 blueprints: the top ships need a piece earned in battle, once; it can never be bought ---------- */
+const BP = { bastion: { c: "relic", need: 1 }, dreadnought: { c: "bcore", need: 2 }, worldbreaker: { c: "cfrag", need: 5 } };
+const BPC = { relic: { n: "Ancient Relic", ic: "⌬", col: "#ffd27a", src: "Explore and win at pyramids", ch: .5 }, bcore: { n: "Beast Core", ic: "✶", col: "#ff8a5a", src: "Win monster hunts", ch: .4 }, cfrag: { n: "Cube Fragment", ic: "◈", col: "#7dff9a", src: "Win Cube fights", ch: 1 } };
+function bpOk(k) { const B0 = BP[k]; if (!B0 || !S) return true; S.bpU = S.bpU || {}; if (S.bpU[k]) return true;
+  let has = 0; try { has = own(k) + (S.sq || []).filter(x => x.k === k).length; } catch (e) {} if (has > 0) { S.bpU[k] = 1; dirty(); return true; } return false; }
+const bpHave = c => ((S && S.bpc) || {})[c] || 0;
+function bpNeed(k) { const B0 = BP[k], C = BPC[B0.c]; toast(`${SH[k].n} needs its blueprint: ${C.ic} ${B0.need} ${C.n}${B0.need > 1 ? "s" : ""} (you have ${bpHave(B0.c)}). ${C.src}. They can't be bought.`, "warn"); }
+function bpBox(k) { const B0 = BP[k]; if (!B0) return ""; const C = BPC[B0.c], ok = bpOk(k), h = bpHave(B0.c);
+  return `<div class="tcreq bpreq${ok ? " ok" : ""}" style="--bc:${C.col}"><b>${C.ic} ${ok ? "Blueprint unlocked" : `${C.n}s ${h} / ${B0.need}`}</b><small>${ok ? `You earned the ${esc(SH[k].n)} blueprint in battle. Build as many as you like.` : `The ${esc(SH[k].n)} blueprint is earned, never bought. ${C.src}: each win can recover a ${C.n}. With ${B0.need}, the ship unlocks for good.`}</small></div>`; }
+/* a fresh win of the right kind can recover a component; when there are enough, the blueprint unlocks */
+function bpDrop(rep) { if (!rep || rep.test || !S || rep.kind !== "attack" || rep.winner !== "a") return; const T = now(); if (rep.at && T - rep.at > 10 * 60000) return;
+  S.bpGot = S.bpGot || {}; if (rep.id && S.bpGot[rep.id]) return; const t = String(rep.title || "");
+  const c = /^Hunt:/.test(t) ? "bcore" : /^Guardians of /.test(t) ? "relic" : /Cube/.test(t) && !/^(Hive raid|Cube strike)/.test(t) ? "cfrag" : null; if (!c) return;
+  const ks = Object.keys(BP).filter(k => BP[k].c === c && !bpOk(k)); if (!ks.length) return; if (Math.random() >= BPC[c].ch) return;
+  if (rep.id) { S.bpGot[rep.id] = 1; const ids = Object.keys(S.bpGot); if (ids.length > 300) delete S.bpGot[ids[0]]; }
+  const C = BPC[c], n = c === "cfrag" && /(Super|Omega|Elite|Warden)/.test(t) ? 2 : 1; S.bpc = S.bpc || {}; S.bpc[c] = (S.bpc[c] || 0) + n; dirty();
+  for (const k of ks) { const B0 = BP[k]; if (S.bpc[c] >= B0.need && !S.bpU[k]) { S.bpc[c] -= B0.need; S.bpU[k] = 1;
+      setTimeout(() => { try { note(`Blueprint unlocked: the ${SH[k].n}. Your Shipyard can build it now.`, "win"); SFX.fanfare && SFX.fanfare(); advHolo(`Commander, the ${C.n}s are enough. Our engineers have the ${SH[k].n} blueprint. The Shipyard can build it now.`, true); } catch (e) {} }, 2600); return; } }
+  const k0 = ks[0]; setTimeout(() => { try { note(`${C.ic} ${C.n} recovered: ${S.bpc[c]} / ${BP[k0].need} toward the ${SH[k0].n} blueprint.`, "win"); } catch (e) {} }, 2200); }
+function pathCard(m, miss, rw) { const E = Object.entries(m.req || {}).filter(([k]) => ANY[k]), tot = E.length, met = E.filter(([k, l]) => lvlOf(k) >= l).length, ready = !miss && bpOk(m.k), bpx = BP[m.k] && !bpOk(m.k) ? `<span class="pchip bp" style="--bc:${BPC[BP[m.k].c].col}">${BPC[BP[m.k].c].ic} ${BPC[BP[m.k].c].n}s <b>${bpHave(BP[m.k].c)}/${BP[m.k].need}</b></span>` : "",
     pct = tot ? Math.round(E.reduce((a, [k, l]) => a + Math.min(1, lvlOf(k) / l), 0) / tot * 100) : 100, first = E.find(([k, l]) => lvlOf(k) < l && pathKind(k)), sh = m.kind !== "r";
   const go = ready ? `data-act="detail" data-kind="${sh ? "s" : "r"}" data-k="${m.k}"` : first ? `data-act="detail" data-kind="${pathKind(first[0])}" data-k="${first[0]}"` : `data-act="nav" data-v="build" data-s="${sh ? "ships" : "research"}"`;
-  const chips = E.map(([k, l]) => { const ok = lvlOf(k) >= l, pk = pathKind(k); return `<button class="pchip${ok ? " ok" : ""}"${pk ? ` data-act="detail" data-kind="${pk}" data-k="${k}"` : ""}>${ok ? "✓ " + esc(ANY[k].n) : `${esc(ANY[k].n)} <b>${lvlOf(k)}/${l}</b>`}</button>`; }).join("");
-  return `<div class="pth ${sh ? "ps" : "pr"}${ready ? " rdy" : ""}"><div class="pth-art"><canvas ${sh ? `data-ship="${m.k}"` : `data-rs="${m.k}|1"`} role="img" aria-label="${esc(m.n)}"></canvas></div>
+  const chips = bpx + E.map(([k, l]) => { const ok = lvlOf(k) >= l, pk = pathKind(k); return `<button class="pchip${ok ? " ok" : ""}"${pk ? ` data-act="detail" data-kind="${pk}" data-k="${k}"` : ""}>${ok ? "✓ " + esc(ANY[k].n) : `${esc(ANY[k].n)} <b>${lvlOf(k)}/${l}</b>`}</button>`; }).join("");
+  return `<div class="pth ${sh ? "ps" : "pr"}${ready ? " rdy" : ""}"><div class="pth-art">${ART[m.k] ? `<img src="${ART[m.k]}" alt="${esc(m.n)}" loading="lazy">` : `<canvas ${sh ? `data-ship="${m.k}"` : `data-rs="${m.k}|1"`} role="img" aria-label="${esc(m.n)}"></canvas>`}</div>
     <div class="pth-b"><small class="pth-k">${sh ? (TITAN_INFO[m.k] ? "Titan" : "New ship") : "New research"}</small><b class="pth-n">${esc(m.n)}</b>
-      <div class="pth-bar"><i style="width:${pct}%"></i></div><small class="pth-st">${ready ? "Ready to start" : `${met}/${tot} requirements met`}</small></div>
+      <div class="pth-bar"><i style="width:${pct}%"></i></div><small class="pth-st">${ready ? "Ready to start" : (miss ? `${met}/${tot} requirements met` : "Blueprint needed")}</small></div>
     <button class="btn ${ready ? "amber" : "ghost"} sm pth-go" ${go}>${ready ? "Start" : "Next step"}</button>
     ${ready ? "" : `<div class="pth-req">${chips}</div>`}<div class="pth-rw"><span>Reward</span>${pathGain(m)}</div></div>`; }
 /* the reward, as a gain: never red for what you cannot afford */
@@ -25869,6 +25902,7 @@ const ACT = {
   csb: d => act(() => {
     const p = G.byId[d.id], k = d.k, def = SH[k]; if (!p || pStatus(p) !== "mine" || !def) return;
     if (def.max || def.tc) return toast(`${def.n} can only be built at your homeworld.`, "warn");
+    if (!bpOk(k)) return bpNeed(k); /* v657 */
     if (missingAt(def.req, p).length) return toast(`${p.name} can't build ${def.n} yet.`, "warn");
     const qn = (p.sq ? 1 : 0) + csList(p).length; if (qn >= Q_MAX) return toast(`${p.name}'s shipyard queue is full (${Q_MAX} orders).`, "warn");
     const n = Math.max(1, Math.floor(+($("#cq-" + k) || {}).value || 1)), c = mul(def.c, n);
@@ -25899,6 +25933,7 @@ const ACT = {
   make: d => act(() => {
     const def = d.kind === "def" ? DF[d.k] : SH[d.k]; let n = Math.max(1, Math.floor(+($("#q-" + d.k) || {}).value || 1));
     if (missing(def.req).length || allyBlock(def)) return;
+    if (d.kind !== "def" && !bpOk(d.k)) return bpNeed(d.k); /* v657 */
     if (def.max) n = Math.min(n, def.max - (d.kind === "def" ? S.def[d.k] : own(d.k)) - S.sq.filter(x => x.k === d.k).reduce((a, x) => a + x.left, 0)); if (n <= 0) return;
     if (def.tc) { const have = S.tcore || 0; if (have < def.tc) return toast(`${def.n} needs ${def.tc} Titan Cores ⬢ (you have ${have}). Earn them by defeating super bosses.`, "warn"); n = Math.min(n, Math.floor(have / def.tc)); } /* v557 */
     const c = mul(def.c, n); if (!pay(c)) return toast("Not enough resources.", "warn"); if (def.tc) S.tcore -= def.tc * n;
