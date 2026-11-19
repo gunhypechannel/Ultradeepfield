@@ -5724,7 +5724,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 661;
+const GAME_V = 662;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -15134,6 +15134,9 @@ function studio() { G.stuT = Date.now(); /* v537 */
     scene.add(new TH.AmbientLight(0x4a5468, .2));
     key.shadow.mapSize.set(1024, 1024); Object.assign(key.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: .5, far: 40 }); key.shadow.bias = -.0008;
     STU = { cv, renderer, scene, camera: new TH.PerspectiveCamera(28, 2, .1, 400), cache: G.stuCache || {}, tex: null, key };
+    try { const C = STU.cache, o = [], os = []; for (const k in C) { const c = C[k]; if (c && c.getContext) (k.endsWith("|side") ? os : o).push(k); } /* fb-20261119 a kept cache keeps its eviction order */
+      for (const [L, n] of [[os, IOS ? 48 : MOBILE ? 64 : 96], [o, IOS ? 32 : 48]]) { let i = 0; while (L.length > n && i < L.length) { const k = L[i]; if (ART_LIVE.has(k)) { i++; continue; } L.splice(i, 1); const c = C[k]; if (c && c.getContext) { c.width = c.height = 0; c._mip = null; } delete C[k]; } }
+      STU.order = o; STU.orderSide = os; } catch (e) {}
   } catch (e) { STU = false; }
   return STU || null;
 }
@@ -24777,9 +24780,9 @@ function sessRestore() { let o = null; try { o = JSON.parse(localStorage.getItem
   if (o.sheet) setTimeout(() => { try { if (!sheet && !battle && !$("#adv")) openSheet(o.sheet); } catch (e) {} }, 2500); }
 document.addEventListener("visibilitychange", () => { if (document.hidden) sessSave(); }); addEventListener("pagehide", sessSave); setInterval(sessSave, 15000);
 setInterval(() => { if (!G.sessDone && G.ready && S && G.me) { const tn = performance.now(); G.sessT0 = G.sessT0 || tn; if (tn - G.sessT0 < 20000 && (tn - G.sessT0 < 4000 || GLB_RUN || GLB_Q.length)) return; /* v426 let the launch settle first */ try { sessRestore(); } catch (e) { G.sessDone = 1; } } }, 500);
-function iosTexCap(k) { return k === "gal" ? 512 : 768; } /* fb-20261115 iPhone/iPad: largest texture side per 3D world (map, base); a function so it is ready before this line runs */
+function iosTexCap(k) { const ios = typeof IOS !== "undefined" && IOS, mob = typeof MOBILE !== "undefined" && MOBILE, weak = typeof WEAK !== "undefined" && WEAK; if (ios || weak) return k === "gal" ? 512 : 768; return mob ? 1024 : 0; } /* v662 Android phones capped too (weak ones like iPhone) */ /* fb-20261115 iPhone/iPad: largest texture side per 3D world (map, base); a function so it is ready before this line runs */
 function glCap(cv, cap) { const g0 = cv.getContext; cv.getContext = function (n, a) { const gl = g0.call(this, n, a); if (gl && !gl.__udfCap) { const gp = gl.getParameter; gl.__udfCap = cap; gl.getParameter = function (q) { const v = gp.call(this, q); return q === 3379 ? Math.min(v, cap) : v; }; } return gl; }; } /* 3379 = MAX_TEXTURE_SIZE */
-function glNew(o, cap) { if (cap && IOS && o && o.canvas) try { glCap(o.canvas, cap); } catch (e) {} const r = new TH.WebGLRenderer(o); try { r.debug.checkShaderErrors = /[?&]gldebug/.test(location.search); } catch (e) {} try { glPace(r); } catch (e) {} return r; }
+function glNew(o, cap) { if (cap && o && o.canvas) try { glCap(o.canvas, cap); } catch (e) {} const r = new TH.WebGLRenderer(o); try { r.debug.checkShaderErrors = /[?&]gldebug/.test(location.search); } catch (e) {} try { glPace(r); } catch (e) {} return r; }
 /* v530 shader pacing: a draw whose material has never been drawn may compile a shader (on an iPhone ~0.1 s each). While a scene is
    paced (r.pace.scene), once this frame has spent its compile budget the remaining never-drawn materials wait for the next frame. */
 function glPace(r) { const gl = r.getContext(), lp = gl.linkProgram, rbd = r.renderBufferDirect, seen = new WeakSet(); let links = 0;
