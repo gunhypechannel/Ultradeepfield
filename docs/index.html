@@ -5282,10 +5282,10 @@ function shPackAdmin() {
     <h3 class="viph">Testers · ${T.size}</h3><div class="pkrows">${(A.testers || []).map(t => `<div class="pkrow"><span><b>${esc(t.commander)}</b></span><button class="btn ghost sm" data-act="pkaTester" data-u="${esc(t.uid)}" data-on="0">Remove</button></div>`).join("")}
     ${who.filter(([u]) => !T.has(u)).map(([u, n]) => `<div class="pkrow"><span>${esc(n)}</span><button class="btn sm" data-act="pkaTester" data-u="${esc(u)}" data-on="1">Make tester</button></div>`).join("")}</div>`;
 }
-function pkApply(c, sign) { const got = []; if (c.premT) { if (sign > 0) S.premT = Math.max(S.premT || 0, c.premT); else if ((S.premT || 0) <= c.premT) S.premT = c.premT - 1; got.push(`Premium Tier ${c.premT}`); } /* v626 */
+function pkApply(c, sign) { const got = []; if (c.tcore) { S.tcore = Math.max(0, (S.tcore || 0) + sign * c.tcore); got.push(`${fmt(c.tcore)} Titan Cores`); } /* v655 */ if (c.premT) { if (sign > 0) S.premT = Math.max(S.premT || 0, c.premT); else if ((S.premT || 0) <= c.premT) S.premT = c.premT - 1; got.push(`Premium Tier ${c.premT}`); } /* v626 */
   if (c.shards) { S.shards = Math.max(0, (S.shards || 0) + sign * c.shards); if (SEC.base) SEC.base.sh = Math.max(0, SEC.base.sh + sign * c.shards); got.push(`◆${fmt(c.shards)}`); } // v362 a pack is no cheat
   for (const [k, n] of Object.entries(c.items || {})) { if (k === "boost") S.boosts = Math.max(0, (S.boosts || 0) + sign * n); else if (SHOP[k]) { if (sign > 0) giveItem(k, n); else { S.items = S.items || {}; S.items[k] = Math.max(0, (S.items[k] || 0) - n); } } else continue; got.push(k === "boost" ? `${n} speed-ups` : `${SHOP[k].n}${n > 1 ? ` ×${n}` : ""}`); }
-  const mats = c.mats || []; if (mats.length) { if (sign > 0) fsDrop(mats, "a pack", { nocap: true }); else { const f = fsOf(); for (const [m, t, n] of mats) { const key = fsMatKey(m, t); f.mats[key] = Math.max(0, (f.mats[key] || 0) - n); } } }
+  const mats = (Array.isArray(c.mats) ? c.mats : []).filter(Array.isArray); if (mats.length) { if (sign > 0) fsDrop(mats, "a pack", { nocap: true }); else { const f = fsOf(); for (const [m, t, n] of mats) { const key = fsMatKey(m, t); f.mats[key] = Math.max(0, (f.mats[key] || 0) - n); } } }
   return got; }
 /* v362 repair, once: the security check reversed the shards of packs worth over 2,500. Each "jumped" reversal logged within two minutes of a
    pack delivery is credited back and its strike removed. */
@@ -5295,7 +5295,7 @@ function packShardFix() { if (!S || S.pkShFix || G.mode !== "online" || !(store 
   if (back) { note(`Restored ◆${fmt(back)} Void Shards from your pack that the security check had wrongly taken back. Sorry about that!`, "win"); dirty(); } }
 async function packsDeliver() { try { packShardFix(); } catch (e) {} if (!window.udfShop || G.mode !== "online" || !S || G.pkDel) return; G.pkDel = 1;
   try { const L = (await udfShop.mine()) || []; S.grants = S.grants || {}; S.grantsRev = S.grantsRev || {};
-    for (const g of L) { const P = (G.packs || []).find(p => p.id === g.pack_id), nm = P ? P.name : g.pack_id;
+    for (const g of L) { const P = (G.packs || []).find(p => p.id === g.pack_id), nm = P ? P.name : g.pack_id === "owner_gift" ? "Owner gift" : g.pack_id;
       if (g.status === "granted") { if (!S.grants[g.id]) { if (g.source === "purchase" && P && +P.priceUsd > 0) S.premUsd = +((S.premUsd || 0) + +P.priceUsd).toFixed(2); /* v626 lifetime support */ const got = pkApply(g.contents || {}, 1); S.grants[g.id] = now(); dirty(); note(`${nm} delivered: ${got.join(", ")}.`, "win"); try { SFX.fanfare(); } catch (e) {} render(true); if (sheet) renderSheet(); await flush(); } // v362 shown at once, saved right after
         await udfShop.ack(g.id); }
       else if (g.status === "revoked") { if (!S.grantsRev[g.id]) { if (g.source === "purchase" && P && +P.priceUsd > 0) S.premUsd = Math.max(0, +((S.premUsd || 0) - +P.priceUsd).toFixed(2)); pkApply(g.contents || {}, -1); S.grantsRev[g.id] = now(); dirty(); await flush(); note(`${nm} was refunded, so its contents were taken back.`, "warn"); }
@@ -5691,7 +5691,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 654;
+const GAME_V = 655;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
