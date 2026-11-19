@@ -5712,7 +5712,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 658;
+const GAME_V = 659;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -11479,7 +11479,7 @@ const TITAN_LEN = { armageddon: 3.2, sovereign: 3.1, harbinger: 3.0 }; /* v556 t
 const bBeast = k => !!(MON[k] || BOSSK[k] || /^wb[A-Z]/.test(k));
 const bBig = k => /^wb[A-Z]/.test(k) || k === "cube" || k === "worldbreaker"; /* world and super bosses, the Cube */
 function bVsK(b, q) { if (!b || !q || bBeast(q.k)) return 1; const C = b.vsK || (b.vsK = {}); if (C[q.side] != null) return C[q.side];
-  const foes = (b.Q || []).filter(x => x && x.side !== q.side); return (C[q.side] = foes.some(x => bBig(x.k)) ? .55 : foes.some(x => (MON[x.k] || BOSSK[x.k]) && !bBig(x.k) && x.k !== "sphere" && x.k !== "cdrone") ? 1.6 : 1); }
+  const foes = (b.Q || []).filter(x => x && x.side !== q.side); return (C[q.side] = foes.some(x => bBig(x.k)) ? 1 /* v659: the boss side is drawn bigger instead */ : foes.some(x => (MON[x.k] || BOSSK[x.k]) && !bBig(x.k) && x.k !== "sphere" && x.k !== "cdrone") ? 1.6 : 1); }
 const bLen = k => TITAN_LEN[k] ? TITAN_LEN[k] : k === "worldbreaker" ? 4.3 /* v531 the biggest thing on the field */ : k === "eclipse" ? 2.6 /* v531 the Discovery Class well above the Reaper (1.72); v533 kept */ : Math.pow(SIDE_LEN[k] || .5, 1.15) * (BOSSK[k] || 1);
 for (const k in MON) BOSSK[k] = (BOSSK[k] || 1) * 1.35; BOSSK.snest = (BOSSK.snest || 1) * 1.35; /* v528 space monsters loom larger in battle */
 const SIDE_LEN = { armageddon: 2.2, sovereign: 2.2, harbinger: 2.1, wbOvl: 1.8, wbDev: 1.8, wbWar: 1.8, wbCon: 1.4, wbBrd: 1.8, wbTyr: 1.8, wbWym: 1.8, wbCol: 1.8, spyProbe: .3, cube: 1.2, sphere: .8, cdrone: .4, tender: .6, guardian: .82, escortCarrier: .9, supercarrier: 1.42, eclipse: 1.75, fighter: .38, heavyFighter: .46, hauler: .5, heavyCargo: .7, recycler: .72, lancer: .55, ark: .6, corvette: .66, battleship: .96, bastion: 1.04, bomber: .78, destroyer: 1.14, dreadnought: 1.6, worldbreaker: 1.5, drone: .38, spitter: .42, brute: .6, lord: .8, leviathan: 1.2, swhale: 1.5, slevi: 1.5, ssquid: 1.05, vmanta: 1.3, swasp: .9, snest: 1.2, ctort: 1.4, gspider: 1.3, smoth: 1.2, cram: 1.5, kegg: 1.1, gwhale: 1.5, reat: 1.2, cserp: 1.3, sent: 1.4 };
@@ -23966,11 +23966,11 @@ function drawBattle(t) {
      bigger and brighter, so a crowded 10 vs 10 fight opens out in depth instead of piling into one strip */
   if (!b.z) b.z = Q.map((q, i) => q.k === "worldbreaker" ? .98 : q.role === "station" || q.role === "turret" ? .78 : ((hash(q.k + "|" + i + "|" + q.side) % 1000) / 1000) * .9 + .05);
   let alive = 0; Q.forEach((q, i) => { if (b.n[i] > 0 && !(pos[i].fl & 6)) alive++; });
-  const crowd = b.fit || clamp(Math.sqrt(22 / Math.max(22, alive)), .46, .92), zy = (bot - top) * (alive > 30 ? .27 : .14), busy = alive > 30; // v75: the fit scale (below) sizes every ship to the free space
+  const crowd = clamp(Math.sqrt(22 / Math.max(22, alive)), .46, .92), fitOf = sd => (b.fitS && b.fitS[sd]) || b.fit || crowd, zy = (bot - top) * (alive > 30 ? .27 : .14), busy = alive > 30; // v75: the fit scale (below) sizes every ship to the free space
   // squadrons of the same type from different commanders share a position in the simulation: fan them apart on screen
   if (!b.jx) { b.jx = Q.map((q, i) => (hash("jx" + i + q.own) % 1000) / 1000 - .5); b.jy = Q.map((q, i) => (hash("jy" + i + q.own) % 1000) / 1000 - .5); b.jitA = 0; }
   b.jitA += (clamp((alive - 16) / 24, 0, 1) - b.jitA) * Math.min(1, real / 1500);
-  const scr = pos.map((p, i) => ({ x: X(p.x + b.jx[i] * (11 + 5 * b.jitA) * Math.max(.35, b.jitA)), y: Y(p.y + b.jy[i] * (7 + 3 * b.jitA) * Math.max(.35, b.jitA)) + Math.sin(t * .0016 + i * 1.7) * 1.4 * d + (b.z[i] - .5) * zy, s: crowd * (.66 + .54 * b.z[i]) }));
+  const scr = pos.map((p, i) => ({ x: X(p.x + b.jx[i] * (11 + 5 * b.jitA) * Math.max(.35, b.jitA)), y: Y(p.y + b.jy[i] * (7 + 3 * b.jitA) * Math.max(.35, b.jitA)) + Math.sin(t * .0016 + i * 1.7) * 1.4 * d + (b.z[i] - .5) * zy, s: fitOf(Q[i].side) * (.66 + .54 * b.z[i]) }));
   if (!b.ord) b.ord = Q.map((q, i) => i).sort((i, j) => b.z[i] - b.z[j]);
   if (!lo) { b.dustL = b.dustL || dustLayer(W, H, d); const dr = reduced ? 0 : Math.sin(t * .00009) * W * .02; ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .55; ctx.drawImage(b.dustL, -W * .05 + dr, -H * .04 + dr * .3, W * 1.1, H * 1.08); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over"; }
   // big fights: same-type squadrons of one side flying in the same patch of sky are drawn as one formation with their combined count
@@ -23980,19 +23980,24 @@ function drawBattle(t) {
      ships until the formations fill about a third of the field, then overlapping footprints are pushed apart. The push is eased
      over time so formations glide apart instead of jittering, and merged squadrons follow their formation (shots still land on it) */
   const fpOf = i => { const q = Q[i], zs = scr[i].s; if (q.role === "station") return [W * .21 * zs, W * .1 * zs, .15]; if (q.role === "turret") return [W * .1 * zs, W * .05 * zs, .4];
-    const n = busy && tot[i] > 0 ? tot[i] : Math.max(1, b.n[i]), vc = MON[q.k] ? 1 : Math.min(busy ? 3 : 6, Math.max(1, visN(q.role, n))), L = Math.max(8 * d, clamp(W * .1 * bLen(q.k), 11 * d, W * (BOSSK[q.k] || q.k === "worldbreaker" ? .55 : .3)) * zs);
+    const n = busy && tot[i] > 0 ? tot[i] : Math.max(1, b.n[i]), vc = MON[q.k] ? 1 : Math.min(busy ? 3 : 6, Math.max(1, visN(q.role, n))), L = Math.max(8 * d, clamp(W * .1 * bLen(q.k), 11 * d, W * (BOSSK[q.k] || q.k === "worldbreaker" ? .55 : .3)) * zs * bVsK(b, q));
     const fk = FOOTK(q.k); return [L * fk * (.62 + .32 * Math.min(vc - 1, 3)), L * fk * (.36 + .26 * Math.min(vc - 1, 2)) + 9 * d, 1]; }; /* v86: giants claim the room they are drawn at */
   { const reps = b.ord.filter(i => !(pos[i].fl & 6) && (b.n[i] > 0 || (b.deadAt[i] != null && T - b.deadAt[i] < .5)) && !(busy && tot[i] === -1));
     let A0 = 0; for (const i of reps) { const [rx, ry] = fpOf(i); A0 += rx * ry * 4; }
     const fitT = A0 ? clamp(crowd * Math.sqrt((W * .88 * (bot - top)) * (busy ? .44 : .42) / A0), .4, 1.85) : crowd;
     b.fit = b.fit ? b.fit + (fitT - b.fit) * Math.min(1, real / 700) : fitT;
+    { /* v659 each side fitted to its own half; both share the smaller, a boss side may be up to 2.2x bigger */ const Ar = { a: 0, d: 0 }; for (const i of reps) { const [rx, ry] = fpOf(i); Ar[Q[i].side] += rx * ry * 4; }
+      const half = W * .88 * (bot - top) * .5 * (busy ? .52 : .5), fs = sd => Ar[sd] ? clamp(fitOf(sd) * Math.sqrt(half / Ar[sd]), .35, 2.4) : null, ta = fs("a"), td = fs("d"), com = Math.min(ta || td || crowd, td || ta || crowd);
+      const boss = sd => reps.some(i => Q[i].side === sd && (BOSSK[Q[i].k] || bBig(Q[i].k) || Q[i].k === "sphere" || Q[i].k === "cdrone")), tgt = { a: boss("a") ? Math.min(ta || com, com * 2.2) : com, d: boss("d") ? Math.min(td || com, com * 2.2) : com };
+      const F0 = b.fitS || (b.fitS = { a: tgt.a, d: tgt.d }), ek = Math.min(1, real / 700); F0.a += (tgt.a - F0.a) * ek; F0.d += (tgt.d - F0.d) * ek; }
     const lay = b.lay || (b.lay = Q.map(() => ({ x: 0, y: 0 }))), P = reps.map(i => { const [rx, ry, w] = fpOf(i); return { i, x: scr[i].x + lay[i].x, y: scr[i].y + lay[i].y, rx, ry, w }; }), x0 = W * .03, x1 = W * .97, y0 = top - (bot - top) * .02, y1 = bot + (bot - top) * .04;
     if (!b.superSide) for (const p of P) { const q = Q[p.i]; if (q.k !== "worldbreaker") continue; /* v531 the Cube Destroyer holds the rear */
       let mo = 0, no = 0, me = 0, ne = 0; for (const o of P) { if (o.i === p.i) continue; if (Q[o.i].side === q.side) { mo += o.x; no++; } else { me += o.x; ne++; } }
       let my = 0, ey = 0; for (const o of P) { if (o.i === p.i) continue; if (Q[o.i].side === q.side) my += o.y; else ey += o.y; } my = no ? my / no : p.y; ey = ne ? ey / ne : p.y;
       const ox = no ? mo / no : p.x, ex = ne ? me / ne : p.x, vert = ne ? Math.abs(ey - my) > Math.abs(ex - ox) : W < H; /* portrait: the sides face each other top and bottom */
-      if (vert) { const down = ne ? my >= ey : q.side === "a"; p.y = down ? y1 - p.ry * 1.05 : y0 + p.ry * .6; p.x = clamp(ox, x0 + p.rx * .8, x1 - p.rx * .8); }
-      else { const left = ne ? ox <= ex : q.side === "a"; p.x = left ? x0 + p.rx * .8 : x1 - p.rx * .8; } p.w = .12; }
+      const cd = b.cdA || (b.cdA = {}), ca = cd[p.i] || (cd[p.i] = { x: ox, y: my }), ck = Math.min(1, real / 9000); ca.x += (ox - ca.x) * ck; ca.y += (my - ca.y) * ck; /* v659 a steady post: drifts, never slides */
+      if (vert) { const down = ne ? my >= ey : q.side === "a"; p.y = down ? y1 - p.ry * 1.05 : y0 + p.ry * .6; p.x = clamp(ca.x, x0 + p.rx * .8, x1 - p.rx * .8); }
+      else { const left = ne ? ox <= ex : q.side === "a"; p.x = left ? x0 + p.rx * .8 : x1 - p.rx * .8; p.y = clamp(ca.y, y0 + p.ry * .6, y1 - p.ry * 1.05); } p.w = .03; }
     for (let it = 0; it < (P.length > 50 ? 3 : 5); it++) { for (let a = 0; a < P.length; a++) for (let c = a + 1; c < P.length; c++) { const A = P[a], C = P[c], dx = C.x - A.x, dy = C.y - A.y, ox = A.rx + C.rx - Math.abs(dx), oy = A.ry + C.ry - Math.abs(dy);
           if (ox <= 0 || oy <= 0) continue; const wa = A.w / (A.w + C.w), wc = 1 - wa;
           if (ox * .55 < oy) { const s = (dx >= 0 ? 1 : -1) * ox * .5; A.x -= s * wa * 1.0; C.x += s * wc * 1.0; } else { const s = (dy >= 0 ? 1 : -1) * oy * .5; A.y -= s * wa; C.y += s * wc; } }
