@@ -1869,6 +1869,13 @@ main.full{padding:0;overflow:hidden;gap:0}
 .mimcl canvas{width:112px;height:56px;flex:none;border-radius:7px;background:radial-gradient(ellipse at center,rgba(40,120,180,.25),transparent 70%)}
 .mimcl div{display:flex;flex-direction:column;gap:1px;min-width:0}.mimcl small{font-size:12px;color:#a9bccb}.mimcl em{font-style:normal;font-size:10px;color:#5fd8ff;letter-spacing:.04em;text-transform:uppercase}
 .mimown{margin-top:12px;padding:8px;border-radius:10px;border:1px dashed rgba(255,211,107,.4)}.mimown div{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.mimbar{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin:4px 0}.mimbar i{display:block;height:100%;background:linear-gradient(90deg,#7a3cff,#5fd8ff)}
+.mimbar.big{height:12px;border-radius:6px;flex:1;margin:0}.mimsup{display:flex;align-items:center;gap:10px;flex:none}.mimsup b{font:700 18px/1 var(--f-display);color:#bfefff}
+.mimme{display:flex;flex-direction:column;gap:2px;padding:7px 9px;border-radius:9px;background:rgba(10,30,50,.45);flex:none}.mimme span{font-weight:700}.mimme small{color:#9ab;font-size:11px}
+.mimal{display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:10px;border:1px solid rgba(95,216,255,.15);background:rgba(8,20,34,.5);margin-bottom:6px;flex:none}
+.mimal>div:first-child{flex:1;min-width:0;display:flex;flex-direction:column}.mimal small{font-size:11px;color:#9ab}.mimalb{display:flex;flex-direction:column;gap:4px}.mimalb .btn{padding:5px 10px;font-size:12px}
+.mimboss{padding:9px 10px;border-radius:11px;border:1px solid rgba(127,240,255,.3);background:rgba(6,22,38,.6);margin:6px 0 10px;display:flex;flex-direction:column;gap:4px}
+.mimanc{display:grid;grid-template-columns:62px 1fr 40px;gap:6px;align-items:center;font-size:12px}.mimanc small{text-align:right;color:#9ab}
 .arfly{position:fixed;left:50%;top:46%;z-index:9999;transform:translate(-50%,0);font:800 30px/1 var(--f-display);color:#e3b8ff;text-shadow:0 0 18px #b27aff,0 2px 0 #000;pointer-events:none;animation:arFly 1.3s ease-out forwards}@keyframes arFly{0%{opacity:0;transform:translate(-50%,10px) scale(.7)}20%{opacity:1;transform:translate(-50%,0) scale(1.15)}100%{opacity:0;transform:translate(-50%,-160px) scale(1)}}
 @media (prefers-reduced-motion:reduce){.arcard.back,.arcard.foil::after,.arcard.flip,.arpips i.due{animation:none}}.arcard.lv0 em{color:#8d8170}
 .arnew{position:absolute;top:6px;right:6px;font:700 9px/1 system-ui;letter-spacing:.1em;padding:4px 6px;border-radius:6px;background:#e2c48a;color:#1a1408;font-style:normal}
@@ -4493,6 +4500,11 @@ const AL = {
   massim:    { n: "Mimic Assimilator", atk: 650, sh: 900, hull: 11000, val: 40000, one: 1 },
   mguard:    { n: "Mimic Guardian", atk: 500, sh: 2600, hull: 26000, val: 52000, one: 1 },
   mtitan:    { n: "Brood Titan", atk: 3400, sh: 3200, hull: 70000, val: 220000, one: 1 },
+  malpha1:   { n: "Alpha Sovereign I", atk: 900, sh: 2500, hull: 30000, val: 300000, one: 1 },
+  malpha2:   { n: "Alpha Sovereign II", atk: 1100, sh: 2000, hull: 28000, val: 300000, one: 1 },
+  malpha3:   { n: "Alpha Sovereign III", atk: 800, sh: 3200, hull: 34000, val: 300000, one: 1 },
+  malpha4:   { n: "Alpha Sovereign IV", atk: 950, sh: 2600, hull: 30000, val: 300000, one: 1 },
+  mnexus:    { n: "Neural Nexus", atk: 300, sh: 2000, hull: 20000, val: 120000, one: 1 },
   mnest:     { n: "Mimic Hive", atk: 700, sh: 2400, hull: 48000, val: 90000, one: 1 }
 };
 /* rapid fire: an attacker of type K firing at type T gets another shot with chance (r-1)/r.
@@ -4755,7 +4767,7 @@ const MON_SP = (() => { const out = [], GOLD = Math.PI * (3 - Math.sqrt(5)), lo 
    capped by the week (week 1 reaches Expansion, weeks 2 and 3 Alpha Dominion, week 4 Omega Convergence), and its garrison grows with
    it. A hive you destroy regrows from Stage 1 after 12 hours. The owner can preview any week ahead of time from the hub. */
 const MIM_U = { mstalk: 1, mharv: 1, mhunt: 1, massim: 1, mguard: 1, mtitan: 1, mnest: 1 };
-Object.assign(MON, { mimic: { n: "Mimic Hive", sp: "Mimic Hive", ic: "🜏", col: "#5fd8ff", rgb: "95,216,255", per: 99, d: "A nest of the Mimic Protocol: black cable spires closed round a glowing neural core, breeding more of its kind. It grows through four stages, and every stage brings a deadlier brood. Destroy it before it matures.", names: ["Hive"] } });
+Object.assign(MON, { mimic: { n: "Mimic Hive", sp: "Mimic Hive", ic: "⬢", col: "#5fd8ff", rgb: "95,216,255", per: 99, d: "A nest of the Mimic Protocol: black cable spires closed round a glowing neural core, breeding more of its kind. It grows through four stages, and every stage brings a deadlier brood. Destroy it before it matures.", names: ["Hive"] } });
 const MIM_N = 120, MIM_WK = 7 * 864e5, MIM_LEN = 28 * 864e5, MIM_REGROW = 12 * 3600e3;
 const MIM_STAGE = ["", "Infestation", "Expansion", "Alpha Dominion", "Omega Convergence"];
 const MIM_WEEKS = [["First Contact", "The infestation begins. Small hives are emerging in quiet sectors, breeding Stalkers and Harvesters."], ["Alpha Ascension", "The hives are growing, and something is coordinating them. Larger nests, specialised Mimics, stronger rewards."], ["The Great Assimilation", "The hives are absorbing our technology. Assimilators and Guardians now defend the mature nests."], ["Omega Awakens", "Every surviving hive is feeding neural energy toward one point in the dark. Break them before Omega wakes."]];
@@ -4780,14 +4792,14 @@ const mimKey = () => String(mimT0());
 function mimS() { const k = mimKey(); if (!S.mim || S.mim.k !== k) S.mim = { k, m: {}, pts: 0, kills: [0, 0, 0, 0, 0], got: {} }; return S.mim; }
 function mimLoot(x, st) { return { tis: 2 + st * 2 + Math.floor(x.lvl / 5), alloy: st >= 2 ? st : 0, ncf: st >= 3 ? st - 2 + (st >= 4 ? 1 : 0) : 0, pts: 25 * st + x.lvl }; }
 function mimWin(x, rep, T) { const st = mimStage(x, T), M = mimS(), L = mimLoot(x, st); for (const k of ["tis", "alloy", "ncf"]) if (L[k]) M.m[k] = (M.m[k] || 0) + L[k];
-  M.pts += L.pts; M.kills[st] = (M.kills[st] || 0) + 1; { const w = Math.max(1, Math.min(4, mimWeek(T))); M.wk = M.wk || {}; const a = M.wk[w] || (M.wk[w] = [0, 0, 0, 0, 0]); a[st]++; } rep.mim = { st, tis: L.tis, alloy: L.alloy, ncf: L.ncf, pts: L.pts }; dirty();
+  M.pts += L.pts; M.kills[st] = (M.kills[st] || 0) + 1; try { mimQueue(5 * st, mimReg(x)); } catch (e) {} /* v665 */ { const w = Math.max(1, Math.min(4, mimWeek(T))); M.wk = M.wk || {}; const a = M.wk[w] || (M.wk[w] = [0, 0, 0, 0, 0]); a[st]++; } rep.mim = { st, tis: L.tis, alloy: L.alloy, ncf: L.ncf, pts: L.pts }; dirty();
   note(`${x.name} destroyed at Stage ${st} (${MIM_STAGE[st]}). Salvaged ${L.tis} Mimic Tissue${L.alloy ? `, ${L.alloy} Assimilated Alloy` : ""}${L.ncf ? `, ${L.ncf} Neural Core Fragment${L.ncf > 1 ? "s" : ""}` : ""} · +${L.pts} invasion points.`, "win"); }
 /* one objective a week: [stage at least, hives, shards, tissue] */
 const MIM_OBJ = [[1, 3, 5, 10], [2, 5, 10, 20], [3, 3, 15, 30], [4, 5, 20, 40]];
 const mimObjN = w => { const M = mimS(), o = MIM_OBJ[w - 1], a = (M.wk || {})[w] || []; let n = 0; for (let s = o[0]; s <= 4; s++) n += a[s] || 0; return n; };
 /* the band on the map and the planet while the invasion runs (and for three days before it) */
-function mimBand(T) { const w = mimWeek(T), c = mimClock(T); if (w === 5) return ""; if (w === 0) { if (-c.e > 3 * 864e5) return ""; return `<button class="omb fin mimb soon" data-act="mimOpen"><b>🜏 THE MIMIC PROTOCOL</b><span>in ${ftime(-c.e)}</span></button>`; }
-  return `<button class="omb fin mimb" data-act="mimOpen"><b>🜏 THE MIMIC PROTOCOL</b><span>Week ${w} · ${MIM_WEEKS[w - 1][0]}</span></button>`; }
+function mimBand(T) { const w = mimWeek(T), c = mimClock(T); if (w === 5) return ""; if (w === 0) { if (-c.e > 3 * 864e5) return ""; return `<button class="omb fin mimb soon" data-act="mimOpen"><b>⬢ THE MIMIC PROTOCOL</b><span>in ${ftime(-c.e)}</span></button>`; }
+  return `<button class="omb fin mimb" data-act="mimOpen"><b>⬢ THE MIMIC PROTOCOL</b><span>Week ${w} · ${MIM_WEEKS[w - 1][0]}</span></button>`; }
 function mimNearest(T) { const h = originPlanet() || myPlanets()[0]; if (!h) return null; const hp = pos(h, T); let best = null, bd = 1e9;
   for (const x of MIM_HIVES) { if (!mimLive(x, T) || pirDown(x) > T) continue; const q = pos(x, T), d = Math.hypot(q.x - hp.x, q.y - hp.y) * (fogSeen(q.x, q.y) ? 1 : 3); if (d < bd) { bd = d; best = x; } } return best; }
 function shMimic() { const T = now(), M = mimS(), w = mimWeek(T), c = mimClock(T), own = ownerFree() && G.mode !== "offline" || G.owner;
@@ -4799,21 +4811,135 @@ function shMimic() { const T = now(), M = mimS(), w = mimWeek(T), c = mimClock(T
   const obj = w >= 1 && w <= 4 ? (() => { const o = MIM_OBJ[w - 1], n = Math.min(o[1], mimObjN(w)), done = n >= o[1], got = M.got["w" + w];
     return `<div class="mimobj"><div><b>This week: destroy ${o[1]} hive${o[1] > 1 ? "s" : ""}${o[0] > 1 ? ` at Stage ${o[0]} or above` : ""}</b><div class="bar"><i style="width:${n / o[1] * 100}%"></i></div><small>${n}/${o[1]} · reward ◆${o[2]} and ${o[3]} Mimic Tissue</small></div>${got ? `<span class="pill">Claimed</span>` : `<button class="btn${done ? " pri" : ""}" data-act="mimClaim" data-w="${w}"${done ? "" : " disabled"}>Claim</button>`}</div>`; })() : "";
   const mats = Object.entries(MIM_MAT).map(([k, [n, ic, col]]) => `<div class="mimmat"><i style="color:${col}">${ic}</i><b>${fmt(M.m[k] || 0)}</b><small>${n}</small></div>`).join("");
-  return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#5fd8ff">Seasonal invasion</div><h2>🜏 The Mimic Protocol</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
+  return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#5fd8ff">Seasonal invasion</div><h2>⬢ The Mimic Protocol</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
   <div class="mimban"><img src="art/mimic/banner.webp" alt=""><div><b>${w >= 1 && w <= 4 ? `Week ${w} · ${MIM_WEEKS[w - 1][0]}` : w === 0 ? "Something is waking" : "The swarm is broken"}</b><span>${when}${c.prev ? " · owner preview" : ""}</span></div></div>
   <p class="note">${w >= 1 && w <= 4 ? MIM_WEEKS[w - 1][1] : w === 0 ? "Recent Cube activity has weakened something that was never meant to be opened. Our scanners are picking up movement in the empty sectors." : "The hives are silent. For now."}</p>
   <div class="mimwks">${weeks}</div>
   ${w >= 1 && w <= 4 ? `<div class="mimst">${[1, 2, 3, 4].map(s => `<div class="s${s}"><b>${byS[s]}</b><small>Stage ${s}<br>${MIM_STAGE[s]}</small></div>`).join("")}</div>
   <button class="btn pri wide" data-act="mimFind"${up.length ? "" : " disabled"}>Find the nearest hive</button>` : ""}
   ${obj}
+  ${mimHubBoss(T, w)}
   <h3>Season materials</h3><div class="mimmats">${mats}</div><p class="note" style="margin-top:6px">Invasion points: <b>${fmt(M.pts)}</b>. Every hive pays Mimic Tissue; mature hives also give up Assimilated Alloy and Neural Core Fragments.</p>
   <h3>The swarm</h3><div class="mimcls">${cls.map(k => `<div class="mimcl"><canvas data-ship="${k}" width="224" height="112"></canvas><div><b>${AL[k].n}</b><small>${CD[k]}</small><em>From Stage ${CS[k]}</em></div></div>`).join("")}</div>
   ${own ? `<div class="mimown"><small>Owner preview: see the invasion as it will look in a given week.</small><div>${[0, 1, 2, 3, 4].map(n => `<button class="btn${((S.mimPrev || {}).w || 0) === n ? " pri" : ""}" data-act="mimPrev" data-w="${n}">${n ? "Week " + n : "Off"}</button>`).join("")}</div></div>` : ""}`; }
 function mimGo(x) { closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); }
   setTimeout(() => { try { const c = G3 && G3.cam, q = P3(x, now()); if (c) { c.follow = null; c.followFleet = null; c.goal = { tx: q.x, ty: q.y, tz: q.z, dist: 26, th: .8 }; } } catch (e) {} }, 300);
   setTimeout(() => { try { if (view === "galaxy" && !sheet && !battle) openSheet({ type: "pirate", id: x.id }); } catch (e) {} }, 2600); }
+/* ---------- v665 the Mimic Protocol, phase 2: the Alphas, their Neural Nexuses, and the server's Hive Suppression ----------
+   From week 2 (Alpha Ascension) four Alphas rule the four quarters of the galaxy, each guarded by its own Neural Nexus (the owner's
+   "Omega Neural Nexus" idea at regional scale). While its Nexus holds, an Alpha shrugs off 60% of the damage it takes and regrows 3
+   sections an hour; break all four of the Nexus's crystal anchors and the Alpha is cut off for 30 minutes: no shield, no regrowth, then
+   the network reconnects and the anchors stand again. Every hive the server destroys in an Alpha's quarter weakens it (up to +40% damage taken).
+   An Alpha has 100 sections; one that falls stays dead until the next week, when a new one rises. Shared record: event/mimic
+   {k, sup, con: {uid: points}, cday: {uid: [day, points]}, rk: [hives destroyed per quarter], a: {ma0..ma3: {w, hp, t, dmg, dead, last}},
+   x: {mx0..mx3: {anc: [4], open}}} (owner previews use event/mimic_prev). Hive Suppression: every hive, Alpha section, Nexus section and
+   weekly objective adds points (400 a commander a day at most); the meter is points against a target that grows with the number of
+   commanders taking part, so a busy server fills it faster and a small one can still get there. It weakens Omega at the finale. */
+Object.assign(MIM_U, { malpha1: 1, malpha2: 1, malpha3: 1, malpha4: 1, mnexus: 1 });
+const MIM_AN = ["I", "II", "III", "IV"], MIM_AREG = ["the first quarter", "the second quarter", "the third quarter", "the fourth quarter"];
+for (let i = 0; i < 4; i++) MON["alpha" + (i + 1)] = { n: "Alpha Sovereign " + MIM_AN[i], sp: "Alpha", ic: "⬢", col: ["#5fd8ff", "#b48cff", "#e4f4ff", "#5fffc8"][i], rgb: ["95,216,255", "180,140,255", "228,244,255", "95,255,200"][i], per: 99, d: "A regional sovereign of the Mimic swarm. It commands every hive in its quarter of the galaxy and draws its strength through its Neural Nexus. Break the Nexus to strip its shield, and burn its hives to weaken it.", names: ["Alpha"] };
+MON.nexus = { n: "Neural Nexus", sp: "Neural Nexus", ic: "⬡", col: "#7ff0ff", rgb: "127,240,255", per: 99, d: "A holographic relay the Alpha uses to command its swarm. While it stands, the Alpha is shielded and heals. Break its four anchors to cut the Alpha off for 30 minutes.", names: ["Nexus"] };
+const MIM_BOSS = {}, MIM_BOSSES = (() => { const out = [], lo = Math.max(LAYERS[LAYERS.length - 1].r0, 18 * SC) + 6, hi = LAYERS[0].r1 - 6, rad = Math.sqrt(lo * lo + .42 * (hi * hi - lo * lo));
+  for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4, lvl = (layerOf(rad).n - 1) * 5 + 5;
+    const A = { id: "ma" + i, kind: "pirate", mon: "alpha" + (i + 1), reg: i, u: "malpha" + (i + 1), lvl, r: +rad.toFixed(2), a0: +a.toFixed(4), name: "Alpha Sovereign " + MIM_AN[i] }, X = { id: "mx" + i, kind: "pirate", mon: "nexus", reg: i, u: "mnexus", lvl, r: +(rad * .93).toFixed(2), a0: +(a + .05).toFixed(4), name: "Neural Nexus " + MIM_AN[i] };
+    out.push(A, X); MIM_BOSS[A.id] = A; MIM_BOSS[X.id] = X; } return out; })();
+const MIM_ANC = 25, MIM_OPEN = 30 * 60e3, MIM_REGEN = 3, MIM_DAYCAP = 400;
+const mimReg = x => Math.floor((((x.a0 - Math.PI / 4) % TAU + TAU) % TAU) / (Math.PI / 2) + .5) % 4; /* the quarter a hive sits in, by its own angle */
+const mimDoc = () => "event/mimic" + (S && S.mimPrev && S.mimPrev.w ? "_prev" : "");
+function mimRaw() { return G.mode === "online" ? (G.mimDoc || {})[mimDoc()] || null : ((S && S.ldb) || {})[mimDoc()] || null; }
+function mimNorm(src, T) { const k = mimKey(), w = Math.max(1, Math.min(4, mimWeek(T))), o = src && src.k === k ? src : { k };
+  o.sup = +o.sup || 0; o.con = o.con || {}; o.cday = o.cday || {}; o.rk = Array.isArray(o.rk) ? o.rk : [0, 0, 0, 0]; o.a = o.a || {}; o.x = o.x || {};
+  for (let i = 0; i < 4; i++) { const ai = "ma" + i, xi = "mx" + i; let A = o.a[ai]; if (!A || A.w !== w) A = o.a[ai] = { w, hp: 100, t: T, dmg: {}, dead: 0, last: "" };
+    let X = o.x[xi]; if (!X) X = o.x[xi] = { anc: [MIM_ANC, MIM_ANC, MIM_ANC, MIM_ANC], open: 0 }; if (X.open && T >= X.open) { X.anc = [MIM_ANC, MIM_ANC, MIM_ANC, MIM_ANC]; X.open = 0; }
+    if (!A.dead && A.hp < 100 && !X.open) { const add = Math.floor((T - (A.t || T)) / 3600e3 * MIM_REGEN); if (add > 0) { A.hp = Math.min(100, A.hp + add); A.t = T; } } if (X.open) A.t = T; }
+  return o; }
+const mimSt = T => mimStC(T);
+const mimBossOn = T => { const w = mimWeek(T); return w >= 2 && w <= 4; };
+function mimHid(x, T) { if (x.mon === "mimic") return !mimLive(x, T); const B = MIM_BOSS[x.id]; if (!B) return false; if (!mimBossOn(T)) return true; if (B.mon !== "nexus") { const A = mimSt(T).a[B.id]; return !!(A && A.dead); } return false; }
+const mimOpen = (st, reg) => st.x["mx" + reg].open || 0;
+function mimSupPct(st) { const n = Object.keys(st.con).length; return Math.min(1, st.sup / (250 + 80 * n)); }
+function mimSupFx(p) { return { sh: Math.round(50 * p), rg: Math.round(60 * p), sw: Math.round(50 * p) }; }
+const mimTier = p => p >= 200 ? ["Vanguard", "#ffd36b"] : p >= 60 ? ["Warden", "#9fe8ff"] : p >= 10 ? ["Scout", "#8fb"] : ["Not yet ranked", "#789"];
+/* points earned this fight, held to the daily cap; returns what counts */
+function mimCon(st, pts, T) { const day = Math.floor(T / 864e5), c = st.cday[G.me] && st.cday[G.me][0] === day ? st.cday[G.me] : [day, 0], add = Math.max(0, Math.min(pts, MIM_DAYCAP - c[1]));
+  c[1] += add; st.cday[G.me] = c; st.con[G.me] = (st.con[G.me] || 0) + add; st.sup += add; return add; }
+function alphaForce(x, T) { const st = mimSt(T || now()), B = MIM_BOSS[x.id]; if (B.mon === "nexus") { const X = st.x[B.id]; const n = X.anc.find(v => v > 0) || MIM_ANC; return { mnexus: n, mguard: 2, mharv: 2 }; }
+  const A = st.a[B.id], live = MIM_HIVES.filter(h => mimReg(h) === B.reg && mimLive(h, T || now())).length; return { [B.u]: Math.max(1, A.hp), mguard: 2 + Math.floor(live / 10), mstalk: 4 }; }
+/* the hives the player destroys feed the meter in batches (one shared write every few minutes at most) */
+function mimQueue(pts, reg) { const M = mimS(); M.pend = (M.pend || 0) + pts; M.prk = M.prk || [0, 0, 0, 0]; M.prk[reg]++; dirty(); mimFlush(); }
+let MIM_FL = 0;
+async function mimFlush(force) { const M = mimS(), T = now(); if (!M.pend || G.mimFlushing || (!force && T - MIM_FL < 120e3) || !G.ready) return; MIM_FL = T; G.mimFlushing = 1;
+  try { const ref = adb().doc(mimDoc()); for (let i = 0; i < 6; i++) { const r = ref.acquire ? await ref.acquire({ holder: G.me, ttlMs: 10000 }) : { acquired: 1 }; if (r.acquired) break; await sleep(1200); }
+    const snap = await casGet(ref), cur = mimNorm(snap.exists ? snap.data() : null, T); mimCon(cur, M.pend, T); (M.prk || []).forEach((n, i) => cur.rk[i] = (cur.rk[i] || 0) + n);
+    if (await casSet(ref, snap, cur)) { M.pend = 0; M.prk = [0, 0, 0, 0]; mimLocal(cur); dirty(); } } catch (e) {} finally { G.mimFlushing = 0; } }
+function mimLocal(cur) { if (G.mode === "online") { G.mimDoc = G.mimDoc || {}; G.mimDoc[mimDoc()] = cur; } }
+/* the fight: like a super boss, each Alpha unit (or Nexus unit) is one section; big fleets meet a boss that rises to match them */
+function mimRise(mkA, mkD, u, n0, cap) { let { F, x } = wbRiseK(mkA(), mkD()); if (F <= 1) return { res: simulate(mkA(), mkD()), rise: 1 };
+  const tgt = Math.min(cap, Math.max(1, Math.round(100 * clamp(.08 + .04 * Math.log10(x), .08, .2)))); let lo = 1, hi = 0, best = null;
+  for (let i = 0; i < 9; i++) { const A = mkA(), D = mkD(); for (const s of D) { s.atk *= F; s.hull *= F; } const res = simulate(A, D), seg = n0 - clamp(Math.round(((res.dLeft || {})[u]) || 0), 0, n0), err = Math.abs(Math.min(seg, cap) - tgt);
+    if (!best || err < best.err) best = { res, F, err }; if (err <= 2) break; if (seg > tgt) lo = F; else hi = F; F = hi ? Math.sqrt(Math.max(lo, 1) * hi) : F * Math.max(1.5, Math.pow(seg / Math.max(1, tgt), 1.6)); if (hi && hi / Math.max(lo, 1) < 1.03) break; }
+  return { res: best.res, rise: best.F }; }
+async function mimBossResolve(f) { const B = MIM_BOSS[f.xid], x = PB[f.xid]; G.resolving.add(f.id); const T0 = now();
+  const home = () => { f.phase = "back"; f.back = Math.max(T0, f.arrive) + (f.tt || 60000); if (!Object.values(f.n || {}).some(v => v > 0)) S.fleets = S.fleets.filter(q => q !== f); };
+  try { const at = f.arrive; if (!mimBossOn(at)) { note(`${B.name} was gone when our fleet arrived. Returning.`, "warn"); return home(); }
+    const ref = adb().doc(mimDoc()); for (let i = 0; i < 8; i++) { const r = ref.acquire ? await ref.acquire({ holder: G.me, ttlMs: 15000 }) : { acquired: 1 }; if (r.acquired) break; await sleep(1500); }
+    const snap = await casGet(ref), cur = mimNorm(snap.exists ? snap.data() : null, at), nx = B.mon === "nexus", X = cur.x["mx" + B.reg], A = cur.a["ma" + B.reg];
+    if (!nx && A.dead) { note(`${B.name} had already fallen when our fleet arrived. Returning.`, "warn"); return home(); }
+    let ai = -1, n0; if (nx) { if (X.open) { note(`${B.name} is already broken. It reconnects in ${ftime(X.open - at)}. Fleet returning.`, "warn"); return home(); } ai = X.anc.findIndex(v => v > 0); n0 = X.anc[ai]; } else n0 = A.hp;
+    const shielded = !nx && !X.open, weak = nx ? 0 : Math.min(.4, (cur.rk[B.reg] || 0) / 250), live = MIM_HIVES.filter(h => mimReg(h) === B.reg && mimLive(h, at)).length;
+    const esc = nx ? { mguard: 2, mharv: 2 } : { mguard: 2 + Math.floor(live / 10), mstalk: 4 };
+    const mkD = () => stacksOf(Object.assign({ [B.u]: n0 }, esc), { mon: B.lvl }, "monster");
+    const mine0 = Object.assign({}, f.n), { res, rise } = mimRise(() => stacksOf(f.n, techVs(x), G.me), mkD, B.u, n0, n0);
+    const left = clamp(Math.round(((res.dLeft || {})[B.u]) || 0), 0, n0), raw = n0 - left, seg = raw ? Math.min(n0, Math.max(1, Math.round(raw * (shielded ? .4 : 1) * (1 + weak)))) : 0; /* the Nexus shield keeps 60% of the damage off; the quarter's dead hives add up to 40% */
+    let pts = 0, broke = 0; if (seg) { if (nx) { X.anc[ai] -= seg; if (X.anc[ai] <= 0) broke = 1; if (X.anc.every(v => v <= 0)) { X.open = at + MIM_OPEN; A.t = at; } pts = 3 * seg; }
+      else { A.hp = n0 - seg; A.t = at; A.dmg[G.me] = (A.dmg[G.me] || 0) + seg; if (!A.hp) { A.dead = at; A.last = G.me; } pts = 4 * seg; } }
+    const counted = pts ? mimCon(cur, pts, at) : 0;
+    if (!(await casSet(ref, snap, cur))) throw CAS_RETRY; f.casN = 0; mimLocal(cur);
+    const rep = mkRep({ at, kind: "attack", simLeft: left, title: `Assault on ${B.name}${nx ? ` · anchor ${ai + 1}` : ""}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: B.name, mimB: B.id, mimSeg: [n0, n0 - seg], omRise: rise > 1.01 ? Math.round(rise) : undefined,
+      start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
+    f.n = cleanShips(res.aLeft); repairDocks(rep, lossesOf(mine0, f.n), 1); if (rep.wrecks) note(`No ships lost for good: ${fmt(rep.wrecks)} damaged ships are coming home to the Repair Yard.`, "info");
+    if (seg) { const L = { m: 30000 * seg, c: 20000 * seg, g: 10000 * seg }, ratio = Math.min(1, fCargo(f) / Math.max(1, total(L))); rep.loot = { m: Math.floor(L.m * ratio), c: Math.floor(L.c * ratio), g: Math.floor(L.g * ratio) }; f.loot = rep.loot;
+      const sh = 2 * seg, M = mimS(); S.shards = (S.shards || 0) + sh; rep.shards = sh; S.wins++; evPts("hunt", seg * 50);
+      if (nx) M.m.ncf = (M.m.ncf || 0) + seg; else { M.m.alloy = (M.m.alloy || 0) + seg; M.m.tis = (M.m.tis || 0) + 2 * seg; } M.pts += counted;
+      logReward(`${B.name} bounty`, rep.loot, { shards: sh, kind: "battle" }); }
+    if (shielded && seg) note(`${B.name} is shielded by its Neural Nexus: it shrugged off 60% of our damage. Break the Nexus's anchors to cut it off.`, "info");
+    if (rise > 1.01) note(`${B.name} rose to meet our fleet: ×${fmt(Math.round(rise))} toughness and firepower against a force this size.`, "warn");
+    if (nx && X.open && broke) note(`The ${B.name} collapsed! Alpha Sovereign ${MIM_AN[B.reg]} is cut off from the swarm for 30 minutes: no shield, no healing. Strike now.`, "win");
+    else if (nx && broke) note(`Anchor ${ai + 1} of the ${B.name} shattered. ${X.anc.filter(v => v > 0).length} left.`, "win");
+    if (!nx && A.dead) { bump("bosses"); note(`We brought down ${B.name}! Everyone who broke a section can claim the spoils.`, "win"); }
+    else if (seg) note(`Our fleet broke ${seg} section${seg > 1 ? "s" : ""} ${nx ? `off anchor ${ai + 1} of the ${B.name} (${Math.max(0, X.anc[ai])} left)` : `off ${B.name} (${A.hp} of 100 left)`}. +${counted} Hive Suppression${counted < pts ? " (daily cap reached)" : ""}.`, "win");
+    else note(`Our fleet couldn't break a section off ${B.name}. Send more firepower${shielded ? ", or break its Nexus first" : ""}.`, "warn");
+    addReport(rep); try { mapClash(fleetTarget(f), rep); } catch (e) {} mimClaim(); home();
+  } catch (e) { if (e === CAS_RETRY && await casAgain(f, mimBossResolve)) return; note(`Lost contact with the ${B.name} fight. Fleet returning.`, "warn"); home(); }
+  finally { G.resolving.delete(f.id); dirty(); progress(); softRender(); } }
+/* a fallen Alpha: everyone who broke a section claims once, by share: Alpha Neural Catalysts, shards, Mimic Tissue; the final blow +2 Catalysts */
+function mimClaim() { if (!S || !G.ready) return; const T = now(); if (!mimBossOn(T) && mimWeek(T) !== 5) return; const st = mimSt(T), M = mimS(); M.got = M.got || {};
+  for (let i = 0; i < 4; i++) { const A = st.a["ma" + i], my = (A.dmg || {})[G.me] || 0, id = `a${i}w${A.w}`; if (!A.dead || !my || M.got[id]) continue; M.got[id] = 1;
+    const tot = Object.values(A.dmg).reduce((a, b) => a + b, 0) || 1, share = my / tot, cat = Math.min(8, 2 + Math.round(share * 20)) + (A.last === G.me ? 2 : 0), sh = Math.min(40, 10 + Math.round(share * 60));
+    M.m.cat = (M.m.cat || 0) + cat; M.m.tis = (M.m.tis || 0) + 20; S.shards = (S.shards || 0) + sh; logReward(`Alpha Sovereign ${MIM_AN[i]} slain`, null, { shards: sh, kind: "event" });
+    note(`Alpha Sovereign ${MIM_AN[i]} is dead. Your share (${Math.round(share * 100)}%): ${cat} Alpha Neural Catalyst${cat > 1 ? "s" : ""}, ◆${sh} and 20 Mimic Tissue${A.last === G.me ? ", with the final blow" : ""}.`, "win"); dirty(); } }
+function mimBossInfo(x, T) { const st = mimSt(T), B = MIM_BOSS[x.id], X = st.x["mx" + B.reg], A = st.a["ma" + B.reg], nx = B.mon === "nexus";
+  const live = MIM_HIVES.filter(h => mimReg(h) === B.reg && mimLive(h, T)).length, weak = Math.round(Math.min(.4, (st.rk[B.reg] || 0) / 250) * 100);
+  const bar = (v, mx, col) => `<div class="mimbar"><i style="width:${v / mx * 100}%;background:${col}"></i></div>`;
+  if (nx) return `<div class="mimboss"><b>${X.open ? `Collapsed · reconnects in <span data-end="${X.open}">${ftime(X.open - T)}</span>` : `Anchors ${X.anc.filter(v => v > 0).length} of 4 standing`}</b>
+    ${X.anc.map((v, i) => `<div class="mimanc"><span>Anchor ${i + 1}</span>${bar(Math.max(0, v), MIM_ANC, "linear-gradient(90deg,#2fa8ff,#9ff0ff)")}<small>${Math.max(0, v)}/${MIM_ANC}</small></div>`).join("")}
+    <p class="note">While the Nexus stands, Alpha Sovereign ${MIM_AN[B.reg]} shrugs off 60% of all damage and regrows ${MIM_REGEN} sections an hour. Break all four anchors and it is cut off for 30 minutes. Each section broken: +3 Hive Suppression and a Neural Core Fragment.</p></div>`;
+  return `<div class="mimboss"><b>${A.dead ? "Slain this week. A new Alpha rises next week." : `${A.hp} of 100 sections`}</b>${bar(A.hp, 100, "linear-gradient(90deg,#7a3cff,#5fd8ff)")}
+    <dl class="kv"><dt>Neural Nexus</dt><dd>${X.open ? `<span style="color:var(--green)">Broken: no shield, no healing for <span data-end="${X.open}">${ftime(X.open - T)}</span></span>` : `<span style="color:var(--amber)">Connected: shrugs off 60% of damage, regrowing</span>`}</dd>
+    <dt>Hives in its quarter</dt><dd>${live} alive · takes +${weak}% damage from the server's hive kills</dd><dt>Your sections</dt><dd>${(A.dmg || {})[G.me] || 0}</dd></dl>
+    <p class="note">Each section broken: +4 Hive Suppression, Assimilated Alloy and Mimic Tissue. When it falls, everyone who broke a section shares Alpha Neural Catalysts by damage, and the final blow earns 2 more.</p></div>`; }
+let MSC = {}; /* mimSt reads the shared record many times a frame (map visibility): one normalised copy per two seconds per source */
+function mimStC(T) { const src = mimRaw(), d = mimDoc(); if (MSC.src === src && MSC.d === d && Math.abs(T - MSC.t) < 2000) return MSC.st; MSC = { src, d, t: T, st: mimNorm(src ? jcopy(src) : null, T) }; return MSC.st; }
+function mimHubBoss(T, w) { const st = mimStC(T), pct = mimSupPct(st), fx = mimSupFx(pct), my = st.con[G.me] || 0, M = mimS(), [tn, tc] = mimTier(my + (M.pend || 0)), n = Object.keys(st.con).length;
+  const sup = `<h3>Hive Suppression · the whole server</h3><div class="mimsup"><div class="mimbar big"><i style="width:${pct * 100}%"></i></div><b>${Math.round(pct * 100)}%</b></div>
+    <p class="note">${fmt(st.sup)} points from ${fmt(n)} commander${n === 1 ? "" : "s"}. At the finale this cuts Omega's starting shields by ${fx.sh}%, its regeneration by ${fx.rg}% and its swarm by ${fx.sw}%.</p>
+    <div class="mimme"><span style="color:${tc}">◆ ${tn}</span><small>Your contribution: ${fmt(my)}${M.pend ? ` (+${M.pend} sending)` : ""} · today ${Math.min(MIM_DAYCAP, ((st.cday[G.me] || [])[0] === Math.floor(T / 864e5) ? st.cday[G.me][1] : 0))}/${MIM_DAYCAP}. Ranks: Scout 10, Warden 60, Vanguard 200.</small></div>`;
+  if (w < 2 || w > 4) return sup + (w === 1 ? `<p class="note">The Alphas rise in week 2.</p>` : "");
+  const rows = [0, 1, 2, 3].map(i => { const A = st.a["ma" + i], X = st.x["mx" + i]; return `<div class="mimal"><div><b style="color:${MON["alpha" + (i + 1)].col}">Alpha Sovereign ${MIM_AN[i]}</b><small>${A.dead ? "Slain this week" : `${A.hp}/100 sections · ${X.open ? `<span style="color:var(--green)">Nexus broken</span>` : `Nexus ${X.anc.filter(v => v > 0).length}/4 anchors`}`}</small><div class="mimbar"><i style="width:${A.dead ? 0 : A.hp}%"></i></div></div>
+    <div class="mimalb">${A.dead ? "" : `<button class="btn" data-act="mimGoB" data-id="ma${i}">Alpha</button>`}<button class="btn" data-act="mimGoB" data-id="mx${i}">Nexus</button></div></div>`; }).join("");
+  return sup + `<h3>The Alphas</h3>${rows}`; }
 const monGone = x => x.mon === "slevi" || x.mon === "ctort" || x.mon === "gspider"; /* v616 the Gravity Spider too */ /* v612 the Star Leviathan and the Crystal Tortoise are retired */
-const PIRATES = PIRATES_ALL.filter(x => !cubeGone(x) && !pirGone(x)).concat(MON_EXTRA, MON_NEW, MON_SP, MIM_HIVES).filter(x => !monGone(x));
+const PIRATES = PIRATES_ALL.filter(x => !cubeGone(x) && !pirGone(x)).concat(MON_EXTRA, MON_NEW, MON_SP, MIM_HIVES, MIM_BOSSES).filter(x => !monGone(x));
 const findHit = x => (G.find === "x" && !x.boss && !x.mon) || (G.find === "q" && !!x.boss) || (G.find === "w" && !!x.mon);const PB = Object.fromEntries(PIRATES.map(p => [p.id, p]));
 /* ---------- abandoned pyramids: 1,500 ancient vaults scattered evenly over the map ----------
    Send any fleet to explore one. From Lv.3 up, Hive guardians still haunt the halls and must be beaten first. The vault pays
@@ -4874,7 +5000,7 @@ const pirRegroup = (lvl, boss) => (boss ? 40 + 6 * lvl : 8 + lvl) * 60000; // cr
 const monForce = (k, lvl) => k === "swasp" ? { swasp: lvl, snest: 1 } : ({ [k]: 1 + Math.floor((lvl - 1) / MON[k].per) }); /* v515 a Starhive: one wasp per level, and its nest */
 const monLoot = lvl => ({ m: Math.round(5000 * lvl ** 1.45), c: Math.round(3200 * lvl ** 1.45), g: Math.round(1500 * lvl ** 1.45) });
 const monAccel = lvl => ({ tier: lvl >= 20 ? "gold" : lvl >= 10 ? "silver" : "bronze", n: 1 + (lvl >= 15 ? 1 : 0) + (lvl >= 25 ? 1 : 0) });
-const xForce0 = x => trainingPir(x) ? { fighter: 1 } : x.mon === "mimic" ? mimForce(x) : x.mon ? monForce(x.mon, x.lvl) : pirateForce(x.lvl, x.boss);
+const xForce0 = x => trainingPir(x) ? { fighter: 1 } : MIM_BOSS[x.id] ? alphaForce(x) : x.mon === "mimic" ? mimForce(x) : x.mon ? monForce(x.mon, x.lvl) : pirateForce(x.lvl, x.boss);
 const xForce = x => { const o = xForce0(x); try { if (isElite(x)) for (const k in o) o[k] = Math.max(1, Math.round(o[k] * 1.6)); } catch (e) {} return o; }; /* v338 elites: ELITE_K.force */
 const xShards = x => x.boss ? 1 + Math.floor(x.lvl / 5) : x.mon ? Math.floor(x.lvl / 6) : x.lvl >= 10 ? 1 : 0; /* v338 */
 const pyrShards = L => Math.max(1, Math.floor(L / 3));
@@ -5108,7 +5234,7 @@ function fogLoad() {
 function fogSave() { if (!FOGD) return; let s = ""; for (let i = 0; i < FOGD.length; i++) s += String.fromCharCode(FOGD[i]); S.fogD = btoa(s); }
 const fogIdx = (x, z) => { const cx = Math.floor((x + FOG_R) / FOG_CELL), cz = Math.floor((z + FOG_R) / FOG_CELL); return cx < 0 || cz < 0 || cx >= FOG_N || cz >= FOG_N ? -1 : cz * FOG_N + cx; };
 const fogSeen = (x, z) => { if (!FOG) return true; const i = fogIdx(x, z); return i >= 0 && FOG[i] === 1; };
-function isFogged(p, T) { if (!p || p.owner === G.me) return false; if (p.mon === "gwhale" && !nightNow()) return true; if (p.mon === "mimic" && !mimLive(p, T || now())) return true; /* v663 */ /* v529 gone by day */ if (S && S.tutSee && S.tutSee.includes(p.id) && tutOn()) return false; /* v331: the Academy targets */ const q = pos(p, T || now()); return !fogSeen(q.x, q.y); }
+function isFogged(p, T) { if (!p || p.owner === G.me) return false; if (p.mon === "gwhale" && !nightNow()) return true; if ((p.mon === "mimic" || MIM_BOSS[p.id]) && mimHid(p, T || now())) return true; /* v663 */ /* v529 gone by day */ if (S && S.tutSee && S.tutSee.includes(p.id) && tutOn()) return false; /* v331: the Academy targets */ const q = pos(p, T || now()); return !fogSeen(q.x, q.y); }
 function reveal(x, z, rad) {
   if (!FOG) return 0; let n = 0; const day = (S.fogDay || 0) + 1, c0x = Math.floor((x - rad + FOG_R) / FOG_CELL), c1x = Math.floor((x + rad + FOG_R) / FOG_CELL), c0z = Math.floor((z - rad + FOG_R) / FOG_CELL), c1z = Math.floor((z + rad + FOG_R) / FOG_CELL);
   for (let cz = Math.max(0, c0z); cz <= Math.min(FOG_N - 1, c1z); cz++) for (let cx = Math.max(0, c0x); cx <= Math.min(FOG_N - 1, c1x); cx++) {
@@ -5819,7 +5945,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 664;
+const GAME_V = 665;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6846,6 +6972,7 @@ const WPN = {
 };
 /* combat profile per unit: role, weapon, armor (damage reduction), evasion, speed, point-defense rating */
 const CPROF = {
+  malpha1: ["titan", "plasma", .34, 0, 1.4, 4], malpha2: ["titan", "acid", .3, .05, 2.2, 3], malpha3: ["titan", "acid", .4, 0, 1.2, 5], malpha4: ["titan", "plasma", .34, 0, 1.4, 4], mnexus: ["station", "ion", .3, 0, 0, 4], /* v665 */
   mstalk: ["fighter", "acid", .08, .24, 7, 0], mharv: ["support", "acid", .12, .08, 3, 0], mhunt: ["interceptor", "acid", .05, .3, 9, 0], massim: ["cruiser", "ion", .15, .1, 4, 1], mguard: ["cruiser", "acid", .3, .04, 3, 2], mtitan: ["titan", "plasma", .32, 0, 1.6, 4], mnest: ["station", "acid", .3, 0, 0, 2], /* v663 */
   fighter: ["interceptor", "laser", 0, .34, 9, .1], heavyFighter: ["fighter", "laser", .08, .26, 8, .2],
   hauler: ["support", "laser", .04, .08, 3.2, 0], tender: ["support", "none", .12, .05, 3, 1], heavyCargo: ["support", "laser", .07, .05, 2.6, 0], recycler: ["support", "none", .12, .04, 2.6, 0], ark: ["support", "none", .1, .04, 2.5, 0],
@@ -7294,7 +7421,7 @@ function events() {
     changed = true; } }); }
   if (G.ready) {
     for (const f of S.fleets) {
-      if (f.phase === "out") ev.push({ at: f.arrive, run: () => f.rj && !f.launched ? rallyReach(f) : f.assault && f.launched ? (f.phase = "resolving") : f.wb || f.om || f.sb ? (f.phase = "resolving") : f.nid ? gatherStart(f) : f.xid ? pirateArrive(f) : f.yid ? pyramidArrive(f) : (f.assault || f.pid === "nexus") ? (f.phase = "resolving") : arrive(f) });
+      if (f.phase === "out") ev.push({ at: f.arrive, run: () => f.rj && !f.launched ? rallyReach(f) : f.assault && f.launched ? (f.phase = "resolving") : f.wb || f.om || f.sb ? (f.phase = "resolving") : f.nid ? gatherStart(f) : f.xid && MIM_BOSS[f.xid] ? (f.phase = "resolving") : f.xid ? pirateArrive(f) : f.yid ? pyramidArrive(f) : (f.assault || f.pid === "nexus") ? (f.phase = "resolving") : arrive(f) });
       else if (f.phase === "muster") ev.push({ at: f.launch, run: () => rallyLaunch(f) }); // v73: a joint strike marches when its timer ends
       else if (f.phase === "gather") ev.push({ at: f.gend, run: () => gatherEnd(f) });
       else if (f.phase === "back") ev.push({ at: f.back, run: () => homecoming(f) });
@@ -7324,7 +7451,7 @@ function advance(T) {
     produce(Math.max(e.at, S.t)); e.run(); any = true;
   }
   produce(T);
-  for (const f of S.fleets) if (f.phase === "resolving" && !G.resolving.has(f.id) && G.ready) { if (f.wb) wbResolve(f); else if (f.om) omResolve(f); else if (f.sb) sbResolve(f); else if (f.pid === "nexus" && !f.assault) resolveNexus(f); else resolveAssault(f); }
+  for (const f of S.fleets) if (f.phase === "resolving" && !G.resolving.has(f.id) && G.ready) { if (f.wb) wbResolve(f); else if (f.om) omResolve(f); else if (f.sb) sbResolve(f); else if (f.xid && MIM_BOSS[f.xid]) mimBossResolve(f); else if (f.pid === "nexus" && !f.assault) resolveNexus(f); else resolveAssault(f); }
   if (any) { changed = true; progress(); }
   const c = changed; changed = false; return c || any;
 }
@@ -11422,6 +11549,7 @@ async function connectCloud() {
     }, () => {});
     db.doc("event/nexus").onSnapshot(s => { G.nexus = s.exists ? cleanNexus(s.data()) : null; softRender(); }, () => {});
     db.doc("event/wboss").onSnapshot(s => { G.wb = s.exists ? s.data() : null; wbSeen(G.wb); wbClaim(); softRender(); }, () => {});
+    for (const d of ["event/mimic", "event/mimic_prev"]) db.doc(d).onSnapshot(s => { (G.mimDoc = G.mimDoc || {})[d] = s.exists ? s.data() : null; mimClaim(); softRender(); }, () => {}); /* v665 */
     db.doc("event/omega").onSnapshot(s => { G.om = s.exists ? s.data() : null; OMN = null; omClaim(); softRender(); }, () => {});
     for (const k of ["vae", "aex", "khz", "med"]) db.doc("event/sb_" + k).onSnapshot(s => { G.sb[k] = s.exists ? s.data() : null; SBN[k] = null; sbClaim(); softRender(); }, () => {}); /* v451 the super bosses */ /* v442 the Omega Cube */ /* v384 world bosses */
     db.doc("event/glory").onSnapshot(s => { G.glory = s.exists ? cleanGlory(s.data()) : null; gloryReturns(); softRender(); }, () => {});
@@ -11602,7 +11730,7 @@ const bBig = k => /^wb[A-Z]/.test(k) || k === "cube" || k === "worldbreaker"; /*
 function bVsK(b, q) { if (!b || !q || bBeast(q.k)) return 1; const C = b.vsK || (b.vsK = {}); if (C[q.side] != null) return C[q.side];
   const foes = (b.Q || []).filter(x => x && x.side !== q.side); return (C[q.side] = foes.some(x => bBig(x.k)) ? 1 /* v659: the boss side is drawn bigger instead */ : foes.some(x => (MON[x.k] || BOSSK[x.k]) && !bBig(x.k) && x.k !== "sphere" && x.k !== "cdrone") ? 1.6 : 1); }
 const bLen = k => TITAN_LEN[k] ? TITAN_LEN[k] : k === "worldbreaker" ? 4.3 /* v531 the biggest thing on the field */ : k === "eclipse" ? 2.6 /* v531 the Discovery Class well above the Reaper (1.72); v533 kept */ : Math.pow(SIDE_LEN[k] || .5, 1.15) * (BOSSK[k] || 1);
-Object.assign(BOSSK, { mstalk: 1.55, mharv: 1.6, mhunt: 1.55, massim: 1.7, mguard: 1.8, mtitan: 2.5, mnest: 2.1 }); Object.assign(BOSS_GLOW, { mstalk: "95,216,255", mharv: "95,216,255", mhunt: "95,216,255", massim: "95,216,255", mguard: "95,216,255", mtitan: "150,120,255", mnest: "95,216,255" }); /* v663 */
+Object.assign(BOSSK, { mstalk: 1.55, mharv: 1.6, mhunt: 1.55, massim: 1.7, mguard: 1.8, mtitan: 2.5, mnest: 2.1, malpha1: 3.2, malpha2: 3.2, malpha3: 3.2, malpha4: 3.2, mnexus: 2.8 }); Object.assign(BOSS_GLOW, { malpha1: "95,216,255", malpha2: "180,140,255", malpha3: "228,244,255", malpha4: "95,255,200", mnexus: "127,240,255", mstalk: "95,216,255", mharv: "95,216,255", mhunt: "95,216,255", massim: "95,216,255", mguard: "95,216,255", mtitan: "150,120,255", mnest: "95,216,255" }); /* v663 */
 for (const k in MON) BOSSK[k] = (BOSSK[k] || 1) * 1.35; BOSSK.snest = (BOSSK.snest || 1) * 1.35; /* v528 space monsters loom larger in battle */
 const SIDE_LEN = { armageddon: 2.2, sovereign: 2.2, harbinger: 2.1, wbOvl: 1.8, wbDev: 1.8, wbWar: 1.8, wbCon: 1.4, wbBrd: 1.8, wbTyr: 1.8, wbWym: 1.8, wbCol: 1.8, spyProbe: .3, cube: 1.2, sphere: .8, cdrone: .4, tender: .6, guardian: .82, escortCarrier: .9, supercarrier: 1.42, eclipse: 1.75, fighter: .38, heavyFighter: .46, hauler: .5, heavyCargo: .7, recycler: .72, lancer: .55, ark: .6, corvette: .66, battleship: .96, bastion: 1.04, bomber: .78, destroyer: 1.14, dreadnought: 1.6, worldbreaker: 1.5, drone: .38, spitter: .42, brute: .6, lord: .8, leviathan: 1.2, swhale: 1.5, slevi: 1.5, ssquid: 1.05, vmanta: 1.3, swasp: .9, snest: 1.2, ctort: 1.4, gspider: 1.3, smoth: 1.2, cram: 1.5, kegg: 1.1, gwhale: 1.5, reat: 1.2, cserp: 1.3, sent: 1.4 };
 /* v260 battle sprite mip levels: a ship drawn small used to be squeezed out of its full-size render every frame. That resample scales with the
@@ -12623,7 +12751,7 @@ function mkSweep(W, T, CH) {
   if (s === 0) M.cand = [];
   for (let i = s; i < e; i++) { const it = M.all[i], kind = i < M.NN ? 0 : i < M.NX ? 1 : 2, j = i * 4, a = it.a0 + T * TAU / period(it.r), x = Math.cos(a) * it.r, z = Math.sin(a) * it.r, nf = fogSeen(x, z);
     const col = kind === 0 ? colObj(NODE_T[it.res].col) : kind === 1 ? (pirDown(it) > T ? grey : it.mon ? colObj(MON[it.mon].col) : it.boss ? cube : red) : pyrDown(it) > T ? dull : gold; A.aCol[j] = col.r; A.aCol[j + 1] = col.g; A.aCol[j + 2] = col.b;
-    const hid = (it.mon === "gwhale" && !nightNow()) || (it.mon === "mimic" && !mimLive(it, T)); A.aCol[j + 3] = hid || !nf || M.near.has(it.id) || (it.boss && dvLive(T)) ? 0 : kind === 0 ? .34 : kind === 1 ? .45 : .5;
+    const hid = (it.mon === "gwhale" && !nightNow()) || ((it.mon === "mimic" || MIM_BOSS[it.id]) && mimHid(it, T)); A.aCol[j + 3] = hid || !nf || M.near.has(it.id) || (it.boss && dvLive(T)) ? 0 : kind === 0 ? .34 : kind === 1 ? .45 : .5;
     if (nf && !hid) { const dc = Math.hypot(x - cp.x, P3(it, T, PQS).y - cp.y, z - cp.z), hl = kind === 0 ? !!G.find && it.res === G.find : kind === 1 ? findHit(it) : G.find === "y"; if (dc < (kind === 0 ? 240 : 280) && (!G.find || G.find === "o" || hl || (kind === 1 && clashAt(it)))) M.cand.push([dc, it.id, kind]); } }
   orbRange(M.L, ["aCol"], s, e - s);
   if (e >= M.N) { M.cur = 0; M.cand.sort((x, y) => x[0] - y[0]); const pick = k => M.cand.filter(c => c[2] === k).slice(0, k === 2 ? 14 : k === 1 ? 30 : MOBILE ? 28 : 40); M.near = new Set(pick(0).concat(pick(1), pick(2)).map(c => c[1]));
@@ -14627,7 +14755,7 @@ function draw3D(t) {
       if (W.wbM) { const V = W._obV || (W._obV = new TH.Vector3()); for (const k in W.wbM) { const M3 = W.wbM[k]; if (k === "lev" || !M3 || !M3.b || !M3.b.grp || !M3.b.grp.visible) continue; M3.b.grp.getWorldPosition(V); obAdd(Gd, V.x, V.y, V.z, (WB_CLR[k] || 30) * .6); } } }
     for (const id of M.near) { const isN = id[0] === "r", isY = id[0] === "y", it = isN ? NB[id] : isY ? YB[id] : PB[id]; if (!it) continue; const M2 = isN ? W.nodes : isY ? W.pyramids : W.pirates; let o = M2.get(id);
       if (!o) { o = isN ? nodeObj(W, it) : isY ? pyramidObj(W, it) : pirateObj(W, it); M2.set(id, o); }
-      const q = P3(it, T, PQ), dc = Math.hypot(q.x - cp.x, q.y - cp.y, q.z - cp.z), nf = fogSeen(q.x, q.z); o.dc = dc; o.fog = !nf; o.grp.visible = nf && !(G.vmode === "planet" && dc < 9 && !W.cam.cine) && !(it.boss && dvLive(T)) && !(it.mon === "mimic" && !mimLive(it, T)); /* v430 */ /* v68: in planet view, a big boss, monster or station drifting past the lens is hidden so it never blocks your world; v144: never while filming (that hid the station or monster being filmed) */ o.grp.position.set(q.x, q.y, q.z);
+      const q = P3(it, T, PQ), dc = Math.hypot(q.x - cp.x, q.y - cp.y, q.z - cp.z), nf = fogSeen(q.x, q.z); o.dc = dc; o.fog = !nf; o.grp.visible = nf && !(G.vmode === "planet" && dc < 9 && !W.cam.cine) && !(it.boss && dvLive(T)) && !((it.mon === "mimic" || MIM_BOSS[it.id]) && mimHid(it, T)); /* v430 */ /* v68: in planet view, a big boss, monster or station drifting past the lens is hidden so it never blocks your world; v144: never while filming (that hid the station or monster being filmed) */ o.grp.position.set(q.x, q.y, q.z);
       if (isY) { const down = pyrDown(it) > T, hl = G.find === "y" && !down; o.ring.rotation.y = t * .0003; o.grp.rotation.y = t * 4e-5 + it.a0; o.grp.position.y = q.y + Math.sin(t * .0004 + it.a0 * 5) * .35; o.setLit(!down); o.beacon.material.opacity = down ? .12 : .5; o.cap.material.color.set(down ? 0x7a6640 : 0xffd36b); o.grp.scale.setScalar(MK_K * (hl ? 1.2 : 1)); } /* v109: a steady glow, a slow turn and a gentle hover instead of swelling */
       else if (isN) { const hl = !!G.find && it.res === G.find; if (o.anim) o.anim(t, q); else o.grp.rotation.y = t * .0003 + it.a0; o.grp.scale.setScalar(MK_K * (hl ? 1.3 : 1)); }
       else if (o.mon) { // v144: monsters swim a lazy figure-eight about two slots wide, weaving between the planets near their spot, facing where they swim and banking into the turns
@@ -14635,6 +14763,7 @@ function draw3D(t) {
         const dx = ca * RX, dz = Math.cos(2 * a) * RZ, ddx = -sa * RX, ddz = -2 * Math.sin(2 * a) * RZ, curv = (dx * ddz - dz * ddx) / Math.pow(dx * dx + dz * dz + 1e-3, 1.5);
         W.monU.value = t * .001; o.body.position.set(sa * RX, Math.sin(t * .0007 + it.a0) * .5, sa * ca * RZ); o.body.rotation.set(clamp(curv * 1.6, -.4, .4), Math.atan2(-dz, dx), 0);
         if (it.mon === "sent") { o.body.position.set(0, Math.sin(t * .0003 + it.a0) * .15, 0); o.body.rotation.set(0, it.a0, 0); }
+        if (MIM_BOSS[it.id]) { o.body.position.set(0, Math.sin(t * .0003 + it.a0) * .25, 0); o.body.rotation.set(0, it.mon === "nexus" ? 0 : it.a0 + Math.sin(t * .0001 + it.a0) * .5, 0); o.body.scale.setScalar((.6 + it.lvl * .0082) * (it.mon === "nexus" ? 1.5 : 1.8)); } /* v665 the Alphas and Nexuses loom */
         if (it.mon === "mimic") { o.body.position.set(0, Math.sin(t * .0004 + it.a0) * .2, 0); o.body.rotation.set(0, t * .00003 + it.a0, 0); o.body.scale.setScalar((.6 + it.lvl * .0082) * (.5 + .17 * mimStage(it, T))); } /* v663 a hive stays put and grows with its stage */ /* v529 the Sentinel does not move */
         if (it.mon === "swasp") { o.body.position.set(0, Math.sin(t * .0005 + it.a0) * .3, 0); o.body.rotation.set(0, t * .00008 + it.a0, 0); } // v515 a Starhive hangs where it is; its swarm does the moving
         if (it.mon === "ssquid") { const p = 1 + .07 * Math.sin(t * .006 + it.a0); o.body.scale.set(o.body.scale.y * p, o.body.scale.y, o.body.scale.y / Math.sqrt(p)); }
@@ -16204,6 +16333,7 @@ function taperTube(pts, f, seg, rad) {
 }
 function buildMonster(k, part) {
   if (k === "mimic") return buildMimic("mnest"); /* v663 */
+  if (/^alpha\d$/.test(k)) return buildMimic("malpha" + k.slice(5)); if (k === "nexus") return buildMimic("mnexus"); /* v665 */
   const C = monMats(), g = new TH.Group(); g.userData.eng = [];
   /* v515 a flat part with rounded bevelled edges, outlined by quadratic curves (moveTo, then control/end pairs) in its own x/y plane */
   const slab = (pts, th) => { const sh = new TH.Shape(); sh.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i += 2) sh.quadraticCurveTo(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]); sh.closePath();
@@ -16513,21 +16643,28 @@ function buildMonster(k, part) {
 const MIMM = {};
 const MIM_D = { mstalk: { s: 1, legs: 4, mane: 26, hump: .5, len: 1, gape: .55, tail: 8 }, mhunt: { s: .95, legs: 2, mane: 18, hump: .15, len: 1.35, gape: .8, tail: 16 }, mharv: { s: 1, legs: 0, mane: 12, hump: 0, len: .8, gape: .35, tail: 4, sac: 1 },
     massim: { s: 1.05, legs: 4, mane: 20, hump: .45, len: 1.05, gape: .6, tail: 8, plates: 1 }, mguard: { s: 1.15, legs: 4, mane: 14, hump: .25, len: .9, gape: .4, tail: 6, armour: 1 }, mtitan: { s: 1.25, legs: 4, mane: 40, hump: .8, len: 1.1, gape: .7, tail: 12, brood: 1 } };
-function mimMats() { const C = MIMM; if (C.cable) return C;
+/* v665 the Alphas and the Neural Nexus. Each Alpha is the creature recipe grown huge, with a crown of hooked spines swept back from its
+   skull and its neural core laid open along its back; each of the four wears its own glow. The Nexus follows the owner's vault painting:
+   black spires closing round a turning holographic prism, a floating sphere over a spiked star of light, a beam through it all, and four
+   crystal anchors at its foot (the anchors fleets break). */
+Object.assign(MIM_D, { malpha1: { s: 1.35, legs: 4, mane: 46, hump: .9, len: 1.15, gape: .8, tail: 14, alpha: 1 }, malpha2: { s: 1.3, legs: 2, mane: 36, hump: .3, len: 1.45, gape: .9, tail: 24, alpha: 1 },
+  malpha3: { s: 1.4, legs: 4, mane: 30, hump: .5, len: 1.0, gape: .6, tail: 10, armour: 1, alpha: 1 }, malpha4: { s: 1.35, legs: 4, mane: 40, hump: .8, len: 1.1, gape: .7, tail: 12, brood: 1, alpha: 1 } });
+const MIM_TINT = { malpha2: 0x9b6bff, malpha3: 0xd8f0ff, malpha4: 0x3fffc0 };
+function mimMats(t) { const C = t ? (MIMM[t] || (MIMM[t] = {})) : MIMM; if (C.cable) return C;
   const tex = (w, h, draw) => { const t = texCanvas(w, h, draw); t.wrapS = t.wrapT = TH.RepeatWrapping; return t; };
   /* a cable: u runs along it (one segment per unit), v round it. Each segment is a ribbed metal sleeve with a dark seam at both ends */
   const cC = tex(128, 64, (x, W, H) => { const g = x.createLinearGradient(0, 0, W, 0); g.addColorStop(0, "#07090d"); g.addColorStop(.1, "#1d2430"); g.addColorStop(.3, "#3c4757"); g.addColorStop(.5, "#283140"); g.addColorStop(.78, "#141922"); g.addColorStop(.92, "#0b0e14"); g.addColorStop(1, "#050608"); x.fillStyle = g; x.fillRect(0, 0, W, H);
     const r = rnd(6620); for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(${r() < .5 ? "0,0,0" : "150,170,200"},${.04 + r() * .08})`; x.fillRect(r() * W, r() * H, 1 + r() * 6, 1); }
     x.fillStyle = "rgba(0,0,0,.55)"; x.fillRect(W * .62, 0, 2, H); });
-  const cE = tex(128, 64, (x, W, H) => { x.fillStyle = "#000"; x.fillRect(0, 0, W, H); const g = x.createLinearGradient(0, 0, W, 0); g.addColorStop(0, "rgba(40,190,255,.9)"); g.addColorStop(.05, "rgba(40,190,255,.0)"); g.addColorStop(.94, "rgba(40,190,255,0)"); g.addColorStop(1, "rgba(80,220,255,.9)"); x.fillStyle = g; x.fillRect(0, 0, W, H); });
+  const cE = tex(128, 64, (x, W, H) => { x.fillStyle = "#000"; x.fillRect(0, 0, W, H); const g = x.createLinearGradient(0, 0, W, 0); g.addColorStop(0, "rgba(220,245,255,.9)"); g.addColorStop(.05, "rgba(220,245,255,0)"); g.addColorStop(.94, "rgba(220,245,255,0)"); g.addColorStop(1, "rgba(235,250,255,.9)"); x.fillStyle = g; x.fillRect(0, 0, W, H); });
   cC.encoding = TH.sRGBEncoding;
   C.cable = new TH.MeshPhysicalMaterial({ map: cC, color: 0x55606e, emissiveMap: cE, emissive: 0x3fc8ff, emissiveIntensity: .18, metalness: .9, roughness: .34, clearcoat: 1, clearcoatRoughness: .2, envMapIntensity: 1.2 });
   C.cableL = C.cable.clone(); C.cableL.emissiveIntensity = 1.3; /* the lit cables nearest the neural cores */
   /* the skull and armour: black chitin-metal with fine cyan vein lines */
   const sC = tex(256, 128, (x, W, H) => { const n = fbm2(6621), img = x.createImageData(W, H), d = img.data; for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) { const v = n(px / 26, py / 26, 10, 4), o = (py * W + px) * 4; d[o] = 18 + v * 34; d[o + 1] = 22 + v * 38; d[o + 2] = 30 + v * 46; d[o + 3] = 255; } x.putImageData(img, 0, 0); });
-  const sE = tex(256, 128, (x, W, H) => { x.fillStyle = "#000"; x.fillRect(0, 0, W, H); const r = rnd(6622); x.lineCap = "round"; for (let i = 0; i < 22; i++) { let px = r() * W, py = r() * H; x.strokeStyle = `rgba(60,200,255,${.35 + r() * .5})`; x.lineWidth = .8 + r() * 1.3; x.beginPath(); x.moveTo(px, py); for (let j = 0; j < 7; j++) { px += (r() - .5) * 40; py += (r() - .5) * 26; x.lineTo(px, py); } x.stroke(); } });
+  const sE = tex(256, 128, (x, W, H) => { x.fillStyle = "#000"; x.fillRect(0, 0, W, H); const r = rnd(6622); x.lineCap = "round"; for (let i = 0; i < 22; i++) { let px = r() * W, py = r() * H; x.strokeStyle = `rgba(255,255,255,${.35 + r() * .5})`; x.lineWidth = .8 + r() * 1.3; x.beginPath(); x.moveTo(px, py); for (let j = 0; j < 7; j++) { px += (r() - .5) * 40; py += (r() - .5) * 26; x.lineTo(px, py); } x.stroke(); } });
   sC.encoding = TH.sRGBEncoding;
-  C.shell = new TH.MeshPhysicalMaterial({ map: sC, emissiveMap: sE, emissive: 0xffffff, emissiveIntensity: 1.4, metalness: .6, roughness: .28, clearcoat: 1, clearcoatRoughness: .1, envMapIntensity: 1.1 });
+  C.shell = new TH.MeshPhysicalMaterial({ map: sC, emissiveMap: sE, emissive: 0x46ccff, emissiveIntensity: 1.4, metalness: .6, roughness: .28, clearcoat: 1, clearcoatRoughness: .1, envMapIntensity: 1.1 });
   C.bone = new TH.MeshPhysicalMaterial({ color: 0xc9d2dc, metalness: .5, roughness: .25, clearcoat: 1, envMapIntensity: 1.2 });
   C.claw = new TH.MeshPhysicalMaterial({ color: 0x1a2230, metalness: .9, roughness: .18, clearcoat: 1, envMapIntensity: 1.5, emissive: 0x0a3a60, emissiveIntensity: .5 });
   C.glow = new TH.MeshBasicMaterial({ color: 0x8fe8ff, toneMapped: false });
@@ -16541,9 +16678,10 @@ function mimMats() { const C = MIMM; if (C.cable) return C;
   C.plate = new TH.MeshStandardMaterial({ color: 0x6f7c8c, metalness: .85, roughness: .4 });
   C.plateL = new TH.MeshBasicMaterial({ color: 0x9fe4ff, toneMapped: false });
   C.holo = new TH.MeshBasicMaterial({ color: 0x5ff0ff, transparent: true, opacity: .35, toneMapped: false, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide });
+  if (t) { const c = new TH.Color(t), W = new TH.Color(0xffffff); for (const m of [C.cable, C.cableL, C.shell, C.core, C.sac]) m.emissive.copy(c); C.claw.emissive.copy(c).multiplyScalar(.2); C.glow.color.copy(c).lerp(W, .45); C.glowS.color.copy(c).multiplyScalar(.75); C.mouth.color.copy(c).lerp(W, .15); C.holo.color.copy(c).lerp(W, .2); } /* v665 an Alpha's own glow */
   return C; }
 function buildMimic(cls) {
-  const C = mimMats(), g = new TH.Group(), r = rnd(hash("mim" + cls)); g.userData.eng = [];
+  const C = mimMats(MIM_TINT[cls]), g = new TH.Group(), r = rnd(hash("mim" + cls)); g.userData.eng = [];
   const V = (x, y, z) => new TH.Vector3(x, y, z), add = (m, x, y, z) => { if (x != null) m.position.set(x, y || 0, z || 0); g.add(m); return m; };
   /* a tapering cable along a curve, its rings swelling once per segment (the sleeves in the paintings); uv.x counts segments */
   const tube = (pts, r0, r1, mat, seg, curl) => { const cv = new TH.CatmullRomCurve3(pts), L = cv.getLength(), n = Math.max(8, Math.round(L * (seg || 9))), rad = 7, fr = cv.computeFrenetFrames(n, false), P = [], U = [], I = [], p = new TH.Vector3(), segL = .34;
@@ -16590,6 +16728,22 @@ function buildMimic(cls) {
     for (let i = 0; i < 9; i++) { const a = 2.1 + i * .5 + r() * .3, R = 1.9 + r() * .7; const e = orb(.3 + r() * .14, C.egg, V(Math.cos(a) * R, -1.15 + r() * .15, Math.sin(a) * R), 14); e.scale.y = 1.25; }
     bundle([V(0, -1.4, 0), V(0, -.6, 0), V(0, .2, 0)], 10, .35, { r0: .07, r1: .04 });
     g.userData.mimR = 3.6; return g; }
+  if (cls === "mnexus") { /* the Neural Nexus (the fourth painting) */
+    const beam = (a, b, rad, mat) => { const d = b.clone().sub(a), m = add(new TH.Mesh(new TH.CylinderGeometry(rad, rad, d.length(), 6, 1, true), mat)); m.position.copy(a).addScaledVector(d, .5); m.quaternion.setFromUnitVectors(V(0, 1, 0), d.normalize()); return m; };
+    add(new TH.Mesh(new TH.CylinderGeometry(3.2, 3.6, .5, 32), C.shell), 0, -1.6, 0);
+    for (let i = 0; i < 18; i++) { const a = i / 18 * TAU + r() * .2, R = 3.4 + r() * 1.4; tube([V(Math.cos(a) * 1.5, -1.42, Math.sin(a) * 1.5), V(Math.cos(a) * 3.2, -1.5, Math.sin(a) * 3.2), V(Math.cos(a + .25) * R, -1.75, Math.sin(a + .25) * R), V(Math.cos(a + .4) * (R + .9), -1.6, Math.sin(a + .4) * (R + .9))], .2, .06); }
+    for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + .5, b = V(Math.cos(a) * 3.15, -1.4, Math.sin(a) * 3.15), tip = V(Math.cos(a) * 1.9, 3.7 + (i % 2) * .9, Math.sin(a) * 1.9), mid = lerp3(b, tip, .45).add(V(Math.cos(a) * 1.0, 0, Math.sin(a) * 1.0));
+      tube([b, lerp3(b, mid, .5).add(V(Math.cos(a) * .3, 0, Math.sin(a) * .3)), mid, tip], .42, .03, C.shell, 6, .8); bundle([b, mid, tip], 3, .38, { t1: .75, r0: .07, r1: .04 }); }
+    const top = 2.6, bot = 1.05; add(new TH.Mesh(new TH.CylinderGeometry(top, bot, 2.4, 6, 1, true), C.holo), 0, 1.2, 0);
+    for (let i = 0; i < 6; i++) { const a = i / 6 * TAU, a2 = a + TAU / 6; beam(V(Math.cos(a) * bot, 0, Math.sin(a) * bot), V(Math.cos(a) * top, 2.4, Math.sin(a) * top), .028, C.glow); beam(V(Math.cos(a) * top, 2.4, Math.sin(a) * top), V(Math.cos(a2) * top, 2.4, Math.sin(a2) * top), .028, C.glow); beam(V(Math.cos(a) * bot, 0, Math.sin(a) * bot), V(Math.cos(a2) * bot, 0, Math.sin(a2) * bot), .022, C.glow); }
+    for (const [rr, y, tx] of [[2.9, 2.45, 0], [1.75, 1.0, .25], [3.3, 2.1, -.12], [2.2, 3.9, .4]]) { const t = add(new TH.Mesh(new TH.TorusGeometry(rr, .02, 6, 72), C.holo), 0, y, 0); t.rotation.set(Math.PI / 2 + tx, 0, 0); }
+    const op = V(0, 3.95, 0); orb(.95, C.sac, op, 30); orb(1.55, C.glowS, op, 16);
+    beam(V(0, -1.3, 0), V(0, 3.2, 0), .1, C.glowS); beam(V(0, -1.3, 0), V(0, 3.2, 0), .035, C.glow);
+    const sc = V(0, 1.35, 0); orb(.22, C.glow, sc, 12); orb(.6, C.glowS, sc, 12);
+    for (let i = 0; i < 10; i++) { const a = i / 10 * TAU, d = V(Math.cos(a), (i % 2 ? .25 : -.2), Math.sin(a)); cone(1.15 + (i % 2) * .35, .07, C.claw, sc.clone().addScaledVector(d, .12), d, 0); }
+    for (let i = 0; i < 4; i++) { const a = i / 4 * TAU + Math.PI / 4, p = V(Math.cos(a) * 3.05, -.75, Math.sin(a) * 3.05), cr = orb(.42, C.core, p, 8); cr.scale.set(.8, 2.5, .8); orb(.85, C.glowS, p, 10);
+      bundle([p.clone().add(V(0, -.8, 0)), p.clone().add(V(Math.cos(a) * .4, -.6, Math.sin(a) * .4)), p.clone().add(V(Math.cos(a) * .9, -.85, Math.sin(a) * .9))], 4, .3, { r0: .09, r1: .05 }); }
+    g.userData.mimR = 4.4; return g; }
   /* the creatures: one recipe, sized and shaped by class */
   const D = MIM_D[cls] || {};
   const L = D.len, spine = [V(-2.6 * L, .35, 0), V(-1.6 * L, .55 + D.hump * .5, 0), V(-.4 * L, .72 + D.hump, 0), V(.8 * L, .9 + D.hump * .8, 0), V(1.75 * L, .8, 0)];
@@ -16615,6 +16769,10 @@ function buildMimic(cls) {
     if (D.plates) /* the Assimilator: torn starship plating fused into its body, running lights still lit, and a wrecked hull in its tendrils */
       for (let i = 0; i < 7; i++) { const b = add(new TH.Mesh(new TH.BoxGeometry(.5 + r() * .5, .08, .3 + r() * .3), C.plate), (-1.8 + i * .55) * L, .9 + r() * .4, (r() - .5) * .8); b.rotation.set((r() - .5) * 1.2, r() * 3, (r() - .5) * .8);
         const l = add(new TH.Mesh(new TH.BoxGeometry(.08, .03, .08), C.plateL)); l.position.copy(b.position).add(V(0, .06, 0)); }
+    if (D.alpha) { /* an Alpha: a crown of great hooked spines swept back from the skull, and its neural core laid open along its back */
+      for (let i = 0; i < 7; i++) { const a = (i - 3) * .32; cone(1.6 + (3 - Math.abs(i - 3)) * .45, .16, C.shell, V(1.55 * L, 1.35, a * .55), V(-1, 1.1 - Math.abs(a) * .3, a * 1.4), .35); }
+      const cp = V(-.3 * L, 1.5 + D.hump, 0), co = orb(.55, C.core, cp, 24); co.scale.set(1.6, .8, 1); orb(1.0, C.glowS, cp, 14);
+      for (let i = 0; i < 8; i++) { const a = i / 8 * TAU; tube([cp.clone().add(V(Math.cos(a) * .95, -.15, Math.sin(a) * .55)), cp.clone().add(V(Math.cos(a) * .55, .45, Math.sin(a) * .32)), cp.clone().add(V(Math.cos(a) * .12, .6, Math.sin(a) * .06))], .1, .035, C.cableL); } }
     if (D.brood) /* the Brood Titan: violet brood sacs swelling along its flanks */
       for (let i = 0; i < 8; i++) { const sd = i % 2 ? 1 : -1, e = orb(.26 + r() * .12, C.egg, V((-1.8 + (i >> 1) * .8) * L, .35 + r() * .3, sd * (.55 + r() * .15)), 14); e.scale.y = 1.2; }
   }
@@ -16623,6 +16781,11 @@ function buildMimic(cls) {
    together, each foot swinging forward lifted and planting back on the ground, the claws riding with it; the body bobs twice a stride and
    snakes a little; the head nods and the jaw works; tendrils, mane and tail ripple outward from the body, later the further out they reach */
 function mimWave(k) { const D = MIM_D[k], f = v => (+v).toFixed(4), W1 = "2.0944", W2 = "4.18879";
+  if (k === "mnexus") return `vec3 p = position; float rr = length(p.xz), hc = (1. - smoothstep(2.75, 2.95, rr)) * step(-.35, p.y) * (1. - step(3.15, p.y)), th = mt * .349066, c = cos(th), s = sin(th);
+    transformed.xz = mix(transformed.xz, vec2(c * transformed.x - s * transformed.z, s * transformed.x + c * transformed.z), hc);
+    float ob = step(3.0, p.y) * (1. - smoothstep(1.7, 2.3, rr)); transformed.y += ob * .2 * sin(mt * 2.0944);
+    float sp = smoothstep(-1., 4.5, p.y) * step(2.95, rr) * step(-1.3, p.y); transformed.x += sp * .07 * sin(mt * 2.0944 + atan(p.z, p.x) * 2.); transformed.z += sp * .07 * cos(mt * 2.0944 + atan(p.z, p.x) * 2.);
+    float rt = smoothstep(3.3, 4.2, rr) * step(p.y, -1.3); transformed.y += rt * .14 * sin(mt * 4.18879 - rr * 2.2 + atan(p.z, p.x));`;
   if (k === "mnest") return `vec3 p = position; float an = atan(p.z, p.x), sp = smoothstep(-1.1, 2.6, p.y) * step(.35, length(p.xz));
     transformed.x += sp * .1 * sin(mt * ${W1} + an * 2.); transformed.z += sp * .1 * cos(mt * ${W1} + an * 2.);
     float rt = smoothstep(1.3, 2.4, length(p.xz)) * step(p.y, -1.05); transformed.y += rt * .14 * sin(mt * ${W2} - length(p.xz) * 2.2 + an);
@@ -16640,7 +16803,7 @@ function mimWave(k) { const D = MIM_D[k], f = v => (+v).toFixed(4), W1 = "2.0944
     transformed.z += tw * .3 * sin(mt * ${W1} - dd * 1.6 + p.x * .6); transformed.y += tw * .2 * sin(mt * ${W2} - dd * 1.3 + p.z * 1.2); transformed.x += tw * .12 * sin(mt * ${W1} - dd);`;
   return w; }
 for (const k in MIM_U) MON_WAVE[k] = mimWave(k);
-MON_WAVE.mimic = mimWave("mnest");
+MON_WAVE.mimic = mimWave("mnest"); for (let i = 1; i <= 4; i++) MON_WAVE["alpha" + i] = mimWave("malpha" + i); MON_WAVE.nexus = mimWave("mnexus"); /* v665 */
 function buildAlien(k) {
   if (MIM_U[k]) return buildMimic(k);
   if (k === "swasp" || k === "snest") return buildMonster("swasp", k === "snest" ? "nest" : "swarm");
@@ -20484,12 +20647,12 @@ function shPyramid() {
 function shPirate() {
   const x = PB[sheet.id]; if (!x) return ""; { const q = pos(x, now()); if (!fogSeen(q.x, q.y)) return shUnexplored(x); }
   const T = now(), h = originPlanet(), avail = originAvail(), sel = selected(), down = pirDown(x), force = xForce(x), L = xLoot(x), sentOut = S.fleets.some(f => f.xid === x.id && f.phase === "out");
-  const head = x.mon ? `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:${MON[x.mon].col}">Space monster · ${MON[x.mon].n} · Lv.${x.lvl}</div><h2>${MON[x.mon].ic} ${esc(x.name)}</h2><p class="note">${MON[x.mon].d} Slay it for a hoard of resources, Void Shards and ${monAccel(x.lvl).n} ${monAccel(x.lvl).tier} time accelerator${monAccel(x.lvl).n > 1 ? "s" : ""}.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${monArt(MON_ARTF[x.mon] || x.mon)}`
+  const head = x.mon ? `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:${MON[x.mon].col}">Space monster · ${MON[x.mon].n} · Lv.${x.lvl}</div><h2>${MON[x.mon].ic} ${esc(x.name)}</h2><p class="note">${MON[x.mon].d}${MIM_BOSS[x.id] ? "" : ` Slay it for a hoard of resources, Void Shards and ${monAccel(x.lvl).n} ${monAccel(x.lvl).tier} time accelerator${monAccel(x.lvl).n > 1 ? "s" : ""}.`}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${monArt(MON_ARTF[x.mon] || x.mon)}`
     : x.boss ? `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#5dff6a">Boss · Assimilation Cube · Lv.${x.lvl}</div><h2>■ ${esc(x.name)}</h2><p class="note">A city-sized cube of the Collective, laced with green fire. It adapts, it repairs, it does not negotiate. Destroy it for a vault of resources, Void Shards and a guaranteed item.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`
     : `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#ff6b5a">Pirate hideout · Lv.${x.lvl}</div><h2>☠ ${esc(x.name)}</h2><p class="note">Outlaw crews hiding in the dust lanes. Beat them and your holds fill with their stolen cargo.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
   const el = isElite(x), lk = xLootK(x), fk = !(S.fk || {})[lk + ":" + x.lvl] && !trainingPir(x);
   const lprev = lootPreview(lk === "cube" ? LOOT.cube(x.lvl) : lk === "mon" ? LOOT.monster(x.lvl, el, x.mon) : LOOT.pirate(x.lvl, el), fk ? `<p class="lfk">First ${lk === "cube" ? "Cube" : lk === "mon" ? "monster" : "pirate"} kill at Lv.${x.lvl}: ◆2 and ${matsText(LOOT.first(lk, x.lvl))}</p>` : "");
-  const info = `${el ? `<div class="elite">★ ELITE · 60% stronger this week · double materials, triple rare chance</div>` : ""}${lprev}<dl class="kv"><dt>Loot on a win</dt><dd>${costHTML(L)}${xShards(x) ? ` + ◆${xShards(x)}` : ""}${x.boss ? " + an item" : x.mon ? ` + ${monAccel(x.lvl).n}× ${monAccel(x.lvl).tier} accelerator` : ""}</dd>${x.mon ? `<dt>Monster strength</dt><dd>×${(.25 + .15 * x.lvl).toFixed(2)} · ${x.mon === "mimic" ? `Stage ${mimStage(x, T)} · ${MIM_STAGE[mimStage(x, T)]}</dd><dt>The brood</dt><dd>${mimForceTxt(x)}` : `${xForce(x)[x.mon]} in the ${x.mon === "ssquid" ? "pack" : "pod"}`}</dd>` : x.boss ? `<dt>Teamwork</dt><dd>Too strong alone? Start a joint strike: every commander who joins adds +10% attack and shields, up to +30%.</dd><dt>Cube strength</dt><dd>×${((.5 + .25 * x.lvl) * CUBE_BOSS_K).toFixed(2)} on every unit</dd>` : `<dt>Pirate tech</dt><dd>Weapons, shields and armour ${pirTech(x.lvl).weapons}</dd>`}<dt>Orbit</dt><dd>${Math.round(x.r)} · ${zoneOf(x.r)}</dd>
+  const info = MIM_BOSS[x.id] ? mimBossInfo(x, T) + cineBtn(x.id) : `${el ? `<div class="elite">★ ELITE · 60% stronger this week · double materials, triple rare chance</div>` : ""}${lprev}<dl class="kv"><dt>Loot on a win</dt><dd>${costHTML(L)}${xShards(x) ? ` + ◆${xShards(x)}` : ""}${x.boss ? " + an item" : x.mon ? ` + ${monAccel(x.lvl).n}× ${monAccel(x.lvl).tier} accelerator` : ""}</dd>${x.mon ? `<dt>Monster strength</dt><dd>×${(.25 + .15 * x.lvl).toFixed(2)} · ${x.mon === "mimic" ? `Stage ${mimStage(x, T)} · ${MIM_STAGE[mimStage(x, T)]}</dd><dt>The brood</dt><dd>${mimForceTxt(x)}` : `${xForce(x)[x.mon]} in the ${x.mon === "ssquid" ? "pack" : "pod"}`}</dd>` : x.boss ? `<dt>Teamwork</dt><dd>Too strong alone? Start a joint strike: every commander who joins adds +10% attack and shields, up to +30%.</dd><dt>Cube strength</dt><dd>×${((.5 + .25 * x.lvl) * CUBE_BOSS_K).toFixed(2)} on every unit</dd>` : `<dt>Pirate tech</dt><dd>Weapons, shields and armour ${pirTech(x.lvl).weapons}</dd>`}<dt>Orbit</dt><dd>${Math.round(x.r)} · ${zoneOf(x.r)}</dd>
     ${h ? `<dt>Flight from ${esc(h.name)}</dt><dd>${ftime(travelMs(h, x, { fighter: 1 }))}</dd>` : ""}<dt>${x.mon ? "Another surfaces after" : x.boss ? "Rebuilds after defeat" : "Regroups after a raid"}</dt><dd>${ftime(xRegroup(x))}</dd></dl>${cineBtn(x.id)}`;
   const scan = `<h2 class="sec">${x.mon ? "The beast" : x.boss ? "Collective forces" : "Crews"}</h2>${down > T ? `<p class="note">${x.mon ? "Slain. Another of its kind drifts in within" : x.boss ? "The Cube is wrecked. It rebuilds in" : "You cleaned this hideout out. The pirates regroup in"} <b data-end="${down}">${ftime(down - T)}</b>.</p>` : unitGrid(force)}`;
   let body;
@@ -20504,7 +20667,7 @@ function shPirate() {
     body = `<h2 class="sec" id="strike">${x.mon ? "Hunting fleet" : "Raiding fleet"}</h2>${originBar()}${picker(avail)}${strikeReqSection(x, x.lvl)}${speedBar(x, sel)}
       <dl class="kv"><dt>Cargo space</dt><dd style="color:${cap >= total(L) ? "var(--green)" : ""}">${fmt(cap)} / ${fmt(total(L))}</dd></dl>
       ${oddsBlock(o)}
-      ${(x.boss || x.mon) && G.mode === "online" ? `<button class="toggle${sheet.joint ? " on" : ""}" data-act="jointToggle"><span><b style="font-family:var(--f-display)">⚔ Start a joint strike</b><br><span class="note">Bosses fall to joint strikes. Allies send ships to ${esc(h ? h.name : "your world")}; at the deadline the joint strike marches as one. Every extra commander adds 15% to the vault (up to +150%), and each gets the full shard and ${x.mon ? "accelerator" : "item"} reward.</span></span><span class="sw"></span></button>${sheet.joint ? rallyTimerUI(h, x, sel) : ""}` : ""}
+      ${(x.boss || x.mon) && !MIM_BOSS[x.id] && G.mode === "online" ? `<button class="toggle${sheet.joint ? " on" : ""}" data-act="jointToggle"><span><b style="font-family:var(--f-display)">⚔ Start a joint strike</b><br><span class="note">Bosses fall to joint strikes. Allies send ships to ${esc(h ? h.name : "your world")}; at the deadline the joint strike marches as one. Every extra commander adds 15% to the vault (up to +150%), and each gets the full shard and ${x.mon ? "accelerator" : "item"} reward.</span></span><span class="sw"></span></button>${sheet.joint ? rallyTimerUI(h, x, sel) : ""}` : ""}
       <button class="btn wide" data-act="raid" data-id="${x.id}" ${Object.keys(sel).length && !sentOut ? "" : "disabled"}>${sentOut ? "Fleet already en route" : sheet.joint && (x.boss || x.mon) ? "⚔ Start the joint strike" : x.mon ? "Launch the hunt" : x.boss ? "Attack the Cube" : "Launch raid"}</button>`;
   }
   const fav = !!(S.fav || {})[x.id];
@@ -23586,6 +23749,8 @@ const CAP2 = {
 const MON_ATK = {
   mstalk: [["flak", 4, "#7fe0ff", .12, {}], ["laser", 2, "#bff3ff", .16, {}]], mharv: [["acid", 3, "#5fd8ff", .2, {}], ["flak", 3, "#9fe8ff", .14, {}]], mhunt: [["laser", 3, "#9fe8ff", .1, {}], ["flak", 5, "#7fe0ff", .1, {}]],
   massim: [["ion", 3, "#9fe4ff", .18, {}], ["missile", 3, "#7fd4ff", .2, {}]], mguard: [["flak", 6, "#5fd8ff", .12, {}], ["ion", 2, "#9fe8ff", .22, {}]], mtitan: [["plasma", 3, "#b48cff", .24, { hv: 1 }], ["missile", 6, "#5fd8ff", .2, { flank: 1 }]],
+  malpha1: [["plasma", 4, "#7fe0ff", .22, { hv: 1 }], ["missile", 6, "#5fd8ff", .2, { flank: 1 }]], malpha2: [["laser", 4, "#c6a8ff", .12, {}], ["plasma", 3, "#9b6bff", .22, { hv: 1 }]], malpha3: [["ion", 4, "#e4f4ff", .2, {}], ["flak", 8, "#cfe8ff", .12, {}]], malpha4: [["acid", 5, "#5fffc8", .2, {}], ["missile", 6, "#3fffc0", .2, { flank: 1 }]],
+  mnexus: [["ion", 6, "#7ff0ff", .16, {}], ["laser", 4, "#bff8ff", .12, {}]], /* v665 */
   mnest: [["missile", 4, "#5fd8ff", .2, { flank: 1 }], ["plasma", 2, "#9b4dff", .26, { hv: 1 }]], /* v663 the Mimics */
   swhale:  [["torpedo", 2, "#9fe8ff", .2, {}], ["flak", 6, "#bff3ff", .14, {}]],          // laser turrets · hull torpedoes · tail-gun tracers
   slevi:   [["acid", 3, "#ff8a3a", .2, {}], ["flak", 8, "#ffd36b", .12, {}]],            // plasma breath · molten spit · ember spray
@@ -26468,9 +26633,10 @@ const ACT = {
   archOpen: () => { G.trayOpen = false; try { trayRender(); } catch (e) {} openSheet({ type: "archives" }); },
   archEntry: d => openSheet({ type: "archives", id: d.id }),
   mimOpen: () => openSheet({ type: "mimic" }), /* v663 */
+  mimGoB: d => { const x = PB[d.id]; if (x) mimGo(x); }, /* v665 */
   mimFind: () => { const x = mimNearest(now()); if (x) mimGo(x); else toast("No hive within reach right now."); },
   mimPrev: d => { if (!ownerFree()) return; const w = +d.w; S.mimPrev = w ? { w, at: now() } : null; dirty(); toast(w ? `Previewing week ${w} of the Mimic Protocol.` : "Preview off."); renderSheet(); },
-  mimClaim: d => { const w = +d.w, M = mimS(), o = MIM_OBJ[w - 1]; if (!o || M.got["w" + w] || mimObjN(w) < o[1]) return; M.got["w" + w] = 1; S.shards = (S.shards || 0) + o[2]; M.m.tis = (M.m.tis || 0) + o[3]; dirty(); toast(`+◆${o[2]} and ${o[3]} Mimic Tissue`, "win"); try { logReward(`Mimic Protocol · week ${w} objective`, null, { shards: o[2], kind: "event" }); } catch (e) {} renderSheet(); },
+  mimClaim: d => { const w = +d.w, M = mimS(), o = MIM_OBJ[w - 1]; if (!o || M.got["w" + w] || mimObjN(w) < o[1]) return; M.got["w" + w] = 1; M.pend = (M.pend || 0) + 10; setTimeout(() => mimFlush(1), 50); S.shards = (S.shards || 0) + o[2]; M.m.tis = (M.m.tis || 0) + o[3]; dirty(); toast(`+◆${o[2]} and ${o[3]} Mimic Tissue`, "win"); try { logReward(`Mimic Protocol · week ${w} objective`, null, { shards: o[2], kind: "event" }); } catch (e) {} renderSheet(); },
 
   archFlip: d => { if (!ARCH[d.id]) return; const n = archClaim(d.id); if (n) { toast(`+◆${n} · ${ARCH[d.id].t}`, "win"); renderSheet(); } else openSheet({ type: "archives", id: d.id }); }, /* v661 */
   archAll: () => { let n = 0; for (const k of ARCH_ORD) n += archClaim(k, true); if (n) { toast(`+◆${n} from your Archive cards.`, "win"); try { SFX.fanfare && SFX.fanfare(true); } catch (e) {} shardFly(n); renderSheet(); } },
@@ -26542,7 +26708,7 @@ const ACT = {
     if (S.fleets.some(f => f.xid === x.id && f.phase === "out")) return toast("A fleet is already on its way there.", "warn");
     if (slotsFull()) return;
     const n = takeShips(pick); if (!Object.keys(n).length) return;
-    if (sheet && sheet.joint && (x.boss || x.mon)) { const mins = RALLY_T.includes(sheet.jt) ? sheet.jt : 10, rf = startRally(x, n, mins); if (!rf) return; openStrike(rf); toast(`Joint strike started on ${x.name}. It launches in ${mins} min: allies can join until then.`, "win"); return; }
+    if (sheet && sheet.joint && (x.boss || x.mon) && !MIM_BOSS[x.id]) { const mins = RALLY_T.includes(sheet.jt) ? sheet.jt : 10, rf = startRally(x, n, mins); if (!rf) return; openStrike(rf); toast(`Joint strike started on ${x.name}. It launches in ${mins} min: allies can join until then.`, "win"); return; }
     const f = sendFleet(x, n, "pirate", { xid: x.id }); if (!f) return; callAllies(f); closeSheet(); toast(`Raid launched on ${x.name}. Arrival in ${ftime(f.tt)}.`);
   }),
   pirLvl: d => { G.pirLvl = d.v === G.pirLvl ? null : d.v; renderSheet(); },
