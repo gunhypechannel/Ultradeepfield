@@ -15063,6 +15063,9 @@ function studio() { G.stuT = Date.now(); /* v537 */
     scene.add(new TH.AmbientLight(0x4a5468, .2));
     key.shadow.mapSize.set(1024, 1024); Object.assign(key.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: .5, far: 40 }); key.shadow.bias = -.0008;
     STU = { cv, renderer, scene, camera: new TH.PerspectiveCamera(28, 2, .1, 400), cache: G.stuCache || {}, tex: null, key };
+    try { const C = STU.cache, o = [], os = []; for (const k in C) { const c = C[k]; if (c && c.getContext) (k.endsWith("|side") ? os : o).push(k); } /* fb-20261119 a kept cache keeps its eviction order */
+      for (const [L, n] of [[os, IOS ? 48 : MOBILE ? 64 : 96], [o, IOS ? 32 : 48]]) { let i = 0; while (L.length > n && i < L.length) { const k = L[i]; if (ART_LIVE.has(k)) { i++; continue; } L.splice(i, 1); const c = C[k]; if (c && c.getContext) { c.width = c.height = 0; c._mip = null; } delete C[k]; } }
+      STU.order = o; STU.orderSide = os; } catch (e) {}
   } catch (e) { STU = false; }
   return STU || null;
 }
