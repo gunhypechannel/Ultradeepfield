@@ -572,6 +572,24 @@ main#view{overflow-x:hidden;overscroll-behavior-x:none}
 .node .nm{font-family:var(--f-display);font-weight:600;font-size:14px}
 .node .rq{grid-column:2;display:flex;gap:5px;flex-wrap:wrap}
 .chipq{display:inline-block;white-space:nowrap;margin:2px 4px 2px 0;font-size:11.5px;padding:2px 6px;border:1px solid var(--amber);color:var(--amber);font-family:var(--f-display);letter-spacing:.03em}
+.pth{display:grid;grid-template-columns:84px minmax(0,1fr) auto;grid-template-areas:"a b g" "q q q" "r r r";gap:8px 12px;align-items:center;margin:10px 0;padding:12px;border-radius:14px;position:relative;overflow:hidden;
+  --pc:255,196,90;border:1px solid rgba(var(--pc),.28);background:radial-gradient(120% 140% at 0% 0%,rgba(var(--pc),.13),transparent 55%),linear-gradient(180deg,rgba(255,255,255,.035),rgba(0,0,0,.12));box-shadow:inset 3px 0 0 rgba(var(--pc),.75)}
+.pth.pr{--pc:85,214,232}.pth.rdy{--pc:113,223,144;box-shadow:inset 3px 0 0 rgba(var(--pc),.9),0 0 18px rgba(var(--pc),.22);animation:pthGlow 2.8s ease-in-out infinite}
+@keyframes pthGlow{50%{box-shadow:inset 3px 0 0 rgba(var(--pc),.9),0 0 26px rgba(var(--pc),.38)}}
+.pth-art{grid-area:a;width:84px;height:56px;border-radius:10px;background:radial-gradient(circle at 50% 60%,rgba(var(--pc),.22),#02060c 72%);border:1px solid rgba(var(--pc),.3);display:grid;place-items:center;overflow:hidden}
+.pth-art canvas{width:84px;height:56px;display:block}
+.pth-b{grid-area:b;min-width:0;display:flex;flex-direction:column;gap:3px}.pth-k{font-family:var(--f-display);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:rgb(var(--pc))}
+.pth-n{font-size:16px;font-weight:700;color:#eef8fc;line-height:1.15;overflow-wrap:anywhere}
+.pth-bar{height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:2px}.pth-bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,rgba(var(--pc),.55),rgb(var(--pc)));box-shadow:0 0 8px rgba(var(--pc),.6)}
+.pth-st{font-size:11.5px;color:var(--muted)}.pth.rdy .pth-st{color:var(--green);font-weight:600}
+.pth-go{grid-area:g;align-self:center;white-space:nowrap}
+.pth-req{grid-area:q;display:flex;flex-wrap:wrap;gap:6px}
+.pchip{all:unset;cursor:pointer;white-space:nowrap;font-size:12px;padding:4px 9px;border-radius:999px;border:1px solid rgba(255,196,90,.55);color:#ffd27a;background:rgba(255,196,90,.08);font-family:var(--f-display);letter-spacing:.02em}
+.pchip b{font-weight:700}.pchip.ok{border-color:rgba(113,223,144,.4);color:#8fe7a8;background:rgba(113,223,144,.07)}.pchip:active{transform:scale(.96)}
+.pth-rw{grid-area:r;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:7px 10px;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.06);font-size:13px}
+.pth-rw .pg{display:inline-flex;align-items:center;gap:3px;color:#d9f6e4;font-weight:600}.pth-rw .pg svg,.pth-rw .pg img{width:16px;height:16px}.pth-rw .pg.shard{color:#d9a6ff}
+.pth-rw > span:first-child{font-family:var(--f-display);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+@media (max-width:360px){.pth{grid-template-columns:64px minmax(0,1fr);grid-template-areas:"a b" "g g" "q q" "r r"}.pth-art,.pth-art canvas{width:64px;height:44px}.pth-go{justify-self:stretch}}
 .chipq.met{border-color:rgba(113,223,144,.5);color:var(--green)}
 
 /* Galaxy map */
@@ -5673,7 +5691,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 652;
+const GAME_V = 653;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -25168,13 +25186,26 @@ function masteryList() {
 }
 const masteryReward = m => ({ m: Math.round((m.c.m || 0) * .6 + 600), c: Math.round((m.c.c || 0) * .6 + 400), g: Math.round((m.c.g || 0) * .6 + 150), sh: m.k === "worldbreaker" ? 10 : (SH[m.k] && SH[m.k].req.shipyard >= 8) || (R[m.k] && R[m.k].req && R[m.k].req.lab >= 5) ? 2 : 1 }); // v80: scarcer shards
 const masteryReady = () => masteryList().filter(m => m.done && !(S.mast || {})[m.id]).length;
+/* v653 one step on the path, as a card */
+const pathKind = k => k in B ? "b" : k in R ? "r" : null;
+function pathCard(m, miss, rw) { const E = Object.entries(m.req || {}).filter(([k]) => ANY[k]), tot = E.length, met = E.filter(([k, l]) => lvlOf(k) >= l).length, ready = !miss,
+    pct = tot ? Math.round(E.reduce((a, [k, l]) => a + Math.min(1, lvlOf(k) / l), 0) / tot * 100) : 100, first = E.find(([k, l]) => lvlOf(k) < l && pathKind(k)), sh = m.kind !== "r";
+  const go = ready ? `data-act="detail" data-kind="${sh ? "s" : "r"}" data-k="${m.k}"` : first ? `data-act="detail" data-kind="${pathKind(first[0])}" data-k="${first[0]}"` : `data-act="nav" data-v="build" data-s="${sh ? "ships" : "research"}"`;
+  const chips = E.map(([k, l]) => { const ok = lvlOf(k) >= l, pk = pathKind(k); return `<button class="pchip${ok ? " ok" : ""}"${pk ? ` data-act="detail" data-kind="${pk}" data-k="${k}"` : ""}>${ok ? "✓ " + esc(ANY[k].n) : `${esc(ANY[k].n)} <b>${lvlOf(k)}/${l}</b>`}</button>`; }).join("");
+  return `<div class="pth ${sh ? "ps" : "pr"}${ready ? " rdy" : ""}"><div class="pth-art"><canvas ${sh ? `data-ship="${m.k}"` : `data-rs="${m.k}|1"`} role="img" aria-label="${esc(m.n)}"></canvas></div>
+    <div class="pth-b"><small class="pth-k">${sh ? (TITAN_INFO[m.k] ? "Titan" : "New ship") : "New research"}</small><b class="pth-n">${esc(m.n)}</b>
+      <div class="pth-bar"><i style="width:${pct}%"></i></div><small class="pth-st">${ready ? "Ready to start" : `${met}/${tot} requirements met`}</small></div>
+    <button class="btn ${ready ? "amber" : "ghost"} sm pth-go" ${go}>${ready ? "Start" : "Next step"}</button>
+    ${ready ? "" : `<div class="pth-req">${chips}</div>`}<div class="pth-rw"><span>Reward</span>${pathGain(m)}</div></div>`; }
+/* the reward, as a gain: never red for what you cannot afford */
+function pathGain(m) { const r = masteryReward(m); return ["m", "c", "g"].filter(k => r[k]).map(k => `<span class="pg r-${k}">${RI[k]}+${fmt(r[k])}</span>`).join("") + `<span class="pg shard">◆${r.sh}</span>`; }
 function mMastery() {
   const L = masteryList(), got = S.mast || {}, claimed = L.filter(m => got[m.id]).length, ready = L.filter(m => m.done && !got[m.id]), pct = Math.round(claimed / L.length * 100);
   const next = L.filter(m => !m.done).map(m => ({ m, miss: (m.kind === "r" ? missing(m.req) : missing(m.req)).length })).sort((a, b) => a.miss - b.miss || total(a.m.c) - total(b.m.c)).slice(0, 4);
   const rw = m => { const r = masteryReward(m); return `${costHTML({ m: r.m, c: r.c, g: r.g })} <span class="shard">◆${r.sh}</span>`; };
   return `<div class="mcard"><h3>Path to Mastery · ${claimed} / ${L.length}</h3><div class="xp"><i style="width:${pct}%"></i></div><p>Every technology you research and every ship type you build pays a reward that helps fund the next one. Unlock them all for the Grand Mastery bonus of ◆50.</p></div>
     ${ready.length ? `<div class="mcard"><h3 style="color:var(--amber)">Ready to claim · ${ready.length}</h3>${ready.map(m => `<div class="crow"><span class="ic">${m.kind === "r" ? bicon(m.k) : `<canvas data-u="${m.k}"></canvas>`}</span><span class="nm">${m.kind === "r" ? "Researched" : "Built"} ${esc(m.n)}<small>${rw(m)}</small></span><button class="btn amber sm" data-act="mastClaim" data-id="${m.id}">Claim</button></div>`).join("")}</div>` : ""}
-    <div class="mcard"><h3>Next on your path</h3>${next.map(({ m, miss }) => `<div class="crow"><span class="ic">${m.kind === "r" ? bicon(m.k) : `<canvas data-u="${m.k}"></canvas>`}</span><span class="nm">${m.kind === "r" ? "Research" : /^[aeiou]/i.test(m.n) ? "Build an" : "Build a"} ${esc(m.n)}<small>${miss ? reqChips(m.req) : `<span class="chipq met">Ready to start</span>`} · reward ${rw(m)}</small></span><button class="btn ghost sm" data-act="nav" data-v="build" data-s="${m.kind === "r" ? "research" : "ships"}">Go</button></div>`).join("") || '<p class="note">Everything unlocked. Claim your rewards above.</p>'}</div>
+    <div class="mcard"><h3>Next on your path</h3>${next.map(({ m, miss }) => pathCard(m, miss, rw)).join("") || '<p class="note">Everything unlocked. Claim your rewards above.</p>'}</div>
     ${claimed === L.length && !got.grand ? `<button class="btn amber wide" data-act="mastClaim" data-id="grand">Claim Grand Mastery · ◆50</button>` : got.grand ? '<p class="note" style="color:var(--amber)">Grand Mastery achieved. Every technology and ship type is yours.</p>' : ""}`;
 }
 
