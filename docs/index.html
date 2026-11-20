@@ -24020,7 +24020,7 @@ function gpuNap(on) { for (const W of [G3, C3]) { if (!W || !W.renderer) continu
 function bevOpen() { if (G.bevOpen == null) { try { G.bevOpen = localStorage.getItem("udf.bevOpen") === "1"; } catch (e) { G.bevOpen = false; } } return !!G.bevOpen; }
 function playBattle(r) {
   if (r && r.elAff && r.elAff.pct > 0) setTimeout(() => { if (battle) elAffFlash(r.elAff); }, 1400); /* v628 */
-  if (battle) closeBattle(); archFromRep(r); crumb("battle replay: " + String((r && r.title) || "battle").slice(0, 40)); gpuNap(true);
+  if (battle) closeBattle(); archFromRep(r); crumb("battle replay: " + String((r && r.title) || "battle").slice(0, 40)); if (IOS) { worldDrop("gal", "before a battle"); worldDrop("col", "before a battle"); } /* fb-20261120 only the world on screen stays */ gpuNap(true);
   const w = document.createElement("div"); w.className = "battle"; w.id = "battle";
   w.innerHTML = `<canvas id="bcv" aria-label="Battle replay"></canvas>
     <div class="bhud top" id="bhA"></div><div class="bhud bot" id="bhD"></div><div class="bev" id="bev" aria-live="polite"></div>
