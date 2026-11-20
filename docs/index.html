@@ -6190,7 +6190,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 674;
+const GAME_V = 675;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -15184,7 +15184,7 @@ function draw3D(t) {
     o.grp.position.set(pt.x, pt.y, pt.z); o.grp.lookAt(nx.x, nx.y, nx.z);
     // bank into turns, and drop in and out of warp with a flare at each end of the trip
     const yaw = Math.atan2(nx.x - pt.x, nx.z - pt.z); if (o.yaw != null) { let dy = yaw - o.yaw; if (dy > Math.PI) dy -= TAU; if (dy < -Math.PI) dy += TAU; o.bank += (clamp(-dy * 30, -.55, .55) - o.bank) * .08; } o.yaw = yaw; if (!Number.isFinite(o.bank)) o.bank = 0; if (!Number.isFinite(o.yaw)) o.yaw = null; o.grp.rotateZ(o.bank || 0);
-    const wk = path.park || path.k >= 1 ? 1 : Math.min(clamp(path.k / .03, 0, 1), id === "raid" ? 1 : clamp((1 - path.k) / .03, 0, 1)), ws0 = fsF * (o.grp.userData.size || 1) * (.25 + .75 * wk), pxC = (o.grp.userData.span || 20) * ws0 * (pxS / W.renderer.getPixelRatio()) / Math.max(1, W.camera.position.distanceTo(o.grp.position)), ws = ws0 * (wk > .9 && pxC < 30 ? 30 / pxC : 1) /* v674 never under 30 px */;
+    const wk = path.park || path.k >= 1 ? 1 : Math.min(clamp(path.k / .03, 0, 1), id === "raid" ? 1 : clamp((1 - path.k) / .03, 0, 1)), ws0 = fsF * (o.grp.userData.size || 1) * (.25 + .75 * wk), pxC = (o.grp.userData.span || 20) * ws0 * ((W.renderer.domElement.clientHeight || innerHeight || 800) / 2 / Math.tan(W.camera.fov * Math.PI / 360)) / Math.max(1, W.camera.position.distanceTo(o.grp.position)), ws = ws0 * (wk > .9 && pxC > .5 && pxC < 30 ? Math.min(4, 30 / pxC) : 1) /* v674 never under 30 px; v675 measured from the canvas, never from a zeroed W.size, at most 4x */;
     o.grp.scale.setScalar(ws);
     if (o.warp) { const fl = 1 - wk; o.warp.visible = fl > .02; o.warp.material.opacity = fl * .9; o.warp.position.set(pt.x, pt.y, pt.z); o.warp.scale.setScalar(fs * 9 * (.4 + fl)); }
     { const ud = o.grp.userData; if (ud.flagship) ud.fz = 1; /* v264 the flagship keeps its true size at every zoom (it used to swell as you zoomed out) */ if (ud.anim && !reduced) ud.anim(t); if (ud.eng) ud.eng.material.uniforms.uScale.value = pxS * ws; }
@@ -21810,7 +21810,7 @@ function vGalaxyBelow() {
     const ps = allCommanders().sort((a, b) => b[1].score - a[1].score).slice(0, 25);
     body = ps.length ? `<p class="note">${activePlayers()} of ${MAX_PLAYERS} commander seats taken.</p><div class="board">${ps.map(([id, p], i) => `<span class="rk">${i + 1}</span><span class="nm ${id === G.me ? "me" : ""}"><i class="sw" style="background:${colorOf(id)}"></i>${esc(nameOf(id))}</span><span class="v">${p.planets} worlds</span><span class="v">${fmt(p.score)}</span>`).join("")}</div>` : '<div class="empty">No commanders yet.</div>';
   }
-  return `${banner}${fl ? `<h2 class="sec">Fleets in flight</h2><div class="queue">${fl}</div>` : ""}
+  return `${banner}${fl && sub.gal !== "targets" ? `<h2 class="sec">Fleets in flight</h2><div class="queue">${fl}</div>` : ""}
     ${S.raid ? `<div class="card" style="border-color:var(--red)"><b style="color:var(--red);font-family:var(--f-display)">Hive raid incoming · <span data-end="${S.raid.at}">${ftime(S.raid.at - T)}</span></b><p class="note">Lv.${S.raid.lvl} raiders. Ships at home, defenses and your fortress will fight.</p></div>` : ""}
     ${joint}${tabs}${body}`;
 }
