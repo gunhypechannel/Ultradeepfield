@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-19 (America/Phoenix). Current game version: **v679** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v473**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
+Last updated: 2026-11-19 (America/Phoenix). Current game version: **v680** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v474**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -39,6 +39,14 @@ Supabase project `slubtpfnimxtrfcozvhk`. Edge Function `settle_fight` (`supabase
 
 ## Pending work (as of 2026-11-07): start here in a new session
 
+- **v680 — Aexion fights like a swordsman (Nov 20)** (p680_wire.py + p680_aex.js). His replay shots used the generic capital beam. Now `aexAtkAdd` (from spawnVolley, sbk "aex") schedules moves on his real volleys, alternating lance and sweep with a gap of the move's length + 0.7 s; damage is unchanged.
+  - **Lance:** a charged thrust whose beam runs past the target to beyond the screen, with after-images; delayed booms on ships along the line (`aexBoom` inserts into b.pend in time order).
+  - **Sweep:** a blade of light swung from his body across the whole foe arc, with cut marks and staggered booms.
+  - **Time fracture (`frac`):** at most twice, after 30% and 70% of b.end. A cold dim overlay (the canvas "saturation" blend washed the screen white in Chromium, so it is not used), slow motion, 3 ghosts (WBR.soft art) striking, then a snap flash and booms.
+  - **Parries (`b.aexP`):** a hex shield and a glance when a capital, titan or Cube Destroyer volley targets him.
+  - **Warform entrance:** a burst during the intro when sbForm is 1; the banner name comes via b.heroN.
+  - **Director and sound:** cineDirect frames the lance between him and the target, and goes wide for sweep and frac. aexSfx reuses mimSfx/SFX.
+  - **Verified:** stress fights aex sbForm 0/1 at iPhone size with tcine.js (SEEK to reach the fracture); fracture brightness measured at 70–79 vs 80–95 normal.
 - **v679 — No letterbox bars (Nov 19)** (p679_wire.py). The v678 bars were drawn at mg.top/mg.bot (the ships' field), not the visible edges; on the owner's Fold they cut across the middle of the battle. Bars removed, grain kept. Seen while checking: a long flat green bar across a Light Fighter badge in a Super Cube fight in the harness, present with cinematic off too (pre-existing, not in the owner's screenshot); not yet traced.
 - **v678 — Cinematic replays; Mimics sway slower (Nov 19)** (p678_wire.py + p678_cine.js). Owner: "slow the battle simulation down in a cinematic style but keep the same damage; movie finish". Visual only: the battle record, losses and result are untouched.
   - **Mode:** `b.cine` (default on, localStorage udf.cineRep; 🎞/⚡ button, `ACT.bcine`).
