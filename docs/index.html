@@ -6190,7 +6190,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 681;
+const GAME_V = 682;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8234,7 +8234,7 @@ function wbFend(key, b, t) { const F = WBF, C = WBR.cy, T2 = F.turn + F.hold, T3
     const opts = [-1, 0, 1].filter(d => d !== last), w = opts.map(d => d === 0 ? .6 : 1 + (d < 0 ? L : R) / Math.max(1, tg.length)); let r = Math.random() * w.reduce((a, v) => a + v, 0), dir = opts[0]; for (let i = 0; i < opts.length; i++) { r -= w[i]; if (r <= 0) { dir = opts[i]; break; } }
     WBR.cy = { t0: t, dir, fired: 0, end: t + T5 + F.rest * (.8 + Math.random() * .5) }; }
   const c = WBR.cy, e = t - c.t0, sm = u => u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u);
-  if (!c.fired && e >= T2) { c.fired = 1; if (!(battle && battle.r && battle.r.sbk === key && BMV_ACT[key])) /* v681 in these fights the battle chooses the move */ { const m = wbMoves(key), mv = m[(Math.random() * m.length) | 0]; WBR.b.act(mv); WBR.mv = { m: mv, t0: t }; if (battle && WBR.awe !== battle) { WBR.awe = battle; if (!G.stress || !G.stress.busy) aweSay(key, .55); } } } /* v487 */
+  if (!c.fired && e >= T2) { c.fired = 1; if (!(battle && battle.r && (battle.r.sbk === key || bmvKey(battle) === key) && BMV_ACT[key])) /* v681 in these fights the battle chooses the move */ { const m = wbMoves(key), mv = m[(Math.random() * m.length) | 0]; WBR.b.act(mv); WBR.mv = { m: mv, t0: t }; if (battle && WBR.awe !== battle) { WBR.awe = battle; if (!G.stress || !G.stress.busy) aweSay(key, .55); } } } /* v487 */
   WBR.face = c.dir * (e < F.turn ? sm(e / F.turn) : e < T4 ? 1 : 1 - sm((e - T4) / F.turn)); }
 function wbArt(key, w, h, t, b) { if (typeof BOSS3D === "undefined" || !wbD(key)) return null;
   try { if (!WBR.r) { const cv = document.createElement("canvas"); WBR.r = glNew({ canvas: cv, alpha: true, antialias: true }); WBR.r.setPixelRatio(1); WBR.r.outputEncoding = TH.sRGBEncoding; WBR.r.toneMapping = TH.ACESFilmicToneMapping; WBR.r.toneMappingExposure = 1.1; WBR.r.setClearColor(0, 0);
@@ -24649,8 +24649,8 @@ function bVoiceKey(b) { const r = b.r || {}; if (r.sbk) return r.sbk; if (r.wb) 
 function bVoice(b, when) { try { const k = bVoiceKey(b); if (!k || !AWE[k] || !AWE[k].length) return; const f = "bv_" + when; if (b[f]) return; b[f] = 1; const line = awePick(k); if (line) sbSay(line); } catch (e) {} }
 /* the boss's own 3D model plays the move the battle is showing (it used to pick its own moves at random, so its blade could swing while
    the overlay fired a lance), and Aexion's missiles and broadside now fly across the battle to the ships (his picture box clipped them) */
-const BMV_ACT = { aex: { lance: "lance", sweep: "blade", frac: "overdrive", missiles: "missiles", broadside: "broadside" }, khz: { seals: "barrage", crush: "crush", nova: "judge" }, med: { gaze: "gaze", serpents: "lunge", shards: "storm" }, vae: { rain: "wing", halo: "judge", wheel: "seal" } };
-function bossAct(b, a, t) { try { const k = b.r && b.r.sbk, mv = BMV_ACT[k] && BMV_ACT[k][a]; if (!mv || WBR.key !== k || !WBR.b || !WBR.b.act) return; WBR.b.act(mv); WBR.mv = { m: mv, t0: t }; } catch (e) {} }
+const BMV_ACT = { omg: { tractor: "tractor", wave: "wave", split: "burst" }, aex: { lance: "lance", sweep: "blade", frac: "overdrive", missiles: "missiles", broadside: "broadside" }, khz: { seals: "barrage", crush: "crush", nova: "judge" }, med: { gaze: "gaze", serpents: "lunge", shards: "storm" }, vae: { rain: "wing", halo: "judge", wheel: "seal" } };
+function bossAct(b, a, t) { try { const k = bmvKey(b) || (b.r && b.r.sbk), mv = BMV_ACT[k] && BMV_ACT[k][a]; if (!mv || WBR.key !== k || !WBR.b || !WBR.b.act) return; WBR.b.act(mv); WBR.mv = { m: mv, t0: t }; } catch (e) {} }
 Object.assign(WB_STRIKE, { aex: { missiles: ["bolts", .3, .8, 8, 3000], broadside: ["bolts", .25, .82, 10, 2200] } });
 function spawnVolley(b, v) { fx589Spawn(b, v); /* v589 */ try { if (MIM_ATK[(b.Q[v.s] || {}).k]) mimAtkAdd(b, v); } catch (e) {} /* v676 */ try { if (b.r && b.r.sbk === "aex") aexAtkAdd(b, v); } catch (e) {} /* v680 */ try { bmvAdd(b, v); } catch (e) {} /* v681 */
   if ((v.ab || (b.Q[v.s] && TITAN_LEN[b.Q[v.s].k])) && titanFx(b, v)) return; /* v556, v559 */
