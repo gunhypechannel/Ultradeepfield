@@ -5,7 +5,7 @@ game (tools/sim_data.js), so every unit added by a later Object.assign is there.
 The server and the replay then decide every fight the same way (same inputs + same seed = the same battle)."""
 import re, json, subprocess, sys, os
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FUNCS = ["simulate", "rnd", "cprof", "unitPow", "clamp", "unitCost", "total", "SMALL_R"]   # code (SMALL_R is a Set, so it is copied as code)
+FUNCS = ["simulate", "fmt", "rnd", "cprof", "unitPow", "clamp", "unitCost", "total", "SMALL_R"]   # code (SMALL_R is a Set, so it is copied as code)
 DATA = ["DOCTRINES", "AL", "CPROF", "CLASS_OF", "SHM", "WPN", "RF", "SH", "DF", "CB_V"]    # plain tables, taken from the running game
 CONSTS = "const ROUND_S = 5, MAX_ROUNDS = 8;"
 s = open(os.path.join(ROOT, "docs", "index.html"), encoding="utf-8").read()
