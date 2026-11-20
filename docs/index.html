@@ -6190,7 +6190,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 672;
+const GAME_V = 673;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -7204,7 +7204,7 @@ function defenders(p) {
    pick targets, and fire weapons with their own range, cooldown, accuracy, tracking and damage profile. Damage drains
    regenerating shields first, then goes through armor into the hull. Same inputs + same seed = the same battle: reports
    store the seed and the fleets, and the replay re-runs them, so what you watch is exactly what was decided. */
-const CB_V = 6, CB_OK = v => v === 3 || v === 4 || v === 5 || v === 6, /* v6: a space monster's pack is one squadron */ ROUND_S = 5, /* v5: same-type stacks of many commanders fight as merged squadrons (60 vs 60 battles), see simulate */ MAX_ROUNDS = 8, SHM = 1.5; // v4: joint fleets arrive together, shield saturation (v3 battles still replay exactly)
+const CB_V = 7, CB_OK = v => v === 3 || v === 4 || v === 5 || v === 6 || v === 7, /* v673 v7: the Cube Destroyer fires from the rear (siege range) */ /* v6: a space monster's pack is one squadron */ ROUND_S = 5, /* v5: same-type stacks of many commanders fight as merged squadrons (60 vs 60 battles), see simulate */ MAX_ROUNDS = 8, SHM = 1.5; // v4: joint fleets arrive together, shield saturation (v3 battles still replay exactly)
 const WPN = {
   laser:   { n: "Laser cannons",      acc: .92, track: 1,    vsSh: 1,    vsAr: .8,   rng: 26, cd: 1 },
   plasma:  { n: "Plasma batteries",   acc: .8,  track: .6,   vsSh: .75,  vsAr: 1.45, rng: 30, cd: 1.6 },
@@ -7248,7 +7248,7 @@ const DOCTRINES = {
 };
 const DOC_AI = { swarm: "Hive swarm", raider: "Pirate raiders", guard: "Defensive screen" };
 function simulate(A, D, o = {}) {
-  const seed = (o.seed != null ? o.seed : (Math.random() * 2147483647) | 0) >>> 0, rng = rnd(seed), V4 = (o.v || CB_V) >= 4, V5 = (o.v || CB_V) >= 5, V6 = (o.v || CB_V) >= 6;
+  const seed = (o.seed != null ? o.seed : (Math.random() * 2147483647) | 0) >>> 0, rng = rnd(seed), V4 = (o.v || CB_V) >= 4, V5 = (o.v || CB_V) >= 5, V6 = (o.v || CB_V) >= 6, V7 = (o.v || CB_V) >= 7, rngOf = s => V7 && s.k === "worldbreaker" ? 160 : WPN[s.wp].rng;
   const cnt = arr => arr.reduce((a, s) => a + (s.n > 0 ? Math.floor(s.n) : 0), 0);
   const quick = !!o.quick || cnt(A) + cnt(D) > 30000, dt = quick ? .5 : .25;
   const aOwn = (A.find(s => s.n > 0) || {}).own, dOwn0 = (D.find(s => s.n > 0) || {}).own;
@@ -7328,7 +7328,7 @@ function simulate(A, D, o = {}) {
     const myBig = dc === "guard" ? sq.filter(f => f.side === s.side && active(f) && BIG_R.has(f.role)) : null;
     for (const e of sq) { if (e.side === s.side || !active(e)) continue;
       const d = dist(s, e), eff = effVs(s, e); if (eff <= 0) continue;
-      const hpE = e.hull + e.shPer, kills = Math.min(e.n, eff / hpE), reach = 1 / (1 + Math.max(0, d - W.rng) / (dc === "skirmish" ? 10 : 22)), val = unitCost(e.k);
+      const hpE = e.hull + e.shPer, kills = Math.min(e.n, eff / hpE), reach = 1 / (1 + Math.max(0, d - rngOf(s)) / (dc === "skirmish" ? 10 : 22)), val = unitCost(e.k);
       let sc;
       if (dc === "swarm") sc = (kills + .1) / (1 + d / 6);
       else if (dc === "raider") sc = kills * Math.sqrt(val) * (e.role === "support" ? 3 : 1) / (1 + e.hull / 3000) * reach;
@@ -7425,7 +7425,7 @@ function simulate(A, D, o = {}) {
         if (s.side === "a" && s.ret && s.y < -12) { s.esc = true; note_(t, "a", "retreat", `${nm(s.k)} squadron escaped with ${fmt(s.n)} ships`); } }
       // fire: main weapon when in range, point defense against nearby small craft, carrier wings every few seconds
       s.cd -= dt; const W = WPN[s.wp];
-      if (s.cd <= 0 && s.tg && active(s.tg) && W.rng > 0 && dist(s, s.tg) <= W.rng + (s.role === "turret" || s.role === "station" ? 10 : 0)) {
+      if (s.cd <= 0 && s.tg && active(s.tg) && W.rng > 0 && dist(s, s.tg) <= rngOf(s) + (s.role === "turret" || s.role === "station" ? 10 : 0)) {
         if (!contact) { contact = true; note_(t, s.side, "contact", "First contact"); }
         volley(s, s.tg, s.wp, 1); s.cd = W.cd * (.9 + rng() * .2); }
       if (s.pd >= 1) { s.fcd -= dt; if (s.fcd <= 0) { s.fcd = WPN.flak.cd; let b = null, bd = 18; for (const e of sq) if (e.side !== s.side && active(e) && SMALL_R.has(e.role)) { const d = dist(s, e); if (d < bd) { bd = d; b = e; } }
@@ -7466,7 +7466,7 @@ function simulate(A, D, o = {}) {
       return out; }
     for (const s of sq) if (s.side === side && s.n > 0) { const k = s.own || "_"; (out[k] = out[k] || {})[s.k] = (out[k][s.k] || 0) + s.n; } return out; };
   const pack = arr => arr.filter(s => s.n > 0).map(s => [s.k, Math.floor(s.n), +(+s.atk).toFixed(2), +(+s.sh).toFixed(2), +(+s.hull).toFixed(2), s.own == null ? null : s.own, +(s.ab || 0)]);
-  const sim = { v: V6 ? 6 : V5 ? 5 : V4 ? 4 : 3, seed, doc: o.doc && DOCTRINES[o.doc] ? o.doc : null, quick: !!o.quick, A: pack(A), D: pack(D), dur: Math.round(t * 100) / 100, docA, docD, ev, stats: st, wpn: wst, pow: { a0: pow0.a, d0: pow0.d, a1: Math.round(powOf("a") + sq.reduce((a, s) => a + (s.side === "a" && s.esc ? s.n * unitPow(s) * (.35 + .65 * (1 - s.wd)) : 0), 0)), d1: Math.round(powOf("d")) } };
+  const sim = { v: V7 ? 7 : V6 ? 6 : V5 ? 5 : V4 ? 4 : 3, seed, doc: o.doc && DOCTRINES[o.doc] ? o.doc : null, quick: !!o.quick, A: pack(A), D: pack(D), dur: Math.round(t * 100) / 100, docA, docD, ev, stats: st, wpn: wst, pow: { a0: pow0.a, d0: pow0.d, a1: Math.round(powOf("a") + sq.reduce((a, s) => a + (s.side === "a" && s.esc ? s.n * unitPow(s) * (.35 + .65 * (1 - s.wd)) : 0), 0)), d1: Math.round(powOf("d")) } };
   const out = { start, rounds, winner, aLeft: snap("a"), dLeft: snap("d"), aByOwn: byOwn("a"), dByOwn: byOwn("d"), sim };
   if (o.rec) out.rec = { dt: quick ? .5 : .5, frames, vols, rocks, squads: sq.map(s => ({ id: s.id, side: s.side, k: s.k, own: s.own, shr: s.src && s.src.shares, role: s.role, wp: s.wp, n0: s.n0, hull: s.hull, sh: s.sh, shPer: s.shPer, atk: s.atk, pow: unitPow(s) })) };
   return out;
@@ -10757,7 +10757,7 @@ Object.assign(ARCH, {"c_1": {"cat": "saga", "t": "Chapter 1: The Wall Breaks", "
 const ARCH_ORD = ["war", "wym", "lev", "krk", "col", "ovl", "vae", "khz", "med", "dev", "brd", "tyr", "aex", "est", "efi", "eli", "eic", "ena", "epx", "cube", "testament", "b_swhale", "b_ssquid", "b_vmanta", "b_swasp", "b_smoth", "b_cram", "b_kegg", "b_gwhale", "b_reat", "b_cserp", "b_sent", "b_hive", "b_coll", "l_deep", "l_architects", "l_seals", "l_eclipse", "l_titans", "l_advisor", "l_judge", "c_1", "c_2", "c_3", "c_4", "c_5", "c_6", "c_7", "c_8", "c_9", "c_10", "c_11", "o_1", "o_2", "o_3", "o_4", "o_5", "o_6", "o_7", "o_8", "e_1", "e_2", "e_3", "e_4", "e_5", "e_6", "s_fighter", "s_heavyFighter", "s_hauler", "s_heavyCargo", "s_recycler", "s_lancer", "s_ark", "s_corvette", "s_battleship", "s_bastion", "s_bomber", "s_destroyer", "s_dreadnought", "s_spyProbe", "s_tender", "s_guardian", "s_escortCarrier", "s_supercarrier", "s_eclipse", "s_worldbreaker", "s_armageddon", "s_sovereign", "s_harbinger"];
 /* her lines one after another: each stays up until its voice clip ends, or long enough to read when it has none */
 const archFragLine = E => E.frag.replace(/^…/, "").replace(/…$/, "..."); /* v508 the fragment as she reads it */
-function archSeq(L, tok, done) { let i = 0, tries = 0; const step = () => { if (tok && tok !== G.archTok) return; if (i >= L.length) { if (done) done(); return; } { const a = VOICE.au; if (tries++ < 120 && ((a && !a.paused && !a.ended) || (G.sbQ && G.sbQ.length) || ($("#advh.on") && G.holoCur !== L[i - 1]))) { setTimeout(step, 500); return; } } tries = 0; const l = L[i++], t0 = Date.now(), minT = Math.max(3200, l.length * 62); try { advHolo(l, 1); } catch (e) {}
+function archSeq(L, tok, done) { let i = 0, tries = 0; const step = () => { if (tok && tok !== G.archTok) return; if (i >= L.length) { if (done) done(); return; } { const a = VOICE.au; if (i > 0 && tries++ < 120 && ((a && !a.paused && !a.ended) || (G.sbQ && G.sbQ.length) || ($("#advh.on") && G.holoCur !== L[i - 1]))) { setTimeout(step, 500); return; } } tries = 0; const l = L[i++], t0 = Date.now(), minT = Math.max(3200, l.length * 62); try { advHolo(l, "arch"); } catch (e) {}
     const wait = () => { const a = VOICE.au, busy = a && !a.paused && !a.ended; if (busy || Date.now() - t0 < (busy ? 0 : minT)) setTimeout(wait, 300); else setTimeout(step, 350); }; setTimeout(wait, 600); }; step(); }
 const archName = k => /^m_/.test(k) ? "The Mimic Protocol" : /^a_/.test(k) ? "The Age of Ashes" : /^h_/.test(k) ? (FACTIONS[k.slice(2)] || {}).n || "A House" : /^d_/.test(k) ? "A discovery" : /^x_/.test(k) ? "The Architects" : k === "l_queen" ? "Queen Vael'Khor" : /^o_/.test(k) ? "The Omens" : /^c_/.test(k) ? "The Ten Seals" : /^e_/.test(k) ? "The Advisor" : /^s_/.test(k) && SH[k.slice(2)] ? SH[k.slice(2)].n : /^l_/.test(k) ? "The Ages of the Deep" : k === "b_hive" ? "The Hive" : k === "b_coll" ? "The Collective" : /^b_/.test(k) && MON[k.slice(2)] ? MON[k.slice(2)].sp : k === "cube" ? "The Cube" : k === "testament" ? "The Final Testament" : SBW[k] ? `${SBW[k].n}, ${SBW[k].t.replace(/^The /, "the ")}` : WB[k] ? WB[k].n : k;
 const archLv = k => ((S && S.arch) || {})[k] | 0;
@@ -11998,9 +11998,34 @@ const bBeast = k => !!(MON[k] || BOSSK[k] || /^wb[A-Z]/.test(k));
 const bBig = k => /^wb[A-Z]/.test(k) || k === "cube" || k === "worldbreaker"; /* world and super bosses, the Cube */
 function bVsK(b, q) { if (!b || !q || bBeast(q.k)) return 1; const C = b.vsK || (b.vsK = {}); if (C[q.side] != null) return C[q.side];
   const foes = (b.Q || []).filter(x => x && x.side !== q.side); return (C[q.side] = foes.some(x => bBig(x.k)) ? 1 /* v659: the boss side is drawn bigger instead */ : foes.some(x => (MON[x.k] || BOSSK[x.k]) && !bBig(x.k) && x.k !== "sphere" && x.k !== "cdrone") ? 1.6 : 1); }
-const bLen = k => TITAN_LEN[k] ? TITAN_LEN[k] : k === "worldbreaker" ? 4.3 /* v531 the biggest thing on the field */ : k === "eclipse" ? 2.6 /* v531 the Discovery Class well above the Reaper (1.72); v533 kept */ : Math.pow(SIDE_LEN[k] || .5, 1.15) * (BOSSK[k] || 1);
+const bLen = k => MIM_HULL[k] ? MIM_HULL[k] /* v673 */ : /^e_/.test(k) && k.length > 2 ? bLen(k.slice(2)) : TITAN_LEN[k] ? TITAN_LEN[k] : k === "worldbreaker" ? 4.3 /* v531 the biggest thing on the field */ : k === "eclipse" ? 2.6 /* v531 the Discovery Class well above the Reaper (1.72); v533 kept */ : Math.pow(SIDE_LEN[k] || .5, 1.15) * (BOSSK[k] || 1);
 Object.assign(BOSSK, { mstalk: 1.55, mharv: 1.6, mhunt: 1.55, massim: 1.7, mguard: 1.8, mtitan: 2.5, mnest: 2.1, malpha1: 3.2, malpha2: 3.2, malpha3: 3.2, malpha4: 3.2, mnexus: 2.8, momega: 4.2, momegax: 4.2, mnode: 2.2, mpylon: 2.4 }); Object.assign(BOSS_GLOW, { momega: "191,246,255", momegax: "232,251,255", mnode: "127,240,255", mpylon: "127,240,255", malpha1: "95,216,255", malpha2: "180,140,255", malpha3: "228,244,255", malpha4: "95,255,200", mnexus: "127,240,255", mstalk: "95,216,255", mharv: "95,216,255", mhunt: "95,216,255", massim: "95,216,255", mguard: "95,216,255", mtitan: "150,120,255", mnest: "95,216,255" }); /* v663 */
 for (const k in MON) BOSSK[k] = (BOSSK[k] || 1) * 1.35; BOSSK.snest = (BOSSK.snest || 1) * 1.35; /* v528 space monsters loom larger in battle */
+/* ---------- v673 the Mimics on the battle screen: sized like the monsters they are ----------
+   Owner: the Mimics "look puny and insignificant"; fleets and units should fill as much of the screen as they can while staying true to
+   how big each side is against the other. They had no entry in the size ladder, so every Mimic fell back to the default hull length:
+   Omega was drawn at 1.89 (a Titan is 3.2, the Cube Destroyer 4.3) and the Alphas below a Dreadnought. Now:
+   - MIM_HULL puts them on the ladder: the swarm at fighter-to-destroyer size, the Brood Titan and the Nexus structures at Titan size, the
+     Alphas above the Titans and Omega the biggest thing that ever takes the field. Echoes copy the hull they mimic.
+   - bCapW: the largest bosses (Alphas, Omega) may span up to 78% of the screen instead of 55%.
+   - The Pylon and Node sprites are mostly empty space (a tall thin spire), so DRAWK draws them larger.
+   - The swarm draws as a pack (up to five bodies), not one creature with a ×6 badge.
+   - A big boss (length 3.6 or more: the Alphas, Omega, and the Cube Destroyer when it defends) rises into the frame during a longer
+     opening, and the banner names it instead of "COMBAT START". */
+const MIM_HULL = { mstalk: .8, mhunt: .92, mharv: .92, massim: 1.08, mguard: 1.35, mnest: 1.7, mtitan: 2.7, mnode: 2.5, mpylon: 2.6, mnexus: 3.2, malpha1: 3.9, malpha2: 3.9, malpha3: 3.9, malpha4: 3.9, momega: 5.4, momegax: 5.8 };
+const MIM_PACK = { mstalk: 1, mhunt: 1, mharv: 1, massim: 1 };
+Object.assign(DRAWK, { mpylon: 3.1, mnode: 2.8, mnexus: 2.4 });
+const bCapW = k => (MIM_HULL[k] || 0) >= 3.6 ? .78 : BOSSK[k] || k === "worldbreaker" ? .55 : .3;
+const bVc = (q, n, cap) => MIM_PACK[q.k] || /^e_/.test(q.k) ? Math.min(5, Math.max(1, n)) : Math.min(cap, Math.max(1, visN(q.role, n)));
+/* no hull is ever drawn wider than 95% of the screen (a lone Cube Destroyer whose foes were all gone could reach 150%) */
+const bFitL = (k, L, W) => Math.min(L, W * .95 / (DRAWK[k] || (AL[k] ? 2 : 1.8)));
+/* the Mimic structures are stations (drawn by the station path at a fixed quarter of the screen); their sprites are tall and mostly empty, so they get their own, larger size */
+const MIM_STA = { mnexus: .4, mnode: .36, mpylon: .58, mnest: .44 };
+const bHero = k => (MIM_HULL[k] || 0) >= 3.6;
+function bIntroMs(Q) { return (Q || []).some(q => q && bHero(q.k)) ? 2700 : 1200; }
+function bHeroName(Q) { let best = null; for (const q of Q || []) if (q && bHero(q.k) && (!best || MIM_HULL[q.k] > MIM_HULL[best.k])) best = q; return best ? ((AL[best.k] || {}).n || "").toUpperCase() : null; }
+/* the rise: a hero boss grows from 55% to full size over the first 1.5 s of its opening, then holds */
+function bRise(b, q) { if (!b || !(b.intro > 0) || !bHero(q.k) || !b.intro0) return 1; const u = clamp((b.intro0 - b.intro) / 1500, 0, 1); return .55 + .45 * (1 - Math.pow(1 - u, 3)); }
 const SIDE_LEN = { armageddon: 2.2, sovereign: 2.2, harbinger: 2.1, wbOvl: 1.8, wbDev: 1.8, wbWar: 1.8, wbCon: 1.4, wbBrd: 1.8, wbTyr: 1.8, wbWym: 1.8, wbCol: 1.8, spyProbe: .3, cube: 1.2, sphere: .8, cdrone: .4, tender: .6, guardian: .82, escortCarrier: .9, supercarrier: 1.42, eclipse: 1.75, fighter: .38, heavyFighter: .46, hauler: .5, heavyCargo: .7, recycler: .72, lancer: .55, ark: .6, corvette: .66, battleship: .96, bastion: 1.04, bomber: .78, destroyer: 1.14, dreadnought: 1.6, worldbreaker: 1.5, drone: .38, spitter: .42, brute: .6, lord: .8, leviathan: 1.2, swhale: 1.5, slevi: 1.5, ssquid: 1.05, vmanta: 1.3, swasp: .9, snest: 1.2, ctort: 1.4, gspider: 1.3, smoth: 1.2, cram: 1.5, kegg: 1.1, gwhale: 1.5, reat: 1.2, cserp: 1.3, sent: 1.4 };
 /* v260 battle sprite mip levels: a ship drawn small used to be squeezed out of its full-size render every frame. That resample scales with the
    source, not the screen: a 10 vs 10 replay spent most of each frame on it (about 2.6 ms per hull in software) and it was the main load in the
@@ -23247,13 +23272,13 @@ function advLive() { if (!S || !G.ready) return; const T = now(); S.advOnce = S.
   for (const k of ["armageddon", "sovereign", "harbinger"]) { let n = 0; try { n = own(k); } catch (e) {} if (n > 0 && advOnce("tb:" + k)) { advNews("x_tb_" + k); break; } } }
 setInterval(() => { try { advLive(); } catch (e) {} }, 8000);
 const advColor = () => view === "base" && !battle && !(typeof G3 !== "undefined" && G3 && G3.cam && G3.cam.cine); /* v576 her full-colour self on your planet; the hologram on the map and in battle */
-function advHolo(line, force) { if (!line || G.cineOn || (sheet && sheet.type === "depot")) return; /* v615 Ondra has the floor */ const T0 = Date.now(); G.holoSaid = G.holoSaid || {}; for (const k in G.holoSaid) if (T0 - G.holoSaid[k] > 60000) delete G.holoSaid[k];
-  if (!advFresh(line) && !(G.holoNext && G.holoNext.line === line)) return; // v386: not the same thing again within 30 s; v605: 2 minutes, shared with the dialog, live calls too
+function advHolo(line, force) { if (!line || G.cineOn || (sheet && sheet.type === "depot")) return; if (G.archRd && force !== "arch") return; /* v673 a record is being read */ /* v615 Ondra has the floor */ const T0 = Date.now(); G.holoSaid = G.holoSaid || {}; for (const k in G.holoSaid) if (T0 - G.holoSaid[k] > 60000) delete G.holoSaid[k];
+  if (force !== "arch" && !advFresh(line) && !(G.holoNext && G.holoNext.line === line)) return; // v386: not the same thing again within 30 s; v605: 2 minutes, shared with the dialog, live calls too
   { const a0 = VOICE.au; if (!force && a0 && !a0.paused && !a0.ended && G.holoCur && G.holoCur !== line && $("#advh.on")) { G.holoNext = { line, at: T0 }; // she finishes her sentence first
       if (!a0._q) { a0._q = 1; const go = () => { a0._q = 0; const n = G.holoNext; G.holoNext = null; if (n && Date.now() - n.at < 12000) setTimeout(() => advHolo(n.line), 400); }; a0.addEventListener("ended", go, { once: true }); a0.addEventListener("error", go, { once: true }); } return; } }
   G.holoSaid[line] = T0; advMark(line); G.holoCur = line; let w = $("#advh"); try { document.documentElement.dataset.advMood = advMood(line); } catch (e) {} /* v566 */ setTimeout(() => { try { afSet(line, "holo"); } catch (e) {} }, 0); /* v609 */ // v334: her hologram for every spoken step line
   if (!w) { w = document.createElement("div"); w.id = "advh"; w.setAttribute("aria-live", "polite"); w.innerHTML = `<div class="holo" data-act="advhX"><img class="advimg" src="${advArt()}" style="${advFx()}" alt=""><i class="hscan"></i><i class="hbeam"></i></div><div class="hsay" data-act="advhX" role="button" aria-label="Dismiss the Advisor"><b>${ADV}</b><span></span><i class="hx" aria-hidden="true">✕</i></div>`; $("#app").appendChild(w); }
-  w.classList.toggle("color", force !== 1 && advColor()); /* v576 live-event calls stay the hologram */ w.querySelector(".hsay span").textContent = line; for (const im of w.querySelectorAll(".advimg,.hscan")) { im.style.animation = "none"; void im.offsetWidth; im.style.animation = ""; } w.classList.add("on"); document.body.classList.add("advtalk"); /* she materializes each time; the Academy card steps aside while she talks */ advHoloPlace(); clearTimeout(G.advhT); speak(line);
+  w.classList.toggle("color", force !== 1 && force !== "arch" && advColor()); /* v576 live-event calls stay the hologram */ w.querySelector(".hsay span").textContent = line; for (const im of w.querySelectorAll(".advimg,.hscan")) { im.style.animation = "none"; void im.offsetWidth; im.style.animation = ""; } w.classList.add("on"); document.body.classList.add("advtalk"); /* she materializes each time; the Academy card steps aside while she talks */ advHoloPlace(); clearTimeout(G.advhT); speak(line);
   const hide = () => { clearTimeout(G.advhT); G.advhT = setTimeout(() => { const x = $("#advh"); if (x) x.classList.remove("on", "talk"); document.body.classList.remove("advtalk"); }, 900); };
   const a = VOICE.au; if (a && !a.ended) { a.addEventListener("ended", hide, { once: true }); a.addEventListener("error", hide, { once: true }); G.advhT = setTimeout(hide, 30000); } else G.advhT = setTimeout(hide, Math.max(4500, line.length * 65)); }
 /* v567 her hologram breathes with her voice: each clip's loudness envelope (docs/voice/env.json, 25 steps a second) */
@@ -23974,7 +23999,7 @@ function playBattle(r) {
   $("#app").appendChild(w);
   const { res, exact } = battleSim(r), R = res.rec;
   const verified = exact && sameUnits(lossesOf(res.start.a, res.aLeft), r.lossA) && sameUnits(lossesOf(res.start.d, res.dLeft), r.lossD) && res.winner === r.winner;
-  battle = { r, res, R, exact, verified, Q: R.squads, simT: 0, end: res.sim.dur, intro: reduced ? 0 : 1200, speed: 1, paused: false, lowFx: reduced || !!G.lowFx, last: 0,
+  battle = { r, res, R, exact, verified, Q: R.squads, simT: 0, end: res.sim.dur, intro: reduced ? 0 : bIntroMs(R.squads), intro0: reduced ? 0 : bIntroMs(R.squads), heroN: bHeroName(R.squads), speed: 1, paused: false, lowFx: reduced || !!G.lowFx, last: 0,
     n: R.squads.map(q => q.n0), face: R.squads.map(q => q.side === "a" ? 1 : -1), shHit: [], hullHit: [], deadAt: [], vi: 0, fx: [], parts: [], booms: [], rings: [], nums: [], debris: [],
     salvos: [], beams: [], hexes: [], fire: [], smoke: [], sparks: [], flashes: [], embers: [], flares: [], pend: [], flash: 0, slowUntil: 0,
     roundShown: 0, roundAt: -1e9, shake: 0, hudAt: 0, done: false, hold: 0 };
@@ -24631,7 +24656,7 @@ function cdPortDrawn(phi, base) { const u = (phi - CD_PHI0) / (Math.PI / 6), k0 
 const CD_PHI0 = -.314; // v416 the Cube Destroyer's rest aim: its baked dish points 18 degrees below forward
 function cdYawPitch(phi) { const cy = .85 * Math.cos(phi), sy = -Math.sqrt(Math.max(1e-6, 1 - cy * cy)); return [Math.atan2(sy, cy), Math.asin(clamp(.85 * Math.sin(phi) / sy, -1, 1))]; }
 /* the aim (on screen, up positive, in the sprite's own facing) a Cube Destroyer formation has turned to, eased toward the target it fires at */
-function cdTurn(b, i, cx, cy, face, scr, T, real) { const A = b.cdPhi || (b.cdPhi = {}), m = (b.beams || []).find(m => m.wb && m.s === i && T - m.t0 > -2.2 && T - m.t0 < m.charge + m.life + 1.5);
+function cdTurn(b, i, cx, cy, face, scr, T, real) { const A = b.cdPhi || (b.cdPhi = {}), m = (b.beams || []).find(m => m.wb && (m.s === i || (b.repOf && b.repOf[m.s] === i)) && T - m.t0 > -2.2 && T - m.t0 < m.charge + m.life + 1.5);
   let want = A[i] == null ? CD_PHI0 : A[i]; /* v422 it holds its lock between shots */ if (m) { const E = (m.mode === "sweep" && m.cxy) || scr[m.e] || (m.ix != null ? { x: m.ix, y: m.iy } : m.lx != null ? { x: m.lx, y: m.ly } : null); if (E) want = Math.atan2(-(E.y - cy), face * (E.x - cx)); }
   const cur = A[i] == null ? CD_PHI0 : A[i], d = Math.atan2(Math.sin(want - cur), Math.cos(want - cur)); A[i] = cur + d * Math.min(1, (real || 16) / 1100); return A[i]; }
 /* v418 the Cube Destroyer's shots: one per formation every 5 s of the replay, each starting its charge 1.4 s before its volley so the beam lands with it */
@@ -24738,8 +24763,8 @@ function drawBattle(t) {
   /* v75 layout (art only, the simulation is untouched): every visible formation gets an on-screen footprint, a fit scale grows all
      ships until the formations fill about a third of the field, then overlapping footprints are pushed apart. The push is eased
      over time so formations glide apart instead of jittering, and merged squadrons follow their formation (shots still land on it) */
-  const fpOf = i => { const q = Q[i], zs = scr[i].s; if (q.role === "station") return [W * .21 * zs, W * .1 * zs, .15]; if (q.role === "turret") return [W * .1 * zs, W * .05 * zs, .4];
-    const n = tot[i] > 0 ? tot[i] : Math.max(1, b.n[i]), vc = MON[q.k] || giant(q.k) ? 1 : Math.min(3, Math.max(1, visN(q.role, n))), L = Math.max(8 * d, clamp(W * .1 * bLen(q.k), 11 * d, W * (BOSSK[q.k] || q.k === "worldbreaker" ? .55 : .3)) * zs * bVsK(b, q));
+  const fpOf = i => { const q = Q[i], zs = scr[i].s; if (q.role === "station") { const m = MIM_STA[q.k] ? MIM_STA[q.k] / .24 : 1; return [W * .21 * zs * m, W * .1 * zs * m * (q.k === "mpylon" || q.k === "mnode" ? 1.6 : 1), .15]; } if (q.role === "turret") return [W * .1 * zs, W * .05 * zs, .4];
+    const n = tot[i] > 0 ? tot[i] : Math.max(1, b.n[i]), vc = MON[q.k] || giant(q.k) ? 1 : bVc(q, n, 3), L = bFitL(q.k, Math.max(8 * d, clamp(W * .1 * bLen(q.k), 11 * d, W * bCapW(q.k)) * zs * bVsK(b, q)), W);
     const fk = FOOTK(q.k); return [L * fk * (.62 + .32 * Math.min(vc - 1, 3)), L * fk * (.36 + .26 * Math.min(vc - 1, 2)) + 9 * d, 1]; }; /* v86: giants claim the room they are drawn at */
   { const reps = b.ord.filter(i => !(pos[i].fl & 6) && (b.n[i] > 0 || (b.deadAt[i] != null && T - b.deadAt[i] < .5)) && !(tot[i] === -1));
     let A0 = 0; for (const i of reps) { const [rx, ry] = fpOf(i); A0 += rx * ry * 4; }
@@ -24749,7 +24774,7 @@ function drawBattle(t) {
       const half = W * .88 * (bot - top) * .5 * (busy ? .52 : .5), fs = sd => Ar[sd] ? clamp(fitOf(sd) * Math.sqrt(half / Ar[sd]), .35, 2.4) : null, ta = fs("a"), td = fs("d"), com = Math.min(ta || td || crowd, td || ta || crowd);
       const boss = sd => reps.some(i => Q[i].side === sd && (BOSSK[Q[i].k] || bBig(Q[i].k) || Q[i].k === "sphere" || Q[i].k === "cdrone")), tgt = { a: boss("a") ? Math.min(ta || com, com * 2.2) : com, d: boss("d") ? Math.min(td || com, com * 2.2) : com };
       const F0 = b.fitS || (b.fitS = { a: tgt.a, d: tgt.d }), ek = Math.min(1, real / 700); F0.a += (tgt.a - F0.a) * ek; F0.d += (tgt.d - F0.d) * ek; }
-    const lay = b.lay || (b.lay = Q.map(() => ({ x: 0, y: 0 }))), P = reps.map(i => { const [rx, ry, w] = fpOf(i); return { i, x: scr[i].x + lay[i].x, y: scr[i].y + lay[i].y, rx, ry, w }; }), x0 = W * .03, x1 = W * .97, y0 = top - (bot - top) * .02, y1 = bot + (bot - top) * .04;
+    const lay = b.lay || (b.lay = Q.map(() => ({ x: 0, y: 0 }))), P = b.lastP = reps.map(i => { const [rx, ry, w] = fpOf(i); return { i, x: scr[i].x + lay[i].x, y: scr[i].y + lay[i].y, rx, ry, w }; }), x0 = W * .03, x1 = W * .97, y0 = top - (bot - top) * .02, y1 = bot + (bot - top) * .04;
     if (!b.superSide) for (const p of P) { const q = Q[p.i]; if (q.k !== "worldbreaker") continue; /* v531 the Cube Destroyer holds the rear */
       let mo = 0, no = 0, me = 0, ne = 0; for (const o of P) { if (o.i === p.i) continue; if (Q[o.i].side === q.side) { mo += o.x; no++; } else { me += o.x; ne++; } }
       let my = 0, ey = 0; for (const o of P) { if (o.i === p.i) continue; if (Q[o.i].side === q.side) my += o.y; else ey += o.y; } my = no ? my / no : p.y; ey = ne ? ey / ne : p.y;
@@ -24762,8 +24787,8 @@ function drawBattle(t) {
           if (ox * .55 < oy) { const s = (dx >= 0 ? 1 : -1) * ox * .5; A.x -= s * wa * 1.0; C.x += s * wc * 1.0; } else { const s = (dy >= 0 ? 1 : -1) * oy * .5; A.y -= s * wa; C.y += s * wc; } }
       for (const p of P) { p.x = clamp(p.x, x0 + p.rx * .8, x1 - p.rx * .8); p.y = clamp(p.y, y0 + p.ry * .6, y1 - p.ry * (BOSSK[Q[p.i].k] ? 1.05 : .6)); } } /* v86: giants stay clear of the bottom panel */
     const ease = reduced ? 1 : Math.min(1, real / 380);
-    for (const p of P) { const L0 = lay[p.i]; L0.x += (p.x - scr[p.i].x - L0.x) * ease; L0.y += (p.y - scr[p.i].y - L0.y) * ease; scr[p.i].x += L0.x; scr[p.i].y += L0.y; scr[p.i].fp = p; }
-    Q.forEach((q, i) => { if (tot[i] === -1 && rep[i] != null) scr[i] = scr[rep[i]]; }); }
+    for (const p of P) { const L0 = lay[p.i], ez = Q[p.i].k === "worldbreaker" && !b.superSide ? 1 : ease; /* v673 */ L0.x += (p.x - scr[p.i].x - L0.x) * ez; L0.y += (p.y - scr[p.i].y - L0.y) * ez; scr[p.i].x += L0.x; scr[p.i].y += L0.y; scr[p.i].fp = p; }
+    Q.forEach((q, i) => { if (tot[i] === -1 && rep[i] != null) scr[i] = scr[rep[i]]; }); b.repOf = rep; /* v673 */ }
   // v109 the Super Cube: its whole side is one colossal Cube; every one of its squads fires from, and is hit on, that one hull
   if (b.superSide) { const sd = b.superSide, idx = Q.map((q, i) => q.side === sd ? i : -1).filter(i => i >= 0), live = idx.filter(i => b.n[i] > 0), use = live.length ? live : idx;
     // v126: the Cube follows the battle camera: its centre is the live defenders' centre in this frame's view, eased, kept on screen
@@ -24795,17 +24820,17 @@ function drawBattle(t) {
         if (b.banner && b.banner.side === q.side && t - b.banner.t < 1500) { b.banner.n++; b.banner.txt = `${ic} ${b.banner.n} allied fleets join ${wh}`; } else b.banner = { n: 1, txt: `${ic} ${typeof nameOf === "function" ? nameOf(q.own) : "Ally"}'s fleet joins ${wh}`, t, side: q.side }; SFX.blast && SFX.blast(1.5, 0); } }
       const age = t - b.seen[i]; if (age < 900 && !lo) { const cx0 = scr[i].x, cy0 = scr[i].y, k = age / 900, ex = q.side === "a" ? -W * .1 : W * 1.1; ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.strokeStyle = `rgba(120,255,170,${.9 * (1 - k)})`; ctx.lineWidth = (8 - 6 * k) * d; ctx.beginPath(); ctx.moveTo(ex + (cx0 - ex) * k * .6, cy0); ctx.lineTo(cx0, cy0); ctx.stroke(); const fr = W * .08 * (1 - Math.abs(k - .3)); ctx.globalAlpha = 1 - k; ctx.drawImage(glowSprite("rgba(140,255,190,1)"), cx0 - fr, cy0 - fr, fr * 2, fr * 2); ctx.restore(); } }
     const dying = n <= 0 && b.deadAt[i] != null && T - b.deadAt[i] < .5; if (n <= 0 && !dying) return;
-    const cx = scr[i].x, cy = scr[i].y, zs = scr[i].s, col = SIDE_COL[q.side];
+    const cx = scr[i].x, cy = scr[i].y, zs = scr[i].s * bRise(b, q) /* v673 */, col = SIDE_COL[q.side];
     ctx.globalAlpha = dying ? 1 - (T - b.deadAt[i]) / .5 : 1;
     if (q.role === "turret" || q.role === "station") { // rendered batteries and fortress, with the flat icon as a fallback while the render bakes
-      const art = shipArtSoon(q.k, (q.acc || b.acc[q.side]), "side"), Lr = (q.role === "station" ? W * .24 : W * .12) * clamp(zs, .6, 1.25);
+      const art = shipArtSoon(q.k, (q.acc || b.acc[q.side]), "side"), Lr = (MIM_STA[q.k] ? W * MIM_STA[q.k] : q.role === "station" ? W * .24 : W * .12) * clamp(zs, .6, 1.25);
       if (art) { ctx.save(); ctx.translate(cx, cy); ctx.scale(-1, 1); ctx.drawImage(art, -Lr, -Lr / 2, Lr * 2, Lr); ctx.restore(); }
       else if (q.role === "turret") drawUnit(ctx, q.k, cx, cy, W * .032, col.main, -1); else drawFortress(ctx, cx, cy, W * .085, t, col.main); }
     else {
       if (dying && b.wreckd && b.wreckd[i]) return; // a capital ship that broke apart is drawn as its wreck
       /* v255 a hull never turns on screen: it used to squash flat and flip through edge-on, which looked like folding in on itself. Each squadron takes its heading from its first advance and keeps it; to go the other way it fires its retro thrusters and backs up */
       const nx = bPos(b, i, T + .5), lk = b.lk || (b.lk = []); if (!lk[i]) { lk[i] = 1; const n3 = bPos(b, i, T + 3); if (Math.abs(n3.x - p.x) > .2) b.face[i] = n3.x > p.x ? 1 : -1; } const face = b.face[i];
-      const L = Math.max(8 * d, clamp(W * .1 * bLen(q.k), 11 * d, W * (BOSSK[q.k] || q.k === "worldbreaker" ? .55 : .3)) * zs * bVsK(b, q)), /* v645 */ vc = MON[q.k] || giant(q.k) ? 1 : Math.min(3, Math.max(1, visN(q.role, Math.max(n, 1)))), moving = Math.hypot(nx.x - p.x, nx.y - p.y) > .2;
+      const L = bFitL(q.k, Math.max(8 * d, clamp(W * .1 * bLen(q.k), 11 * d, W * bCapW(q.k)) * zs * bVsK(b, q)), W), /* v645 */ vc = MON[q.k] || giant(q.k) ? 1 : bVc(q, Math.max(n, 1), 3), moving = Math.hypot(nx.x - p.x, nx.y - p.y) > .2;
       const mf = MON[q.k] && !dying ? monBatFrame(b, i, q.k, real, moving) : null; /* v651 */
       /* v78 inertia: hulls swing round through edge-on instead of flipping, and bank into climbs and dives along their real flight
          path; heavy hulls turn and bank slowly, so a dreadnought feels massive and a fighter nimble */
@@ -24977,8 +25002,8 @@ function drawBattle(t) {
   b.beams = b.beams.filter(m => T - m.t0 <= m.charge + m.life + (m.wb ? 3 : 0)); // v410: the Cube Destroyer's splash outlives its beam
   for (const m of b.beams) { const age = T - m.t0; if (age < 0) continue;
     if (m.ti) { titanBeamDraw(ctx, b, m, age, scr, W, d, lo, T); continue; } /* v556 */
-    if (m.wb) { /* v410 the Cube Destroyer: charge in the dish, beam from its core, a wide splash */ const S0 = scr[m.s], E0 = scr[m.e], g = b.geo && b.geo[m.s], ok = g && g.f === b.gf;
-      if (S0 && b.n[m.s] > 0 && !m.ht) { const Lg = ok ? g.L : Math.min(W * .1 * bLen("worldbreaker") * S0.s, W * .55 * S0.s), fc = ok ? g.face : (b.face[m.s] || 1); const ph = (b.cdPhi || {})[m.s] == null ? CD_PHI0 : b.cdPhi[m.s]; const pt = (b.cdPt && b.cdPt[m.s]) || cdPortDrawn(ph, null); m.ox = S0.x + fc * Lg * pt[0]; m.oy = S0.y + Lg * pt[1]; /* v431 from the gun port as it is drawn */ m.L = Lg; }
+    if (m.wb) { /* v410 the Cube Destroyer: charge in the dish, beam from its core, a wide splash */ const ms = b.repOf && b.repOf[m.s] != null ? b.repOf[m.s] : m.s /* v673 */, S0 = scr[m.s], E0 = scr[m.e], g = b.geo && b.geo[ms], ok = g && g.f === b.gf;
+      if (S0 && b.n[m.s] > 0 && !m.ht) { const Lg = ok ? g.L : Math.min(W * .1 * bLen("worldbreaker") * S0.s, W * .55 * S0.s), fc = ok ? g.face : (b.face[ms] || 1); const ph = (b.cdPhi || {})[ms] == null ? CD_PHI0 : b.cdPhi[ms]; const pt = (b.cdPt && b.cdPt[ms]) || cdPortDrawn(ph, null); m.ox = S0.x + fc * Lg * pt[0]; m.oy = S0.y + Lg * pt[1]; /* v431 from the gun port as it is drawn */ m.L = Lg; }
       if (E0) { m.lx = E0.x; m.ly = E0.y; } if (m.ox == null || (!E0 && m.ix == null && m.lx == null)) continue;
       const ox = m.ox, oy = m.oy, Lg = m.L, R0 = Lg * .16 * (m.mode === "nova" ? 1.5 : 1), red = "#ff2a1a"; let ex = E0 ? E0.x : m.ix != null ? m.ix : m.lx, ey = E0 ? E0.y : m.iy != null ? m.iy : m.ly;
       ctx.save(); ctx.globalCompositeOperation = "lighter";
@@ -25087,7 +25112,7 @@ function drawBattle(t) {
           for (let k = 0; k < c; k++) { const bx = ex + (Math.random() - .5) * W * .05 * e.s, by = ey + (Math.random() - .5) * H * .02; b.pend.push({ x: bx, y: by, t: t + k * 70, size: k ? size * .7 : size, snd: k === 0, zs: e.s });
             if (!lo) for (let j = 0; j < 3 && b.debris.length < 160; j++) { const a = Math.random() * TAU, sp = (8 + Math.random() * 30) * d / 1000; b.debris.push({ x: bx, y: by, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, a: Math.random() * 6, va: (Math.random() - .5) * .006, s: (1.5 + Math.random() * 3) * d * (big ? 2 : 1), t, life: 2500 + Math.random() * 2500, sh: Array.from({ length: 4 + (Math.random() * 3 | 0) }, (_, m) => [m / 5 * TAU + Math.random() * .6, .45 + Math.random() * .7]) }); } }
           // a capital ship or station going down: a chain of blasts walking along the hull, a final cataclysm, and slow motion
-          if (big && dead) { const L3 = W * .07 * e.s, qk = Q[v.e], Lw = Math.max(8 * d, clamp(W * .1 * bLen(qk.k), 11 * d, W * (BOSSK[qk.k] || qk.k === "worldbreaker" ? .55 : .3)) * e.s);
+          if (big && dead) { const L3 = W * .07 * e.s, qk = Q[v.e], Lw = Math.max(8 * d, clamp(W * .1 * bLen(qk.k), 11 * d, W * bCapW(qk.k)) * e.s);
             if (qk.role !== "station" && qk.role !== "turret") { (b.wreckd = b.wreckd || [])[v.e] = 1; b.wrecks = (b.wrecks || []).slice(-3); b.wrecks.push({ k: qk.k, acc: (qk.acc || b.acc[qk.side]), x: e.x, y: e.y, L: Lw, face: b.face[v.e] || 1, t, life: 3400, cut: (Math.random() - .5) * Lw * .4, vx: Lw * (.00006 + Math.random() * .00005), vy: Lw * (Math.random() - .5) * .00006, dr: Lw * (Math.random() - .5) * .00002, va: .00012 + Math.random() * .00018 }); }
             if (b.vw && b.vw.mode === "auto") b.focus = { s: 1.45, x: e.x / W, y: e.y / H, until: t + 2400 }; for (let k = 0; k < 6; k++) b.pend.push({ x: ex + (k / 5 - .5) * L3 * 2 + (Math.random() - .5) * 6 * d, y: ey + (Math.random() - .5) * 10 * d, t: t + 120 + k * 120, size: 1.4, snd: k % 2 === 0, zs: e.s });
             b.pend.push({ x: ex, y: ey, t: t + 900, size: 3.2, snd: true, zs: e.s }); b.slowUntil = t + 1300; }
@@ -25176,7 +25201,7 @@ function drawBattle(t) {
     ctx.globalAlpha = clamp(k, 0, 1); const g = ctx.createLinearGradient(0, mid - bh / 2, 0, mid + bh / 2); g.addColorStop(0, "rgba(16,60,90,0)"); g.addColorStop(.5, "rgba(16,60,90,.85)"); g.addColorStop(1, "rgba(16,60,90,0)"); ctx.fillStyle = g; ctx.fillRect(0, mid - bh / 2, W, bh);
     ctx.strokeStyle = "rgba(95,208,255,.6)"; ctx.lineWidth = 1.2 * d; ctx.beginPath(); ctx.moveTo(0, mid - bh * .32); ctx.lineTo(W, mid - bh * .32); ctx.moveTo(0, mid + bh * .32); ctx.lineTo(W, mid + bh * .32); ctx.stroke();
     ctx.font = `italic 800 ${26 * d}px Oxanium, sans-serif`; ctx.textAlign = "center"; ctx.fillStyle = "#5fd9ff"; ctx.fillText("VS", W * .36 - slide, mid + 9 * d);
-    ctx.font = `italic 700 ${15 * d}px Oxanium, sans-serif`; ctx.fillStyle = "#e8fdff"; ctx.fillText(intro ? "COMBAT START" : `ROUND ${rnd_}`, W * .62 + slide, mid + 6 * d); ctx.globalAlpha = 1; }
+    ctx.font = `italic 700 ${15 * d}px Oxanium, sans-serif`; ctx.fillStyle = "#e8fdff"; ctx.fillText(intro ? (b.heroN || "COMBAT START") : `ROUND ${rnd_}`, W * .62 + slide, mid + 6 * d); ctx.globalAlpha = 1; }
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   if (t - b.hudAt > 140) { b.hudAt = t; battleHUD(b, pos); }
   if (!b.done && !b.ending && T >= b.end && b.intro <= 0) { b.hold += real; if ((b.hold > 900 && !(b.hold < 4500 && (b.pend.length || b.fx.some(f => f.last && !f.hit && f.v && f.v.dead > 0)))) || b.paused) { /* v235: let the killing shot land and the last ship blow up before the ending */ settleBattle(b); battleHUD(b, Q.map((q, i) => bPos(b, i, b.end))); endingStart(b, t, W, H, d); } }
@@ -26981,7 +27006,7 @@ const ACT = {
   archFlip: d => { if (!ARCH[d.id]) return; const n = archClaim(d.id); if (n) { toast(`+◆${n} · ${ARCH[d.id].t}`, "win"); renderSheet(); } else openSheet({ type: "archives", id: d.id }); }, /* v661 */
   archAll: () => { let n = 0; for (const k of ARCH_ORD) n += archClaim(k, true); if (n) { toast(`+◆${n} from your Archive cards.`, "win"); try { SFX.fanfare && SFX.fanfare(true); } catch (e) {} shardFly(n); renderSheet(); } },
   archPlay: d => { const E = ARCH[d.id], lv = archLv(d.id); G.archTok = (G.archTok || 0) + 1; if (G.archRd === d.id || !E || !lv) { G.archRd = null; try { voiceStop(); } catch (e) {} const h = $("#advh"); if (h) h.classList.remove("on"); if (sheet && sheet.type === "archives") renderSheet(); return; }
-    G.archRd = d.id; const L = [archFragLine(E)].concat(lv >= 2 ? [E.interp, E.adv] : [], E.enc, lv >= 2 ? E.def : []); archSeq(L, G.archTok, () => { if (G.archRd === d.id) { G.archRd = null; if (sheet && sheet.type === "archives") renderSheet(); } }); if (sheet && sheet.type === "archives") renderSheet(); },
+    G.archRd = d.id; try { voiceStop(); } catch (e) {} G.holoNext = null; /* v673 */ const L = [archFragLine(E)].concat(lv >= 2 ? [E.interp, E.adv] : [], E.enc, lv >= 2 ? E.def : []); archSeq(L, G.archTok, () => { if (G.archRd === d.id) { G.archRd = null; if (sheet && sheet.type === "archives") renderSheet(); } }); if (sheet && sheet.type === "archives") renderSheet(); },
   evCube: () => ACT.events({ ev: "cube" }), // v91: the Cube and its banner open the event card first
   achClaim: d => act(() => { const a = ACH.find(x => x[0] === d.k); if (!a) return; const s = achState(a); if (!s.ready) return; const g = achGot(); g[a[0]] = s.got + 1;
     grantRw(achRw(a[0], s.got), `Achievement · ${a[1]} tier ${s.got + 1}`); SFX.research(); toast(`${a[1]} tier ${s.got + 1}: +${achAP(s.got)} Achievement Points.`, "win"); }),
