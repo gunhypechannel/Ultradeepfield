@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-19 (America/Phoenix). Current game version: **v673** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v467**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
+Last updated: 2026-11-19 (America/Phoenix). Current game version: **v674** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v468**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -39,6 +39,13 @@ Supabase project `slubtpfnimxtrfcozvhk`. Edge Function `settle_fight` (`supabase
 
 ## Pending work (as of 2026-11-07): start here in a new session
 
+- **v674 — Map fleets: one flagship per fleet, sized against the planets (Nov 19)** (p674_wire.py + p674_fleets.js). Owner (iPhone screenshot): fleets were 2–5 planets long, the Cube Destroyer was an orb at each fleet's nose, and five attacks on one Cube piled into a blob. Measured at iPhone size: planets 77–98 px across, fleets 120–490 px.
+  - **Only the flagship (owner's call):** each map fleet is one hull (`FLEET_SOLO`, `fleetSolo`): the faction flagship, or the fleet's biggest ship when it has none. A Cube Destroyer, when carried, flies beside it. Joint strikes keep their armada. Battle replays and map clashes keep full fleets.
+  - **Armada bug:** fleet3D's `big` argument doubles as the formation name, so every ordinary fleet (formation "wedge", a string) was drawn as a joint-strike armada (×3 hulls per class, ×2 count). `FLEET_ARM` now marks real armadas.
+  - **Size by strength:** `fleetSzOf` sets the formation span (`userData.span`) to `FLEET_SPAN` [1.05, 1.35, 1.7, 2.1] × `PL_D` (a typical planet diameter) by `fleetTier`: unit cost thresholds 5e5 / 2e7 / 5e8, with any titan at least tier 2 and a Cube Destroyer tier 3. Joint strikes multiply that, up to 2.6. A fleet in flight never drops below 30 px on screen.
+  - **Formation:** the Cube Destroyer sorts last, at the rear.
+  - **Lanes:** `fleetLanes` (W.lanes): outbound fleets to the same pid fan out sideways by 1.15× their span as they close in.
+  - Verified at 393×852 (iPhone): 5 fleets to one world show as 5 single ships on separate lanes, with Cube Destroyer fleets as flagship + Cube Destroyer.
 - **v673 — Mimics sized like monsters, Cube Destroyer fires from the start and no longer slides, Archive replay (Nov 19)** (p673_wire.py + p673_scale.js).
   - **Mimic size:** they had no entry in the size ladder, so every Mimic fell back to the default hull length. Omega was drawn at 1.89 (a Titan is 3.2, the Cube Destroyer 4.3) and the Alphas below a Dreadnought. `MIM_HULL` puts them on the ladder (Omega 5.4/5.8, Alphas 3.9, Nexus 3.2, Brood Titan 2.7). `bCapW` lets heroes span 78% of the screen. `bFitL` caps every hull at 95% of the screen width; a lone Cube Destroyer whose foes had died could reach 150%. Echoes (`e_*`) copy their hull's length. `DRAWK` is larger for the mostly-empty Pylon, Node and Nexus sprites, and `MIM_STA` gives the Mimic stations (Nexus, Node, Pylon, Hive nest) their own larger station size. The swarm (`MIM_PACK`) draws up to 5 bodies.
   - **Hero opening:** units of length 3.6 or more get a 2.7 s opening (`bIntroMs`). They rise from 55% to full size (`bRise`, `b.intro0`), and the banner names them (`b.heroN`).

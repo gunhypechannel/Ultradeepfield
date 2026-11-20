@@ -6190,7 +6190,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 673;
+const GAME_V = 674;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13789,14 +13789,41 @@ const flagOK = u => { try { if (!u) return false;
   if (u === G.me || u === "local") { if (!S) return false; if (!S.fs || S.fs.built == null) fsOf(); return !!S.fs.built && flagLvOK(myCmdLv()); }
   const P = G.players[u]; if (P && P.score != null) { const fl = P.tech ? P.tech.fl : null; return fl == null ? (P.lvl || cmdLevel(P.score)) >= FLAG_OLD : fl > 0 && (fl > 1 || (P.lvl || cmdLevel(P.score)) >= FLAG_LV); }
   const s = BOT_BY[u] ? botScore(BOT_BY[u]) : null; return s != null && cmdLevel(s) >= FLAG_LV; } catch (e) { return false; } };
-function fleet3D(W, n, col, hostile, big, cube, flag, look) { // big: a joint strike armada, more hulls in the formation; cube: v174 the Cube event's flagship formation; flag: v250 the faction whose flagship leads
+/* ---------- v674 map fleets: clean and proportional ----------
+   Owner (iPhone screenshot): fleets on the map were 2 to 5 planets long, the Cube Destroyer sat like an orb at each fleet's nose, and
+   five attacks on one Cube piled into one blob. Measured at iPhone size: planets 77-98 px across, fleets 120-490 px.
+   - Ordinary fleets were drawn as joint-strike armadas: fleet3D's `big` argument doubles as the formation name, so every fleet of yours
+     (formation "wedge", a string) got three hulls per class and twice the count. FLEET_ARM says when a fleet really is an armada.
+   - Size by strength: a fleet's span is set against a planet's diameter (PL_D) in four steps by what it carries (fleetTier):
+     scouts and raids 1.05, a battle fleet 1.35, a heavy fleet 1.7, a titan or Cube Destroyer armada 2.1 planet diameters.
+     Joint strikes grow on top of that, up to 2.6. A fleet never shrinks below 30 px on screen, so it stays findable when zoomed out.
+   - The Cube Destroyer flies at the rear of its formation (it led, an orb at the nose).
+   - Fleets bound for the same world fan out into lanes as they close in (fleetLanes), instead of stacking. */
+let FLEET_ARM = false;
+const PL_D = 2 * (.38 + .42) * VIS_K; /* a typical world's diameter on the map */
+function fleetTier(n) { n = n || {}; let c = 0, ti = 0; for (const k in n) { const v = +n[k] || 0; if (v <= 0) continue; c += v * unitCost(k); if (k === "worldbreaker") ti = 3; else if (MINI_CLS[k] === "x") ti = Math.max(ti, 2); }
+  return Math.max(ti, c < 5e5 ? 0 : c < 2e7 ? 1 : c < 5e8 ? 2 : 3); }
+const FLEET_SPAN = [1.05, 1.35, 1.7, 2.1];
+/* the fleet's size multiplier (userData.size) so its formation spans the tier's share of a planet; span is the formation's own width */
+function fleetSzOf(n, grp, extra) { const sp = (grp && grp.userData.span) || 20, tgt = Math.min(2.6, FLEET_SPAN[fleetTier(n)] * (extra || 1)) * PL_D; return tgt / (FLEET_FS * sp); }
+/* lanes: fleets flying out to the same world, ordered by id, so each knows its place across the approach */
+function fleetLanes(list) { const by = new Map(); for (const [id, f] of list) { if (!f || f.phase !== "out" || !f.pid || id === "raid") continue; const a = by.get(f.pid) || []; a.push(id); by.set(f.pid, a); }
+  const out = new Map(); for (const a of by.values()) if (a.length > 1) { a.sort(); a.forEach((id, i) => out.set(id, [i, a.length])); } return out; }
+/* v674 owner: "only the flagship". On the map each fleet is one hull: your faction flagship (or, without one, its biggest ship), sized by
+   the fleet's strength. A fleet carrying a Cube Destroyer shows it beside the flagship, so a planet-killer is easy to spot. Joint
+   strikes keep their armada; battle replays keep their full fleets. */
+let FLEET_SOLO = false;
+function fleetSolo(n, hostile, flag) { const ks = Object.keys(n || {}).filter(k => n[k] > 0 && MINI_CLS[k]), o = {}; if (ks.includes("worldbreaker")) o.worldbreaker = 1;
+  if (!flag) { const ord = { x: 0, l: 1, m: 2, s: 3, q: 9 }, lead = ks.filter(k => k !== "worldbreaker").sort((a, b) => ord[MINI_CLS[a]] - ord[MINI_CLS[b]] || bLen(b) - bLen(a))[0] || (o.worldbreaker ? null : hostile ? "destroyer" : "fighter"); if (lead) o[lead] = 1; }
+  return o; }
+function fleet3D(W, n, col, hostile, big, cube, flag, look) { const arm = typeof big === "string" ? FLEET_ARM : !!big; /* v674 */ // big: a joint strike armada, more hulls in the formation; cube: v174 the Cube event's flagship formation; flag: v250 the faction whose flagship leads
   if (cube && !flag && flagOK(G.me)) flag = facOf(); if (flag && !FACTIONS[flag]) flag = null;
   const K = fleetKit(W, (flag || (hostile ? "terran" : facOf())) + (FLEET_FIN ? "~h" + FLEET_FIN : "")); if (!K) return miniFleet(W, n, col, hostile);
   const grp = new TH.Group(), comp = Object.entries(n || {}).filter(([k, v]) => v > 0 && MINI_CLS[k]);
-  if (!comp.length) comp.push(...(hostile ? [["destroyer", 2], ["corvette", 4], ["heavyFighter", 8]] : [["fighter", 6]]));
-  const order = { q: 0, x: 0, l: 1, m: 2, s: 3 }; comp.sort((a, b) => order[MINI_CLS[a[0]]] - order[MINI_CLS[b[0]]] || b[1] - a[1]);
+  if (!comp.length && !(FLEET_SOLO && flag)) comp.push(...(FLEET_SOLO ? [[hostile ? "destroyer" : "fighter", 1]] : hostile ? [["destroyer", 2], ["corvette", 4], ["heavyFighter", 8]] : [["fighter", 6]]));
+  const order = { q: 9 /* v674 the Cube Destroyer holds the rear */, x: 0, l: 1, m: 2, s: 3 }; comp.sort((a, b) => order[MINI_CLS[a[0]]] - order[MINI_CLS[b[0]]] || b[1] - a[1]);
   const ships = flag ? ["flagship"] : []; // v250 the faction flagship always leads (v174 at the Cube it was a Discovery Class): a picture only, the fleet's ships and numbers are untouched
-  for (const [k, v] of comp) { const cap = { s: 4, m: 3, l: 2, x: 1, q: 1 }[MINI_CLS[k]] * (big ? 3 : 1); for (let i = 0; i < clamp(Math.ceil(Math.log2(v + 1)) * (big ? 2 : 1), 1, cap) && ships.length < (big ? (MOBILE ? 12 : 18) : MOBILE ? 6 : 9) + (flag ? 1 : 0); i++) ships.push(k); } // phones: up to 6 hulls per squadron
+  for (const [k, v] of comp) { const cap = FLEET_SOLO ? 1 : { s: 4, m: 3, l: 2, x: 1, q: 1 }[MINI_CLS[k]] * (arm ? 3 : 1); for (let i = 0; i < clamp(Math.ceil(Math.log2(v + 1)) * (arm ? 2 : 1), 1, cap) && ships.length < (arm ? (MOBILE ? 12 : 18) : MOBILE ? 6 : 9) + (flag ? 1 : 0); i++) ships.push(k); } // phones: up to 6 hulls per squadron
   // wedge: the biggest hull leads, the rest fan out behind it in staggered rows
   const geos = ships.map(k => shipGeo(K, k)), esc = flag && geos.length > 1 ? geos.slice(1) : geos, sp = Math.max(...esc.map(g => Math.max(g.len * .55, g.wid))) * .9 + .5; // the escorts set the spacing, not the flagship
   const form = typeof big === "string" && FORMS[big] ? big : "wedge", N = ships.length, FM = cube ? CUBE_FORM : FORMS[form], tc = {}, F0 = flag ? { len: geos[0].len * FLAG_K, wid: geos[0].wid * FLAG_K } : null;
@@ -13832,7 +13859,7 @@ function fleet3D(W, n, col, hostile, big, cube, flag, look) { // big: a joint st
   pose(0, true); grp.traverse(c => { if (c !== grp) { c.matrixAutoUpdate = false; c.updateMatrix(); } }); // the parts never move inside their group: fixed local transforms
   grp.userData.anim = pose; grp.userData.eng = eng; grp.userData.detailed = true; grp.userData.slots = slots;
   // v150 bounds for fleetLod: the whole formation (with room for its motion) and the longest hull
-  Object.assign(grp.userData, { groups, orphan: 0, sp, flagship: flag, R:Math.max(...slots.map(s => Math.hypot(s.x, s.y, s.z))) + Math.max(sp * 2.5, F0 ? F0.len * .7 : 0) });
+  Object.assign(grp.userData, { span: 2 * Math.max(...slots.map(s => Math.hypot(s.x, s.z))) + Math.max(...geos.map((g, i) => g.len * (ships[i] === "flagship" ? FLAG_K : 1))), groups, orphan: 0, sp, flagship: flag, R:Math.max(...slots.map(s => Math.hypot(s.x, s.y, s.z))) + Math.max(sp * 2.5, F0 ? F0.len * .7 : 0) });
   (W.fleetSet || (W.fleetSet = new Set())).add(grp); return grp;
 }
 function disposeFleet(grp) { if (!grp || !grp.userData.detailed) return; if (G3 && G3.fleetSet) G3.fleetSet.delete(grp); const e = grp.userData.eng; if (e) { e.geometry.dispose(); e.material.dispose(); } grp.traverse(o => { if (o.isInstancedMesh && o.dispose) o.dispose(); }); }
@@ -14017,7 +14044,7 @@ function drawClashes(W, t, T) {
       const boomT = W.glow.boom || (W.glow.boom = glowTex("255,170,80", 1)), booms = [];
       for (let i = 0; i < 14; i++) { const sp = new TH.Sprite(W.additive(boomT, 0xffffff, 0)); sp.renderOrder = 15; W.scene.add(sp); booms.push({ sp, t0: -1e9 }); }
       const mk = (n, col, hostile, fg, sd) => { const ff0 = FLEET_FIN, sn = clashShips(n); FLEET_FIN = sd === c.you && !c.demo ? (() => { try { return hullFleet(G.me, sn || n); } catch (e) { return null; } })() : null; /* v658 your side wears your finish */
-        let g; try { g = fleet3D(W, sn || genComp(clashCnt(n)), col, hostile, false, false, fg); } finally { FLEET_FIN = ff0; } g.userData.size = (.75 + Math.min(1.1, Math.log10(clashCnt(n) + 1) * .3)) * .5; W.scene.add(g); return g; };
+        let g; try { g = fleet3D(W, sn || genComp(clashCnt(n)), col, hostile, false, false, fg); } finally { FLEET_FIN = ff0; } g.userData.size = fleetSzOf(sn || genComp(clashCnt(n)), g); /* v674 */ W.scene.add(g); return g; };
       c.o = { ga: mk(c.a, c.aCol, c.you !== "a", c.aF || (c.aCmd === false ? null : DEMO_FAC[hash(String(c.key) + "a") % 4]), "a"), gd: mk(c.d, c.dCol, c.you === "a", c.dF || (c.dCmd === false ? null : DEMO_FAC[hash(String(c.key) + "d") % 4]), "d"), /* v258: every commander's side leads with a flagship (v261: not Cube bosses, monsters, pirates or the Hive) */ bolts, booms, bl: [], la: -1, ld: -1, ended: 0 }; if (beastKind(c.loc)) { c.o.bx = beastInit(W, c); c.o.gd.visible = false; } if (bossLocKey(c.loc)) { c.o.boss = 1; c.o.gd.visible = false; } if (!reduced) c.o.f5 = fx590Init(W, c); /* v590 */ }
     const atCube = c.loc === NEXUS, angN = ang + (atCube ? e * .00007 : 0), o = c.o, dx = Math.cos(angN), dz = Math.sin(angN), wob = Math.sin(e * .0011) * (atCube ? 7 : .6); /* v194 strafing runs round the Cube */
     // attackers sweep in during the first 2 s, then hold a firing line; defenders hold in front of the target
@@ -14858,10 +14885,10 @@ const cdEscort = n => { if (!n || !(n.worldbreaker > 0)) return n; const o = { w
 const fleetFlagU = (f, hostile) => f.demo || f.raid || f.mission === "spy" ? null : hostile ? f.from : f.u ? f.u : f.js ? ((G.assaults && G.assaults[f.js] && G.assaults[f.js].leader) || G.me) : G.me;
 function fleetObj(W, f, hostile, cube) {
   const col = hostile ? 0xff6262 : f.js ? (f.jsK === "in" ? 0x8affc0 : 0x5dff9a) : f.nid ? 0x9af0c8 : f.xid ? 0xffc06a : f.mission === "spy" ? 0xff6af0 : f.mission === "attack" ? 0xffb08a : f.mission === "transfer" ? 0xb8a6ff : 0x9fe9f7;
-  FLEET_FIN = f.demo || f.raid || f.mission === "spy" ? null : hullFleet(fleetFlagU(f, hostile), f.n); const flag = fleetFlag(f, hostile), grp = fleet3D(W, hostile && !f.n ? null : cdEscort(f.n), col, hostile, f.js ? (f.jsK !== "in" ? (f.form || "wedge") : false) : hostile ? false : fformOf(f), !!cube, flag, flag ? uidLook(fleetFlagU(f, hostile)) : null); FLEET_FIN = null; const tot = Object.values(f.n || {}).reduce((a, b) => a + b, 0) || 6;
-  grp.userData.size = (.75 + Math.min(1.1, Math.log10(tot + 1) * .3)) * .5; // grows with fleet size
+  FLEET_ARM = !!(f.js && f.jsK !== "in"); FLEET_FIN = f.demo || f.raid || f.mission === "spy" ? null : hullFleet(fleetFlagU(f, hostile), f.n); const flag = fleetFlag(f, hostile), grp = (FLEET_SOLO = !(f.js && f.jsK !== "in"), fleet3D(W, FLEET_SOLO ? fleetSolo(f.n, hostile, flag) : hostile && !f.n ? null : cdEscort(f.n), col, hostile, f.js ? (f.jsK !== "in" ? (f.form || "wedge") : false) : hostile ? false : fformOf(f), !!cube, flag, flag ? uidLook(fleetFlagU(f, hostile)) : null)); FLEET_FIN = null; FLEET_ARM = false; FLEET_SOLO = false; const tot = Object.values(f.n || {}).reduce((a, b) => a + b, 0) || 6;
+  grp.userData.size = fleetSzOf(f.n || (hostile ? { destroyer: 2, corvette: 4 } : { fighter: 6 }), grp); /* v674 sized against a planet by strength (was a log of the ship count) */
   grp.userData.flagKeep = !!flag && !f.demo; // v250 (a demo's 140 fleets drop their glow from afar, to stay smooth)
-  if (f.js && f.jsK !== "in") grp.userData.size *= 1.15 + Math.min(.5, (f.cnt || 1) * .05); // a joint strike army is one big formation, bigger with every commander
+  if (f.js && f.jsK !== "in") grp.userData.size = fleetSzOf(f.n, grp, 1.15 + Math.min(.5, (f.cnt || 1) * .05)); // a joint strike army is one big formation, bigger with every commander
   // warp flare: flashes where the fleet jumps out of and back into normal space
   const warp = new TH.Sprite(W.additive(W.glow.warp || (W.glow.warp = glowTex("255,255,255", 1)), col, 0)); warp.renderOrder = 13; W.scene.add(warp);
   const lg = new TH.BufferGeometry(); lg.setAttribute("position", new TH.BufferAttribute(new Float32Array(33 * 3), 3));
@@ -15127,7 +15154,7 @@ function draw3D(t) {
   for (const x of visibleInbound(T)) list.push(["in-" + x.id, { phase: "out", pid: x.pid, ox: x.ox, oy: x.oy, out: x.out, arrive: x.arrive, n: x.n, enemy: true, src: x.src, from: x.from }, true]);
   for (const x of G.spyIn || []) if (x.arrive > T && x.out <= T && G.byId[x.pid] && G.byId[x.pid].owner === G.me) list.push(["sp-" + x.id, { phase: "out", pid: x.pid, ox: x.ox, oy: x.oy, out: x.out, arrive: x.arrive, n: x.n, enemy: true, src: x.src, from: x.from, mission: "spy" }, true]); // v279: probes coming at your world, whether or not you have radar
   for (const pr of S.probes || []) { const tg = G.byId[pr.tid] || PB[pr.tid] || NB[pr.tid] || EB[pr.tid]; if (tg) list.push(["pr-" + pr.id, { id: "pr-" + pr.id, phase: "out", tgObj: tg, mission: "spy", chart: 1, out: pr.out, arrive: pr.at, n: { spyProbe: 1 } }, false]); } // v279: charting probes fly on the map too
-  if (W.fmFr !== W.fr) { W.fmFr = W.fr; W.fleetMade = 0; } // v276: the budget starts fresh every frame
+  if (W.fmFr !== W.fr) { W.fmFr = W.fr; W.fleetMade = 0; } W.lanes = fleetLanes(list); /* v674 */ // v276: the budget starts fresh every frame
   for (const [id, f, hostile] of list) {
     let path;
     if (id === "raid") { const hp = homePlanet(); if (!hp) continue; const b = P3(hp, T), ang = (hash(G.me || "x") % 360) / 57.3; path = { a: { x: b.x + Math.cos(ang) * 160, y: 30, z: b.z + Math.sin(ang) * 160 }, b, k: 1 - clamp((S.raid.at - T) / 120000, 0, 1) }; }
@@ -15147,6 +15174,7 @@ function draw3D(t) {
     else if (path.park) { const gat = f.phase === "gather", R = path.hold ? .5 : gat ? 2.6 : f.jsK === "mass" ? 6.5 : f.parkR || 4, a = t * (gat ? .00035 : f.phase === "muster" ? .00009 : f.parkR ? .00011 : .0008) + (hash(id) % 10); /* v106: a strike waiting at the muster point holds a slow, stately orbit */ // v96: gatherers hold a slow, tight mining orbit
       pt = { x: path.b.x + Math.cos(a) * R, y: path.b.y + (gat ? .7 + .25 * Math.sin(t * .0011) : 1), z: path.b.z + Math.sin(a) * R }; nx = { x: path.b.x + Math.cos(a + .1) * R, y: pt.y, z: path.b.z + Math.sin(a + .1) * R }; }
     else { pt = ARC(path.a, path.b, path.k); nx = ARC(path.a, path.b, Math.min(1, path.k + .01)); if (path.k >= 1) nx = { x: pt.x + (path.b.x - path.a.x) * .01, y: pt.y, z: pt.z + (path.b.z - path.a.z) * .01 };
+      { const ln = W.lanes && W.lanes.get(id); if (ln) { const dx = path.b.x - path.a.x, dz = path.b.z - path.a.z, L = Math.hypot(dx, dz) || 1, w = clamp(path.k * 1.4, 0, 1), gap = (o.grp.userData.span || 20) * fsF * (o.grp.userData.size || 1) * 1.15, off = (ln[0] - (ln[1] - 1) / 2) * gap * w; pt.x += -dz / L * off; pt.z += dx / L * off; nx.x += -dz / L * off; nx.z += dx / L * off; } } /* v674 lanes into a shared target */
       // v174 any course that passes close to the Cube (crossing the map over the Void) is lifted round its hull, never through it
       const np = W.nexus.position; if (Math.hypot(pt.x - np.x, pt.y - np.y, pt.z - np.z) < CUBE_CORNER + 30) { const rad = (o.grp.userData.R || 4) * fsF * (o.grp.userData.size || 1) * .7 + 2; V3.set(pt.x, pt.y, pt.z); cubeSweep(W, o.lastC, V3, rad); pt = { x: V3.x, y: V3.y, z: V3.z }; (o.lastC || (o.lastC = new TH.Vector3())).copy(V3); V3.set(nx.x, nx.y, nx.z); cubeClear(W, V3, rad); nx = { x: V3.x, y: V3.y, z: V3.z }; } else if (o.lastC) o.lastC = null;
       if (W.obG && path.k > 0 && path.k < 1) { const rs = Math.min(3, (o.grp.userData.R || 4) * fsF * (o.grp.userData.size || 1) * .35), ea = path.a, eb = path.b, sk = e => Math.hypot(e.x - eb.x, e.z - eb.z) < e.r * 1.6 + 6 || Math.hypot(e.x - ea.x, e.z - ea.z) < e.r * 1.6 + 6, ed = Math.min(1, path.k / .06, (1 - path.k) / .06); /* v619 */
@@ -15156,7 +15184,7 @@ function draw3D(t) {
     o.grp.position.set(pt.x, pt.y, pt.z); o.grp.lookAt(nx.x, nx.y, nx.z);
     // bank into turns, and drop in and out of warp with a flare at each end of the trip
     const yaw = Math.atan2(nx.x - pt.x, nx.z - pt.z); if (o.yaw != null) { let dy = yaw - o.yaw; if (dy > Math.PI) dy -= TAU; if (dy < -Math.PI) dy += TAU; o.bank += (clamp(-dy * 30, -.55, .55) - o.bank) * .08; } o.yaw = yaw; if (!Number.isFinite(o.bank)) o.bank = 0; if (!Number.isFinite(o.yaw)) o.yaw = null; o.grp.rotateZ(o.bank || 0);
-    const wk = path.park || path.k >= 1 ? 1 : Math.min(clamp(path.k / .03, 0, 1), id === "raid" ? 1 : clamp((1 - path.k) / .03, 0, 1)), ws = fsF * (o.grp.userData.size || 1) * (.25 + .75 * wk);
+    const wk = path.park || path.k >= 1 ? 1 : Math.min(clamp(path.k / .03, 0, 1), id === "raid" ? 1 : clamp((1 - path.k) / .03, 0, 1)), ws0 = fsF * (o.grp.userData.size || 1) * (.25 + .75 * wk), pxC = (o.grp.userData.span || 20) * ws0 * (pxS / W.renderer.getPixelRatio()) / Math.max(1, W.camera.position.distanceTo(o.grp.position)), ws = ws0 * (wk > .9 && pxC < 30 ? 30 / pxC : 1) /* v674 never under 30 px */;
     o.grp.scale.setScalar(ws);
     if (o.warp) { const fl = 1 - wk; o.warp.visible = fl > .02; o.warp.material.opacity = fl * .9; o.warp.position.set(pt.x, pt.y, pt.z); o.warp.scale.setScalar(fs * 9 * (.4 + fl)); }
     { const ud = o.grp.userData; if (ud.flagship) ud.fz = 1; /* v264 the flagship keeps its true size at every zoom (it used to swell as you zoomed out) */ if (ud.anim && !reduced) ud.anim(t); if (ud.eng) ud.eng.material.uniforms.uScale.value = pxS * ws; }
