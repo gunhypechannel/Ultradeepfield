@@ -1,0 +1,3 @@
+else w += ` float lw = clamp((-.1 - p.y) / 1.35, 0., 1.)${D.legs === 2 ? ` * step(${mid}, p.x)` : ""}, lp = ph + (p.x > ${mid} ? 0. : 3.14159) + (p.z > 0. ? 0. : 3.14159);
+    transformed.x += lw * .48 * sin(lp); transformed.y += lw * lw * .34 * max(0., cos(lp)); transformed.z += lw * .05 * sin(lp) * sign(p.z);
+    float bw = 1. - lw; transformed.y += bw * .06 * sin(ph * 2. + .6); transformed.z += bw * .06 * sin(ph + p.x * .7);`;
