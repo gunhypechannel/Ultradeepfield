@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-19 (America/Phoenix). Current game version: **v675** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v469**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
+Last updated: 2026-11-19 (America/Phoenix). Current game version: **v676** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v470**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -39,6 +39,10 @@ Supabase project `slubtpfnimxtrfcozvhk`. Edge Function `settle_fight` (`supabase
 
 ## Pending work (as of 2026-11-07): start here in a new session
 
+- **v676 — Mimics animate in battle, each kind with its own attack (Nov 19)** (p676_wire.py + p676_mimatk.js). Owner: "I thought the mimics were supposed to move anatomically?" Their motion (`mimWave` → `MON_WAVE`) was already baked into battle frames, but drawBattle only asked `monBatFrame` for `MON` creatures, so Mimics were stills.
+  - **Frames:** now `MIM_D` kinds animate too. `mimAnimOK` limits this to the biggest kinds by `MIM_HULL`: 3 on iOS/WEAK, 6 elsewhere (10–16 frames each, a memory guard).
+  - **Attacks:** `MIM_ATK` per kind (bite, spit, grab, link, slam, claw, lash, pulse, brood, lance, omega) starts from `spawnVolley` (`mimAtkAdd`, one at a time per squadron, timed to the real volley). The body lunges or rears (`mimLunge`, applied to `scr` after layout) and the effect draws after wbStrike (`mimAtkDraw`). Omega's lance shakes and flashes the screen once.
+  - Verified in the Lab: hive 4 / Alpha II / Omega phase 1 fights show bite, spit, link, slam, lash and omega attacks, with frames ready for every kind. In the software-GL harness a hive-4 opening took up to 120 s to bake; until frames are ready the old stills are drawn, so nothing waits on them.
 - **v675 — Map fleet size measurement fix; Finder drops "Fleets in flight" (Nov 19)** (p675_wire.py).
   - **Owner's iPhone:** a returning fleet showed as a huge, smeared red flagship in a white blow-out. v674's 30 px minimum size read the screen size from `pxS` (built from `W.size`, which adaptRes zeroes to force a resize) and misjudged it in normal frames as well. In the harness the same fleet drew at 1.6× up close and 3.4× zoomed out (scale 0.34 / 0.72 instead of 0.21). It now measures from the canvas's clientHeight, ignores a zero reading, and boosts at most 4×. Verified: the scale holds at 0.213 at every zoom while W.size is zeroed every 50 ms. **Not proven** as the sole cause of the smear: the v674 build stayed finite in the same test. If it recurs, look at the flagship look aura and LOD at close range.
   - **Finder:** "Fleets in flight" no longer shows in the Finder (sub.gal "targets"). The Mine tab still lists them.
