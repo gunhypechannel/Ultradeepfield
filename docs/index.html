@@ -6191,7 +6191,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 684;
+const GAME_V = 685;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -7205,7 +7205,7 @@ function defenders(p) {
    pick targets, and fire weapons with their own range, cooldown, accuracy, tracking and damage profile. Damage drains
    regenerating shields first, then goes through armor into the hull. Same inputs + same seed = the same battle: reports
    store the seed and the fleets, and the replay re-runs them, so what you watch is exactly what was decided. */
-const CB_V = 8, CB_OK = v => v === 3 || v === 4 || v === 5 || v === 6 || v === 7 || v === 8, /* v683 v8: bosses raise their shields again every 12 s */ /* v673 v7: the Cube Destroyer fires from the rear (siege range) */ /* v6: a space monster's pack is one squadron */ ROUND_S = 5, /* v5: same-type stacks of many commanders fight as merged squadrons (60 vs 60 battles), see simulate */ MAX_ROUNDS = 8, SHM = 1.5; // v4: joint fleets arrive together, shield saturation (v3 battles still replay exactly)
+const CB_V = 9, CB_OK = v => v === 3 || v === 4 || v === 5 || v === 6 || v === 7 || v === 8 || v === 9, /* v685 v9: the Mimic bosses raise their shields too */ /* v683 v8: bosses raise their shields again every 12 s */ /* v673 v7: the Cube Destroyer fires from the rear (siege range) */ /* v6: a space monster's pack is one squadron */ ROUND_S = 5, /* v5: same-type stacks of many commanders fight as merged squadrons (60 vs 60 battles), see simulate */ MAX_ROUNDS = 8, SHM = 1.5; // v4: joint fleets arrive together, shield saturation (v3 battles still replay exactly)
 const WPN = {
   laser:   { n: "Laser cannons",      acc: .92, track: 1,    vsSh: 1,    vsAr: .8,   rng: 26, cd: 1 },
   plasma:  { n: "Plasma batteries",   acc: .8,  track: .6,   vsSh: .75,  vsAr: 1.45, rng: 30, cd: 1.6 },
@@ -7249,7 +7249,7 @@ const DOCTRINES = {
 };
 const DOC_AI = { swarm: "Hive swarm", raider: "Pirate raiders", guard: "Defensive screen" };
 function simulate(A, D, o = {}) {
-  const seed = (o.seed != null ? o.seed : (Math.random() * 2147483647) | 0) >>> 0, rng = rnd(seed), V4 = (o.v || CB_V) >= 4, V5 = (o.v || CB_V) >= 5, V6 = (o.v || CB_V) >= 6, V7 = (o.v || CB_V) >= 7, V8 = (o.v || CB_V) >= 8, rngOf = s => V7 && s.k === "worldbreaker" ? 160 : WPN[s.wp].rng;
+  const seed = (o.seed != null ? o.seed : (Math.random() * 2147483647) | 0) >>> 0, rng = rnd(seed), V4 = (o.v || CB_V) >= 4, V5 = (o.v || CB_V) >= 5, V6 = (o.v || CB_V) >= 6, V7 = (o.v || CB_V) >= 7, V8 = (o.v || CB_V) >= 8, V9 = (o.v || CB_V) >= 9, rngOf = s => V7 && s.k === "worldbreaker" ? 160 : WPN[s.wp].rng;
   const cnt = arr => arr.reduce((a, s) => a + (s.n > 0 ? Math.floor(s.n) : 0), 0);
   const quick = !!o.quick || cnt(A) + cnt(D) > 30000, dt = quick ? .5 : .25;
   const aOwn = (A.find(s => s.n > 0) || {}).own, dOwn0 = (D.find(s => s.n > 0) || {}).own;
@@ -7437,7 +7437,7 @@ function simulate(A, D, o = {}) {
     }
     // shields recharge when a squadron has not been hit for 2 s
     for (const s of sq) if (s.n > 0 && t - s.lastHit > 2) s.shp = Math.min(s.n * s.shPer, s.shp + s.n * s.shPer * .06 * dt);
-    if (V8) for (const s of sq) { if (s.bsp == null) s.bsp = typeof s.k === "string" && /^wb[A-Z]/.test(s.k) && AL[s.k] ? 10 : 0; if (s.bsp && s.n > 0 && t >= s.bsp) { s.shp = Math.max(s.shp, s.n * s.shPer * .6); s.bsp += 12; } } /* v683 a boss raises its shield again every 12 s, under fire too */
+    if (V8) for (const s of sq) { if (s.bsp == null) s.bsp = typeof s.k === "string" && (/^wb[A-Z]/.test(s.k) || (V9 && /^(malpha\d*|momega\w*|mnexus|mimic)$/.test(s.k))) && AL[s.k] ? 10 : 0; if (s.bsp && s.n > 0 && t >= s.bsp) { s.shp = Math.max(s.shp, s.n * s.shPer * .6); s.bsp += 12; } } /* v683 a boss raises its shield again every 12 s, under fire too */
     if (step % Math.round(1 / dt) === 0) {
       const pa = powOf("a"), pdn = powOf("d");
       for (const s of sq) { if (!active(s) || s.ret) continue; const hpF = s.n * (1 - s.wd) / s.n0;
@@ -7468,7 +7468,7 @@ function simulate(A, D, o = {}) {
       return out; }
     for (const s of sq) if (s.side === side && s.n > 0) { const k = s.own || "_"; (out[k] = out[k] || {})[s.k] = (out[k][s.k] || 0) + s.n; } return out; };
   const pack = arr => arr.filter(s => s.n > 0).map(s => [s.k, Math.floor(s.n), +(+s.atk).toFixed(2), +(+s.sh).toFixed(2), +(+s.hull).toFixed(2), s.own == null ? null : s.own, +(s.ab || 0)]);
-  const sim = { v: V8 ? 8 : V7 ? 7 : V6 ? 6 : V5 ? 5 : V4 ? 4 : 3, seed, doc: o.doc && DOCTRINES[o.doc] ? o.doc : null, quick: !!o.quick, A: pack(A), D: pack(D), dur: Math.round(t * 100) / 100, docA, docD, ev, stats: st, wpn: wst, pow: { a0: pow0.a, d0: pow0.d, a1: Math.round(powOf("a") + sq.reduce((a, s) => a + (s.side === "a" && s.esc ? s.n * unitPow(s) * (.35 + .65 * (1 - s.wd)) : 0), 0)), d1: Math.round(powOf("d")) } };
+  const sim = { v: V9 ? 9 : V8 ? 8 : V7 ? 7 : V6 ? 6 : V5 ? 5 : V4 ? 4 : 3, seed, doc: o.doc && DOCTRINES[o.doc] ? o.doc : null, quick: !!o.quick, A: pack(A), D: pack(D), dur: Math.round(t * 100) / 100, docA, docD, ev, stats: st, wpn: wst, pow: { a0: pow0.a, d0: pow0.d, a1: Math.round(powOf("a") + sq.reduce((a, s) => a + (s.side === "a" && s.esc ? s.n * unitPow(s) * (.35 + .65 * (1 - s.wd)) : 0), 0)), d1: Math.round(powOf("d")) } };
   const out = { start, rounds, winner, aLeft: snap("a"), dLeft: snap("d"), aByOwn: byOwn("a"), dByOwn: byOwn("d"), sim };
   if (o.rec) out.rec = { dt: quick ? .5 : .5, frames, vols, rocks, squads: sq.map(s => ({ id: s.id, side: s.side, k: s.k, own: s.own, shr: s.src && s.src.shares, role: s.role, wp: s.wp, n0: s.n0, hull: s.hull, sh: s.sh, shPer: s.shPer, atk: s.atk, pow: unitPow(s) })) };
   return out;
@@ -7856,19 +7856,23 @@ const WB_STRIKE = {
   eli: { lance: ["beam", .35, .78, 0, 2800], halo: ["wave", .35, .85, 0, 2800], judgement: ["beam", .4, .9, 0, 2800] },
   est: { chain: ["chain", .3, .8, 6, 2800], ion: ["bolts", .3, .85, 7, 2800], clap: ["wave", .4, .88, 0, 2800] },
   ena: { thorn: ["bolts", .3, .8, 8, 2800], spore: ["wave", .3, .9, 0, 2800], growth: ["beam", .4, .88, 0, 2800] },
-  epx: { converge: ["beam", .5, .95, 0, 3400], storm: ["bolts", .2, .9, 12, 3000], cataclysm: ["wave", .45, .95, 0, 3200] } };
+  epx: { converge: ["beam", .5, .95, 0, 3400], storm: ["bolts", .2, .9, 12, 3000], cataclysm: ["wave", .45, .95, 0, 3200] },
+  scb: { tractor: ["beam", .3, .85, 0, 3000], burst: ["bolts", .3, .85, 8, 2600], wave: ["wave", .35, .9, 0, 2600] } }; /* v685 the Super Cube */
+Object.assign(WB_STRIKE.ovl, { summon: ["bolts", .4, .9, 6, 3000] }); Object.assign(WB_STRIKE.war, { summon: ["bolts", .4, .9, 6, 3000] }); Object.assign(WB_STRIKE.c0, { charge: ["beam", .3, .85, 0, 2600] });
+Object.assign(WB_STRIKE.dev, { bite: ["bolts", .35, .7, 3, 2000] }); Object.assign(WB_STRIKE.krk, { bite: ["bolts", .35, .7, 3, 2000] }); Object.assign(WB_STRIKE.wym, { coil: ["wave", .35, .85, 0, 2600] }); Object.assign(WB_STRIKE.lev, { coil: ["wave", .35, .85, 0, 2600] }); /* v685 the moves that stayed in the box */
 /* v407 a boss's attack on the whole battle field (its 3D picture is drawn in a box round the boss, which clipped its beams halfway) */
 /* the boss picture with its edges faded, so a beam or wave that runs past its box fades out instead of stopping on a hard straight edge */
 function wbSoft(A) { const w = A.width, h = A.height; let c = WBR.soft; if (!c || c.width !== w || c.height !== h) { c = WBR.soft = document.createElement("canvas"); c.width = w; c.height = h; c.m = null; }
   const x = c.getContext("2d"); x.globalCompositeOperation = "copy"; x.drawImage(A, 0, 0); x.globalCompositeOperation = "destination-in";
   if (!c.m) { const m = document.createElement("canvas"); m.width = w; m.height = h; const y = m.getContext("2d"), g = y.createRadialGradient(0, 0, 0, 0, 0, 1); for (const [o, v] of [[0, 1], [.62, 1], [.82, .55], [1, 0]]) g.addColorStop(o, `rgba(0,0,0,${v})`); y.setTransform(w / 2, 0, 0, h / 2, w / 2, h / 2); y.fillStyle = g; y.fillRect(-1, -1, 2, 2); c.m = m; }
   x.drawImage(c.m, 0, 0); x.globalCompositeOperation = "source-over"; return c; }
-function wbStrike(ctx, b, scr, Q, W, H, t, d, lo) { const k = b.r && (b.r.wb || (b.r.sbk && WB_STRIKE[b.r.sbk] && !aexdOn(b) ? b.r.sbk : null)) /* v681 super bosses too */, M = WBR.mv; if (!k || !M || WBR.key !== k || !b.scC) return;
-  const S = (WB_STRIKE[k] || {})[M.m]; if (!S) return; const f = (t - M.t0) / S[4], PB = !!WB[k] /* v493 every world boss's strikes cross the screen */, MO = (k === "wym" || PB) && WBR.mouth && b.wbBox ? { x: b.wbBox.cx + (WBR.mouth.u - .5) * b.wbBox.aw, y: b.wbBox.cy + (WBR.mouth.v - .5) * b.wbBox.ah } : null; /* v411 the Wyrm fires from its mouth */
-  if (MO && f < S[1] && f > S[1] - .16) { const q = 1 - (S[1] - f) / .16, r = (8 + 46 * q) * d; ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .4 + .6 * q; ctx.drawImage(glowSprite(PB && k !== "wym" ? WB[k].col : "rgba(255,170,60,1)"), MO.x - r * 2, MO.y - r * 2, r * 4, r * 4); ctx.drawImage(glowSprite("#fff2d8"), MO.x - r * .6, MO.y - r * .6, r * 1.2, r * 1.2); ctx.strokeStyle = "#ffcf7a"; ctx.lineWidth = 2 * d; for (let j = 0; j < 3; j++) { const rr = r * (2.6 - ((q * 1.8 + j / 3) % 1) * 2); ctx.globalAlpha = .7 * q; ctx.beginPath(); ctx.ellipse(MO.x, MO.y, rr, rr * .7, 0, 0, TAU); ctx.stroke(); } ctx.restore(); return; }
+const wbCol = k => (WB[k] || (typeof SBW !== "undefined" && SBW[k]) || { col: "#5dff7a" }).col; /* v685 */
+function wbStrike(ctx, b, scr, Q, W, H, t, d, lo) { const k = b.r && (b.r.wb || (b.r.sbk && WB_STRIKE[b.r.sbk] && !aexdOn(b) ? b.r.sbk : null) || (!b.r.omega && b.superSide != null && !b.r.sbk ? "scb" : null)) /* v681 super bosses, v685 the Super Cube */, M = WBR.mv; if (!k || !M || WBR.key !== k || !b.scC) return;
+  const S = (WB_STRIKE[k] || {})[M.m]; if (!S) return; const f = (t - M.t0) / S[4], PB = !!(WB[k] || k === "scb") /* v685 the Super Cube too; v493 every world boss's strikes cross the screen */, MO = (k === "wym" || PB) && WBR.mouth && b.wbBox ? { x: b.wbBox.cx + (WBR.mouth.u - .5) * b.wbBox.aw, y: b.wbBox.cy + (WBR.mouth.v - .5) * b.wbBox.ah } : null; /* v411 the Wyrm fires from its mouth */
+  if (MO && f < S[1] && f > S[1] - .16) { const q = 1 - (S[1] - f) / .16, r = (8 + 46 * q) * d; ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .4 + .6 * q; ctx.drawImage(glowSprite(PB && k !== "wym" ? wbCol(k) : "rgba(255,170,60,1)"), MO.x - r * 2, MO.y - r * 2, r * 4, r * 4); ctx.drawImage(glowSprite("#fff2d8"), MO.x - r * .6, MO.y - r * .6, r * 1.2, r * 1.2); ctx.strokeStyle = "#ffcf7a"; ctx.lineWidth = 2 * d; for (let j = 0; j < 3; j++) { const rr = r * (2.6 - ((q * 1.8 + j / 3) % 1) * 2); ctx.globalAlpha = .7 * q; ctx.beginPath(); ctx.ellipse(MO.x, MO.y, rr, rr * .7, 0, 0, TAU); ctx.stroke(); } ctx.restore(); return; }
   if (f < S[1] || f > S[2]) return; const u = (f - S[1]) / (S[2] - S[1]), env = Math.sin(Math.min(1, u) * Math.PI);
   const tg = []; Q.forEach((q, i) => { if (q.side !== b.superSide && b.n[i] > 0 && scr[i]) tg.push(i); }); if (!tg.length) return;
-  const els = k === "epx" ? ((b.r.pent && b.r.pent.length ? b.r.pent : ["ice", "fire", "light", "storm", "nature"]).map(e => WB[WB_EL.find(x => WB[x].el === e)].col)) : [(WB[k] || SBW[k]).col], col = j => els[j % els.length];
+  const els = k === "epx" ? ((b.r.pent && b.r.pent.length ? b.r.pent : ["ice", "fire", "light", "storm", "nature"]).map(e => WB[WB_EL.find(x => WB[x].el === e)].col)) : [wbCol(k)], col = j => els[j % els.length];
   const cx = MO ? MO.x : b.scC.x, cy = MO ? MO.y : b.scC.y, F = M.fx || (M.fx = { hit: {}, snd: 0 }), hit = (x, y, s, key) => { if (F.hit[key]) return; F.hit[key] = 1; b.flashes.push({ x, y, t, r: (26 + s * 30) * d, life: 260 + s * 160, rot: Math.random() * .8 }); b.shake = Math.max(b.shake || 0, (2 + s * 3) * d); };
   if (!F.snd) { F.snd = 1; try { if (S[0] === "wave") SFX.blast(2.4, 0); else SFX.laser(true); } catch (e) {} }
   ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
@@ -7910,7 +7914,8 @@ function riseFight(mkA, mkD, frac, worn, t0) { let { F, x } = wbRiseK(mkA(), mkD
   for (let i = 0; i < 9; i++) { const A = mkA(), D = mkD(); for (const s of D) { s.atk *= F; s.hull *= F; } const res = simulate(A, D), f = frac(res), err = Math.abs(f - tgt);
     if (!best || err < best.err) best = { res, F, err }; if (err <= .05) break; if (f > tgt) lo = F; else hi = F; F = hi ? Math.sqrt(Math.max(lo, 1) * hi) : F * Math.max(1.5, Math.pow(f / tgt, 1.6)); if (hi && hi / Math.max(lo, 1) < 1.03) break; }
   return { res: best.res, rise: best.F }; }
-const cubeKilled = res => { const s0 = Object.values(res.start.d || {}).reduce((a, v) => a + v, 0), s1 = Object.values(res.dLeft || {}).reduce((a, v) => a + Math.max(0, v), 0); return s0 ? 1 - s1 / s0 : 1; };
+const cubeHW = o => Object.entries(o || {}).reduce((a, [k, n]) => a + Math.max(0, +n || 0) * ((AL[k] && AL[k].hull) || (SH[k] && SH[k].hull) || 1), 0); /* v685 hull, not head count */
+const cubeKilled = res => { const s0 = cubeHW(res.start.d), s1 = cubeHW(res.dLeft); return s0 ? 1 - s1 / s0 : 1; };
 function cubeFight(A0, cur) { const D = nexusDefense(cur); if (!D.alien) return { D, res: simulate(A0(), D.stacks), rise: 1 }; const { res, rise } = riseFight(A0, () => nexusDefense(cur).stacks, cubeKilled, cubeIntegrity(cur) <= CUBE_BREAK, .5); return { D, res, rise }; }
 /* a fight against a boss that rises to meet the fleet: above the threshold one attack destroys a set share of its full hull, 30% at the
    threshold rising to 60% for the very largest fleets; when a fight overshoots, the boss is made tougher and it is fought again
@@ -12438,6 +12443,18 @@ const TH = window.THREE;
     if (Array.isArray(v)) return v.map(x => ud(x, d + 1)); const pr = Object.getPrototypeOf(v); if (pr !== Object.prototype && pr !== null) return v; const o = {}; for (const k in v) o[k] = ud(v[k], d + 1); return o; };
   P.copy = function (src, recursive = true) { const u = src.userData; src.userData = {}; try { cp0.call(this, src, false); } finally { src.userData = u; } this.userData = ud(u, 0);
     if (recursive) for (const c of src.children) this.add(c.clone()); return this; }; })(); /* v445 clones share three.js objects in userData (was a JSON copy of whole models) */
+/* v685 the memory leak behind the iPhone crashes. three.js keeps a "dispose" listener on every geometry, material and texture a renderer
+   draws, and that listener holds the renderer (its canvas, buffers, programs). Objects shared between renderers (three's own PMREM
+   background box, BORG's blocks, cached sprites and geometry) are never disposed, so every released map and base renderer stayed alive:
+   +150 to 190 MB for each trip between the map and the base on a simulated iPhone, 14 live WebGL contexts after three trips.
+   Now each renderer records the listeners it adds and removes them all when it is disposed (glFree, map3DRebuild, t3Free...). */
+if (TH && TH.WebGLRenderer && !TH.WebGLRenderer.__v685) { const R0 = TH.WebGLRenderer, ED = TH.EventDispatcher.prototype, ae = ED.addEventListener; let CUR = null;
+  ED.addEventListener = function (type, l) { if (type === "dispose" && CUR) (CUR.__dl || (CUR.__dl = [])).push([this, l]); return ae.call(this, type, l); };
+  const unhook = r => { const L = r.__dl; r.__dl = null; if (L) for (const [o, l] of L) { try { o.removeEventListener("dispose", l); } catch (e) {} } };
+  const W2 = function (...a) { const r = new R0(...a);
+    for (const k of ["render", "compile", "setRenderTarget", "initTexture", "clear", "copyFramebufferToTexture", "copyTextureToTexture", "readRenderTargetPixels"]) { const f = r[k]; if (typeof f !== "function") continue; r[k] = function () { const p = CUR; CUR = r; try { return f.apply(this, arguments); } finally { CUR = p; } }; }
+    const d0 = r.dispose; r.dispose = function () { try { return d0.apply(this, arguments); } finally { unhook(r); } }; return r; };
+  W2.prototype = R0.prototype; W2.__v685 = 1; try { TH.WebGLRenderer = W2; } catch (e) {} }
 let G3 = null, G3fail = !TH;
 const map3DInit = {};
 /* v171 crash recorder: a small flight log kept on the device. Key moments (a demo, a battle, a GPU reset) and a heartbeat every few
@@ -14353,7 +14370,7 @@ setInterval(() => { try { if (!S || !G.ready || !canPlay()) return; const T = no
 /* the Collective Warden's integrity: damage from every fight against it persists for the week (shared record, field wd) */
 const CUBE_BREAK = .5; /* v594 at half strength the Warden stops rising */
 const cubeIntegrity = cur => 1 - clamp(+(cur && cur.wd) || 0, 0, .9);
-function wardenWear(cur, res) { const s0 = sumN(res.start.d || {}), s1 = sumN(cleanShips(res.dLeft || {})) + sumN(Object.fromEntries(Object.entries(res.dLeft || {}).filter(([k]) => !SH[k]))); if (!s0) return; const left = clamp(s1 / s0, 0, 1);
+function wardenWear(cur, res) { const s0 = cubeHW(res.start.d), s1 = cubeHW(res.dLeft); if (!s0) return; /* v685 by hull */ const left = clamp(s1 / s0, 0, 1);
   cur.wd = clamp(1 - cubeIntegrity(cur) * left, 0, .9); }
 /* ---------- the event's visuals on the map (all deterministic from the clock) ---------- */
 function cubeLiveFx(W, t, T) {
@@ -24738,6 +24755,20 @@ function bShDraw(ctx, b, W, H, d, T, t) { if (b.superSide == null || !b.scC || !
   const hs = 15 * d, sw = u * rx * 2.4; ctx.strokeStyle = col; ctx.lineWidth = 1.4 * d; for (let y = B.cy - ry, r = 0; y < B.cy + ry + hs; y += hs * .87, r++) for (let x = B.cx - rx + (r % 2) * hs * .75; x < B.cx + rx + hs; x += hs * 1.5) { const dd = Math.hypot((x - B.cx) / rx, (y - B.cy) / ry), on = Math.abs(dd * rx - sw * .5) < rx * .35 ? 1 : .25; ctx.globalAlpha = env * .55 * on * dd; ctx.beginPath(); for (let k = 0; k <= 6; k++) { const a = k * Math.PI / 3; ctx[k ? "lineTo" : "moveTo"](x + Math.cos(a) * hs * .48, y + Math.sin(a) * hs * .48); } ctx.stroke(); }
   ctx.restore(); ctx.globalAlpha = .85 * env; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2.5 * d; ctx.beginPath(); ctx.ellipse(B.cx, B.cy, rx * s, ry * s, 0, 0, TAU); ctx.stroke(); ctx.globalAlpha = .5 * env; ctx.strokeStyle = col; ctx.lineWidth = 8 * d; ctx.stroke();
   ctx.restore(); ctx.globalAlpha = 1; }
+/* v685 reactive boss shields: every shot a boss's shield absorbs ripples where it lands (a cluster of hexes) and lights the stretch of the
+   bubble's rim facing the shot; the whole bubble shimmers while the hits keep coming. The shield is real in the simulator (it comes back
+   every 12 s, v683), so the ripples come in bursts after each pulse and stop when the shield is drained and the hull takes the fire. */
+function bShHit(b, x, y, t, sh) { const H = b.bShH || (b.bShH = []); if (H.length && t - H[H.length - 1].t < 45) return; H.push({ x, y, t, s: sh > 0 ? 1 : .6 }); if (H.length > 28) H.shift(); }
+function bShHits(ctx, b, W, H, d, t) { const L = b.bShH; if (!L || !L.length || !b.scC) return; const B = b.wbBox || { cx: b.scC.x, cy: b.scC.y, aw: W * .6, ah: W * .3 }, rx = B.aw * .5, ry = Math.max(B.ah * .55, rx * .45);
+  const col = b.r.sbk && SBW[b.r.sbk] ? SBW[b.r.sbk].col : b.r.wb && WB[b.r.wb] ? WB[b.r.wb].col : b.r.mon || b.r.mim ? "#b0ff7a" : "#7ad8ff", LIFE = 560; let heat = 0;
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
+  for (const h of L) { const u = (t - h.t) / LIFE; if (u < 0 || u > 1) continue; heat += (1 - u) * h.s; const a = Math.atan2((h.y - B.cy) / ry, (h.x - B.cx) / rx), px = B.cx + Math.cos(a) * rx, py = B.cy + Math.sin(a) * ry, f = 1 - u;
+    ctx.globalAlpha = .85 * f * h.s; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2.2 * d; ctx.beginPath(); ctx.ellipse(B.cx, B.cy, rx, ry, 0, a - .32 * (.5 + u), a + .32 * (.5 + u)); ctx.stroke(); /* the rim facing the shot */
+    ctx.globalAlpha = .5 * f * h.s; ctx.strokeStyle = col; ctx.lineWidth = 7 * d; ctx.stroke();
+    const hs = (7 + 10 * u) * d; ctx.lineWidth = 1.4 * d; ctx.strokeStyle = col; for (let j = 0; j < 7; j++) { const aa = j * Math.PI / 3, cx = px + (j ? Math.cos(aa) * hs * 1.5 : 0), cy = py + (j ? Math.sin(aa) * hs * 1.5 : 0); ctx.globalAlpha = (j ? .45 : .9) * f * h.s; ctx.beginPath(); for (let k = 0; k <= 6; k++) { const q = k * Math.PI / 3 + Math.PI / 6; ctx[k ? "lineTo" : "moveTo"](cx + Math.cos(q) * hs * .8, cy + Math.sin(q) * hs * .8); } ctx.stroke(); } /* the hex ripple */
+    ctx.globalAlpha = .7 * f * f * h.s; ctx.drawImage(glowSprite(col), px - 18 * d, py - 18 * d, 36 * d, 36 * d); }
+  if (heat > .05) { ctx.globalAlpha = Math.min(.35, heat * .08); ctx.strokeStyle = col; ctx.lineWidth = 3 * d; ctx.beginPath(); ctx.ellipse(B.cx, B.cy, rx, ry, 0, 0, TAU); ctx.stroke(); } /* the bubble shimmers under sustained fire */
+  ctx.restore(); ctx.globalAlpha = 1; }
 function spawnVolley(b, v) { fx589Spawn(b, v); /* v589 */ try { if (MIM_ATK[(b.Q[v.s] || {}).k]) mimAtkAdd(b, v); } catch (e) {} /* v676 */ try { if (b.r && b.r.sbk === "aex") aexAtkAdd(b, v); } catch (e) {} /* v680 */ try { bmvAdd(b, v); } catch (e) {} /* v681 */
   if ((v.ab || (b.Q[v.s] && TITAN_LEN[b.Q[v.s].k])) && titanFx(b, v)) return; /* v556, v559 */
   const lo = b.lowFx, cap = PERF.battleCap, wk = v.wk, many = v.n + v.ic, mis = wk === "missile" || wk === "torpedo", q = b.Q[v.s], side = q.side, sz = q.sz != null ? q.sz : (q.sz = szOf(q));
@@ -25378,7 +25409,7 @@ function drawBattle(t) {
     for (let i = 0; i < s.n; i++) { const o = (i - (s.n - 1) / 2) * 5 * d + Math.sin(i * 12.9 + s.t0) * 2 * d, x0 = sx + nx * o + ux * 6 * d, y0 = sy + ny * o, x1 = x0 + ux * reach, y1 = y0 + uy * reach;
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.strokeStyle = col; ctx.globalAlpha = al * .22 * dim; ctx.lineWidth = w * 7; ctx.stroke(); ctx.globalAlpha = al * .85 * dim; ctx.lineWidth = w * 2.3; ctx.stroke(); ctx.strokeStyle = "#fff"; ctx.globalAlpha = al * dim; ctx.lineWidth = w * .9; ctx.stroke(); }
     const mr = (8 + s.w * 5) * d * al; ctx.globalAlpha = al; ctx.drawImage(glowSprite(col), sx - mr, sy - mr, mr * 2, mr * 2); }
-  try { wbStrike(ctx, b, scr, Q, W, H, t, d, lo); } catch (e) {} try { mimAtkDraw(ctx, b, scr, T, W, d, lo, t, H); } catch (e) {} /* v676, v677 */ try { aexDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v680 */ try { aexdDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} try { bShDraw(ctx, b, W, H, d, T, t); } catch (e) {} /* v683 */ try { bmvDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v681 */ // v407 the boss's attack across the whole field
+  try { wbStrike(ctx, b, scr, Q, W, H, t, d, lo); } catch (e) {} try { mimAtkDraw(ctx, b, scr, T, W, d, lo, t, H); } catch (e) {} /* v676, v677 */ try { aexDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v680 */ try { aexdDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} try { bShDraw(ctx, b, W, H, d, T, t); } catch (e) {} /* v683 */ try { bShHits(ctx, b, W, H, d, t); } catch (e) {} /* v685 */ try { bmvDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v681 */ // v407 the boss's attack across the whole field
   // mega beams from stations, titans and beam batteries: a charge-up glow, then a roaring column with a blinding impact
   if (!b.cdQ) b.cdQ = cdPlan(b); while (b.cdQ.length && b.cdQ[0].t0 - 2.4 <= T) b.beams.push(b.cdQ.shift()); // v418 a staged shot joins 2.4 s ahead, so the station can turn onto it
   b.beams = b.beams.filter(m => T - m.t0 <= m.charge + m.life + (m.wb ? 3 : 0)); // v410: the Cube Destroyer's splash outlives its beam
@@ -25482,7 +25513,7 @@ function drawBattle(t) {
     if (f.ic && p >= stop && !f.hit) { f.hit = true; b.booms.push({ x: px, y: py, t, small: 1 }); if (!lo) { (b.pdt = b.pdt || []).push({ x0: e.x, y0: e.y, x1: px, y1: py, t, life: 240 }); if (b.pdt.length > 30) b.pdt.shift(); } continue; } // shot down by point defense: v78 tracer bursts from the defender
     if (p >= 1 && !f.hit) { f.hit = true; const big = BIG_R.has(Q[v.e].role);
       if (f.fk) { const fl = b.flak || (b.flak = []), k2 = Math.max(.7, e.s); for (let i = 0; i < (lo ? 2 : 4); i++) { const a = Math.random() * TAU, rr = (10 + Math.random() * 46) * d * k2; fl.push({ x: ex + Math.cos(a) * rr, y: ey + Math.sin(a) * rr * .65, t: t + i * 55 + Math.random() * 30, r: (15 + Math.random() * 11) * d * k2, rot: Math.random() * TAU }); } if (fl.length > (lo ? 16 : 36)) fl.splice(0, fl.length - (lo ? 16 : 36)); if (f.j === 100) SFX.shield && SFX.shield(sp(ex, ey)); continue; } // v267 the flak shell bursts
-      if (v.bounce || v.sh > 0) { b.shHit[v.e] = T; (b.shDir = b.shDir || [])[v.e] = Math.atan2(sy - ey, sx - ex); rs603Hit(b, v.e, ex, ey, sx, sy, v.crit && f.last, f.hv || f.sw, t); /* v603 */ if (b.rings.length < (b.Q.length > 60 ? 18 : 90)) b.rings.push({ x: ex, y: ey, t, col: "110,210,255", r0: 4 * d, r1: 18 * d, life: 320 });
+      if (v.bounce || v.sh > 0) { b.shHit[v.e] = T; if (b.superSide != null && b.Q[v.e] && b.Q[v.e].side === b.superSide) try { bShHit(b, ex, ey, t, v.sh); } catch (er) {} /* v685 */ (b.shDir = b.shDir || [])[v.e] = Math.atan2(sy - ey, sx - ex); rs603Hit(b, v.e, ex, ey, sx, sy, v.crit && f.last, f.hv || f.sw, t); /* v603 */ if (b.rings.length < (b.Q.length > 60 ? 18 : 90)) b.rings.push({ x: ex, y: ey, t, col: "110,210,255", r0: 4 * d, r1: 18 * d, life: 320 });
         // shots splashing on a shield light up a cluster of white hexagon cells
         if (!lo && (f.last || Math.random() < .35) && (!busy || Math.random() < .3)) { const nc = 2 + Math.floor(Math.random() * 4), cells = [HEX_N[0]].concat(HEX_N.slice(1).sort(() => Math.random() - .5).slice(0, nc)); b.hexes.push({ x: ex, y: ey, t, r: (5.5 + Math.min(5, Math.log10(1 + v.sh) * 1.3)) * d, cells }); if (b.hexes.length > (b.Q.length > 60 ? 8 : 60)) b.hexes.shift(); }
         if (f.last) SFX.shield(sp(ex, ey)); }
