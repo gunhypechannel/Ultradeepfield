@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-19 (America/Phoenix). Current game version: **v680** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v474**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
+Last updated: 2026-11-20 (America/Phoenix). Current game version: **v681** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v475**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -39,6 +39,7 @@ Supabase project `slubtpfnimxtrfcozvhk`. Edge Function `settle_fight` (`supabase
 
 ## Pending work (as of 2026-11-07): start here in a new session
 
+- **v681 — Khezaroth, Medusara, Vaelthar and the Omega Cube attack across the screen; boss models play the battle's moves; Aexion's missiles reach the ships; boss voice lines** (`tools/patches/p681_boss.js`, `p681_wire.py`). `BMV` gives each boss a two-move rotation plus a signature (khz seals/crush + nova, med gaze/serpents + shards, vae rain/halo + wheel, omg tractor/wave + split; signature at most twice, past 30% and 70% of the fight), drawn by `bmvDraw` from the boss to the ships with `aexBoom` impacts. `bossAct` makes the boss's 3D model play the matching move (`BMV_ACT`); `wbFend` no longer fires random model moves in those fights. `wbStrike` now runs for super bosses too, and `WB_STRIKE.aex` adds missiles/broadside, which Aexion's rotation now includes (lance, missiles, sweep, broadside): before, his missiles flew inside his picture box and stopped at its edge. `bVoice` speaks an opening line and a signature line per fight through `awePick`/`sbSay`; `AWE_MIM` adds Mimic lines (captions only until recorded). Verified in the clock harness: moves alternate, the model follows, missiles land on the ship lines.
 - **v680 — Aexion fights like a swordsman (Nov 20)** (p680_wire.py + p680_aex.js). His replay shots used the generic capital beam. Now `aexAtkAdd` (from spawnVolley, sbk "aex") schedules moves on his real volleys, alternating lance and sweep with a gap of the move's length + 0.7 s; damage is unchanged.
   - **Lance:** a charged thrust whose beam runs past the target to beyond the screen, with after-images; delayed booms on ships along the line (`aexBoom` inserts into b.pend in time order).
   - **Sweep:** a blade of light swung from his body across the whole foe arc, with cut marks and staggered booms.
