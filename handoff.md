@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-19 (America/Phoenix). Current game version: **v677** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v471**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
+Last updated: 2026-11-19 (America/Phoenix). Current game version: **v678** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v472**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -39,6 +39,14 @@ Supabase project `slubtpfnimxtrfcozvhk`. Edge Function `settle_fight` (`supabase
 
 ## Pending work (as of 2026-11-07): start here in a new session
 
+- **v678 — Cinematic replays; Mimics sway slower (Nov 19)** (p678_wire.py + p678_cine.js). Owner: "slow the battle simulation down in a cinematic style but keep the same damage; movie finish". Visual only: the battle record, losses and result are untouched.
+  - **Mode:** `b.cine` (default on, localStorage udf.cineRep; 🎞/⚡ button, `ACT.bcine`).
+  - **Pace:** `CINE_PACE` .62 on the replay clock (with slowUntil as before). An 8-round battle now takes about 3 min to watch at 1×; 2×/4× remain.
+  - **Rhythm:** `cineDue` puts volleys on a 0.2 s beat, side d on the off-beat (≤0.2 s of delay, visual only).
+  - **Director (`cineDirect`, auto camera only):** opening shots of each fleet during a ≥3 s intro (`cineIntro`); then Mimic big attacks (storm/omega/grab/slam/claw/lance; omegaX gets a wide 3.4 s hold), Cube Destroyer/Titan beams, the heaviest salvo within 1.1 s, and a wide shot every third cut; the winner at the end. Focus uses `b.lastP`, and the camera eases over 950 ms.
+  - **Film look (`cineLook`):** letterbox bars (wider at opening and finish) and overlay grain, skipped on low FX.
+  - **Fixes:** "ASSIMILATED" is drawn directly (replays clear b.nums since v603). Mimics' battle loop (`monBatFrame`) runs at 0.5× (owner: slower reads more real).
+  - **Verified:** clips via `$S/gt/tcine.js` with Playwright's clock (install + pauseAt + runFor 1/15 s): CD attack, Cube assault, Omega phase 1. Pace measured at 0.216 battle-s per s.
 - **v677 — Mimics without legs; cinematic attacks (Nov 19)** (p677_wire.py + p677_mimfx.js; the old v676 attack code is cut out and replaced). Owner: "remove their legs and walking animations and just make their tentacles move; cooler attack animations."
   - **Body:** buildMimic's limbs are replaced by 10–16 hanging tentacles (`D.legs` now sets how many). mimWave's trot becomes a float bob with the lower tentacles swaying, and the same wave runs on the map and in battle frames.
   - **Tentacle attacks (`MIM_TENT`, `mimTent`):** bite 1, grab 3, claw 2, storm 3. A tapered dark cable with a lit rim and suckers reaches, spears, holds and retracts. The prey is yanked toward the attacker (never bosses); a prey that dies is dragged all the way in (devour, `m.dev`).
