@@ -6190,7 +6190,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 678;
+const GAME_V = 679;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -24513,7 +24513,7 @@ function cineDirect(b, t, T, W, H) { const P = b.lastP; if (!P || !P.length || !
   b.focus = { s: 1, x: .5, y: .5, until: t + 1800, cine: "wide" }; C.n++; }
 let CINE_GR = null;
 function cineLook(ctx, b, W, H, top, bot, t, lo) { if (lo) return; const T = b.simT, fh = bot - top, opening = b.intro > 0 ? 1 : 0, closing = b.ending || T >= b.end - .05 ? 1 : 0, k = b.lbK = (b.lbK == null ? 1 : b.lbK) + (((opening || closing) ? 1 : .55) - (b.lbK == null ? 1 : b.lbK)) * .04, h = fh * .075 * k;
-  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = "#000"; ctx.globalAlpha = .9; ctx.fillRect(0, top - 2, W, h + 2); ctx.fillRect(0, bot - h, W, h + 2);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); /* v679 no letterbox bars */
   if (!CINE_GR) { CINE_GR = document.createElement("canvas"); CINE_GR.width = CINE_GR.height = 128; const x = CINE_GR.getContext("2d"), D = x.createImageData(128, 128); for (let i = 0; i < D.data.length; i += 4) { const v = Math.random() * 255 | 0; D.data[i] = D.data[i + 1] = D.data[i + 2] = v; D.data[i + 3] = 255; } x.putImageData(D, 0, 0); }
   ctx.globalAlpha = .045; ctx.globalCompositeOperation = "overlay"; const ox = (t * 7.3) % 128 | 0, oy = (t * 3.1) % 128 | 0; const pat = ctx.createPattern(CINE_GR, "repeat"); ctx.translate(-ox, -oy); ctx.fillStyle = pat; ctx.fillRect(0, 0, W + 128, H + 128); ctx.restore(); }
 function spawnVolley(b, v) { fx589Spawn(b, v); /* v589 */ try { if (MIM_ATK[(b.Q[v.s] || {}).k]) mimAtkAdd(b, v); } catch (e) {} /* v676 */
