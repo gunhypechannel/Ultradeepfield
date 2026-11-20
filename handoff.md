@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-19 (America/Phoenix). Current game version: **v676** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v470**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
+Last updated: 2026-11-19 (America/Phoenix). Current game version: **v677** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v471**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -39,6 +39,13 @@ Supabase project `slubtpfnimxtrfcozvhk`. Edge Function `settle_fight` (`supabase
 
 ## Pending work (as of 2026-11-07): start here in a new session
 
+- **v677 — Mimics without legs; cinematic attacks (Nov 19)** (p677_wire.py + p677_mimfx.js; the old v676 attack code is cut out and replaced). Owner: "remove their legs and walking animations and just make their tentacles move; cooler attack animations."
+  - **Body:** buildMimic's limbs are replaced by 10–16 hanging tentacles (`D.legs` now sets how many). mimWave's trot becomes a float bob with the lower tentacles swaying, and the same wave runs on the map and in battle frames.
+  - **Tentacle attacks (`MIM_TENT`, `mimTent`):** bite 1, grab 3, claw 2, storm 3. A tapered dark cable with a lit rim and suckers reaches, spears, holds and retracts. The prey is yanked toward the attacker (never bosses); a prey that dies is dragged all the way in (devour, `m.dev`).
+  - **Impact (`hit`):** hit-stop via b.slowUntil (150–260 ms; 900 ms for Omega's signature), shake, flash and a shockwave ring.
+  - **Per-kind effects:** acid spit has a drip trail, a splash and 3 s burns (`b.mBurn`). The assimilation link crawls circuitry over the prey and shows "ASSIMILATED" if it dies (b.nums). The Alphas' `storm` adds a roar ring and chain lightning through up to 3 other foes (`mimBolt`). Omega's signature `omegaX` fires at most twice a fight (the first omega volley and one after half time): the screen darkens and light drains into the core, then a beam sweeps from the leftmost to the rightmost enemy.
+  - **Sound (`mimSfx`):** whip, hiss and hum are synthesised on the battle bus (SFX.bv); slam uses SFX.blast; Omega uses SFX.charge then megaBeam.
+  - **Verified:** Lab fights om1, alpha2 and hive3 at iPhone size, with clips made by stepping simT while paused (`$S/gt/tclip.js`). Attacks seen: spit, omegaX, storm, omega, bite, slam, link, grab.
 - **v676 — Mimics animate in battle, each kind with its own attack (Nov 19)** (p676_wire.py + p676_mimatk.js). Owner: "I thought the mimics were supposed to move anatomically?" Their motion (`mimWave` → `MON_WAVE`) was already baked into battle frames, but drawBattle only asked `monBatFrame` for `MON` creatures, so Mimics were stills.
   - **Frames:** now `MIM_D` kinds animate too. `mimAnimOK` limits this to the biggest kinds by `MIM_HULL`: 3 on iOS/WEAK, 6 elsewhere (10–16 frames each, a memory guard).
   - **Attacks:** `MIM_ATK` per kind (bite, spit, grab, link, slam, claw, lash, pulse, brood, lance, omega) starts from `spawnVolley` (`mimAtkAdd`, one at a time per squadron, timed to the real volley). The body lunges or rears (`mimLunge`, applied to `scr` after layout) and the effect draws after wbStrike (`mimAtkDraw`). Omega's lance shakes and flashes the screen once.
