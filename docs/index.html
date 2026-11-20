@@ -6190,7 +6190,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 677;
+const GAME_V = 678;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13374,7 +13374,7 @@ function monBatPose(root, kind, f) { if (!MON_WAVE[kind]) return null; const U =
   return [...done.values()]; }
 /* which frame a monster in battle shows: its own phase, a little faster while it moves; the nearer of two frames full, the other over it */
 function monBatFrame(b, i, k, real, moving) { if (!MON_WAVE[k]) return null; const pre = b.mfPre || (b.mfPre = {}); if (!pre[k]) { pre[k] = 1; for (let f = 0; f < MBF_N; f++) shipArtSoon(k, "~f" + f, "side"); }
-  const P = b.mph || (b.mph = []); P[i] = ((P[i] == null ? (i * .37) % 1 : P[i]) + Math.min(80, real || 16) / 1000 / MBF_P * (moving ? 1.35 : 1)) % 1;
+  const P = b.mph || (b.mph = []); P[i] = ((P[i] == null ? (i * .37) % 1 : P[i]) + Math.min(80, real || 16) / 1000 / MBF_P * (moving ? 1.35 : 1) * (MIM_D[k] ? .5 : 1)) % 1; /* v678 the Mimics move slower and heavier */
   const x = P[i] * MBF_N, f0 = Math.floor(x) % MBF_N, f1 = (f0 + 1) % MBF_N, w = x - Math.floor(x), a0 = shipArtSoon(k, "~f" + f0, "side"), a1 = shipArtSoon(k, "~f" + f1, "side");
   if (!a0 && !a1) return null; if (!a1) return ["~f" + f0, null, 0]; if (!a0) return ["~f" + f1, null, 0]; return w < .5 ? ["~f" + f0, "~f" + f1, w] : ["~f" + f1, "~f" + f0, 1 - w]; }
 /* v651 a monster's shield: the ellipse round the solid part of its picture, over every frame of its loop (in picture units) */
@@ -24026,7 +24026,7 @@ function playBattle(r) {
   $("#app").appendChild(w);
   const { res, exact } = battleSim(r), R = res.rec;
   const verified = exact && sameUnits(lossesOf(res.start.a, res.aLeft), r.lossA) && sameUnits(lossesOf(res.start.d, res.dLeft), r.lossD) && res.winner === r.winner;
-  battle = { r, res, R, exact, verified, Q: R.squads, simT: 0, end: res.sim.dur, intro: reduced ? 0 : bIntroMs(R.squads), intro0: reduced ? 0 : bIntroMs(R.squads), heroN: bHeroName(R.squads), speed: 1, paused: false, lowFx: reduced || !!G.lowFx, last: 0,
+  battle = { r, res, R, exact, verified, Q: R.squads, simT: 0, end: res.sim.dur, intro: reduced ? 0 : cineIntro(bIntroMs(R.squads)), intro0: reduced ? 0 : cineIntro(bIntroMs(R.squads)), cine: !reduced && cineOn(), /* v678 */ heroN: bHeroName(R.squads), speed: 1, paused: false, lowFx: reduced || !!G.lowFx, last: 0,
     n: R.squads.map(q => q.n0), face: R.squads.map(q => q.side === "a" ? 1 : -1), shHit: [], hullHit: [], deadAt: [], vi: 0, fx: [], parts: [], booms: [], rings: [], nums: [], debris: [],
     salvos: [], beams: [], hexes: [], fire: [], smoke: [], sparks: [], flashes: [], embers: [], flares: [], pend: [], flash: 0, slowUntil: 0,
     roundShown: 0, roundAt: -1e9, shake: 0, hudAt: 0, done: false, hold: 0 };
@@ -24100,7 +24100,7 @@ function clipCard(blob, mime, title) { const ext = /mp4/.test(mime) ? "mp4" : "w
   crumb("battle clip ready"); }
 function battleCtl() {
   const b = battle, el = $("#bctl"); if (!b || !el) return;
-  el.innerHTML = `<button data-act="bpause" aria-label="${b.paused ? "Play" : "Pause"}">${b.paused ? "▶" : "❚❚"}</button><button data-act="bspeed" aria-label="Speed">${b.speed}×</button><button data-act="breplay" aria-label="Replay from the start">⟲</button><button data-act="bclip" aria-label="Record this battle as a video to share" class="${G.clip ? "on" : ""}">⏺</button><button data-act="bskip" aria-label="Skip to the result">⏭</button><button data-act="bfx" aria-label="Effects level">${b.lowFx ? "FX lo" : "FX hi"}</button><button data-act="blbl" class="${bLblOn() ? "on" : ""}" aria-label="${bLblOn() ? "Hide ship names and counts" : "Show ship names and counts"}" aria-pressed="${bLblOn()}">🏷</button><button data-act="bcam" class="${b.vw && b.vw.mode === "free" ? "on" : ""}" aria-label="${b.vw && b.vw.mode === "free" ? "Free camera: drag and pinch. Tap for the director" : "Director camera. Tap for free camera"}">${b.vw && b.vw.mode === "free" ? "✋" : "🎬"}</button><button data-act="bview" aria-label="Tactical overview">⊡</button><button data-act="bsave" class="${bSaved(b.r) ? "on" : ""}" aria-label="${bSaved(b.r) ? "Remove from Saved" : "Save to favourites"}">${bSaved(b.r) ? "★" : "☆"}</button>`;
+  el.innerHTML = `<button data-act="bpause" aria-label="${b.paused ? "Play" : "Pause"}">${b.paused ? "▶" : "❚❚"}</button><button data-act="bspeed" aria-label="Speed">${b.speed}×</button><button data-act="breplay" aria-label="Replay from the start">⟲</button><button data-act="bclip" aria-label="Record this battle as a video to share" class="${G.clip ? "on" : ""}">⏺</button><button data-act="bskip" aria-label="Skip to the result">⏭</button><button data-act="bfx" aria-label="Effects level">${b.lowFx ? "FX lo" : "FX hi"}</button><button data-act="blbl" class="${bLblOn() ? "on" : ""}" aria-label="${bLblOn() ? "Hide ship names and counts" : "Show ship names and counts"}" aria-pressed="${bLblOn()}">🏷</button><button data-act="bcine" class="${b.cine ? "on" : ""}" aria-label="${b.cine ? "Cinematic replay: slower, directed. Tap for quick" : "Quick replay. Tap for cinematic"}">${b.cine ? "🎞" : "⚡"}</button><button data-act="bcam" class="${b.vw && b.vw.mode === "free" ? "on" : ""}" aria-label="${b.vw && b.vw.mode === "free" ? "Free camera: drag and pinch. Tap for the director" : "Director camera. Tap for free camera"}">${b.vw && b.vw.mode === "free" ? "✋" : "🎬"}</button><button data-act="bview" aria-label="Tactical overview">⊡</button><button data-act="bsave" class="${bSaved(b.r) ? "on" : ""}" aria-label="${bSaved(b.r) ? "Remove from Saved" : "Save to favourites"}">${bSaved(b.r) ? "★" : "☆"}</button>`;
 }
 const bPos = (b, i, tt) => { const F = b.R.frames, fd = b.R.dt, k = Math.min(F.length - 1, Math.max(0, Math.floor(tt / fd + 1e-6))), f0 = F[k], f1 = F[Math.min(F.length - 1, k + 1)];
   const u = f1.t > f0.t ? clamp((tt - f0.t) / (f1.t - f0.t), 0, 1) : 0, a = f0.s[i], c = f1.s[i]; return { x: a[0] + (c[0] - a[0]) * u, y: a[1] + (c[1] - a[1]) * u, sh: a[2], wd: a[3], fl: a[4] }; };
@@ -24443,6 +24443,7 @@ function mimAtkDraw(ctx, b, scr, T, W, d, lo, t, H) { const A = b.mAtk; if (!A |
     if (!m.snd && u >= 0) { m.snd = 1; mimSfx(m.a === "spit" ? "hiss" : m.a === "link" || m.a === "pulse" || m.a === "brood" || m.a === "storm" ? "hum" : m.a === "omegaX" ? "omega" : m.a === "slam" ? "slam" : MIM_TENT[m.a] ? "whip" : "hum", pan); }
     /* the shockwave of a landed hit, after the hit itself */
     if (m.ht != null) { const k = (T - m.ht) / .45; if (k >= 0 && k < 1) { ctx.save(); ctx.globalCompositeOperation = "lighter"; const r = Lg * (m.a === "slam" || m.a === "omegaX" ? 1.6 : 1) * (.3 + k); ctx.globalAlpha = (1 - k) * .85; ctx.strokeStyle = C(1); ctx.lineWidth = (6 - 4 * k) * d; ctx.beginPath(); ctx.ellipse(m.hx, m.hy, r, r * .5, 0, 0, TAU); ctx.stroke(); ctx.globalAlpha = (1 - k) * .7; ctx.drawImage(gl, m.hx - r * .4, m.hy - r * .4, r * .8, r * .8); ctx.restore(); } }
+    if (m.asT && t - m.asT < 1500) { const k = (t - m.asT) / 1500; ctx.save(); ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = Math.min(1, (1 - k) * 2); ctx.font = `italic 800 ${13 * d}px Oxanium, sans-serif`; ctx.textAlign = "center"; ctx.fillStyle = "#5fd8ff"; ctx.strokeStyle = "rgba(0,0,0,.8)"; ctx.lineWidth = 3 * d; ctx.strokeText("ASSIMILATED", E0.x, E0.y - (26 + 16 * k) * d); ctx.fillText("ASSIMILATED", E0.x, E0.y - (26 + 16 * k) * d); ctx.restore(); } /* v678 */
     if (u > 1) continue;
     if (MIM_TENT[m.a] && alive) { /* tentacles: reach (0-.3), spear and hold (.3-.65), retract */ const n = MIM_TENT[m.a], reach = u < .3 ? u / .3 : u < .65 ? 1 : 1 - (u - .65) / .35, w0 = Lg * (m.a === "grab" ? .2 : .24) * (n === 1 ? 1.2 : 1);
       for (let j = 0; j < n; j++) { const off = (j - (n - 1) / 2) * Lg * .25, sx = S0.x + off * .3, sy = S0.y + off, tx = E0.x + off * .15, ty = E0.y + off * .25, ex = sx + (tx - sx) * reach, ey = sy + (ty - sy) * reach;
@@ -24461,7 +24462,7 @@ function mimAtkDraw(ctx, b, scr, T, W, d, lo, t, H) { const A = b.mAtk; if (!A |
     else if (m.a === "link" && alive) { const k = Math.min(1, u / .2), ex = S0.x + (E0.x - S0.x) * k, ey = S0.y + (E0.y - S0.y) * k; ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .8 * fade; ctx.strokeStyle = C(1); ctx.lineWidth = 3 * d; ctx.setLineDash([7 * d, 5 * d]); ctx.lineDashOffset = -T * 140 * d; ctx.beginPath(); ctx.moveTo(S0.x, S0.y); ctx.lineTo(ex, ey); ctx.stroke(); ctx.setLineDash([]);
       if (k >= 1) { hit(m, E0.x, E0.y, false); const gr = Lg * .9 * Math.min(1, (u - .2) / .5), rnd2 = j => (Math.sin(m.seed * 9.1 + j * 37.7) * 43758.5) % 1; ctx.lineWidth = 1.6 * d; ctx.strokeStyle = C(1); ctx.globalAlpha = .9 * fade; ctx.beginPath();
         for (let j = 0; j < 16; j++) { let x = E0.x + rnd2(j) * gr, y = E0.y + rnd2(j + 50) * gr * .45; ctx.moveTo(x, y); for (let s2 = 0; s2 < 3; s2++) { if ((j + s2) % 2) x += (rnd2(j * 3 + s2) > 0 ? 1 : -1) * gr * .2; else y += (rnd2(j * 5 + s2) > 0 ? 1 : -1) * gr * .12; ctx.lineTo(x, y); } } ctx.stroke(); /* circuitry crawling over the prey */
-        if (!(b.n[m.e] > 0) && !m.as) { m.as = 1; (b.nums || (b.nums = [])).push({ x: E0.x, y: E0.y - 26 * d, t, txt: "ASSIMILATED", col: "#5fd8ff", big: 1 }); } } ctx.restore(); }
+        if (!(b.n[m.e] > 0) && !m.as) { m.as = 1; m.asT = t; } } ctx.restore(); }
     else if ((m.a === "pulse" || m.a === "brood") && alive) { ctx.save(); ctx.globalCompositeOperation = "lighter"; const an = Math.atan2(E0.y - S0.y, E0.x - S0.x); for (let j = 0; j < 3; j++) { const k = u * 1.4 - j * .2; if (k < 0 || k > 1) continue; const x = S0.x + (E0.x - S0.x) * k, y = S0.y + (E0.y - S0.y) * k, r = Lg * (.25 + .35 * k); ctx.globalAlpha = (1 - k) * .85; ctx.strokeStyle = C(1); ctx.lineWidth = 3 * d; ctx.beginPath();
         if (m.a === "brood") ctx.arc(x + Math.sin(j * 2.3 + m.seed) * r * .6, y + Math.cos(j * 1.7 + m.seed) * r * .4, r * .18, 0, TAU); else ctx.ellipse(x, y, r * .5, r, an, 0, TAU); ctx.stroke(); } if (u > .7) hit(m, E0.x, E0.y, false); ctx.restore(); }
     else if ((m.a === "lance" || m.a === "omega") && alive) { ctx.save(); ctx.globalCompositeOperation = "lighter"; const ch = m.a === "omega" ? .4 : .3; if (u < ch) { const k = u / ch, r = Lg * (m.a === "omega" ? .5 : .3) * (.3 + k); ctx.globalAlpha = .4 + .6 * k; ctx.drawImage(gl, S0.x - r, S0.y - r, r * 2, r * 2); }
@@ -24482,6 +24483,39 @@ function mimAtkDraw(ctx, b, scr, T, W, d, lo, t, H) { const A = b.mAtk; if (!A |
   if (b.mBurn) { b.mBurn = b.mBurn.filter(x => T - x.t < 3); ctx.save(); ctx.globalCompositeOperation = "lighter"; for (const x of b.mBurn) { const E0 = scr[x.e]; if (!E0 || !(b.n[x.e] > 0)) continue; const k = (T - x.t) / 3; for (let j = 0; j < 3; j++) { const ox = Math.sin(x.seed + j * 2.1) * 14 * d, oy = Math.cos(x.seed * 1.3 + j) * 7 * d, f = .6 + .4 * Math.sin(T * 25 + j * 3); ctx.globalAlpha = (1 - k) * f; ctx.drawImage(glowSprite(j % 2 ? "rgba(150,255,110,1)" : "fire"), E0.x + ox - 7 * d, E0.y + oy - 7 * d, 14 * d, 14 * d); } } ctx.restore(); }
   ctx.restore(); ctx.globalAlpha = 1; }
 
+/* ---------- v678 cinematic replays (owner: "slow the battle down in a cinematic style but keep the same damage; movie finish") ----------
+   The replay is a playback of a battle already settled, so nothing here touches damage, losses or the result. Cinematic mode (the
+   default; 🎞 in the replay bar, ⚡ for quick):
+   - the clock runs at CINE_PACE (62%) of normal, and slow motion still deepens on big kills and Mimic hits;
+   - volleys land on a beat (cineDue): one side on the beat, the other on the off-beat, so fire comes in answering waves;
+   - a director (cineDirect) frames each moment: opening shots of each fleet, then the biggest thing about to happen (a Cube
+     Destroyer beam, a Titan's shot, a Mimic's tentacles or Omega's beam, the heaviest salvo), a wide shot every third cut, and the
+     winner at the end; shots hold about two seconds and the camera eases slowly between them; tap 🎬 for the free camera;
+   - a film look: letterbox bars that close in for the opening and the finish, and a light grain (not on low effects). */
+const CINE_PACE = .62, CINE_BEAT = .2;
+const cineOn = () => { try { return localStorage.getItem("udf.cineRep") !== "0"; } catch (e) { return true; } };
+const cineIntro = ms => cineOn() ? Math.max(ms, 3000) : ms;
+function cineDue(b, v, T) { if (!b.cine) return v.t <= T; const off = (b.Q[v.s] && b.Q[v.s].side === "d") ? CINE_BEAT / 2 : 0; return Math.ceil((v.t - off) / CINE_BEAT - 1e-6) * CINE_BEAT + off <= T; }
+function cineDirect(b, t, T, W, H) { const P = b.lastP; if (!P || !P.length || !W) return; const C = b.cdir || (b.cdir = { n: 0 });
+  const at = i => { const j = b.repOf && b.repOf[i] != null ? b.repOf[i] : i, p = P.find(q => q.i === j); return p ? [p.x, p.y] : null; };
+  const mid = (i, j) => { const a = at(i), c = at(j); return a && c ? [(a[0] + c[0]) / 2, (a[1] + c[1]) / 2] : a || c; };
+  const ctr = sd => { let x = 0, y = 0, w = 0; for (const p of P) { const q = b.Q[p.i]; if (!q || q.side !== sd) continue; const k = (p.rx || 1) * (p.ry || 1); x += p.x * k; y += p.y * k; w += k; } return w ? [x / w, y / w] : null; };
+  const shot = (p, s, hold, tag) => { if (!p) return false; b.focus = { s, x: clamp(p[0] / W, .18, .82), y: clamp(p[1] / H, .18, .82), until: t + hold, cine: tag || 1 }; C.n++; return true; };
+  if (b.done) return;
+  if (b.ending || T >= b.end - .05) { if (C.fin) return; C.fin = 1; shot(ctr((b.res && b.res.winner) || "a") || [W / 2, H / 2], 1.3, 6000, "fin"); return; } /* act three: the winner */
+  if (b.focus && t < b.focus.until) return;
+  if (b.intro > 0) { if (!C.o1) { C.o1 = 1; shot(ctr("a"), 1.35, 1400, "open"); } else if (!C.o2) { C.o2 = 1; shot(ctr("d"), 1.35, 1400, "open"); } return; } /* act one: each fleet */
+  if (C.n % 3 === 2) { b.focus = { s: 1, x: .5, y: .5, until: t + 2000, cine: "wide" }; C.n++; return; }
+  for (const m of b.mAtk || []) { const u = (T - m.t0) / MIM_DUR[m.a]; if (u > -.4 && u < .5 && /storm|omega|grab|slam|claw|lance/.test(m.a)) { if (shot(mid(m.s, m.e), m.a === "omegaX" ? 1.12 : 1.55, m.a === "omegaX" ? 3400 : 2300, "mim")) return; } }
+  for (const m of (b.beams || []).concat(b.cdQ || [])) { if ((m.wb || m.ti) && m.t0 > T - .3 && m.t0 < T + 1.4) { if (shot(mid(m.s, m.e), 1.5, 2400, "beam")) return; } }
+  let best = null, bd = 0; for (let k = b.vi; k < b.R.vols.length; k++) { const v = b.R.vols[k]; if (v.t > T + 1.1) break; const w = (v.dead || 0) * (unitCost((b.Q[v.e] || {}).k) || 1); if (w > bd) { bd = w; best = v; } }
+  if (best && shot(mid(best.s, best.e), 1.45, 2000, "salvo")) return;
+  b.focus = { s: 1, x: .5, y: .5, until: t + 1800, cine: "wide" }; C.n++; }
+let CINE_GR = null;
+function cineLook(ctx, b, W, H, top, bot, t, lo) { if (lo) return; const T = b.simT, fh = bot - top, opening = b.intro > 0 ? 1 : 0, closing = b.ending || T >= b.end - .05 ? 1 : 0, k = b.lbK = (b.lbK == null ? 1 : b.lbK) + (((opening || closing) ? 1 : .55) - (b.lbK == null ? 1 : b.lbK)) * .04, h = fh * .075 * k;
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = "#000"; ctx.globalAlpha = .9; ctx.fillRect(0, top - 2, W, h + 2); ctx.fillRect(0, bot - h, W, h + 2);
+  if (!CINE_GR) { CINE_GR = document.createElement("canvas"); CINE_GR.width = CINE_GR.height = 128; const x = CINE_GR.getContext("2d"), D = x.createImageData(128, 128); for (let i = 0; i < D.data.length; i += 4) { const v = Math.random() * 255 | 0; D.data[i] = D.data[i + 1] = D.data[i + 2] = v; D.data[i + 3] = 255; } x.putImageData(D, 0, 0); }
+  ctx.globalAlpha = .045; ctx.globalCompositeOperation = "overlay"; const ox = (t * 7.3) % 128 | 0, oy = (t * 3.1) % 128 | 0; const pat = ctx.createPattern(CINE_GR, "repeat"); ctx.translate(-ox, -oy); ctx.fillStyle = pat; ctx.fillRect(0, 0, W + 128, H + 128); ctx.restore(); }
 function spawnVolley(b, v) { fx589Spawn(b, v); /* v589 */ try { if (MIM_ATK[(b.Q[v.s] || {}).k]) mimAtkAdd(b, v); } catch (e) {} /* v676 */
   if ((v.ab || (b.Q[v.s] && TITAN_LEN[b.Q[v.s].k])) && titanFx(b, v)) return; /* v556, v559 */
   const lo = b.lowFx, cap = PERF.battleCap, wk = v.wk, many = v.n + v.ic, mis = wk === "missile" || wk === "torpedo", q = b.Q[v.s], side = q.side, sz = q.sz != null ? q.sz : (q.sz = szOf(q));
@@ -24806,7 +24840,7 @@ function drawBattle(t) {
   const W = cv.width, H = cv.height, mainCtx = cv.getContext("2d"); let ctx = mainCtx; if (W < 8 || H < 8) return;
   const real = b.last ? Math.min(80, t - b.last) : 16; b.last = t;
   // the intro waits (up to 2.5 s) for the unit renders to finish baking, so nothing pops from flat icons into 3D mid-fight
-  if (!b.paused && !b.done) { if (b.intro > 0) { if ((ART_Q.length || !fbReady()) && (b.introHold || 0) < 4500) b.introHold = (b.introHold || 0) + real; else b.intro -= real; } else b.simT = Math.min(b.end + (b.ending ? 0 : 1.5), b.simT + real / 1000 * b.speed * BATTLE_PACE * (t < b.slowUntil ? .3 : 1)); } // capital kills play in slow motion
+  if (!b.paused && !b.done) { if (b.intro > 0) { if ((ART_Q.length || !fbReady()) && (b.introHold || 0) < 4500) b.introHold = (b.introHold || 0) + real; else b.intro -= real; } else b.simT = Math.min(b.end + (b.ending ? 0 : 1.5), b.simT + real / 1000 * b.speed * BATTLE_PACE * (t < b.slowUntil ? .3 : 1) * (b.cine ? CINE_PACE : 1)); /* v678 */ } // capital kills play in slow motion
   /* v317 with flagships, the field leaves a flagship's length behind each fleet inside the open strip, so every squadron flies ahead of its flagship */
   const fm = b.flags && b.fdir ? Math.min(W, H) * .16 * .95 : 0, fy = fm && b.fdir === "y" && b.vb, fxm = fm && b.fdir === "x" ? fm / W : 0;
   const top0 = fy ? Math.max(H * .14, b.vb[0] + fm) : H * .14, bot0 = fy ? Math.max(top0 + H * .25, Math.min(H * .79, b.vb[1] - fm)) : H * .79, xl0 = Math.max(.06, fxm);
@@ -24847,8 +24881,8 @@ function drawBattle(t) {
      slides). AUTO lets the director punch in on capital-ship kills and shield collapses, then ease back to the tactical view; FREE is
      the player's own pan and zoom (drag, pinch, wheel); the overview button returns to the full tactical view */
   const vw = b.vw || (b.vw = { s: 1, x: .5, y: .5, ts: 1, tx: .5, ty: .5, mode: "auto" });
-  if (vw.mode === "auto") { const fo = b.focus && t < b.focus.until ? b.focus : null; vw.ts = fo ? fo.s : 1; vw.tx = fo ? fo.x : .5; vw.ty = fo ? fo.y : .5; }
-  { const ke = reduced ? 1 : Math.min(1, real / (vw.mode === "auto" ? 520 : 70)); vw.s += (vw.ts - vw.s) * ke; vw.x += (vw.tx - vw.x) * ke; vw.y += (vw.ty - vw.y) * ke; }
+  if (vw.mode === "auto") { if (b.cine) try { cineDirect(b, t, T, W, H); } catch (e) {} /* v678 the director */ const fo = b.focus && t < b.focus.until ? b.focus : null; vw.ts = fo ? fo.s : 1; vw.tx = fo ? fo.x : .5; vw.ty = fo ? fo.y : .5; }
+  { const ke = reduced ? 1 : Math.min(1, real / (vw.mode === "auto" ? (b.cine ? 950 : 520) : 70)); vw.s += (vw.ts - vw.s) * ke; vw.x += (vw.tx - vw.x) * ke; vw.y += (vw.ty - vw.y) * ke; }
   const vs = vw.s, vtx = clamp(W / 2 - vs * vw.x * W, W * (1 - vs), 0), vty = clamp(H / 2 - vs * vw.y * H, H * (1 - vs), 0);
   /* v87 positional sound: the camera is the listener. Events in view play full and panned to their place; zooming in brings them
      closer; events off-screen play quieter and muffled (a low-pass), like a distant sensor feed */
@@ -24869,7 +24903,7 @@ function drawBattle(t) {
     else { ctx.fillStyle = "#55595f"; ctx.fillRect(-o.s, -o.s * .4, o.s * 2, o.s * .8); ctx.fillStyle = "rgba(255,150,70,.6)"; ctx.fillRect(o.s * .6, -o.s * .2, o.s * .4, o.s * .4); } ctx.restore(); }
   ctx.globalAlpha = 1;
   // volleys due by now become projectiles
-  if (b.intro <= 0) while (b.vi < b.R.vols.length && b.R.vols[b.vi].t <= T) spawnVolley(b, b.R.vols[b.vi++]);
+  if (b.intro <= 0) while (b.vi < b.R.vols.length && cineDue(b, b.R.vols[b.vi], T)) spawnVolley(b, b.R.vols[b.vi++]); /* v678 volleys on the beat */
   // squadrons
   const pos = Q.map((q, i) => bPos(b, i, T));
   /* v60 depth: every squadron flies on its own depth plane. Far ones are smaller and sit behind a layer of haze, near ones are
@@ -25313,7 +25347,7 @@ function drawBattle(t) {
   ctx.setTransform(1, 0, 0, 1, shx, shy);
   if (!lo) { // the colour grade and vignette (v252: the big dark foreground rocks are gone)
     b.fgL = b.fgL || fgRocks(W, H, d);
-    ctx.drawImage(b.fgL.grade, 0, 0, W, H); }
+    ctx.drawImage(b.fgL.grade, 0, 0, W, H); } if (b.cine) try { cineLook(ctx, b, W, H, top, bot, t, lo); } catch (e) {} /* v678 */
   ctx.setTransform(vs, 0, 0, vs, vtx + shx, vty + shy);
   fx589Draw(ctx, b, t, d, vs, scr, Q, T, vtx); b.nums.length = 0; rs603Draw(ctx, b, t, d, W, H, pos); /* v603 no numbers: reactive shields */
   ctx.globalAlpha = 1;
@@ -27421,6 +27455,7 @@ const ACT = {
   perfToggle: () => { MAPPROF.on = !MAPPROF.on; MAPPROF.s = {}; MAPPROF.frames = []; perfHud(); if (sheet) renderSheet(); },
   authOut: () => { closeSheet(); authSignOut(); },
   bcam: () => { const b = battle; if (!b || !b.vw) return; if (b.vw.mode === "free") { b.vw.mode = "auto"; } else camFree(b); battleCtl(); },
+  bcine: () => { const b = battle; if (!b) return; b.cine = !b.cine; try { localStorage.setItem("udf.cineRep", b.cine ? "1" : "0"); } catch (e) {} if (!b.cine && b.focus && b.focus.cine) b.focus = null; toast(b.cine ? "Cinematic replays: slower, with a director camera." : "Quick replays: full speed, fixed camera."); battleCtl(); }, /* v678 */
   bview: () => { const b = battle; if (!b || !b.vw) return; b.vw.mode = "auto"; b.focus = null; battleCtl(); },
   bpause: () => { const b = battle; if (!b || b.done) return; b.paused = !b.paused; battleCtl(); },
   bspeed: () => { const b = battle; if (!b) return; b.speed = b.speed === 1 ? 2 : b.speed === 2 ? 4 : b.speed === 4 ? .5 : 1; battleCtl(); try { crumb(`battle speed ${b.speed}x · ${(b.Q || []).length} stacks`); } catch (e) {} },
