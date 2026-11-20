@@ -6190,7 +6190,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 682;
+const GAME_V = 683;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -7204,7 +7204,7 @@ function defenders(p) {
    pick targets, and fire weapons with their own range, cooldown, accuracy, tracking and damage profile. Damage drains
    regenerating shields first, then goes through armor into the hull. Same inputs + same seed = the same battle: reports
    store the seed and the fleets, and the replay re-runs them, so what you watch is exactly what was decided. */
-const CB_V = 7, CB_OK = v => v === 3 || v === 4 || v === 5 || v === 6 || v === 7, /* v673 v7: the Cube Destroyer fires from the rear (siege range) */ /* v6: a space monster's pack is one squadron */ ROUND_S = 5, /* v5: same-type stacks of many commanders fight as merged squadrons (60 vs 60 battles), see simulate */ MAX_ROUNDS = 8, SHM = 1.5; // v4: joint fleets arrive together, shield saturation (v3 battles still replay exactly)
+const CB_V = 8, CB_OK = v => v === 3 || v === 4 || v === 5 || v === 6 || v === 7 || v === 8, /* v683 v8: bosses raise their shields again every 12 s */ /* v673 v7: the Cube Destroyer fires from the rear (siege range) */ /* v6: a space monster's pack is one squadron */ ROUND_S = 5, /* v5: same-type stacks of many commanders fight as merged squadrons (60 vs 60 battles), see simulate */ MAX_ROUNDS = 8, SHM = 1.5; // v4: joint fleets arrive together, shield saturation (v3 battles still replay exactly)
 const WPN = {
   laser:   { n: "Laser cannons",      acc: .92, track: 1,    vsSh: 1,    vsAr: .8,   rng: 26, cd: 1 },
   plasma:  { n: "Plasma batteries",   acc: .8,  track: .6,   vsSh: .75,  vsAr: 1.45, rng: 30, cd: 1.6 },
@@ -7248,7 +7248,7 @@ const DOCTRINES = {
 };
 const DOC_AI = { swarm: "Hive swarm", raider: "Pirate raiders", guard: "Defensive screen" };
 function simulate(A, D, o = {}) {
-  const seed = (o.seed != null ? o.seed : (Math.random() * 2147483647) | 0) >>> 0, rng = rnd(seed), V4 = (o.v || CB_V) >= 4, V5 = (o.v || CB_V) >= 5, V6 = (o.v || CB_V) >= 6, V7 = (o.v || CB_V) >= 7, rngOf = s => V7 && s.k === "worldbreaker" ? 160 : WPN[s.wp].rng;
+  const seed = (o.seed != null ? o.seed : (Math.random() * 2147483647) | 0) >>> 0, rng = rnd(seed), V4 = (o.v || CB_V) >= 4, V5 = (o.v || CB_V) >= 5, V6 = (o.v || CB_V) >= 6, V7 = (o.v || CB_V) >= 7, V8 = (o.v || CB_V) >= 8, rngOf = s => V7 && s.k === "worldbreaker" ? 160 : WPN[s.wp].rng;
   const cnt = arr => arr.reduce((a, s) => a + (s.n > 0 ? Math.floor(s.n) : 0), 0);
   const quick = !!o.quick || cnt(A) + cnt(D) > 30000, dt = quick ? .5 : .25;
   const aOwn = (A.find(s => s.n > 0) || {}).own, dOwn0 = (D.find(s => s.n > 0) || {}).own;
@@ -7436,6 +7436,7 @@ function simulate(A, D, o = {}) {
     }
     // shields recharge when a squadron has not been hit for 2 s
     for (const s of sq) if (s.n > 0 && t - s.lastHit > 2) s.shp = Math.min(s.n * s.shPer, s.shp + s.n * s.shPer * .06 * dt);
+    if (V8) for (const s of sq) { if (s.bsp == null) s.bsp = typeof s.k === "string" && /^wb[A-Z]/.test(s.k) && AL[s.k] ? 10 : 0; if (s.bsp && s.n > 0 && t >= s.bsp) { s.shp = Math.max(s.shp, s.n * s.shPer * .6); s.bsp += 12; } } /* v683 a boss raises its shield again every 12 s, under fire too */
     if (step % Math.round(1 / dt) === 0) {
       const pa = powOf("a"), pdn = powOf("d");
       for (const s of sq) { if (!active(s) || s.ret) continue; const hpF = s.n * (1 - s.wd) / s.n0;
@@ -7466,7 +7467,7 @@ function simulate(A, D, o = {}) {
       return out; }
     for (const s of sq) if (s.side === side && s.n > 0) { const k = s.own || "_"; (out[k] = out[k] || {})[s.k] = (out[k][s.k] || 0) + s.n; } return out; };
   const pack = arr => arr.filter(s => s.n > 0).map(s => [s.k, Math.floor(s.n), +(+s.atk).toFixed(2), +(+s.sh).toFixed(2), +(+s.hull).toFixed(2), s.own == null ? null : s.own, +(s.ab || 0)]);
-  const sim = { v: V7 ? 7 : V6 ? 6 : V5 ? 5 : V4 ? 4 : 3, seed, doc: o.doc && DOCTRINES[o.doc] ? o.doc : null, quick: !!o.quick, A: pack(A), D: pack(D), dur: Math.round(t * 100) / 100, docA, docD, ev, stats: st, wpn: wst, pow: { a0: pow0.a, d0: pow0.d, a1: Math.round(powOf("a") + sq.reduce((a, s) => a + (s.side === "a" && s.esc ? s.n * unitPow(s) * (.35 + .65 * (1 - s.wd)) : 0), 0)), d1: Math.round(powOf("d")) } };
+  const sim = { v: V8 ? 8 : V7 ? 7 : V6 ? 6 : V5 ? 5 : V4 ? 4 : 3, seed, doc: o.doc && DOCTRINES[o.doc] ? o.doc : null, quick: !!o.quick, A: pack(A), D: pack(D), dur: Math.round(t * 100) / 100, docA, docD, ev, stats: st, wpn: wst, pow: { a0: pow0.a, d0: pow0.d, a1: Math.round(powOf("a") + sq.reduce((a, s) => a + (s.side === "a" && s.esc ? s.n * unitPow(s) * (.35 + .65 * (1 - s.wd)) : 0), 0)), d1: Math.round(powOf("d")) } };
   const out = { start, rounds, winner, aLeft: snap("a"), dLeft: snap("d"), aByOwn: byOwn("a"), dByOwn: byOwn("d"), sim };
   if (o.rec) out.rec = { dt: quick ? .5 : .5, frames, vols, rocks, squads: sq.map(s => ({ id: s.id, side: s.side, k: s.k, own: s.own, shr: s.src && s.src.shares, role: s.role, wp: s.wp, n0: s.n0, hull: s.hull, sh: s.sh, shPer: s.shPer, atk: s.atk, pow: unitPow(s) })) };
   return out;
@@ -7861,7 +7862,7 @@ function wbSoft(A) { const w = A.width, h = A.height; let c = WBR.soft; if (!c |
   const x = c.getContext("2d"); x.globalCompositeOperation = "copy"; x.drawImage(A, 0, 0); x.globalCompositeOperation = "destination-in";
   if (!c.m) { const m = document.createElement("canvas"); m.width = w; m.height = h; const y = m.getContext("2d"), g = y.createRadialGradient(0, 0, 0, 0, 0, 1); for (const [o, v] of [[0, 1], [.62, 1], [.82, .55], [1, 0]]) g.addColorStop(o, `rgba(0,0,0,${v})`); y.setTransform(w / 2, 0, 0, h / 2, w / 2, h / 2); y.fillStyle = g; y.fillRect(-1, -1, 2, 2); c.m = m; }
   x.drawImage(c.m, 0, 0); x.globalCompositeOperation = "source-over"; return c; }
-function wbStrike(ctx, b, scr, Q, W, H, t, d, lo) { const k = b.r && (b.r.wb || (b.r.sbk && WB_STRIKE[b.r.sbk] ? b.r.sbk : null)) /* v681 super bosses too */, M = WBR.mv; if (!k || !M || WBR.key !== k || !b.scC) return;
+function wbStrike(ctx, b, scr, Q, W, H, t, d, lo) { const k = b.r && (b.r.wb || (b.r.sbk && WB_STRIKE[b.r.sbk] && !aexdOn(b) ? b.r.sbk : null)) /* v681 super bosses too */, M = WBR.mv; if (!k || !M || WBR.key !== k || !b.scC) return;
   const S = (WB_STRIKE[k] || {})[M.m]; if (!S) return; const f = (t - M.t0) / S[4], PB = !!WB[k] /* v493 every world boss's strikes cross the screen */, MO = (k === "wym" || PB) && WBR.mouth && b.wbBox ? { x: b.wbBox.cx + (WBR.mouth.u - .5) * b.wbBox.aw, y: b.wbBox.cy + (WBR.mouth.v - .5) * b.wbBox.ah } : null; /* v411 the Wyrm fires from its mouth */
   if (MO && f < S[1] && f > S[1] - .16) { const q = 1 - (S[1] - f) / .16, r = (8 + 46 * q) * d; ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .4 + .6 * q; ctx.drawImage(glowSprite(PB && k !== "wym" ? WB[k].col : "rgba(255,170,60,1)"), MO.x - r * 2, MO.y - r * 2, r * 4, r * 4); ctx.drawImage(glowSprite("#fff2d8"), MO.x - r * .6, MO.y - r * .6, r * 1.2, r * 1.2); ctx.strokeStyle = "#ffcf7a"; ctx.lineWidth = 2 * d; for (let j = 0; j < 3; j++) { const rr = r * (2.6 - ((q * 1.8 + j / 3) % 1) * 2); ctx.globalAlpha = .7 * q; ctx.beginPath(); ctx.ellipse(MO.x, MO.y, rr, rr * .7, 0, 0, TAU); ctx.stroke(); } ctx.restore(); return; }
   if (f < S[1] || f > S[2]) return; const u = (f - S[1]) / (S[2] - S[1]), env = Math.sin(Math.min(1, u) * Math.PI);
@@ -8228,7 +8229,7 @@ const WB_FRONT = { medusara: 0, khezaroth: 0, supercube: 0, omega: 0, vaelthar: 
    side (0.65 s, eased), hold a second, attack (the move and its strike on the fleet), hold a second, turn back to the front, rest about
    a second, then the next facing, chosen at random but never the same twice running and leaning toward where its targets are */
 const WBF = { turn: 650, hold: 900, atk: 2600, rest: 1000 };
-function wbFend(key, b, t) { const F = WBF, C = WBR.cy, T2 = F.turn + F.hold, T3 = T2 + F.atk, T4 = T3 + F.hold, T5 = T4 + F.turn;
+function wbFend(key, b, t) { if (key === "aex" && aexdOn(battle)) { if (!b.live) WBR.face = 0; WBR.cy = null; return; } /* v683 the dreadnought turns only to attack (aexdDraw) */ const F = WBF, C = WBR.cy, T2 = F.turn + F.hold, T3 = T2 + F.atk, T4 = T3 + F.hold, T5 = T4 + F.turn;
   if (!b.live) { WBR.cy = null; WBR.face = 0; return; }
   if (!C || t >= C.end) { const tg = b.tg || [], L = tg.filter(v => v < -.04).length, R = tg.filter(v => v > .04).length, last = C ? C.dir : 0;
     const opts = [-1, 0, 1].filter(d => d !== last), w = opts.map(d => d === 0 ? .6 : 1 + (d < 0 ? L : R) / Math.max(1, tg.length)); let r = Math.random() * w.reduce((a, v) => a + v, 0), dir = opts[0]; for (let i = 0; i < opts.length; i++) { r -= w[i]; if (r <= 0) { dir = opts[i]; break; } }
@@ -24507,6 +24508,7 @@ function cineDirect(b, t, T, W, H) { const P = b.lastP; if (!P || !P.length || !
   if (b.intro > 0) { if (!C.o1) { C.o1 = 1; shot(ctr("a"), 1.35, 1400, "open"); } else if (!C.o2) { C.o2 = 1; shot(ctr("d"), 1.35, 1400, "open"); } return; } /* act one: each fleet */
   if (C.n % 3 === 2) { b.focus = { s: 1, x: .5, y: .5, until: t + 2000, cine: "wide" }; C.n++; return; }
   for (const m of b.bmA || []) { const u = (T - m.t0) / BMV_DUR[m.a]; if (u > -.4 && u < .4) { b.focus = { s: 1, x: .5, y: .5, until: t + (m.sig ? 4200 : 2600), cine: "boss" }; C.n++; return; } } /* v681 */
+  { const c = b.aexD && b.aexD.c; if (c && t > c.fireAt - 900 && t < c.fireAt + 600) { b.focus = { s: 1, x: .5, y: .5, until: c.fireAt + c.ms + 300, cine: "boss" }; C.n++; return; } } /* v683 */
   for (const m of b.aexA || []) { const u = (T - m.t0) / AEX_DUR[m.a]; if (u > -.4 && u < .4) { if (m.a === "lance") { if (shot(mid(m.e, m.e) && b.scC ? [(b.scC.x + at(m.e)[0]) / 2, (b.scC.y + at(m.e)[1]) / 2] : null, 1.3, 2600, "aex")) return; } else { b.focus = { s: 1, x: .5, y: .5, until: t + (m.a === "frac" ? 4200 : 2800), cine: "aex" }; C.n++; return; } } } /* v680 */
   for (const m of b.mAtk || []) { const u = (T - m.t0) / MIM_DUR[m.a]; if (u > -.4 && u < .5 && /storm|omega|grab|slam|claw|lance/.test(m.a)) { if (shot(mid(m.s, m.e), m.a === "omegaX" ? 1.12 : 1.55, m.a === "omegaX" ? 3400 : 2300, "mim")) return; } }
   for (const m of (b.beams || []).concat(b.cdQ || [])) { if ((m.wb || m.ti) && m.t0 > T - .3 && m.t0 < T + 1.4) { if (shot(mid(m.s, m.e), 1.5, 2400, "beam")) return; } }
@@ -24530,7 +24532,7 @@ function cineLook(ctx, b, W, H, top, bot, t, lo) { if (lo) return; const T = b.s
 const AEX_DUR = { sweep: 1.6, lance: 1.25, frac: 2.9, missiles: 1.5, broadside: 1.1 };
 function aexAtkAdd(b, v) { const q = b.Q[v.s], e = b.Q[v.e]; if (!q || !e) return;
   if (q.side !== b.superSide) { if (e.side !== b.superSide || !(BIG_R.has(q.role) || q.role === "titan" || q.k === "worldbreaker")) return; const P = b.aexP || (b.aexP = []); if (P.length && v.t - P[P.length - 1].t0 < .45) return; P.push({ s: v.s, t0: v.t + .25, seed: P.length * 5 % 11 }); if (P.length > 10) P.shift(); return; }
-  const A = b.aexA || (b.aexA = []), last = A[A.length - 1]; if (last && v.t - last.t0 < AEX_DUR[last.a] + .7) return;
+  if (aexdOn(b)) return aexdQueue(b, v); /* v683 */ const A = b.aexA || (b.aexA = []), last = A[A.length - 1]; if (last && v.t - last.t0 < AEX_DUR[last.a] + .7) return;
   const end = b.end || 40, fr = A.filter(x => x.a === "frac").length; let a = ["lance", "missiles", "sweep", "broadside"][A.length % 4]; /* v681 */ if (fr < 2 && ((fr === 0 && v.t > end * .3) || (fr === 1 && v.t > end * .7))) a = "frac";
   A.push({ a, t0: v.t, e: v.e, seed: A.length * 7 % 13 }); }
 function aexSfx(kind) { try { if (kind === "lance") { mimSfx("hum", 0); setTimeout(() => { try { SFX.laser(true); SFX.blast(2, 0); } catch (e) {} }, 380); }
@@ -24652,6 +24654,88 @@ function bVoice(b, when) { try { const k = bVoiceKey(b); if (!k || !AWE[k] || !A
 const BMV_ACT = { omg: { tractor: "tractor", wave: "wave", split: "burst" }, aex: { lance: "lance", sweep: "blade", frac: "overdrive", missiles: "missiles", broadside: "broadside" }, khz: { seals: "barrage", crush: "crush", nova: "judge" }, med: { gaze: "gaze", serpents: "lunge", shards: "storm" }, vae: { rain: "wing", halo: "judge", wheel: "seal" } };
 function bossAct(b, a, t) { try { const k = bmvKey(b) || (b.r && b.r.sbk), mv = BMV_ACT[k] && BMV_ACT[k][a]; if (!mv || WBR.key !== k || !WBR.b || !WBR.b.act) return; WBR.b.act(mv); WBR.mv = { m: mv, t0: t }; } catch (e) {} }
 Object.assign(WB_STRIKE, { aex: { missiles: ["bolts", .3, .8, 8, 3000], broadside: ["bolts", .25, .82, 10, 2200] } });
+/* v683 Aexion's dreadnought form: the ship turns slowly, and only to attack. Each attack is one choreographed beat in real time
+   (turn toward the target, fire in step with the model's own animation, hold, turn back, rest), fired from the ship itself:
+   missiles from the launch cells along its spine, a broadside rippling down the hull, the rail from the bow, and its own special,
+   the Sovereign Rail (a charged spinal beam swept across the whole fleet, at most twice a fight, past 30% and 70%) */
+const AEXD = { turn: 1500, hold: 500, rest: 2600 }, AEXD_MS = { missiles: 3000, broadside: 2200, lance: 2600, rail: 4600 }, AEXD_MV = { missiles: "missiles", broadside: "broadside", lance: "rail", rail: "rail" };
+const aexdOn = b => !!(b && b.r && b.r.sbk === "aex" && !b.r.sbForm);
+function aexdQueue(b, v) { const D = b.aexD || (b.aexD = { n: 0, rails: 0, c: null }); if (b.ending || (b.intro || 0) > 0) return; const t = D.now || performance.now(); if (D.c && t < D.c.end) return;
+  const fr = v.t / (b.end || 40); let a; if ((D.rails === 0 && fr > .3) || (D.rails === 1 && fr > .7)) { a = "rail"; D.rails++; } else a = ["missiles", "lance", "broadside"][D.n++ % 3];
+  const ms = AEXD_MS[a]; D.c = { a, e: v.e, t0: t, fireAt: t + 9e9, ms, end: t + 9e9, seed: (D.n * 7 + D.rails * 3) % 13, dir: null, hit: {} }; }
+function aexdSfx(a, ms) { try { if (!SFX.ok()) return; const at = (f, fn) => setTimeout(() => { try { fn(); } catch (e) {} }, ms * f);
+  if (a === "missiles") { for (let j = 0; j < 5; j++) at(.05 + j * .07, () => SFX.laser(false)); at(.5, () => SFX.blast(1.6, 0)); at(.62, () => SFX.blast(1.8, 0)); }
+  else if (a === "broadside") { at(.1, () => SFX.blast(1.8, 0)); at(.14, () => SFX.laser(true)); at(.5, () => SFX.blast(2, 0)); at(.54, () => SFX.laser(true)); }
+  else if (a === "lance") { mimSfx("hum", 0); at(.38, () => { SFX.laser(true); SFX.blast(2.2, 0); }); }
+  else if (a === "rail") { if (SFX.charge) SFX.charge(0); else mimSfx("hum", 0); at(.42, () => { if (SFX.megaBeam) SFX.megaBeam(0); SFX.blast(3, 0); }); at(.6, () => SFX.blast(2.4, 0)); } } catch (e) {} }
+function aexdDraw(ctx, b, scr, T, W, H, d, lo, t) { if (!aexdOn(b) || !b.scC) return; const D = b.aexD || (b.aexD = { n: 0, rails: 0, c: null }), dt = D.lt ? t - D.lt : 0; D.lt = t; D.now = t;
+  const c = D.c, sm = u => u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u), own = WBR.key === "aex";
+  if (c && (b.paused || !b.speed) && dt > 0) { c.t0 += dt; c.fireAt += dt; c.end += dt; } /* a paused replay holds the beat */
+  if (!c || t >= c.end) { if (own) WBR.face = 0; return; }
+  const B = b.wbBox || { cx: b.scC.x, cy: b.scC.y, aw: W * .6, ah: W * .3 }, cx = B.cx, cy = B.cy, col = (SBW.aex && SBW.aex.col) || "#7ac8ff", gl = glowSprite(col), wh = glowSprite("#ffffff");
+  const foes = []; b.Q.forEach((q, i) => { if (q.side !== b.superSide && b.n[i] > 0 && scr[i]) foes.push(i); });
+  let mx = 0, my = 0; for (const i of foes) { mx += scr[i].x; my += scr[i].y; } if (foes.length) { mx /= foes.length; my /= foes.length; } else { mx = W / 2; my = H * .75; }
+  const spine = cy + B.ah * .06, deck = cy + B.ah * .18, out = p => p.y > deck + B.ah * .1 || Math.abs(p.x - cx) > B.aw * .4, far = foes.filter(i => out(scr[i])); /* squadrons tangling with the hull are not targets for the big guns */
+  let fx = 0, fy = 0; for (const i of far) { fx += scr[i].x; fy += scr[i].y; } if (far.length) { fx /= far.length; fy /= far.length; } else { fx = mx; fy = Math.max(my, deck + B.ah * .3); }
+  const E = c.a !== "rail" && scr[c.e] && b.n[c.e] > 0 && out(scr[c.e]) ? scr[c.e] : c.a !== "rail" && far.length ? scr[far[c.seed % far.length]] : { x: fx, y: fy };
+  if (c.dir == null) { const dx = E.x - cx; c.dir = Math.abs(dx) < W * .06 ? 0 : Math.sign(dx); c.tn = c.dir ? AEXD.turn : 500; c.fireAt = c.t0 + c.tn; c.end = c.fireAt + c.ms + AEXD.hold + c.tn + AEXD.rest + (c.a === "rail" ? 1500 : 0); } /* no side to turn to: a short settle, not a turn */
+  const e = t - c.t0, tOut = c.tn + c.ms + AEXD.hold, f = e < c.tn ? sm(e / c.tn) : e < tOut ? 1 : 1 - sm((e - tOut) / c.tn);
+  if (own) WBR.face = -c.dir * f; /* the model's bow points the other way to the face sign */ /* the turn is slow and only comes with an attack */
+  if (!c.fired && t >= c.fireAt) { c.fired = 1; try { if (own && WBR.b && WBR.b.act) { WBR.b.act(AEXD_MV[c.a]); WBR.mv = { m: AEXD_MV[c.a], t0: t }; } } catch (e2) {} aexdSfx(c.a, c.ms); if (c.a === "rail") try { bVoice(b, "sig"); } catch (e2) {} }
+  const u = (t - c.fireAt) / c.ms; if (u < -.25 || u > 1.05) return; const n = foes.length, tgt = j => n ? scr[foes[(j * 5 + c.seed) % n]] : { x: mx, y: my };
+  const mo = WBR.mouth && own ? { x: cx + (WBR.mouth.u - .5) * B.aw, y: cy + (WBR.mouth.v - .5) * B.ah } : { x: cx, y: cy + B.ah * .22 }, bow = c.dir ? { x: cx + c.dir * B.aw * .3, y: deck } : mo, glow = (x, y, r, g, a) => { ctx.globalAlpha = a; ctx.drawImage(g, x - r, y - r, r * 2, r * 2); };
+  const boom = (k, x, y, s, snd) => { if (c.hit[k]) return; c.hit[k] = 1; aexBoom(b, x, y, t, s, snd); };
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
+  if (c.a === "missiles") { const N = lo ? 6 : 10;
+    if (u < .08) for (let j = 0; j < N; j++) glow(cx + (j / (N - 1) - .5) * B.aw * .34, spine, 7 * d, gl, .4 + .6 * Math.max(0, u + .25) / .33); /* the launch cells open */
+    for (let j = 0; j < N; j++) { const lj = .04 + j * .035, v = (u - lj) / .42; if (v < 0) continue; const P0 = { x: cx + (j / (N - 1) - .5) * B.aw * .34, y: spine }, P2 = tgt(j), C1 = { x: P0.x + (P2.x - P0.x) * .15 + (j % 2 ? 1 : -1) * W * .05, y: Math.min(P0.y, P2.y) - H * .14 };
+      const at = q => ({ x: (1 - q) * (1 - q) * P0.x + 2 * (1 - q) * q * C1.x + q * q * P2.x, y: (1 - q) * (1 - q) * P0.y + 2 * (1 - q) * q * C1.y + q * q * P2.y });
+      if (v < .1) glow(P0.x, P0.y, 16 * d * (1 - v * 8), wh, .9);
+      if (v < 1) { const p = at(v); ctx.strokeStyle = col; for (let s2 = 0; s2 < 6; s2++) { const qa = Math.max(0, v - (s2 + 1) * .035), qb = Math.max(0, v - s2 * .035), A1 = at(qa), A2 = at(qb); ctx.globalAlpha = .55 * (1 - s2 / 6); ctx.lineWidth = (4 - s2 * .5) * d; ctx.beginPath(); ctx.moveTo(A1.x, A1.y); ctx.lineTo(A2.x, A2.y); ctx.stroke(); }
+        glow(p.x, p.y, 10 * d, gl, .9); glow(p.x, p.y, 4 * d, wh, 1); }
+      else boom("m" + j, P2.x, P2.y, 1.1, j % 3 === 0); } }
+  else if (c.a === "broadside") { const N = lo ? 5 : 8;
+    if (u > 0 && u < .85) { ctx.globalAlpha = .35 * Math.sin(Math.PI * u / .85); ctx.strokeStyle = col; ctx.lineWidth = 3 * d; ctx.beginPath(); ctx.moveTo(cx - B.aw * .3, deck); ctx.lineTo(cx + B.aw * .3, deck); ctx.stroke(); } /* the gun deck lights */
+    for (const [si, s0] of [[0, .1], [1, .5]]) for (let j = 0; j < N; j++) { const g = c.dir < 0 ? N - 1 - j : j, gx = cx + (g / (N - 1) - .5) * B.aw * .58, gy = deck, f0 = s0 + j * .025, v = (u - f0) / .16; if (v < 0) continue;
+      if (v < .35) { glow(gx, gy, 20 * d * (1 - v), gl, .9); glow(gx, gy, 8 * d, wh, 1 - v * 2); }
+      const P = tgt(j * 3 + si * 5); if (v < 1) { const x = gx + (P.x - gx) * v, y = gy + (P.y - gy) * v, bx = gx + (P.x - gx) * Math.max(0, v - .16), by = gy + (P.y - gy) * Math.max(0, v - .16);
+        for (const [lw, a2, cc] of [[12, .3, col], [4, .9, "#ffffff"]]) { ctx.globalAlpha = a2; ctx.strokeStyle = cc; ctx.lineWidth = lw * d; ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(x, y); ctx.stroke(); } }
+      else boom("b" + si + "_" + j, P.x, P.y, .9, j % 4 === 0); } }
+  else if (c.a === "lance") { const dx = E.x - bow.x, dy = E.y - bow.y, dl = Math.hypot(dx, dy) || 1, ux = dx / dl, uy = dy / dl, far = Math.hypot(W, H) * 1.3;
+    if (u < .38) { const k = Math.max(0, (u + .25) / .63), r = B.aw * (.02 + .06 * k); glow(bow.x, bow.y, r * 2, gl, .5 + .5 * k); glow(bow.x, bow.y, r * .5, wh, k); ctx.strokeStyle = col; ctx.lineWidth = 2 * d;
+      for (let j = 0; j < 7; j++) { const a = j * .9 + t * .005, R = r * (3.4 - k * 2.4); ctx.globalAlpha = .8 * k; ctx.beginPath(); ctx.moveTo(bow.x + Math.cos(a) * R, bow.y + Math.sin(a) * R); ctx.lineTo(bow.x + Math.cos(a) * R * .55, bow.y + Math.sin(a) * R * .55); ctx.stroke(); } }
+    else { const k = (u - .38) / .62, ex = bow.x + ux * far, ey = bow.y + uy * far, wd = (k < .38 ? 18 : 18 * (1 - (k - .38) / .62)) * d;
+      if (!c.fired2) { c.fired2 = 1; b.shake = Math.max(b.shake || 0, 10 * d); b.flash = Math.max(b.flash || 0, .22); b.slowUntil = Math.max(b.slowUntil || 0, t + 220); for (const i of foes) { const p = scr[i], q2 = (p.x - bow.x) * ux + (p.y - bow.y) * uy, off = Math.abs((p.x - bow.x) * uy - (p.y - bow.y) * ux); if (q2 > 0 && off < W * .06) aexBoom(b, p.x, p.y, t + 80 + q2 * .2, 1.5, off < W * .025); } }
+      if (k < .12) glow(bow.x, bow.y, B.aw * .1 * (1 - k / .12), wh, 1);
+      for (const [lw, a2, cc] of [[2.4, .3, col], [1, .7, col], [.35, 1, "#ffffff"]]) { ctx.globalAlpha = a2 * (k < .38 ? 1 : 1 - (k - .38) / .62); ctx.strokeStyle = cc; ctx.lineWidth = Math.max(.5, wd * lw); ctx.beginPath(); ctx.moveTo(bow.x, bow.y); ctx.lineTo(ex, ey); ctx.stroke(); } } }
+  else if (c.a === "rail") { /* the Sovereign Rail */ const ch = .42, dim = u < 0 ? 0 : u < ch ? u / ch : u < .8 ? 1 : 1 - (u - .8) / .2;
+    ctx.save(); ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = .4 * dim; ctx.fillStyle = "rgb(10,16,26)"; ctx.fillRect(-W, -H, W * 3, H * 3); ctx.restore();
+    let a0 = Infinity, a1 = -Infinity, R = 0; for (const i of (far.length ? far : foes)) { const p = scr[i], a = Math.atan2(p.y - bow.y, p.x - bow.x); a0 = Math.min(a0, a); a1 = Math.max(a1, a); R = Math.max(R, Math.hypot(p.x - bow.x, p.y - bow.y)); } if (!foes.length) { a0 = 1.2; a1 = 1.9; R = H * .6; }
+    const mid = (a0 + a1) / 2, spr = Math.min(.9, Math.max(.25, a1 - a0 + .2)), s0 = mid - spr / 2 * (c.seed % 2 ? 1 : -1), s1 = mid + spr / 2 * (c.seed % 2 ? 1 : -1); R = Math.max(R * 1.3, Math.hypot(W, H));
+    if (u < ch) { const k = Math.max(0, (u + .25) / (ch + .25)); /* the hull drains into the bow */
+      for (let j = 0; j < 6; j++) { const hx = cx + (j / 5 - .5) * B.aw * .6, hy = (j % 2 ? spine : deck), q = ((t * .0016 + j / 6) % 1); ctx.globalAlpha = .7 * k; ctx.strokeStyle = col; ctx.lineWidth = 2 * d; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(bow.x, bow.y); ctx.stroke(); glow(hx + (bow.x - hx) * q, hy + (bow.y - hy) * q, 6 * d, wh, k); }
+      const r = B.aw * (.03 + .09 * k); glow(bow.x, bow.y, r * 2, gl, .6 + .4 * k); glow(bow.x, bow.y, r * .55, wh, .4 + .6 * k);
+      ctx.strokeStyle = col; ctx.lineWidth = 2.5 * d; for (let j = 0; j < 3; j++) { const q = (k * 2.2 + j / 3) % 1, rr = r * (3.4 - q * 2.8); ctx.globalAlpha = .7 * q; ctx.beginPath(); ctx.ellipse(bow.x, bow.y, rr, rr * .75, 0, 0, TAU); ctx.stroke(); }
+      ctx.globalAlpha = .45 * k; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1.5 * d; ctx.setLineDash([6 * d, 10 * d]); ctx.beginPath(); ctx.moveTo(bow.x, bow.y); ctx.lineTo(bow.x + Math.cos(s0) * R, bow.y + Math.sin(s0) * R); ctx.stroke(); ctx.setLineDash([]); /* the aim line */ }
+    else if (u <= 1) { const k = clamp((u - ch) / (.8 - ch), 0, 1), ease = 1 - Math.pow(1 - k, 2), a = s0 + (s1 - s0) * ease, fade = u < .8 ? 1 : 1 - (u - .8) / .2, wd = 64 * d * (1 - k * .45) * fade;
+      if (!c.fired2) { c.fired2 = 1; b.flash = Math.max(b.flash || 0, .7); b.shake = Math.max(b.shake || 0, 24 * d); b.slowUntil = Math.max(b.slowUntil || 0, t + 700); }
+      const ex = bow.x + Math.cos(a) * R, ey = bow.y + Math.sin(a) * R;
+      for (const [lw, a2, cc] of [[1.8, .25, col], [1, .55, col], [.42, .9, "#eaf8ff"], [.16, 1, "#ffffff"]]) { ctx.globalAlpha = a2 * fade; ctx.strokeStyle = cc; ctx.lineWidth = Math.max(1, wd * lw); ctx.beginPath(); ctx.moveTo(bow.x, bow.y); ctx.lineTo(ex, ey); ctx.stroke(); }
+      glow(bow.x, bow.y, B.aw * .14 * fade, gl, .8); glow(bow.x, bow.y, B.aw * .045 * fade, wh, 1);
+      for (const i of foes) { const p = scr[i], ap = Math.atan2(p.y - bow.y, p.x - bow.x), past = s1 > s0 ? ap <= a + .04 : ap >= a - .04; if (past && Math.abs(ap - mid) < spr) boom("r" + i, p.x, p.y, 2.2, Object.keys(c.hit).length % 3 === 0); }
+      if (u > .8) { const q = (u - .8) / .2, rr = Math.hypot(W, H) * q; ctx.globalAlpha = (1 - q) * .6; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 6 * d * (1 - q); ctx.beginPath(); ctx.arc(bow.x, bow.y, rr, 0, TAU); ctx.stroke(); } }
+    const ta = u < -.1 ? 0 : u < .05 ? (u + .1) / .15 : u < .7 ? 1 : Math.max(0, 1 - (u - .7) / .2); /* the callout */
+    if (ta > 0) { ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = ta; ctx.textAlign = "center"; ctx.font = `italic 800 ${20 * d}px Oxanium, sans-serif`; ctx.fillStyle = "#e8f8ff"; ctx.shadowColor = col; ctx.shadowBlur = 18 * d; ctx.fillText("SOVEREIGN RAIL", W / 2, H * .17); ctx.font = `600 ${10 * d}px Oxanium, sans-serif`; ctx.shadowBlur = 0; ctx.fillStyle = "#9fd8ff"; ctx.fillText("AEXION'S SPINAL CANNON", W / 2, H * .17 + 18 * d); ctx.textAlign = "left"; } }
+  ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over"; }
+/* v683 a boss raises its shield again (the sim's v8 shield pulse): a hex bubble flashes round it */
+function bShDraw(ctx, b, W, H, d, T, t) { if (b.superSide == null || !b.scC || !b.R || !b.R.frames) return; let sh = 0, n = 0; b.Q.forEach((q, i) => { if (q.side === b.superSide && q.shPer > 0 && b.n[i] > 0) { sh += bPos(b, i, T).sh || 0; n++; } }); if (!n) return; sh /= n;
+  if (b.bShL != null && sh - b.bShL > .2 && T > .5) { b.bSh = { t0: t }; try { mimSfx("hum", 0); } catch (e) {} } b.bShL = sh; const S = b.bSh; if (!S) return; const u = (t - S.t0) / 1700; if (u < 0 || u > 1) return;
+  const B = b.wbBox || { cx: b.scC.x, cy: b.scC.y, aw: W * .6, ah: W * .3 }, rx = B.aw * .5, ry = Math.max(B.ah * .55, rx * .45), col = b.r.sbk && SBW[b.r.sbk] ? SBW[b.r.sbk].col : b.r.wb && WB[b.r.wb] ? WB[b.r.wb].col : "#5dff7a", env = u < .15 ? u / .15 : 1 - (u - .15) / .85;
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; const s = u < .3 ? .7 + .3 * (u / .3) : 1;
+  ctx.beginPath(); ctx.ellipse(B.cx, B.cy, rx * s, ry * s, 0, 0, TAU); ctx.save(); ctx.clip(); const g = ctx.createRadialGradient(B.cx, B.cy, 0, B.cx, B.cy, rx * s); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(.75, col); g.addColorStop(1, "#ffffff"); ctx.globalAlpha = .22 * env; ctx.fillStyle = g; ctx.fillRect(B.cx - rx, B.cy - ry, rx * 2, ry * 2);
+  const hs = 15 * d, sw = u * rx * 2.4; ctx.strokeStyle = col; ctx.lineWidth = 1.4 * d; for (let y = B.cy - ry, r = 0; y < B.cy + ry + hs; y += hs * .87, r++) for (let x = B.cx - rx + (r % 2) * hs * .75; x < B.cx + rx + hs; x += hs * 1.5) { const dd = Math.hypot((x - B.cx) / rx, (y - B.cy) / ry), on = Math.abs(dd * rx - sw * .5) < rx * .35 ? 1 : .25; ctx.globalAlpha = env * .55 * on * dd; ctx.beginPath(); for (let k = 0; k <= 6; k++) { const a = k * Math.PI / 3; ctx[k ? "lineTo" : "moveTo"](x + Math.cos(a) * hs * .48, y + Math.sin(a) * hs * .48); } ctx.stroke(); }
+  ctx.restore(); ctx.globalAlpha = .85 * env; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2.5 * d; ctx.beginPath(); ctx.ellipse(B.cx, B.cy, rx * s, ry * s, 0, 0, TAU); ctx.stroke(); ctx.globalAlpha = .5 * env; ctx.strokeStyle = col; ctx.lineWidth = 8 * d; ctx.stroke();
+  ctx.restore(); ctx.globalAlpha = 1; }
 function spawnVolley(b, v) { fx589Spawn(b, v); /* v589 */ try { if (MIM_ATK[(b.Q[v.s] || {}).k]) mimAtkAdd(b, v); } catch (e) {} /* v676 */ try { if (b.r && b.r.sbk === "aex") aexAtkAdd(b, v); } catch (e) {} /* v680 */ try { bmvAdd(b, v); } catch (e) {} /* v681 */
   if ((v.ab || (b.Q[v.s] && TITAN_LEN[b.Q[v.s].k])) && titanFx(b, v)) return; /* v556, v559 */
   const lo = b.lowFx, cap = PERF.battleCap, wk = v.wk, many = v.n + v.ic, mis = wk === "missile" || wk === "torpedo", q = b.Q[v.s], side = q.side, sz = q.sz != null ? q.sz : (q.sz = szOf(q));
@@ -25292,7 +25376,7 @@ function drawBattle(t) {
     for (let i = 0; i < s.n; i++) { const o = (i - (s.n - 1) / 2) * 5 * d + Math.sin(i * 12.9 + s.t0) * 2 * d, x0 = sx + nx * o + ux * 6 * d, y0 = sy + ny * o, x1 = x0 + ux * reach, y1 = y0 + uy * reach;
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.strokeStyle = col; ctx.globalAlpha = al * .22 * dim; ctx.lineWidth = w * 7; ctx.stroke(); ctx.globalAlpha = al * .85 * dim; ctx.lineWidth = w * 2.3; ctx.stroke(); ctx.strokeStyle = "#fff"; ctx.globalAlpha = al * dim; ctx.lineWidth = w * .9; ctx.stroke(); }
     const mr = (8 + s.w * 5) * d * al; ctx.globalAlpha = al; ctx.drawImage(glowSprite(col), sx - mr, sy - mr, mr * 2, mr * 2); }
-  try { wbStrike(ctx, b, scr, Q, W, H, t, d, lo); } catch (e) {} try { mimAtkDraw(ctx, b, scr, T, W, d, lo, t, H); } catch (e) {} /* v676, v677 */ try { aexDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v680 */ try { bmvDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v681 */ // v407 the boss's attack across the whole field
+  try { wbStrike(ctx, b, scr, Q, W, H, t, d, lo); } catch (e) {} try { mimAtkDraw(ctx, b, scr, T, W, d, lo, t, H); } catch (e) {} /* v676, v677 */ try { aexDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v680 */ try { aexdDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} try { bShDraw(ctx, b, W, H, d, T, t); } catch (e) {} /* v683 */ try { bmvDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v681 */ // v407 the boss's attack across the whole field
   // mega beams from stations, titans and beam batteries: a charge-up glow, then a roaring column with a blinding impact
   if (!b.cdQ) b.cdQ = cdPlan(b); while (b.cdQ.length && b.cdQ[0].t0 - 2.4 <= T) b.beams.push(b.cdQ.shift()); // v418 a staged shot joins 2.4 s ahead, so the station can turn onto it
   b.beams = b.beams.filter(m => T - m.t0 <= m.charge + m.life + (m.wb ? 3 : 0)); // v410: the Cube Destroyer's splash outlives its beam
