@@ -1041,6 +1041,10 @@ canvas.dthumb{display:block}
 .dvart{height:min(46vw,240px);flex-shrink:0}.dvtl{list-style:none;padding:0;margin:6px 0 10px;display:grid;gap:4px;counter-reset:dv}.dvtl li{display:grid;grid-template-columns:1fr auto;gap:0 8px;padding:7px 10px;border-radius:10px;background:rgba(255,255,255,.03);border-left:3px solid rgba(93,255,106,.25)}.dvtl li span{grid-column:1/3;opacity:.72;font-size:12px}.dvtl li small{opacity:.75;font-size:11px;white-space:nowrap}.dvtl li.done{opacity:.55;border-left-color:rgba(93,255,106,.5)}.dvtl li.now{background:rgba(93,255,106,.1);border-left-color:#5dff6a}.dvtl li.now small{color:#5dff6a;opacity:1}.omb.soon{opacity:.92}
 /* v571 The Ten Seals */
 .omb.fin{border-color:var(--fc);background:rgba(26,10,4,.92);color:#ffe8d6;box-shadow:0 0 18px color-mix(in srgb,var(--fc) 45%,transparent)}.omb.fin b{color:var(--fc);white-space:nowrap}
+.nxcall{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;margin:8px 0;border:1px solid rgba(201,166,255,.45);border-radius:12px;background:rgba(40,20,70,.45);color:#e8dcff}
+.nxcall span{flex:1 1 220px;min-width:0;font-size:13px;line-height:1.4}
+.nxcall.on{border-color:#c9a6ff;box-shadow:0 0 14px rgba(201,166,255,.35)}
+.nxcall.on b{display:block;color:#c9a6ff;letter-spacing:.06em;width:100%}
 .omb.fin span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .dvtl.fin li{border-left-color:color-mix(in srgb,var(--fc) 30%,transparent)}.dvtl.fin li.done{border-left-color:color-mix(in srgb,var(--fc) 55%,transparent)}.dvtl.fin li.now{background:color-mix(in srgb,var(--fc) 14%,transparent);border-left-color:var(--fc)}.dvtl.fin li.now small{color:var(--fc)}
 .finled{list-style:none;padding:0;margin:6px 0 12px;display:grid;gap:3px}.finled li{display:flex;justify-content:space-between;gap:8px;padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.03);font-size:13px}.finled li b{white-space:nowrap}.finled li.held b{color:#7dff9a}.finled li.cracked b{color:#ff6a5a}.finled li.live b{color:#ffd36b}.finled li.soon{opacity:.6}
@@ -6191,7 +6195,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 685;
+const GAME_V = 686;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -7916,7 +7920,9 @@ function riseFight(mkA, mkD, frac, worn, t0) { let { F, x } = wbRiseK(mkA(), mkD
   return { res: best.res, rise: best.F }; }
 const cubeHW = o => Object.entries(o || {}).reduce((a, [k, n]) => a + Math.max(0, +n || 0) * ((AL[k] && AL[k].hull) || (SH[k] && SH[k].hull) || 1), 0); /* v685 hull, not head count */
 const cubeKilled = res => { const s0 = cubeHW(res.start.d), s1 = cubeHW(res.dLeft); return s0 ? 1 - s1 / s0 : 1; };
-function cubeFight(A0, cur) { const D = nexusDefense(cur); if (!D.alien) return { D, res: simulate(A0(), D.stacks), rise: 1 }; const { res, rise } = riseFight(A0, () => nexusDefense(cur).stacks, cubeKilled, cubeIntegrity(cur) <= CUBE_BREAK, .5); return { D, res, rise }; }
+function cubeFight(A0, cur) { const D = nexusDefense(cur); if (!D.alien) return { D, res: simulate(A0(), D.stacks), rise: 1 }; const won = r => r.winner === "a", frac = r => won(r) ? 1 : Math.min(.9, cubeKilled(r));
+  let { res, rise } = riseFight(A0, () => nexusDefense(cur).stacks, frac, cubeIntegrity(cur) <= CUBE_BREAK, .99); /* v686 it rises only as far as this fleet can still destroy it */
+  if (!won(res) && rise > 1) { const r1 = simulate(A0(), nexusDefense(cur).stacks); if (won(r1)) { res = r1; rise = 1; } } return { D, res, rise }; }
 /* a fight against a boss that rises to meet the fleet: above the threshold one attack destroys a set share of its full hull, 30% at the
    threshold rising to 60% for the very largest fleets; when a fight overshoots, the boss is made tougher and it is fought again
    (only hull and attack: a shot too weak for a shield is deflected, so scaled shields would make a big fleet harmless) */
@@ -9143,9 +9149,10 @@ function omBand() { const T = now(), b = $("#omband"), live = dvNow(T), nx = dvN
   if (view === "galaxy" && !sheet && !battle && !G.sbSim && !cineOn) { if (live) { const e = live.e; if (e >= DV.fight0) { const st = omState(live.s0); if (omOn(T)) html = `<button class="omb" data-act="omOpen"><b>Ω OMEGA CUBE</b><span>${st.hp}/${OM_SEG}</span><i>⚔ Attack</i></button>`; }
       else html = `<button class="omb" data-act="omOpen"><b>Ω CUBE DEVASTATION</b><span>${esc(DVS[dvStage(e)][2])}</span></button>`; }
     else if (nx - T < 72 * 3600e3) { annOnce("dv", nx, DV_SOON); } if (!live && nx - T < 72 * 3600e3) html = `<button class="omb soon" data-act="omOpen"><b>Ω CUBE DEVASTATION</b><span>in ${ftime(nx - T)}</span></button>`; }
+  if (!html && view === "galaxy" && !sheet && !battle && !G.sbSim && !cineOn) html = nxCallBand(T); /* v686 */
   if (!html && view === "galaxy" && !sheet && !battle && !G.sbSim && !cineOn) html = finBand(T); /* v571 */
   if (!html && view === "galaxy" && !sheet && !battle && !G.sbSim && !cineOn) html = mimBand(T); /* v663 */
-  { let hb = ""; if (view === "base" && !battle) { hb = omenBand(T) + d1Band(T) + mimBand(T) + wheelBand(); } else if (view === "galaxy" && !battle && !cineOn) hb = cubeHB(T); /* v593 */ if ((G.hb || "") !== hb) { G.hb = hb; try { hud(); } catch (e) {} } } /* v587 on the planet: in the HUD strip */
+  { let hb = ""; if (view === "base" && !battle) { hb = nxCallBand(T) + omenBand(T) + d1Band(T) + mimBand(T) + wheelBand(); } else if (view === "galaxy" && !battle && !cineOn) hb = cubeHB(T); /* v593 */ if ((G.hb || "") !== hb) { G.hb = hb; try { hud(); } catch (e) {} } } /* v587 on the planet: in the HUD strip */
   if (!html) { if (b) b.remove(); return; } if (!b) { const A = $("#app"); if (!A) return; const el = document.createElement("div"); el.id = "omband"; el.innerHTML = html; A.appendChild(el); } else if (b.dataset.h !== html) { b.dataset.h = html; b.innerHTML = html; } }
 setInterval(() => { try { omBand(); omClaim(); } catch (e) {} }, 1000);
 /* the owner's preview: the whole event (awakening, migration, assembly, eruption, a turn of the finished Omega, and its break-up) in
@@ -11215,7 +11222,8 @@ function cleanNexus(d) {
   if (d.garrison && typeof d.garrison === "object") for (const u in d.garrison) { const s = cleanShips(d.garrison[u]); if (Object.keys(s).length) garrison[u] = s; }
   if (d.points && typeof d.points === "object") for (const a in d.points) points[a] = Math.max(0, +d.points[a] || 0);
   const ret = {}; if (d.ret && typeof d.ret === "object") for (const u in d.ret) { const x = d.ret[u]; if (x && typeof x === "object") { const n = cleanShips(x.n); if (Object.keys(n).length) ret[u] = { n, at: +x.at || 0 }; } }
-  return { week: Math.floor(+d.week || 0), holder: typeof d.holder === "string" ? d.holder : null, since: +d.since || 0, garrison, points, wd: clamp(+d.wd || 0, 0, .8), ret }; // v117: ret = routed garrisons flying home
+  const call = d.call && typeof d.call === "object" && typeof d.call.aly === "string" ? { by: String(d.call.by || ""), aly: d.call.aly, at: +d.call.at || 0, until: +d.call.until || 0 } : null; /* v686 */
+  return { week: Math.floor(+d.week || 0), holder: typeof d.holder === "string" ? d.holder : null, since: +d.since || 0, garrison, points, wd: clamp(+d.wd || 0, 0, .8), ret, call }; // v117: ret = routed garrisons flying home
 }
 /* v117 Battle for the Cube, after Game of War's kingdom battles. The Warden fights at CUBE_EASE strength (easier to take). When an
    alliance breaks the holders, every losing member's survivors plus 35% of their losses (the wounded) are routed home together:
@@ -11344,6 +11352,9 @@ function cleanGlory(d) {
   const returns = {}; if (d.returns && typeof d.returns === "object") for (const u in d.returns) returns[u] = cleanShips(d.returns[u]);
   return { week: Math.floor(+d.week || 0), ranks, returns };
 }
+const NX_CALL = 20 * 60e3, NX_WARP = 120e3; /* v686 the holders' call for reinforcements: 20 minutes; ships warp in within 2 minutes from anywhere, no fuel */
+const nxCallOn = (T = now()) => { const cur = nexusNow(T), c = cur.call; return c && S && S.ally && c.aly === S.ally && cur.holder === S.ally && T < c.until && evActive(T) && myAlly() ? c : null; };
+function nxCallBand(T) { const c = nxCallOn(T); if (!c) return ""; const by = c.by === G.me ? "You" : nameOf(c.by); return `<button class="omb fin" style="--fc:#c9a6ff" data-act="nxAnswer"><b>📣 THE CUBE CALLS</b><span>${esc(by)} · ${ftime(c.until - T)} left</span><i>🛡 Reinforce</i></button>`; }
 function nexusNow(T = now()) { const w = evWeek(T), d = G.nexus; return d && d.week === w ? d : { week: w, holder: null, since: 0, garrison: {}, points: {} }; }
 function nexusStandings(T = now()) {
   const cur = nexusNow(T), pts = Object.assign({}, cur.points);
@@ -20619,8 +20630,9 @@ function shNexus() {
     const open = Object.values(G.assaults || {}).filter(x => x.pid === "nexus" && x.ally === S.ally && !x.disb && x.status !== "done" && (x.rally ? x.launch : x.arrive) > T);
     body = `${open.length ? `<h2 class="sec">Open strikes on the Cube</h2><div class="list">${open.map(rallyRow).join("")}</div>` : ""}
       <h2 class="sec">${hold && md === "solo" ? "Station ships" : md === "rally" ? "Start a joint strike" : md === "joint" ? "Open a joint strike" : "Assault fleet"}</h2>${modes}${originBar()}${picker(avail)}${speedBar(NEXUS, sel)}${how}
+      ${hold ? (() => { const c = nxCallOn(T); return c ? `<div class="nxcall on"><b>📣 Reinforcements called</b><span>${esc(c.by === G.me ? "You" : nameOf(c.by))} called the alliance. Until the call ends (<b data-end="${c.until}">${ftime(c.until - T)}</b>), every member’s ships warp into the garrison in ${Math.round(NX_WARP / 60e3)} minutes from anywhere, with no fuel.</span></div>` : `<div class="nxcall"><span>Call every member of ${esc(allyTag(S.ally))} to the Cube: for ${Math.round(NX_CALL / 60e3)} minutes their ships warp straight into the garrison, wherever they are.</span><button class="btn amber" data-act="nxCall">📣 Call reinforcements</button></div>`; })() : ""}
       ${hold && md === "solo" ? `<p class="note">Your alliance holds the Cube. Send more ships any time to reinforce its garrison. If another alliance breaks it, every member's survivors and wounded fly home together; otherwise they come home when the battle ends.</p>` : hold ? `<p class="note">Your alliance holds the Cube: this joint strike reinforces its garrison.</p>` : `${oddsBlock(o)}`}
-      <button class="btn wide${md !== "solo" ? " amber" : ""}" data-act="nexusGo" ${Object.keys(sel).length ? "" : "disabled"}>${md === "rally" ? `⚔ Start the joint strike · launches in ${mins} min` : md === "joint" ? `⚔ Open the joint strike · ${mins} min muster` : hold ? "🛡 Reinforce the Cube" : "Launch assault"}</button>`;
+      <button class="btn wide${md !== "solo" ? " amber" : ""}" data-act="nexusGo" ${Object.keys(sel).length ? "" : "disabled"}>${md === "rally" ? `⚔ Start the joint strike · launches in ${mins} min` : md === "joint" ? `⚔ Open the joint strike · ${mins} min muster` : hold ? (nxCallOn(T) && md === "solo" ? `🛡 Warp in · arrives in ${Math.round(NX_WARP / 60e3)} min` : "🛡 Reinforce the Cube") : "Launch assault"}</button>`;
   }
   return `<div class="hd"><div><div class="chapter" style="color:#c9a6ff">Weekly event · Battle for the Cube</div><h2>The Cube</h2><p class="note">${live ? `Live now · ends in <b data-end="${end}">${ftime(end - T)}</b>` : `Closed · next battle in <b data-end="${next}">${ftime(next - T)}</b>`}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
     <p class="note">The Collective's colossal Cube, glowing green inside the gravity well. Every alliance fights to seize it and stations fleets to hold it. Whoever holds it when the timer runs out is crowned <b>${GLORY_T[15]}</b> (+15% production and +10% fleet damage for a week, ◆150 and an Epic gift for every member). Second and third place go by hold time (+10% and +5% production).</p>
@@ -26635,7 +26647,7 @@ const pushCard = () => { if (G.mode !== "online") return ""; const on = pushOn()
     : `<p>Get a buzz when a build finishes, a fleet lands, a boss rises or someone attacks you, even with the game closed.</p><button class="btn amber" data-act="pushOn">Turn on notifications</button>`}</div>`; };
 function sendFleet(p, n, mission, extra) {
   const h = originPlanet(); if (!h) return null;
-  const pct = spdPct(), fuel = fuelFor(h, p, n, pct);
+  const pct = spdPct(), fuel = extra && extra.warp ? 0 : fuelFor(h, p, n, pct); /* v686 a warp to the Cube burns no fuel */
   if (h.kind !== "home") {
     settle(h); if (h.st.g < fuel && tutOn()) { const add = Math.ceil(fuel - h.st.g) + 50; h.st.g += add; note(`Academy supplies: +${fmt(add)} gas at ${h.name} for this flight.`, "win"); } // v327
     if (h.st.g < fuel) { toast(`${h.name} needs ${fmt(fuel)} gas for this flight and has ${fmt(h.st.g)}. Fly slower or send gas there.`, "warn"); return null; }
@@ -26978,10 +26990,18 @@ const ACT = {
     if (md === "joint") { const T0 = now(), jt = mins * 60000, tt0 = travelMs(originPlanet(), NEXUS, n, S.r, spdPct()), arrive = T0 + Math.max(jt, tt0);
       const f = sendFleet(NEXUS, n, "nexusAtk", { arrive, tt: arrive - T0, muster: jt }); if (!f) return; openJoint(f, NEXUS); closeSheet();
       toast(`Joint strike on the Cube opened. Alliance fleets that arrive in time strike with you in ${ftime(f.arrive - now())}.`, "win"); return; }
-    const f = sendFleet(NEXUS, n, nexusNow().holder === S.ally ? "nexusHold" : "nexusAtk"); if (!f) return;
+    const wc = nexusNow().holder === S.ally && nxCallOn(), f = sendFleet(NEXUS, n, nexusNow().holder === S.ally ? "nexusHold" : "nexusAtk", wc ? { arrive: now() + NX_WARP, tt: NX_WARP, warp: 1 } : undefined); if (!f) return; /* v686 answering the call: a warp */
     closeSheet(); toast(`Fleet bound for the Cube. Arrives in ${ftime(f.tt)}, burned ${fmt(f.fuel)} gas.`);
   }),
   nxMode: d => { if (sheet) { sheet.nxMode = d.v; sheet.oddsKey = null; renderSheet(); } },
+  nxAnswer: () => { openSheet({ type: "nexus" }); if (sheet) { sheet.nxMode = "solo"; renderSheet(); } }, /* v686 */
+  nxCall: async () => { if (G.mode !== "online" || !G.db || !myAlly()) return toast("Calling the alliance needs the shared galaxy.", "warn"); const T = now(); if (!evActive(T) || nexusNow(T).holder !== S.ally) return toast("Only the alliance holding the Cube can call for reinforcements.", "warn"); if (nxCallOn(T)) return toast("The call is already out.", "warn");
+    try { const ref = G.db.doc("event/nexus"); for (let i = 0; i < 8; i++) { const r = await ref.acquire({ holder: G.me, ttlMs: 15000 }); if (r.acquired) break; await sleep(1500); }
+      const snap = await ref.get(), w = evWeek(T); const cur = snap.exists ? cleanNexus(snap.data()) : null; if (!cur || cur.week !== w || cur.holder !== S.ally) return toast("Your alliance no longer holds the Cube.", "warn");
+      if (cur.call && cur.call.aly === S.ally && T < cur.call.until) { G.nexus = cur; renderSheet(); return toast("The call is already out.", "warn"); }
+      cur.call = { by: G.me, aly: S.ally, at: T, until: T + NX_CALL }; await ref.set(cur); G.nexus = cur;
+      try { await chatPost("a", null, { u: G.me, x: `📣 Reinforcements to the Cube! For the next ${Math.round(NX_CALL / 60e3)} minutes, send ships from the Cube's page: they warp into our garrison in ${Math.round(NX_WARP / 60e3)} minutes from anywhere, no fuel.`, t: T }, true); } catch (e) {}
+      toast("The alliance has been called. For 20 minutes every member can warp ships into the Cube.", "win"); renderSheet(); } catch (e) { toast("The call didn't go out. Try again.", "warn"); } },
   // v139 emblems: picked while founding (the form keeps what you typed), or changed later by the leader
   crestPick: d => { G.crestPick = clamp(+d.n || 1, 1, CREST_N); document.querySelectorAll('.crestpk [data-act="crestPick"]').forEach(b => b.classList.toggle("on", +b.dataset.n === G.crestPick)); },
   alPg: d => { sub.alP = d.v || ""; sub.depU = null; G.crestOpen = false; render(true); try { const v = document.querySelector("#view, main"), t = document.querySelector(".altabs"); if (v && t) { const top = t.getBoundingClientRect().top - v.getBoundingClientRect().top + v.scrollTop; if (v.scrollTop > top) v.scrollTop = top; } } catch (e) {} }, /* v602 */ alDepU: d => { sub.depU = d.u || null; render(true); }, /* v584 */
