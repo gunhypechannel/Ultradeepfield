@@ -1,6 +1,6 @@
 # Ultra Deep Field — handoff
 
-Last updated: 2026-11-19 (America/Phoenix). Current game version: **v678** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v472**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
+Last updated: 2026-11-19 (America/Phoenix). Current game version: **v679** (`GAME_V` in `docs/index.html`, and `docs/version.json`). Offline cache: **udf-v473**. (v582–v584 had left version.json at 580 and the cache at udf-v380; v586 bumps both.)
 
 **This repo is the master copy of the game.** The claude.ai artifact is `docs/index.html` without the website-only head lines and the service-worker line at the bottom. The Android app and the Desktop launcher are being switched to load this live site. Don't overwrite `docs/index.html` with an older copy from anywhere else.
 
@@ -39,6 +39,7 @@ Supabase project `slubtpfnimxtrfcozvhk`. Edge Function `settle_fight` (`supabase
 
 ## Pending work (as of 2026-11-07): start here in a new session
 
+- **v679 — No letterbox bars (Nov 19)** (p679_wire.py). The v678 bars were drawn at mg.top/mg.bot (the ships' field), not the visible edges; on the owner's Fold they cut across the middle of the battle. Bars removed, grain kept. Seen while checking: a long flat green bar across a Light Fighter badge in a Super Cube fight in the harness, present with cinematic off too (pre-existing, not in the owner's screenshot); not yet traced.
 - **v678 — Cinematic replays; Mimics sway slower (Nov 19)** (p678_wire.py + p678_cine.js). Owner: "slow the battle simulation down in a cinematic style but keep the same damage; movie finish". Visual only: the battle record, losses and result are untouched.
   - **Mode:** `b.cine` (default on, localStorage udf.cineRep; 🎞/⚡ button, `ACT.bcine`).
   - **Pace:** `CINE_PACE` .62 on the replay clock (with slowUntil as before). An 8-round battle now takes about 3 min to watch at 1×; 2×/4× remain.
