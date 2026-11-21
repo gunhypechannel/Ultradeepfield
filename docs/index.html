@@ -6199,7 +6199,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 689;
+const GAME_V = 690;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -24082,7 +24082,7 @@ function playBattle(r) {
   /* v341: every commander's squadrons fly in their own flagship's glow colour (a friend's or an ally's report shows their colours, not yours) */
   for (const q of R.squads) { const u = q.own; if (typeof u === "string" && u !== "pirates" && u !== "cube" && (u === G.me || G.players[u] || isBot(u) || FAC4_U[u])) { const f = playerFac(u); if (FLAG_GLOW[f] != null) Object.defineProperty(q, "acc", { value: "#" + FLAG_GLOW[f].toString(16).padStart(6, "0") + "@" + f + (u === G.me ? "^me" : G.players[u] ? "^u" + u + "^" : ""), enumerable: false, writable: true, configurable: true }); } }
   fbBake(); battle.flags = battleFlags(r, R.squads); for (const sd of ["a", "d"]) for (const e of battle.flags[sd]) shipArtSoon("flagship", e.acc, "side"); // v250
-  setTimeout(() => titAdvBattle(battle), 2600); /* v606 */ battle.superSide = r.sbk || r.omega ? "d" : r.wb ? "d" : r.dName === "Collective Warden" ? "d" : r.aName === "The Cube" ? "a" : null; // v109: the Super Cube fights as one grand Cube
+  /* v690 the Advisor's Titan lines in battle are retired (v606 titAdvBattle) */ battle.superSide = r.sbk || r.omega ? "d" : r.wb ? "d" : r.dName === "Collective Warden" ? "d" : r.aName === "The Cube" ? "a" : null; // v109: the Super Cube fights as one grand Cube
   /* v401: your fleet is always nearest you. When you attack, the field is mirrored top to bottom (the recorded frames, once per record) and the two panels swap, so your ships and their panel sit at the bottom and the defender is across the field */
   { const mine = R.squads.find(q => q.own === G.me); battle.flip = !battle.notMine && !!mine && mine.side === "a"; if (!!R.flipY !== battle.flip) { for (const f of R.frames) for (const s of f.s) s[1] = 100 - s[1]; R.flipY = battle.flip; } w.classList.toggle("flip", battle.flip); }
   for (const q of R.squads) { if (isWbU(q.k)) continue; cardPal(q.k); shipArtSoon(q.k, q.acc || battle.acc[q.side], "side"); if (q.role === "carrier") shipArtSoon(q.k === "lord" ? "drone" : "fighter", q.acc || battle.acc[q.side], "side"); } // start baking every unit type now (and sample its card), and a carrier's fighter wing
@@ -24832,7 +24832,7 @@ function spawnVolley(b, v) { fx589Spawn(b, v); /* v589 */ try { if (MIM_ATK[(b.Q
 /* when a Titan unleashes its ultimate (Worldbreaker Cannon, Wing launch, Swarm) the battle drops into slow motion for a beat: the screen
    flashes in the weapon's colour, cinematic bars slide in, and speed lines rush toward the Titan */
 function fx590UltStart(b, v) { try { if (b.lowFx || reduced || !(v.ab === "wbc" || v.ab === "wing" || v.ab === "swarm")) return; const tn = performance.now(); if (b.ult590 && tn - b.ult590.t < 4000) return;
-  { const qq = b.Q[v.s], ms = b.r && (b.r.kind === "defense" || b.r.kind === "raid") ? "d" : "a"; b.tUlt = b.tUlt || {}; if (qq && qq.side === ms && !b.tUlt[qq.k] && b.r && ((b.r.aUids || []).includes(G.me) || b.r.dUid === G.me)) { b.tUlt[qq.k] = 1; titAdv("ult", v.ab); } } /* v606 */ b.ult590 = { t: tn, i: v.s, col: v.ab === "wbc" ? "255,170,60" : v.ab === "wing" ? "122,244,255" : "93,255,168" }; b.slowUntil = Math.max(b.slowUntil || 0, tn + 1200); b.shake = Math.max(b.shake || 0, 10 * (b.qs || 1)); } catch (e) {} }
+  { const qq = b.Q[v.s], ms = b.r && (b.r.kind === "defense" || b.r.kind === "raid") ? "d" : "a"; b.tUlt = b.tUlt || {}; if (qq && qq.side === ms && !b.tUlt[qq.k] && b.r && ((b.r.aUids || []).includes(G.me) || b.r.dUid === G.me)) { b.tUlt[qq.k] = 1; /* v690 no Advisor call-out on a Titan ultimate */ } } /* v606 */ b.ult590 = { t: tn, i: v.s, col: v.ab === "wbc" ? "255,170,60" : v.ab === "wing" ? "122,244,255" : "93,255,168" }; b.slowUntil = Math.max(b.slowUntil || 0, tn + 1200); b.shake = Math.max(b.shake || 0, 10 * (b.qs || 1)); } catch (e) {} }
 function fx590Ult(ctx, b, t, W, H, d, scr, vs, vtx, vty) { const u = b.ult590; if (!u) return; const age = t - u.t, L = 1700; if (age < 0 || age > L) { if (age > L) b.ult590 = null; return; }
   const k = age / L, inA = Math.min(1, age / 140), outA = k > .7 ? 1 - (k - .7) / .3 : 1, A = inA * outA, S0 = scr[u.i], cx = S0 ? S0.x * vs + vtx : W / 2, cy = S0 ? S0.y * vs + vty : H / 2;
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
