@@ -2950,7 +2950,7 @@ body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}
     const bG = new TH.CylinderGeometry(.2, .26, 2.3, 8); bG.translate(0, 1.15, 0); bG.rotateX(Math.PI / 2); const barrels = inst(bG, MD, guns.length); body.add(barrels);
     const flash = puffs(guns.length, 0xffb050), shells = puffs(guns.length * 2, 0xffc070); body.add(flash); body.add(shells);
     const trG = new TH.BufferGeometry(), trP = new Float32Array(guns.length * 6), trC = new Float32Array(guns.length * 6); trG.setAttribute("position", new TH.BufferAttribute(trP, 3)); trG.setAttribute("color", new TH.BufferAttribute(trC, 3));
-    const tracers = new TH.LineSegments(trG, new TH.LineBasicMaterial({ vertexColors: true, transparent: true, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); tracers.frustumCulled = false; body.add(tracers);
+    const tracers = new TH.LineSegments(trG, new TH.LineBasicMaterial({ vertexColors: true, transparent: true, blending: TH.CustomBlending, blendSrc: TH.OneFactor, blendDst: TH.OneFactor, blendSrcAlpha: TH.ZeroFactor, blendDstAlpha: TH.OneFactor, depthWrite: false, toneMapped: false })); /* v707 light only: additive alpha drew black lines */ tracers.frustumCulled = false; body.add(tracers);
     // the boarding claw: a two-jointed arm on the bow with three hooked fingers
     const arm = new TH.Group(); arm.position.set(15.5, -.6, 0); arm.scale.setScalar(1.7); arm.rotation.z = -.62; body.add(arm); arm.add(box(3, 3, 3.2, MD)); { const r = new TH.Mesh(new TH.TorusGeometry(1.5, .2, 6, 18), glowMat(0xff7a20, .8)); r.position.x = 1.4; r.rotation.y = Math.PI / 2; arm.add(r); }
     const a1 = new TH.Group(); a1.position.x = 1; arm.add(a1); a1.add(beam(V(0, 0, 0), V(6, -1.8, 0), 1.7, 1.25, 1.5, MP)); a1.add(strut(V(.4, 1, .9), V(5, -.6, .9), .2, .2, MD, 8)); a1.add(strut(V(.4, 1, -.9), V(5, -.6, -.9), .2, .2, MD, 8));
@@ -3000,8 +3000,8 @@ body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}
       const NS = smoke.geometry.attributes.aS.count; for (let i = 0; i < NS; i++) { const p = stacks[i % stacks.length], a = ((t * .00022 + i / NS * 3.1) % 1); smoke.put(i, p.x - a * 9 - Math.sin(i) * .5, p.y + 1 + a * 7 + Math.sin(i * 2) * .4, p.z + Math.cos(i * 3) * a * 2, 2 + a * 6, .75 * Math.sin(a * Math.PI) * (a < .1 ? a * 10 : 1)); } smoke.done();
       guns.forEach((g, i) => { const k = fb < 0 ? -1 : (fb - .12 - g.f) / .14, rec = k > 0 && k < 1 ? Math.sin(k * Math.PI) * (1 - k) : 0, fl = k > 0 && k < .5 ? 1 - k * 2 : 0;
         S.p.set(g.x, g.y, g.z - g.side * rec * .8); S.q.setFromAxisAngle(S.Y, g.side > 0 ? 0 : Math.PI); S.s.set(1, 1, 1); S.m.compose(S.p, S.q, S.s); barrels.setMatrixAt(i, S.m);
-        const mz = g.z + g.side * 2.5; flash.put(i, g.x, g.y, mz + g.side * .8, 6 * fl + .01, fl); shells.put(i * 2, g.x + .1, g.y, g.z + g.side * (d0x(k)), 1.6, k > 0 && k < 1.6 ? 1 - k / 1.6 : 0); shells.put(i * 2 + 1, g.x + .2, g.y, g.z + g.side * (d0x(k) + 4), 1, k > 0 && k < 1.6 ? .6 * (1 - k / 1.6) : 0);
-        const tr = k > 0 && k < 1.6 ? 1 - k / 1.6 : 0, d0 = 2.5 + k * 30, d1 = d0 + 10; trP.set([g.x, g.y, g.z + g.side * d0, g.x + .5, g.y, g.z + g.side * d1], i * 6); for (let e = 0; e < 2; e++) trC.set([1 * tr, .62 * tr, .25 * tr], i * 6 + e * 3); });
+        const mz = g.z + g.side * 2.5; flash.put(i, g.x, g.y, mz + g.side * .8, 9 * fl + .01, fl); shells.put(i * 2, g.x + .1, g.y, g.z + g.side * (d0x(k)), 1.6, k > 0 && k < 1.6 ? 1 - k / 1.6 : 0); shells.put(i * 2 + 1, g.x + .2, g.y, g.z + g.side * (d0x(k) + 4), 1, k > 0 && k < 1.6 ? .6 * (1 - k / 1.6) : 0);
+        const tr = k > 0 && k < 1.6 ? 1 - k / 1.6 : 0, d0 = 2.5 + k * 30, d1 = tr > 0 ? d0 + 10 : d0; trP.set([g.x, g.y, g.z + g.side * d0, g.x + (tr > 0 ? .5 : 0), g.y, g.z + g.side * d1], i * 6); /* v707 a silent gun draws nothing */ for (let e = 0; e < 2; e++) trC.set([1 * tr, .62 * tr, .25 * tr], i * 6 + e * 3); });
       barrels.instanceMatrix.needsUpdate = true; flash.done(); shells.done(); trG.attributes.position.needsUpdate = true; trG.attributes.color.needsUpdate = true;
       let li = 0; const chain = (a, b, n, sag) => { for (let q = 0; q < n; q++, li++) { const f = (q + .5) / n; S.p.lerpVectors(a, b, f); S.p.y -= Math.sin(f * Math.PI) * sag; S.v.subVectors(b, a).normalize(); S.q.setFromUnitVectors(S.Y, S.v); S.w.set(0, 1, 0).applyQuaternion(S.q); S.e.set(0, q % 2 ? Math.PI / 2 : 0, 0); S.q.multiply(new TH.Quaternion().setFromEuler(S.e)); S.s.set(1, 1.6, 1); S.m.compose(S.p, S.q, S.s); links.setMatrixAt(li, S.m); } };
       for (const w of wrecks) { const sw = Math.sin(t * .0009 + w.ph) * .12 + reach * .05; w.g.rotation.z = sw * .6; w.g.position.set(w.top.x + Math.sin(sw) * (w.top.y - w.y), w.y, Math.sin(t * .0007 + w.ph) * .4); for (const dz of [-.5, .5]) chain(V(w.top.x + dz * 2, w.top.y, dz), V(w.g.position.x + dz * 1.6, w.y + .6, w.g.position.z + dz * .3), NL, .3); }
@@ -6540,7 +6540,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 706;
+const GAME_V = 707;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8199,7 +8199,7 @@ const WB_STRIKE = {
   war: { pulse: ["wave", .2, .75, 0, 1800], beam: ["beam", .35, .82, 0, 3200], well: ["wave", .72, .95, 0, 3600] },
   c0: { discharge: ["bolts", .2, .7, 5, 1800] },
   brd: { hatch: ["bolts", .4, .92, 7, 3000], acid: ["bolts", .3, .8, 5, 2800], slam: ["wave", .4, .88, 0, 1900] },
-  tyr: { broadside: ["bolts", .25, .82, 10, 2800], missiles: ["bolts", .3, .75, 8, 3200], claw: ["beam", .42, .72, 0, 2600], mines: ["bolts", .4, .92, 6, 3800] },
+  tyr: { broadside: ["bolts", .12, .95, 22, 2800], missiles: ["bolts", .3, .75, 8, 3200], claw: ["beam", .42, .72, 0, 2600], mines: ["bolts", .4, .92, 6, 3800] },
   wym: { lens: ["beam", .35, .85, 0, 3000], sweep: ["sweep", .2, .82, 0, 2200] },
   lev: { lens: ["beam", .35, .85, 0, 3000], sweep: ["sweep", .2, .82, 0, 2200] },
   krk: { lash: ["bolts", .3, .65, 4, 1900], beam: ["beam", .42, .88, 0, 3800], roar: ["wave", .3, .85, 0, 2400], grab: ["bolts", .45, .75, 3, 3000], storm: ["bolts", .32, .85, 9, 4200] },
@@ -8243,6 +8243,14 @@ function wbStrike(ctx, b, scr, Q, W, H, t, d, lo) { const k = b.r && (b.r.wb || 
     for (const [lw, a, c] of [[w0 * 3, .25, col(0)], [w0, .7, col(0)], [w0 * .3, .9, "#ffffff"]]) { ctx.globalAlpha = a * (1 - u * .8); ctx.strokeStyle = c; ctx.lineWidth = lw; ctx.beginPath(); ctx.ellipse(cx, cy, R, R * .82, 0, 0, TAU); ctx.stroke(); }
     if (u < .3) glow(cx, cy, W * (.25 + u), col(0), (1 - u / .3) * .9);
     for (const i of tg) { const p = scr[i], r = Math.hypot(p.x - cx, (p.y - cy) / .82); if (r < R) hit(p.x, p.y, .7, "w" + i); } }
+  else if (k === "tyr" && M.m === "broadside" && b.wbBox) { const B = b.wbBox, dir = Math.sign((tg.reduce((a, i) => a + scr[i].y, 0) / tg.length) - B.cy) || 1, N = lo ? 14 : 22;
+    for (let j = 0; j < N; j++) { const deck = j % 2, gi = j >> 1, n2 = N >> 1, fx0 = (gi + .5) / n2, a = .02 + fx0 * .5 + deck * .05, v = clamp((u - a) / .28, 0, 1); if (u < a) continue;
+      const sx = B.cx + (fx0 - .5) * B.aw * .7 * (WBR.face < 0 ? -1 : 1), sy = B.cy + dir * B.ah * (deck ? .02 : .12), i = tg[(j * 5 + ((M.t0 / 61) | 0)) % tg.length], p = scr[i], tx = p.x + Math.sin(j * 7.1) * 14 * d, ty = p.y + Math.cos(j * 3.3) * 8 * d;
+      if (v < .18) { const q = 1 - v / .18; glow(sx, sy, (18 + 20 * q) * d, "rgba(255,190,90,1)", q); glow(sx, sy, 8 * d, "#fff3d0", q); }
+      if (v < 1) { const x = sx + (tx - sx) * v, y = sy + (ty - sy) * v - Math.sin(v * Math.PI) * 18 * d, x0 = sx + (tx - sx) * Math.max(0, v - .22), y0 = sy + (ty - sy) * Math.max(0, v - .22) - Math.sin(Math.max(0, v - .22) * Math.PI) * 18 * d;
+        ctx.globalAlpha = .5; ctx.strokeStyle = "rgba(255,150,60,1)"; ctx.lineWidth = 7 * d; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x, y); ctx.stroke(); ctx.globalAlpha = 1; ctx.strokeStyle = "#ffe6b0"; ctx.lineWidth = 2.4 * d; ctx.stroke(); glow(x, y, 9 * d, "#fff6e0", 1); }
+      else { hit(tx, ty, .55, "t" + j); const age = (u - a - .28) / .18; if (age < 1) { glow(tx, ty, (26 + 40 * age) * d, "rgba(255,120,40,1)", .9 * (1 - age)); glow(tx, ty, 10 * d, "#ffffff", 1 - age); } } }
+    if (u > .1 && u < .8) b.shake = Math.max(b.shake || 0, 2.5 * d); }
   else { const n = S[3] || 5; for (let j = 0; j < n; j++) { const i = tg[(j * 7 + ((M.t0 / 97) | 0)) % tg.length], p = scr[i], a = (j / n) * .55, v = clamp((u - a) / .35, 0, 1); if (u < a) continue; const c = col(j), sx = cx + Math.cos(j * 2.4) * W * .06, sy = cy + Math.sin(j * 2.4) * W * .04;
     if (v < 1) { const x = sx + (p.x - sx) * v, y = sy + (p.y - sy) * v + (S[0] === "bolts" && (M.m === "rain" || M.m === "mines" || M.m === "hatch") ? -Math.sin(v * Math.PI) * H * .12 : 0), bx = sx + (p.x - sx) * Math.max(0, v - .14), by = sy + (p.y - sy) * Math.max(0, v - .14);
       if (S[0] === "chain") { ctx.globalAlpha = .9; ctx.strokeStyle = c; ctx.lineWidth = 3 * d; ctx.beginPath(); ctx.moveTo(sx, sy); for (let s = 1; s <= 8; s++) { const q = s / 8 * v; ctx.lineTo(sx + (p.x - sx) * q + (Math.random() - .5) * 26 * d, sy + (p.y - sy) * q + (Math.random() - .5) * 26 * d); } ctx.stroke(); ctx.globalAlpha = .3; ctx.lineWidth = 12 * d; ctx.stroke(); }
@@ -8682,7 +8690,7 @@ function wbFend(key, b, t) { if (key === "aex" && (aexdOn(battle) || aexwOn(batt
     const opts = [-1, 0, 1].filter(d => d !== last), w = opts.map(d => d === 0 ? .6 : 1 + (d < 0 ? L : R) / Math.max(1, tg.length)); let r = Math.random() * w.reduce((a, v) => a + v, 0), dir = opts[0]; for (let i = 0; i < opts.length; i++) { r -= w[i]; if (r <= 0) { dir = opts[i]; break; } }
     WBR.cy = { t0: t, dir, from: OM && C ? C.dir : 0, tn: OM && C && Math.abs(dir - C.dir) > 1 ? F.turn * 1.4 : F.turn, fired: 0, end: t + (OM ? T4 : T5) + F.rest * (.8 + Math.random() * .5) }; }
   const c = WBR.cy, e = t - c.t0, sm = u => u <= 0 ? 0 : u >= 1 ? 1 : OM ? u * u * u * (u * (u * 6 - 15) + 10) : u * u * (3 - 2 * u);
-  if (!c.fired && e >= T2) { c.fired = 1; if (!(battle && battle.r && (battle.r.sbk === key || bmvKey(battle) === key) && BMV_ACT[key])) /* v681 in these fights the battle chooses the move */ { const m = wbMoves(key), mv = m[(Math.random() * m.length) | 0]; WBR.b.act(mv); WBR.mv = { m: mv, t0: t }; if (battle && WBR.awe !== battle) { WBR.awe = battle; if (!G.stress || !G.stress.busy) aweSay(key, .55); } } } /* v487 */
+  if (!c.fired && e >= T2) { c.fired = 1; if (!(battle && battle.r && (battle.r.sbk === key || bmvKey(battle) === key) && BMV_ACT[key])) /* v681 in these fights the battle chooses the move */ { const m = wbMoves(key); let mv = m[(Math.random() * m.length) | 0]; if (key === "tyr") { const L0 = WBR.tyrLast, r = Math.random(); mv = r < .55 || L0 !== "broadside" && r < .62 ? "broadside" : ["missiles", "claw", "mines"].filter(x => x !== L0)[(Math.random() * 2) | 0]; WBR.tyrLast = mv; } /* v707 the Tyrant fights with its broadsides */ WBR.b.act(mv); WBR.mv = { m: mv, t0: t }; if (battle && WBR.awe !== battle) { WBR.awe = battle; if (!G.stress || !G.stress.busy) aweSay(key, .55); } } } /* v487 */
   WBR.face = OM ? c.from + (c.dir - c.from) * sm(e / c.tn) : c.dir * (e < F.turn ? sm(e / F.turn) : e < T4 ? 1 : 1 - sm((e - T4) / F.turn)); }
 function wbArt(key, w, h, t, b) { if (typeof BOSS3D === "undefined" || !wbD(key)) return null;
   try { if (!WBR.r) { const cv = document.createElement("canvas"); WBR.r = glNew({ canvas: cv, alpha: true, antialias: true }); WBR.r.setPixelRatio(1); WBR.r.outputEncoding = TH.sRGBEncoding; WBR.r.toneMapping = TH.ACESFilmicToneMapping; WBR.r.toneMappingExposure = 1.1; WBR.r.setClearColor(0, 0);
@@ -14782,8 +14790,8 @@ const FX_LITE = () => gfx("fx") === 0; // v124: follows Graphics > Effects
 function cubePhase(T) { const t0 = evStart(evWeek(T)), s = T - t0; if (s < 0 || s >= CUBE_END) return null; let i = 0; for (let j = 0; j < CUBE_PH.length; j++) if (s >= CUBE_PH[j].at) i = j;
   const p = CUBE_PH[i], e = CUBE_PH[i + 1] ? CUBE_PH[i + 1].at : CUBE_END, k = (s - p.at) / (e - p.at); return Object.assign({}, p, { key: p.k, i, s, k, t0, end: t0 + e, energy: p.e0 + (p.e1 - p.e0) * k, shield: p.sh }); }
 /* the Cube's spin: a base turn plus one that grows with its energy (integrated, so it never jumps) */
-function cubeSpin(T) { const ph = cubePhase(T); if (!ph) return T * .00012; let a = ph.s * .00012;
-  for (let j = 0; j <= ph.i; j++) { const p = CUBE_PH[j], e = CUBE_PH[j + 1] ? CUBE_PH[j + 1].at : CUBE_END, d = (j < ph.i ? e : ph.s) - p.at, k = d / (e - p.at); a += .00034 * d * (p.e0 + (p.e1 - p.e0) * k / 2); } return a; }
+function cubeSpin(T) { const ph = cubePhase(T); if (!ph) return T * .00002; let a = ph.s * .00002; /* v707 slower */
+  for (let j = 0; j <= ph.i; j++) { const p = CUBE_PH[j], e = CUBE_PH[j + 1] ? CUBE_PH[j + 1].at : CUBE_END, d = (j < ph.i ? e : ph.s) - p.at, k = d / (e - p.at); a += .00004 * d * (p.e0 + (p.e1 - p.e0) * k / 2); } return a; }
 /* where the Cube is: out of deep space to its orbit (Arrival), hanging there as it wakes (Awakening), spiralling down onto the
    Void (Approach); afterwards it holds over the Void, and after the event the map glides it home */
 function cubeWorldPos(T, ph) { ph = ph || cubePhase(T); if (!ph || ph.i > 2) return null;
@@ -15596,7 +15604,7 @@ function draw3D(t) {
     const LI = liveIntro(T), PH = cubePhase(T), turn = LI && LI.s > 48000 ? Math.pow((LI.s - 48000) / 1000, 1.3) * .12 : 0;
     if (LI) { const cp = liveCubePos(LI.s); np.set(cp.x, cp.y, cp.z); } else { const cw = PH && cubeWorldPos(T, PH); if (cw) np.set(cw.x, cw.y, cw.z); }
     const DVn = dvNow(T), DVq = DVn && dvCore(DVn, {}); if (DVq) np.set(DVq.x, DVq.y, DVq.z); /* v430 the Super Cube goes to the heart of the Omega Cube */
-    W.nexus.rotation.y = LI ? t * .00012 + turn : PH && PH.i < 6 ? cubeSpin(T) : t * .00012; W.nexus.rotation.x = .18; W.nexus.userData.r2.rotation.y = -t * .0012;
+    W.nexus.rotation.y = LI ? t * .00002 + turn : PH && PH.i < 6 ? cubeSpin(T) : t * .00002; W.nexus.rotation.x = .18; W.nexus.userData.r2.rotation.y = -t * .00025; /* v707 slower */
     if (DVq && DVq.u > 0) { const al = dvEase(DVq.u); W.nexus.rotation.x = .18 * (1 - al); W.nexus.rotation.y = W.nexus.rotation.y * (1 - al) + dvRot(DVn.e) * al; W.nexus.userData.r2.visible = al < .5; } else W.nexus.userData.r2.visible = true; /* square to the Omega once it is home */
     // v137: the holding alliance's crest floats above the Cube (the plain beacon shows while nobody holds it)
     // v141: the holder's emblem is now a crisp screen overlay (cubeCrestOverlay); here the plain beacon just hides while someone holds the Cube
