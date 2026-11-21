@@ -6199,7 +6199,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 691;
+const GAME_V = 692;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8244,15 +8244,15 @@ const WB_FRONT = { medusara: 0, khezaroth: 0, supercube: 0, omega: 0, vaelthar: 
 /* v480 a boss fending off attackers on every side: three facings (front, 45 degrees left, 45 degrees right). Each beat: turn toward a
    side (0.65 s, eased), hold a second, attack (the move and its strike on the fleet), hold a second, turn back to the front, rest about
    a second, then the next facing, chosen at random but never the same twice running and leaning toward where its targets are */
-const WBF = { turn: 650, hold: 900, atk: 2600, rest: 1000 };
-function wbFend(key, b, t) { if (key === "aex" && (aexdOn(battle) || aexwOn(battle))) { /* v691 the Warform turns with its attacks too (aexwDraw) */ if (!b.live) WBR.face = 0; WBR.cy = null; return; } /* v683 the dreadnought turns only to attack (aexdDraw) */ const F = WBF, C = WBR.cy, T2 = F.turn + F.hold, T3 = T2 + F.atk, T4 = T3 + F.hold, T5 = T4 + F.turn;
+const WBF = { turn: 650, hold: 900, atk: 2600, rest: 1000 }, WBF_OMG = { turn: 2600, hold: 1400, atk: 2600, rest: 6000 }; /* v692 the Omega Cube: slow, heavy turns, and it keeps its facing */
+function wbFend(key, b, t) { if (key === "aex" && (aexdOn(battle) || aexwOn(battle))) { /* v691 the Warform turns with its attacks too (aexwDraw) */ if (!b.live) WBR.face = 0; WBR.cy = null; return; } /* v683 the dreadnought turns only to attack (aexdDraw) */ const OM = key === "omg", F = OM ? WBF_OMG : WBF, C = WBR.cy, T2 = F.turn + F.hold, T3 = T2 + F.atk, T4 = T3 + F.hold, T5 = T4 + F.turn;
   if (!b.live) { WBR.cy = null; WBR.face = 0; return; }
   if (!C || t >= C.end) { const tg = b.tg || [], L = tg.filter(v => v < -.04).length, R = tg.filter(v => v > .04).length, last = C ? C.dir : 0;
     const opts = [-1, 0, 1].filter(d => d !== last), w = opts.map(d => d === 0 ? .6 : 1 + (d < 0 ? L : R) / Math.max(1, tg.length)); let r = Math.random() * w.reduce((a, v) => a + v, 0), dir = opts[0]; for (let i = 0; i < opts.length; i++) { r -= w[i]; if (r <= 0) { dir = opts[i]; break; } }
-    WBR.cy = { t0: t, dir, fired: 0, end: t + T5 + F.rest * (.8 + Math.random() * .5) }; }
-  const c = WBR.cy, e = t - c.t0, sm = u => u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u);
+    WBR.cy = { t0: t, dir, from: OM && C ? C.dir : 0, tn: OM && C && Math.abs(dir - C.dir) > 1 ? F.turn * 1.4 : F.turn, fired: 0, end: t + (OM ? T4 : T5) + F.rest * (.8 + Math.random() * .5) }; }
+  const c = WBR.cy, e = t - c.t0, sm = u => u <= 0 ? 0 : u >= 1 ? 1 : OM ? u * u * u * (u * (u * 6 - 15) + 10) : u * u * (3 - 2 * u);
   if (!c.fired && e >= T2) { c.fired = 1; if (!(battle && battle.r && (battle.r.sbk === key || bmvKey(battle) === key) && BMV_ACT[key])) /* v681 in these fights the battle chooses the move */ { const m = wbMoves(key), mv = m[(Math.random() * m.length) | 0]; WBR.b.act(mv); WBR.mv = { m: mv, t0: t }; if (battle && WBR.awe !== battle) { WBR.awe = battle; if (!G.stress || !G.stress.busy) aweSay(key, .55); } } } /* v487 */
-  WBR.face = c.dir * (e < F.turn ? sm(e / F.turn) : e < T4 ? 1 : 1 - sm((e - T4) / F.turn)); }
+  WBR.face = OM ? c.from + (c.dir - c.from) * sm(e / c.tn) : c.dir * (e < F.turn ? sm(e / F.turn) : e < T4 ? 1 : 1 - sm((e - T4) / F.turn)); }
 function wbArt(key, w, h, t, b) { if (typeof BOSS3D === "undefined" || !wbD(key)) return null;
   try { if (!WBR.r) { const cv = document.createElement("canvas"); WBR.r = glNew({ canvas: cv, alpha: true, antialias: true }); WBR.r.setPixelRatio(1); WBR.r.outputEncoding = TH.sRGBEncoding; WBR.r.toneMapping = TH.ACESFilmicToneMapping; WBR.r.toneMappingExposure = 1.1; WBR.r.setClearColor(0, 0);
       WBR.sc = new TH.Scene(); WBR.sc.add(new TH.AmbientLight(0x5f6a8a, .3)); const d0 = new TH.DirectionalLight(0xfff0e6, 2.1); d0.position.set(-6, 8, 10); WBR.sc.add(d0); const d1 = new TH.DirectionalLight(0x8a50ff, 1.2); d1.position.set(10, 4, -8); WBR.sc.add(d1); WBR.cam = new TH.PerspectiveCamera(36, 2, .1, 500); }
