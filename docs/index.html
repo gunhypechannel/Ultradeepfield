@@ -13046,6 +13046,7 @@ function worldDrop(k, why) { try {
   if (k === "col" && C3 && view !== "base") { const old = C3; C3 = null; glFree(old.renderer); if (colHost && colHost.parentNode) colHost.parentNode.removeChild(colHost); colHost = null; crumb("base released (" + why + ")"); }
   if (k === "stu" && STU) { const s = STU; G.stuCache = s.cache; STU = null; glFree(s.renderer); }
   if (glw0) G.glWait = performance.now() + 1000; /* v588 the wait starts once the release is done */
+  G.memEst = null; /* fb-20261121 the next heartbeat measures again instead of reporting the released world */
 } catch (e) { try { crumb("release failed: " + (e && e.message)); } catch (er) {} } }
 const MEM_DIET = IOS;
 /* v425 the background diet: shed what comes back for free (drawing buffers, bloom targets, the boss renderer, the studio and its battle
