@@ -6199,7 +6199,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 692;
+const GAME_V = 693;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8244,7 +8244,7 @@ const WB_FRONT = { medusara: 0, khezaroth: 0, supercube: 0, omega: 0, vaelthar: 
 /* v480 a boss fending off attackers on every side: three facings (front, 45 degrees left, 45 degrees right). Each beat: turn toward a
    side (0.65 s, eased), hold a second, attack (the move and its strike on the fleet), hold a second, turn back to the front, rest about
    a second, then the next facing, chosen at random but never the same twice running and leaning toward where its targets are */
-const WBF = { turn: 650, hold: 900, atk: 2600, rest: 1000 }, WBF_OMG = { turn: 2600, hold: 1400, atk: 2600, rest: 6000 }; /* v692 the Omega Cube: slow, heavy turns, and it keeps its facing */
+const WBF = { turn: 650, hold: 900, atk: 2600, rest: 1000 }, WBF_OMG = { turn: 4000, hold: 2000, atk: 2600, rest: 11000 }; /* v693 slower and rarer still */ /* v692 the Omega Cube: slow, heavy turns, and it keeps its facing */
 function wbFend(key, b, t) { if (key === "aex" && (aexdOn(battle) || aexwOn(battle))) { /* v691 the Warform turns with its attacks too (aexwDraw) */ if (!b.live) WBR.face = 0; WBR.cy = null; return; } /* v683 the dreadnought turns only to attack (aexdDraw) */ const OM = key === "omg", F = OM ? WBF_OMG : WBF, C = WBR.cy, T2 = F.turn + F.hold, T3 = T2 + F.atk, T4 = T3 + F.hold, T5 = T4 + F.turn;
   if (!b.live) { WBR.cy = null; WBR.face = 0; return; }
   if (!C || t >= C.end) { const tg = b.tg || [], L = tg.filter(v => v < -.04).length, R = tg.filter(v => v > .04).length, last = C ? C.dir : 0;
@@ -24674,7 +24674,12 @@ function bmvDraw(ctx, b, scr, T, W, H, d, lo, t) { const k = bmvKey(b); if (!k |
     else if (m.a === "wheel") { const n = 6, rot = (m.seed % 2 ? 1 : -1) * u * Math.PI * .9; ctx.globalAlpha = Math.min(1, u * 4) * (u > .9 ? (1.1 - u) / .2 : 1); ctx.strokeStyle = C(1); ctx.lineWidth = 4 * d; ctx.beginPath(); ctx.arc(cx, cy, B.aw * .22, 0, TAU); ctx.stroke();
       if (u > .15) { once("bang", () => big(16)); const hit = m.hit || (m.hit = {}); for (let j = 0; j < n; j++) { const a = j / n * TAU + rot; for (const [lw, al, c2] of [[22, .3, C(1)], [6, .9, "#ffffff"]]) { ctx.globalAlpha = al * (u > .9 ? (1.1 - u) / .2 : 1); ctx.strokeStyle = c2; ctx.lineWidth = lw * d; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * B.aw * .22, cy + Math.sin(a) * B.aw * .22); ctx.lineTo(cx + Math.cos(a) * R * 1.4, cy + Math.sin(a) * R * 1.4); ctx.stroke(); }
           fx.forEach((p, jj) => { const i = foes[jj]; if (hit[i]) return; const ap = Math.atan2(p.y - cy, p.x - cx), da = Math.atan2(Math.sin(ap - a), Math.cos(ap - a)); if (Math.abs(da) < .06) { hit[i] = t; aexBoom(b, p.x, p.y, t + 100, 2, Object.keys(hit).length % 3 === 1); } }); } } }
-    else if (m.a === "tractor") { const tg = fx.slice(0, 8); tg.forEach((p, j) => { const k2 = clamp((u - .1 - j * .03) / .2, 0, 1); if (!k2) return; ctx.globalAlpha = .75 * (u > .85 ? (1.1 - u) / .25 : 1); ctx.strokeStyle = C(1); ctx.lineWidth = 6 * d; ctx.setLineDash([10 * d, 6 * d]); ctx.lineDashOffset = T * 160 * d; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + (p.x - cx) * k2, cy + (p.y - cy) * k2); ctx.stroke(); ctx.setLineDash([]); if (k2 >= 1) ctx.drawImage(gl, p.x - 18 * d, p.y - 18 * d, 36 * d, 36 * d); });
+    else if (m.a === "tractor") { /* v693 solid beams (a soft outer glow, the beam, a white core, rings drawn back along it toward the Cube), the Cube Destroyer and the Titans caught first */
+      const rk = i => { const q = b.Q[i] || {}; return q.k === "worldbreaker" ? 0 : q.role === "titan" || q.k === "eclipse" ? 1 : BIG_R.has(q.role) ? 2 : 3; }, tg = foes.map((i, j) => [i, j]).sort((x, y) => rk(x[0]) - rk(y[0]) || x[1] - y[1]).slice(0, lo ? 7 : 12).map(x => scr[x[0]]), fa = u > .85 ? (1.1 - u) / .25 : 1;
+      tg.forEach((p, j) => { const k2 = clamp((u - .1 - j * .025) / .2, 0, 1); if (!k2) return; const ex = cx + (p.x - cx) * k2, ey = cy + (p.y - cy) * k2, pul = 1 + .12 * Math.sin(t * .02 + j);
+        for (const [lw, al, c2] of [[20, .16, C(1)], [8, .5, C(1)], [2.4, .95, "#ffffff"]]) { ctx.globalAlpha = al * fa; ctx.strokeStyle = c2; ctx.lineWidth = lw * d * pul; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ex, ey); ctx.stroke(); }
+        if (k2 >= 1) { ctx.globalAlpha = .9 * fa; ctx.drawImage(gl, p.x - 22 * d, p.y - 22 * d, 44 * d, 44 * d); const an = Math.atan2(p.y - cy, p.x - cx); ctx.strokeStyle = C(1); ctx.lineWidth = 2 * d;
+          for (let r = 0; r < 3; r++) { const q = 1 - ((t * .0009 + r / 3 + j * .13) % 1), rx = cx + (p.x - cx) * q, ry = cy + (p.y - cy) * q, rr = (5 + 9 * q) * d; ctx.globalAlpha = .7 * fa * Math.sin(Math.PI * q); ctx.beginPath(); ctx.ellipse(rx, ry, rr * .35, rr, an, 0, TAU); ctx.stroke(); } } });
       if (u > .8) { once("bang", () => big(9)); sweepHit(p => true, 1.4); } }
     else if (m.a === "wave") { const ang = Math.atan2(my - cy, mx - cx), k2 = clamp((u - .1) / .8, 0, 1), dist = R * 1.3 * k2, wx = cx + Math.cos(ang) * dist, wy = cy + Math.sin(ang) * dist, nx = -Math.sin(ang), ny = Math.cos(ang), half = Math.hypot(W, H);
       ctx.globalAlpha = .7 * (1 - k2 * .5); for (const [lw, c2] of [[30, C(.35)], [8, C(1)], [2, "#ffffff"]]) { ctx.strokeStyle = c2; ctx.lineWidth = lw * d; ctx.beginPath(); ctx.moveTo(wx - nx * half, wy - ny * half); ctx.lineTo(wx + nx * half, wy + ny * half); ctx.stroke(); }
