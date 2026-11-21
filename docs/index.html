@@ -6199,7 +6199,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 688;
+const GAME_V = 689;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -11505,6 +11505,8 @@ function progress() {
 
 /* ---------- save / sync ---------- */
 const KEY = "novaDominion.save.v1";
+/* v689 the cloud save number this device last wrote or loaded: if the account's save number is past it, another device saved since */
+const cseqGet = () => { try { return +localStorage.getItem(KEY + ".cseq") || 0; } catch (e) { return 0; } }, cseqSet = n => { try { if (n > 0) localStorage.setItem(KEY + ".cseq", String(n)); } catch (e) {} };
 const store = { db: null, uid: null, dirty: false, writing: false, mode: "device", lastPlayer: "", ready: false }; // v200: ready once the account save has been read
 const dirty = () => { store.dirty = true; try { pushSync(); } catch (e) {} }; /* v541 reminders follow every change */
 const SESS = Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
@@ -11529,7 +11531,7 @@ async function adoptCloud(v) {
     const wasHidden = store.wasHidden, uid = S.uid, lp = S.lp; let st;
     try { const raw = JSON.parse(v.json); if (raw.repsSep) await repsInto(raw, store.uid); st = migrate(raw); } catch (e) { return sessTakeover(); }
     st.uid = uid; if (lp !== undefined) st.lp = lp; st.cloudAt = +v.savedAt || 0;
-    S = st; store.seq = +v.seq || 0; store.follow = null; store.dirty = false;
+    S = st; store.seq = +v.seq || 0; cseqSet(store.seq); store.follow = null; store.dirty = false;
     secBoot(); FOG = null; live = false; advance(now()); live = true; if (typeof menu === "object" && menu) menu.rest = null;
     store.paused = false; try { rebuild(); } catch (e) {}
     if (sheet) { try { renderSheet(); } catch (e) { try { closeSheet(); } catch (e2) {} } }
@@ -11549,7 +11551,7 @@ async function flush() {
   if (store.writing && store.dirty) { store.again = true; return; } /* v207: a save asked for mid-write runs right after it instead of being dropped */
   if (!store.dirty || store.writing || store.adopting || store.checking) return;
   store.dirty = false; S.savedAt = now();
-  const cloudOk = store.db && store.uid && store.ready; if (cloudOk) S.cloudAt = S.savedAt; // the cloud copy this device last wrote or read
+  const cloudOk = store.db && store.uid && store.ready && !store.paused; if (cloudOk) S.cloudAt = S.savedAt; /* v689 a paused copy no longer marks itself in sync */ // the cloud copy this device last wrote or read
   const full = JSON.stringify(S), fsig = secSig(full); let json = full, sig = fsig, reps = null; /* v293: the cloud save leaves the reports out */
   if (store.db && store.uid && store.ready) { const rj = JSON.stringify({ reports: S.reports || [], savedReps: S.savedReps || [] }); if (rj !== store.repsJ) reps = rj;
     json = JSON.stringify(Object.assign({}, S, { reports: undefined, savedReps: undefined, repsSep: 1 })); sig = secSig(json); }
@@ -11558,7 +11560,7 @@ async function flush() {
     store.writing = true;
     try { if (store.paused) { store.writing = false; return; } const seq = (store.seq || 0) + 1, z = empSize(S), shrink = !!store.shrinkOk; /* v205: seq = save order number, checked by the server */
       if (reps) { await store.db.doc(`data/users/${store.uid}/reps`).set({ v: 1, at: S.savedAt, json: reps }); store.repsJ = reps; } // v293: reports first, so a device that loads this save finds them
-      await store.db.doc(`data/users/${store.uid}/save`).set({ v: 3, savedAt: S.savedAt, json, sig, sess: SESS, seq, lv: z.lv, ships: z.ships, shrink }); store.lastW = Date.now(); store.seq = seq; if (shrink) store.shrinkOk = false; store.mode = "cloud"; srvBackup(json, sig); }
+      await store.db.doc(`data/users/${store.uid}/save`).set({ v: 3, savedAt: S.savedAt, json, sig, sess: SESS, seq, lv: z.lv, ships: z.ships, shrink }); store.lastW = Date.now(); store.seq = seq; cseqSet(seq); if (shrink) store.shrinkOk = false; store.mode = "cloud"; srvBackup(json, sig); }
     catch (e) { let why = null; /* v205: a refused save: find out whether another device saved first or this copy would have wiped progress */
       if (e && e.code === "not_granted") try { const s4 = await store.db.doc(`data/users/${store.uid}/save`).get(), v = s4.exists ? s4.data() : null;
         if (v) { if (v.sess && v.sess !== SESS && (+v.seq || 0) >= (store.seq || 0)) why = "other"; else if (v.sess === SESS && (+v.seq || 0) !== (store.seq || 0)) { store.seq = +v.seq || 0; why = "retry"; } else if ((+v.lv || 0) >= 10 && empSize(S).lv * 2 < (+v.lv || 0)) why = "shrink"; else if ((+v.seq || 0) !== (store.seq || 0)) { store.seq = +v.seq || 0; why = "retry"; } } } catch (e2) {}
@@ -11770,13 +11772,13 @@ async function connectCloud() {
         if (typeof d.json === "string" && d.sig && d.sig !== secSig(d.json)) secLog("save", "the cloud save was edited outside the game.", "It was ignored.", 3);
         else if (typeof d.json === "string") { const cs = JSON.parse(d.json), cp = empScore(empSize(cs)), cAt = d.savedAt || 0, behind = lp > 5 && cp < lp * .5 && !foreign;
           if (cs.repsSep) await repsInto(cs, uid); // v293: its reports come from their own record
-          const take = foreign || (!behind && (S.uid === uid ? cAt > (S.cloudAt || 0) : true));
+          const lseq = cseqGet(), take = foreign || (!behind && (S.uid === uid ? cAt > (S.cloudAt || 0) || (lseq > 0 && (+d.seq || 0) > lseq) : true)); /* v689 */
           if (take) { try { if (lp > 0) localStorage.setItem(KEY + ".device", JSON.stringify(S)); } catch (e) {}
             G.awayMs = cs.t ? now() - cs.t : 0; S = migrate(cs); S.cloudAt = cAt; secBoot(); FOG = null; live = false; advance(now()); live = true; render(true); toast(foreign ? "Signed in. Loaded this account's empire." : "Loaded your saved empire.", "win"); }
           else if (behind) toast("Your account's save was behind this device. This device's empire was kept and saved to your account.", "warn"); } }
       else if (foreign) { try { localStorage.setItem(KEY + ".device", JSON.stringify(S)); } catch (e) {}
         const hn = S.homeName; store.shrinkOk = true; S = newState(); FOG = null; S.homeName = hn; live = false; advance(now()); live = true; view = "base"; rebuild(); render(true); G.askFac = G.askFac0; toast("New account: a fresh homeworld is ready for you."); } // v329: faction, then the opening battle
-      if (snap && snap.exists) store.seq = +(snap.data() || {}).seq || 0;
+      if (snap && snap.exists) { store.seq = +(snap.data() || {}).seq || 0; cseqSet(store.seq); }
       S.uid = uid; if (snap && snap.exists) S.cloudAt = Math.max(S.cloudAt || 0, +(snap.data() || {}).savedAt || 0); /* v204: the save already on the server is not "another device" */
     } catch (e) {}
     store.ready = true;
@@ -11815,7 +11817,7 @@ async function connectCloud() {
     db.collection("assaults").where("status", "==", "open").limit(100).onSnapshot(snap => {
       const o = {}; for (const d of snap.docs) { const v = d.data(); if (v && (typeof v.pid === "string" || typeof v.xid === "string") && v.members && typeof v.leader === "string") o[d.id] = { id: d.id, pid: typeof v.pid === "string" ? v.pid : null, xid: typeof v.xid === "string" && PB[v.xid] ? v.xid : null, leader: v.leader, arrive: +v.arrive || 0, max: clamp(okInt(v.max), 2, 60), members: v.members, ally: typeof v.ally === "string" ? v.ally : null, inv: Array.isArray(v.inv) ? v.inv.filter(x => typeof x === "string").slice(0, 60) : [],
           rally: v.rally ? 1 : 0, lh: typeof v.lh === "string" ? v.lh : null, launch: +v.launch || 0, cap: clamp(okInt(v.cap), 1000, 1e9), disb: v.disb ? 1 : 0, form: FORMS[v.form] ? v.form : "wedge", mout: +v.mout || 0, boosts: v.boosts && typeof v.boosts === "object" ? v.boosts : {}, status: "open" }; }
-      G.assaults = o; callNew();
+      G.assaults = o; callNew(); try { strikeOrphans(o); } catch (e) {} /* v689 */
       // a slower ally joined and pushed the strike back: every fleet in that attack holds position until the new time
       if (S) for (const f of S.fleets) { const a = f.assault && o[f.assault]; if (a && f.phase === "out" && !a.rally && a.arrive > f.arrive) { f.arrive = a.arrive; dirty(); } }
       softRender();
@@ -13864,7 +13866,7 @@ function fleet3D(W, n, col, hostile, big, cube, flag, look) { const arm = typeof
   const geos = ships.map(k => shipGeo(K, k)), esc = flag && geos.length > 1 ? geos.slice(1) : geos, sp = Math.max(...esc.map(g => Math.max(g.len * .55, g.wid))) * .9 + .5; // the escorts set the spacing, not the flagship
   const form = typeof big === "string" && FORMS[big] ? big : "wedge", N = ships.length, FM = cube ? CUBE_FORM : FORMS[form], tc = {}, F0 = flag ? { len: geos[0].len * FLAG_K, wid: geos[0].wid * FLAG_K } : null;
   const spM = flag && !cube && form === "swarm" ? Math.max(sp, (F0.len * .5 + sp * .6) / 1.08, (F0.wid * .5 + sp * .6) / 1.35) : sp; // the swarm's rings open wide enough to circle the flagship
-  const slots = ships.map((k, i) => { const tier = k === "flagship" || /[lxq]/.test(MINI_CLS[k]) ? "b" : "s", j = tc[tier] = (tc[tier] || 0) + 1; const s = cube ? FM.slot(i, N, sp, k, F0, j) : flag ? (i ? FLAG_SLOT[form](i, N, spM, F0) : [0, 0, 0]) : FM.slot(i, N, sp, k, null, j); return { k, x: s[0], y: s[1], z: s[2], ph: i * 1.3, i, side: s[3] || 0, big: tier === "b" }; });
+  const slots = ships.map((k, i) => { const tier = k === "flagship" || /[lxq]/.test(MINI_CLS[k]) ? "b" : "s", j = tc[tier] = (tc[tier] || 0) + 1; const s = cube ? FM.slot(i, N, sp, k, F0 || { len: geos[0].len, wid: geos[0].wid }, j) /* v689 */ : flag ? (i ? FLAG_SLOT[form](i, N, spM, F0) : [0, 0, 0]) : FM.slot(i, N, sp, k, null, j); return { k, x: s[0], y: s[1], z: s[2], ph: i * 1.3, i, side: s[3] || 0, big: tier === "b" }; });
   const move0 = FM.move, mDamp = clamp(Math.max(...esc.map(g => g.len)) / 2.6, .35, 1), move = mDamp >= 1 || form === "swarm" || cube ? move0 : (s, t, N, sp) => { const m = move0(s, t, N, sp); return [m[0] * mDamp, m[1] * mDamp, m[2] * mDamp, m[3] * mDamp, m[4] * mDamp, m[5] * mDamp]; }; // v106: each formation has its own motion; v295: small hulls move less
   let acc = K.acc.get(col); if (!acc) { acc = K.mats.accent.clone(); acc.color.set(col); acc.emissive.set(col); acc.emissiveIntensity = 1.1; K.acc.set(col, acc); }
   const groups = [];
@@ -15240,8 +15242,8 @@ function draw3D(t) {
     o.pt = pt; o.f = f;
     { const cu = noLine || path.park ? null : cosCol(fleetFlagU(f, hostile), "trail"); /* v554 warp trails */
       if (cu) { if (!o.ct || o.ctId !== cu.id) { cosTrailFree(W, o); o.ctId = cu.id; o.ct = []; o.cth = []; const tx = W.glow.ctr || (W.glow.ctr = glowTex("255,255,255", 1)); for (let i = 0; i < 16; i++) { const sp = new TH.Sprite(W.additive(tx, i % 2 ? cu.c2 : cu.c1, 0)); sp.renderOrder = 12; sp.material.depthWrite = false; W.scene.add(sp); o.ct.push(sp); } }
-        const nw = performance.now(); if (!o.ctT || nw - o.ctT > 80) { o.ctT = nw; o.cth.unshift([pt.x, pt.y, pt.z]); if (o.cth.length > 16) o.cth.length = 16; }
-        for (let i = 0; i < 16; i++) { const sp = o.ct[i], q = o.cth[i]; if (!q || i === 0) { sp.visible = false; continue; } sp.visible = true; sp.position.set(q[0], q[1], q[2]); const k = 1 - i / 16; sp.scale.setScalar(fs * (3.2 * k + .5) * (1 + .18 * Math.sin(t * .012 + i * 1.7))); sp.material.opacity = .9 * k; } }
+        const L = Math.max(1, Math.hypot(path.b.x - path.a.x, (path.b.y || 0) - (path.a.y || 0), path.b.z - path.a.z)), stp = fs * 1.1 / L, q0 = ARC(path.a, path.b, path.k), ox = pt.x - q0.x, oy = pt.y - q0.y, oz = pt.z - q0.z; /* v689 */
+        for (let i = 0; i < 16; i++) { const sp = o.ct[i], kk = path.k - i * stp; if (i === 0 || kk <= 0) { sp.visible = false; continue; } const q = ARC(path.a, path.b, kk); sp.visible = true; sp.position.set(q.x + ox, q.y + oy, q.z + oz); const k = 1 - i / 16; sp.scale.setScalar(fs * (3.2 * k + .5) * (1 + .18 * Math.sin(t * .012 + i * 1.7))); sp.material.opacity = .6 * k; } }
       else if (o.ct) cosTrailFree(W, o); }
   }
   for (const [id, o] of W.fleets) if (!fseen.has(id)) { disposeObj(W, o); W.fleets.delete(id); }
@@ -20582,14 +20584,14 @@ function vFleets() {
     const tg = fleetTarget(f), o = f.from && G.byId[f.from] ? G.byId[f.from] : homePlanet(), bnd = fleetBounds(f), tot = Object.values(f.n || {}).reduce((a, b) => a + b, 0);
     const ships = Object.entries(f.n || {}).filter(([, v]) => v).map(([k, v]) => `${fmt(v)} ${SH[k].n}`).join(", ") || (f.loot ? "Cargo only" : "—");
     const cl = f.cargo || f.loot, cargo = cl && total(cl) ? ` · cargo ${fmt(total(cl))}` : "";
-    const canRecall = f.phase === "out" && !f.assault && f.mission !== "convoy", canHurry = bnd && !f.assault && f.phase !== "resolving";
+    const canRecall = f.phase === "out" && !f.assault && f.mission !== "convoy", canHurry = bnd && (!f.assault || f.phase === "back") && f.phase !== "resolving";
     const rem = bnd ? Math.max(0, bnd[1] - T) : 0;
     return `<div class="fcard"><div class="top"><b>${CAPS[f.cap] ? `<img class="fcap" src="avatars/${f.cap}.webp" alt="" title="${esc(capName(f.cap))}">` : ""}${fleetLabel(f)} · ${esc(tg ? tg.name : "—")}</b><span class="pill ${f.mission === "attack" && f.phase === "out" ? "bad" : f.phase === "back" ? "ok" : "go"}">${bnd ? `<span data-end="${bnd[1]}">${ftime(rem)}</span>` : "…"}</span></div>
       <div class="route">${esc(o ? o.name : S.homeName)} → ${esc(tg ? tg.name : "—")}${f.phase === "back" || f.phase === "gather" ? ` → ${esc(fleetHome(f) ? fleetHome(f).name : S.homeName)}` : ""} · ${fmt(tot)} ships${cargo}</div>
       <div class="route">${ships}</div>${fleetResRow(f)}${f.n && sumShips(f.n) && f.assault && G.assaults[f.assault] ? (() => { const a = G.assaults[f.assault], cur = FORMS[a.form] ? a.form : "wedge", lead = a.leader === G.me && now() < a.arrive; return `<div class="segc fform">${Object.entries(FORMS).map(([k, F]) => `<button class="${k === cur ? "on" : ""}" data-act="strikeForm" data-id="${a.id}" data-v="${k}" title="${esc(F.d)}" ${lead ? "" : "disabled"}>${F.ic} ${F.n}</button>`).join("")}</div><p class="note">Joint strike formation${lead ? ": the whole army flies this way." : `, set by ${esc(nameOf(a.leader))}.`}</p>`; })() : f.n && sumShips(f.n) ? `<div class="segc fform">${Object.entries(FORMS).map(([k, F]) => `<button class="${fformOf(f) === k ? "on" : ""}" data-act="fleetForm" data-id="${f.id}" data-v="${k}" title="${esc(F.d)}">${F.ic} ${F.n}</button>`).join("")}</div>` : ""}
       ${bnd ? `<div class="bar" style="grid-column:auto"><i data-s="${bnd[0]}" data-e="${bnd[1]}"></i></div>` : ""}
       <div class="tl ftl"><span>Flight<b>${ftime(f.tt || 0)}</b><small>one way</small></span><span>${bnd ? bnd[2] : "Status"}<b>${bnd ? `<span data-end="${bnd[1]}">${ftime(rem)}</span>` : "in battle"}</b>${bnd ? `<small>at ${atClock(bnd[1])}</small>` : ""}</span><span>Speed<b>${f.spd || 100}%</b><small class="fg">⛽ ${fmt(f.fuel || 0)} gas</small></span></div>
-      <div class="acts"><button class="btn ghost sm" data-act="fleetMap" data-id="${f.id}">Show on map</button>${f.mission === "attack" && f.phase === "out" && !f.assault && G.mode === "online" && rem > 20000 ? `<button class="btn sm" data-act="callJoint" data-id="${f.id}">Call allies to join</button>` : f.assault && G.assaults[f.assault] ? `<span class="pill go">Joint · ${memberCount(G.assaults[f.assault])}/${G.assaults[f.assault].max}</span>${!f.launched && now() < G.assaults[f.assault].launch ? `<button class="btn sm" data-act="assault" data-id="${f.assault}">＋ Add participants</button>` : ""}` : ""}${canRecall ? `<button class="btn ghost sm" data-act="recallF" data-id="${f.id}">Recall</button>` : ""}${strikeRowBtns(f)}${fhelpBtn(f)}${canHurry && rem > 0 ? `<button class="btn amber sm" data-act="hurry" data-id="${f.id}" ${S.shards >= shardCost(rem) ? "" : "disabled"}>Hurry <span class="shard">◆${shardCost(rem)}</span></button>` : ""}${!f.assault && f.phase !== "resolving" && rem > 20000 ? `<button class="btn ghost sm" data-act="fBoost" data-id="${f.id}" ${S.shards >= boostCost(f) ? "" : "disabled"}>⚡ Afterburners <span class="shard">◆${boostCost(f)}</span></button>${S.boosts > 0 ? `<button class="btn ghost sm" data-act="fBoostItem" data-id="${f.id}">Use boost −5 min · ${S.boosts}</button>` : ""}` : ""}</div></div>`;
+      <div class="acts"><button class="btn ghost sm" data-act="fleetMap" data-id="${f.id}">Show on map</button>${f.mission === "attack" && f.phase === "out" && !f.assault && G.mode === "online" && rem > 20000 ? `<button class="btn sm" data-act="callJoint" data-id="${f.id}">Call allies to join</button>` : f.assault && G.assaults[f.assault] ? `<span class="pill go">Joint · ${memberCount(G.assaults[f.assault])}/${G.assaults[f.assault].max}</span>${!f.launched && now() < G.assaults[f.assault].launch ? `<button class="btn sm" data-act="assault" data-id="${f.assault}">＋ Add participants</button>` : ""}` : ""}${canRecall ? `<button class="btn ghost sm" data-act="recallF" data-id="${f.id}">Recall</button>` : ""}${strikeRowBtns(f)}${fhelpBtn(f)}${canHurry && rem > 0 ? `<button class="btn amber sm" data-act="hurry" data-id="${f.id}" ${S.shards >= shardCost(rem) ? "" : "disabled"}>Hurry <span class="shard">◆${shardCost(rem)}</span></button>` : ""}${(!f.assault || f.phase === "back") && f.phase !== "resolving" && rem > 20000 ? `<button class="btn ghost sm" data-act="fBoost" data-id="${f.id}" ${S.shards >= boostCost(f) ? "" : "disabled"}>⚡ Afterburners <span class="shard">◆${boostCost(f)}</span></button>${S.boosts > 0 ? `<button class="btn ghost sm" data-act="fBoostItem" data-id="${f.id}">Use boost −5 min · ${S.boosts}</button>` : ""}` : ""}</div></div>`;
   }).join("");
   const shipsAt = p => p.kind === "home" || p === hw ? Object.fromEntries(Object.entries(S.ships).filter(([, v]) => v > 0)) : cleanShips(p.garrison || {});
   const count = o => Object.values(o).reduce((x, y) => x + y, 0);
@@ -21302,6 +21304,13 @@ function strikeBoost(id, kind) {
 function strikeSync() { const T = now(); for (const f of S.fleets) { const a = f.assault && G.assaults[f.assault]; if (!a || !a.arrive || !a.rally) continue;
   if (f.launched && f.phase === "out" && a.arrive < f.arrive - 500) { f.arrive = Math.max(T + 500, a.arrive); dirty(); } } }
 setInterval(() => { try { if (S) strikeSync(); } catch (e) {} }, 1000);
+/* v689 a fleet still flying to a joint strike that has already fought (an older copy of the empire, saved from another device, brought
+   it back from before the battle) or that no longer exists: it used to fly on for hours to a fight that was over, with no speed-ups.
+   Now it lands at once and takes the strike's recorded result (or turns home if the strike is gone). */
+function strikeOrphans(o) { if (!S || !G.db) return; for (const f of S.fleets) { const id = f.assault; if (!id || o[id] || f.orph === id || !(f.phase === "out" || f.phase === "muster") || G.resolving.has(f.id)) continue; f.orph = id;
+    adb().doc("assaults/" + id).get().then(sn => { const a = sn && sn.exists ? sn.data() : null; if (!S.fleets.includes(f) || f.assault !== id || !(f.phase === "out" || f.phase === "muster")) return;
+      if (a && a.status === "open") { f.orph = null; return; } const T = now(); f.phase = "out"; f.launched = 1; if (f.arrive > T + 2000) { f.arrive = T + 2000; f.out = Math.min(f.out || T, T - 1); }
+      dirty(); flush(); toast(a ? "Your joint strike already fought while this device was behind. Your fleet's result is coming in." : "That joint strike no longer exists. Your fleet is turning home.", "warn"); softRender(); }).catch(() => { f.orph = null; }); } }
 function strikeBoostUI(a) { if (!(a.members || {})[G.me] || strikeMarchLeft(a) < 45000) return ""; const T = now(), nb = Object.entries(a.boosts || {});
   return `<h2 class="sec">⚡ Speed up the joint strike</h2><p class="note">Any member can boost the march. Strikes the target in <b data-end="${a.arrive}">${ftime(a.arrive - T)}</b>.${nb.length ? ` Boosted by ${nb.map(([u, n]) => `${esc(u === G.me ? "you" : nameOf(u))}${n > 1 ? " ×" + n : ""}`).join(", ")}.` : ""}</p>
     <div style="display:flex;gap:8px"><button class="btn ghost" style="flex:1" data-act="strikeBoost" data-id="${a.id}" data-k="item" ${S.boosts > 0 ? "" : "disabled"}>⚡ Boost −5 min · ${S.boosts || 0} left</button><button class="btn amber" style="flex:1" data-act="strikeBoost" data-id="${a.id}" data-k="burn" ${(S.shards || 0) >= strikeBurnCost(a) ? "" : "disabled"}>🔥 Afterburners −33% · ◆${strikeBurnCost(a)}</button></div>`; }
@@ -26513,12 +26522,12 @@ const HELP_MAX = 10, HELP_DAY = 30;
    Each member who helps cuts 4% of the time left (at least 30 seconds), up to 10 helps. Helping counts toward the same 30 a day. */
 const fhStrike = f => { const a = f && f.assault && G.assaults[f.assault]; return a && !a.disb && (a.members || {})[G.me] && f.phase === "out" && a.arrive - now() > 45000 ? a : null; };
 const fhId = f => fhStrike(f) ? "s-" + f.assault : f.id + "-" + f.phase;
-const fhOK = f => !!f && (fhStrike(f) || (!f.assault && f.mission !== "spy" && (f.phase === "back" || f.phase === "out")));
+const fhOK = f => !!f && (fhStrike(f) || ((!f.assault || f.phase === "back") && f.mission !== "spy" && (f.phase === "back" || f.phase === "out")));
 const fhEnd = f => { const a = fhStrike(f); if (a) return a.arrive; const b = fleetBounds(f); return b ? b[1] : 0; };
 function strikeCut(a, cut) { const T = now(), base = Math.max(T, a.launch || 0), arr = Math.max(base + 30000, a.arrive - cut), out0 = a.mout || a.launch || T; let mout = out0;
   if (T > (a.launch || 0)) { const k = clamp((T - out0) / Math.max(1, a.arrive - out0), 0, .999); mout = T - k * (arr - T) / (1 - k); }
   const saved = a.arrive - arr; if (saved <= 0) return 0; a.arrive = Math.floor(arr); a.mout = Math.floor(mout); try { adb().doc("assaults/" + a.id).update({ arrive: a.arrive, mout: a.mout }).catch(() => {}); } catch (e) {} try { strikeSync(); } catch (e) {} dirty(); try { jsRefresh(); } catch (e) {} return saved; }
-function homeHB(T) { const it = []; for (const f of S.fleets || []) { if (f.phase === "back" && !f.assault && f.back - T > 20000) it.push({ f, end: f.back }); else { const a = fhStrike(f); if (a && !it.some(x => x.a === a)) it.push({ f, a, end: a.arrive }); } }
+function homeHB(T) { const it = []; for (const f of S.fleets || []) { if (f.phase === "back" && f.back - T > 20000) it.push({ f, end: f.back }); else { const a = fhStrike(f); if (a && !it.some(x => x.a === a)) it.push({ f, a, end: a.arrive }); } }
   if (!it.length) return ""; const x = it.reduce((p, q) => q.end > p.end ? q : p), n = it.length, c = x.a ? strikeBurnCost(x.a) : fbCost(x.f);
   return `<button class="omb homeb" data-act="${x.a ? "assault" : "fleetMap"}" data-id="${x.a ? x.a.id : x.f.id}"><b>${x.a ? "⚔ STRIKE" : "↩ HOME"}${n > 1 ? " +" + (n - 1) : ""}</b><span class="cpt" data-end="${x.end}"></span></button><button class="omb homeb hbz" data-act="${x.a ? "strikeBoost" : "fBoost"}" data-id="${x.a ? x.a.id : x.f.id}"${x.a ? ' data-k="burn"' : ""} aria-label="Afterburners: ${x.a ? "a third off the march" : "the rest of the trip 50% faster"}" ${S.shards >= c ? "" : "disabled"}>⚡${c ? ` ◆${c}` : ""}</button>`; }
 function strikeRowBtns(f) { const a = fhStrike(f); if (!a) return ""; const left = strikeMarchLeft(a), bc = strikeBurnCost(a), hc = shardCost(left);
@@ -26973,10 +26982,10 @@ const ACT = {
   cineMode: d => { if (G3 && G3.cam.cine) { G3.cam.cine.m = d.m; const sg = G3.cam.siege; /* v130: on the siege film the angle buttons set your view on top of the director's shots */
     if (sg) { const P = { chase: [0, 0, 1], side: [Math.PI / 2, 0, 1], front: [Math.PI, 0, 1], top: [0, -1.1, 1.2], orbit: [sg.oth, sg.oph, sg.ok] }[d.m]; if (P) [sg.oth, sg.oph, sg.ok] = P; sg.spin = d.m === "orbit"; }
     cineBar(); } },
-  fBoost: d => act(() => { const f = S.fleets.find(x => x.id === d.id); if (!f || f.assault) return; const c = fbCost(f); if (S.shards < c) return toast(`Afterburners need ◆${c}.`, "warn"); if (fleetSpeedUp(f)) { S.shards -= c; S.tutRush = 1; toast(`Afterburners lit: the rest of the trip is 50% faster.${c ? "" : " This one is on the Academy."}`, "win"); } }),
+  fBoost: d => act(() => { const f = S.fleets.find(x => x.id === d.id); if (!f || (f.assault && f.phase !== "back")) return; const c = fbCost(f); if (S.shards < c) return toast(`Afterburners need ◆${c}.`, "warn"); if (fleetSpeedUp(f)) { S.shards -= c; S.tutRush = 1; toast(`Afterburners lit: the rest of the trip is 50% faster.${c ? "" : " This one is on the Academy."}`, "win"); } }),
   fFuel: d => act(() => { const f = S.fleets.find(x => x.id === d.id), s = SHOP[d.k]; if (!f || f.assault || !s || !s.fuelMs || !((S.items || {})[d.k] > 0)) return; if (fleetSpeedUp(f, s.fuelMs)) { S.items[d.k]--; S.tutRush = 1; spdAdd(s.fuelMs); toast(`Afterburner Fuel burned: ${s.fuelL} cut.`, "win"); } }), /* v534 */
   shopFuel: () => openSheet({ type: "shop", cat: "accel", jump: "accel" }),
-  fBoostItem: d => act(() => { const f = S.fleets.find(x => x.id === d.id); if (!f || f.assault || !(S.boosts > 0)) return; if (fleetSpeedUp(f, 5 * 60000)) { S.boosts--; S.tutRush = 1; spdAdd(300000); toast("Boost used: 5 minutes cut."); } }),
+  fBoostItem: d => act(() => { const f = S.fleets.find(x => x.id === d.id); if (!f || (f.assault && f.phase !== "back") || !(S.boosts > 0)) return; if (fleetSpeedUp(f, 5 * 60000)) { S.boosts--; S.tutRush = 1; spdAdd(300000); toast("Boost used: 5 minutes cut."); } }),
   recallG: d => act(() => { // stop gathering early: fly home with what is loaded so far
     const f = S.fleets.find(x => x.id === d.id); if (!f || f.phase !== "gather") return; const T = now(), h = f.haul || { res: "m", amt: 0 }, fr = clamp((T - f.arrive) / Math.max(1, f.gend - f.arrive), 0, 1);
     occClear(f.nid, f.id); f.phase = "back"; f.back = T + (f.tt || 60000); const got = Math.floor(h.amt * fr); setHaulLoot(f, h.res, got); f.gend = T; toast(`Gatherers recalled with ${fmt(got)} ${RES_N[h.res].toLowerCase()}.`); }),
@@ -26986,7 +26995,7 @@ const ACT = {
     toast(`Fleet recalled. Home in ${ftime(el)}.`);
   }),
   hurry: d => act(() => {
-    const f = S.fleets.find(x => x.id === d.id), b = f && fleetBounds(f); if (!f || !b || f.assault) return;
+    const f = S.fleets.find(x => x.id === d.id), b = f && fleetBounds(f); if (!f || !b || (f.assault && f.phase !== "back")) return;
     const T = now(), c = shardCost(b[1] - T); if (S.shards < c) return toast(`Hurrying needs ◆${c}. You have ◆${S.shards}.`, "warn");
     S.shards -= c; const cut = b[1] - T;
     if (f.phase === "out") { f.arrive = T; } else if (f.phase === "gather") { f.gend = T; } else if (f.phase === "back") { f.back = T; }
