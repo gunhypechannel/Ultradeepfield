@@ -1867,6 +1867,14 @@ main.full{padding:0;overflow:hidden;gap:0}
 .crcm b{font:700 15px/1 var(--f-display);color:#bff6ec}.crcm small{font-size:10px;color:#9ab}.crcm .btn{padding:3px 8px;font-size:11px}.crcm.ok{border-color:#3fe0c8}.crcm.got{opacity:.6}
 .crccl{border-color:rgba(232,180,90,.14);background:rgba(18,10,30,.5)}.crccl img{width:112px;height:72px;flex:none;border-radius:7px;object-fit:cover;object-position:50% 35%}.crccl em{color:#e8b45a}
 .crcmi{width:40px;height:40px;border-radius:8px;object-fit:cover;margin-bottom:2px}
+.crcbosses{display:flex;flex-direction:column;gap:6px;flex:none}.crcboss{display:flex;gap:9px;align-items:center;padding:6px;border-radius:10px;border:1px solid rgba(232,180,90,.2);background:rgba(18,10,30,.55)}
+.crcboss img{width:64px;height:64px;flex:none;border-radius:8px;object-fit:cover;object-position:50% 30%}.crcboss>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.crcboss small{font-size:11px;color:#b9a9c9}.crcboss.dead{opacity:.5}.crcboss.off{opacity:.65}
+.crcmolt{display:flex;gap:10px;align-items:center;flex:none;margin:8px 0;padding:8px;border-radius:12px;border:1px solid #e8b45a;background:linear-gradient(135deg,rgba(40,24,6,.85),rgba(6,30,34,.85));box-shadow:0 0 18px rgba(232,180,90,.25)}
+.crcmolt img{width:86px;height:86px;flex:none;border-radius:9px;object-fit:cover}.crcmolt>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.crcmolt b{font:700 14px/1.15 var(--f-display);color:#ffd07a}.crcmolt span{font-size:12px;color:#c9e9ea}
+.crcph{display:flex;gap:4px}.crcph i{font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px;border:1px solid rgba(232,180,90,.4);color:#c9b48a}.crcph i.on{background:#e8b45a;color:#1a1006;font-weight:700}.crcph i.done{background:rgba(63,232,240,.25);color:#7ff8e4;border-color:#3fe8f0}
+.crctac{display:flex;gap:9px;align-items:center;margin-top:7px}.crctac img{width:40px;height:40px;flex:none;border-radius:8px}.crctac>div{display:flex;flex-direction:column;min-width:0}.crctac small{font-size:12px;color:#c9bdd6;line-height:1.35}
+.crcbi{display:flex;flex-direction:column;gap:4px;margin:6px 0;flex:none}.crcbi small{font-size:12px;color:#b9a9c9}.crcbi img{display:none}
+.crcmi.s{width:16px;height:16px;margin:0 2px -3px 0;border-radius:3px}.crcfr{border-color:rgba(232,180,90,.25)}
 .crcart{background:radial-gradient(ellipse at 50% 60%,rgba(63,224,200,.2),rgba(16,8,30,.6) 70%)}
 .mimban{position:relative;border-radius:14px;overflow:hidden;margin:4px 0 10px;border:1px solid rgba(95,216,255,.35);box-shadow:0 0 24px rgba(40,170,255,.18)}
 .mimban{aspect-ratio:3/1;flex:none}.mimban img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover}
@@ -4937,7 +4945,7 @@ function mimNorm(src, T) { const k = mimKey(), w = Math.max(1, Math.min(4, mimWe
   return o; }
 const mimSt = T => mimStC(T);
 const mimBossOn = T => { const w = mimWeek(T); return w >= 2 && w <= 4; };
-function mimHid(x, T) { if (x.mon === "mimic") return !mimLive(x, T); const B = MIM_BOSS[x.id]; if (!B) return false; if (B.om) return !moWin(T) || !!moOutcome(moSt(T).o); /* v667 */ if (!mimBossOn(T)) return true; if (B.mon !== "nexus") { const A = mimSt(T).a[B.id]; return !!(A && A.dead); } return false; }
+function mimHid(x, T) { if (x.mon === "mimic") return !mimLive(x, T); const B = MIM_BOSS[x.id]; if (!B) return false; if (B.crc) return crcHid(x, T); /* v704 */ if (B.om) return !moWin(T) || !!moOutcome(moSt(T).o); /* v667 */ if (!mimBossOn(T)) return true; if (B.mon !== "nexus") { const A = mimSt(T).a[B.id]; return !!(A && A.dead); } return false; }
 const mimOpen = (st, reg) => st.x["mx" + reg].open || 0;
 function mimSupPct(st) { const n = Object.keys(st.con).length; return Math.min(1, st.sup / (250 + 80 * n)); }
 function mimSupFx(p) { return { sh: Math.round(50 * p), rg: Math.round(60 * p), sw: Math.round(50 * p) }; }
@@ -4945,7 +4953,7 @@ const mimTier = p => p >= 200 ? ["Vanguard", "#ffd36b"] : p >= 60 ? ["Warden", "
 /* points earned this fight, held to the daily cap; returns what counts */
 function mimCon(st, pts, T) { const day = Math.floor(T / 864e5), c = st.cday[G.me] && st.cday[G.me][0] === day ? st.cday[G.me] : [day, 0], add = Math.max(0, Math.min(pts, MIM_DAYCAP - c[1]));
   c[1] += add; st.cday[G.me] = c; st.con[G.me] = (st.con[G.me] || 0) + add; st.sup += add; return add; }
-function alphaForce(x, T) { const st = mimSt(T || now()), B = MIM_BOSS[x.id]; if (B.om) { const { o } = moSt(T || now()); return B.om === 2 ? { mnexus: o.nx.anc.find(v => v > 0) || MO_ANC, mguard: 2, mharv: 2 } : { [moPh(o.hp) === 3 ? "momegax" : "momega"]: Math.max(1, o.shd > 0 ? o.shd : o.hp), mstalk: 6, mhunt: 3 }; } if (B.mon === "nexus") { const X = st.x[B.id]; const n = X.anc.find(v => v > 0) || MIM_ANC; return { mnexus: n, mguard: 2, mharv: 2 }; }
+function alphaForce(x, T) { if (MIM_BOSS[x.id].crc) return crcBossForce(x, T); /* v704 */ const st = mimSt(T || now()), B = MIM_BOSS[x.id]; if (B.om) { const { o } = moSt(T || now()); return B.om === 2 ? { mnexus: o.nx.anc.find(v => v > 0) || MO_ANC, mguard: 2, mharv: 2 } : { [moPh(o.hp) === 3 ? "momegax" : "momega"]: Math.max(1, o.shd > 0 ? o.shd : o.hp), mstalk: 6, mhunt: 3 }; } if (B.mon === "nexus") { const X = st.x[B.id]; const n = X.anc.find(v => v > 0) || MIM_ANC; return { mnexus: n, mguard: 2, mharv: 2 }; }
   const A = st.a[B.id], live = MIM_HIVES.filter(h => mimReg(h) === B.reg && mimLive(h, T || now())).length; return { [B.u]: Math.max(1, A.hp), mguard: 2 + Math.floor(live / 10), mstalk: 4 }; }
 /* the hives the player destroys feed the meter in batches (one shared write every few minutes at most) */
 function mimQueue(pts, reg) { const M = mimS(); M.pend = (M.pend || 0) + pts; M.prk = M.prk || [0, 0, 0, 0]; M.prk[reg]++; dirty(); mimFlush(); }
@@ -5001,7 +5009,7 @@ function mimClaim() { if (!S || !G.ready) return; try { moClaimM(); } catch (e) 
     const tot = Object.values(A.dmg).reduce((a, b) => a + b, 0) || 1, share = my / tot, cat = Math.min(8, 2 + Math.round(share * 20)) + (A.last === G.me ? 2 : 0), sh = Math.min(40, 10 + Math.round(share * 60));
     M.m.cat = (M.m.cat || 0) + cat; M.m.tis = (M.m.tis || 0) + 20; S.shards = (S.shards || 0) + sh; logReward(`Alpha Sovereign ${MIM_AN[i]} slain`, null, { shards: sh, kind: "event" });
     note(`Alpha Sovereign ${MIM_AN[i]} is dead. Your share (${Math.round(share * 100)}%): ${cat} Alpha Neural Catalyst${cat > 1 ? "s" : ""}, ◆${sh} and 20 Mimic Tissue${A.last === G.me ? ", with the final blow" : ""}.`, "win"); dirty(); } }
-function mimBossInfo(x, T) { if (MIM_BOSS[x.id].om) return moInfo(x, T); const st = mimSt(T), B = MIM_BOSS[x.id], X = st.x["mx" + B.reg], A = st.a["ma" + B.reg], nx = B.mon === "nexus";
+function mimBossInfo(x, T) { if (MIM_BOSS[x.id].crc) return crcBossInfo(x, T); /* v704 */ if (MIM_BOSS[x.id].om) return moInfo(x, T); const st = mimSt(T), B = MIM_BOSS[x.id], X = st.x["mx" + B.reg], A = st.a["ma" + B.reg], nx = B.mon === "nexus";
   const live = MIM_HIVES.filter(h => mimReg(h) === B.reg && mimLive(h, T)).length, weak = Math.round(Math.min(.4, (st.rk[B.reg] || 0) / 250) * 100);
   const bar = (v, mx, col) => `<div class="mimbar"><i style="width:${v / mx * 100}%;background:${col}"></i></div>`;
   if (nx) return `<div class="mimboss"><b>${X.open ? `Collapsed · reconnects in <span data-end="${X.open}">${ftime(X.open - T)}</span>` : `Anchors ${X.anc.filter(v => v > 0).length} of 4 standing`}</b>
@@ -5214,139 +5222,306 @@ function mimLabHTML(row0, b) { const p = S.mimPrev || {}, row = (ic, n, sub, btn
     + row("⬢", "Omega: The Convergence", "The arrival cinematic, then Omega on the map with its Central Nexus", b("labPrev", "krk", "▶ Preview") + b("moCine", "p2", "Phase 2") + b("moCine", "p3", "Phase 3") + b("moFinal", "", "Ending"))
     + MIM_LAB.map(([k, n]) => row0(k === "echo" ? "◈" : /^om|node|pylon|swarm/.test(k) ? "⬢" : "✣", n, k === "swarm" ? "A small fleet clears a wave" : "A demo fleet of 1,400 warships", b("mimLabFight", k, "⚔ Watch"))).join(""); }
 const monGone = x => x.mon === "slevi" || x.mon === "ctort" || x.mon === "gspider"; /* v616 the Gravity Spider too */ /* v612 the Star Leviathan and the Crystal Tortoise are retired */
-/* ---------- v703 TIDE OF THE CARCINID, phase 1: First Tides (the owner's master prompt, built in phases) ----------
+/* ---------- v703/v704 TIDE OF THE CARCINID (the owner's master prompt) ----------
    Below the Kraken Deep lies the Abyss, a sea older than the stars. The Carcinid Abyssal Empire ruled it before the Architects built
    their prison: armoured crustacean legions who bred the great ocean beasts (the Leviathan, the Kraken, the serpents of the deep) as war
    mounts. Every time a Warden fell, the seal over the Abyss thinned. Now Abyssal Breach Zones are tearing open across the galaxy.
-   The run: every Season of the Leviathan (the first season of the ten-season year), from the first one after the prologue (season 3,
-   4 January 2027). 120 Breach Zones on their own spiral; each grows through four infestation stages, capped by the week, and its
-   garrison grows with it; a nest you destroy reforms at Stage 1 after 12 hours. Carcinid scout patrols (Scuttle Frigates and Tidal
-   Interceptors) roam between them. Phase 1 ships week 1 (First Tides): the first 40 Breach Zones, Stages 1 and 2, the patrols, the
-   first four Carcinid monsters and two ships (3D models built in code), three materials (Abyssal Chitin, Coral Alloy, Tidal Resin),
-   weekly exploration orders, and the server-wide Abyssal Suppression Meter (shared record event/carcinid {k, sup, con, cday}; owner
-   previews use event/carcinid_prev). CRC_WAVES and CRC_CAP open the later weeks as their phases are built. */
-const CRC_U = { cscut: 1, cspit: 1, charv: 1, cguard: 1, cfrig: 1, cint: 1, cnest: 1 };
-Object.assign(AL, {
-  cscut:  { n: "Scuttle Drone", atk: 380, sh: 320, hull: 5600, val: 16000, one: 1 },
-  cspit:  { n: "Coral Spitter", atk: 760, sh: 240, hull: 5200, val: 22000, one: 1 },
-  charv:  { n: "Tide Harvester", atk: 160, sh: 900, hull: 9800, val: 20000, one: 1 },
-  cguard: { n: "Shell Guardian", atk: 420, sh: 3000, hull: 28000, val: 52000, one: 1 },
-  cfrig:  { n: "Scuttle Frigate", atk: 600, sh: 800, hull: 12000, val: 36000, one: 1 },
-  cint:   { n: "Tidal Interceptor", atk: 820, sh: 260, hull: 5800, val: 24000, one: 1 },
-  cnest:  { n: "Abyssal Breach Nest", atk: 650, sh: 2600, hull: 50000, val: 90000, one: 1 } });
+   The run: every Season of the Leviathan (the first season of the ten-season year), from season index 2 (4 January 2027).
+   - Week 1, First Tides: 40 Breach Zones open (Stages 1-2), scout patrols chart our worlds.
+   - Week 2, The Claw Admirals: 40 more; Stage 3 (Reef Fortress); the Red Claw Marshal and the Pearl Matron take the field.
+   - Week 3, The Deep Guardians: the last 40; the Reef Tyrant and the Trench Oracle; the Trench Behemoth, the Krakenbreaker and the
+     Pale Sovereign rise.
+   - Week 4, The Great Molting: Stage 4 (Abyssal Dominion); Dread Admiral Korvax rides a chained Leviathan; from day 23 the Abyssal Crown
+     surfaces and molts through four phases. Kill it and the server sees the finale.
+   The wild Kraken is back in the deep layers for good from the first tide (it was retired as a world boss in v700).
+   Shared record event/carcinid {k, sup, con, cday, b: {boss id: {hp, dmg: {uid: sections}, dead, last, t}}} (previews use _prev).
+   The six Abyssal tactics (each a real effect in the fights that carry it): Shell Armor, Brood Deployment, Tidal Pulse, Molting,
+   Monster Resonance, Pincer Lock. Eight materials feed the Abyssal Forge (cosmetics, a hull finish, a planet skin, accelerators, a
+   Titan Core); a reward track pays out by tide points, its premium side with Void Pass Premium. */
+const CRC_U = {}; for (const k of ["cscut", "cspit", "charv", "cguard", "cbrood", "cwar", "ccrys", "clanc", "cmolt", "ckrak", "cfrig", "cint", "cdest", "cvang", "ccarr", "cpearl", "cmint", "cregent", "cempr", "cbrlord", "cnest", "cmar", "cmat", "ctyr", "cora", "ckor", "cbeh", "ckbr", "cpal", "ccrown", "ccrownm"]) CRC_U[k] = 1;
+{ const U = (n, atk, sh, hull, val) => ({ n, atk, sh, hull, val, one: 1 }); Object.assign(AL, {
+  cscut: U("Scuttle Drone", 380, 320, 5600, 16000), cspit: U("Coral Spitter", 760, 240, 5200, 22000), charv: U("Tide Harvester", 160, 900, 9800, 20000), cguard: U("Shell Guardian", 420, 3000, 28000, 52000),
+  cbrood: U("Broodmother", 300, 1800, 24000, 60000), cwar: U("Claw Warrior", 900, 1200, 16000, 48000), ccrys: U("Crystal Reaver", 820, 900, 11000, 40000), clanc: U("Trench Lancer", 1300, 1400, 22000, 70000),
+  cmolt: U("Molting Titan", 2800, 2600, 64000, 200000), ckrak: U("The Kraken", 3600, 2400, 90000, 260000),
+  cfrig: U("Scuttle Frigate", 600, 800, 12000, 36000), cint: U("Tidal Interceptor", 820, 260, 5800, 24000), cdest: U("Reef Guard Destroyer", 1000, 900, 15000, 46000), cvang: U("Abyssal Vanguard", 1400, 1600, 26000, 80000),
+  ccarr: U("Brood Warden Carrier", 700, 2400, 36000, 110000), cpearl: U("Pearl Hunter", 900, 300, 6000, 26000), cmint: U("Molting Interceptor", 1000, 360, 6400, 30000), cregent: U("Tidal Regent", 2600, 2800, 60000, 220000),
+  cempr: U("Emperor's Shell", 3400, 3600, 80000, 320000), cbrlord: U("Broodlord Carrier", 1200, 3000, 52000, 180000), cnest: U("Abyssal Breach Nest", 650, 2600, 50000, 90000),
+  cmar: U("Red Claw Marshal", 1000, 2200, 30000, 300000), cmat: U("Pearl Matron", 700, 3000, 32000, 300000), ctyr: U("Reef Tyrant", 900, 3600, 38000, 300000), cora: U("Trench Oracle", 1100, 2400, 28000, 300000),
+  ckor: U("Dread Admiral Korvax", 1300, 3200, 36000, 400000), cbeh: U("Trench Behemoth", 1000, 4200, 44000, 350000), ckbr: U("Krakenbreaker", 1300, 2600, 34000, 350000), cpal: U("Pale Sovereign", 1200, 3000, 32000, 350000),
+  ccrown: U("The Abyssal Crown", 1500, 4000, 42000, 600000), ccrownm: U("The Abyssal Crown, molting", 2300, 1500, 32000, 600000) }); }
 const CRC_COL = "#e8b45a", CRC_GLOW = "#3fe0c8";
 Object.assign(MON, {
   carcinid: { n: "Abyssal Breach Zone", sp: "Breach Zone", ic: "❖", col: CRC_COL, rgb: "232,180,90", per: 99, d: "A tear into the Abyss. Coral and black chitin have grown round the wound, and the Carcinid pour through it: drones, spitters and the shelled guardians of the brood. It grows through four infestation stages, and every stage brings a heavier garrison. Close it before it matures.", names: ["Breach"] },
-  crcpat: { n: "Carcinid Scout Patrol", sp: "Scout Patrol", ic: "❖", col: "#5fe0e8", rgb: "95,224,232", per: 99, d: "Scuttle Frigates and Tidal Interceptors charting our worlds for the Abyssal Empire. Sink them before they report home.", names: ["Patrol"] } });
-const CRC_M = { carcinid: "cnest", crcpat: "cpat" };
-const CRC_N = 120, CRC_P = 16, CRC_WK = 7 * 864e5, CRC_LEN = 28 * 864e5, CRC_REGROW = 12 * 3600e3;
-const CRC_WAVES = 1, CRC_CAP = 2; /* phase 1: only week 1's 40 Breach Zones, and Stages 1 and 2 */
+  crcpat: { n: "Carcinid Scout Patrol", sp: "Scout Patrol", ic: "❖", col: "#5fe0e8", rgb: "95,224,232", per: 99, d: "A Carcinid war patrol charting our worlds for the Abyssal Empire. Sink it before it reports home.", names: ["Patrol"] },
+  wkraken: { n: "The Kraken", sp: "Kraken", ic: "✵", col: "#c46aff", rgb: "196,106,255", per: 99, d: "The Kraken has come back up from the Abyss, wild now, its Carcinid riders gone. It drifts through the deep layers and drags down anything that strays close. Slaying one breaks the Abyssal war-song: Dread Admiral Korvax loses his Monster Resonance against you for 12 hours.", names: ["Kraken"] } });
+const CRC_BDEF = [ /* id, mon, unit, name, from week, sections, mech, map angle, radius (share of the galaxy), map size, painting, colour, lore */
+  ["ca0", "crcmar", "cmar", "The Red Claw Marshal", 2, 100, "pincer", .55, .42, 2, "marshal", "#ff5a5a", "First of the Claw Admirals, a crimson war-crab who leads from the front. Her pincers lock a fleet in place: our ships fight her with a sixth less firepower."],
+  ["ca1", "crcmat", "cmat", "The Pearl Matron", 2, 100, "brood", 2.15, .42, 2, "matron", "#e8fbff", "Mother of the broods, crowned in pearls. Her sac never stops: every fight brings a fresh wave of Broodmothers and drones, more the healthier she is."],
+  ["ca2", "crctyr", "ctyr", "The Reef Tyrant", 3, 100, "shell", 3.7, .42, 2.1, "tyrant", "#ff9a7a", "A walking reef fortress. His shell turns aside 30% of every blow until the server's Abyssal Suppression passes 50%."],
+  ["ca3", "crcora", "cora", "The Trench Oracle", 3, 100, "pulse", 5.3, .42, 2, "oracle", "#b48cff", "The Empire's seer, who hears the tides before they turn. Her Tidal Pulse strips 40% of our fleet's shields."],
+  ["ca4", "crckor", "ckor", "Dread Admiral Korvax", 4, 150, "reson", 1.0, .26, 2.4, "korvax", "#ffc870", "Supreme commander of the Abyssal Empire, riding a chained Leviathan into battle. The war-song of the deep beasts makes his fleet 25% tougher and deadlier, unless you have slain a wild Kraken in the last 12 hours."],
+  ["cg0", "crcbeh", "cbeh", "The Trench Behemoth", 3, 150, "shell", .2, .72, 2.4, "behemoth", "#7ff8e4", "A guardian so old that cities grew on its back. Its shell keeps 40% of every blow off it. It does not heal."],
+  ["cg1", "crckbr", "ckbr", "The Krakenbreaker", 3, 150, "pincer", 2.3, .72, 2.3, "krakenbreaker", "#d070ff", "The guardian that tamed the Kraken, with the Kraken's own arms grafted to its shell. Two Krakens fight at its side, and its grip costs our fleet a sixth of its firepower."],
+  ["cg2", "crcpal", "cpal", "The Pale Sovereign", 3, 150, "pulse", 4.4, .72, 2.3, "pale", "#e8fbff", "A ghost-white guardian of living crystal. Its Tidal Pulse strips 40% of our shields, and Crystal Reavers swarm around it."],
+  ["cc", "crccrown", "ccrown", "The Abyssal Crown", 4, 400, "molt", 3.9, .14, 3.6, "s_crownship", "#ffd07a", "The Emperor of the Abyss, a moon of a crab with a city on its back. It surfaces for the Great Molting: four phases, and if it completes its molt, the Empire is reborn."]];
+const CRC_BOSS = {}, CRC_BOSSES = (() => { const out = [], lo = Math.max(LAYERS[LAYERS.length - 1].r0, 18 * SC) + 6, hi = LAYERS[0].r1 - 6;
+  for (const [id, mon, u, name, wk, hp, mech, a, f, sc, art, col, d] of CRC_BDEF) { const rad = Math.sqrt(lo * lo + f * (hi * hi - lo * lo)), lvl = (layerOf(rad).n - 1) * 5 + 5;
+    const B = { id, kind: "pirate", mon, u, crc: 1, name, wk, hp, mech, lvl, r: +rad.toFixed(2), a0: a, sc, art, guard: id[1] === "g", crown: id === "cc" };
+    MON[mon] = { n: name.replace(/^The /, ""), sp: id === "cc" ? "The Crown" : id[1] === "g" ? "Deep Guardian" : "Claw Admiral", ic: "❖", col, rgb: hexRgb(col), per: 99, d, names: [name] }; out.push(B); CRC_BOSS[id] = B; MIM_BOSS[id] = B; }
+  return out; })();
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return `${n >> 16 & 255},${n >> 8 & 255},${n & 255}`; }
+const CRC_M = { carcinid: "cnest", crcpat: "cpat", wkraken: "ckrak" }; for (const B of CRC_BOSSES) CRC_M[B.mon] = B.u;
+const CRC_N = 120, CRC_P = 16, CRC_KN = 6, CRC_WK = 7 * 864e5, CRC_LEN = 28 * 864e5, CRC_REGROW = 12 * 3600e3, CRC_CROWN0 = 3 * CRC_WK + 2 * 864e5;
+const CRC_WAVES = 3, CRC_CAP = 4;
 const CRC_STAGE = ["", "Breach", "Spawning Tide", "Reef Fortress", "Abyssal Dominion"];
-const CRC_WEEKS = [["First Tides", "Breach Zones are tearing open in the outer dark. Scuttle Drones and Coral Spitters pour through, and Carcinid scout frigates are charting our worlds."], ["The Claw Admirals", "The scouts have reported home. The Claw Admirals are taking the field, and the nests are hardening into reef fortresses."], ["The Deep Guardians", "The Empire wakes its guardians. The oldest things in the Abyss are rising toward the light."], ["The Great Molting", "The Abyssal Crown is shedding its shell. When it molts, the Empire is reborn. Break the tide before it does."]];
+const CRC_WEEKS = [["First Tides", "Breach Zones are tearing open in the outer dark. Scuttle Drones and Coral Spitters pour through, and Carcinid scout frigates are charting our worlds."], ["The Claw Admirals", "The scouts have reported home. The Red Claw Marshal and the Pearl Matron have taken the field, and the nests are hardening into reef fortresses."], ["The Deep Guardians", "The Empire wakes its guardians. The Reef Tyrant and the Trench Oracle join the war, and the oldest things in the Abyss are rising toward the light."], ["The Great Molting", "Dread Admiral Korvax rides to war on a chained Leviathan, and the Abyssal Crown is surfacing to shed its shell. If it completes its molt, the Empire is reborn."]];
 const CRC_NESTS = (() => { const out = [], GOLD = Math.PI * (3 - Math.sqrt(5)), lo = Math.max(LAYERS[LAYERS.length - 1].r0, 18 * SC) + 6, hi = LAYERS[0].r1 - 6;
   for (let j = 0; j < CRC_N; j++) { const u = (j + .7) / CRC_N, rad = Math.sqrt(lo * lo + u * (hi * hi - lo * lo)), a = (2.1 + j * GOLD) % TAU, lvl = (layerOf(rad).n - 1) * 5 + 2 + (j * 5) % 4;
     out.push({ id: "cn" + j, kind: "pirate", mon: "carcinid", cj: j, lvl, r: +rad.toFixed(2), a0: +a.toFixed(4), name: `Breach Zone ${String.fromCharCode(65 + (j * 11) % 26)}${String.fromCharCode(65 + (j * 5 + 7) % 26)}-${100 + j}` }); }
   return out; })();
 const CRC_PATS = (() => { const out = [], lo = Math.max(LAYERS[LAYERS.length - 1].r0, 18 * SC) + 10, hi = LAYERS[0].r1 - 10;
   for (let j = 0; j < CRC_P; j++) { const u = (j + .5) / CRC_P, rad = Math.sqrt(lo * lo + u * (hi * hi - lo * lo)), a = (.6 + j * 2.399963 * 1.7) % TAU, lvl = (layerOf(rad).n - 1) * 5 + 3 + (j * 3) % 3;
-    out.push({ id: "cp" + j, kind: "pirate", mon: "crcpat", pj: j, lvl, r: +rad.toFixed(2), a0: +a.toFixed(4), name: `Carcinid Scout Patrol ${["Kesh", "Vorr", "Thal", "Mokk", "Szal", "Ruun", "Qarr", "Ilth"][j % 8]}-${j + 1}` }); }
+    out.push({ id: "cp" + j, kind: "pirate", mon: "crcpat", pj: j, lvl, r: +rad.toFixed(2), a0: +a.toFixed(4), name: `Carcinid Patrol ${["Kesh", "Vorr", "Thal", "Mokk", "Szal", "Ruun", "Qarr", "Ilth"][j % 8]}-${j + 1}` }); }
+  return out; })();
+const CRC_KRAK = (() => { const out = [], lo = Math.max(LAYERS[LAYERS.length - 1].r0, 18 * SC) + 6, hi = LAYERS[0].r1 - 6;
+  for (let j = 0; j < CRC_KN; j++) { const u = .55 + .4 * (j + .5) / CRC_KN, rad = Math.sqrt(lo * lo + u * (hi * hi - lo * lo)), a = (1.3 + j * TAU / CRC_KN) % TAU, lvl = (layerOf(rad).n - 1) * 5 + 4;
+    out.push({ id: "wk" + j, kind: "pirate", mon: "wkraken", kj: j, lvl, r: +rad.toFixed(2), a0: +a.toFixed(4), name: `The Kraken of ${["Thessa", "the Long Dark", "Vhool", "the Drowned Rim", "Morrow", "the Silent Shelf"][j]}` }); }
   return out; })();
 const CRC_RUN = k => k >= PRO && seaCyc(k) === 0;
 function crcT0(T = now()) { const c = vpSeason(T); for (let k = Math.max(0, c - 1); k <= c + 12; k++) if (CRC_RUN(k) && VP_BASE + k * VP_LEN + CRC_LEN > T) return VP_BASE + k * VP_LEN; return VP_BASE + (PRO + 10) * VP_LEN; }
-function crcClock(T) { const p = S && S.crcPrev; if (p && p.w && ownerFree()) return { e: (p.w - 1) * CRC_WK + 3 * 864e5 + Math.max(0, T - p.at), prev: 1 }; return { e: T - crcT0(T), prev: 0 }; } /* a preview opens three days into the week, when Stage 2 is out */
+function crcClock(T) { const p = S && S.crcPrev; if (p && p.w && ownerFree()) return { e: (p.w === 5 ? CRC_CROWN0 + 3600e3 : (p.w - 1) * CRC_WK + 3 * 864e5) + Math.max(0, T - p.at), prev: 1 }; return { e: T - crcT0(T), prev: 0 }; } /* a preview opens three days into the week (W5: the Great Molting) */
 const crcWeek = T => { const e = crcClock(T).e; return e < 0 ? 0 : e >= CRC_LEN ? 5 : 1 + Math.floor(e / CRC_WK); };
 const crcEm = x => x.mon === "crcpat" ? x.pj * 3 * 3600e3 : Math.floor(x.cj / 40) * CRC_WK + (x.cj % 40) * 1.1 * 3600e3;
-function crcLive(x, T) { const e = crcClock(T).e; if (x.mon === "carcinid" && x.cj >= 40 * CRC_WAVES) return false; return e >= crcEm(x) && e < CRC_LEN; }
-const crcHid = (x, T) => !crcLive(x, T);
+const crcKrakOn = T => (S && S.crcPrev && S.crcPrev.w && ownerFree()) || T >= VP_BASE + PRO * VP_LEN; /* the wild Kraken: back for good from the first tide */
+function crcLive(x, T) { if (x.mon === "wkraken") return crcKrakOn(T); const e = crcClock(T).e; if (x.mon === "carcinid" && x.cj >= 40 * CRC_WAVES) return false; return e >= crcEm(x) && e < CRC_LEN; }
+function crcHid(x, T) { const B = CRC_BOSS[x.id]; if (B) { if (!crcBossOn(B, T)) return true; const s = crcStC(T).b[B.id]; return !!(s && s.dead); } return !crcLive(x, T); }
+function crcBossOn(B, T) { const e = crcClock(T).e; return e < CRC_LEN && (B.crown ? e >= CRC_CROWN0 : e >= (B.wk - 1) * CRC_WK); }
 function crcStage(x, T) { if (x.mon !== "carcinid") return 1; const c = crcClock(T), down = ((S && S.pir) || {})[x.id] || 0, born = Math.max(crcEm(x), down ? down - T + c.e : -1e15), wk = Math.max(1, Math.min(4, 1 + Math.floor(c.e / CRC_WK)));
   return Math.max(1, Math.min(1 + Math.floor(Math.max(0, c.e - born) / (3 * 864e5)), wk >= 4 ? 4 : Math.min(3, wk + 1), CRC_CAP)); }
-function crcForce(x, T) { T = T || now(); const n = 1 + Math.floor(x.lvl / 4), sup = crcSupPct(crcStC(T)) >= 1;
-  let o; if (x.mon === "crcpat") o = { cfrig: 1 + Math.floor(n / 3), cint: 2 + (n >> 1) };
-  else { const st = crcStage(x, T); o = { cnest: 1, cscut: 2 + n, charv: 1, cspit: 1 }; if (st >= 2) { o.cscut += 1; o.cspit = 1 + (n >> 1); o.cguard = 1 + Math.floor(n / 4); o.cfrig = 1; } }
+function crcForce(x, T) { T = T || now(); const n = 1 + Math.floor(x.lvl / 4), sup = crcSupPct(crcStC(T)) >= 1, w = Math.max(1, Math.min(4, crcWeek(T)));
+  let o; if (x.mon === "wkraken") return { ckrak: 1 + Math.floor(x.lvl / 12) };
+  if (x.mon === "crcpat") { o = { cfrig: 1 + Math.floor(n / 3), cint: 2 + (n >> 1) }; if (w >= 2) o.cpearl = 1 + (n >> 2); if (w >= 3) { o.cdest = 1; o.cmint = 1 + (n >> 2); } if (w >= 4) { o.cvang = 1; o.ccarr = 1; } }
+  else { const st = crcStage(x, T); o = { cnest: 1, cscut: 2 + n, charv: 1, cspit: 1 };
+    if (st >= 2) { o.cscut += 1; o.cspit = 1 + (n >> 1); o.cguard = 1 + Math.floor(n / 4); o.cfrig = 1; }
+    if (st >= 3) { o.cbrood = 1; o.cscut += 2; o.cwar = 1 + Math.floor(n / 4); o.ccrys = 1; o.cdest = 1; } /* Brood Deployment: every Broodmother brings two more drones */
+    if (st >= 4) { o.cmolt = 1; o.clanc = 1 + Math.floor(n / 5); o.cguard += 1; o.cvang = 1; } }
   if (sup) for (const k in o) if (k !== "cnest") o[k] = Math.max(1, Math.ceil(o[k] * .75)); /* a full Suppression Meter thins every garrison by a quarter */
   return o; }
 const crcForceTxt = x => Object.entries(crcForce(x)).filter(([k]) => k !== "cnest").map(([k, v]) => `${v} ${AL[k].n}`).join(" · ");
-/* the season's materials: Abyssal Chitin from every nest, Coral Alloy from Stage 2 on, Tidal Resin from the scout patrols.
-   The other five (Pearl Core, Emperor Shell Fragment, Brood Enzyme, Ancient Reef Crystal, Crown Reactor Shard) come with later weeks. */
-const CRC_MAT = { chitin: ["Abyssal Chitin", "⬣", "#e8b45a"], coral: ["Coral Alloy", "✲", "#ff7ab0"], resin: ["Tidal Resin", "◉", "#3fe0c8"] };
+/* the eight materials */
+const CRC_MAT = { chitin: ["Abyssal Chitin", "#e8b45a"], coral: ["Coral Alloy", "#ff7ab0"], resin: ["Tidal Resin", "#3fe0c8"], enzyme: ["Brood Enzyme", "#7ff8e4"], pearl: ["Pearl Core", "#e8fbff"], rcrystal: ["Ancient Reef Crystal", "#9fd8ff"], eshell: ["Emperor Shell Fragment", "#d8b070"], crown: ["Crown Reactor Shard", "#ffd07a"] };
+const CRC_MSRC = { chitin: "every Breach Zone", coral: "Stage 2+ Breach Zones", resin: "scout patrols", enzyme: "Stage 3+ Breach Zones and wild Krakens", pearl: "Stage 4 Breach Zones and the Pearl Matron", rcrystal: "the Deep Guardians", eshell: "the Claw Admirals", crown: "the Abyssal Crown" };
 const crcKey = () => (S && S.crcPrev && S.crcPrev.w ? "p" : "") + String(crcT0()); /* an owner preview keeps its own tally */
 function crcS() { const k = crcKey(); if (!S.crc || S.crc.k !== k) S.crc = { k, m: {}, pts: 0, kills: [0, 0, 0, 0, 0], wk: {}, got: {} }; return S.crc; }
-function crcLoot(x, st) { return x.mon === "crcpat" ? { chitin: 1 + Math.floor(x.lvl / 10), coral: 0, resin: 2 + Math.floor(x.lvl / 6), pts: 15 + (x.lvl >> 1) } : { chitin: 2 + st * 2 + Math.floor(x.lvl / 5), coral: st >= 2 ? st : 0, resin: 0, pts: 25 * st + x.lvl }; }
-const crcWk = (M, w) => { M.wk = M.wk || {}; return M.wk[w] || (M.wk[w] = { nest: 0, pat: 0, coral: 0, sv: {} }); };
-function crcWin(x, rep, T) { const st = crcStage(x, T), M = crcS(), L = crcLoot(x, st), w = Math.max(1, Math.min(4, crcWeek(T))), W = crcWk(M, w);
-  for (const k of ["chitin", "coral", "resin"]) if (L[k]) M.m[k] = (M.m[k] || 0) + L[k];
-  M.pts += L.pts; if (x.mon === "crcpat") { W.pat++; M.pat = (M.pat || 0) + 1; } else { W.nest++; M.kills[st] = (M.kills[st] || 0) + 1; } W.coral += L.coral; try { crcQueue(L.pts); } catch (e) {}
-  rep.crc = { st, chitin: L.chitin, coral: L.coral, resin: L.resin, pts: L.pts }; dirty();
-  const got = [L.chitin ? `${L.chitin} Abyssal Chitin` : "", L.coral ? `${L.coral} Coral Alloy` : "", L.resin ? `${L.resin} Tidal Resin` : ""].filter(Boolean).join(", ");
-  note(x.mon === "crcpat" ? `${x.name} sunk. Salvaged ${got} · +${L.pts} tide points.` : `${x.name} closed at Stage ${st} (${CRC_STAGE[st]}). Salvaged ${got} · +${L.pts} tide points.`, "win"); }
-/* the week's exploration orders: [id, text, need, shards, {material: n}] (the same orders every week, counted week by week) */
-const CRC_OBJ = [["sv", "Chart 3 Breach Zones (open one you have explored on the map)", 3, 5, { resin: 4 }], ["nest", "Close 3 Breach Zones", 3, 10, { chitin: 15 }], ["pat", "Sink 2 Carcinid scout patrols", 2, 8, { resin: 6 }], ["coral", "Salvage 10 Coral Alloy", 10, 10, { chitin: 10 }]];
+function crcLoot(x, st) { if (x.mon === "wkraken") return { enzyme: 3 + Math.floor(x.lvl / 8), chitin: 4, pts: 40 + x.lvl };
+  return x.mon === "crcpat" ? { chitin: 1 + Math.floor(x.lvl / 10), resin: 2 + Math.floor(x.lvl / 6), pts: 15 + (x.lvl >> 1) } : { chitin: 2 + st * 2 + Math.floor(x.lvl / 5), coral: st >= 2 ? st : 0, enzyme: st >= 3 ? st - 2 : 0, pearl: st >= 4 ? 1 + (x.lvl >= 20 ? 1 : 0) : 0, pts: 25 * st + x.lvl }; }
+const crcWk = (M, w) => { M.wk = M.wk || {}; const W = M.wk[w] || (M.wk[w] = {}); W.sv = W.sv || {}; for (const k of ["nest", "pat", "coral", "st3", "boss", "grd", "crn", "krk"]) W[k] = W[k] || 0; return W; };
+const crcMatTxt = L => Object.keys(CRC_MAT).filter(k => L[k]).map(k => `${L[k]} ${CRC_MAT[k][0]}`).join(", ");
+function crcAddM(L) { const M = crcS(); for (const k in CRC_MAT) if (L[k]) M.m[k] = (M.m[k] || 0) + L[k]; }
+function crcWin(x, rep, T) { const st = crcStage(x, T), M = crcS(), L = crcLoot(x, st), w = Math.max(1, Math.min(4, crcWeek(T))), W = crcWk(M, w), on = crcWeek(T) >= 1 && crcWeek(T) <= 4;
+  if (x.mon === "wkraken") { (S.crcKrk = S.crcKrk || {}).at = T; if (!on) { crcAddM({ enzyme: L.enzyme }); note(`${x.name} is dead. Salvaged ${L.enzyme} Brood Enzyme. Korvax's Monster Resonance is broken against you for 12 hours.`, "win"); dirty(); return; } W.krk++; }
+  crcAddM(L); M.pts += L.pts; if (x.mon === "crcpat") { W.pat++; M.pat = (M.pat || 0) + 1; } else if (x.mon === "carcinid") { W.nest++; if (st >= 3) W.st3++; M.kills[st] = (M.kills[st] || 0) + 1; } W.coral += L.coral || 0; try { crcQueue(L.pts); } catch (e) {}
+  rep.crc = Object.assign({ st }, L); dirty();
+  note(x.mon === "wkraken" ? `${x.name} is dead. Salvaged ${crcMatTxt(L)} · +${L.pts} tide points. Korvax's Monster Resonance is broken against you for 12 hours.` : x.mon === "crcpat" ? `${x.name} sunk. Salvaged ${crcMatTxt(L)} · +${L.pts} tide points.` : `${x.name} closed at Stage ${st} (${CRC_STAGE[st]}). Salvaged ${crcMatTxt(L)} · +${L.pts} tide points.`, "win"); }
+/* the week's exploration orders: [id, text, need, shards, {material: n}] */
+const CRC_OBJW = { 1: [["sv", "Chart 3 Breach Zones (open one you have explored on the map)", 3, 5, { resin: 4 }], ["nest", "Close 3 Breach Zones", 3, 10, { chitin: 15 }], ["pat", "Sink 2 Carcinid patrols", 2, 8, { resin: 6 }], ["coral", "Salvage 10 Coral Alloy", 10, 10, { chitin: 10 }]],
+  2: [["sv", "Chart 5 Breach Zones", 5, 5, { resin: 6 }], ["st3", "Close 2 Reef Fortresses (Stage 3 or above)", 2, 12, { enzyme: 4 }], ["boss", "Break 10 sections off a Claw Admiral", 10, 15, { eshell: 2 }], ["krk", "Slay a wild Kraken", 1, 10, { enzyme: 3 }]],
+  3: [["nest", "Close 5 Breach Zones", 5, 12, { chitin: 25 }], ["grd", "Break 10 sections off a Deep Guardian", 10, 15, { rcrystal: 3 }], ["boss", "Break 15 sections off the Claw Admirals", 15, 15, { eshell: 3 }], ["pat", "Sink 4 Carcinid patrols", 4, 10, { resin: 10 }]],
+  4: [["st3", "Close 4 Breach Zones at Stage 3 or above", 4, 15, { pearl: 2 }], ["boss", "Break 10 sections off Dread Admiral Korvax or any admiral", 10, 20, { eshell: 4 }], ["crn", "Break 5 sections off the Abyssal Crown", 5, 25, { crown: 1 }], ["krk", "Slay a wild Kraken", 1, 10, { enzyme: 4 }]] };
+const crcObjs = w => CRC_OBJW[w] || CRC_OBJW[1];
 function crcObjN(w, id) { const W = crcWk(crcS(), w); return id === "sv" ? Object.keys(W.sv).length : W[id] || 0; }
 function crcSurvey(x) { const T = now(), w = crcWeek(T); if (w < 1 || w > 4 || !crcLive(x, T) || x.mon !== "carcinid") return; const W = crcWk(crcS(), w); if (!W.sv[x.id]) { W.sv[x.id] = 1; dirty(); } }
-/* the Abyssal Suppression Meter: every nest, patrol and order adds points (300 a commander a day at most) against a target that grows
-   with the number of commanders taking part. 25, 50, 75 and 100% pay everyone who helped; at 100% every garrison is thinned by a quarter. */
+/* the Abyssal Suppression Meter, and the shared health of the admirals, guardians and the Crown */
 const CRC_DAYCAP = 300, CRC_SUPM = [[25, 5, 4], [50, 8, 6], [75, 12, 8], [100, 20, 12]];
 const crcDoc = () => "event/carcinid" + (S && S.crcPrev && S.crcPrev.w ? "_prev" : "");
 function crcRaw() { return G.mode === "online" ? (G.crcDoc || {})[crcDoc()] || null : ((S && S.ldb) || {})[crcDoc()] || null; }
-function crcNorm(src) { const k = crcKey(), o = src && src.k === k ? src : { k }; o.sup = +o.sup || 0; o.con = o.con || {}; o.cday = o.cday || {}; return o; }
+const CRC_REGEN = { ca0: 2, ca1: 2, ca2: 2, ca3: 2, ca4: 3 };
+function crcNorm(src, T) { T = T || now(); const k = crcKey(), o = src && src.k === k ? src : { k }; o.sup = +o.sup || 0; o.con = o.con || {}; o.cday = o.cday || {}; o.b = o.b || {};
+  for (const B of CRC_BOSSES) { let A = o.b[B.id]; if (!A) A = o.b[B.id] = { hp: B.hp, dmg: {}, dead: 0, last: "", t: T }; A.dmg = A.dmg || {};
+    const rg = CRC_REGEN[B.id] || 0; if (rg && !A.dead && A.hp < B.hp) { const add = Math.floor((T - (A.t || T)) / 3600e3 * rg); if (add > 0) { A.hp = Math.min(B.hp, A.hp + add); A.t = T; } } }
+  return o; }
 let CSC = {};
-function crcStC(T) { const src = crcRaw(), d = crcDoc(); if (CSC.src === src && CSC.d === d && Math.abs(T - CSC.t) < 2000) return CSC.st; CSC = { src, d, t: T, st: crcNorm(src ? jcopy(src) : null) }; return CSC.st; }
+function crcStC(T) { const src = crcRaw(), d = crcDoc(); if (CSC.src === src && CSC.d === d && Math.abs(T - CSC.t) < 2000) return CSC.st; CSC = { src, d, t: T, st: crcNorm(src ? jcopy(src) : null, T) }; return CSC.st; }
 function crcSupPct(st) { const n = Object.keys(st.con).length; return Math.min(1, st.sup / (300 + 90 * n)); }
 function crcCon(st, pts, T) { const day = Math.floor(T / 864e5), c = st.cday[G.me] && st.cday[G.me][0] === day ? st.cday[G.me] : [day, 0], add = Math.max(0, Math.min(pts, CRC_DAYCAP - c[1]));
   c[1] += add; st.cday[G.me] = c; st.con[G.me] = (st.con[G.me] || 0) + add; st.sup += add; return add; }
 function crcQueue(pts) { const M = crcS(); M.pend = (M.pend || 0) + pts; dirty(); crcFlush(); }
 let CRC_FL = 0;
+function crcLocal(cur) { if (G.mode === "online") { G.crcDoc = G.crcDoc || {}; G.crcDoc[crcDoc()] = cur; } CSC = {}; }
+async function crcLock(ref) { for (let i = 0; i < 8; i++) { const r = ref.acquire ? await ref.acquire({ holder: G.me, ttlMs: 15000 }) : { acquired: 1 }; if (r.acquired) return; await sleep(1300); } }
 async function crcFlush(force) { const M = crcS(), T = now(); if (!M.pend || G.crcFlushing || (!force && T - CRC_FL < 120e3) || !G.ready) return; CRC_FL = T; G.crcFlushing = 1;
-  try { const ref = adb().doc(crcDoc()); for (let i = 0; i < 6; i++) { const r = ref.acquire ? await ref.acquire({ holder: G.me, ttlMs: 10000 }) : { acquired: 1 }; if (r.acquired) break; await sleep(1200); }
-    const snap = await casGet(ref), cur = crcNorm(snap.exists ? snap.data() : null); crcCon(cur, M.pend, T);
-    if (await casSet(ref, snap, cur)) { M.pend = 0; if (G.mode === "online") { G.crcDoc = G.crcDoc || {}; G.crcDoc[crcDoc()] = cur; } CSC = {}; dirty(); } } catch (e) {} finally { G.crcFlushing = 0; } }
+  try { const ref = adb().doc(crcDoc()); await crcLock(ref); const snap = await casGet(ref), cur = crcNorm(snap.exists ? snap.data() : null, T); crcCon(cur, M.pend, T);
+    if (await casSet(ref, snap, cur)) { M.pend = 0; crcLocal(cur); dirty(); } } catch (e) {} finally { G.crcFlushing = 0; } }
 setInterval(() => { try { if (S && S.crc && S.crc.pend) crcFlush(); } catch (e) {} }, 60e3);
+/* ---------- the boss fights: each section of an admiral, guardian or the Crown is one unit; the tactics bend the fight ---------- */
+const CRC_PHN = ["", "The Shell Holds", "The Brood Wakes", "The Great Molting", "The Crown Reborn"];
+const crcPh = hp => hp > 300 ? 1 : hp > 200 ? 2 : hp > 100 ? 3 : 4;
+const crcKrkFresh = T => !!(S && S.crcKrk && T - S.crcKrk.at < 12 * 3600e3);
+function crcBossSet(B, A, T) { /* what the boss fields right now: [unit, sections in this phase, escort, notes] */
+  const st = crcStC(T), pct = crcSupPct(st); let u = B.u, n0 = A.hp, esc = {}, mods = { pA: 1, pS: 1, seg: 1, bK: 1 }, tac = [];
+  if (B.mech === "pincer") { mods.pA = .84; tac.push("pincer"); esc = B.guard ? { ckrak: 2, cwar: 2 } : { cwar: 3, cscut: 4 }; }
+  if (B.mech === "brood") { tac.push("brood"); esc = { cbrood: 2, cscut: 4 + Math.floor(A.hp / 10), ccarr: 1 }; }
+  if (B.mech === "shell") { tac.push("shell"); mods.seg = B.guard ? .6 : pct >= .5 ? .85 : .7; esc = B.guard ? { cguard: 4, ctyr: 0 } : { cguard: 3, ccrys: 2 }; delete esc.ctyr; }
+  if (B.mech === "pulse") { tac.push("pulse"); mods.pS = .6; esc = B.guard ? { ccrys: 4, cmint: 2 } : { cspit: 4, cint: 4, cmint: 2 }; }
+  if (B.mech === "reson") { esc = { slevi: 1, cregent: 2, cvang: 2 }; if (!crcKrkFresh(T)) { tac.push("reson"); mods.bK = 1.25; } }
+  if (B.crown) { const ph = crcPh(A.hp); n0 = A.hp - (4 - ph) * 100; u = ph === 3 ? "ccrownm" : "ccrown";
+    if (ph === 1) { tac.push("shell"); mods.seg = .5 + .5 * pct; esc = { cguard: 4, cempr: 1 }; }
+    else if (ph === 2) { tac.push("brood"); esc = { cbrood: 3, cscut: 12, cbrlord: 1 }; }
+    else if (ph === 3) { tac.push("molt"); mods.seg = 2; mods.bK = 1.5; esc = { cmolt: 2, cmint: 4 }; }
+    else { tac.push("reson"); mods.bK = crcKrkFresh(T) ? 1.1 : 1.3; esc = { cempr: 2, cregent: 2, slevi: 1 }; } }
+  return { u, n0, esc, mods, tac }; }
+function crcBossForce(x, T) { T = T || now(); const B = CRC_BOSS[x.id], A = crcStC(T).b[B.id], s = crcBossSet(B, A, T); return Object.assign({ [s.u]: Math.max(1, s.n0) }, s.esc); }
+async function crcBossResolve(f) { const B = CRC_BOSS[f.xid], x = PB[f.xid]; G.resolving.add(f.id); const T0 = now();
+  const home = () => { f.phase = "back"; f.back = Math.max(T0, f.arrive) + (f.tt || 60000); if (!Object.values(f.n || {}).some(v => v > 0)) S.fleets = S.fleets.filter(q => q !== f); };
+  try { const at = f.arrive; if (!crcBossOn(B, at)) { note(`${B.name} was gone when our fleet arrived. Returning.`, "warn"); return home(); }
+    const ref = adb().doc(crcDoc()); await crcLock(ref); const snap = await casGet(ref), cur = crcNorm(snap.exists ? snap.data() : null, at), A = cur.b[B.id];
+    if (A.dead) { note(`${B.name} had already fallen when our fleet arrived. Returning.`, "warn"); return home(); }
+    const ph0 = B.crown ? crcPh(A.hp) : 0, Z = crcBossSet(B, A, at), n0 = Math.max(1, Z.n0);
+    const mkA = () => { const st = stacksOf(f.n, techVs(x), G.me); for (const s of st) { s.atk *= Z.mods.pA; s.sh *= Z.mods.pS; } return st; };
+    const mkD = () => { const st = stacksOf(Object.assign({ [Z.u]: n0 }, Z.esc), { mon: B.lvl }, "monster"); if (Z.mods.bK !== 1) for (const s of st) { s.atk *= Z.mods.bK; s.hull *= Z.mods.bK; } return st; };
+    const mine0 = Object.assign({}, f.n), { res, rise } = mimRise(mkA, mkD, Z.u, n0, n0);
+    const left = clamp(Math.round(((res.dLeft || {})[Z.u]) || 0), 0, n0), raw = n0 - left, seg = raw ? Math.min(n0, Math.max(1, Math.round(raw * Z.mods.seg))) : 0;
+    let pts = 0; if (seg) { A.hp -= seg; A.t = at; A.dmg[G.me] = (A.dmg[G.me] || 0) + seg; if (A.hp <= 0) { A.hp = 0; A.dead = at; A.last = G.me; } pts = 4 * seg; }
+    const counted = pts ? crcCon(cur, pts, at) : 0;
+    if (!(await casSet(ref, snap, cur))) throw CAS_RETRY; f.casN = 0; crcLocal(cur);
+    const rep = mkRep({ at, kind: "attack", simLeft: left, title: `Assault on ${B.name}${B.crown ? ` · Phase ${ph0}, ${CRC_PHN[ph0]}` : ""}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: B.name, mon: B.mon, mimB: B.id, mimSeg: [n0, n0 - seg], omRise: rise > 1.01 ? Math.round(rise) : undefined,
+      start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
+    f.n = cleanShips(res.aLeft); repairDocks(rep, lossesOf(mine0, f.n), 1); if (rep.wrecks) note(`No ships lost for good: ${fmt(rep.wrecks)} damaged ships are coming home to the Repair Yard.`, "info");
+    if (seg) { const L = { m: 30000 * seg, c: 20000 * seg, g: 10000 * seg }, ratio = Math.min(1, fCargo(f) / Math.max(1, total(L))); rep.loot = { m: Math.floor(L.m * ratio), c: Math.floor(L.c * ratio), g: Math.floor(L.g * ratio) }; f.loot = rep.loot;
+      const sh = 2 * seg, M = crcS(), w = Math.max(1, Math.min(4, crcWeek(at))), W = crcWk(M, w); S.shards = (S.shards || 0) + sh; rep.shards = sh; S.wins++; evPts("hunt", seg * 50);
+      const mt = { chitin: 2 * seg }; if (B.crown) { mt.crown = Math.ceil(seg / 3); W.crn += seg; } else if (B.guard) { mt.rcrystal = Math.ceil(seg / 2); W.grd += seg; } else { mt.eshell = Math.ceil(seg / 3); if (B.mech === "brood") mt.pearl = Math.ceil(seg / 2); W.boss += seg; }
+      crcAddM(mt); M.pts += counted; logReward(`${B.name} bounty`, rep.loot, { shards: sh, kind: "battle" }); }
+    const T = { pincer: `Pincer Lock: ${B.name} pinned our fleet (−16% firepower).`, pulse: `Tidal Pulse: our shields were stripped (−40%).`, shell: `Shell Armor: ${B.name}'s shell turned aside part of every blow.`, brood: `Brood Deployment: a fresh brood joined the fight.`, reson: `Monster Resonance: the war-song of the deep beasts made the enemy ${Math.round((Z.mods.bK - 1) * 100)}% tougher. Slay a wild Kraken to break it.`, molt: `Molting: the Crown's new shell is soft, every blow counts double, but it strikes 50% harder.` };
+    for (const t of Z.tac) note(T[t], "info");
+    if (rise > 1.01) note(`${B.name} rose to meet our fleet: ×${fmt(Math.round(rise))} toughness and firepower against a force this size.`, "warn");
+    if (A.dead) { bump("bosses"); note(B.crown ? `THE ABYSSAL CROWN HAS FALLEN. Everyone who broke a section can claim the spoils.` : `We brought down ${B.name}! Everyone who broke a section can claim the spoils.`, "win"); }
+    else if (seg) note(`Our fleet broke ${seg} section${seg > 1 ? "s" : ""} off ${B.name} (${A.hp} of ${B.hp} left${B.crown && crcPh(A.hp) !== ph0 ? `; the Crown enters Phase ${crcPh(A.hp)}, ${CRC_PHN[crcPh(A.hp)]}` : ""}). +${counted} Abyssal Suppression${counted < pts ? " (daily cap reached)" : ""}.`, "win");
+    else note(`Our fleet couldn't break a section off ${B.name}. Send more firepower.`, "warn");
+    addReport(rep); try { mapClash(fleetTarget(f), rep); } catch (e) {} crcClaim(); home();
+  } catch (e) { if (e === CAS_RETRY && await casAgain(f, crcBossResolve)) return; note(`Lost contact with the ${B.name} fight. Fleet returning.`, "warn"); home(); }
+  finally { G.resolving.delete(f.id); dirty(); progress(); softRender(); } }
+/* a fallen boss: everyone who broke a section claims once, by share; the final blow pays extra. The Crown's fall plays the finale. */
+function crcClaim() { if (!S || !G.ready) return; const T = now(), w = crcWeek(T); if (w < 2) return; const st = crcStC(T), M = crcS(); M.got = M.got || {};
+  for (const B of CRC_BOSSES) { const A = st.b[B.id], my = (A.dmg || {})[G.me] || 0, id = "b" + B.id; if (!A.dead || !my || M.got[id]) continue; M.got[id] = 1;
+    const tot = Object.values(A.dmg).reduce((a, b) => a + b, 0) || 1, share = my / tot, last = A.last === G.me ? 2 : 0, sh = Math.min(B.crown ? 60 : 40, (B.crown ? 25 : 10) + Math.round(share * 60)), r = { sh };
+    if (B.crown) { r.crown = Math.min(10, 3 + Math.round(share * 20)) + last; r.eshell = 4; S.medals = S.medals || {}; S.medals.crown = (S.medals.crown || 0) + 1; }
+    else if (B.guard) r.rcrystal = Math.min(12, 4 + Math.round(share * 20)) + last; else { r.eshell = Math.min(12, (B.id === "ca4" ? 6 : 3) + Math.round(share * 20)) + last; r.pearl = B.mech === "brood" ? 4 : 1; }
+    crcGrant(r, `${B.name} slain`); note(`${B.name} is dead. Your share (${Math.round(share * 100)}%): ${crcMatTxt(r)} and ◆${sh}${last ? ", with the final blow" : ""}.`, "win"); }
+  const C = st.b.cc; if (C && C.dead && !M.fin) { M.fin = 1; dirty(); setTimeout(() => { try { crcCine("fin"); } catch (e) {} }, 1200); } }
+/* the Great Molting's moments, in the Omega cinematic frame: its rise, each new phase, and the finale */
+const CRC_CINE = { arr: ["s_crownship", "THE GREAT MOLTING", "“The Crown rises. Kneel, or be shed with the old shell.”", "The Abyssal Crown has surfaced at the heart of the galaxy. Four phases stand between it and its rebirth."],
+  p2: ["s_hatchery", "PHASE II · THE BROOD WAKES", "“Every egg remembers. Every egg will hatch.”", "The Crown's shell has cracked, and its brood is pouring from the hatcheries on its back."],
+  p3: ["crownbrood", "PHASE III · THE GREAT MOLTING", "“The old shell falls. The new one hardens.”", "The Crown is shedding its shell. Its new one is soft: strike now, before it hardens."],
+  p4: ["s_throne", "PHASE IV · THE CROWN REBORN", "“I have been born a thousand times. You have been born once.”", "The Crown has molted. Its last shell is its hardest, and the deep beasts sing for it."],
+  fin: ["s_throne", "THE TIDE HAS TURNED", "THE ABYSS REMEMBERS WHAT THE STARS HAVE FORGOTTEN.", "The Abyssal Crown is dead. Its shell drifts empty above the Breach. Far below, something answers its last cry."] };
+function crcCine(k) { if (document.getElementById("omcine")) return; const D = CRC_CINE[k]; if (!D) return; const w = document.createElement("div"); w.id = "omcine"; w.className = "fin crccine"; document.body.appendChild(w);
+  w.innerHTML = `<div class="omcimg" style="background-image:url(art/carcinid/${D[0]}.webp)"></div><div class="omctx tx"><small>${esc(D[1])}</small><b class="q"></b><span class="after">${esc(D[3])}</span></div><small>Tap to close</small>`;
+  const q = D[2], el = w.querySelector(".q"); let n = 0; const tick = () => { if (!document.body.contains(w)) return; el.textContent = q.slice(0, ++n); if (n < q.length) setTimeout(tick, 45); else w.classList.add("done"); };
+  try { SFX.gong(); } catch (e) {} setTimeout(tick, 900); w.addEventListener("click", () => { if (n < q.length) n = q.length - 1; else { w.classList.add("out"); setTimeout(() => w.remove(), 600); } }); }
+function crcCineCheck() { if (!S || !G.ready || G.cineOn || battle || document.getElementById("omcine")) return; const T = now(), e = crcClock(T).e; if (e < CRC_CROWN0 || e >= CRC_LEN) return; const M = crcS(), C = crcStC(T).b.cc; M.cine = M.cine || {}; if (!C || C.dead) return;
+  if (!M.cine.arr) { M.cine.arr = 1; dirty(); return crcCine("arr"); } const ph = crcPh(C.hp); for (const p of [2, 3, 4]) if (ph >= p && !M.cine["p" + p]) { M.cine["p" + p] = 1; dirty(); return crcCine("p" + p); } }
+function crcBossInfo(x, T) { const B = CRC_BOSS[x.id], st = crcStC(T), A = st.b[B.id], Z = crcBossSet(B, A, T), tot = Object.values(A.dmg || {}).reduce((a, b) => a + b, 0), my = (A.dmg || {})[G.me] || 0, pct = Math.round(A.hp / B.hp * 100);
+  return `<div class="crcbi"><img src="art/carcinid/${B.art}.webp" alt=""><div><b>${A.dead ? "Slain" : `${A.hp} of ${B.hp} sections`}${B.crown && !A.dead ? ` · Phase ${crcPh(A.hp)}, ${CRC_PHN[crcPh(A.hp)]}` : ""}</b><div class="mimbar crcbar"><i style="width:${pct}%"></i></div><small>${CRC_REGEN[B.id] ? `Regrows ${CRC_REGEN[B.id]} sections an hour.` : "Does not heal."} Your share: ${my} section${my === 1 ? "" : "s"}${tot ? ` (${Math.round(my / tot * 100)}%)` : ""}.</small></div></div>
+    ${Z.tac.map(t => `<div class="crctac"><img src="art/carcinid/k_${CRC_TAC[t][1]}.webp" alt=""><div><b>${CRC_TAC[t][0]}</b><small>${CRC_TAC[t][2]}</small></div></div>`).join("")}
+    <dl class="kv"><dt>Its fleet</dt><dd>${Object.entries(crcBossForce(x, T)).map(([k, v]) => `${v} ${AL[k] ? AL[k].n : k}`).join(" · ")}</dd><dt>Every section</dt><dd>◆2 · resources · ${B.crown ? "Crown Reactor Shards" : B.guard ? "Ancient Reef Crystal" : "Emperor Shell Fragments"} · +4 Suppression</dd><dt>When it falls</dt><dd>Everyone who broke a section claims a share${B.crown ? ", the Crown Slayer medal, and the finale" : ""}</dd></dl>`; }
+const CRC_TAC = { shell: ["Shell Armor", "shell", "Carcinid shells turn aside part of every blow: the Reef Tyrant 30% (15% once Suppression passes 50%), the Trench Behemoth 40%, the Crown's first phase up to half until Suppression is full. Shell Guardians carry the heaviest plate of the line."],
+  brood: ["Brood Deployment", "brood", "Broodmothers bring two more drones into every Reef Fortress; the Pearl Matron fields a fresh brood each fight, bigger the healthier she is; the Crown's second phase pours out its hatcheries."],
+  pulse: ["Tidal Pulse", "pulse", "The Trench Oracle and the Pale Sovereign roll a wave of abyssal water over the field that strips 40% of our fleet's shields."],
+  molt: ["Molting", "molt", "In its third phase the Abyssal Crown sheds its shell: every blow counts double, but it strikes 50% harder. Molting Titans hold Stage 4 nests."],
+  reson: ["Monster Resonance", "reson", "Korvax and the reborn Crown ride with the deep beasts (a chained Leviathan): their fleets are 25-30% tougher and deadlier, unless you slew a wild Kraken in the last 12 hours."],
+  pincer: ["Pincer Lock", "pincer", "The Red Claw Marshal and the Krakenbreaker lock our ships in their claws: our fleet fights with a sixth less firepower."] };
+/* ---------- the Abyssal Forge, the reward track, the cosmetics ---------- */
+const CRC_FORGE = [
+  ["px", "Abyssal Reef planet skin", "A world of black chitin plates and violet coral, lit by cyan tide-water.", { chitin: 150, coral: 40, pearl: 6 }],
+  ["hull", "Carcinid Chitin hull finish", "Plate your ships in black-violet chitin with gilded seams. Looks only.", { coral: 60, eshell: 10, rcrystal: 6 }],
+  ["frame12", "Tide Lord portrait frame", "A gilded ring of antlers and pearls.", { pearl: 10, rcrystal: 4 }],
+  ["banner12", "Abyssal Fleet banner", "The Carcinid armada under the Crown.", { chitin: 100, resin: 30 }],
+  ["trail12", "Tidal warp trail", "Your fleets leave a gold-and-cyan wake.", { resin: 40, enzyme: 10 }],
+  ["laser12", "Abyssal laser colour", "Your guns fire tide-cyan and gold.", { coral: 40, enzyme: 12 }],
+  ["aura12", "Crown of the Abyss aura", "A gold-and-cyan ring round your homeworld.", { crown: 4, eshell: 10 }],
+  ["acc", "Tidal accelerator (silver)", "A silver time accelerator for your Void Shop inventory.", { chitin: 40 }],
+  ["tcore", "Titan Core ⬢", "Forged from Emperor Shell and the Crown's own reactor.", { eshell: 8, crown: 3 }],
+  ["sh", "Void Shards ◆25", "A Crown Reactor Shard sells high.", { crown: 1 }]];
+const CRC_TRACK = [[100, { sh: 5 }, { chitin: 25 }], [300, { resin: 10 }, { sh: 10 }], [600, { item: "crateM" }, { banner12: 1 }], [1000, { sh: 10 }, { px: 1 }], [1600, { enzyme: 8 }, { frame12: 1 }], [2400, { sh: 15 }, { hull: 1 }], [3500, { eshell: 4 }, { sh: 30 }], [5000, { pearl: 4 }, { tcore: 1 }], [7000, { crown: 1 }, { aura12: 1 }]];
+const crcHave = (c, M) => Object.entries(c).every(([k, n]) => (M.m[k] || 0) >= n);
+const crcCostTxt = c => Object.entries(c).map(([k, n]) => `<span style="color:${CRC_MAT[k][1]}"><img class="crcmi s" src="art/carcinid/m_${k}.webp" alt="">${n}</span>`).join(" ");
+const crcOwn = k => k === "px" ? !!(S.pxOwn || {}).abyssreef : k === "hull" ? !!(S.hullOwn || {}).carcinid : /12$/.test(k) ? !!((S.cos || {}).own || {})[k] : false;
+function crcGrant(r, why) { const got = []; for (const k in CRC_MAT) if (r[k]) { crcAddM({ [k]: r[k] }); got.push(`${r[k]} ${CRC_MAT[k][0]}`); }
+  if (r.sh) { S.shards = (S.shards || 0) + r.sh; got.push(`◆${r.sh}`); } if (r.item) { giveItem(r.item); got.push(SHOP[r.item] ? SHOP[r.item].n : r.item); }
+  if (r.tcore) { S.tcore = (S.tcore || 0) + r.tcore; got.push("a Titan Core ⬢"); } if (r.px) { (S.pxOwn = S.pxOwn || {}).abyssreef = 1; got.push("the Abyssal Reef planet skin"); }
+  if (r.hull) { (S.hullOwn = S.hullOwn || {}).carcinid = 1; got.push("the Carcinid Chitin hull finish"); } if (r.acc) { giveItem("xb_silver"); got.push("a silver time accelerator"); }
+  for (const c of ["frame12", "banner12", "trail12", "laser12", "aura12"]) if (r[c]) { try { cosGive(c); } catch (e) {} got.push(cosDef(c) ? cosDef(c).n : c); }
+  dirty(); if (got.length) { toast(`${why}: ${got.join(", ")}`, "win"); try { logReward(why, null, { shards: r.sh || 0, kind: "event" }); } catch (e) {} } return got; }
+function crcForgeHTML() { const M = crcS(); return `<h3>The Abyssal Forge</h3><div class="mimforge">${CRC_FORGE.map(([k, n, d, c]) => { const done = crcOwn(k), ok = !done && crcHave(c, M);
+    return `<div class="mimfr crcfr${done ? " done" : ""}"><div><b>${esc(n)}</b><small>${esc(d)}</small><em>${crcCostTxt(c)}</em></div><button class="btn${ok ? " pri" : ""}" data-act="crcForge" data-k="${k}"${ok ? "" : " disabled"}>${done ? "Owned" : "Forge"}</button></div>`; }).join("")}</div>`; }
+function crcTrackHTML() { const M = crcS(), pr = mimPrem(), got = M.tr || {};
+  const nm = (k, v) => k === "px" ? "Abyssal Reef skin" : k === "hull" ? "Chitin finish" : k === "item" ? (SHOP[v] ? SHOP[v].n : v) : k === "sh" ? `◆${v}` : k === "tcore" ? "Titan Core ⬢" : /12$/.test(k) ? (cosDef(k) || {}).n || k : `${v} ${CRC_MAT[k][0]}`;
+  const cell = (r, i, p) => { const id = (p ? "p" : "f") + i, have = got[id], open = M.pts >= CRC_TRACK[i][0] && (!p || pr); return `<button class="mimtc${p ? " p" : ""}${have ? " got" : open ? " ready" : ""}" data-act="crcTrack" data-i="${i}" data-p="${p ? 1 : 0}"${open && !have ? "" : " disabled"}>${have ? "✓ " : ""}${esc(Object.entries(r).map(([k, v]) => nm(k, v)).join(", "))}</button>`; };
+  return `<h3>Carcinid reward track</h3><p class="note">${fmt(M.pts)} tide points. Premium rewards need Void Pass Premium${pr ? " (yours is active)" : ""}.</p><div class="mimtrack">${CRC_TRACK.map(([pts, f, p], i) => `<div class="mimtr${M.pts >= pts ? " on" : ""}"><b>${fmt(pts)}</b>${cell(f, i, 0)}${cell(p, i, 1)}</div>`).join("")}</div>`; }
+/* ---------- finding things and the hub ---------- */
 function crcNearest(T, mon) { const h = originPlanet() || myPlanets()[0]; if (!h) return null; const hp = pos(h, T); let best = null, bd = 1e9;
-  for (const x of mon === "crcpat" ? CRC_PATS : CRC_NESTS) { if (!crcLive(x, T) || pirDown(x) > T) continue; const q = pos(x, T), d = Math.hypot(q.x - hp.x, q.y - hp.y) * (fogSeen(q.x, q.y) ? 1 : 3); if (d < bd) { bd = d; best = x; } } return best; }
-function crcBand(T) { const w = crcWeek(T), c = crcClock(T); if (w === 5) return "";
+  for (const x of mon === "crcpat" ? CRC_PATS : mon === "wkraken" ? CRC_KRAK : CRC_NESTS) { if (!crcLive(x, T) || pirDown(x) > T) continue; const q = pos(x, T), d = Math.hypot(q.x - hp.x, q.y - hp.y) * (fogSeen(q.x, q.y) ? 1 : 3); if (d < bd) { bd = d; best = x; } } return best; }
+function crcBand(T) { try { if (!G.crcCC || Date.now() - G.crcCC > 4000) { G.crcCC = Date.now(); setTimeout(() => { try { crcCineCheck(); } catch (e) {} }, 500); } } catch (e) {}
+  const w = crcWeek(T), c = crcClock(T); if (w === 5) return "";
   if (w === 0) { if (-c.e > 3 * 864e5) return ""; return `<button class="omb fin crcb soon" data-act="crcOpen"><b>❖ TIDE OF THE CARCINID</b><span>in ${ftime(-c.e)}</span></button>`; }
   { const M = crcS(); if (!M.intro && G.ready) { M.intro = 1; dirty(); setTimeout(() => { try { note("Tide of the Carcinid: Abyssal Breach Zones are opening across the galaxy. Open the event from the band at the top of the map.", "warn"); } catch (e) {} }, 1500); } }
-  return `<button class="omb fin crcb" data-act="crcOpen"><b>❖ TIDE OF THE CARCINID</b><span>Week ${w} · ${CRC_WEEKS[w - 1][0]}</span></button>`; }
-function crcInfo(x, T) { const L = crcLoot(x, crcStage(x, T)), sal = [L.chitin ? `${L.chitin} Abyssal Chitin` : "", L.coral ? `${L.coral} Coral Alloy` : "", L.resin ? `${L.resin} Tidal Resin` : ""].filter(Boolean).join(" · ") + ` · +${L.pts} tide points`;
-  return (x.mon === "crcpat" ? `Scout patrol</dd><dt>The patrol</dt><dd>${crcForceTxt(x)}` : `Stage ${crcStage(x, T)} · ${CRC_STAGE[crcStage(x, T)]}</dd><dt>The garrison</dt><dd>${crcForceTxt(x)}`) + `</dd><dt>Tide salvage</dt><dd>${sal}`; }
-/* the owner's paintings (art/carcinid; the rest of the set is kept there for the later weeks) */
-const CRC_ART = { cscut: "drone", cspit: "spitter", charv: "harvester", cguard: "guardian", cfrig: "frigate", cint: "interceptor", carcinid: "crownbrood", crcpat: "frigate" };
-const CRC_CD = { cscut: "The Empire's foot soldier. Small, fast, and never alone.", cspit: "A living coral battery that lobs searing spore-shot from its back.", charv: "Strips wrecks and asteroids for the brood, its resin sacs glowing.", cguard: "A walking bulwark. Its shell turns aside what our guns throw at it.", cfrig: "The scouts' flagship, a carapace hull with folded legs for landing.", cint: "A split-claw hunter built to run down lone ships." },
-  CRC_CS = { cscut: "Stage 1", cspit: "Stage 1", charv: "Stage 1", cguard: "Stage 2", cfrig: "Patrols · Stage 2", cint: "Patrols" };
+  const live = c.e >= CRC_CROWN0 && !(crcStC(T).b.cc || {}).dead;
+  return `<button class="omb fin crcb" data-act="crcOpen"><b>❖ ${live ? "THE GREAT MOLTING" : "TIDE OF THE CARCINID"}</b><span>${live ? `LIVE · Phase ${crcPh(crcStC(T).b.cc.hp)}` : `Week ${w} · ${CRC_WEEKS[w - 1][0]}`}</span></button>`; }
+function crcInfo(x, T) { const L = crcLoot(x, crcStage(x, T)), sal = crcMatTxt(L).replace(/, /g, " · ") + (crcWeek(T) >= 1 && crcWeek(T) <= 4 ? ` · +${L.pts} tide points` : "");
+  return (x.mon === "wkraken" ? `A wild creature</dd><dt>Breaks</dt><dd>Korvax's Monster Resonance against you, for 12 hours` : x.mon === "crcpat" ? `War patrol</dd><dt>The patrol</dt><dd>${crcForceTxt(x)}` : `Stage ${crcStage(x, T)} · ${CRC_STAGE[crcStage(x, T)]}</dd><dt>The garrison</dt><dd>${crcForceTxt(x)}`) + `</dd><dt>${x.mon === "wkraken" ? "Salvage" : "Tide salvage"}</dt><dd>${sal}`; }
+/* the owner's paintings */
+const CRC_ART = { cscut: "drone", cspit: "spitter", charv: "harvester", cguard: "guardian", cbrood: "broodmother", cwar: "warrior", ccrys: "crystal", clanc: "spitter_b", cmolt: "crownbrood", cfrig: "frigate", cint: "interceptor", cdest: "s_lance", cvang: "s_war", ccarr: "s_brood", cpearl: "s_eye", cmint: "s_crown", cregent: "s_citadel", cempr: "s_shell", cbrlord: "s_brood2",
+  carcinid: "s_reef", crcpat: "frigate", crcmar: "marshal", crcmat: "matron", crctyr: "tyrant", crcora: "oracle", crckor: "korvax", crcbeh: "behemoth", crckbr: "krakenbreaker", crcpal: "pale", crccrown: "s_crownship" };
+const CRC_CD = { cscut: ["The Empire's foot soldier. Small, fast, and never alone.", "Stage 1"], cspit: ["A living coral battery that lobs searing spore-shot from its back.", "Stage 1"], charv: ["Strips wrecks and asteroids for the brood, its resin sacs glowing.", "Stage 1"], cguard: ["A walking bulwark. Its shell turns aside what our guns throw at it.", "Stage 2"],
+  cbrood: ["Carries the next brood on its back; two more drones hatch into every fight.", "Stage 3"], cwar: ["Built around its pincers. It closes on a ship and does not let go.", "Stage 3"], ccrys: ["Grows Ancient Reef Crystal through its shell and fires it as light.", "Stage 3"], clanc: ["A long trench-hunter with lance-claws and a whip of a tail.", "Stage 4"], cmolt: ["A crab mid-molt, its soft new shell glowing through the old. Enormous.", "Stage 4"],
+  ckrak: ["The Kraken, back from the Abyss. Wild now, and in the deep layers for good.", "Wild"],
+  cfrig: ["A beetle-hulled warship with two great claws hooked under its brow.", "Patrols · Stage 2"], cint: ["A slim hunter with two pincer arms thrust forward.", "Patrols"], cdest: ["A trident prow and a spine of living coral.", "Patrols · Stage 3"], cvang: ["An arrowhead with two great claw-wings swept back.", "Stage 4 · Admirals"],
+  ccarr: ["Rows of glowing eggs down both flanks; every one a ship.", "Week 4 patrols"], cpearl: ["A pale needle with two pincer prongs.", "Week 2 patrols"], cmint: ["Two hulls split like a shed shell.", "Week 3 patrols"], cregent: ["A flagship with crescents fore and aft and a great cyan eye.", "Korvax, the Crown"], cempr: ["The Crown's golden flagship.", "The Crown"], cbrlord: ["A brood sac on a carrier's back.", "The Crown"] };
+function crcBossRow(B, T, st) { const A = st.b[B.id], on = crcBossOn(B, T), pct = Math.round(A.hp / B.hp * 100), soon = !on && crcClock(T).e < CRC_LEN;
+  return `<div class="crcboss${A.dead ? " dead" : on ? "" : " off"}"><img src="art/carcinid/${B.art}.webp" alt="" loading="lazy"><div><b>${esc(B.name)}</b><small>${A.dead ? "Slain" : on ? `${A.hp}/${B.hp}${B.crown ? ` · Phase ${crcPh(A.hp)}, ${CRC_PHN[crcPh(A.hp)]}` : ""}` : soon ? (B.crown ? "Surfaces on day 23" : `Arrives in week ${B.wk}`) : "Gone"}</small><div class="mimbar crcbar"><i style="width:${A.dead ? 0 : pct}%"></i></div></div>${on && !A.dead ? `<button class="btn${B.crown ? " pri" : ""}" data-act="crcGoB" data-id="${B.id}">Go</button>` : ""}</div>`; }
 function shCarcinid() { const T = now(), M = crcS(), w = crcWeek(T), c = crcClock(T), own = ownerFree() && G.mode !== "offline" || G.owner, on = w >= 1 && w <= 4;
-  const live = CRC_NESTS.filter(x => crcLive(x, T)), up = live.filter(x => pirDown(x) <= T), byS = [0, 0, 0, 0, 0]; up.forEach(x => byS[crcStage(x, T)]++); const pats = CRC_PATS.filter(x => crcLive(x, T) && pirDown(x) <= T).length;
+  const live = CRC_NESTS.filter(x => crcLive(x, T)), up = live.filter(x => pirDown(x) <= T), byS = [0, 0, 0, 0, 0]; up.forEach(x => byS[crcStage(x, T)]++); const pats = CRC_PATS.filter(x => crcLive(x, T) && pirDown(x) <= T).length, krk = CRC_KRAK.filter(x => crcLive(x, T) && pirDown(x) <= T).length;
   const when = w === 0 ? `Begins in ${ftime(-c.e)}` : w === 5 ? "The tide has turned" : w === 4 ? `Ends in ${ftime(CRC_LEN - c.e)}` : `Week ${w + 1} in ${ftime(w * CRC_WK - c.e)}`;
   const weeks = CRC_WEEKS.map(([t], i) => `<div class="mimwk crcwk${i + 1 === w ? " on" : i + 1 < w ? " past" : ""}"><b>Week ${i + 1}</b><span>${t}</span></div>`).join("");
-  const st = crcStC(T), pct = crcSupPct(st), my = (st.con[G.me] || 0) + (M.pend || 0), n = Object.keys(st.con).length;
+  const st = crcStC(T), pct = crcSupPct(st), my = (st.con[G.me] || 0) + (M.pend || 0), n = Object.keys(st.con).length, C = st.b.cc;
   const sup = `<h3>Abyssal Suppression</h3><div class="mimsup"><div class="mimbar big crcbar"><i style="width:${Math.round(pct * 100)}%"></i></div><b>${Math.round(pct * 100)}%</b></div>
-    <p class="note" style="margin-top:4px">Every Breach Zone and patrol any commander destroys pushes the Abyss back. ${n} commander${n === 1 ? "" : "s"} so far · your share ${fmt(my)} point${my === 1 ? "" : "s"}${M.pend ? " (sending)" : ""}. ${pct >= 1 ? "<b>The Breaches are suppressed: every garrison is a quarter weaker.</b>" : "At 100% every garrison is a quarter weaker."}</p>
+    <p class="note" style="margin-top:4px">Everything any commander destroys pushes the Abyss back. ${n} commander${n === 1 ? "" : "s"} so far · your share ${fmt(my)} point${my === 1 ? "" : "s"}${M.pend ? " (sending)" : ""}. At 50% the Reef Tyrant's shell weakens; at 100% every garrison is a quarter weaker and the Crown's first shell is broken.</p>
     <div class="crcms">${CRC_SUPM.map(([p, sh, rs]) => { const got = M.got["s" + p], ok = pct * 100 >= p && my > 0; return `<div class="crcm${got ? " got" : ok ? " ok" : ""}"><b>${p}%</b><small>◆${sh} · ${rs} Resin</small>${got ? `<span class="pill">Claimed</span>` : `<button class="btn${ok ? " pri" : ""}" data-act="crcSup" data-p="${p}"${ok ? "" : " disabled"}>Claim</button>`}</div>`; }).join("")}</div>`;
-  const obj = on ? `<h3>Exploration orders · week ${w}</h3>` + CRC_OBJ.map(([id, t, need, sh, mt]) => { const k = Math.min(need, crcObjN(w, id)), done = k >= need, got = M.got[`w${w}${id}`];
-    return `<div class="mimobj crcobj"><div><b>${t}</b><div class="bar"><i style="width:${k / need * 100}%"></i></div><small>${k}/${need} · reward ◆${sh} and ${Object.entries(mt).map(([m, v]) => `${v} ${CRC_MAT[m][0]}`).join(", ")}</small></div>${got ? `<span class="pill">Claimed</span>` : `<button class="btn${done ? " pri" : ""}" data-act="crcClaim" data-w="${w}" data-id="${id}"${done ? "" : " disabled"}>Claim</button>`}</div>`; }).join("") : "";
-  const mats = Object.entries(CRC_MAT).map(([k, [nm, ic, col]]) => `<div class="mimmat"><img class="crcmi" src="art/carcinid/m_${k}.webp" alt=""><b>${fmt(M.m[k] || 0)}</b><small>${nm}</small></div>`).join("");
-  const cls = ["cscut", "cspit", "charv", "cguard", "cfrig", "cint"];
+  const obj = on ? `<h3>Exploration orders · week ${w}</h3>` + crcObjs(w).map(([id, t, need, sh, mt]) => { const k = Math.min(need, crcObjN(w, id)), done = k >= need, got = M.got[`w${w}${id}`];
+    return `<div class="mimobj crcobj"><div><b>${t}</b><div class="bar"><i style="width:${k / need * 100}%"></i></div><small>${k}/${need} · reward ◆${sh} and ${crcMatTxt(mt)}</small></div>${got ? `<span class="pill">Claimed</span>` : `<button class="btn${done ? " pri" : ""}" data-act="crcClaim" data-w="${w}" data-id="${id}"${done ? "" : " disabled"}>Claim</button>`}</div>`; }).join("") : "";
+  const molt = C && c.e >= CRC_CROWN0 && on ? `<div class="crcmolt${C.dead ? " won" : ""}"><img src="art/carcinid/${C.dead ? "s_throne" : "s_crownship"}.webp" alt=""><div><b>${C.dead ? "The Abyssal Crown is dead" : `THE GREAT MOLTING · Phase ${crcPh(C.hp)}`}</b><span>${C.dead ? "The Abyss remembers what the stars have forgotten." : `${CRC_PHN[crcPh(C.hp)]} · ${C.hp}/400 sections`}</span><div class="crcph">${[1, 2, 3, 4].map(p => `<i class="${C.dead || crcPh(C.hp) > p ? "done" : crcPh(C.hp) === p ? "on" : ""}">${p}</i>`).join("")}</div>${C.dead ? `<button class="btn" data-act="crcCine" data-k="fin">Replay the finale</button>` : `<button class="btn pri" data-act="crcGoB" data-id="cc">Join the fight</button>`}</div></div>` : "";
+  const cmd = w >= 2 && on ? `<h3>The Abyssal Command</h3><div class="crcbosses">${CRC_BOSSES.filter(B => !B.crown && (B.wk <= w || own)).map(B => crcBossRow(B, T, st)).join("")}</div>` : "";
+  const mats = Object.entries(CRC_MAT).map(([k, [nm, col]]) => `<div class="mimmat"><img class="crcmi" src="art/carcinid/m_${k}.webp" alt=""><b>${fmt(M.m[k] || 0)}</b><small>${nm}</small></div>`).join("");
+  const tac = `<details class="crclore"><summary>Abyssal tactics</summary>${Object.values(CRC_TAC).map(([nm, ic, d]) => `<div class="crctac"><img src="art/carcinid/k_${ic}.webp" alt=""><div><b>${nm}</b><small>${d}</small></div></div>`).join("")}</details>`;
+  const cls = ["cscut", "cspit", "charv", "cguard", "cbrood", "cwar", "ccrys", "clanc", "cmolt", "ckrak", "cfrig", "cint", "cpearl", "cdest", "cmint", "cvang", "ccarr", "cregent", "cempr", "cbrlord"];
   return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:${CRC_COL}">Seasonal invasion</div><h2>❖ Tide of the Carcinid</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
   <div class="mimban crcban"><img src="art/carcinid/banner.webp" alt=""><div><b>${on ? `Week ${w} · ${CRC_WEEKS[w - 1][0]}` : w === 0 ? "The deep is stirring" : "The tide has turned"}</b><span>${when}${c.prev ? " · owner preview" : ""}</span></div></div>
-  <details class="crclore"${on && !M.loreSeen ? " open" : ""}><summary>The Abyss wakes</summary><p>Below the Kraken Deep lies the Abyss, a sea older than the stars. Before the Architects built their prison, it belonged to the Carcinid Abyssal Empire: armoured legions who bred the great ocean beasts as war mounts. The Leviathan, the Kraken and the serpents of the deep were theirs before they were ours.</p><p>Every time a Warden fell, the seal over the Abyss grew thinner. Now it has torn. Breach Zones are opening across the galaxy, and the Empire is coming through them, one tide at a time.</p></details>
+  <details class="crclore"${on && !M.loreSeen ? " open" : ""}><summary>The Abyss wakes</summary><p>Below the Kraken Deep lies the Abyss, a sea older than the stars. Before the Architects built their prison, it belonged to the Carcinid Abyssal Empire: armoured legions who bred the great ocean beasts as war mounts. The Leviathan, the Kraken and the serpents of the deep were theirs before they were ours.</p><p>Every time a Warden fell, the seal over the Abyss grew thinner. Now it has torn. Breach Zones are opening across the galaxy, and the Empire is coming through them, one tide at a time: its scouts first, then the Claw Admirals, then the guardians of the deep, and last of all the Abyssal Crown itself, rising to molt.</p><p>The Kraken has come back with them. It answers to no one now.</p></details>
   <p class="note">${on ? CRC_WEEKS[w - 1][1] : w === 0 ? "Deep-scan buoys in the outer layers are picking up pressure waves where there is no water. Something is pressing against the dark from the other side." : "The Breaches have sealed. The Abyss remembers."}</p>
-  <div class="mimwks">${weeks}</div>
-  ${on ? `<div class="mimst crcst">${[1, 2, 3, 4].map(s => `<div class="s${s}${s > CRC_CAP ? " off" : ""}"><b>${s > CRC_CAP ? "–" : byS[s]}</b><small>Stage ${s}<br>${CRC_STAGE[s]}</small></div>`).join("")}</div>
-  <div class="crcfind"><button class="btn pri" data-act="crcFind"${up.length ? "" : " disabled"}>Nearest Breach Zone</button><button class="btn" data-act="crcFindP"${pats ? "" : " disabled"}>Nearest scout patrol (${pats})</button></div>` : ""}
-  ${obj}${on || w === 5 ? sup : ""}
-  <h3>Season materials</h3><div class="mimmats">${mats}</div><p class="note" style="margin-top:6px">Tide points: <b>${fmt(M.pts)}</b>. Every Breach Zone pays Abyssal Chitin; Stage 2 and above also gives up Coral Alloy; scout patrols carry Tidal Resin. Keep them: the Abyssal forges open later in the tide.</p>
-  <h3>The Abyssal Empire</h3><div class="mimcls">${cls.map(k => `<div class="mimcl crccl"><img src="art/carcinid/${CRC_ART[k]}.webp" alt="" loading="lazy"><div><b>${AL[k].n}</b><small>${CRC_CD[k]}</small><em>${CRC_CS[k]}</em></div></div>`).join("")}</div>
-  ${own ? `<div class="mimown"><small>Owner preview: see the tide as it will look in a given week (this device only).</small><div>${[0, 1, 2, 3, 4].map(k => `<button class="btn${((S.crcPrev || {}).w || 0) === k ? " pri" : ""}" data-act="crcPrev" data-w="${k}">${k ? "Week " + k : "Off"}</button>`).join("")}</div></div>` : ""}`; }
+  <div class="mimwks">${weeks}</div>${molt}
+  ${on ? `<div class="mimst crcst">${[1, 2, 3, 4].map(s => `<div class="s${s}${s > Math.min(CRC_CAP, w >= 4 ? 4 : w + 1) ? " off" : ""}"><b>${byS[s]}</b><small>Stage ${s}<br>${CRC_STAGE[s]}</small></div>`).join("")}</div>
+  <div class="crcfind"><button class="btn pri" data-act="crcFind" data-m="carcinid"${up.length ? "" : " disabled"}>Nearest Breach Zone</button><button class="btn" data-act="crcFind" data-m="crcpat"${pats ? "" : " disabled"}>Nearest patrol (${pats})</button><button class="btn" data-act="crcFind" data-m="wkraken"${krk ? "" : " disabled"}>Nearest Kraken (${krk})</button></div>` : ""}
+  ${cmd}${obj}${on || w === 5 ? sup : ""}${tac}
+  <h3>Season materials</h3><div class="mimmats">${mats}</div><p class="note" style="margin-top:6px">Tide points: <b>${fmt(M.pts)}</b>. ${Object.entries(CRC_MSRC).map(([k, s]) => `${CRC_MAT[k][0]} from ${s}`).join("; ")}.</p>
+  ${S.medals && S.medals.crown ? `<div class="mimmedal"><span>🏆 Crown Slayer ×${S.medals.crown}</span></div>` : ""}${crcForgeHTML()}${crcTrackHTML()}
+  <h3>The Abyssal Empire</h3><div class="mimcls">${cls.map(k => `<div class="mimcl crccl">${CRC_ART[k] ? `<img src="art/carcinid/${CRC_ART[k]}.webp" alt="" loading="lazy">` : `<canvas data-ship="${k}" width="224" height="112"></canvas>`}<div><b>${AL[k].n}</b><small>${CRC_CD[k][0]}</small><em>${CRC_CD[k][1]}</em></div></div>`).join("")}</div>
+  ${own ? `<div class="mimown"><small>Owner preview: see the tide as it will look in a given week (this device only). W5 opens the Great Molting.</small><div>${[0, 1, 2, 3, 4, 5].map(k => `<button class="btn${((S.crcPrev || {}).w || 0) === k ? " pri" : ""}" data-act="crcPrev" data-w="${k}">${k ? (k === 5 ? "Molting" : "Week " + k) : "Off"}</button>`).join("")}</div></div>` : ""}`; }
 /* the Battle Lab */
-const CRC_LAB = [["crc1", "Breach Zone · Stage 1", () => ({ cnest: 1, cscut: 7, charv: 1, cspit: 1 })], ["crc2", "Breach Zone · Stage 2", () => ({ cnest: 1, cscut: 8, charv: 1, cspit: 3, cguard: 2, cfrig: 1 })], ["crcp", "Carcinid scout patrol", () => ({ cfrig: 2, cint: 5 })]];
-function crcLabFight(k) { const L = CRC_LAB.find(x => x[0] === k); if (!L) return; const D0 = L[2](), A0 = { battleship: 20, destroyer: 20, fighter: 60, corvette: 20 }, lvl = 20;
-  const res = simulate(stacksOf(A0, techOf(null), G.me), stacksOf(D0, { mon: lvl }, "monster"));
-  const rep = mkRep({ at: now(), kind: "attack", test: 1, title: `Battle Lab · ${L[1]}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: L[1], mon: k === "crcp" ? "crcpat" : "carcinid", lvl, ptype: "ocean", fortL: 0, alien: true, pirate: true,
+const CRC_LAB = [["crc1", "Breach Zone · Stage 1", () => ({ cnest: 1, cscut: 7, charv: 1, cspit: 1 })], ["crc2", "Breach Zone · Stage 2", () => ({ cnest: 1, cscut: 8, charv: 1, cspit: 3, cguard: 2, cfrig: 1 })],
+  ["crc3", "Breach Zone · Stage 3", () => ({ cnest: 1, cscut: 11, charv: 1, cspit: 3, cguard: 2, cfrig: 1, cbrood: 1, cwar: 2, ccrys: 1, cdest: 1 })], ["crc4", "Breach Zone · Stage 4", () => ({ cnest: 1, cscut: 11, cspit: 3, cguard: 3, cbrood: 1, cwar: 2, ccrys: 1, cmolt: 1, clanc: 2, cvang: 1 })],
+  ["crcp", "Carcinid patrol (week 4)", () => ({ cfrig: 2, cint: 5, cpearl: 2, cdest: 1, cmint: 2, cvang: 1, ccarr: 1 })], ["crck", "The wild Kraken", () => ({ ckrak: 2 })],
+  ...CRC_BOSSES.map(B => ["b" + B.id, B.name, () => { const A = { hp: B.hp }, Z = crcBossSet(B, A, now()); return Object.assign({ [Z.u]: 20 }, Z.esc); }]),
+  ["bcc3", "The Abyssal Crown · Phase 3, molting", () => ({ ccrownm: 20, cmolt: 2, cmint: 4 })]];
+function crcLabFight(k) { const L = CRC_LAB.find(x => x[0] === k); if (!L) return; const D0 = L[2](), big = /^b/.test(k), A0 = big ? MIM_LAB_FLEET : { battleship: 20, destroyer: 20, fighter: 60, corvette: 20 }, lvl = 20;
+  const res = simulate(stacksOf(A0, techOf(null), G.me), stacksOf(D0, { mon: lvl }, "monster")), B = big ? CRC_BOSS[k.slice(1)] || CRC_BOSS.cc : null;
+  const rep = mkRep({ at: now(), kind: "attack", test: 1, title: `Battle Lab · ${L[1]}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: L[1], mon: B ? B.mon : k === "crcp" ? "crcpat" : k === "crck" ? "wkraken" : "carcinid", lvl, ptype: "terran", fortL: 0, alien: true, pirate: true,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
   closeSheet(); playBattle(rep); }
 function crcLabHTML(row0, b) { const p = S.crcPrev || {}, row = (ic, n, sub, btns) => `<div class="strow" style="flex-wrap:wrap"><div style="flex:1 1 100%;min-width:0"><b>${ic} ${esc(n)}</b>${sub ? `<div class="note">${sub}</div>` : ""}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div></div>`;
-  return row("❖", "The tide, week by week", `Breach Zones, patrols and the hub as they will be · ${p.w ? `previewing week ${p.w}` : "off"} · phase 1 builds week 1`, [1, 2, 3, 4].map(w => b("crcLabWeek", String(w), "W" + w)).join("") + b("crcLabWeek", "0", "Off") + b("crcOpen", "", "Hub"))
-    + CRC_LAB.map(([k, n]) => row0("❖", n, "A small fleet against it", b("crcLabFight", k, "⚔ Watch"))).join(""); }
-const PIRATES = PIRATES_ALL.filter(x => !cubeGone(x) && !pirGone(x)).concat(MON_EXTRA, MON_NEW, MON_SP, MIM_HIVES, MIM_BOSSES, MIM_OM, CRC_NESTS, CRC_PATS).filter(x => !monGone(x));
+  return row("❖", "The tide, week by week", `Breach Zones, patrols, the admirals and the hub as they will be · ${p.w ? (p.w === 5 ? "previewing the Great Molting" : `previewing week ${p.w}`) : "off"}`, [1, 2, 3, 4].map(w => b("crcLabWeek", String(w), "W" + w)).join("") + b("crcLabWeek", "5", "Molting") + b("crcLabWeek", "0", "Off") + b("crcOpen", "", "Hub"))
+    + row("❖", "The Great Molting · cinematics", "The rise, each phase, and the finale", ["arr", "p2", "p3", "p4", "fin"].map(k => b("crcCine", k, k === "fin" ? "Finale" : k === "arr" ? "Rise" : "Phase " + k[1])).join(""))
+    + CRC_LAB.map(([k, n]) => row0("❖", n, /^b/.test(k) ? "A demo fleet of 1,400 warships" : "A small fleet against it", b("crcLabFight", k, "⚔ Watch"))).join(""); }
+const PIRATES = PIRATES_ALL.filter(x => !cubeGone(x) && !pirGone(x)).concat(MON_EXTRA, MON_NEW, MON_SP, MIM_HIVES, MIM_BOSSES, MIM_OM, CRC_NESTS, CRC_PATS, CRC_KRAK, CRC_BOSSES).filter(x => !monGone(x));
 const findHit = x => (G.find === "x" && !x.boss && !x.mon) || (G.find === "q" && !!x.boss) || (G.find === "w" && !!x.mon);const PB = Object.fromEntries(PIRATES.map(p => [p.id, p]));
 /* ---------- abandoned pyramids: 1,500 ancient vaults scattered evenly over the map ----------
    Send any fleet to explore one. From Lv.3 up, Hive guardians still haunt the halls and must be beaten first. The vault pays
@@ -6352,7 +6527,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 703;
+const GAME_V = 704;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6561,6 +6736,7 @@ const HULL_F = { copper: { n: "Copper", t: 1, col: "#e8763e", rim: "#ffa070", me
   diamond: { n: "Diamond", t: 11, col: "#eef7ff", rim: "#bfe8ff", met: .9, rough: .05, k: 1.25, tm: .5, sw: "linear-gradient(135deg,#9fb8d0,#ffffff 40%,#c8f0ff 55%,#ffd8f4 70%,#ffffff)" },
   ruby: { n: "Ruby", t: 12, col: "#ff1438", rim: "#ff7a94", met: .5, rough: .08, k: .85, sw: "linear-gradient(135deg,#5a0614,#ff4a66 45%,#a8102c 60%,#ffc0cc)" },
   emerald: { n: "Emerald", t: 14, col: "#10d868", rim: "#86ffc0", met: .5, rough: .08, k: .85, sw: "linear-gradient(135deg,#053a1e,#3cff9a 45%,#0e8a48 60%,#c8ffe0)" },
+  carcinid: { n: "Carcinid Chitin", t: 99, col: "#1a1226", rim: "#e8b45a", met: .7, rough: .26, k: .9, gl: 1.2, sw: "linear-gradient(135deg,#0a0610,#2a1a3a 40%,#e8b45a 52%,#140a1e 64%,#3fe8f0)" }, /* v704 forged */
   mimic: { n: "Mimic Bioweave", t: 99, col: "#1a2836", rim: "#5fd8ff", met: .8, rough: .22, k: .85, gl: 1.25, sw: "linear-gradient(135deg,#05080c,#1a2836 40%,#5fd8ff 52%,#0a121a 64%,#3a6a80)" }, /* v668 forged */
   glyph: { n: "Glyph Holo", t: 16, col: "#30e8ff", rim: "#7afcff", met: .3, rough: .15, k: 1.1, tm: .3, gl: 1.6, sw: "linear-gradient(135deg,rgba(3,42,48,.55),rgba(58,240,255,.75) 30%,rgba(200,110,255,.7) 50%,rgba(255,210,90,.7) 68%,rgba(120,255,170,.75) 85%,rgba(200,252,255,.6))" } };
 const HULL_TEX = {}, HULL_TV = 1;
@@ -6571,7 +6747,7 @@ function hullTex(f) { const e = HULL_TEX[f]; if (e) return e.t || null; if (!TH)
     try { if (G3 && G3.fkm) for (const key of Object.keys(G3.fkm)) if (finHas(key, f)) delete G3.fkm[key]; } catch (er) {}
     clearTimeout(hullTex.t); hullTex.t = setTimeout(() => { try { document.querySelectorAll("canvas[data-ship]").forEach(c => { c._dk = null; c._pend = null; }); if (!battle) render(true); } catch (er) {} }, 200); }, undefined, () => { HULL_TEX[f].fail = 1; });
   return null; }
-const hullOk = f => !!HULL_F[f] && (premT() >= HULL_F[f].t || !!G.owner || (f === "mimic" && !!((S && S.hullOwn) || {}).mimic));
+const hullOk = f => !!HULL_F[f] && (premT() >= HULL_F[f].t || !!G.owner || (f === "mimic" && !!((S && S.hullOwn) || {}).mimic) || (f === "carcinid" && !!((S && S.hullOwn) || {}).carcinid));
 const hullOf = k => { const f = ((S && S.hullF) || {})[k]; return f && hullOk(f) ? f : null; };
 /* v638 two-tone: a trim finish on fins, wings and dark plating. A finish travels as a spec, "obsidian" or "obsidian.gold" */
 const hullTrimOf = k => { const t = ((S && S.hullT) || {})[k], f = hullOf(k); return f && t && t !== f && hullOk(t) ? t : null; };
@@ -6885,6 +7061,7 @@ const PX2 = [
   ["sphinx", "Sphinx Sands", 2000, "all", .14, "#ffb340", "Gold dunes and black glass, crossed by glowing hieroglyph bands around a winged sigil.", "rock", ["#1a1004", "#8a6020", "#ffd080"], [255, 190, 80], { cracks: .01 }],
   ["petrified", "Petrified Star", 2000, "all", .14, "#ff5a4a", "A world turned to stone by a gorgon's gaze: temples, coiled serpents and a sleeping face, split by veins of burning crimson.", "rock", ["#141012", "#5a4a4e", "#c8b8b8"], [255, 70, 60], { cracks: .014 }], /* v570 */
   ["omen", "Omen Star", 2000, "all", .14, "#9ab8ff", "A pale world gone cold, haunted by the shadows of things that haven't arrived yet.", "ice", ["#2a3a5a", "#7a98c8", "#e8f0ff"], [150, 190, 255], { swirl: 1 }],
+  ["abyssreef", "Abyssal Reef", 2400, "all", .12, "#e8b45a", "A world of black chitin plates and violet coral, lit by cyan tide-water. Forged from the Carcinid tide.", "ocean", ["#06030c", "#1a0a2a", "#3a1a4a", "#0a3a44", "#1a5a6a"], [63, 232, 240], { sea: .85, veins: 1 }], /* v704 */
   ["mimichive", "Neural Hive", 2400, "all", .12, "#5fd8ff", "A world wrapped in black cable and lit from inside by a cyan neural core. Forged from the Mimic swarm.", "ocean", ["#010308", "#04121e", "#0a2a3e", "#123848", "#1a4a5a"], [90, 220, 255], { sea: .92, veins: 1 }], /* v668 */
   ["countdown", "The Countdown", 2000, "all", .14, "#ffcf6a", "A brass world of turning rings, every gear counting down to the first seal.", "metal", ["#3a2410", "#a0702a", "#f0c070"], [255, 200, 110], { gears: 1 }] /* v575 */
 ];
@@ -7861,7 +8038,7 @@ function advance(T) {
     produce(Math.max(e.at, S.t)); e.run(); any = true;
   }
   produce(T);
-  for (const f of S.fleets) if (f.phase === "resolving" && !G.resolving.has(f.id) && G.ready) { if (f.wb) wbResolve(f); else if (f.om) omResolve(f); else if (f.sb) sbResolve(f); else if (f.xid && MIM_BOSS[f.xid]) (MIM_BOSS[f.xid].om ? moResolve(f) : mimBossResolve(f)); else if (f.pid === "nexus" && !f.assault) resolveNexus(f); else resolveAssault(f); }
+  for (const f of S.fleets) if (f.phase === "resolving" && !G.resolving.has(f.id) && G.ready) { if (f.wb) wbResolve(f); else if (f.om) omResolve(f); else if (f.sb) sbResolve(f); else if (f.xid && MIM_BOSS[f.xid]) (MIM_BOSS[f.xid].crc ? crcBossResolve(f) : MIM_BOSS[f.xid].om ? moResolve(f) : mimBossResolve(f)); else if (f.pid === "nexus" && !f.assault) resolveNexus(f); else resolveAssault(f); }
   if (any) { changed = true; progress(); }
   const c = changed; changed = false; return c || any;
 }
@@ -11192,14 +11369,14 @@ function vpReward(i, prem, si = vpSeason()) { const t = i + 1, sx = seaCos(si); 
   if (COS_PT[t]) r.cos = COS_PT[t] + sx; return r; }
 
 /* ---------- v553 cosmetics and the Wardrobe ---------- */
-const COS_SEA = ["Leviathan", "Cube", "Pentarch", "Starhive", "Mimic", "Wyrm", "Aeon", "Ruin", "Sphinx", "Petrified Star", "Omens", "Countdown"], COS_C2 = ["#ffd36b", "#b8ffcf", "#9fb4ff", "#ff6a3a", "#ff6ad5", "#ff3b2a", "#e8f6ff", "#ffd36b", "#c890ff", "#ffb0a0", "#dfe9ff", "#ffe9b0"];
+const COS_SEA = ["Leviathan", "Cube", "Pentarch", "Starhive", "Mimic", "Wyrm", "Aeon", "Ruin", "Sphinx", "Petrified Star", "Omens", "Countdown", "Carcinid"], COS_C2 = ["#ffd36b", "#b8ffcf", "#9fb4ff", "#ff6a3a", "#ff6ad5", "#ff3b2a", "#e8f6ff", "#ffd36b", "#c890ff", "#ffb0a0", "#dfe9ff", "#ffe9b0"];
 const COS_K = { banner: ["Banner", "⚑", "b"], frame: ["Portrait frame", "◎", "f"], trail: ["Warp trail", "☄", "t"], aura: ["Homeworld aura", "◍", "a"], laser: ["Laser colour", "⌁", "l"], adv: ["Advisor outfit", "✧", "v"], wheel: ["Wheel theme", "☸", "w"], clip: ["Clip frame", "▣", "c"], skinx: ["Animated skin", "🪐", "x"] };
 const COS_ORDER = ["banner", "frame", "trail", "aura", "laser", "adv", "wheel", "clip", "skinx"];
 const COS_PT = { 1: "banner", 5: "frame", 10: "trail", 12: "wheel", 15: "adv", 20: "laser", 22: "clip", 30: "aura" }; /* premium tier -> kind (tier 40: skinx) */
-const COS_ART = { adv0: "art/season/s1-adv.webp", adv1: "art/season/s2-adv.webp", adv2: "art/season/s3-adv.webp", adv3: "art/season/s4-adv.webp", adv4: "art/season/s5-adv.webp", adv5: "art/season/s6-adv.webp", /* v560 the season pack */ ...Object.fromEntries([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].flatMap(i => [["adv" + i, `art/season/s${i + 1}-adv.webp`], ["banner" + i, `art/season/s${i + 1}-banner.webp`], ["frame" + i, `art/season/s${i + 1}-frame.webp`]])), cache: "art/season/cache.webp", cacheOpen: "art/season/cache-open.webp" };
+const COS_ART = { adv0: "art/season/s1-adv.webp", adv1: "art/season/s2-adv.webp", adv2: "art/season/s3-adv.webp", adv3: "art/season/s4-adv.webp", adv4: "art/season/s5-adv.webp", adv5: "art/season/s6-adv.webp", /* v560 the season pack */ ...Object.fromEntries([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].flatMap(i => [["adv" + i, `art/season/s${i + 1}-adv.webp`], ["banner" + i, `art/season/s${i + 1}-banner.webp`], ["frame" + i, `art/season/s${i + 1}-frame.webp`]])), banner12: "art/carcinid/cos-banner.webp", frame12: "art/carcinid/frame.webp", cache: "art/season/cache.webp", cacheOpen: "art/season/cache-open.webp" };
 const seasonTok = (si = vpSeason()) => `art/season/s${(seaCos(si)) + 1}-token.webp`; /* v560 */ /* id -> file: the owner's season art (v558 Advisor outfits) */
 function cosDef(id) { const m = /^([a-z]+?)(F|S)?(\d+)$/.exec(id || ""); if (!m || !COS_K[m[1]]) return null; const k = m[1], si = +m[3], free = m[2] === "F", set = m[2] === "S", K = COS_K[k];
-  const col = VP_SEASONS[si] ? VP_SEASONS[si][1] : "#7af4ff", col2 = COS_C2[si] || "#ffffff";
+  const col = si === 12 ? "#e8b45a" : VP_SEASONS[si] ? VP_SEASONS[si][1] : "#7af4ff", col2 = si === 12 ? "#3fe8f0" : COS_C2[si] || "#ffffff"; /* v704 the Carcinid set */
   const n = set ? `${COS_SEA[si]} Ascendant aura` : free ? `Pathfinder ${K[0].toLowerCase()} · ${COS_SEA[si]}` : `${COS_SEA[si]} ${k === "adv" ? K[0] : K[0].toLowerCase()}`;
   const tier = set ? null : free ? (k === "frame" ? 10 : 30) : k === "skinx" ? VP_TIERS : +Object.keys(COS_PT).find(t => COS_PT[t] === k);
   return { id, k, si, free, set, n: n[0].toUpperCase() + n.slice(1), col: free ? "#9fe9ff" : col, col2: free ? col : col2, tier, art: COS_ART[id] || null }; }
@@ -11267,7 +11444,7 @@ function shWardrobe() { const C = cosOf(), k = COS_K[sheet.k] ? sheet.k : "banne
     ${trying.length ? `<div class="cwbar"><span>${lockedTry.length ? `Trying ${trying.length} item${trying.length > 1 ? "s" : ""} · ${lockedTry.length} locked won't save` : `Trying ${trying.length} item${trying.length > 1 ? "s" : ""}`}</span><button class="btn ghost sm" data-act="cwRevert">Revert</button><button class="btn amber sm" data-act="cwSave"${trying.length > lockedTry.length ? "" : " disabled"}>Save look</button></div>` : ""}`;
   const tabs = `<div class="cwtabs">${COS_ORDER.map(x => `<button class="${x === k ? "on" : ""}" data-act="cwTab" data-v="${x}"><i>${COS_K[x][1]}</i><span>${COS_K[x][0]}</span>${tr[x] !== undefined && tr[x] !== (C.eq[x] || null) ? "<em>•</em>" : ""}</button>`).join("")}</div>`;
   const desc = { banner: "Your banner runs behind your name on your profile and on the leaderboards.", frame: "A frame around your portrait everywhere it appears: profile, leaderboards, chat.", trail: "Your fleets leave this warp trail on the galaxy map. Everyone sees it.", aura: "A glowing aura and orbiting lights around your homeworld on the galaxy map.", laser: "Your ships fire in this colour in your battles and battle replays.", adv: "The Advisor wears this season outfit whenever she appears.", wheel: "The Holo Glyph Wheel in the Void Shop takes on these colours.", clip: "Your shared battle clips get this season frame.", skinx: "Brings your season planet skin to life: your homeworld pulses with a season corona on the galaxy map while it wears the skin." }[k];
-  const setN = si => COS_ORDER.filter(x => C.own[x + si]).length, src = d => d.set ? `Own every ${COS_SEA[d.si]} season cosmetic` : `Void Pass · Season ${cosNo(d.si)} · ${d.free ? "free" : "premium"} tier ${d.tier}`;
+  const setN = si => COS_ORDER.filter(x => C.own[x + si]).length, src = d => d.si === 12 ? "Tide of the Carcinid · the Abyssal Forge and the reward track" : d.set ? `Own every ${COS_SEA[d.si]} season cosmetic` : `Void Pass · Season ${cosNo(d.si)} · ${d.free ? "free" : "premium"} tier ${d.tier}`;
   const rar = d => d.set ? "set" : d.k === "skinx" ? "myth" : d.free ? "free" : "prem";
   const stage = (() => { const d = cosDef(sel); if (!d) return ""; const have = !!C.own[d.id], on = C.eq[k] === d.id, isTry = tr[k] === d.id;
     const ctx = k === "banner" ? `<div class="cwst bn${d.art ? " art" : ""}" style="${cosBannerStyle(d.id)}">${frameWith(frId, avCanvas(G.me, "avc big"))}<div><b>${esc(S.homeName || "Commander")}</b><small>Leaderboard · profile</small></div></div>`
@@ -12086,7 +12263,7 @@ async function connectCloud() {
     }, () => {});
     db.doc("event/nexus").onSnapshot(s => { G.nexus = s.exists ? cleanNexus(s.data()) : null; softRender(); }, () => {});
     db.doc("event/wboss").onSnapshot(s => { G.wb = s.exists ? s.data() : null; wbSeen(G.wb); wbClaim(); softRender(); }, () => {});
-    for (const d of ["event/carcinid", "event/carcinid_prev"]) db.doc(d).onSnapshot(s => { (G.crcDoc = G.crcDoc || {})[d] = s.exists ? s.data() : null; CSC = {}; softRender(); }, () => {}); /* v703 */
+    for (const d of ["event/carcinid", "event/carcinid_prev"]) db.doc(d).onSnapshot(s => { (G.crcDoc = G.crcDoc || {})[d] = s.exists ? s.data() : null; CSC = {}; try { crcClaim(); } catch (e) {} softRender(); }, () => {}); /* v703 */
     for (const d of ["event/mimic", "event/mimic_prev"]) db.doc(d).onSnapshot(s => { (G.mimDoc = G.mimDoc || {})[d] = s.exists ? s.data() : null; mimClaim(); softRender(); }, () => {}); /* v665 */
     db.doc("event/omega").onSnapshot(s => { G.om = s.exists ? s.data() : null; OMN = null; omClaim(); softRender(); }, () => {});
     for (const k of ["vae", "aex", "khz", "med"]) db.doc("event/sb_" + k).onSnapshot(s => { G.sb[k] = s.exists ? s.data() : null; SBN[k] = null; sbClaim(); softRender(); }, () => {}); /* v451 the super bosses */ /* v442 the Omega Cube */ /* v384 world bosses */
@@ -15365,7 +15542,7 @@ function draw3D(t) {
         const dx = ca * RX, dz = Math.cos(2 * a) * RZ, ddx = -sa * RX, ddz = -2 * Math.sin(2 * a) * RZ, curv = (dx * ddz - dz * ddx) / Math.pow(dx * dx + dz * dz + 1e-3, 1.5);
         W.monU.value = t * .001; o.body.position.set(sa * RX, Math.sin(t * .0007 + it.a0) * .5, sa * ca * RZ); o.body.rotation.set(clamp(curv * 1.6, -.4, .4), Math.atan2(-dz, dx), 0);
         if (it.mon === "sent") { o.body.position.set(0, Math.sin(t * .0003 + it.a0) * .15, 0); o.body.rotation.set(0, it.a0, 0); }
-        if (MIM_BOSS[it.id]) { o.body.position.set(0, Math.sin(t * .0003 + it.a0) * .25, 0); o.body.rotation.set(0, it.mon === "nexus" ? 0 : it.a0 + Math.sin(t * .0001 + it.a0) * .5, 0); o.body.scale.setScalar((.6 + it.lvl * .0082) * (it.om === 1 ? 4.2 : it.om === 2 ? 2.6 : it.mon === "nexus" ? 1.5 : 1.8)); } /* v665 the Alphas and Nexuses loom */
+        if (MIM_BOSS[it.id]) { o.body.position.set(0, Math.sin(t * .0003 + it.a0) * .25, 0); o.body.rotation.set(0, it.mon === "nexus" ? 0 : it.a0 + Math.sin(t * .0001 + it.a0) * .5, 0); o.body.scale.setScalar((.6 + it.lvl * .0082) * (it.crc ? it.sc : it.om === 1 ? 4.2 : it.om === 2 ? 2.6 : it.mon === "nexus" ? 1.5 : 1.8)); } /* v665 the Alphas and Nexuses loom */
         if (it.mon === "mimic") { o.body.position.set(0, Math.sin(t * .0004 + it.a0) * .2, 0); o.body.rotation.set(0, t * .00003 + it.a0, 0); o.body.scale.setScalar((.6 + it.lvl * .0082) * (.5 + .17 * mimStage(it, T))); } /* v663 a hive stays put and grows with its stage */
         if (it.mon === "carcinid") { o.body.position.set(0, Math.sin(t * .0004 + it.a0) * .15, 0); o.body.rotation.set(0, t * .00002 + it.a0, 0); o.body.scale.setScalar((.6 + it.lvl * .0082) * (.42 + .16 * crcStage(it, T))); } /* v703 a Breach Zone stays put and grows with its stage */ /* v529 the Sentinel does not move */
         if (it.mon === "swasp") { o.body.position.set(0, Math.sin(t * .0005 + it.a0) * .3, 0); o.body.rotation.set(0, t * .00008 + it.a0, 0); } // v515 a Starhive hangs where it is; its swarm does the moving
@@ -17606,7 +17783,7 @@ function shipArt(k, accent, view) {
   try {
     let M = shipMats(accent); if (k === "flagship") { const F2 = flagMats(M.fac, 2.9); M = Object.assign(Object.create(M), F2); Object.defineProperty(M, "fac", { value: Object.getPrototypeOf(M).fac }); } /* v256 the portrait wears the plated metal */
     const ship = kind === "s" ? (glbShip(k) || buildShip(k, M)) : kind === "a" ? (mfr >= 0 && MON_WAVE[k] ? monMerged(k) : buildAlien(k)) : kind === "m" ? buildMissile(k, M) : buildDefense(k, M); if (fin && kind === "s") hullFinish(ship, fin, k); const mfM = mfr >= 0 && kind === "a" ? monBatPose(ship, k, mfr) : null; S.scene.add(ship);
-    if ((kind === "d" || kind === "m") && view === "side") ship.rotation.y = -.5; // turrets read better turned a little toward the camera
+    if ((kind === "d" || kind === "m") && view === "side") ship.rotation.y = -.5; if (view === "side" && kind === "a" && typeof CRC_FACE !== "undefined" && CRC_FACE[k]) ship.rotation.y = CRC_FACE[k]; /* v704 */ // turrets read better turned a little toward the camera
     if (k === "eclipse" && view === "side") ship.rotation.x = .42; if (view === "side" && TITAN_INFO[k]) ship.rotation.x = k === "harbinger" ? 1.0 : .38; /* v556 */ if (k === "smoth" && view === "side") { ship.rotation.order = "ZYX"; ship.rotation.set(Math.PI / 2, 0, Math.PI / 2); } /* v528 its back: head up, wings spread */ /* v522 the Solar Moth shows its wings in battle, not their edge */ // v170 the Discovery's saucer reads as a disc, not a sliver, tilted a little toward the camera
     const gl = S.glowT || (S.glowT = glowTex("150,215,255", 1)), FG = k === "flagship" ? M.neon.color : null, gc = !FG && fin && kind === "s" ? finEng(fin) : FG ? [new TH.Color(0xffffff).lerp(FG, .5), FG] : ship.userData.engCol ? ship.userData.engCol : kind === "a" ? [0xd8ff9a, 0x7aff3a] : [0x9fdcff, 0x4f9fff];
     if (FG) { const gw = S.glowW || (S.glowW = glowTex("255,255,255", 1)); for (const [x, y, z, rr, c, a] of ship.userData.glow || []) { const sp = new TH.Sprite(new TH.SpriteMaterial({ map: gw, color: c || FG, opacity: a * .32, transparent: true, blending: TH.AdditiveBlending, depthWrite: false })); sp.position.set(x, y, z); sp.scale.setScalar(rr * .8); ship.add(sp); } } // v250 the flagship's battle portrait carries its halo
@@ -21400,7 +21577,7 @@ function shPyramid() {
 function shPirate() {
   const x = PB[sheet.id]; if (!x) return ""; { const q = pos(x, now()); if (!fogSeen(q.x, q.y)) return shUnexplored(x); } if (CRC_M[x.mon]) try { crcSurvey(x); } catch (e) {} /* v703 */
   const T = now(), h = originPlanet(), avail = originAvail(), sel = selected(), down = pirDown(x), force = xForce(x), L = xLoot(x), sentOut = S.fleets.some(f => f.xid === x.id && f.phase === "out");
-  const head = x.mon ? `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:${MON[x.mon].col}">Space monster · ${MON[x.mon].n} · Lv.${x.lvl}</div><h2>${MON[x.mon].ic} ${esc(x.name)}</h2><p class="note">${MON[x.mon].d}${MIM_BOSS[x.id] ? "" : ` Slay it for a hoard of resources, Void Shards and ${monAccel(x.lvl).n} ${monAccel(x.lvl).tier} time accelerator${monAccel(x.lvl).n > 1 ? "s" : ""}.`}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${CRC_M[x.mon] ? `<div class="monart crcart"><img src="art/carcinid/${CRC_ART[x.mon]}.webp?v=1" alt="" loading="lazy"></div>` : monArt(MON_ARTF[x.mon] || x.mon)}`
+  const head = x.mon ? `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:${MON[x.mon].col}">Space monster · ${MON[x.mon].n} · Lv.${x.lvl}</div><h2>${MON[x.mon].ic} ${esc(x.name)}</h2><p class="note">${MON[x.mon].d}${MIM_BOSS[x.id] ? "" : ` Slay it for a hoard of resources, Void Shards and ${monAccel(x.lvl).n} ${monAccel(x.lvl).tier} time accelerator${monAccel(x.lvl).n > 1 ? "s" : ""}.`}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${CRC_M[x.mon] ? (CRC_ART[x.mon] ? `<div class="monart crcart"><img src="art/carcinid/${CRC_ART[x.mon]}.webp?v=1" alt="" loading="lazy"></div>` : `<div class="monart crcart"><canvas data-ship="${CRC_M[x.mon]}" width="600" height="300"></canvas></div>`) : monArt(MON_ARTF[x.mon] || x.mon)}`
     : x.boss ? `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#5dff6a">Boss · Assimilation Cube · Lv.${x.lvl}</div><h2>■ ${esc(x.name)}</h2><p class="note">A city-sized cube of the Collective, laced with green fire. It adapts, it repairs, it does not negotiate. Destroy it for a vault of resources, Void Shards and a guaranteed item.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`
     : `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:#ff6b5a">Pirate hideout · Lv.${x.lvl}</div><h2>☠ ${esc(x.name)}</h2><p class="note">Outlaw crews hiding in the dust lanes. Beat them and your holds fill with their stolen cargo.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>`;
   const el = isElite(x), lk = xLootK(x), fk = !(S.fk || {})[lk + ":" + x.lvl] && !trainingPir(x);
@@ -24792,137 +24969,319 @@ function mimAnimOK(b, k) { let S = b.mAnim; if (!S) { const ks = [...new Set(b.Q
 const MIM_ATK = { mstalk: "bite", mhunt: "spit", mharv: "grab", massim: "link", mguard: "slam", mtitan: "claw", malpha1: "storm", malpha2: "storm", malpha3: "storm", malpha4: "storm", mnexus: "pulse", mnode: "pulse", mpylon: "lance", momega: "omega", momegax: "omega", mnest: "brood" };
 const MIM_DUR = { bite: .7, spit: .8, grab: 1.3, link: 1.4, slam: .7, claw: .7, storm: 1.5, pulse: .9, brood: .8, lance: .8, omega: 1.4, omegaX: 2.6 };
 const MIM_TENT = { bite: 1, grab: 3, claw: 2, storm: 3 }; /* how many tentacles each attack throws */
-/* ---------- v703 the Carcinid on the battle screen and the map: profiles, sizes, weapons, and their 3D models (built in code) ----------
-   Styled on the owner's paintings: near-black chitin with a violet sheen, gilded seams, gold claw tips and spines, cyan light in the joints and eyes, violet and red coral. The crabs walk (each leg steps in turn,
-   the claws lift and the body rides on them), the coral on a Spitter sways, and a Breach nest's coral breathes round its rift. */
-Object.assign(CPROF, { cscut: ["fighter", "acid", .12, .24, 7, 0], cspit: ["frigate", "plasma", .08, .12, 5, 0], charv: ["support", "acid", .14, .08, 3, 0], cguard: ["cruiser", "laser", .36, .03, 3, 2], cfrig: ["frigate", "ion", .16, .14, 5.5, 1], cint: ["interceptor", "laser", .06, .3, 9, 0], cnest: ["station", "acid", .3, 0, 0, 2] });
-Object.assign(BOSSK, { cscut: 1.55, cspit: 1.6, charv: 1.6, cguard: 1.85, cfrig: 1.7, cint: 1.55, cnest: 2.1 });
-Object.assign(MIM_HULL, { cscut: .8, cspit: .9, charv: .95, cguard: 1.4, cfrig: 1.15, cint: .9, cnest: 1.7 });
-Object.assign(MIM_PACK, { cscut: 1, cspit: 1, charv: 1, cint: 1 }); MIM_STA.cnest = .44;
-Object.assign(MON_ATK, { cscut: [["acid", 3, "#3fe0c8", .14, {}], ["flak", 4, "#ffc870", .12, {}]], cspit: [["plasma", 2, "#b48cff", .24, { hv: 1 }], ["acid", 3, "#ffc870", .2, {}]], charv: [["acid", 3, "#3fe0c8", .2, {}], ["flak", 3, "#7ff8e4", .14, {}]],
-  cguard: [["flak", 6, "#e8b45a", .12, {}], ["ion", 2, "#7ff8e4", .22, {}]], cfrig: [["ion", 3, "#7ff8e4", .18, {}], ["missile", 3, "#e8b45a", .2, {}]], cint: [["laser", 3, "#9ff8ec", .1, {}], ["flak", 5, "#ffc870", .1, {}]],
-  cnest: [["missile", 4, "#3fe0c8", .2, { flank: 1 }], ["plasma", 2, "#e8b45a", .26, { hv: 1 }]] });
-Object.assign(MIM_ATK, { cscut: "slam", cguard: "slam", cspit: "spit", cint: "spit" });
-Object.assign(MON_EL, { carcinid: "water", crcpat: "water" });
+/* ---------- v703/v704 the Carcinid on the battle screen and the map: profiles, sizes, weapons, and their 3D models (built in code) ----------
+   v704 rebuilt after the owner's paintings. The shape language they share:
+   - crabs: a wide carapace with a pointed brow, gilded plate rims, curved horns rising off the back, a fringe of hooked fangs under the
+     eyes over a cyan core, and enormous crescent pincers (two sickle fingers, serrated inside) that close almost into a ring;
+   - ships: long hulls of overlapping armour plates with gilded edges, crescent blades sweeping forward from the prow, sickle claws folded
+     under the belly like legs, swept fins on the back, a cyan eye on the flank and twin cyan drives;
+   - palette: near-black chitin with a violet sheen, gold-bronze edges and claws, cyan light (the bosses carry their own tints).
+   The crabs walk (each leg steps in turn, the pincers lift and the body rides on them), the Kraken's arms writhe, the nest breathes. */
+Object.assign(CPROF, { cscut: ["fighter", "acid", .12, .24, 7, 0], cspit: ["frigate", "plasma", .08, .12, 5, 0], charv: ["support", "acid", .14, .08, 3, 0], cguard: ["cruiser", "laser", .36, .03, 3, 2],
+  cbrood: ["carrier", "acid", .22, .04, 2.6, 2], cwar: ["cruiser", "laser", .28, .08, 4, 1], ccrys: ["frigate", "ion", .2, .1, 4.5, 1], clanc: ["battleship", "plasma", .26, .06, 3.6, 1], cmolt: ["titan", "plasma", .3, 0, 1.8, 3], ckrak: ["titan", "acid", .24, .04, 2.4, 2],
+  cfrig: ["frigate", "ion", .16, .14, 5.5, 1], cint: ["interceptor", "laser", .06, .3, 9, 0], cdest: ["frigate", "plasma", .14, .14, 6, 1], cvang: ["cruiser", "ion", .22, .08, 4.2, 2], ccarr: ["carrier", "laser", .2, .04, 3, 3], cpearl: ["interceptor", "beam", .05, .32, 9.5, 0],
+  cmint: ["interceptor", "ion", .08, .3, 9, 0], cregent: ["battleship", "beam", .28, .04, 3.2, 3], cempr: ["titan", "beam", .34, 0, 1.8, 5], cbrlord: ["carrier", "acid", .24, .03, 2.6, 4], cnest: ["station", "acid", .3, 0, 0, 2],
+  cmar: ["titan", "laser", .34, .02, 1.8, 4], cmat: ["titan", "acid", .3, 0, 1.4, 5], ctyr: ["titan", "plasma", .42, 0, 1.2, 5], cora: ["titan", "ion", .28, .04, 1.6, 4], ckor: ["titan", "beam", .36, 0, 1.6, 6],
+  cbeh: ["titan", "plasma", .44, 0, 1, 6], ckbr: ["titan", "acid", .3, .02, 1.8, 4], cpal: ["titan", "ion", .32, .04, 1.6, 5], ccrown: ["titan", "beam", .4, 0, 1.2, 7], ccrownm: ["titan", "plasma", .2, 0, 1.8, 4] });
+Object.assign(BOSSK, { cscut: 1.55, cspit: 1.6, charv: 1.6, cguard: 1.85, cbrood: 2, cwar: 1.9, ccrys: 1.7, clanc: 2, cmolt: 2.4, ckrak: 2.6, cfrig: 1.7, cint: 1.55, cdest: 1.75, cvang: 1.9, ccarr: 2.1, cpearl: 1.55, cmint: 1.55, cregent: 2.4, cempr: 2.8, cbrlord: 2.4, cnest: 2.1,
+  cmar: 3.2, cmat: 3.2, ctyr: 3.3, cora: 3.2, ckor: 3.6, cbeh: 3.6, ckbr: 3.4, cpal: 3.4, ccrown: 4.2, ccrownm: 4.2 });
+Object.assign(MIM_HULL, { cscut: .8, cspit: .9, charv: .95, cguard: 1.4, cbrood: 1.7, cwar: 1.5, ccrys: 1.2, clanc: 1.8, cmolt: 2.6, ckrak: 2.8, cfrig: 1.15, cint: .9, cdest: 1.3, cvang: 1.6, ccarr: 2, cpearl: .85, cmint: .9, cregent: 2.5, cempr: 3, cbrlord: 2.4, cnest: 1.7,
+  cmar: 3.7, cmat: 3.7, ctyr: 3.8, cora: 3.7, ckor: 4.2, cbeh: 4.4, ckbr: 4, cpal: 4, ccrown: 5.4, ccrownm: 5.4 });
+Object.assign(MIM_PACK, { cscut: 1, cspit: 1, charv: 1, cint: 1, cpearl: 1, cmint: 1 }); MIM_STA.cnest = .44;
+Object.assign(BOSS_GLOW, { ckor: "232,180,90", ccrown: "255,210,120", ccrownm: "160,250,255", cmar: "255,90,90", cmat: "220,240,255", ctyr: "255,140,120", cora: "190,120,255", cbeh: "120,240,230", ckbr: "220,90,255", cpal: "200,250,255" });
+{ const A = (w, n, c, d, f) => [w, n, c, d, f || {}], T = "#3fe8f0", G = "#ffc870", V = "#b48cff";
+  Object.assign(MON_ATK, { cscut: [A("acid", 3, T, .14), A("flak", 4, G, .12)], cspit: [A("plasma", 2, V, .24, { hv: 1 }), A("acid", 3, G, .2)], charv: [A("acid", 3, T, .2), A("flak", 3, "#7ff8e4", .14)], cguard: [A("flak", 6, G, .12), A("ion", 2, "#7ff8e4", .22)],
+    cbrood: [A("missile", 5, T, .2, { flank: 1 }), A("acid", 3, V, .2)], cwar: [A("laser", 3, G, .12), A("flak", 5, T, .1)], ccrys: [A("ion", 4, "#9ff8ff", .16), A("laser", 2, "#e8fbff", .14)], clanc: [A("plasma", 3, T, .22, { hv: 1 }), A("laser", 4, G, .12)],
+    cmolt: [A("plasma", 4, "#e8fbff", .26, { hv: 1 }), A("missile", 6, T, .2, { flank: 1 })], ckrak: [A("acid", 5, "#d070ff", .2), A("plasma", 2, V, .26, { hv: 1 })],
+    cfrig: [A("ion", 3, "#7ff8e4", .18), A("missile", 3, G, .2)], cint: [A("laser", 3, "#9ff8ec", .1), A("flak", 5, G, .1)], cdest: [A("plasma", 2, T, .22, { hv: 1 }), A("flak", 5, G, .12)], cvang: [A("ion", 4, T, .18), A("missile", 4, G, .2, { flank: 1 })],
+    ccarr: [A("missile", 6, T, .2, { flank: 1 }), A("flak", 6, G, .12)], cpearl: [A("laser", 3, "#e8fbff", .1), A("flak", 4, T, .1)], cmint: [A("ion", 3, V, .14), A("laser", 3, T, .1)], cregent: [A("laser", 5, T, .14), A("plasma", 3, G, .24, { hv: 1 })],
+    cempr: [A("plasma", 5, G, .26, { hv: 1 }), A("laser", 6, T, .12)], cbrlord: [A("missile", 8, "#ff7ab0", .2, { flank: 1 }), A("acid", 4, V, .2)], cnest: [A("missile", 4, T, .2, { flank: 1 }), A("plasma", 2, V, .26, { hv: 1 })],
+    cmar: [A("laser", 5, "#ff6060", .12), A("plasma", 3, G, .24, { hv: 1 })], cmat: [A("missile", 8, "#e8fbff", .2, { flank: 1 }), A("acid", 4, T, .2)], ctyr: [A("plasma", 4, "#ff9a7a", .26, { hv: 1 }), A("flak", 8, G, .12)], cora: [A("ion", 5, V, .16), A("laser", 4, "#e0c0ff", .12)],
+    ckor: [A("plasma", 5, G, .26, { hv: 1 }), A("laser", 6, T, .12)], cbeh: [A("plasma", 5, T, .28, { hv: 1 }), A("flak", 10, G, .12)], ckbr: [A("acid", 6, "#d070ff", .2), A("plasma", 3, V, .26, { hv: 1 })], cpal: [A("ion", 6, "#e8fbff", .16), A("laser", 5, T, .12)],
+    ccrown: [A("plasma", 6, G, .28, { hv: 1 }), A("missile", 8, T, .2, { flank: 1 })], ccrownm: [A("plasma", 6, "#e8fbff", .3, { hv: 1 }), A("laser", 6, T, .12)] }); }
+Object.assign(MIM_ATK, { cscut: "slam", cguard: "slam", cwar: "slam", clanc: "slam", cmar: "slam", ctyr: "slam", cbeh: "slam", cmolt: "slam", ckor: "slam", ccrown: "slam", ckrak: "grab", ckbr: "grab" }); /* the crabs lunge with their crush (the Kraken and the Krakenbreaker grab); the rest is crcAtkDraw */
+Object.assign(MON_EL, { carcinid: "water", crcpat: "water", wkraken: "water" });
+const CRC_FACE = {}; /* filled below: the crabs turn -.55, the ships -.22, the Kraken -.3 */
+const CRC_CRABS = ["cscut", "cspit", "charv", "cguard", "cbrood", "cwar", "ccrys", "clanc", "cmolt", "cmar", "cmat", "ctyr", "cora", "ckor", "cbeh", "ckbr", "cpal", "ccrown", "ccrownm"];
 { const crab = `vec3 p = position; float ph = mt * 6.28318 + p.x * 2.6 + (p.z > 0. ? 0. : 3.14159), lz = clamp((abs(p.z) - .95) / 1.5, 0., 1.) * (1. - smoothstep(1.15, 1.35, p.x));
     transformed.y += lz * .16 * max(0., sin(ph)); transformed.x += lz * .12 * cos(ph);
     float cl = smoothstep(1.3, 1.9, p.x); transformed.y += cl * (.09 * sin(mt * 2.0944 + (p.z > 0. ? 0. : 1.6)) + .05 * (p.x - 1.3) * sin(mt * 4.18879));
-    float tu = smoothstep(.55, 1.6, p.y) * step(abs(p.z), .9) * (1. - cl); transformed.x += tu * .07 * sin(mt * 2.0944 + p.y * 1.4); transformed.z += tu * .05 * cos(mt * 2.0944 + p.y);
+    float tu = smoothstep(.75, 1.9, p.y) * step(abs(p.z), .9) * (1. - cl); transformed.x += tu * .05 * sin(mt * 2.0944 + p.y * 1.4); transformed.z += tu * .04 * cos(mt * 2.0944 + p.y);
+    float tl = smoothstep(-1.3, -2.6, p.x) * step(abs(p.z), 1.); transformed.y += tl * .1 * sin(mt * 4.18879 + p.x * 1.6);
     transformed.y += (1. - lz) * .045 * sin(mt * 4.18879);`;
-  for (const k of ["cscut", "cspit", "charv", "cguard"]) MON_WAVE[k] = crab;
+  for (const k of CRC_CRABS) MON_WAVE[k] = crab;
+  MON_WAVE.ckrak = MON_WAVE.wkraken = `vec3 p = position; float ar = smoothstep(.4, 4.5, p.x); transformed.y += ar * ar * .55 * sin(mt * 2.0944 + p.x * 1.3 + p.z * 2.2); transformed.z += ar * ar * .45 * cos(mt * 2.0944 + p.x * 1.1 + p.y * 1.7);
+    float mn = smoothstep(.2, -2.5, p.x); transformed.yz *= 1. + mn * .05 * sin(mt * 4.18879); transformed.y += .08 * sin(mt * 2.0944);`;
+  for (const m of ["crcmar", "crcmat", "crctyr", "crcora", "crckor", "crcbeh", "crckbr", "crcpal", "crccrown"]) MON_WAVE[m] = crab;
   MON_WAVE.cnest = MON_WAVE.carcinid = `vec3 p = position; float an = atan(p.z, p.x), rr = length(p.xz), sp = smoothstep(-.6, 3.6, p.y) * step(.6, rr) * (1. - step(2.35, rr) * step(1.6, p.y) * .7);
     transformed.x += sp * .09 * sin(mt * 2.0944 + an * 3. + p.y); transformed.z += sp * .09 * cos(mt * 2.0944 + an * 3. + p.y);
     float rf = 1. - smoothstep(1.2, 1.7, length(p.xy - vec2(0., 1.1))) * step(abs(p.z), .5); transformed.xy += (p.xy - vec2(0., 1.1)) * (1. - rf) * .03 * sin(mt * 4.18879);`;
   MON_WAVE.crcpat = `transformed.y += .08 * sin(mt * 2.0944 + position.x * .25 + position.z * .3);`; }
-let CRC_MC = null;
-function crcMats() { if (CRC_MC) return CRC_MC; const C = CRC_MC = {}, tex = (w, h, draw) => { const t = texCanvas(w, h, draw); t.wrapS = t.wrapT = TH.RepeatWrapping; return t; };
-  /* the paintings' chitin: near-black plates with a violet and blue sheen, gilded seams between the segments, pitted */
+/* the palettes: [shell base rgb, sheen rgb, glow, gold] */
+const CRC_TINT = { def: [[16, 12, 26], [34, 18, 46], 0x3fe8f0, 0xd2a45c], red: [[40, 8, 12], [80, 14, 24], 0xff4050, 0xe0a050], pearl: [[150, 150, 172], [70, 60, 100], 0x5ff0ff, 0xe8d0a0], oracle: [[28, 10, 48], [64, 24, 96], 0xb060ff, 0xd2a45c],
+  gold: [[22, 17, 12], [46, 34, 12], 0x3fe8f0, 0xffc860], krak: [[26, 8, 36], [70, 12, 84], 0xd040ff, 0xd2a45c], pale: [[176, 186, 204], [90, 110, 150], 0x5ff8ff, 0xf0e0c0], coral: [[34, 12, 18], [70, 22, 34], 0x3fe8f0, 0xd8a060] };
+const CRC_MC = {};
+function crcMats(t) { t = CRC_TINT[t] ? t : "def"; if (CRC_MC[t]) return CRC_MC[t]; const [B, K, GL, GO] = CRC_TINT[t], C = CRC_MC[t] = {}, tex = (w, h, draw) => { const x = texCanvas(w, h, draw); x.wrapS = x.wrapT = TH.RepeatWrapping; return x; };
+  /* the paintings' chitin: dark plates with a sheen, gilded seams between the segments, pitted with small scales */
   const sC = tex(256, 128, (x, W, H) => { const n = fbm2(7031), img = x.createImageData(W, H), d = img.data;
-    for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) { const v = n(px / 22, py / 22, 10, 4), band = Math.abs(Math.sin(py / H * Math.PI * 7)), seam = band < .12 ? .35 : 1, sp = n(px / 6, py / 6, 10, 2) > .72 ? .55 : 1, o = (py * W + px) * 4;
-      const ir = n(px / 40 + 7, py / 30, 10, 3); if (band < .1) { d[o] = 214; d[o + 1] = 160; d[o + 2] = 78; } else { d[o] = (16 + v * 26 + ir * 30) * sp; d[o + 1] = (12 + v * 14 + (1 - ir) * 18) * sp; d[o + 2] = (26 + v * 40 + ir * 36) * sp; } d[o + 3] = 255; } x.putImageData(img, 0, 0); });
-  const sE = tex(256, 128, (x, W, H) => { x.fillStyle = "#000"; x.fillRect(0, 0, W, H); for (let i = 1; i < 7; i++) { const y = i / 7 * H; x.strokeStyle = "rgba(255,255,255,.55)"; x.lineWidth = 1.2; x.beginPath(); x.moveTo(0, y); for (let px = 0; px <= W; px += 16) x.lineTo(px, y + Math.sin(px * .09 + i) * 2); x.stroke(); }
+    for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) { const v = n(px / 22, py / 22, 10, 4), band = Math.abs(Math.sin(py / H * Math.PI * 7)), sc = Math.abs(Math.sin(px * .35) * Math.sin(py * .5)), sp = n(px / 6, py / 6, 10, 2) > .72 ? .55 : 1, ir = n(px / 40 + 7, py / 30, 10, 3), o = (py * W + px) * 4;
+      if (band < .1 || (sc < .05 && v > .5)) { d[o] = 214; d[o + 1] = 160; d[o + 2] = 78; } else { d[o] = (B[0] + v * K[0] + ir * 26) * sp; d[o + 1] = (B[1] + v * K[1] + (1 - ir) * 14) * sp; d[o + 2] = (B[2] + v * K[2] + ir * 30) * sp; } d[o + 3] = 255; } x.putImageData(img, 0, 0); });
+  const sE = tex(256, 128, (x, W, H) => { x.fillStyle = "#000"; x.fillRect(0, 0, W, H); for (let i = 1; i < 7; i++) { const y = i / 7 * H; x.strokeStyle = "rgba(255,255,255,.5)"; x.lineWidth = 1.1; x.beginPath(); x.moveTo(0, y); for (let px = 0; px <= W; px += 16) x.lineTo(px, y + Math.sin(px * .09 + i) * 2); x.stroke(); }
     const r = rnd(7032); for (let i = 0; i < 40; i++) { x.fillStyle = `rgba(255,255,255,${.3 + r() * .5})`; x.beginPath(); x.arc(r() * W, r() * H, .8 + r() * 1.6, 0, TAU); x.fill(); } });
   sC.encoding = TH.sRGBEncoding;
-  C.shell = new TH.MeshPhysicalMaterial({ map: sC, emissiveMap: sE, emissive: 0x3fe8f0, emissiveIntensity: .7, metalness: .55, roughness: .3, clearcoat: 1, clearcoatRoughness: .12, envMapIntensity: 1.1 });
-  C.shellD = C.shell.clone(); C.shellD.color = new TH.Color(0x8a80a0); C.shellD.emissiveIntensity = .5;
-  C.under = new TH.MeshPhysicalMaterial({ color: 0x1c1430, roughness: .45, metalness: .1, clearcoat: .6, envMapIntensity: .7 });
+  C.shell = new TH.MeshPhysicalMaterial({ map: sC, emissiveMap: sE, emissive: GL, emissiveIntensity: .7, metalness: .55, roughness: .3, clearcoat: 1, clearcoatRoughness: .12, envMapIntensity: 1.1 });
+  C.shellD = C.shell.clone(); C.shellD.color = new TH.Color(0x9088a8); C.shellD.emissiveIntensity = .4;
+  C.under = new TH.MeshPhysicalMaterial({ color: new TH.Color(`rgb(${B[0] + 10},${B[1] + 6},${B[2] + 14})`), roughness: .45, metalness: .2, clearcoat: .6, envMapIntensity: .7 });
   C.joint = new TH.MeshStandardMaterial({ color: 0x0e0a16, roughness: .55, metalness: .2 });
-  C.claw = new TH.MeshPhysicalMaterial({ map: sC, color: 0xb8a8e0, metalness: .5, roughness: .24, clearcoat: 1, clearcoatRoughness: .1, envMapIntensity: 1.2 });
-  C.tip = new TH.MeshPhysicalMaterial({ color: 0xd2a45c, metalness: .85, roughness: .26, clearcoat: 1, envMapIntensity: 1.4 });
+  C.claw = new TH.MeshPhysicalMaterial({ map: sC, color: new TH.Color(GO).lerp(new TH.Color(0xffffff), .25), metalness: .8, roughness: .26, clearcoat: 1, clearcoatRoughness: .1, envMapIntensity: 1.3 }); /* gold over the dark plate pattern */
+  C.tip = new TH.MeshPhysicalMaterial({ color: GO, metalness: .9, roughness: .24, clearcoat: 1, envMapIntensity: 1.5 });
   const cC = tex(128, 128, (x, W, H) => { const n = fbm2(7033), img = x.createImageData(W, H), d = img.data; for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) { const v = n(px / 9, py / 9, 10, 3), pore = n(px / 3, py / 3, 10, 2) > .66 ? .45 : 1, o = (py * W + px) * 4;
     d[o] = (190 + v * 60) * pore; d[o + 1] = (50 + v * 50) * pore; d[o + 2] = (180 + v * 70) * pore; d[o + 3] = 255; } x.putImageData(img, 0, 0); });
   cC.encoding = TH.sRGBEncoding;
   C.coral = new TH.MeshPhysicalMaterial({ map: cC, roughness: .75, metalness: 0, clearcoat: .3, emissive: 0x3a0a40, emissiveIntensity: .4, envMapIntensity: .6 });
-  C.coralB = C.coral.clone(); C.coralB.color = new TH.Color(0xffb070); /* red-orange coral among the violet, as in the paintings */
-  C.glow = new TH.MeshBasicMaterial({ color: 0x8ffbe8, toneMapped: false });
-  C.glowS = new TH.MeshBasicMaterial({ color: 0x2fd0b8, transparent: true, opacity: .3, toneMapped: false, blending: TH.AdditiveBlending, depthWrite: false });
-  C.eye = new TH.MeshBasicMaterial({ color: 0x9ffcff, toneMapped: false });
+  C.coralB = C.coral.clone(); C.coralB.color = new TH.Color(0xffb070);
+  C.glow = new TH.MeshBasicMaterial({ color: new TH.Color(GL).lerp(new TH.Color(0xffffff), .45), toneMapped: false });
+  C.glowS = new TH.MeshBasicMaterial({ color: new TH.Color(GL).multiplyScalar(.7), transparent: true, opacity: .3, toneMapped: false, blending: TH.AdditiveBlending, depthWrite: false });
+  C.eye = new TH.MeshBasicMaterial({ color: new TH.Color(GL).lerp(new TH.Color(0xffffff), .3), toneMapped: false });
   C.pearl = new TH.MeshPhysicalMaterial({ color: 0x1a5a64, roughness: .08, metalness: 0, clearcoat: 1, emissive: 0x2fe0d0, emissiveIntensity: .8, envMapIntensity: 1.5 }); C.pearl.userData.pulse = "(.6 + .4 * sin(uMT * 1.5 + vViewPosition.x))";
-  C.sac = new TH.MeshPhysicalMaterial({ color: 0x03322c, emissive: 0x2fe0c0, emissiveIntensity: .85, roughness: .2, clearcoat: .8, transparent: true, opacity: .88, envMapIntensity: .4 }); C.sac.userData.pulse = "(.7 + .3 * sin(uMT * 1.3))";
-  C.metal = new TH.MeshPhysicalMaterial({ color: 0x2c2438, metalness: .85, roughness: .32, clearcoat: 1, envMapIntensity: 1.2 });
+  C.egg = new TH.MeshPhysicalMaterial({ color: 0x062a30, emissive: GL, emissiveIntensity: 1.1, roughness: .1, clearcoat: 1, transparent: true, opacity: .9, envMapIntensity: .6 }); C.egg.userData.pulse = "(.65 + .35 * sin(uMT * 1.7 + vViewPosition.y * 2.))";
+  C.sac = new TH.MeshPhysicalMaterial({ color: 0x03322c, emissive: GL, emissiveIntensity: .85, roughness: .2, clearcoat: .8, transparent: true, opacity: .82, envMapIntensity: .4 }); C.sac.userData.pulse = "(.7 + .3 * sin(uMT * 1.3))";
+  C.crys = new TH.MeshPhysicalMaterial({ color: 0x9ff0ff, emissive: GL, emissiveIntensity: .7, roughness: .05, metalness: 0, clearcoat: 1, transparent: true, opacity: .78, envMapIntensity: 1.6 });
+  C.metal = new TH.MeshPhysicalMaterial({ color: new TH.Color(`rgb(${B[0] + 30},${B[1] + 24},${B[2] + 34})`), metalness: .85, roughness: .32, clearcoat: 1, envMapIntensity: 1.2 });
   C.rock = new TH.MeshStandardMaterial({ color: 0x0c0a10, roughness: .92, metalness: .05, flatShading: true });
   C.void = new TH.MeshBasicMaterial({ color: 0x010a0c, side: TH.DoubleSide });
-  C.core = new TH.MeshPhysicalMaterial({ color: 0x021a18, emissive: 0x2fe8cc, emissiveIntensity: 1.2, roughness: .15, clearcoat: 1, transparent: true, opacity: .9 }); C.core.userData.pulse = "(.65 + .35 * sin(uMT * 2.1))";
+  C.core = new TH.MeshPhysicalMaterial({ color: 0x021a18, emissive: GL, emissiveIntensity: 1.3, roughness: .15, clearcoat: 1, transparent: true, opacity: .9 }); C.core.userData.pulse = "(.65 + .35 * sin(uMT * 2.1))";
+  C.tower = new TH.MeshPhysicalMaterial({ color: 0x4a3a24, metalness: .8, roughness: .3, clearcoat: 1, emissive: GL, emissiveIntensity: .15, envMapIntensity: 1.2 });
   return C; }
-function buildCarc(k) { const C = crcMats(), g = new TH.Group(), r = rnd(hash("crc" + k)); g.userData.eng = [];
+const CRC_SHIP = { /* f: the hull's form, L half-length, w half-width, h height, n armour plates, hk under-claws a side, eggs a side, t tint */
+  cfrig: { f: "beetle", L: 2.0, w: .9, h: .55, n: 4 }, cint: { f: "fork", L: 1.9, w: .6, h: .4, n: 3 }, cdest: { f: "trident", L: 2.6, w: .75, h: .5, n: 6 },
+  cvang: { f: "manta", L: 2.5, w: .8, h: .5, n: 5 }, ccarr: { f: "pod", L: 2.6, w: 1.0, h: .6, n: 5, hk: 5, eggs: 5 }, cpearl: { f: "needle", L: 2.1, w: .55, h: .36, n: 4, t: "pearl" },
+  cmint: { f: "twin", L: 1.9, w: .6, h: .4, n: 3, t: "oracle" }, cregent: { f: "regent", L: 3.2, w: 1.0, h: .6, n: 7 }, cempr: { f: "crown", L: 3.2, w: 1.15, h: .65, n: 6, t: "gold" },
+  cbrlord: { f: "hump", L: 2.9, w: 1.05, h: .6, n: 5, hk: 5, t: "krak" } };
+const CRC_CRAB = { /* w half-width, l half-length, h height, claw size, fangs, horn pairs, legs thickness, tint, extras */
+  cscut: { w: 1.05, l: 1.1, h: .5, kk: .85, fg: 4, hn: 1, th: .85 }, cspit: { w: 1.1, l: 1.1, h: .55, kk: .75, fg: 4, hn: 0, th: .95, turret: 1 }, charv: { w: 1.3, l: 1.1, h: .45, kk: .7, fg: 4, hn: 0, th: .9, sacs: 1 },
+  cguard: { w: 1.25, l: 1.25, h: .95, kk: 1.05, fg: 6, hn: 2, th: 1.25, spikes: 16, coral: 4 }, cbrood: { w: 1.25, l: 1.15, h: .6, kk: .8, fg: 6, hn: 1, th: 1.05, abdo: 1 }, cwar: { w: 1.25, l: 1.2, h: .75, kk: 1.45, fg: 6, hn: 3, th: 1.15 },
+  ccrys: { w: 1.15, l: 1.15, h: .6, kk: 1, fg: 4, hn: 1, th: 1, crys: 7 }, clanc: { w: .85, l: 1.35, h: .6, kk: 1.25, fg: 4, hn: 1, th: .95, tail: 1, ant: 1 }, cmolt: { w: 1.35, l: 1.3, h: .85, kk: 1.3, fg: 8, hn: 3, th: 1.25, t: "pale", molt: 1 },
+  cmar: { w: 1.4, l: 1.3, h: .85, kk: 1.6, fg: 8, hn: 3, th: 1.3, t: "red", spikes: 12 }, cmat: { w: 1.35, l: 1.25, h: .75, kk: 1.15, fg: 6, hn: 2, th: 1.15, t: "pearl", abdo: 1, pearls: 1 },
+  ctyr: { w: 1.5, l: 1.35, h: 1.05, kk: 1.35, fg: 8, hn: 3, th: 1.35, t: "coral", coral: 16, spikes: 10 }, cora: { w: 1.3, l: 1.25, h: .75, kk: 1.15, fg: 8, hn: 2, th: 1.15, t: "oracle", eye3: 1 },
+  ckor: { w: 1.55, l: 1.35, h: .95, kk: 1.7, fg: 10, hn: 4, th: 1.35, t: "gold", crown: 1, spikes: 10 }, cbeh: { w: 1.7, l: 1.45, h: 1.2, kk: 1.4, fg: 8, hn: 3, th: 1.45, city: 1, coral: 10 },
+  ckbr: { w: 1.4, l: 1.3, h: .85, kk: 1.6, fg: 10, hn: 3, th: 1.3, t: "krak", tent: 8 }, cpal: { w: 1.4, l: 1.3, h: .85, kk: 1.55, fg: 8, hn: 3, th: 1.25, t: "pale", crys: 9 },
+  ccrown: { w: 1.75, l: 1.5, h: 1.2, kk: 1.8, fg: 12, hn: 5, th: 1.45, t: "gold", crown: 1, city: 1, coral: 8 }, ccrownm: { w: 1.75, l: 1.5, h: 1.2, kk: 1.8, fg: 12, hn: 5, th: 1.45, t: "pale", crown: 1, molt: 1 } };
+for (const k of CRC_CRABS) CRC_FACE[k] = -.55; for (const k of Object.keys(CRC_SHIP)) CRC_FACE[k] = -.22; CRC_FACE.ckrak = -.3;
+function buildCarc(k) { const D = CRC_CRAB[k] || CRC_SHIP[k] || {}, C = crcMats(D.t), g = new TH.Group(), r = rnd(hash("crc" + k)); g.userData.eng = [];
   const V = (x, y, z) => new TH.Vector3(x, y, z), add = (m, x, y, z) => { if (x != null) m.position.set(x, y || 0, z || 0); g.add(m); return m; };
   const ell = (sx, sy, sz, mat, x, y, z, seg) => { const m = add(new TH.Mesh(new TH.SphereGeometry(1, seg || 18, Math.round((seg || 18) * .7)), mat), x, y, z); m.scale.set(sx, sy, sz); return m; };
   const seg = (a, b, r0, r1, mat) => { const d = b.clone().sub(a), L = d.length(), m = new TH.Mesh(new TH.CylinderGeometry(r1, r0, L, 8, 1), mat); m.position.copy(a).addScaledVector(d, .5); m.quaternion.setFromUnitVectors(V(0, 1, 0), d.normalize()); g.add(m); return m; };
   const cone = (len, rad, mat, from, dir, bend) => { const geo = new TH.ConeGeometry(rad, len, 8, 4); geo.translate(0, len / 2, 0); if (bend) { const P = geo.attributes.position; for (let i = 0; i < P.count; i++) { const y = P.getY(i) / len; P.setZ(i, P.getZ(i) + bend * y * y * len); } geo.computeVertexNormals(); }
     const m = add(new TH.Mesh(geo, mat)); m.position.copy(from); m.quaternion.setFromUnitVectors(V(0, 1, 0), dir.clone().normalize()); return m; };
-  /* a carapace: a flattened, front-pointed dome with segment ridges across it and a slight lip at the rim */
-  const shell = (rx, ry, rz, o, x, y, z, mat) => { o = o || {}; const geo = new TH.SphereGeometry(1, 40, 24), P = geo.attributes.position;
-    for (let i = 0; i < P.count; i++) { let px = P.getX(i), py = P.getY(i), pz = P.getZ(i); if (py < 0) py *= o.belly == null ? .35 : o.belly; const f = Math.max(0, px); px *= 1 + (o.point == null ? .14 : o.point) * f * f;
-      py += (o.ridge == null ? .05 : o.ridge) * Math.cos(px * Math.PI * 3.2) * Math.max(0, py); pz *= 1 + .07 * Math.max(0, 1 - Math.abs(py) * 6); P.setXYZ(i, px * rx, py * ry, pz * rz); }
-    geo.computeVertexNormals(); const m = add(new TH.Mesh(geo, mat || C.shell), x || 0, y || 0, z || 0);
-    if (!mat || mat === C.shell) { const rim = add(new TH.Mesh(new TH.TorusGeometry(1, .035, 6, 48), C.tip), x || 0, (y || 0) + .01, z || 0); rim.rotation.x = Math.PI / 2; rim.scale.set(rx * 1.01, rz * 1.06, ry * 1.4); } /* the gilded rim */
+  /* a crescent blade: a tapering, slightly flattened horn that leaves along dir and curls toward bend; teeth along its inner edge */
+  const sickle = (base, dir, bend, len, w, mat, o) => { o = o || {}; const N = 14, R = 7, T0 = dir.clone().normalize(), B0 = bend.clone().normalize(), curl = o.curl == null ? .6 : o.curl, th = o.th == null ? .5 : o.th, pts = [];
+    for (let i = 0; i <= N; i++) { const t = i / N; pts.push(base.clone().addScaledVector(T0, len * t).addScaledVector(B0, len * curl * t * t)); }
+    const P = [], I = [], sd = new TH.Vector3(), up = new TH.Vector3(), rad = [], fr = [];
+    for (let i = 0; i <= N; i++) { const t = i / N, c = pts[i], tg = (i < N ? pts[i + 1].clone().sub(c) : c.clone().sub(pts[i - 1])).normalize(); sd.crossVectors(tg, B0).normalize(); up.crossVectors(sd, tg).normalize();
+      const rr = w * Math.pow(1 - t, .85) * (1 + .35 * Math.sin(Math.PI * Math.min(1, t * 2.5))) + .004; rad.push(rr); fr.push([c, sd.clone(), up.clone()]);
+      for (let j = 0; j <= R; j++) { const a = j / R * TAU, cs = Math.cos(a) * rr * th, sn = Math.sin(a) * rr; P.push(c.x + sd.x * cs + up.x * sn, c.y + sd.y * cs + up.y * sn, c.z + sd.z * cs + up.z * sn); } }
+    for (let i = 0; i < N; i++) for (let j = 0; j < R; j++) { const a = i * (R + 1) + j, b = a + R + 1; I.push(a, b, a + 1, a + 1, b, b + 1); }
+    const geo = new TH.BufferGeometry(); geo.setAttribute("position", new TH.Float32BufferAttribute(P, 3)); geo.setIndex(I); geo.computeVertexNormals(); const m = add(new TH.Mesh(geo, mat));
+    if (o.teeth) for (let q = 1; q <= o.teeth; q++) { const fi = Math.round((.12 + .7 * q / (o.teeth + 1)) * N), [c, , u] = fr[fi]; cone(w * .55 * (1 - fi / N) + .04, rad[fi] * .35 + .012, o.tm || C.tip, c.clone().addScaledVector(u, rad[fi] * .7), u.clone().addScaledVector(pts[Math.min(N, fi + 1)].clone().sub(c).normalize(), .6)); }
+    if (o.spine) for (let q = 1; q <= o.spine; q++) { const fi = Math.round((.1 + .55 * q / (o.spine + 1)) * N), [c, , u] = fr[fi]; cone(w * .5, rad[fi] * .3 + .01, C.tip, c.clone().addScaledVector(u, -rad[fi] * .7), u.clone().multiplyScalar(-1).addScaledVector(pts[Math.max(0, fi - 1)].clone().sub(c).normalize(), .5)); }
     return m; };
-  const legs = (n, th, reach, x0, dx) => { for (const s of [1, -1]) for (let i = 0; i < n; i++) { const xi = x0 - i * dx, lean = (n / 2 - .5 - i) * .22;
-    const hip = V(xi, -.05, s * .8), knee = V(xi + lean * .5, .5, s * (1.45 * reach)), ank = V(xi + lean, -.25, s * (2.1 * reach)), foot = V(xi + lean * 1.3, -.95, s * (2.35 * reach));
-    seg(hip, knee, .17 * th, .14 * th, C.shell); seg(knee, ank, .14 * th, .1 * th, C.shell); seg(ank, foot, .095 * th, .025 * th, C.tip);
-    for (const [a, b2] of [[hip, knee], [knee, ank]]) { const mpt = a.clone().lerp(b2, .55); cone(.16 * th, .04 * th, C.tip, mpt, V(.2, 1, s * .6), .05); }
-    for (const j of [knee, ank]) { ell(.15 * th, .15 * th, .15 * th, C.joint, j.x, j.y, j.z, 8); ell(.06 * th, .06 * th, .06 * th, C.glow, j.x, j.y - .08 * th, j.z, 6); } } };
-  const claw = (s, kk, x0) => { x0 = x0 || 0; kk *= 1.3; const sh = V(.95 + x0, 0, s * .62), el = V(1.4 + x0, .3, s * 1.22), wr = V(1.9 + x0, .15, s * 1.02), pm = V(2.2 + x0 * 1.1 + .1 * (kk - 1), .12, s * .95);
-    seg(sh, el, .13 * kk, .12 * kk, C.shellD); seg(el, wr, .12 * kk, .14 * kk, C.claw); ell(.13 * kk, .13 * kk, .13 * kk, C.joint, el.x, el.y, el.z, 8);
-    const palm = ell(.42 * kk, .27 * kk, .24 * kk, C.claw, pm.x, pm.y, pm.z, 18); palm.rotation.y = s * .15;
-    cone(.62 * kk, .11 * kk, C.claw, V(pm.x + .3 * kk, pm.y - .06 * kk, pm.z), V(1, -.12, -s * .12), .08); /* the fixed finger */
-    cone(.56 * kk, .1 * kk, C.tip, V(pm.x + .26 * kk, pm.y + .14 * kk, pm.z), V(1, .2, -s * .1), -.1); /* the moving finger */
-    for (let i = 0; i < 4; i++) cone(.12 * kk, .035 * kk, C.tip, V(pm.x + (-.1 + i * .12) * kk, pm.y + .22 * kk, pm.z), V(.2, 1, s * .2)); ell(.08 * kk, .05 * kk, .05 * kk, C.glow, pm.x - .1 * kk, pm.y - .05 * kk, pm.z + s * .2 * kk, 8); };
-  const eyes = (rx, ry, sp) => { for (const s of [1, -1]) { const a = V(rx * .82, ry * .25, s * (sp || .26)), b = V(rx * .98 + .14, ry * .35 + .34, s * ((sp || .26) + .06)); seg(a, b, .045, .035, C.shellD); ell(.085, .07, .07, C.eye, b.x, b.y, b.z, 10); ell(.16, .13, .13, C.glowS, b.x, b.y, b.z, 8); } };
-  const rimSpikes = (rx, rz, n, len, mat) => { for (let i = 0; i < n; i++) { const a = -Math.PI * .82 + i / (n - 1) * Math.PI * 1.64, rim = V(Math.cos(a) * rx, -.02, Math.sin(a) * rz);
-    for (const s of [1, -1]) { const p = V(rim.x, rim.y, rim.z * s); cone(len * (.8 + r() * .4), .05 + len * .12, mat || C.tip, p, V(Math.cos(a) * .6, .45, Math.sin(a) * s), .05); } } };
-  const vents = (pts) => { for (const p of pts) { ell(.07, .03, .07, C.glow, p.x, p.y, p.z, 8); ell(.18, .08, .18, C.glowS, p.x, p.y, p.z, 8); } };
-  const coralTree = (base, h, spread, depth, mat, glowTip) => { const grow = (a, dir, len, d, rad) => { const b = a.clone().addScaledVector(dir.clone().normalize(), len); seg(a, b, rad, rad * .72, mat); ell(rad * .74, rad * .74, rad * .74, mat, b.x, b.y, b.z, 8);
-      if (d <= 0) { if (glowTip) { ell(rad * .9, rad * .9, rad * .9, C.glow, b.x, b.y, b.z, 8); ell(rad * 2.4, rad * 2.4, rad * 2.4, C.glowS, b.x, b.y, b.z, 8); } return; }
-      const nb = 2 + (r() < .35 ? 1 : 0); for (let i = 0; i < nb; i++) grow(b, dir.clone().normalize().add(V((r() - .5) * spread, .25 + r() * .3, (r() - .5) * spread)), len * (.62 + r() * .2), d - 1, rad * .72); };
+  /* a carapace: a flattened dome, pointed and narrowed toward the front, ridged across, with a gilded rim */
+  const shell = (rx, ry, rz, o, x, y, z, mat) => { o = o || {}; const geo = new TH.SphereGeometry(1, 44, 26), P = geo.attributes.position;
+    for (let i = 0; i < P.count; i++) { let px = P.getX(i), py = P.getY(i), pz = P.getZ(i); if (py < 0) py *= o.belly == null ? .35 : o.belly; const f = Math.max(0, px); px *= 1 + (o.point == null ? .14 : o.point) * f * f; pz *= 1 - (o.tri || 0) * f * f;
+      py += (o.ridge == null ? .05 : o.ridge) * Math.cos(px * Math.PI * 3.2) * Math.max(0, py); if (o.keel) py += o.keel * Math.max(0, py) * Math.max(0, 1 - Math.abs(pz) * 2.2); pz *= 1 + .07 * Math.max(0, 1 - Math.abs(py) * 6); P.setXYZ(i, px * rx, py * ry, pz * rz); }
+    geo.computeVertexNormals(); const m = add(new TH.Mesh(geo, mat || C.shell), x || 0, y || 0, z || 0);
+    if (!o.norim && (!mat || mat === C.shell)) { const rim = add(new TH.Mesh(new TH.TorusGeometry(1, .035, 6, 56), C.tip), x || 0, (y || 0) + .01, z || 0); rim.rotation.x = Math.PI / 2; rim.scale.set(rx * 1.01, rz * 1.04 * (1 - (o.tri || 0) * .3), ry * 1.4); }
+    return m; };
+  const glowAt = (p, r0, r1) => { ell(r0, r0, r0, C.glow, p.x, p.y, p.z, 10); ell(r1, r1, r1, C.glowS, p.x, p.y, p.z, 10); };
+  const coralTree = (base, h, spread, depth, mat, glowTip) => { const grow = (a, dir, len, d, rd) => { const b = a.clone().addScaledVector(dir.clone().normalize(), len); seg(a, b, rd, rd * .72, mat); ell(rd * .74, rd * .74, rd * .74, mat, b.x, b.y, b.z, 8);
+      if (d <= 0) { if (glowTip) glowAt(b, rd * .9, rd * 2.4); return; } const nb = 2 + (r() < .35 ? 1 : 0); for (let i = 0; i < nb; i++) grow(b, dir.clone().normalize().add(V((r() - .5) * spread, .25 + r() * .3, (r() - .5) * spread)), len * (.62 + r() * .2), d - 1, rd * .72); };
     grow(base, V((r() - .5) * .3, 1, (r() - .5) * .3), h, depth, h * .12); };
-  if (k === "cscut") { /* the Scuttle Drone: small, sleek, all points */
-    shell(1.25, .52, .95, { point: .3, ridge: .06 }); shell(1.0, .25, .8, { belly: 1, ridge: 0 }, 0, -.12, 0, C.under);
-    cone(.55, .08, C.tip, V(1.45, .05, 0), V(1, .15, 0), 0); rimSpikes(1.2, .92, 6, .26); legs(4, .85, .95, .55, .42); claw(1, .72); claw(-1, .72); eyes(1.25, .52, .22);
-    vents([V(-.2, .5, .25), V(-.2, .5, -.25), V(-.6, .42, 0)]); }
-  else if (k === "cspit") { /* the Coral Spitter: a living battery of coral on its back */
-    shell(1.2, .5, 1.0, { point: .12, ridge: .05 }); shell(1.0, .25, .85, { belly: 1, ridge: 0 }, 0, -.12, 0, C.under); legs(4, .95, 1, .5, .42); claw(1, .62); claw(-1, .62); eyes(1.2, .5, .24);
-    for (let i = 0; i < 5; i++) { const a = i / 5 * TAU; coralTree(V(-.15 + Math.cos(a) * .35, .35, Math.sin(a) * .35), .35 + r() * .15, .9, 2, i % 3 ? C.coral : C.coralB, true); }
-    const bA = V(.1, .45, 0), bB = V(.95, 1.25, 0); seg(bA, bB, .2, .15, C.coral); for (let i = 0; i < 4; i++) { const t = .2 + i * .22, p = bA.clone().lerp(bB, t); ell(.2, .07, .2, C.shellD, p.x, p.y, p.z, 12).quaternion.setFromUnitVectors(V(0, 1, 0), bB.clone().sub(bA).normalize()); }
-    ell(.13, .13, .13, C.glow, bB.x, bB.y, bB.z, 10); ell(.34, .34, .34, C.glowS, bB.x, bB.y, bB.z, 10); }
-  else if (k === "charv") { /* the Tide Harvester: wide and low, resin sacs on its back, long feelers */
-    shell(1.15, .42, 1.25, { point: .05, ridge: .04 }); shell(1.0, .22, 1.1, { belly: 1, ridge: 0 }, 0, -.1, 0, C.under); legs(4, .9, 1.08, .5, .4); eyes(1.15, .42, .3);
-    for (const s of [1, -1]) { ell(.55, .4, .42, C.sac, -.25, .45, s * .45, 20); for (let i = 0; i < 3; i++) { const b = ell(.57, .06, .44, C.shellD, -.25 + (i - 1) * .3, .45, s * .45, 14); b.scale.set(.1, .43, .45); } }
-    for (const s of [1, -1]) { const a = V(1.05, .05, s * .3), b = V(1.9, .35, s * .55), c = V(2.6, .15, s * .4); seg(a, b, .06, .045, C.shellD); seg(b, c, .045, .03, C.claw); cone(.22, .04, C.tip, c, V(1, -.3, -s * .3)); cone(.2, .035, C.tip, c, V(1, .2, -s * .2)); }
-    for (const s of [1, -1]) cone(.3, .06, C.tip, V(1.15, -.12, s * .14), V(1, -.4, -s * .2), .1); vents([V(.35, .38, 0)]); }
-  else if (k === "cguard") { /* the Shell Guardian: a domed fortress of a shell, crusted with coral, one great claw */
-    shell(1.3, .95, 1.1, { point: .06, ridge: .08, belly: .3 }); shell(1.1, .28, .95, { belly: 1, ridge: 0 }, 0, -.14, 0, C.under); legs(4, 1.25, 1.0, .5, .42); claw(1, 1.05, .05); claw(-1, .78); eyes(1.3, .7, .3);
-    for (let i = 0; i < 14; i++) { const a = r() * TAU, el = .25 + r() * .9, p = V(Math.cos(a) * Math.cos(el) * 1.25, Math.sin(el) * .9, Math.sin(a) * Math.cos(el) * 1.05); cone(.22 + r() * .2, .07, C.tip, p, p.clone().normalize().add(V(0, .4, 0)), .04); }
-    for (let i = 0; i < 4; i++) { const a = r() * TAU, p = V(Math.cos(a) * .6 - .2, .72, Math.sin(a) * .5); coralTree(p, .22, .8, 1, i % 2 ? C.coral : C.coralB, i === 0); }
-    vents([V(-.5, .75, .3), V(-.5, .75, -.3)]); }
-  else if (k === "cfrig") { /* the Scuttle Frigate: a carapace hull, dorsal plates, mandible prows, folded legs and teal drives */
-    shell(2.2, .55, .95, { point: .25, ridge: .03, belly: .55 }, 0, 0, 0, C.shell); shell(2.0, .25, .8, { belly: 1, ridge: 0 }, -.05, -.2, 0, C.metal);
-    for (let i = 0; i < 5; i++) { const p = ell(.5, .14, .62 - i * .04, C.shellD, .9 - i * .48, .5 - Math.abs(i - 1.5) * .04, 0, 18); p.rotation.z = -.15; }
-    for (const s of [1, -1]) { cone(.9, .12, C.tip, V(2.0, -.02, s * .32), V(1, -.05, -s * .25), .12); cone(.5, .07, C.claw, V(1.6, .1, s * .55), V(1, .05, 0)); }
-    for (const s of [1, -1]) for (let i = 0; i < 3; i++) { const x = .7 - i * .75, a = V(x, -.25, s * .8), b = V(x - .3, -.6, s * 1.2), c = V(x - .8, -.5, s * .95); seg(a, b, .08, .07, C.shellD); seg(b, c, .07, .04, C.tip); ell(.08, .08, .08, C.joint, b.x, b.y, b.z, 8); }
-    for (let i = 0; i < 7; i++) for (const s of [1, -1]) cone(.35 + (i % 2) * .15, .07, C.tip, V(1.3 - i * .5, .4, s * (.55 + Math.sin(i) * .05)), V(-.6, .8, s * .5), -.1);
-    ell(.35, .16, .3, C.metal, 1.15, .42, 0, 14); for (const s of [1, -1]) ell(.14, .04, .05, C.glow, 1.35, .45, s * .17, 8);
-    for (const z of [-.42, 0, .42]) { ell(.12, .18, .18, C.glow, -2.25, .02, z, 10); ell(.4, .32, .32, C.glowS, -2.4, .02, z, 10); }
-    vents([V(-.3, .45, .45), V(-.3, .45, -.45)]); }
-  else if (k === "cint") { /* the Tidal Interceptor: a slim body behind a split claw of a prow, swept fins, hot drives */
-    shell(1.55, .34, .45, { point: .2, ridge: .03, belly: .6 }, 0, 0, 0, C.shell);
-    for (const s of [1, -1]) { cone(1.6, .13, C.claw, V(.9, 0, s * .32), V(1, 0, s * .12), -s * .35); cone(.5, .05, C.tip, V(2.1, 0, s * .26), V(1, 0, -s * .5), -s * .1); }
-    for (const s of [1, -1]) { const f = ell(.75, .05, .45, C.shellD, -.7, -.02, s * .65, 16); f.rotation.y = s * .5; f.rotation.x = s * .25; }
-    cone(.6, .1, C.shellD, V(-.4, .25, 0), V(-.4, 1, 0), -.2); for (let i = 0; i < 4; i++) cone(.25, .05, C.tip, V(.6 - i * .4, .22, 0), V(-.5, 1, 0), -.05); ell(.25, .1, .14, C.glow, .55, .25, 0, 10);
-    for (const s of [1, -1]) { ell(.1, .12, .12, C.glow, -1.6, 0, s * .18, 10); ell(.34, .26, .26, C.glowS, -1.75, 0, s * .18, 10); } }
-  else if (k === "cnest") { /* the Breach nest: a rift into the Abyss in a mound of rock, ringed by chitin spires, choked with coral and eggs */
+  const crystal = (p, h, dir) => { const m = add(new TH.Mesh(new TH.ConeGeometry(h * .2, h, 6, 1), C.crys)); m.geometry.translate(0, h / 2, 0); m.position.copy(p); m.quaternion.setFromUnitVectors(V(0, 1, 0), dir.clone().normalize()); ell(h * .2, h * .2, h * .2, C.glowS, p.x + dir.x * h * .5, p.y + dir.y * h * .5, p.z + dir.z * h * .5, 8); return m; };
+  const tower = (p, h, rd) => { seg(p, p.clone().add(V(0, h * .7, 0)), rd, rd * .7, C.tower); cone(h * .45, rd * .8, C.tip, p.clone().add(V(0, h * .65, 0)), V(0, 1, 0)); ell(rd * .45, rd * .3, rd * .45, C.glow, p.x, p.y + h * .45, p.z, 8); };
+  /* ---------- the crabs ---------- */
+  if (CRC_CRAB[k]) { const W = D.w * 1.25, L = D.l * 1.2, H = D.h * 1.25, kk = D.kk, th = D.th * 1.2;
+    shell(L, H, W, { point: .22, ridge: .07, belly: .35, tri: .35, keel: .25 });
+    for (let i = 0; i < 3; i++) { const p = shell(L * (.55 - i * .1), H * .3, W * (.85 - i * .2), { point: .4, ridge: 0, belly: .2, tri: .5, keel: .5 }, L * (.25 - i * .38), H * (.72 + i * .08), 0); p.rotation.z = -.2; } /* the gilded plates across the back */ shell(L * .9, .26, W * .86, { belly: 1, ridge: 0, norim: 1 }, 0, -.13, 0, C.under);
+    /* the brow: a pointed rostrum and two hooked brow horns over cyan eyes; a fringe of fangs below them over the glowing core */
+    cone(.45, .07, C.tip, V(L * 1.08, H * .18, 0), V(1, .25, 0), 0); for (const s of [1, -1]) { sickle(V(L * .86, H * .32, s * .3), V(1, .45, s * .5), V(0, -.2, -s), .45 + kk * .1, .07, C.claw, { curl: .45 }); ell(.09, .06, .07, C.eye, L * .93, H * .2, s * .24, 10); ell(.2, .14, .14, C.glowS, L * .95, H * .2, s * .25, 8); }
+    for (let i = 0; i < D.fg; i++) { const s = i % 2 ? 1 : -1, j = Math.floor(i / 2), z = s * (.08 + j * .11 * 2.2 / Math.max(2, D.fg / 2)), len = (.42 + (j === 0 ? .2 : 0)) * (.8 + kk * .25); sickle(V(L * .9 - j * .04, -H * .08, z), V(.35, -1, s * .1), V(-1, 0, -s * .2), len, .05 + .015 * kk, C.claw, { curl: .5 }); }
+    glowAt(V(L * .78, -H * .3, 0), .12 + kk * .04, .3 + kk * .08);
+    /* the horns: crescents rising off the back of the shell, curling forward */
+    for (let i = 0; i < D.hn; i++) for (const s of [1, -1]) { const t = i / Math.max(1, D.hn), x = -L * (.15 + .55 * t), z = s * W * (.45 + .3 * t); sickle(V(x, H * (.55 - .25 * t), z), V(-.35, 1, s * .45), V(1, 0, -s * .3), .8 + .5 * (1 - t) + H * .4, .11, C.claw, { curl: .5, spine: 2 }); }
+    /* the legs: thick spiked segments, the last one a sickle curling under */
+    const nl = 4; for (const s of [1, -1]) for (let i = 0; i < nl; i++) { const xi = .55 - i * .42 * L / 1.1, lean = (nl / 2 - .5 - i) * .22, R = W / 1.1, hip = V(xi, -.05, s * W * .72), knee = V(xi + lean * .6, H * .55, s * 1.2 * R), ank = V(xi + lean * 1.1, -H * .2, s * 1.6 * R);
+      seg(hip, knee, .1 * th, .085 * th, C.shell); seg(knee, ank, .085 * th, .065 * th, C.shell); sickle(ank, V(lean * .3, -1, s * .3), V(lean >= 0 ? 1 : -1, 0, s * .15), (.55 + H * .15) * th, .07 * th, C.claw, { curl: .3, spine: 1 });
+      for (const [a, b2] of [[hip, knee], [knee, ank]]) cone(.18 * th, .045 * th, C.tip, a.clone().lerp(b2, .55), V(.2, 1, s * .6), .05);
+      for (const j of [knee, ank]) { ell(.1 * th, .1 * th, .1 * th, C.joint, j.x, j.y, j.z, 8); ell(.045 * th, .045 * th, .045 * th, C.glow, j.x, j.y - .06 * th, j.z, 6); } }
+    /* the pincers: an armoured arm, a spiked palm, and two crescent fingers that close almost into a ring */
+    for (const s of [1, -1]) { const q = 1.3 * kk * (s === 1 && (k === "cguard" || k === "cwar") ? 1.12 : 1), sh = V(.95, 0, s * W * .55), el = V(1.45, .35, s * W * .98), wr = V(1.95, .22, s * W * .8), pm = V(2.25 + .12 * (q - 1), .2, s * W * .72);
+      seg(sh, el, .16 * q, .15 * q, C.shell); seg(el, wr, .15 * q, .18 * q, C.shell); ell(.16 * q, .16 * q, .16 * q, C.joint, el.x, el.y, el.z, 8); cone(.2 * q, .05 * q, C.tip, el, V(0, 1, s * .4), .05);
+      const palm = ell(.55 * q, .4 * q, .3 * q, C.shell, pm.x, pm.y, pm.z, 20); palm.rotation.y = s * .12; for (let i = 0; i < 4; i++) cone(.14 * q, .04 * q, C.tip, V(pm.x + (-.2 + i * .14) * q, pm.y + .28 * q, pm.z), V(.25, 1, s * .25));
+      const tipX = pm.x + .38 * q; sickle(V(tipX, pm.y + .12 * q, pm.z), V(1, .55, -s * .08), V(.15, -1, -s * .12), 1.25 * q, .14 * q, C.claw, { curl: .66, teeth: 5 }); /* the upper finger arches over */
+      sickle(V(tipX - .05 * q, pm.y - .14 * q, pm.z), V(1, -.4, -s * .06), V(0, 1, -s * .1), 1.0 * q, .12 * q, C.claw, { curl: .55, teeth: 4 }); /* the lower finger curls up to meet it */
+      ell(.07 * q, .05 * q, .05 * q, C.glow, pm.x - .1 * q, pm.y - .03 * q, pm.z + s * .22 * q, 8); }
+    /* their own features */
+    if (D.spikes) for (let i = 0; i < D.spikes; i++) { const a = r() * TAU, el = .25 + r() * .9, p = V(Math.cos(a) * Math.cos(el) * L * .95, Math.sin(el) * H * .95, Math.sin(a) * Math.cos(el) * W * .85); cone(.2 + r() * .2, .06, C.tip, p, p.clone().normalize().add(V(0, .4, 0)), .04); }
+    if (D.coral) for (let i = 0; i < D.coral; i++) { const a = r() * TAU, d = r() * .6, p = V(Math.cos(a) * L * d - .15, H * (.75 - d * .4), Math.sin(a) * W * d * .8); coralTree(p, .2 + r() * .14, .8, 1, i % 3 ? C.coral : C.coralB, i % 2 === 0); }
+    if (D.crys) for (let i = 0; i < D.crys; i++) { const a = r() * TAU, d = r() * .6, p = V(Math.cos(a) * L * d - .2, H * (.72 - d * .4), Math.sin(a) * W * d * .8); crystal(p, .35 + r() * .45, V((r() - .5) * .6 - .3, 1, (r() - .5) * .8)); }
+    if (D.turret) { for (let i = 0; i < 5; i++) { const a = i / 5 * TAU; coralTree(V(-.15 + Math.cos(a) * .35, H * .7, Math.sin(a) * .35), .35 + r() * .15, .9, 2, i % 3 ? C.coral : C.coralB, true); }
+      const bA = V(.1, H * .8, 0), bB = V(.95, H * .8 + .8, 0); seg(bA, bB, .17, .13, C.coralB); for (let i = 0; i < 3; i++) { const pp = bA.clone().lerp(bB, .25 + i * .25); ell(.2, .06, .2, C.tip, pp.x, pp.y, pp.z, 12).quaternion.setFromUnitVectors(V(0, 1, 0), bB.clone().sub(bA).normalize()); } glowAt(bB, .13, .34); }
+    if (D.sacs) for (const s of [1, -1]) { ell(.55, .4, .42, C.sac, -.25, H * .9, s * .45, 20); for (let i = 0; i < 3; i++) { const b = ell(.57, .06, .44, C.shellD, -.25 + (i - 1) * .3, H * .9, s * .45, 14); b.scale.set(.1, .43, .45); } }
+    if (D.abdo) { const ab = ell(1.05, .72, .95, C.sac, -L - .55, H * .3, 0, 26); for (let i = 0; i < 4; i++) { const b = ell(1.07, .74, .97, C.shell, -L - .55, H * .3, 0, 24); b.scale.set(.09, .74, .97); b.position.x = -L - .55 + (i - 1.5) * .45; } ab.renderOrder = 1;
+      for (let i = 0; i < 11; i++) { const a = r() * TAU, p = V(-L - .55 + (r() - .5) * 1.2, H * .3 + Math.sin(a) * .45, Math.cos(a) * .6); ell(.16, .2, .16, C.egg, p.x, p.y, p.z, 12); } }
+    if (D.pearls) for (let i = 0; i < 9; i++) { const a = -Math.PI * .7 + i / 8 * Math.PI * 1.4; ell(.12, .12, .12, C.pearl, Math.cos(a) * L * .7, H * .78, Math.sin(a) * W * .7, 12); }
+    if (D.tail) { for (let i = 0; i < 5; i++) { const x = -L - .25 - i * .42, s0 = 1 - i * .14; shell(.32, .38 * s0, .62 * s0, { ridge: 0, belly: .5 }, x, .05, 0); } for (const s of [-1, 0, 1]) { const f = ell(.45, .05, .2, C.shellD, -L - 2.45, .05, s * .25, 12); f.rotation.y = s * .5; } }
+    if (D.ant) for (const s of [1, -1]) { const t = new TH.Mesh(new TH.TubeGeometry(new TH.CatmullRomCurve3([V(L, H * .25, s * .15), V(L + .8, H * .6, s * .3), V(L + .5, H + 1.3, s * .5), V(-.4, H + 1.9, s * .7)]), 24, .025, 5, false), C.tip); g.add(t); }
+    if (D.eye3) { glowAt(V(L * .82, H * .62, 0), .16, .55); const halo = add(new TH.Mesh(new TH.TorusGeometry(.9, .04, 8, 48), C.glow), -.1, H + .9, 0); halo.rotation.x = Math.PI / 2; ell(1.2, .08, 1.2, C.glowS, -.1, H + .9, 0, 20);
+      for (let i = 0; i < 6; i++) { const z = (i - 2.5) * .18; const t = new TH.Mesh(new TH.TubeGeometry(new TH.CatmullRomCurve3([V(L * .6, -H * .2, z), V(L * .9, -H * .7, z * 1.4), V(L * .6, -H * 1.3, z * 1.8)]), 16, .03, 5, false), C.sac); g.add(t); } }
+    if (D.crown) { for (let i = 0; i < 9; i++) { const a = -Math.PI * .75 + i / 8 * Math.PI * 1.5, p = V(Math.cos(a) * L * .45 + .1, H * .92, Math.sin(a) * W * .4), h = (i % 2 ? .6 : 1.05) * (i === 4 ? 1.4 : 1); cone(h, .09, C.tip, p, V(Math.cos(a) * .25, 1, Math.sin(a) * .25), 0); }
+      glowAt(V(L * .4 + .1, H * 1.1, 0), .12, .4); }
+    if (D.city) for (let i = 0; i < 12; i++) { const a = r() * TAU, d = .15 + r() * .5, p = V(Math.cos(a) * L * d - .25, H * (.92 - d * .45), Math.sin(a) * W * d * .7); tower(p, .5 + r() * .8, .06 + r() * .04); }
+    if (D.tent) for (let i = 0; i < D.tent; i++) { const s = i % 2 ? 1 : -1, a = (i >> 1) / (D.tent / 2), base = V(-L * .3 - a * .8, H * .2, s * W * .7), pts = [base]; let p = base.clone(); for (let j = 1; j <= 5; j++) { p = p.clone().add(V(-.35 - r() * .2, .35 * Math.sin(j + i) + .2, s * (.35 + r() * .2))); pts.push(p); }
+      const t = new TH.Mesh(taperTube(pts.map(v => [v.x, v.y, v.z]), u => .16 * (1 - u * .85), 30, 7), C.sac); g.add(t); for (let j = 1; j < 5; j++) ell(.04, .04, .04, C.glow, pts[j].x, pts[j].y - .1, pts[j].z, 6); }
+    if (D.molt) { for (const s of [1, -1]) { const o2 = shell(L * .7, H * .55, W * .5, { ridge: .06, belly: 1, norim: 1 }, -L * .35, H * 1.05, s * W * .45, C.shellD); o2.rotation.x = s * .55; o2.rotation.z = .25; }
+      for (let i = 0; i < 6; i++) { const a = r() * TAU; const b = ell(.5, .025, .025, C.glow, Math.cos(a) * L * .5, H * .7, Math.sin(a) * W * .5, 6); b.rotation.y = a; } } }
+  /* ---------- the ships ---------- */
+  else if (CRC_SHIP[k]) { const L = D.L * .92, W = D.w * 1.3, H = D.h * 1.8, n = D.n, F = D.f;
+    C.blade = C.blade || C.shell.clone(); C.blade.color = new TH.Color(0x9a8aa8); C.blade.metalness = .7; C.blade.emissiveIntensity = .9;
+    const plates = (len, h, w, x0, y0, z0, cnt, tilt) => { for (let i = 0; i < cnt; i++) { const t = cnt > 1 ? i / (cnt - 1) : 0, x = x0 + len * (.5 - t), sw = 1 - Math.pow(Math.abs(t - .35) * 1.3, 2) * .6; const p = shell(len / cnt * 1.6, h * .62 * sw, w * sw, { point: .4, ridge: 0, belly: .2, tri: .5, keel: .8 }, x, y0 + h * .45 * sw, z0); p.rotation.z = tilt == null ? -.2 : tilt; } };
+    const hull = (l, h, w, x, y, z, o) => shell(l, h, w, Object.assign({ point: .28, ridge: 0, belly: .6, tri: .45, keel: .45, norim: 1 }, o || {}), x || 0, y || 0, z || 0, C.shellD);
+    const drives = (xs, zs, sc) => { for (const zz of zs) { const s2 = sc || 1, nac = add(new TH.Mesh(new TH.CylinderGeometry(.16 * s2, .2 * s2, .7 * s2, 14), C.metal), xs, .05, zz); nac.rotation.z = Math.PI / 2;
+      const ring = add(new TH.Mesh(new TH.TorusGeometry(.18 * s2, .03 * s2, 6, 20), C.tip), xs - .18 * s2, .05, zz); ring.rotation.y = Math.PI / 2; ell(.06 * s2, .15 * s2, .15 * s2, C.glow, xs - .33 * s2, .05, zz, 12); ell(.3 * s2, .26 * s2, .26 * s2, C.glowS, xs - .43 * s2, .05, zz, 10); } };
+    const eye = (x, y, z, r0) => { glowAt(V(x, y, z), r0, r0 * 3.4); const rg = add(new TH.Mesh(new TH.TorusGeometry(r0 * 1.5, r0 * .3, 8, 24), C.tip), x, y, z); rg.lookAt(x, y, z + 1); };
+    const hooks = (cnt, x0, x1, y, z, len) => { for (let i = 0; i < cnt; i++) for (const s of [1, -1]) { const x = x0 + (x1 - x0) * i / Math.max(1, cnt - 1); sickle(V(x, y, s * z), V(.5, -1, s * .45), V(1, .15, -s * .1), len, .08, i % 2 ? C.blade : C.claw, { curl: .65 }); } };
+    const fins = (cnt, x0, x1, y, z, len) => { for (let i = 0; i < cnt; i++) for (const s of [1, -1]) { const x = x0 + (x1 - x0) * i / Math.max(1, cnt - 1); sickle(V(x, y, s * z), V(-.8, 1, s * .5), V(-1, -.3, 0), len * (.7 + .3 * Math.sin(Math.PI * (i + .5) / cnt)), .1, C.blade, { curl: .5, spine: 1 }); } };
+    const pincer = (base, dir, sc, s) => { const p = ell(.28 * sc, .2 * sc, .18 * sc, C.shell, base.x, base.y, base.z, 14); sickle(base.clone().add(V(.15 * sc, .08 * sc, 0)), dir.clone().add(V(0, .5, 0)), V(.1, -1, -s * .2), .75 * sc, .09 * sc, C.claw, { curl: .65, teeth: 3 }); sickle(base.clone().add(V(.12 * sc, -.08 * sc, 0)), dir.clone().add(V(0, -.4, 0)), V(0, 1, -s * .1), .6 * sc, .08 * sc, C.claw, { curl: .55, teeth: 2 }); return p; };
+    if (F === "beetle") { /* the Scuttle Frigate: a short, high beetle hull; two great claws hooking down off the brow, mandibles beneath */
+      hull(L * .85, H * 1.1, W * 1.05, 0, 0, 0, { point: .3, tri: .3, keel: .6 }); plates(L * 1.4, H * .5, W * 1.05, -.1, H * .3, 0, n);
+      for (const s of [1, -1]) { sickle(V(L * .55, H * .35, s * W * .6), V(1, .25, s * .2), V(.1, -1, -s * .35), L * .95, .2, C.blade, { curl: .75, teeth: 4, spine: 2 }); sickle(V(L * .6, -H * .3, s * W * .25), V(1, -.4, s * .1), V(0, 1, -s * .3), L * .5, .09, C.claw, { curl: .6, teeth: 2 }); }
+      hooks(3, L * .2, -L * .5, -H * .45, W * .55, .6); fins(2, -L * .1, -L * .6, H * .9, W * .35, .8); eye(L * .45, H * .1, W * .95, .09); eye(L * .45, H * .1, -W * .95, .09); drives(-L * .9, [-W * .4, W * .4], 1.1); }
+    else if (F === "fork") { /* the Tidal Interceptor: a slim fuselage with two long arms thrust forward, each ending in an open pincer */
+      hull(L * .9, H * .45, W * .45, 0, 0, 0, { point: .7, tri: .7 }); plates(L * 1.3, H * .3, W * .5, -.2, H * .05, 0, n);
+      for (const s of [1, -1]) { const a = V(L * .1, 0, s * W * .4), e2 = V(L * .55, 0, s * W * 1.05), f2 = V(L * 1.05, .02, s * W * .85); seg(a, e2, .09, .08, C.shell); seg(e2, f2, .08, .07, C.shell); ell(.1, .1, .1, C.joint, e2.x, e2.y, e2.z, 8); pincer(f2, V(1, 0, -s * .15), 1.05, s);
+        const wg = shell(L * .35, .08, W * .9, { point: .2, ridge: 0, belly: 1, tri: .6 }, -L * .45, 0, s * W * .9); wg.rotation.y = s * .55; }
+      fins(1, -L * .3, -L * .3, H * .4, W * .2, .9); drives(-L * .95, [-W * .3, W * .3], .9); eye(L * .5, H * .1, W * .45, .06); eye(L * .5, H * .1, -W * .45, .06); }
+    else if (F === "trident") { /* the Reef Guard Destroyer: a long spine-ship; a trident of blades at the prow, coral growing along the back */
+      hull(L, H * .8, W * .7); plates(L * 1.5, H * .4, W * .75, -.05, H * .15, 0, n);
+      cone(L * .9, .12, C.claw, V(L * 1.05, 0, 0), V(1, 0, 0), 0); for (const s of [1, -1]) sickle(V(L * .85, 0, s * W * .45), V(1, s * .35, s * .45), V(0, -s * .6, -s), L * .9, .15, C.blade, { curl: .5, teeth: 3 });
+      for (let i = 0; i < 5; i++) coralTree(V(L * (.3 - .25 * i), H * .7, (r() - .5) * W * .3), .22, .8, 1, i % 2 ? C.coral : C.coralB, true);
+      hooks(4, L * .3, -L * .6, -H * .35, W * .5, .55); drives(-L * .95, [-W * .35, W * .35]); eye(L * .4, 0, W * .72, .08); eye(L * .4, 0, -W * .72, .08); }
+    else if (F === "manta") { /* the Abyssal Vanguard: an arrowhead hull with two great claw-wings swept back, their tips hooking forward */
+      hull(L * .95, H * .75, W * .7); plates(L * 1.4, H * .4, W * .75, 0, H * .15, 0, n);
+      for (const s of [1, -1]) { const wg = shell(L * .7, .12, W * 1.3, { point: .5, ridge: 0, belly: 1, tri: .4 }, -L * .2, -H * .05, s * W * 1.05); wg.rotation.y = s * .5; sickle(V(L * .05, -H * .05, s * W * 2.1), V(1, 0, -s * .1), V(0, -.2, -s), L * .8, .14, C.blade, { curl: .55, teeth: 3 }); sickle(V(-L * .75, 0, s * W * 1.6), V(-1, .3, s * .4), V(1, 0, 0), L * .45, .09, C.claw, { curl: .5 }); }
+      for (const s of [1, -1]) sickle(V(L * .85, H * .1, s * W * .4), V(1, s * .3, s * .2), V(0, -s * .6, -s * .5), L * .6, .12, C.claw, { curl: .55, teeth: 2 }); drives(-L * .95, [-W * .35, W * .35]); eye(L * .35, H * .15, 0, .11); }
+    else if (F === "pod") { /* the Brood Warden Carrier: a fat oval hull; rows of glowing eggs down both flanks, a fringe of little hooks below */
+      hull(L * .9, H * 1.05, W * 1.2, 0, 0, 0, { point: .2, tri: .2, keel: .3 }); plates(L * 1.4, H * .45, W * 1.15, -.1, H * .45, 0, n);
+      for (const s of [1, -1]) for (let i = 0; i < D.eggs; i++) { const x = L * (.4 - 1 * i / (D.eggs - 1)); ell(.2, .24, .17, C.egg, x, H * .05, s * W * 1.12, 12); ell(.36, .36, .24, C.glowS, x, H * .05, s * W * 1.18, 8); ell(.2, .04, .2, C.tip, x, H * .3, s * W * 1.1, 8); }
+      for (const s of [1, -1]) sickle(V(L * .85, 0, s * W * .4), V(1, s * .3, s * .2), V(0, -s * .7, -s * .5), L * .5, .12, C.claw, { curl: .6, teeth: 2 }); hooks(D.hk, L * .4, -L * .6, -H * .4, W * .7, .45); drives(-L * .95, [-W * .5, 0, W * .5]); }
+    else if (F === "needle") { /* the Pearl Hunter: a long pale needle with two thin pincer prongs and a fan of tail fins */
+      hull(L * 1.05, H * .4, W * .38, 0, 0, 0, { point: .6, tri: .8 }); plates(L * 1.2, H * .25, W * .4, -.1, H * .05, 0, n);
+      for (const s of [1, -1]) sickle(V(L * .9, s * H * .2, s * W * .2), V(1, s * .4, s * .1), V(0, -s, -s * .2), L * .95, .1, C.claw, { curl: .5, teeth: 3 });
+      for (let i = 0; i < 3; i++) { const a = (i - 1) * .9; sickle(V(-L * .7, 0, 0), V(-1, Math.cos(a) * .8, Math.sin(a) * .8), V(-1, 0, 0), .7, .08, C.blade, { curl: .3 }); } drives(-L * 1.0, [-W * .25, W * .25], .8); eye(L * .45, H * .1, 0, .07); }
+    else if (F === "twin") { /* the Molting Interceptor: two slim hulls split like a molting shell, joined by a bridge, violet light in the cracks */
+      for (const s of [1, -1]) { hull(L * .85, H * .45, W * .32, 0, 0, s * W * .55, { point: .7, tri: .6 }); plates(L * 1.1, H * .28, W * .32, -.1, H * .05, s * W * .55, n); for (const u of [1, -1]) sickle(V(L * .8, u * H * .15, s * W * .55), V(1, u * .4, 0), V(0, -u, 0), L * .7, .1, C.claw, { curl: .55, teeth: 2 }); }
+      const br = add(new TH.Mesh(new TH.BoxGeometry(L * .5, .08, W * 1.1), C.shellD), 0, 0, 0); for (let i = 0; i < 4; i++) ell(L * .2, .02, .02, C.glow, L * (.3 - .2 * i), H * .3, (i % 2 ? 1 : -1) * W * .55, 6); drives(-L * .9, [-W * .55, W * .55], .85); eye(L * .2, H * .05, 0, .09); }
+    else if (F === "regent") { /* the Tidal Regent: a long flagship; crescents fore and aft, a great cyan eye amidships, a crest of spines */
+      hull(L, H * .85, W * .8); plates(L * 1.5, H * .45, W * .85, 0, H * .2, 0, n);
+      for (let q = 0; q < 2; q++) for (const s of [1, -1]) sickle(V(L * (.8 - q * .2), H * (-.05 + q * .45), s * W * (.6 - q * .12)), V(1, .15 + q * .3, s * (.25 + q * .1)), V(-.1, -.8, -s * .5), L * (1.05 - q * .2), .2 - q * .04, C.blade, { curl: .65, teeth: 4, spine: 1 });
+      for (const s of [1, -1]) sickle(V(-L * .6, H * .2, s * W * .5), V(-1, .2, s * .4), V(1, .2, 0), L * .55, .12, C.blade, { curl: .55 });
+      eye(L * .05, H * 1.05, 0, .2); for (let i = 0; i < 7; i++) cone(.35 + .3 * Math.sin(i / 6 * Math.PI), .07, C.tip, V(L * (.45 - .17 * i), H * 1, 0), V(-.5, 1, 0), -.1);
+      hooks(4, L * .3, -L * .55, -H * .4, W * .55, .7); drives(-L * .95, [-W * .4, W * .4], 1.2); }
+    else if (F === "crown") { /* the Emperor's Shell: a wide golden hull crowned with spires; double crescents and a ring of blades */
+      hull(L * .95, H * .95, W * 1.05, 0, 0, 0, { point: .4, tri: .4 }); plates(L * 1.5, H * .5, W * 1.05, 0, H * .3, 0, n);
+      for (let q = 0; q < 2; q++) for (const s of [1, -1]) sickle(V(L * (.8 - q * .15), H * (q * .5), s * W * (.7 - q * .15)), V(1, .2 + q * .3, s * (.3 + q * .1)), V(-.1, -.85, -s * .5), L * (1.1 - q * .15), .22 - q * .04, C.claw, { curl: .7, teeth: 5, spine: 2 });
+      for (let i = 0; i < 9; i++) { const a = -Math.PI * .8 + i / 8 * Math.PI * 1.6, h = (i % 2 ? .45 : .8) * (i === 4 ? 1.5 : 1); cone(h, .08, C.tip, V(Math.cos(a) * L * .3, H * 1.05, Math.sin(a) * W * .45), V(Math.cos(a) * .3, 1, Math.sin(a) * .3)); } eye(L * .05, H * 1.3, 0, .14);
+      for (let i = 0; i < 5; i++) for (const s of [1, -1]) sickle(V(L * (.3 - .25 * i), 0, s * W * 1.0), V(.2, -.2, s), V(1, 0, 0), .6, .09, C.claw, { curl: .5 }); hooks(5, L * .3, -L * .6, -H * .4, W * .6, .6); drives(-L * .95, [-W * .5, 0, W * .5], 1.2); }
+    else if (F === "hump") { /* the Broodlord Carrier: a tall humped back carrying a great brood sac, pink coral, hooked legs beneath */
+      hull(L * .95, H * .8, W * .9); const sac = ell(L * .55, H * 1.1, W * .75, C.sac, -L * .15, H * .9, 0, 24); for (let i = 0; i < 4; i++) { const b2 = ell(L * .56, H * 1.12, W * .76, C.shell, -L * .15, H * .9, 0, 20); b2.scale.set(.06, H * 1.12, W * .76); b2.position.x = -L * .15 + (i - 1.5) * L * .25; }
+      for (let i = 0; i < 9; i++) ell(.15, .18, .15, C.egg, -L * .15 + (r() - .5) * L * .7, H * (.6 + r() * .8), (r() - .5) * W * .9, 10);
+      for (let i = 0; i < 5; i++) coralTree(V(L * (.4 - .15 * i), H * .5, (r() - .5) * W * .5), .2, .8, 1, C.coral, true); for (const s of [1, -1]) sickle(V(L * .85, 0, s * W * .4), V(1, s * .3, s * .2), V(0, -s * .7, -s * .5), L * .7, .14, C.blade, { curl: .6, teeth: 3 });
+      hooks(D.hk, L * .4, -L * .6, -H * .35, W * .6, .6); drives(-L * .95, [-W * .45, 0, W * .45]); }
+    for (const s of [1, -1]) ell(L * .55, .02, .02, C.glow, -.1, -H * .1, s * W * (F === "pod" ? 1.2 : F === "manta" ? .75 : F === "fork" || F === "needle" ? .45 : F === "twin" ? 0 : .8), 6); }
+  /* ---------- the wild Kraken: a long mantle trailing behind, a ring of eyes, arms reaching forward ---------- */
+  else if (k === "ckrak") { const C2 = crcMats("krak"), M = new TH.Mesh(new TH.LatheGeometry([[0, 0], [.55, .2], [.8, .9], [.75, 1.8], [.5, 2.8], [.18, 3.5], [0, 3.7]].map(([rr, y]) => new TH.Vector2(rr, y)), 24), C2.shell);
+    M.rotation.z = Math.PI / 2; M.position.set(.2, .1, 0); M.scale.set(1, 1, .9); g.add(M); for (const s of [1, -1]) { const f = ell(.9, .05, .55, C2.shellD, -2.6, .1, s * .45, 14); f.rotation.y = s * .6; }
+    for (const s of [1, -1]) { glowAt(V(.35, .35, s * .62), .14, .4); ell(.09, .09, .05, C2.joint, .42, .35, s * .66, 8); }
+    for (let i = 0; i < 8; i++) { const a = i / 8 * TAU, by = Math.sin(a) * .45, bz = Math.cos(a) * .45, pts = [[.4, by, bz]]; let px = .4, py = by, pz = bz;
+      for (let j = 1; j <= 6; j++) { px += .55 + r() * .15; py += Math.sin(a) * .2 + Math.sin(j * 1.3 + i) * .3; pz += Math.cos(a) * .25 + Math.cos(j * 1.1 + i) * .25; pts.push([px, py, pz]); }
+      g.add(new TH.Mesh(taperTube(pts, u => .2 * (1 - u * .85), 36, 8), C2.shell)); for (let j = 1; j < 6; j++) ell(.045, .045, .045, C2.glow, pts[j][0], pts[j][1] - .12, pts[j][2], 6); }
+    for (let i = 0; i < 10; i++) { const a = r() * TAU; ell(.06, .06, .06, C2.glow, -.5 - r() * 2.4, Math.sin(a) * .6, Math.cos(a) * .55, 6); } }
+  /* ---------- the Breach nest: a rift into the Abyss in a mound of rock, ringed by crescent spires, choked with coral and eggs ---------- */
+  else if (k === "cnest") {
     const base = add(new TH.Mesh(new TH.DodecahedronGeometry(3, 1), C.rock), 0, -1.55, 0); base.scale.set(1, .32, .85);
     for (let i = 0; i < 9; i++) { const a = r() * TAU, d = 1.6 + r() * 1.3, b = add(new TH.Mesh(new TH.DodecahedronGeometry(.35 + r() * .35, 0), C.rock), Math.cos(a) * d, -1.05, Math.sin(a) * d * .85); b.rotation.set(r() * 3, r() * 3, r() * 3); }
-    for (let i = 0; i < 9; i++) { const a = i / 9 * TAU + .2, p = V(Math.cos(a) * 2.35, -1.1, Math.sin(a) * 2.0), in2 = V(-Math.cos(a), 0, -Math.sin(a)); cone(3.6 + r() * 1.4, .28, C.shell, p, V(0, 1, 0).addScaledVector(in2, .18), .32).rotation.y += 0; }
-    const ring = add(new TH.Mesh(new TH.TorusGeometry(1.15, .2, 10, 36), C.shell), 0, 1.1, 0); ring.scale.set(1, 1.35, 1);
+    for (let i = 0; i < 9; i++) { const a = i / 9 * TAU + .2, p = V(Math.cos(a) * 2.35, -1.1, Math.sin(a) * 2.0), in2 = V(-Math.cos(a), 0, -Math.sin(a)); sickle(p, V(0, 1, 0).addScaledVector(in2, .15), in2, 3.4 + r() * 1.2, .26, i % 2 ? C.shell : C.claw, { curl: .35, spine: 2 }); }
+    const ring = add(new TH.Mesh(new TH.TorusGeometry(1.15, .2, 10, 36), C.claw), 0, 1.1, 0); ring.scale.set(1, 1.35, 1);
     for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; cone(.42, .08, C.tip, V(Math.cos(a) * 1.25, 1.1 + Math.sin(a) * 1.6, 0), V(Math.cos(a), Math.sin(a) * 1.3, 0)); }
     const hole = add(new TH.Mesh(new TH.CircleGeometry(1.02, 36), C.void), 0, 1.1, 0); hole.scale.set(1, 1.35, 1);
     const core = ell(.55, .75, .2, C.core, 0, 1.1, 0, 20); ell(1.0, 1.35, .5, C.glowS, 0, 1.1, 0, 18); ell(1.5, 1.9, .9, C.glowS, 0, 1.1, 0, 14); core.renderOrder = 2;
     for (let i = 0; i < 14; i++) { const a = r() * TAU, d = .9 + r() * 1.7; coralTree(V(Math.cos(a) * d, -1.0, Math.sin(a) * d * .85), .45 + r() * .45, 1, 2, i % 3 ? C.coral : C.coralB, i % 2 === 0); }
-    for (let i = 0; i < 26; i++) { const a = r() * TAU, d = .6 + r() * 1.8, s = .14 + r() * .16; ell(s, s * 1.15, s, C.pearl, Math.cos(a) * d, -.95 + s * .6, Math.sin(a) * d * .85, 12); } }
+    for (let i = 0; i < 26; i++) { const a = r() * TAU, d = .6 + r() * 1.8, s = .14 + r() * .16; ell(s, s * 1.15, s, C.egg, Math.cos(a) * d, -.95 + s * .6, Math.sin(a) * d * .85, 12); } }
   else if (k === "cpat") { /* a scout patrol on the map: a frigate with two interceptors on its wings */
     const f = buildCarc("cfrig"); g.add(f); for (const s of [1, -1]) { const c = buildCarc("cint"); c.scale.setScalar(.72); c.position.set(-1.4, .35, s * 2.3); g.add(c); } }
   return g; }
+/* ---------- v704 the Carcinid fight with their own moves (owner: "multiple unique attack animations and reactive shielding") ----------
+   Every Carcinid unit has two signature attacks that alternate volley by volley, drawn on the battlefield in time with its real shots:
+   - Pincer Lance: the prow blades charge and two curved beams close on the target like a pair of pincers, crossing in a flash;
+   - Spine Volley: a fan of gilded spines arcs out and stitches across the target;
+   - Tidal Pulse: a ring of abyssal water rolls out from the shooter and breaks over the target, its shields flickering;
+   - Brood Launch: glowing eggs are flung out, crack, and the brood streaks in on the target in a swarm of sparks;
+   - Claw Crush: the ghost of a giant crescent pincer snaps shut on the target, with a shockwave;
+   - Coral Mortar: glowing coral is lobbed in high arcs and bursts in violet spore-clouds;
+   - Abyssal Beam: an eye charges and a thick cyan-gold beam tears across the field.
+   Reactive shielding: when a Carcinid unit is hit while its shields hold, a hexagonal carapace-shield lights where the shot lands (cyan
+   plates with gilded seams, rippling out from the impact, brighter the more shield is left); once the shields are gone, the shell sparks
+   gold instead. Pictures only; the fight itself is unchanged. */
+const CRC_ATK = { cfrig: ["lance", "mortar"], cint: ["spines", "lance"], cdest: ["mortar", "spines"], cvang: ["lance", "pulse"], ccarr: ["brood", "spines"], cpearl: ["spines", "pulse"], cmint: ["pulse", "spines"], cregent: ["beam", "lance"],
+  cempr: ["beam", "crush"], cbrlord: ["brood", "mortar"], cscut: ["spines", "crush"], cspit: ["mortar", "spines"], charv: ["pulse", "spines"], cguard: ["crush", "pulse"], cbrood: ["brood", "mortar"], cwar: ["crush", "lance"], ccrys: ["pulse", "spines"],
+  clanc: ["lance", "crush"], cmolt: ["crush", "beam"], ckrak: ["pulse", "crush"], cnest: ["brood", "mortar"], cmar: ["crush", "lance"], cmat: ["brood", "pulse"], ctyr: ["mortar", "crush"], cora: ["pulse", "beam"], ckor: ["beam", "crush"],
+  cbeh: ["crush", "mortar"], ckbr: ["crush", "pulse"], cpal: ["pulse", "beam"], ccrown: ["beam", "brood"], ccrownm: ["beam", "crush"] };
+const CRC_ADUR = { lance: 1.1, spines: .9, pulse: 1.2, brood: 1.5, crush: 1, mortar: 1.3, beam: 1.4 };
+function crcAtkAdd(b, v) { const q = b.Q[v.s]; if (!q || v.e == null || v.e < 0) return; const ks = CRC_ATK[q.k]; if (!ks) return; const L = b.cAtk || (b.cAtk = []), last = b.cAtkT || (b.cAtkT = {}), cnt = b.cAtkN || (b.cAtkN = {});
+  if (last[v.s] != null && v.t - last[v.s] < 1.3) return; last[v.s] = v.t; const a = ks[(cnt[v.s] = (cnt[v.s] || 0) + 1) % 2]; L.push({ s: v.s, e: v.e, t0: v.t, a, seed: (v.s * 7 + L.length) % 13 }); if (L.length > 28) L.shift(); }
+function crcShAdd(b, v) { const e = b.Q[v.e]; if (!e || !CRC_ATK[e.k]) return; const H = b.cSh || (b.cSh = []), lt = b.cShT || (b.cShT = {}); if (lt[v.e] != null && v.t - lt[v.e] < .35) return; lt[v.e] = v.t; H.push({ e: v.e, s: v.s, t0: v.t + .32, seed: H.length % 9 }); if (H.length > 30) H.shift(); }
+const crcRGB = q => BOSS_GLOW[q.k] || (CRC_SHIP[q.k] && CRC_SHIP[q.k].t === "oracle" ? "190,120,255" : CRC_SHIP[q.k] && CRC_SHIP[q.k].t === "krak" ? "220,90,255" : "63,232,240");
+function crcAtkDraw(ctx, b, scr, T, W, d, lo, t) { const A = b.cAtk, Hh = b.cSh; if ((!A || !A.length) && (!Hh || !Hh.length)) return; ctx.save(); ctx.lineCap = "round"; ctx.globalCompositeOperation = "lighter";
+  const gold = "255,200,112";
+  for (const m of A || []) { const D = CRC_ADUR[m.a], u = (T - m.t0) / D; if (u < 0 || u > 1) continue; const S0 = scr[m.s], E0 = scr[m.e]; if (!S0 || !E0) continue; const q = b.Q[m.s], g = b.geo && b.geo[m.s], Lg = g ? g.L : 40, col = crcRGB(q), C = a => `rgba(${col},${a})`, G = a => `rgba(${gold},${a})`, gl = glowSprite(C(1)), dir = Math.sign(E0.x - S0.x) || 1;
+    const fx = S0.x + dir * Lg * .45, fy = S0.y, dx = E0.x - fx, dy = E0.y - fy, dl = Math.hypot(dx, dy) || 1, nx = -dy / dl, ny = dx / dl, fade = Math.min(1, u / .08, (1 - u) / .15);
+    if (!m.snd) { m.snd = 1; try { mimSfx(m.a === "crush" ? "slam" : m.a === "mortar" || m.a === "brood" ? "hiss" : "hum", clamp(S0.x / W * 2 - 1, -1, 1)); } catch (e) {} }
+    if (m.a === "lance") { const ch = Math.min(1, u / .35); ctx.globalAlpha = fade * ch; for (const s of [1, -1]) ctx.drawImage(gl, fx - Lg * .2, fy + s * Lg * .18 - Lg * .2, Lg * .4, Lg * .4);
+      if (u > .35) { const k = Math.min(1, (u - .35) / .25); for (const s of [1, -1]) { const bx = fx, by = fy + s * Lg * .18, cx = fx + dx * .5 + nx * s * dl * .28, cy = fy + dy * .5 + ny * s * dl * .28, ex = E0.x, ey = E0.y;
+        ctx.beginPath(); ctx.moveTo(bx, by); const steps = 16; for (let i = 1; i <= steps * k; i++) { const tt = i / steps, x = (1 - tt) * (1 - tt) * bx + 2 * (1 - tt) * tt * cx + tt * tt * ex, y = (1 - tt) * (1 - tt) * by + 2 * (1 - tt) * tt * cy + tt * tt * ey; ctx.lineTo(x, y); }
+        ctx.globalAlpha = fade * .3; ctx.strokeStyle = C(1); ctx.lineWidth = 9 * d; ctx.stroke(); ctx.globalAlpha = fade; ctx.lineWidth = 2.6 * d; ctx.strokeStyle = "#fff"; ctx.stroke(); }
+        if (k >= 1) { const r = Lg * (.5 + (u - .6) * 2); ctx.globalAlpha = fade; ctx.drawImage(gl, E0.x - r, E0.y - r, r * 2, r * 2); ctx.strokeStyle = G(1); ctx.lineWidth = 2 * d; ctx.beginPath(); ctx.moveTo(E0.x - r * .5, E0.y - r * .5); ctx.lineTo(E0.x + r * .5, E0.y + r * .5); ctx.moveTo(E0.x - r * .5, E0.y + r * .5); ctx.lineTo(E0.x + r * .5, E0.y - r * .5); ctx.stroke(); } } }
+    else if (m.a === "spines") { const n = lo ? 5 : 9; for (let i = 0; i < n; i++) { const off = (i - (n - 1) / 2) / n, st = i * .025, k = clamp((u - st) / .55, 0, 1); if (k <= 0) continue; const arc = Math.sin(Math.PI * k) * dl * .22 * off * 2, x = fx + dx * k + nx * arc, y = fy + dy * k + ny * arc + E0.y * 0;
+        const k2 = Math.max(0, k - .08), x2 = fx + dx * k2 + nx * Math.sin(Math.PI * k2) * dl * .22 * off * 2, y2 = fy + dy * k2 + ny * Math.sin(Math.PI * k2) * dl * .22 * off * 2; ctx.globalAlpha = fade * (k < 1 ? 1 : 0); ctx.strokeStyle = G(1); ctx.lineWidth = 2.2 * d; ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x, y); ctx.stroke();
+        if (k >= 1 && u - st < .75) { const r = Lg * .18; ctx.globalAlpha = fade * .9; ctx.drawImage(glowSprite(G(1)), E0.x + off * Lg * .8 - r, E0.y + Math.sin(i * 2.3) * Lg * .25 - r, r * 2, r * 2); } } }
+    else if (m.a === "pulse") { const k = u, r = dl * k * 1.05; ctx.globalAlpha = fade * (1 - k * .6); ctx.strokeStyle = C(1); for (let i = 0; i < 3; i++) { const rr = r - i * Lg * .25; if (rr <= 0) continue; ctx.lineWidth = (5 - i * 1.4) * d; ctx.beginPath(); ctx.ellipse(fx, fy, rr, rr * .5, Math.atan2(dy, dx), -.6, .6); ctx.stroke(); }
+      if (k > .75) { const r2 = Lg * (.5 + (k - .75) * 3); ctx.globalAlpha = fade; ctx.drawImage(gl, E0.x - r2, E0.y - r2, r2 * 2, r2 * 2); } }
+    else if (m.a === "brood") { const n = lo ? 4 : 7; for (let i = 0; i < n; i++) { const st = i * .04, k = clamp((u - st) / .8, 0, 1); if (k <= 0 || k >= 1) continue; const lob = k < .3 ? k / .3 : 1, ex = fx + nx * (i - n / 2) * Lg * .25 * lob, ey = fy + ny * (i - n / 2) * Lg * .25 * lob - Lg * .4 * lob;
+        if (k < .3) { ctx.globalAlpha = fade; ctx.fillStyle = C(.9); ctx.beginPath(); ctx.ellipse(ex, ey, 4 * d, 5 * d, 0, 0, TAU); ctx.fill(); }
+        else { const kk = (k - .3) / .7, x = ex + (E0.x - ex) * kk + Math.sin(kk * 12 + i) * Lg * .1 * (1 - kk), y = ey + (E0.y - ey) * kk + Math.cos(kk * 10 + i) * Lg * .1 * (1 - kk); ctx.globalAlpha = fade; ctx.drawImage(gl, x - 6 * d, y - 6 * d, 12 * d, 12 * d); ctx.fillStyle = "#fff"; ctx.fillRect(x - 1.2 * d, y - 1.2 * d, 2.4 * d, 2.4 * d);
+          if (kk > .92) { const r = Lg * .3; ctx.drawImage(gl, E0.x - r + (i - n / 2) * 3 * d, E0.y - r, r * 2, r * 2); } } } }
+    else if (m.a === "crush") { const k = u, r = Lg * 1.1, o = k < .45 ? .9 - k / .45 * .75 : .15, ang = Math.atan2(-dy, -dx); ctx.globalAlpha = fade * .85; ctx.strokeStyle = G(1); ctx.lineWidth = 6 * d;
+      for (const s of [1, -1]) { ctx.beginPath(); ctx.arc(E0.x, E0.y, r * .6, ang + s * (Math.PI * .15 + o), ang + s * (Math.PI * .95), s < 0); ctx.stroke(); }
+      ctx.strokeStyle = C(1); ctx.lineWidth = 2 * d; for (const s of [1, -1]) { ctx.beginPath(); ctx.arc(E0.x, E0.y, r * .48, ang + s * (Math.PI * .2 + o), ang + s * (Math.PI * .9), s < 0); ctx.stroke(); }
+      if (k > .45) { const kk = (k - .45) / .55, rr = r * (.3 + kk); ctx.globalAlpha = fade * (1 - kk); ctx.strokeStyle = G(1); ctx.lineWidth = (5 - 4 * kk) * d; ctx.beginPath(); ctx.ellipse(E0.x, E0.y, rr, rr * .5, 0, 0, TAU); ctx.stroke(); if (!m.hit) { m.hit = 1; b.shake = Math.max(b.shake || 0, 8 * d); } } }
+    else if (m.a === "mortar") { const n = lo ? 2 : 4; for (let i = 0; i < n; i++) { const st = i * .08, k = clamp((u - st) / .7, 0, 1); if (k <= 0) continue; const tx = E0.x + (i - n / 2) * Lg * .22, ty = E0.y + Math.sin(i * 3) * Lg * .15;
+        if (k < 1) { const x = fx + (tx - fx) * k, y = fy + (ty - fy) * k - Math.sin(Math.PI * k) * Math.max(Lg * 1.5, dl * .35); ctx.globalAlpha = fade; ctx.drawImage(glowSprite("rgba(255,122,176,1)"), x - 7 * d, y - 7 * d, 14 * d, 14 * d); ctx.fillStyle = "#ffd0e8"; ctx.beginPath(); ctx.arc(x, y, 2.4 * d, 0, TAU); ctx.fill(); }
+        else if (u - st < .95) { const kk = (u - st - .7) / .25, r = Lg * (.25 + kk * .5); ctx.globalAlpha = fade * (1 - kk); ctx.drawImage(glowSprite("rgba(180,140,255,1)"), tx - r, ty - r, r * 2, r * 2); } } }
+    else if (m.a === "beam") { const ch = Math.min(1, u / .4), ex0 = fx, ey0 = fy - Lg * .05; ctx.globalAlpha = fade * ch; const cr = Lg * (.15 + .25 * ch); ctx.drawImage(gl, ex0 - cr, ey0 - cr, cr * 2, cr * 2);
+      if (u > .4) { const k = Math.min(1, (u - .4) / .12), x1 = ex0 + dx * 1.15 * k, y1 = ey0 + dy * 1.15 * k, wv = 1 + .25 * Math.sin(T * 40); ctx.beginPath(); ctx.moveTo(ex0, ey0); ctx.lineTo(x1, y1);
+        ctx.globalAlpha = fade * .25; ctx.strokeStyle = C(1); ctx.lineWidth = 22 * d * wv; ctx.stroke(); ctx.globalAlpha = fade * .6; ctx.strokeStyle = G(1); ctx.lineWidth = 9 * d * wv; ctx.stroke(); ctx.globalAlpha = fade; ctx.strokeStyle = "#fff"; ctx.lineWidth = 3 * d; ctx.stroke();
+        if (k >= 1) { const r = Lg * .8 * wv; ctx.drawImage(gl, E0.x - r, E0.y - r, r * 2, r * 2); if (!m.hit) { m.hit = 1; b.shake = Math.max(b.shake || 0, 10 * d); b.flash = Math.max(b.flash || 0, .12); } } } } }
+  /* reactive shielding: hexagonal carapace plates light where the shot lands */
+  for (const h of Hh || []) { const k = (T - h.t0) / .6; if (k < 0 || k > 1) continue; const E0 = scr[h.e], S0 = scr[h.s]; if (!E0 || !S0 || !(b.n[h.e] > 0)) continue; const q = b.Q[h.e], g = b.geo && b.geo[h.e], Lg = g ? g.L : 40;
+    let sh = 1; try { sh = bPos(b, h.e, T).sh; if (sh == null) sh = 1; } catch (e) {} const col = sh > .02 ? crcRGB(q) : gold, R = Lg * .62, ang = Math.atan2(S0.y - E0.y, S0.x - E0.x), ix = E0.x + Math.cos(ang) * R * .9, iy = E0.y + Math.sin(ang) * R * .45, al = (1 - k) * (sh > .02 ? .35 + .65 * Math.min(1, sh) : .8);
+    ctx.globalAlpha = al * .35; ctx.strokeStyle = `rgba(${col},1)`; ctx.lineWidth = 1.6 * d; ctx.beginPath(); ctx.ellipse(E0.x, E0.y, R, R * .5, 0, ang - 1.1, ang + 1.1); ctx.stroke();
+    if (sh > .02) { const hs = Lg * .09, rip = k * R * 1.2; for (let i = -2; i <= 2; i++) for (let j = -1; j <= 1; j++) { const hx = ix + (i * 1.5 + (j & 1) * .75) * hs * 1.15, hy = iy + j * hs * 1.3, dd = Math.hypot(hx - ix, hy - iy); if (dd > rip + hs || dd < rip - hs * 2.5) continue;
+        ctx.globalAlpha = al * (1 - dd / (R * 1.3)); ctx.strokeStyle = `rgba(${col},1)`; ctx.lineWidth = 1.4 * d; ctx.beginPath(); for (let a = 0; a < 6; a++) { const aa = a / 6 * TAU, px = hx + Math.cos(aa) * hs * .6, py = hy + Math.sin(aa) * hs * .6; a ? ctx.lineTo(px, py) : ctx.moveTo(px, py); } ctx.closePath(); ctx.stroke();
+        ctx.strokeStyle = `rgba(${gold},${.6 * al})`; ctx.lineWidth = .8 * d; ctx.stroke(); }
+      const fr = Lg * .3 * (1 - k * .5); ctx.globalAlpha = al; ctx.drawImage(glowSprite(`rgba(${col},1)`), ix - fr, iy - fr, fr * 2, fr * 2); }
+    else { for (let i = 0; i < 5; i++) { const a = ang + (i - 2) * .5 + h.seed, l = Lg * .25 * k; ctx.globalAlpha = (1 - k); ctx.strokeStyle = `rgba(${gold},1)`; ctx.lineWidth = 1.5 * d; ctx.beginPath(); ctx.moveTo(ix, iy); ctx.lineTo(ix + Math.cos(a) * l, iy + Math.sin(a) * l); ctx.stroke(); } } }
+  ctx.restore(); }
 function mimAtkAdd(b, v) { const q = b.Q[v.s]; if (!q) return; let a = MIM_ATK[q.k]; if (!a || v.e == null || v.e < 0) return; const L = b.mAtk || (b.mAtk = []), last = b.mAtkT || (b.mAtkT = {});
   if (a === "omega") { const n = b.mSig || 0; if (n < 2 && (n === 0 || v.t > (b.end || 40) * .5)) { a = "omegaX"; b.mSig = n + 1; } }
   if (last[v.s] != null && v.t - last[v.s] < MIM_DUR[a] * 1.1) return; last[v.s] = v.t;
@@ -25309,7 +25668,7 @@ function bShHits(ctx, b, W, H, d, t) { const L = b.bShH; if (!L || !L.length || 
     ctx.globalAlpha = .7 * f * f * h.s; ctx.drawImage(glowSprite(col), px - 18 * d, py - 18 * d, 36 * d, 36 * d); }
   if (heat > .05) { ctx.globalAlpha = Math.min(.35, heat * .08); ctx.strokeStyle = col; ctx.lineWidth = 3 * d; ctx.beginPath(); ctx.ellipse(B.cx, B.cy, rx, ry, 0, 0, TAU); ctx.stroke(); } /* the bubble shimmers under sustained fire */
   ctx.restore(); ctx.globalAlpha = 1; }
-function spawnVolley(b, v) { fx589Spawn(b, v); /* v589 */ try { if (MIM_ATK[(b.Q[v.s] || {}).k]) mimAtkAdd(b, v); } catch (e) {} /* v676 */ try { if (b.r && b.r.sbk === "aex") aexAtkAdd(b, v); } catch (e) {} /* v680 */ try { bmvAdd(b, v); } catch (e) {} /* v681 */
+function spawnVolley(b, v) { fx589Spawn(b, v); /* v589 */ try { if (MIM_ATK[(b.Q[v.s] || {}).k]) mimAtkAdd(b, v); } catch (e) {} /* v676 */ try { crcAtkAdd(b, v); crcShAdd(b, v); } catch (e) {} /* v704 */ try { if (b.r && b.r.sbk === "aex") aexAtkAdd(b, v); } catch (e) {} /* v680 */ try { bmvAdd(b, v); } catch (e) {} /* v681 */
   if ((v.ab || (b.Q[v.s] && TITAN_LEN[b.Q[v.s].k])) && titanFx(b, v)) return; /* v556, v559 */
   const lo = b.lowFx, cap = PERF.battleCap, wk = v.wk, many = v.n + v.ic, mis = wk === "missile" || wk === "torpedo", q = b.Q[v.s], side = q.side, sz = q.sz != null ? q.sz : (q.sz = szOf(q));
   if (q.role === "carrier") (b.ctgt = b.ctgt || [])[v.s] = v.e; // its fighter wing flies at whatever the carrier is shooting
@@ -25701,7 +26060,7 @@ function drawBattle(t) {
   const pos = Q.map((q, i) => bPos(b, i, T));
   /* v60 depth: every squadron flies on its own depth plane. Far ones are smaller and sit behind a layer of haze, near ones are
      bigger and brighter, so a crowded 10 vs 10 fight opens out in depth instead of piling into one strip */
-  if (!b.z) b.z = Q.map((q, i) => q.k === "worldbreaker" ? .98 : q.role === "station" || q.role === "turret" ? .78 : ((hash(q.k + "|" + i + "|" + q.side) % 1000) / 1000) * .9 + .05);
+  if (!b.z) b.z = Q.map((q, i) => q.k === "worldbreaker" || (CRC_U[q.k] && bHero(q.k)) ? .98 : q.role === "station" || q.role === "turret" ? .78 : ((hash(q.k + "|" + i + "|" + q.side) % 1000) / 1000) * .9 + .05);
   let alive = 0; Q.forEach((q, i) => { if (b.n[i] > 0 && !(pos[i].fl & 6)) alive++; });
   const crowd = clamp(Math.sqrt(22 / Math.max(22, alive)), .46, .92), fitOf = sd => (b.fitS && b.fitS[sd]) || b.fit || crowd, zy = (bot - top) * (alive > 30 ? .27 : .14), busy = alive > 30; // v75: the fit scale (below) sizes every ship to the free space
   // squadrons of the same type from different commanders share a position in the simulation: fan them apart on screen
@@ -25949,7 +26308,7 @@ function drawBattle(t) {
     for (let i = 0; i < s.n; i++) { const o = (i - (s.n - 1) / 2) * 5 * d + Math.sin(i * 12.9 + s.t0) * 2 * d, x0 = sx + nx * o + ux * 6 * d, y0 = sy + ny * o, x1 = x0 + ux * reach, y1 = y0 + uy * reach;
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.strokeStyle = col; ctx.globalAlpha = al * .22 * dim; ctx.lineWidth = w * 7; ctx.stroke(); ctx.globalAlpha = al * .85 * dim; ctx.lineWidth = w * 2.3; ctx.stroke(); ctx.strokeStyle = "#fff"; ctx.globalAlpha = al * dim; ctx.lineWidth = w * .9; ctx.stroke(); }
     const mr = (8 + s.w * 5) * d * al; ctx.globalAlpha = al; ctx.drawImage(glowSprite(col), sx - mr, sy - mr, mr * 2, mr * 2); }
-  try { wbStrike(ctx, b, scr, Q, W, H, t, d, lo); } catch (e) {} try { mimAtkDraw(ctx, b, scr, T, W, d, lo, t, H); } catch (e) {} /* v676, v677 */ try { aexwDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} try { aexDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v680 */ try { aexdDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} try { bShDraw(ctx, b, W, H, d, T, t); } catch (e) {} /* v683 */ try { bShHits(ctx, b, W, H, d, t); } catch (e) {} /* v685 */ try { bmvDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v681 */ // v407 the boss's attack across the whole field
+  try { wbStrike(ctx, b, scr, Q, W, H, t, d, lo); } catch (e) {} try { mimAtkDraw(ctx, b, scr, T, W, d, lo, t, H); } catch (e) {} /* v676, v677 */ try { crcAtkDraw(ctx, b, scr, T, W, d, lo, t); } catch (e) {} /* v704 */ try { aexwDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} try { aexDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v680 */ try { aexdDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} try { bShDraw(ctx, b, W, H, d, T, t); } catch (e) {} /* v683 */ try { bShHits(ctx, b, W, H, d, t); } catch (e) {} /* v685 */ try { bmvDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v681 */ // v407 the boss's attack across the whole field
   // mega beams from stations, titans and beam batteries: a charge-up glow, then a roaring column with a blinding impact
   if (!b.cdQ) b.cdQ = cdPlan(b); while (b.cdQ.length && b.cdQ[0].t0 - 2.4 <= T) b.beams.push(b.cdQ.shift()); // v418 a staged shot joins 2.4 s ahead, so the station can turn onto it
   b.beams = b.beams.filter(m => T - m.t0 <= m.charge + m.life + (m.wb ? 3 : 0)); // v410: the Cube Destroyer's splash outlives its beam
@@ -27989,12 +28348,17 @@ const ACT = {
   archEntry: d => openSheet({ type: "archives", id: d.id }),
   mimOpen: () => openSheet({ type: "mimic" }), /* v663 */
   crcOpen: () => { openSheet({ type: "carcinid" }); setTimeout(() => { try { const M = crcS(); if (crcWeek(now()) >= 1 && !M.loreSeen) { M.loreSeen = 1; dirty(); } } catch (e) {} }, 3000); /* the lore opens the first time */ }, /* v703 */
-  crcFind: () => { const x = crcNearest(now(), "carcinid"); if (x) mimGo(x); else toast("No Breach Zone within reach right now."); },
+  crcFind: d => { const m = d.m || "carcinid", x = crcNearest(now(), m); if (x) mimGo(x); else toast(m === "crcpat" ? "No patrol within reach right now." : m === "wkraken" ? "No Kraken within reach right now." : "No Breach Zone within reach right now."); },
+  crcGoB: d => { const x = PB[d.id]; if (x) mimGo(x); },
+  crcCine: d => crcCine(d.k),
+  crcForge: d => { const F = CRC_FORGE.find(r => r[0] === d.k), M = crcS(); if (!F) return; if (crcOwn(d.k)) return toast("You already own it.", "warn"); if (!crcHave(F[3], M)) return toast("Not enough materials yet.", "warn");
+    for (const [k, n] of Object.entries(F[3])) M.m[k] -= n; crcGrant({ [d.k]: d.k === "sh" ? 25 : 1 }, "Forged"); try { SFX.build(); } catch (e) {} renderSheet(); },
+  crcTrack: d => { const i = +d.i, p = d.p === "1", M = crcS(), T0 = CRC_TRACK[i]; if (!T0) return; const id = (p ? "p" : "f") + i; M.tr = M.tr || {}; if (M.tr[id] || M.pts < T0[0] || (p && !mimPrem())) return; M.tr[id] = 1; crcGrant(T0[p ? 2 : 1], "Carcinid reward track"); renderSheet(); },
   crcFindP: () => { const x = crcNearest(now(), "crcpat"); if (x) mimGo(x); else toast("No scout patrol within reach right now."); },
-  crcPrev: d => { if (!ownerFree()) return; const w = +d.w; S.crcPrev = w ? { w, at: now() } : null; CSC = {}; dirty(); toast(w ? `Previewing week ${w} of the Tide of the Carcinid (this device only).` : "Preview off."); renderSheet(); },
-  crcClaim: d => { const w = +d.w, o = CRC_OBJ.find(x => x[0] === d.id), M = crcS(), id = `w${w}${d.id}`; if (!o || M.got[id] || crcObjN(w, o[0]) < o[2]) return; M.got[id] = 1; S.shards = (S.shards || 0) + o[3];
-    for (const [m, v] of Object.entries(o[4])) M.m[m] = (M.m[m] || 0) + v; M.pend = (M.pend || 0) + 10; setTimeout(() => crcFlush(1), 50); dirty();
-    toast(`+◆${o[3]} and ${Object.entries(o[4]).map(([m, v]) => `${v} ${CRC_MAT[m][0]}`).join(", ")}`, "win"); try { logReward(`Tide of the Carcinid · week ${w} order`, null, { shards: o[3], kind: "event" }); } catch (e) {} renderSheet(); },
+  crcPrev: d => { if (!ownerFree()) return; const w = +d.w; S.crcPrev = w ? { w, at: now() } : null; CSC = {}; dirty(); toast(w ? `Previewing ${w === 5 ? "the Great Molting" : "week " + w} of the Tide of the Carcinid (this device only).` : "Preview off."); renderSheet(); },
+  crcClaim: d => { const w = +d.w, o = crcObjs(w).find(x => x[0] === d.id), M = crcS(), id = `w${w}${d.id}`; if (!o || M.got[id] || crcObjN(w, o[0]) < o[2]) return; M.got[id] = 1; S.shards = (S.shards || 0) + o[3];
+    crcAddM(o[4]); M.pend = (M.pend || 0) + 10; setTimeout(() => crcFlush(1), 50); dirty();
+    toast(`+◆${o[3]} and ${crcMatTxt(o[4])}`, "win"); try { logReward(`Tide of the Carcinid · week ${w} order`, null, { shards: o[3], kind: "event" }); } catch (e) {} renderSheet(); },
   crcSup: d => { const p = +d.p, Rw = CRC_SUPM.find(x => x[0] === p), M = crcS(), st = crcStC(now()); if (!Rw || M.got["s" + p] || crcSupPct(st) * 100 < p || !((st.con[G.me] || 0) + (M.pend || 0) > 0)) return;
     M.got["s" + p] = 1; S.shards = (S.shards || 0) + Rw[1]; M.m.resin = (M.m.resin || 0) + Rw[2]; dirty(); toast(`Abyssal Suppression ${p}%: +◆${Rw[1]} and ${Rw[2]} Tidal Resin`, "win"); try { logReward(`Abyssal Suppression ${p}%`, null, { shards: Rw[1], kind: "event" }); } catch (e) {} renderSheet(); },
   crcLabWeek: d => { if (!duelOwner()) return; const w = +d.k; S.crcPrev = w ? { w, at: now() } : null; CSC = {}; dirty(); toast(w ? `Previewing week ${w} of the Tide of the Carcinid (this device only).` : "Carcinid preview off."); renderSheet(); },
