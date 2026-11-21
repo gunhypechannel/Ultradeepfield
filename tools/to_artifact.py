@@ -34,6 +34,7 @@ if os.path.exists(lst):
     def grp(p):
         if p.startswith('art/season/'): return 'season'
         if p.startswith(('art/arch/', 'art/lore/', 'art/chron/', 'art/ev/')): return 'arch'
+        if p.startswith('art/carcinid/'): return 'crc' # v703
         return 'misc'
     packs = {}
     for p in paths:
