@@ -1,7 +1,11 @@
 /* ---------- v703/v704 TIDE OF THE CARCINID (the owner's master prompt) ----------
-   Below the Kraken Deep lies the Abyss, a sea older than the stars. The Carcinid Abyssal Empire ruled it before the Architects built
-   their prison: armoured crustacean legions who bred the great ocean beasts (the Leviathan, the Kraken, the serpents of the deep) as war
-   mounts. Every time a Warden fell, the seal over the Abyss thinned. Now Abyssal Breach Zones are tearing open across the galaxy.
+   v706 the story, tied into the year: beyond the Architects' outer wall lies the Abyss, a sea that runs down to the prison's floor. The
+   Carcinid Abyssal Empire ruled it and bred the deep beasts as war mounts; the Architects took the greatest of them, the Leviathan, and
+   made it the Warden of their wall. In Chapter 1 (this season) the Leviathan turns inward: it hears its old masters. The Empire is not
+   conquering; something beneath the Abyss (the Unmade) is stirring, and the whole Empire is rising to flee it through the cracks.
+   The season's Leviathan hunt (week 3) decides what Korvax rides in week 4: its corpse (slain) or the beast itself in chains (escaped).
+   The Crown's tide ends one of two ways: slain (the finale, and the Abyss answers) or reborn (it escapes: the Judge counts one seal
+   fewer held, the Seal Strain rises, and next year the Crown and Korvax return with harder shells).
    The run: every Season of the Leviathan (the first season of the ten-season year), from season index 2 (4 January 2027).
    - Week 1, First Tides: 40 Breach Zones open (Stages 1-2), scout patrols chart our worlds.
    - Week 2, The Claw Admirals: 40 more; Stage 3 (Reef Fortress); the Red Claw Marshal and the Pearl Matron take the field.
@@ -14,7 +18,7 @@
    The six Abyssal tactics (each a real effect in the fights that carry it): Shell Armor, Brood Deployment, Tidal Pulse, Molting,
    Monster Resonance, Pincer Lock. Eight materials feed the Abyssal Forge (cosmetics, a hull finish, a planet skin, accelerators, a
    Titan Core); a reward track pays out by tide points, its premium side with Void Pass Premium. */
-const CRC_U = {}; for (const k of ["cscut", "cspit", "charv", "cguard", "cbrood", "cwar", "ccrys", "clanc", "cmolt", "ckrak", "cfrig", "cint", "cdest", "cvang", "ccarr", "cpearl", "cmint", "cregent", "cempr", "cbrlord", "cnest", "cmar", "cmat", "ctyr", "cora", "ckor", "cbeh", "ckbr", "cpal", "ccrown", "ccrownm"]) CRC_U[k] = 1;
+const CRC_U = {}; for (const k of ["cscut", "cspit", "charv", "cguard", "cbrood", "cwar", "ccrys", "clanc", "cmolt", "ckrak", "cfrig", "cint", "cdest", "cvang", "ccarr", "cpearl", "cmint", "cregent", "cempr", "cbrlord", "cnest", "cmar", "cmat", "ctyr", "cora", "ckor", "cbeh", "ckbr", "cpal", "ccrown", "ccrownm", "clevd"]) CRC_U[k] = 1;
 { const U = (n, atk, sh, hull, val) => ({ n, atk, sh, hull, val, one: 1 }); Object.assign(AL, {
   cscut: U("Scuttle Drone", 380, 320, 5600, 16000), cspit: U("Coral Spitter", 760, 240, 5200, 22000), charv: U("Tide Harvester", 160, 900, 9800, 20000), cguard: U("Shell Guardian", 420, 3000, 28000, 52000),
   cbrood: U("Broodmother", 300, 1800, 24000, 60000), cwar: U("Claw Warrior", 900, 1200, 16000, 48000), ccrys: U("Crystal Reaver", 820, 900, 11000, 40000), clanc: U("Trench Lancer", 1300, 1400, 22000, 70000),
@@ -24,7 +28,7 @@ const CRC_U = {}; for (const k of ["cscut", "cspit", "charv", "cguard", "cbrood"
   cempr: U("Emperor's Shell", 3400, 3600, 80000, 320000), cbrlord: U("Broodlord Carrier", 1200, 3000, 52000, 180000), cnest: U("Abyssal Breach Nest", 650, 2600, 50000, 90000),
   cmar: U("Red Claw Marshal", 1000, 2200, 30000, 300000), cmat: U("Pearl Matron", 700, 3000, 32000, 300000), ctyr: U("Reef Tyrant", 900, 3600, 38000, 300000), cora: U("Trench Oracle", 1100, 2400, 28000, 300000),
   ckor: U("Dread Admiral Korvax", 1300, 3200, 36000, 400000), cbeh: U("Trench Behemoth", 1000, 4200, 44000, 350000), ckbr: U("Krakenbreaker", 1300, 2600, 34000, 350000), cpal: U("Pale Sovereign", 1200, 3000, 32000, 350000),
-  ccrown: U("The Abyssal Crown", 1500, 4000, 42000, 600000), ccrownm: U("The Abyssal Crown, molting", 2300, 1500, 32000, 600000) }); }
+  ccrown: U("The Abyssal Crown", 1500, 4000, 42000, 600000), ccrownm: U("The Abyssal Crown, molting", 2300, 1500, 32000, 600000), clevd: U("Leviathan Corpse", 3600, 2400, 80000, 150000) }); }
 const CRC_COL = "#e8b45a", CRC_GLOW = "#3fe0c8";
 Object.assign(MON, {
   carcinid: { n: "Abyssal Breach Zone", sp: "Breach Zone", ic: "❖", col: CRC_COL, rgb: "232,180,90", per: 99, d: "A tear into the Abyss. Coral and black chitin have grown round the wound, and the Carcinid pour through it: drones, spitters and the shelled guardians of the brood. It grows through four infestation stages, and every stage brings a heavier garrison. Close it before it matures.", names: ["Breach"] },
@@ -35,7 +39,7 @@ const CRC_BDEF = [ /* id, mon, unit, name, from week, sections, mech, map angle,
   ["ca1", "crcmat", "cmat", "The Pearl Matron", 2, 100, "brood", 2.15, .42, 2, "matron", "#e8fbff", "Mother of the broods, crowned in pearls. Her sac never stops: every fight brings a fresh wave of Broodmothers and drones, more the healthier she is."],
   ["ca2", "crctyr", "ctyr", "The Reef Tyrant", 3, 100, "shell", 3.7, .42, 2.1, "tyrant", "#ff9a7a", "A walking reef fortress. His shell turns aside 30% of every blow until the server's Abyssal Suppression passes 50%."],
   ["ca3", "crcora", "cora", "The Trench Oracle", 3, 100, "pulse", 5.3, .42, 2, "oracle", "#b48cff", "The Empire's seer, who hears the tides before they turn. Her Tidal Pulse strips 40% of our fleet's shields."],
-  ["ca4", "crckor", "ckor", "Dread Admiral Korvax", 4, 150, "reson", 1.0, .26, 2.4, "korvax", "#ffc870", "Supreme commander of the Abyssal Empire, riding a chained Leviathan into battle. The war-song of the deep beasts makes his fleet 25% tougher and deadlier, unless you have slain a wild Kraken in the last 12 hours."],
+  ["ca4", "crckor", "ckor", "Dread Admiral Korvax", 4, 150, "reson", 1.0, .26, 2.4, "korvax", "#ffc870", "Supreme commander of the Abyssal Empire. He rides the Leviathan into battle: alive and in chains if it escaped its hunt this season, its corpse if the galaxy slew it. Its war-song makes his fleet 30% tougher and deadlier (15% from a corpse), unless you have slain a wild Kraken in the last 12 hours."],
   ["cg0", "crcbeh", "cbeh", "The Trench Behemoth", 3, 150, "shell", .2, .72, 2.4, "behemoth", "#7ff8e4", "A guardian so old that cities grew on its back. Its shell keeps 40% of every blow off it. It does not heal."],
   ["cg1", "crckbr", "ckbr", "The Krakenbreaker", 3, 150, "pincer", 2.3, .72, 2.3, "krakenbreaker", "#d070ff", "The guardian that tamed the Kraken, with the Kraken's own arms grafted to its shell. Two Krakens fight at its side, and its grip costs our fleet a sixth of its firepower."],
   ["cg2", "crcpal", "cpal", "The Pale Sovereign", 3, 150, "pulse", 4.4, .72, 2.3, "pale", "#e8fbff", "A ghost-white guardian of living crystal. Its Tidal Pulse strips 40% of our shields, and Crystal Reavers swarm around it."],
@@ -50,7 +54,7 @@ const CRC_M = { carcinid: "cnest", crcpat: "cpat", wkraken: "ckrak" }; for (cons
 const CRC_N = 120, CRC_P = 16, CRC_KN = 6, CRC_WK = 7 * 864e5, CRC_LEN = 28 * 864e5, CRC_REGROW = 12 * 3600e3, CRC_CROWN0 = 3 * CRC_WK + 2 * 864e5;
 const CRC_WAVES = 3, CRC_CAP = 4;
 const CRC_STAGE = ["", "Breach", "Spawning Tide", "Reef Fortress", "Abyssal Dominion"];
-const CRC_WEEKS = [["First Tides", "Breach Zones are tearing open in the outer dark. Scuttle Drones and Coral Spitters pour through, and Carcinid scout frigates are charting our worlds."], ["The Claw Admirals", "The scouts have reported home. The Red Claw Marshal and the Pearl Matron have taken the field, and the nests are hardening into reef fortresses."], ["The Deep Guardians", "The Empire wakes its guardians. The Reef Tyrant and the Trench Oracle join the war, and the oldest things in the Abyss are rising toward the light."], ["The Great Molting", "Dread Admiral Korvax rides to war on a chained Leviathan, and the Abyssal Crown is surfacing to shed its shell. If it completes its molt, the Empire is reborn."]];
+const CRC_WEEKS = [["First Tides", "The Leviathan is pressing on the Architects' wall from the inside, and the wall is cracking. Breach Zones are tearing open in the outer dark. Scuttle Drones and Coral Spitters pour through, and Carcinid scout frigates are charting our worlds."], ["The Claw Admirals", "The scouts have reported home. The Red Claw Marshal and the Pearl Matron have taken the field, and the nests are hardening into reef fortresses."], ["The Deep Guardians", "The Empire wakes its guardians. The Reef Tyrant and the Trench Oracle join the war, the Leviathan's hunt begins at the wall, and the oldest things in the Abyss are rising toward the light."], ["The Great Molting", "Dread Admiral Korvax has claimed the Leviathan and rides it to war, and the Abyssal Crown is surfacing to shed its shell. If it completes its molt, the Empire is reborn."]];
 const CRC_NESTS = (() => { const out = [], GOLD = Math.PI * (3 - Math.sqrt(5)), lo = Math.max(LAYERS[LAYERS.length - 1].r0, 18 * SC) + 6, hi = LAYERS[0].r1 - 6;
   for (let j = 0; j < CRC_N; j++) { const u = (j + .7) / CRC_N, rad = Math.sqrt(lo * lo + u * (hi * hi - lo * lo)), a = (2.1 + j * GOLD) % TAU, lvl = (layerOf(rad).n - 1) * 5 + 2 + (j * 5) % 4;
     out.push({ id: "cn" + j, kind: "pirate", mon: "carcinid", cj: j, lvl, r: +rad.toFixed(2), a0: +a.toFixed(4), name: `Breach Zone ${String.fromCharCode(65 + (j * 11) % 26)}${String.fromCharCode(65 + (j * 5 + 7) % 26)}-${100 + j}` }); }
@@ -95,7 +99,7 @@ const crcWk = (M, w) => { M.wk = M.wk || {}; const W = M.wk[w] || (M.wk[w] = {})
 const crcMatTxt = L => Object.keys(CRC_MAT).filter(k => L[k]).map(k => `${L[k]} ${CRC_MAT[k][0]}`).join(", ");
 function crcAddM(L) { const M = crcS(); for (const k in CRC_MAT) if (L[k]) M.m[k] = (M.m[k] || 0) + L[k]; }
 function crcWin(x, rep, T) { const st = crcStage(x, T), M = crcS(), L = crcLoot(x, st), w = Math.max(1, Math.min(4, crcWeek(T))), W = crcWk(M, w), on = crcWeek(T) >= 1 && crcWeek(T) <= 4;
-  if (x.mon === "wkraken") { (S.crcKrk = S.crcKrk || {}).at = T; if (!on) { crcAddM({ enzyme: L.enzyme }); note(`${x.name} is dead. Salvaged ${L.enzyme} Brood Enzyme. Korvax's Monster Resonance is broken against you for 12 hours.`, "win"); dirty(); return; } W.krk++; }
+  if (x.mon === "wkraken") { const K0 = S.crcKrk = S.crcKrk || {}; K0.at = T; K0.n = (K0.n || 0) + 1; if (!on) { crcAddM({ enzyme: L.enzyme }); note(`${x.name} is dead. Salvaged ${L.enzyme} Brood Enzyme. Korvax's Monster Resonance is broken against you for 12 hours.`, "win"); dirty(); return; } W.krk++; }
   crcAddM(L); M.pts += L.pts; if (x.mon === "crcpat") { W.pat++; M.pat = (M.pat || 0) + 1; } else if (x.mon === "carcinid") { W.nest++; if (st >= 3) W.st3++; M.kills[st] = (M.kills[st] || 0) + 1; } W.coral += L.coral || 0; try { crcQueue(L.pts); } catch (e) {}
   rep.crc = Object.assign({ st }, L); dirty();
   note(x.mon === "wkraken" ? `${x.name} is dead. Salvaged ${crcMatTxt(L)} · +${L.pts} tide points. Korvax's Monster Resonance is broken against you for 12 hours.` : x.mon === "crcpat" ? `${x.name} sunk. Salvaged ${crcMatTxt(L)} · +${L.pts} tide points.` : `${x.name} closed at Stage ${st} (${CRC_STAGE[st]}). Salvaged ${crcMatTxt(L)} · +${L.pts} tide points.`, "win"); }
@@ -112,7 +116,10 @@ const CRC_DAYCAP = 300, CRC_SUPM = [[25, 5, 4], [50, 8, 6], [75, 12, 8], [100, 2
 const crcDoc = () => "event/carcinid" + (S && S.crcPrev && S.crcPrev.w ? "_prev" : "");
 function crcRaw() { return G.mode === "online" ? (G.crcDoc || {})[crcDoc()] || null : ((S && S.ldb) || {})[crcDoc()] || null; }
 const CRC_REGEN = { ca0: 2, ca1: 2, ca2: 2, ca3: 2, ca4: 3 };
-function crcNorm(src, T) { T = T || now(); const k = crcKey(), o = src && src.k === k ? src : { k }; o.sup = +o.sup || 0; o.con = o.con || {}; o.cday = o.cday || {}; o.b = o.b || {};
+function crcNorm(src, T) { T = T || now(); const k = crcKey(); let o = src && src.k === k ? src : null;
+  if (!o) { o = { k, hist: Object.assign({}, (src && src.hist) || {}) }; if (src && src.k && src.b && src.b.cc) o.hist[src.k] = src.b.cc.dead ? "win" : "esc"; } /* v706 how each tide ended */
+  o.sup = +o.sup || 0; o.con = o.con || {}; o.cday = o.cday || {}; o.b = o.b || {}; o.hist = o.hist || {}; const pe = o.hist[String(+k.replace(/^p/, "") - 10 * VP_LEN)] === "esc";
+  CRC_BOSS.cc.hp = pe ? 500 : 400; CRC_BOSS.ca4.hp = pe ? 190 : 150; /* the Crown escaped last time: it and Korvax return with harder shells */
   for (const B of CRC_BOSSES) { let A = o.b[B.id]; if (!A) A = o.b[B.id] = { hp: B.hp, dmg: {}, dead: 0, last: "", t: T }; A.dmg = A.dmg || {};
     const rg = CRC_REGEN[B.id] || 0; if (rg && !A.dead && A.hp < B.hp) { const add = Math.floor((T - (A.t || T)) / 3600e3 * rg); if (add > 0) { A.hp = Math.min(B.hp, A.hp + add); A.t = T; } } }
   return o; }
@@ -131,7 +138,9 @@ async function crcFlush(force) { const M = crcS(), T = now(); if (!M.pend || G.c
 setInterval(() => { try { if (S && S.crc && S.crc.pend) crcFlush(); } catch (e) {} }, 60e3);
 /* ---------- the boss fights: each section of an admiral, guardian or the Crown is one unit; the tactics bend the fight ---------- */
 const CRC_PHN = ["", "The Shell Holds", "The Brood Wakes", "The Great Molting", "The Crown Reborn"];
-const crcPh = hp => hp > 300 ? 1 : hp > 200 ? 2 : hp > 100 ? 3 : 4;
+const crcPh = hp => hp > 300 ? 1 : hp > 200 ? 2 : hp > 100 ? 3 : 4; /* a harder shell (500) only lengthens the first phase */
+/* v706 what became of the Leviathan in this season's hunt (Chapter 1): "dead" if the galaxy slew it, else "alive" (escaped, or not yet hunted) */
+function crcLevFate(T) { const p = S && S.crcPrev; if (p && p.w && p.lev && ownerFree()) return p.lev; try { const s0 = finLast("lev", T); if (s0 != null && T - s0 < 20 * 864e5 && finOutcome("lev", s0, T) === "held") return "dead"; } catch (e) {} return "alive"; }
 const crcKrkFresh = T => !!(S && S.crcKrk && T - S.crcKrk.at < 12 * 3600e3);
 function crcBossSet(B, A, T) { /* what the boss fields right now: [unit, sections in this phase, escort, notes] */
   const st = crcStC(T), pct = crcSupPct(st); let u = B.u, n0 = A.hp, esc = {}, mods = { pA: 1, pS: 1, seg: 1, bK: 1 }, tac = [];
@@ -139,7 +148,7 @@ function crcBossSet(B, A, T) { /* what the boss fields right now: [unit, section
   if (B.mech === "brood") { tac.push("brood"); esc = { cbrood: 2, cscut: 4 + Math.floor(A.hp / 10), ccarr: 1 }; }
   if (B.mech === "shell") { tac.push("shell"); mods.seg = B.guard ? .6 : pct >= .5 ? .85 : .7; esc = B.guard ? { cguard: 4, ctyr: 0 } : { cguard: 3, ccrys: 2 }; delete esc.ctyr; }
   if (B.mech === "pulse") { tac.push("pulse"); mods.pS = .6; esc = B.guard ? { ccrys: 4, cmint: 2 } : { cspit: 4, cint: 4, cmint: 2 }; }
-  if (B.mech === "reson") { esc = { slevi: 1, cregent: 2, cvang: 2 }; if (!crcKrkFresh(T)) { tac.push("reson"); mods.bK = 1.25; } }
+  if (B.mech === "reson") { const dead = crcLevFate(T) === "dead"; esc = { [dead ? "clevd" : "slevi"]: 1, cregent: 2, cvang: 2 }; if (!crcKrkFresh(T)) { tac.push("reson"); mods.bK = dead ? 1.15 : 1.3; } }
   if (B.crown) { const ph = crcPh(A.hp); n0 = A.hp - (4 - ph) * 100; u = ph === 3 ? "ccrownm" : "ccrown";
     if (ph === 1) { tac.push("shell"); mods.seg = .5 + .5 * pct; esc = { cguard: 4, cempr: 1 }; }
     else if (ph === 2) { tac.push("brood"); esc = { cbrood: 3, cscut: 12, cbrlord: 1 }; }
@@ -189,11 +198,12 @@ const CRC_CINE = { arr: ["s_crownship", "THE GREAT MOLTING", "“The Crown rises
   p2: ["s_hatchery", "PHASE II · THE BROOD WAKES", "“Every egg remembers. Every egg will hatch.”", "The Crown's shell has cracked, and its brood is pouring from the hatcheries on its back."],
   p3: ["crownbrood", "PHASE III · THE GREAT MOLTING", "“The old shell falls. The new one hardens.”", "The Crown is shedding its shell. Its new one is soft: strike now, before it hardens."],
   p4: ["s_throne", "PHASE IV · THE CROWN REBORN", "“I have been born a thousand times. You have been born once.”", "The Crown has molted. Its last shell is its hardest, and the deep beasts sing for it."],
-  fin: ["s_throne", "THE TIDE HAS TURNED", "THE ABYSS REMEMBERS WHAT THE STARS HAVE FORGOTTEN.", "The Abyssal Crown is dead. Its shell drifts empty above the Breach. Far below, something answers its last cry."] };
+  fin: ["s_throne", "THE TIDE HAS TURNED", "THE ABYSS REMEMBERS WHAT THE STARS HAVE FORGOTTEN.", "The Abyssal Crown is dead. Its shell drifts empty above the Breach. Far below the Abyss, something answers its last cry: the thing the whole Empire was fleeing."],
+  esc: ["s_moon", "THE CROWN IS REBORN", "“Remember this tide. The next one is mine.”", "The Abyssal Crown completed its molt and sank back into the Abyss, reborn. The seal over the deep has cracked, and the Judge will remember. Next year the tide returns with a harder shell."] };
 function crcCine(k) { if (document.getElementById("omcine")) return; const D = CRC_CINE[k]; if (!D) return; const w = document.createElement("div"); w.id = "omcine"; w.className = "fin crccine"; document.body.appendChild(w);
   w.innerHTML = `<div class="omcimg" style="background-image:url(art/carcinid/${D[0]}.webp)"></div><div class="omctx tx"><small>${esc(D[1])}</small><b class="q"></b><span class="after">${esc(D[3])}</span></div><small>Tap to close</small>`;
   const q = D[2], el = w.querySelector(".q"); let n = 0; const tick = () => { if (!document.body.contains(w)) return; el.textContent = q.slice(0, ++n); if (n < q.length) setTimeout(tick, 45); else w.classList.add("done"); };
-  try { SFX.gong(); } catch (e) {} setTimeout(tick, 900); w.addEventListener("click", () => { if (n < q.length) n = q.length - 1; else { w.classList.add("out"); setTimeout(() => w.remove(), 600); } }); }
+  try { SFX.gong(); } catch (e) {} setTimeout(tick, 900); setTimeout(() => { try { if (document.body.contains(w)) sbSay(CRC_SAY["cine_" + k]); } catch (e) {} }, 2600); /* v705 */ w.addEventListener("click", () => { if (n < q.length) n = q.length - 1; else { w.classList.add("out"); setTimeout(() => w.remove(), 600); } }); }
 function crcCineCheck() { if (!S || !G.ready || G.cineOn || battle || document.getElementById("omcine")) return; const T = now(), e = crcClock(T).e; if (e < CRC_CROWN0 || e >= CRC_LEN) return; const M = crcS(), C = crcStC(T).b.cc; M.cine = M.cine || {}; if (!C || C.dead) return;
   if (!M.cine.arr) { M.cine.arr = 1; dirty(); return crcCine("arr"); } const ph = crcPh(C.hp); for (const p of [2, 3, 4]) if (ph >= p && !M.cine["p" + p]) { M.cine["p" + p] = 1; dirty(); return crcCine("p" + p); } }
 function crcBossInfo(x, T) { const B = CRC_BOSS[x.id], st = crcStC(T), A = st.b[B.id], Z = crcBossSet(B, A, T), tot = Object.values(A.dmg || {}).reduce((a, b) => a + b, 0), my = (A.dmg || {})[G.me] || 0, pct = Math.round(A.hp / B.hp * 100);
@@ -204,7 +214,7 @@ const CRC_TAC = { shell: ["Shell Armor", "shell", "Carcinid shells turn aside pa
   brood: ["Brood Deployment", "brood", "Broodmothers bring two more drones into every Reef Fortress; the Pearl Matron fields a fresh brood each fight, bigger the healthier she is; the Crown's second phase pours out its hatcheries."],
   pulse: ["Tidal Pulse", "pulse", "The Trench Oracle and the Pale Sovereign roll a wave of abyssal water over the field that strips 40% of our fleet's shields."],
   molt: ["Molting", "molt", "In its third phase the Abyssal Crown sheds its shell: every blow counts double, but it strikes 50% harder. Molting Titans hold Stage 4 nests."],
-  reson: ["Monster Resonance", "reson", "Korvax and the reborn Crown ride with the deep beasts (a chained Leviathan): their fleets are 25-30% tougher and deadlier, unless you slew a wild Kraken in the last 12 hours."],
+  reson: ["Monster Resonance", "reson", "Korvax rides the Leviathan (in chains if it escaped its hunt, its corpse if we slew it) and the reborn Crown sings with the deep beasts: their fleets are 15-30% tougher and deadlier, unless you slew a wild Kraken in the last 12 hours."],
   pincer: ["Pincer Lock", "pincer", "The Red Claw Marshal and the Krakenbreaker lock our ships in their claws: our fleet fights with a sixth less firepower."] };
 /* ---------- the Abyssal Forge, the reward track, the cosmetics ---------- */
 const CRC_FORGE = [
@@ -272,8 +282,9 @@ function shCarcinid() { const T = now(), M = crcS(), w = crcWeek(T), c = crcCloc
   const cls = ["cscut", "cspit", "charv", "cguard", "cbrood", "cwar", "ccrys", "clanc", "cmolt", "ckrak", "cfrig", "cint", "cpearl", "cdest", "cmint", "cvang", "ccarr", "cregent", "cempr", "cbrlord"];
   return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter" style="color:${CRC_COL}">Seasonal invasion</div><h2>❖ Tide of the Carcinid</h2></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
   <div class="mimban crcban"><img src="art/carcinid/banner.webp" alt=""><div><b>${on ? `Week ${w} · ${CRC_WEEKS[w - 1][0]}` : w === 0 ? "The deep is stirring" : "The tide has turned"}</b><span>${when}${c.prev ? " · owner preview" : ""}</span></div></div>
-  <details class="crclore"${on && !M.loreSeen ? " open" : ""}><summary>The Abyss wakes</summary><p>Below the Kraken Deep lies the Abyss, a sea older than the stars. Before the Architects built their prison, it belonged to the Carcinid Abyssal Empire: armoured legions who bred the great ocean beasts as war mounts. The Leviathan, the Kraken and the serpents of the deep were theirs before they were ours.</p><p>Every time a Warden fell, the seal over the Abyss grew thinner. Now it has torn. Breach Zones are opening across the galaxy, and the Empire is coming through them, one tide at a time: its scouts first, then the Claw Admirals, then the guardians of the deep, and last of all the Abyssal Crown itself, rising to molt.</p><p>The Kraken has come back with them. It answers to no one now.</p></details>
+  <details class="crclore"${on && !M.loreSeen ? " open" : ""}><summary>The Abyss wakes</summary><p>Beyond the Architects' outer wall lies the Abyss, a sea older than the stars that runs all the way down to the prison's floor. It belonged to the Carcinid Abyssal Empire: armoured legions who bred the great beasts of the deep as war mounts, the Kraken and the Leviathan among them.</p><p>When the Architects built their prison, they took the Empire's greatest beast, made it the Warden of their wall, and sealed the Abyss behind it. This season the Leviathan has turned inward. It hears its old masters calling.</p><p>The Carcinid are not here to conquer. Something beneath the Abyss is stirring, and the whole Empire is rising to flee it through the cracks in the wall: its scouts first, then the Claw Admirals, then the guardians of the deep, and last of all the Abyssal Crown, rising to be reborn on our side of the wall.</p><p>The Kraken came up with them: the light we saw rising from the deep in the omens. It answers to no one now.</p></details>
   <p class="note">${on ? CRC_WEEKS[w - 1][1] : w === 0 ? "Deep-scan buoys in the outer layers are picking up pressure waves where there is no water. Something is pressing against the dark from the other side." : "The Breaches have sealed. The Abyss remembers."}</p>
+  ${on && w >= 3 ? `<p class="note crcfate">${crcLevFate(T) === "dead" ? "The Leviathan was slain at the wall. The Carcinid have dragged its corpse into the Breach, and Korvax rides it." : w >= 4 ? "The Leviathan escaped its hunt. Korvax has it in chains." : "The Leviathan's hunt at the wall decides what Korvax rides in week 4: its corpse, or the beast itself in chains."}</p>` : ""}${CRC_BOSS.cc.hp > 400 && on ? `<p class="note crcfate">Last tide the Crown escaped. It has returned with a harder shell, and so has Korvax.</p>` : ""}
   <div class="mimwks">${weeks}</div>${molt}
   ${on ? `<div class="mimst crcst">${[1, 2, 3, 4].map(s => `<div class="s${s}${s > Math.min(CRC_CAP, w >= 4 ? 4 : w + 1) ? " off" : ""}"><b>${byS[s]}</b><small>Stage ${s}<br>${CRC_STAGE[s]}</small></div>`).join("")}</div>
   <div class="crcfind"><button class="btn pri" data-act="crcFind" data-m="carcinid"${up.length ? "" : " disabled"}>Nearest Breach Zone</button><button class="btn" data-act="crcFind" data-m="crcpat"${pats ? "" : " disabled"}>Nearest patrol (${pats})</button><button class="btn" data-act="crcFind" data-m="wkraken"${krk ? "" : " disabled"}>Nearest Kraken (${krk})</button></div>` : ""}
@@ -295,5 +306,6 @@ function crcLabFight(k) { const L = CRC_LAB.find(x => x[0] === k); if (!L) retur
   closeSheet(); playBattle(rep); }
 function crcLabHTML(row0, b) { const p = S.crcPrev || {}, row = (ic, n, sub, btns) => `<div class="strow" style="flex-wrap:wrap"><div style="flex:1 1 100%;min-width:0"><b>${ic} ${esc(n)}</b>${sub ? `<div class="note">${sub}</div>` : ""}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div></div>`;
   return row("❖", "The tide, week by week", `Breach Zones, patrols, the admirals and the hub as they will be · ${p.w ? (p.w === 5 ? "previewing the Great Molting" : `previewing week ${p.w}`) : "off"}`, [1, 2, 3, 4].map(w => b("crcLabWeek", String(w), "W" + w)).join("") + b("crcLabWeek", "5", "Molting") + b("crcLabWeek", "0", "Off") + b("crcOpen", "", "Hub"))
-    + row("❖", "The Great Molting · cinematics", "The rise, each phase, and the finale", ["arr", "p2", "p3", "p4", "fin"].map(k => b("crcCine", k, k === "fin" ? "Finale" : k === "arr" ? "Rise" : "Phase " + k[1])).join(""))
+    + row("❖", "The Great Molting · cinematics", "The rise, each phase, the finale, and the Crown's escape", ["arr", "p2", "p3", "p4", "fin", "esc"].map(k => b("crcCine", k, k === "fin" ? "Finale" : k === "esc" ? "Escape" : k === "arr" ? "Rise" : "Phase " + k[1])).join(""))
+    + row("❖", "The Leviathan's fate (preview)", `What Korvax rides in week 4 · ${p.lev === "dead" ? "its corpse" : "the beast in chains"}`, b("crcLabLev", "dead", "Slain") + b("crcLabLev", "alive", "Escaped"))
     + CRC_LAB.map(([k, n]) => row0("❖", n, /^b/.test(k) ? "A demo fleet of 1,400 warships" : "A small fleet against it", b("crcLabFight", k, "⚔ Watch"))).join(""); }
