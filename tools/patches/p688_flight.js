@@ -1,0 +1,25 @@
+/* v687/v688 speeding up flights. (1) A chip in the top bar on the map and on the planet whenever a fleet is flying home or a joint strike
+   you are in is marching: the countdown, ⚡ afterburners in one tap; a tap on the chip opens it (the follow bar's ⚡ only showed once you
+   had found the fleet, and fleets in a joint strike had no speed-up outside the strike's own page). (2) Alliance help for any flight,
+   like help with a construction: your fleet out, your fleet home, or the joint strike you march in (each help speeds the whole strike).
+   Each member who helps cuts 4% of the time left (at least 30 seconds), up to 10 helps. Helping counts toward the same 30 a day. */
+const fhStrike = f => { const a = f && f.assault && G.assaults[f.assault]; return a && !a.disb && (a.members || {})[G.me] && f.phase === "out" && a.arrive - now() > 45000 ? a : null; };
+const fhId = f => fhStrike(f) ? "s-" + f.assault : f.id + "-" + f.phase;
+const fhOK = f => !!f && (fhStrike(f) || (!f.assault && f.mission !== "spy" && (f.phase === "back" || f.phase === "out")));
+const fhEnd = f => { const a = fhStrike(f); if (a) return a.arrive; const b = fleetBounds(f); return b ? b[1] : 0; };
+function strikeCut(a, cut) { const T = now(), base = Math.max(T, a.launch || 0), arr = Math.max(base + 30000, a.arrive - cut), out0 = a.mout || a.launch || T; let mout = out0;
+  if (T > (a.launch || 0)) { const k = clamp((T - out0) / Math.max(1, a.arrive - out0), 0, .999); mout = T - k * (arr - T) / (1 - k); }
+  const saved = a.arrive - arr; if (saved <= 0) return 0; a.arrive = Math.floor(arr); a.mout = Math.floor(mout); try { adb().doc("assaults/" + a.id).update({ arrive: a.arrive, mout: a.mout }).catch(() => {}); } catch (e) {} try { strikeSync(); } catch (e) {} dirty(); try { jsRefresh(); } catch (e) {} return saved; }
+function homeHB(T) { const it = []; for (const f of S.fleets || []) { if (f.phase === "back" && !f.assault && f.back - T > 20000) it.push({ f, end: f.back }); else { const a = fhStrike(f); if (a && !it.some(x => x.a === a)) it.push({ f, a, end: a.arrive }); } }
+  if (!it.length) return ""; const x = it.reduce((p, q) => q.end > p.end ? q : p), n = it.length, c = x.a ? strikeBurnCost(x.a) : fbCost(x.f);
+  return `<button class="omb homeb" data-act="${x.a ? "assault" : "fleetMap"}" data-id="${x.a ? x.a.id : x.f.id}"><b>${x.a ? "⚔ STRIKE" : "↩ HOME"}${n > 1 ? " +" + (n - 1) : ""}</b><span class="cpt" data-end="${x.end}"></span></button><button class="omb homeb hbz" data-act="${x.a ? "strikeBoost" : "fBoost"}" data-id="${x.a ? x.a.id : x.f.id}"${x.a ? ' data-k="burn"' : ""} aria-label="Afterburners: ${x.a ? "a third off the march" : "the rest of the trip 50% faster"}" ${S.shards >= c ? "" : "disabled"}>⚡${c ? ` ◆${c}` : ""}</button>`; }
+function strikeRowBtns(f) { const a = fhStrike(f); if (!a) return ""; const left = strikeMarchLeft(a), bc = strikeBurnCost(a), hc = shardCost(left);
+  return `${S.boosts > 0 ? `<button class="btn ghost sm" data-act="strikeBoost" data-id="${a.id}" data-k="item">⚡ −5 min · ×${S.boosts}</button>` : ""}<button class="btn ghost sm" data-act="strikeBoost" data-id="${a.id}" data-k="burn" ${(S.shards || 0) >= bc ? "" : "disabled"}>⚡ Afterburners <span class="shard">◆${bc}</span></button><button class="btn amber sm" data-act="strikeHurry" data-id="${a.id}" ${(S.shards || 0) >= hc ? "" : "disabled"}>Hurry <span class="shard">◆${hc}</span></button>`; }
+function fhelpBtn(f, sm) { const a = myAlly(); if (!a || !G.db || !fhOK(f)) return ""; const r = a.fhelp && a.fhelp[G.me];
+  if (r && r.id === fhId(f) && r.e > now()) return `<span class="pill ok" title="Alliance help on this flight">🤝 ${Object.keys(r.by || {}).length}/${HELP_MAX}</span>`;
+  return fhEnd(f) - now() > 60000 ? `<button class="${sm ? "" : "btn ghost sm"}" data-act="askFHelp" data-id="${f.id}" aria-label="Ask your alliance to help speed up this flight">🤝${sm ? "" : " Ask for help"}</button>` : ""; }
+function fhelpApply() { const a = myAlly(), r = a && a.fhelp && a.fhelp[G.me]; if (!r) return; S.fhelpGot = S.fhelpGot || {}; const got = Math.min(HELP_MAX, Object.keys(r.by || {}).length), done = S.fhelpGot[r.id] || 0; if (got <= done) return;
+  const T = now(), sa = r.id.startsWith("s-") ? G.assaults[r.id.slice(2)] : null, f = sa ? null : (S.fleets || []).find(x => fhId(x) === r.id); if (!sa && !f) return; const end = sa ? sa.arrive : fhEnd(f);
+  let cut = 0; for (let i = done; i < got; i++) { const rem = end - cut - T; if (rem <= 1000) break; cut += Math.max(30000, rem * .04); }
+  if (cut > 0) { if (sa) strikeCut(sa, cut); else fleetSpeedUp(f, cut); } S.fhelpGot[r.id] = got; dirty(); toast(`${got - done} alliance member${got - done > 1 ? "s" : ""} helped ${sa ? "the joint strike" : f.phase === "back" ? "your fleet home" : "your fleet"}: −${ftime(cut)}.`, "win"); softRender(); }
+const allyHelpN = a => { const T = now(), n = o => Object.entries(o || {}).filter(([u, r]) => u !== G.me && r && a.members[u] && r.e > T && !(r.by || {})[G.me] && Object.keys(r.by || {}).length < HELP_MAX).length; return a ? n(a.help) + n(a.fhelp) : 0; };
