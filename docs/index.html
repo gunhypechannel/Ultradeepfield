@@ -6207,7 +6207,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 701;
+const GAME_V = 702;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8005,7 +8005,7 @@ function wbPosRaw(key, T, out) { const o = out || {};
     if (key === "lev") { const r = LAYERS[0].r1 + 10, a = (hash("lev" + c2) % 6283) / 1000 + TAU * T / (8 * 3600e3); o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 20 + 3 * Math.sin(T / 6e5); return o; } // v569 patrolling just beyond the Rim; v617 a lap every 4 hours
     if (key === "krk") { const L = LAYERS[3], r = (L.r0 + L.r1) / 2, a = (hash("krk" + c2) % 6283) / 1000 + TAU * T / period(r); o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 9 + 2 * Math.sin(T / 5e5); return o; } // risen among the deep layers
     if (key === "col") { if (!WB_MINE) { WB_MINE = NODES.filter(n => n.res === "c" && layerOf(n.r).n === 4); if (!WB_MINE.length) WB_MINE = NODES.slice(0, 50); }
-      const q = P3(WB_MINE[hash("col" + c2) % WB_MINE.length], T, WBS), r = Math.hypot(q.x, q.z) || 1; o.x = q.x - q.x / r * 14; o.z = q.z - q.z / r * 14; o.y = q.y; return o; }
+      const q = P3(WB_MINE[hash("col" + c2) % WB_MINE.length], WB2_BASE + c2 * WEEK, WBS), r = Math.hypot(q.x, q.z) || 1; o.x = q.x - q.x / r * 14; o.z = q.z - q.z / r * 14; o.y = q.y + 1.2 * Math.sin(T / 4e5); return o; } /* v702 it stays where its mine was when the week began, bobbing in place */
     if (!WB_LANE) { WB_LANE = PIRATES.filter(x => x.kind === "pirate" && [3, 4].includes(layerOf(x.r).n)).sort((a, b) => a.a0 - b.a0); if (!WB_LANE.length) WB_LANE = PIRATES.slice(0, 50); }
     const LEG = 8 * 3600e3, u = (T - WB2_BASE) / LEG, i = Math.floor(u), f = u - i, n = WB_LANE.length, at = j => WB_LANE[((hash("tyr" + c2) + j * 37) % n + n) % n]; // the Tyrant sails hideout to hideout, 8 hours a leg
     const A = P3(at(i), T, {}), B = P3(at(i + 1), T, {}), k = f * f * (3 - 2 * f); o.x = A.x + (B.x - A.x) * k; o.z = A.z + (B.z - A.z) * k; o.y = A.y + (B.y - A.y) * k + 30 + Math.sin(f * Math.PI) * 6; return o; } // high above the worlds, claw hanging down
@@ -15521,7 +15521,7 @@ function overlay3D(W, fx, w, h, dpr, t, T) {
       if (W.cam.followMv && W.cam.followMv.m === v.m) { ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 1.6; const rr = sz * 2.6 * (1 + .08 * Math.sin(t * .006)); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4; ctx.beginPath(); ctx.arc(s[0], s[1], rr, a - .35, a + .35); ctx.stroke(); } ctx.restore(); }
       if (W.cam.dist < 650 || (W.cam.followMv && W.cam.followMv.m === v.m)) lbl(-4 - Math.log2(1 + v.m.n) * .5, `${v.m.m === "w" ? "⚔ " : ""}${isBot(v.uid) ? BOT_BY[v.uid].name : nameOf(v.uid)} · ${fmt(v.m.n)}`, s[0], s[1] - sz - 8, own); } }
   { const st = wbState(T); for (const key in WB) { if (!(st.hp[key] > 0) || !wbOn(key, T)) continue; const D = WB[key], q = P3(WBO[key], T, WBQ); V3B.set(q.x, q.y + (D.con != null ? 6 : 10) * D.sc * 1.6, q.z); const dd = cp.distanceTo(V3B), s = proj(V3B); if (!s) continue; /* v384 world bosses */
-      const sr = (D.con != null ? 6 : 16) * D.sc * 1.6 / dd * k; hits.push({ wb: key, x: s[0], y: s[1], sr: Math.max(sr, 14) });
+      const sr = (D.con != null ? 6 : 16) * D.sc * 1.6 / dd * k; hits.push({ wb: key, x: s[0], y: s[1], sr: Math.max(sr, 22), prio: 1 }); /* v702 a tap on a world boss wins over the worlds beside it */
       if (sr < 2.2 && G.find !== "ev") { ctx.save(); ctx.globalAlpha = .85; ctx.fillStyle = D.col; ctx.beginPath(); ctx.arc(s[0], s[1], D.con != null ? 2.2 : 3.6, 0, TAU); ctx.fill(); ctx.globalAlpha = .25; ctx.beginPath(); ctx.arc(s[0], s[1], D.con != null ? 5 : 8, 0, TAU); ctx.fill(); ctx.restore(); continue; } /* v386: far away, a small marker */
       if (D.con == null || sr > 5) lbl(-sr - 3, `${D.ic} ${D.n} · ${Math.round(st.hp[key] / WB_SEG * 100)}%${key === "ovl" && wbCons(T) ? " · shielded" : ""}`, s[0], s[1] - Math.max(sr, 12) - 8, D.col); } }
   for (const [yid0, o] of W.pyramids || []) { const y = YB[yid0]; if (!y || o.fog || !o.grp.visible || (G.find && G.find !== "y")) continue; const s = proj(o.grp.position); if (!s) continue;
