@@ -6200,7 +6200,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 696;
+const GAME_V = 697;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -11647,7 +11647,7 @@ async function flush() {
     store.writing = true;
     try { if (store.paused) { store.writing = false; return; } const seq = (store.seq || 0) + 1, z = empSize(S), shrink = !!store.shrinkOk; /* v205: seq = save order number, checked by the server */
       if (reps) { await store.db.doc(`data/users/${store.uid}/reps`).set({ v: 1, at: S.savedAt, json: reps }); store.repsJ = reps; } // v293: reports first, so a device that loads this save finds them
-      await store.db.doc(`data/users/${store.uid}/save`).set({ v: 3, savedAt: S.savedAt, json, sig, sess: SESS, seq, lv: z.lv, ships: z.ships, shrink }); store.lastW = Date.now(); store.seq = seq; cseqSet(seq); if (shrink) store.shrinkOk = false; store.mode = "cloud"; srvBackup(json, sig); }
+      await store.db.doc(`data/users/${store.uid}/save`).set({ v: 3, savedAt: S.savedAt, json, sig, sess: SESS, seq, gv: GAME_V, lv: z.lv, ships: z.ships, shrink }); /* v697 gv: the server refuses saves from versions before 697 */ store.lastW = Date.now(); store.seq = seq; cseqSet(seq); if (shrink) store.shrinkOk = false; store.mode = "cloud"; srvBackup(json, sig); }
     catch (e) { let why = null; /* v205: a refused save: find out whether another device saved first or this copy would have wiped progress */
       if (e && e.code === "not_granted") try { const s4 = await store.db.doc(`data/users/${store.uid}/save`).get(), v = s4.exists ? s4.data() : null;
         if (v) { if (v.sess && v.sess !== SESS && (+v.seq || 0) >= (store.seq || 0)) why = "other"; else if (v.sess === SESS && (+v.seq || 0) !== (store.seq || 0)) { store.seq = +v.seq || 0; why = "retry"; } else if ((+v.lv || 0) >= 10 && empSize(S).lv * 2 < (+v.lv || 0)) why = "shrink"; else if ((+v.seq || 0) !== (store.seq || 0)) { store.seq = +v.seq || 0; why = "retry"; } } } catch (e2) {}
@@ -26925,7 +26925,7 @@ const ACT = {
   restScan: async () => { flush().catch(() => {}); menu.rest = restCopies(); if (menu.open) menu.open.settings = true; renderMenu();
     if (!store.db || !store.uid) return; try { const snap = await store.db.collection(`data/users/${store.uid}/backups`).limit(40).get(), rows = [];
       for (const d of snap.docs) { const v = d.data() || {}; if (typeof v.json !== "string") continue; let st; try { st = JSON.parse(v.json); } catch (e) { continue; } const sum = o => Object.values(o || {}).reduce((a, x) => a + (+x || 0), 0);
-        rows.push({ k: "srv:" + d.id, label: (d.id[0] === "d" ? "Daily server backup · " : "Hourly server backup · ") + new Date(v.at || 0).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }), at: +v.at || 0, lv: sum(st.b), rl: sum(st.r), ships: sum(st.ships), res: (st.res.m || 0) + (st.res.c || 0) + (st.res.g || 0) }); }
+        rows.push({ k: "srv:" + d.id, label: (d.id[0] === "d" ? "Daily server backup · " : d.id[0] === "k" ? "Replaced by another device · " : "Hourly server backup · ") /* v697 */ + new Date(v.at || 0).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }), at: +v.at || 0, lv: sum(st.b), rl: sum(st.r), ships: sum(st.ships), res: (st.res.m || 0) + (st.res.c || 0) + (st.res.g || 0) }); }
       rows.sort((a, b) => b.at - a.at); menu.rest = (menu.rest || []).concat(rows); renderMenu(); } catch (e) {} },
   restUse: async d => { let j = null;
     if (String(d.k).startsWith("srv:")) { try { const sn = await store.db.doc(`data/users/${store.uid}/backups/${d.k.slice(4)}`).get(), v = sn.exists ? sn.data() : null; if (v && v.sig === secSig(v.json)) j = v.json; } catch (e) {} if (!j) return toast("That backup can't be read.", "warn"); }
