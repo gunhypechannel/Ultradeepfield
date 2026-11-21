@@ -6,15 +6,15 @@
      under the belly like legs, swept fins on the back, a cyan eye on the flank and twin cyan drives;
    - palette: near-black chitin with a violet sheen, gold-bronze edges and claws, cyan light (the bosses carry their own tints).
    The crabs walk (each leg steps in turn, the pincers lift and the body rides on them), the Kraken's arms writhe, the nest breathes. */
-Object.assign(CPROF, { cscut: ["fighter", "acid", .12, .24, 7, 0], cspit: ["frigate", "plasma", .08, .12, 5, 0], charv: ["support", "acid", .14, .08, 3, 0], cguard: ["cruiser", "laser", .36, .03, 3, 2],
+Object.assign(CPROF, { clevd: ["capital", "plasma", .34, 0, 2, 2], cscut: ["fighter", "acid", .12, .24, 7, 0], cspit: ["frigate", "plasma", .08, .12, 5, 0], charv: ["support", "acid", .14, .08, 3, 0], cguard: ["cruiser", "laser", .36, .03, 3, 2],
   cbrood: ["carrier", "acid", .22, .04, 2.6, 2], cwar: ["cruiser", "laser", .28, .08, 4, 1], ccrys: ["frigate", "ion", .2, .1, 4.5, 1], clanc: ["battleship", "plasma", .26, .06, 3.6, 1], cmolt: ["titan", "plasma", .3, 0, 1.8, 3], ckrak: ["titan", "acid", .24, .04, 2.4, 2],
   cfrig: ["frigate", "ion", .16, .14, 5.5, 1], cint: ["interceptor", "laser", .06, .3, 9, 0], cdest: ["frigate", "plasma", .14, .14, 6, 1], cvang: ["cruiser", "ion", .22, .08, 4.2, 2], ccarr: ["carrier", "laser", .2, .04, 3, 3], cpearl: ["interceptor", "beam", .05, .32, 9.5, 0],
   cmint: ["interceptor", "ion", .08, .3, 9, 0], cregent: ["battleship", "beam", .28, .04, 3.2, 3], cempr: ["titan", "beam", .34, 0, 1.8, 5], cbrlord: ["carrier", "acid", .24, .03, 2.6, 4], cnest: ["station", "acid", .3, 0, 0, 2],
   cmar: ["titan", "laser", .34, .02, 1.8, 4], cmat: ["titan", "acid", .3, 0, 1.4, 5], ctyr: ["titan", "plasma", .42, 0, 1.2, 5], cora: ["titan", "ion", .28, .04, 1.6, 4], ckor: ["titan", "beam", .36, 0, 1.6, 6],
   cbeh: ["titan", "plasma", .44, 0, 1, 6], ckbr: ["titan", "acid", .3, .02, 1.8, 4], cpal: ["titan", "ion", .32, .04, 1.6, 5], ccrown: ["titan", "beam", .4, 0, 1.2, 7], ccrownm: ["titan", "plasma", .2, 0, 1.8, 4] });
-Object.assign(BOSSK, { cscut: 1.55, cspit: 1.6, charv: 1.6, cguard: 1.85, cbrood: 2, cwar: 1.9, ccrys: 1.7, clanc: 2, cmolt: 2.4, ckrak: 2.6, cfrig: 1.7, cint: 1.55, cdest: 1.75, cvang: 1.9, ccarr: 2.1, cpearl: 1.55, cmint: 1.55, cregent: 2.4, cempr: 2.8, cbrlord: 2.4, cnest: 2.1,
+Object.assign(BOSSK, { clevd: 2.6, cscut: 1.55, cspit: 1.6, charv: 1.6, cguard: 1.85, cbrood: 2, cwar: 1.9, ccrys: 1.7, clanc: 2, cmolt: 2.4, ckrak: 2.6, cfrig: 1.7, cint: 1.55, cdest: 1.75, cvang: 1.9, ccarr: 2.1, cpearl: 1.55, cmint: 1.55, cregent: 2.4, cempr: 2.8, cbrlord: 2.4, cnest: 2.1,
   cmar: 3.2, cmat: 3.2, ctyr: 3.3, cora: 3.2, ckor: 3.6, cbeh: 3.6, ckbr: 3.4, cpal: 3.4, ccrown: 4.2, ccrownm: 4.2 });
-Object.assign(MIM_HULL, { cscut: .8, cspit: .9, charv: .95, cguard: 1.4, cbrood: 1.7, cwar: 1.5, ccrys: 1.2, clanc: 1.8, cmolt: 2.6, ckrak: 2.8, cfrig: 1.15, cint: .9, cdest: 1.3, cvang: 1.6, ccarr: 2, cpearl: .85, cmint: .9, cregent: 2.5, cempr: 3, cbrlord: 2.4, cnest: 1.7,
+Object.assign(MIM_HULL, { clevd: 3.9, cscut: .8, cspit: .9, charv: .95, cguard: 1.4, cbrood: 1.7, cwar: 1.5, ccrys: 1.2, clanc: 1.8, cmolt: 2.6, ckrak: 2.8, cfrig: 1.15, cint: .9, cdest: 1.3, cvang: 1.6, ccarr: 2, cpearl: .85, cmint: .9, cregent: 2.5, cempr: 3, cbrlord: 2.4, cnest: 1.7,
   cmar: 3.7, cmat: 3.7, ctyr: 3.8, cora: 3.7, ckor: 4.2, cbeh: 4.4, ckbr: 4, cpal: 4, ccrown: 5.4, ccrownm: 5.4 });
 Object.assign(MIM_PACK, { cscut: 1, cspit: 1, charv: 1, cint: 1, cpearl: 1, cmint: 1 }); MIM_STA.cnest = .44;
 Object.assign(BOSS_GLOW, { ckor: "232,180,90", ccrown: "255,210,120", ccrownm: "160,250,255", cmar: "255,90,90", cmat: "220,240,255", ctyr: "255,140,120", cora: "190,120,255", cbeh: "120,240,230", ckbr: "220,90,255", cpal: "200,250,255" });
@@ -22,7 +22,7 @@ Object.assign(BOSS_GLOW, { ckor: "232,180,90", ccrown: "255,210,120", ccrownm: "
   Object.assign(MON_ATK, { cscut: [A("acid", 3, T, .14), A("flak", 4, G, .12)], cspit: [A("plasma", 2, V, .24, { hv: 1 }), A("acid", 3, G, .2)], charv: [A("acid", 3, T, .2), A("flak", 3, "#7ff8e4", .14)], cguard: [A("flak", 6, G, .12), A("ion", 2, "#7ff8e4", .22)],
     cbrood: [A("missile", 5, T, .2, { flank: 1 }), A("acid", 3, V, .2)], cwar: [A("laser", 3, G, .12), A("flak", 5, T, .1)], ccrys: [A("ion", 4, "#9ff8ff", .16), A("laser", 2, "#e8fbff", .14)], clanc: [A("plasma", 3, T, .22, { hv: 1 }), A("laser", 4, G, .12)],
     cmolt: [A("plasma", 4, "#e8fbff", .26, { hv: 1 }), A("missile", 6, T, .2, { flank: 1 })], ckrak: [A("acid", 5, "#d070ff", .2), A("plasma", 2, V, .26, { hv: 1 })],
-    cfrig: [A("ion", 3, "#7ff8e4", .18), A("missile", 3, G, .2)], cint: [A("laser", 3, "#9ff8ec", .1), A("flak", 5, G, .1)], cdest: [A("plasma", 2, T, .22, { hv: 1 }), A("flak", 5, G, .12)], cvang: [A("ion", 4, T, .18), A("missile", 4, G, .2, { flank: 1 })],
+    clevd: [A("acid", 4, T, .22), A("flak", 8, G, .12)], cfrig: [A("ion", 3, "#7ff8e4", .18), A("missile", 3, G, .2)], cint: [A("laser", 3, "#9ff8ec", .1), A("flak", 5, G, .1)], cdest: [A("plasma", 2, T, .22, { hv: 1 }), A("flak", 5, G, .12)], cvang: [A("ion", 4, T, .18), A("missile", 4, G, .2, { flank: 1 })],
     ccarr: [A("missile", 6, T, .2, { flank: 1 }), A("flak", 6, G, .12)], cpearl: [A("laser", 3, "#e8fbff", .1), A("flak", 4, T, .1)], cmint: [A("ion", 3, V, .14), A("laser", 3, T, .1)], cregent: [A("laser", 5, T, .14), A("plasma", 3, G, .24, { hv: 1 })],
     cempr: [A("plasma", 5, G, .26, { hv: 1 }), A("laser", 6, T, .12)], cbrlord: [A("missile", 8, "#ff7ab0", .2, { flank: 1 }), A("acid", 4, V, .2)], cnest: [A("missile", 4, T, .2, { flank: 1 }), A("plasma", 2, V, .26, { hv: 1 })],
     cmar: [A("laser", 5, "#ff6060", .12), A("plasma", 3, G, .24, { hv: 1 })], cmat: [A("missile", 8, "#e8fbff", .2, { flank: 1 }), A("acid", 4, T, .2)], ctyr: [A("plasma", 4, "#ff9a7a", .26, { hv: 1 }), A("flak", 8, G, .12)], cora: [A("ion", 5, V, .16), A("laser", 4, "#e0c0ff", .12)],
@@ -45,6 +45,7 @@ const CRC_CRABS = ["cscut", "cspit", "charv", "cguard", "cbrood", "cwar", "ccrys
   MON_WAVE.cnest = MON_WAVE.carcinid = `vec3 p = position; float an = atan(p.z, p.x), rr = length(p.xz), sp = smoothstep(-.6, 3.6, p.y) * step(.6, rr) * (1. - step(2.35, rr) * step(1.6, p.y) * .7);
     transformed.x += sp * .09 * sin(mt * 2.0944 + an * 3. + p.y); transformed.z += sp * .09 * cos(mt * 2.0944 + an * 3. + p.y);
     float rf = 1. - smoothstep(1.2, 1.7, length(p.xy - vec2(0., 1.1))) * step(abs(p.z), .5); transformed.xy += (p.xy - vec2(0., 1.1)) * (1. - rf) * .03 * sin(mt * 4.18879);`;
+  MON_WAVE.clevd = MON_WAVE.slevi; /* v706 the Leviathan's corpse still swims */
   MON_WAVE.crcpat = `transformed.y += .08 * sin(mt * 2.0944 + position.x * .25 + position.z * .3);`; }
 /* the palettes: [shell base rgb, sheen rgb, glow, gold] */
 const CRC_TINT = { def: [[16, 12, 26], [34, 18, 46], 0x3fe8f0, 0xd2a45c], red: [[40, 8, 12], [80, 14, 24], 0xff4050, 0xe0a050], pearl: [[150, 150, 172], [70, 60, 100], 0x5ff0ff, 0xe8d0a0], oracle: [[28, 10, 48], [64, 24, 96], 0xb060ff, 0xd2a45c],
@@ -250,6 +251,13 @@ function buildCarc(k) { const D = CRC_CRAB[k] || CRC_SHIP[k] || {}, C = crcMats(
     const core = ell(.55, .75, .2, C.core, 0, 1.1, 0, 20); ell(1.0, 1.35, .5, C.glowS, 0, 1.1, 0, 18); ell(1.5, 1.9, .9, C.glowS, 0, 1.1, 0, 14); core.renderOrder = 2;
     for (let i = 0; i < 14; i++) { const a = r() * TAU, d = .9 + r() * 1.7; coralTree(V(Math.cos(a) * d, -1.0, Math.sin(a) * d * .85), .45 + r() * .45, 1, 2, i % 3 ? C.coral : C.coralB, i % 2 === 0); }
     for (let i = 0; i < 26; i++) { const a = r() * TAU, d = .6 + r() * 1.8, s = .14 + r() * .16; ell(s, s * 1.15, s, C.egg, Math.cos(a) * d, -.95 + s * .6, Math.sin(a) * d * .85, 12); } }
+  else if (k === "clevd") { /* v706 the Leviathan, slain at the wall and dragged into the Breach: its own body gone dark, cyan rot in the wounds, gilded Carcinid chains and a war-saddle on its back */
+    const m = buildMonster("slevi"); m.traverse(o => { if (!o.isMesh || !o.material || Array.isArray(o.material)) return; const mt = o.material.clone(); if (mt.color) mt.color.multiplyScalar(.6).lerp(new TH.Color(0x6a5a8a), .25); if (mt.emissive) { mt.emissive.setHex(0x2fd8e0); mt.emissiveIntensity = Math.max(.35, (mt.emissiveIntensity || 0) * .8); } o.material = mt; }); g.add(m);
+    const bb = new TH.Box3().setFromObject(m), sz = bb.getSize(new TH.Vector3()), c = bb.getCenter(new TH.Vector3()), R = Math.min(sz.y, sz.z) * .55;
+    for (let i = 0; i < 4; i++) { const x = bb.min.x + sz.x * (.3 + i * .12), ring = add(new TH.Mesh(new TH.TorusGeometry(R, R * .09, 8, 28), C.tip), x, c.y, c.z); ring.rotation.y = Math.PI / 2; }
+    for (let i = 0; i < 3; i++) { const x = bb.min.x + sz.x * (.3 + i * .12); seg(V(x, c.y + R, c.z), V(x + sz.x * .12, c.y + R, c.z), R * .05, R * .05, C.tip); }
+    const sx = bb.min.x + sz.x * .62, sy = bb.max.y; shell(.9, .35, .6, { point: .3, ridge: .05 }, sx, sy + .1, c.z); for (let i = 0; i < 5; i++) cone(.6 + (i % 2) * .3, .06, C.tip, V(sx - .4 + i * .2, sy + .35, c.z), V(-.2, 1, 0));
+    for (let i = 0; i < 8; i++) glowAt(V(bb.min.x + sz.x * r(), c.y + (r() - .3) * sz.y * .6, c.z + (r() - .5) * sz.z * .5), .08, .3); }
   else if (k === "cpat") { /* a scout patrol on the map: a frigate with two interceptors on its wings */
     const f = buildCarc("cfrig"); g.add(f); for (const s of [1, -1]) { const c = buildCarc("cint"); c.scale.setScalar(.72); c.position.set(-1.4, .35, s * 2.3); g.add(c); } }
   return g; }
@@ -265,7 +273,7 @@ function buildCarc(k) { const D = CRC_CRAB[k] || CRC_SHIP[k] || {}, C = crcMats(
    Reactive shielding: when a Carcinid unit is hit while its shields hold, a hexagonal carapace-shield lights where the shot lands (cyan
    plates with gilded seams, rippling out from the impact, brighter the more shield is left); once the shields are gone, the shell sparks
    gold instead. Pictures only; the fight itself is unchanged. */
-const CRC_ATK = { cfrig: ["lance", "mortar"], cint: ["spines", "lance"], cdest: ["mortar", "spines"], cvang: ["lance", "pulse"], ccarr: ["brood", "spines"], cpearl: ["spines", "pulse"], cmint: ["pulse", "spines"], cregent: ["beam", "lance"],
+const CRC_ATK = { clevd: ["beam", "crush"], cfrig: ["lance", "mortar"], cint: ["spines", "lance"], cdest: ["mortar", "spines"], cvang: ["lance", "pulse"], ccarr: ["brood", "spines"], cpearl: ["spines", "pulse"], cmint: ["pulse", "spines"], cregent: ["beam", "lance"],
   cempr: ["beam", "crush"], cbrlord: ["brood", "mortar"], cscut: ["spines", "crush"], cspit: ["mortar", "spines"], charv: ["pulse", "spines"], cguard: ["crush", "pulse"], cbrood: ["brood", "mortar"], cwar: ["crush", "lance"], ccrys: ["pulse", "spines"],
   clanc: ["lance", "crush"], cmolt: ["crush", "beam"], ckrak: ["pulse", "crush"], cnest: ["brood", "mortar"], cmar: ["crush", "lance"], cmat: ["brood", "pulse"], ctyr: ["mortar", "crush"], cora: ["pulse", "beam"], ckor: ["beam", "crush"],
   cbeh: ["crush", "mortar"], ckbr: ["crush", "pulse"], cpal: ["pulse", "beam"], ccrown: ["beam", "brood"], ccrownm: ["beam", "crush"] };
