@@ -1,0 +1,14 @@
+/* v725 eggs phases 2 and 3 */
+.xsgr{display:inline-block;width:max-content;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:8px;color:#bfe9ff;background:rgba(120,200,255,.1);border:1px solid rgba(120,200,255,.35)}
+.xscr.g1 .xsart img{transform:scale(1.1)}.xscr.g2 .xsart img{transform:scale(1.22)}.xscr.g2 .xsart{box-shadow:0 0 16px color-mix(in srgb,var(--c) 55%,transparent)}
+.xscr.cmp{outline:2px solid #ffd36b;outline-offset:-2px}
+small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.xsbrw{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
+.xsbrw span{font-size:11px;padding:2px 8px;border-radius:8px;border:1px solid color-mix(in srgb,var(--c) 45%,transparent);color:var(--muted)}
+.xsbrw span.ok{color:#fff;background:color-mix(in srgb,var(--c) 22%,transparent)}
+.xsgift{display:flex;flex-direction:column;gap:8px}
+.xsgift select{background:#0b141c;color:#e6f2f8;border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit}
+.xsgl{display:flex;flex-wrap:wrap;gap:6px}.xsgl .btn{display:flex;align-items:center;gap:6px}.xsgl .xsegg{width:14px;height:18px}
+.xsprof .xscomp{display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;background:rgba(255,211,107,.06);border:1px solid color-mix(in srgb,var(--r) 50%,transparent);margin-bottom:6px}
+.xsprof .xscomp img{width:64px;height:64px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2px var(--r),0 0 18px var(--c)}
+.xsprof .xscomp div{display:flex;flex-direction:column;gap:2px;min-width:0}.xsprof .xscomp small{color:#ffd36b;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:10.5px}.xsprof .xscomp b{color:#fff}.xsprof .xscomp span{color:var(--muted);font-size:12px}
