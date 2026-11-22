@@ -6548,7 +6548,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 719;
+const GAME_V = 720;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -23646,7 +23646,7 @@ setInterval(() => { try { bossTheme(); } catch (e) {} }, 1000);
 function cubeWant() { try { if (!AU.ctx || !AU.musicOn || AU.muted || document.hidden || !G.ready) return false; return !!(G.dvSim || dvNow(now())); } catch (e) { return false; } }
 function cubeTheme() { const c = AU.ctx; if (!c) return;
   if (!cubeWant()) { if (AU.cube) { const B = AU.cube; AU.cube = null; B.out.gain.setTargetAtTime(0, c.currentTime, .9); setTimeout(() => { try { if (!(AU.cube && AU.cube.el === B.el)) B.el.pause(); } catch (e) {} try { B.out.disconnect(); } catch (e) {} }, 4500); AU.cduck = AU.conv || AU.boss ? 0 : 1; applyAudio(); } return; }
-  if (!AU.cube) { let el = AU.cubeEl; if (!el) { el = AU.cubeEl = new Audio("music_cube.mp3?v=719"); el.loop = true; el.preload = "auto"; try { AU.cubeSrc = c.createMediaElementSource(el); } catch (e) { AU.cubeSrc = null; } }
+  if (!AU.cube) { let el = AU.cubeEl; if (!el) { el = AU.cubeEl = new Audio("music_cube.mp3?v=720"); el.loop = true; el.preload = "auto"; try { AU.cubeSrc = c.createMediaElementSource(el); } catch (e) { AU.cubeSrc = null; } }
     const out = c.createGain(); out.gain.value = 0; out.connect(AU.master); if (AU.cubeSrc) { try { AU.cubeSrc.disconnect(); } catch (e) {} AU.cubeSrc.connect(out); } try { el.currentTime = 0; } catch (e) {} el.play().catch(() => {}); AU.cube = { out, el }; AU.cduck = 0; applyAudio(); }
   const vv = .11 * gainOf(AU.mv) / gainOf(50) * (AU.duck || 1); AU.cube.out.gain.setTargetAtTime(vv, c.currentTime, AU.cube.on ? .3 : 1.6); if (!AU.cubeSrc) AU.cube.el.volume = clamp(vv * 8, 0, 1); AU.cube.on = 1;
   if (AU.cube.el.paused && !AU.cube.tried) { AU.cube.tried = 1; AU.cube.el.play().catch(() => { AU.cube.tried = 0; }); } }
