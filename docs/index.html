@@ -27294,6 +27294,7 @@ function sessRestore() { let o = null; try { o = JSON.parse(localStorage.getItem
   if (!o || o.me !== G.me || Date.now() - o.t > 12 * 3600e3 || !SESS_VIEWS.includes(o.view) || !S || !S.tut || S.tut.k !== "done" || battle) return;
   if (o.view === "galaxy" && (G.crashBoot || G.safeStart)) { try { crumb("session not restored onto the galaxy (last session crashed)"); } catch (e) {} return; } /* v530 */
   try { if (typeof liveIntro === "function" && liveIntro(now())) return; } catch (e) {}
+  if (G.navUser) { try { crumb("session not restored (player already moved)"); } catch (e) {} return; } /* fb-20261122 */
   G.sessHold = 1; try { if (o.sub) Object.assign(sub, o.sub); if (view !== o.view) { view = o.view; render(); } crumb(`session restored: ${o.view}${o.cam ? " + camera" : ""}${o.sheet ? " + " + o.sheet.type : ""} (${Math.round((Date.now() - o.t) / 60000)} min)`); } catch (e) {}
   if (o.view === "galaxy" && o.cam) { let n = 0; const go = () => { if (G3 && G3.cam && !G3.cam.cine && !G3.cam.live) { const c = G3.cam; Object.assign(c, o.cam); c.goal = null; c.follow = null; c.followFleet = null; c.vel = null; if (o.sel && G.byId[o.sel]) G.sel = o.sel; G.sessHold = 0; } else if (n++ < 60) setTimeout(go, 250); else G.sessHold = 0; }; go(); } else G.sessHold = 0;
   if (o.sheet) setTimeout(() => { try { if (!sheet && !battle && !$("#adv")) openSheet(o.sheet); } catch (e) {} }, 2500); }
@@ -28149,7 +28150,7 @@ const ACT = {
   weeklyBonus: () => act(() => { ensureWeekly(); if (S.weekly.bonus || !S.weekly.tasks.every(w => w.claimed)) return; S.weekly.bonus = true; dirty(); grantRw(WEEKLY_BONUS(), "Weekly missions bonus"); SFX.research(); toast("Weekly bonus claimed.", "win"); }),
   dailyClaim: d => act(() => { ensureDaily(); const t = S.daily.tasks[+d.i]; if (!t || t.claimed || !dailyDone(t)) return; const r = dailyReward(); for (const k of ["m", "c", "g"]) S.res[k] += r[k]; t.claimed = true; S.shards = (S.shards || 0) + 1; if (Math.random() < ESH_P.task) grantShards(1, "Daily task"); /* v629 */ logReward("Daily task", r, { shards: 1, kind: "quest" }); fsDrop(lootRoll(LOOT.daily()), "a daily task", { nocap: 1 }); /* v338 */ toast("Daily task reward collected, plus ◆1.", "win"); }),
   dailyBonus: () => act(() => { ensureDaily(); if (S.daily.bonus || !S.daily.tasks.every(t => t.claimed)) return; S.daily.bonus = true; S.boosts++; fsDrop(lootRoll(LOOT.dailyBonus()), "the daily bonus", { nocap: 1 }); S.shards = (S.shards || 0) + 3; logReward("Daily bonus", null, { shards: 3, boosts: 1, kind: "quest" }); toast("All daily tasks done. +1 Boost and ◆3.", "win"); }),
-  nav: d => { let v = d.v, s = d.s;
+  nav: d => { let v = d.v, s = d.s; G.navUser = 1; /* fb-20261122 the session restore leaves a player who already moved */
     if (v === "fleet") { if (s === "rep") { v = "mail"; sub.mail = "battle"; } else { v = "build"; s = "ships"; } }
     else if (v === "lab") { v = "build"; s = "research"; }
     else if (v === "build" && (!s || s === "fac" || s === "res" || s === "def")) { if (s === "fac" || s === "res") sub.bcat = s; s = s === "def" ? "ships" : "bld"; }
