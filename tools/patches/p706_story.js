@@ -47,7 +47,7 @@ Object.assign(ARCH, {
   q_korvax: { cat: "tide", t: "Korvax and the Leviathan", era: "This tide", civ: "The Carcinid", loc: "The heart of the Breach", img: "art/carcinid/korvax.webp", th: "Catastrophic",
     frag: "The wall-beast was ours before it was theirs. Alive or dead, it will carry us home.",
     interp: "Dread Admiral Korvax commands every claw of the Empire. He has claimed the Leviathan for himself: chained and alive if it escaped its hunt, its corpse if we slew it. Its war-song is his strength.",
-    adv: "He's riding the Warden of the wall into battle, Commander. Whatever happened at the wall this season, he made it his.",
+    adv: "He's riding the Warden of the wall into battle, Commander. Whatever we did to it at the wall, he made it his.",
     enc: ["Commander, Dread Admiral Korvax has taken the field. He's riding the Leviathan."], def: ["Korvax is dead, Commander.", "With his last breath he wasn't calling his fleet. He was calling the Crown."] },
   q_crown: { cat: "tide", t: "The Abyssal Crown", era: "Every age", civ: "The Carcinid", loc: "The heart of the galaxy", img: "art/carcinid/s_crownship.webp", th: "Catastrophic",
     frag: "Each molt, a new Crown. Each Crown, the same mind. It has been shedding its shell since before there were stars.",
@@ -70,6 +70,6 @@ function crcArchTick() { if (!S || !G.ready || battle || G.cineOn || document.ge
   for (const [k, a, b] of want) { const lv = archLv(k); if (b && lv < 2) { archUnlock(k, 2); return; } if (a && lv < 1) { archUnlock(k, 1); return; } } }
 /* the Leviathan's hunt, told as part of the tide; and the Crown's escape, once, when the tide ends without its death */
 function crcStoryTick() { if (!S || !G.ready || battle || G.cineOn || document.getElementById("omcine")) return; const T = now(), w = crcWeek(T);
-  if (w >= 3 && w <= 4) { const M = crcS(); if (!M.levSaid) { let o = null; try { const s0 = finLast("lev", T); if (s0 != null && T - s0 < 20 * 864e5) o = finOutcome("lev", s0, T); } catch (e) {} if (o) { M.levSaid = o; dirty(); setTimeout(() => { try { sbSay(CRC_SAY[o === "held" ? "lev_held" : "lev_cracked"]); } catch (e) {} }, 22000); } } }
+  if (w >= 1 && w <= 2) { const M = crcS(); if (!M.levSaid) { let o = null; try { const s0 = finLast("lev", T); if (s0 != null && T - s0 < 45 * 864e5) o = finOutcome("lev", s0, T); } catch (e) {} if (o) { M.levSaid = o; dirty(); setTimeout(() => { try { sbSay(CRC_SAY[o === "held" ? "lev_held" : "lev_cracked"]); } catch (e) {} }, 22000); } } }
   const out = crcYearOutcome(T), pk = String(crcT0(T) - 10 * VP_LEN); if (out === "esc" && T - (+pk + CRC_LEN) < 7 * 864e5) { S.crcEnd = S.crcEnd || {}; if (!S.crcEnd[pk]) { S.crcEnd[pk] = 1; dirty(); crcCine("esc"); } } }
 setInterval(() => { try { crcStoryTick(); crcArchTick(); } catch (e) {} }, 15000);
