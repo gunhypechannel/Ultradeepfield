@@ -27,7 +27,7 @@ Object.assign(ARCH, {
   q_empire: { cat: "tide", t: "The Abyssal Empire", era: "Before the Architects", civ: "The Carcinid", loc: "The Abyss", img: "art/carcinid/s_skullcity.webp", th: "Extreme",
     frag: "We bred the deep beasts and rode them to the edge of everything. Then the builders came, and took the greatest of them for their wall.",
     interp: "The Carcinid bred the Kraken and the Leviathan as war mounts. When the Architects built their prison, they took the Leviathan from them and made it the Warden of their outer wall.",
-    adv: "The Leviathan was theirs, Commander. That's why it turned inward. It heard them calling it home.",
+    adv: "The Leviathan was theirs, Commander. That's half of why it turned inward. It heard them calling it home.",
     enc: ["Commander, the patrol we sank was carrying records. Star charts. Of our worlds."], def: ["I've translated the patrol's records.", "They aren't invasion plans, Commander. They're evacuation routes."] },
   q_kraken: { cat: "tide", t: "The Kraken Returns", era: "This tide", civ: "The deep", loc: "The deep layers", img: "art/mon/kraken.webp", th: "Extreme",
     frag: "The light rose out of the deep in a ring, and the ring was arms.",
