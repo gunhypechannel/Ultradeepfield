@@ -6548,7 +6548,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 722;
+const GAME_V = 723;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -18139,7 +18139,7 @@ const ERA_CAT = { metalMine: "prod", crystalMine: "prod", gasSynth: "prod", sola
    Meshy exports each model about 1.9 units long, Y up; ships face -X (the game's hulls face +X, so they turn half a circle). */
 const GLB_SHIPS = new Set(["fighter", "heavyFighter", "hauler", "heavyCargo", "recycler", "lancer", "ark", "corvette", "battleship", "bastion", "bomber", "destroyer", "dreadnought", "escortCarrier", "supercarrier", "guardian", "tender", "spyProbe"]); // v352: the Cube Destroyer's model is a sphere
 const GLB_YAW = {}; // turn from the model file to the hull pointing +X (default: half a turn)
-const GLB_BLDS = new Set(["metalMine", "crystalMine", "gasSynth", "solar", "shipyard", "metalStore", "crystalStore", "gasTank", "robotics", "lab", "radar", "fusion", "repairYard", "nanite", "fortress", "terraformer", "allyDepot", "lunarBase", "phalanx"]);
+const GLB_BLDS = new Set(["metalMine", "crystalMine", "gasSynth", "solar", "shipyard", "metalStore", "crystalStore", "gasTank", "robotics", "lab", "radar", "fusion", "repairYard", "nanite", "fortress", "terraformer", "allyDepot", "lunarBase", "phalanx", "sanct"]); /* v723 the Xeno Sanctuary */
 let GLB_BN = 0; // building models loaded so far (phones: the first 8 keep 1536 px colour maps)
 const GLB = {};
 function glbOn() {
@@ -18152,7 +18152,7 @@ function glbOn() {
   return (glbOn.v = ok);
 }
 const GLB_Q = []; let GLB_RUN = 0;
-const GLB_V = {"armageddon": "5935b307", "sovereign": "9d0e7099", "harbinger": "96444209", "allyDepot":"c2dfe0e8","ark":"9b3cccf1","bastion":"70f5614b","battleship":"e235b570","bomber":"09efbb28","corvette":"1d10b235","crystalMine":"96bb71b9","crystalStore":"1a929fcf","destroyer":"831f8994","dreadnought":"7703142f","escortCarrier":"b4256abb","fighter":"80489844","fortress":"405286e5","fusion":"ec8965d4","gasSynth":"708df8c8","gasTank":"dbcabb5c","guardian":"a9a493f6","hauler":"0b4fb8e6","heavyCargo":"0b382b6b","heavyFighter":"1d458c8b","lab":"4a2529f7","lancer":"7f74a79b","lunarBase":"6e5b6c72","metalMine":"54532b9d","metalStore":"72d30726","nanite":"c3b6fb3e","phalanx":"4fe44153","radar":"8b652465","recycler":"4919e165","repairYard":"3374af55","robotics":"67616b88","shipyard":"e82b8bd0","solar":"32100219","spyProbe":"4c7bf229","supercarrier":"fa2ab171","tender":"054f88f4","terraformer":"fd97993c"}; // v356 each model file's fingerprint (tools/glb_versions.json)
+const GLB_V = {"sanct": "e45e883a", "armageddon": "5935b307", "sovereign": "9d0e7099", "harbinger": "96444209", "allyDepot":"c2dfe0e8","ark":"9b3cccf1","bastion":"70f5614b","battleship":"e235b570","bomber":"09efbb28","corvette":"1d10b235","crystalMine":"96bb71b9","crystalStore":"1a929fcf","destroyer":"831f8994","dreadnought":"7703142f","escortCarrier":"b4256abb","fighter":"80489844","fortress":"405286e5","fusion":"ec8965d4","gasSynth":"708df8c8","gasTank":"dbcabb5c","guardian":"a9a493f6","hauler":"0b4fb8e6","heavyCargo":"0b382b6b","heavyFighter":"1d458c8b","lab":"4a2529f7","lancer":"7f74a79b","lunarBase":"6e5b6c72","metalMine":"54532b9d","metalStore":"72d30726","nanite":"c3b6fb3e","phalanx":"4fe44153","radar":"8b652465","recycler":"4919e165","repairYard":"3374af55","robotics":"67616b88","shipyard":"e82b8bd0","solar":"32100219","spyProbe":"4c7bf229","supercarrier":"fa2ab171","tender":"054f88f4","terraformer":"fd97993c"}; // v356 each model file's fingerprint (tools/glb_versions.json)
 /* v356 start loading your buildings' and hulls' models as soon as the game is ready, before the base is opened */
 function glbPreload() {
   if (glbPreload.done || !G.ready || typeof S === "undefined" || !S || !S.b) return; glbPreload.done = true; if (!glbOn() || WEAK) return;
@@ -18297,7 +18297,7 @@ async function glbLights(k, s) {
       .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n roughnessFactor = .25 + .25 * roughnessFactor;")
       .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\n metalnessFactor = .7 + .2 * metalnessFactor;"); };
     m.customProgramCacheKey = () => "bld360"; m.roughness = 1; m.metalness = 1;
-    m.emissiveMap = et; m.emissive.set(0xffffff); m.emissiveIntensity = 2.6 * (1 + 1.1 * DN_NIGHT); if (!GLB_EMI.includes(m)) GLB_EMI.push(m); m.userData.env0 = 1.5; m.envMapIntensity = 1.5 * DN_ENV; m.needsUpdate = true;
+    m.emissiveMap = et; m.emissive.set(0xffffff); m.userData.ek = k === "sanct" ? .12 : 1; /* v723 */ m.emissiveIntensity = 2.6 * (1 + 1.1 * DN_NIGHT) * m.userData.ek; if (!GLB_EMI.includes(m)) GLB_EMI.push(m); m.userData.env0 = 1.5; m.envMapIntensity = 1.5 * DN_ENV; m.needsUpdate = true;
     // lit spots: triangles whose texels glow, clustered
     const g = mesh.geometry, P = g.attributes.position, U = g.attributes.uv, I = g.index; if (!P || !U) return;
     const n = I ? I.count / 3 : P.count / 3, tri = [], bb = new TH.Box3().setFromBufferAttribute(P), size = Math.max(bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z);
@@ -19417,7 +19417,7 @@ function colDayNight(W) {
   if (L.rim) L.rim.intensity = .6 * up + .22 * n; if (L.fill) L.fill.intensity = .5 + .25 * n;
   const bg = W.bg0.clone().lerp(new TH.Color(0x03050a), n * .92).lerp(new TH.Color(0x6a3a26), dusk * .25); W.scene.background.copy(bg); if (W.scene.fog) W.scene.fog.color.copy(bg);
   W.renderer.toneMappingExposure = .78 + .07 * n;
-  for (const m of GLB_EMI) { m.emissiveIntensity = 2.6 * (1 + 1.1 * n); if (m.userData.env0 == null) m.userData.env0 = m.envMapIntensity; m.envMapIntensity = m.userData.env0 * (.22 + .78 * up); }
+  for (const m of GLB_EMI) { m.emissiveIntensity = 2.6 * (1 + 1.1 * n) * (m.userData.ek || 1); if (m.userData.env0 == null) m.userData.env0 = m.envMapIntensity; m.envMapIntensity = m.userData.env0 * (.22 + .78 * up); }
   DN_ENV = .22 + .78 * up; for (let i = METAL_LIST.length - 1; i >= 0; i--) METAL_LIST[i].envMapIntensity = METAL_LIST[i].userData.env0 * DN_ENV; // v360 metal stops mirroring the day sky at night
   for (const k in POOL_MATS) POOL_MATS[k].opacity = POOL_MATS[k].userData.op * (.22 + .78 * n);
   DN_NIGHT = n; W.dnKey = key; W.dnBg = W.scene.background.getHex();
