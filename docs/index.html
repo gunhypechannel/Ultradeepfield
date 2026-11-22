@@ -6545,7 +6545,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 713;
+const GAME_V = 714;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13076,6 +13076,7 @@ function worldDrop(k, why) { try {
   if (k === "col" && C3 && view !== "base") { const old = C3; C3 = null; glFree(old.renderer); if (colHost && colHost.parentNode) colHost.parentNode.removeChild(colHost); colHost = null; crumb("base released (" + why + ")"); }
   if (k === "stu" && STU) { const s = STU; G.stuCache = s.cache; STU = null; glFree(s.renderer); }
   if (glw0) G.glWait = performance.now() + 1000; /* v588 the wait starts once the release is done */
+  G.memEst = null; /* fb-20261121 the next heartbeat measures again instead of reporting the released world */
 } catch (e) { try { crumb("release failed: " + (e && e.message)); } catch (er) {} } }
 const MEM_DIET = IOS;
 /* v425 the background diet: shed what comes back for free (drawing buffers, bloom targets, the boss renderer, the studio and its battle
@@ -15768,7 +15769,7 @@ function draw3D(t) {
   if (G.levIn) { try { levInCam(W, t); } catch (e) {} } else if (cam.cine) { try { const P = W.camera.position, Q = { x: P.x, y: P.y, z: P.z }; camClear(W, Q); if (Q.x !== P.x || Q.y !== P.y || Q.z !== P.z) { P.set(Q.x, Q.y, Q.z); W.camera.lookAt(cam.tx, cam.ty, cam.tz); } } catch (e) {} } /* v695 the Leviathan's arrival directs the camera; cinematic cameras keep clear of stars and planets */
   MAPPROF.mark("fleets");
   fleetLod(W, pxK);
-  { const B = W.renderer.pace; if (B) { B.scene = W.scene; B.used = 0; B.skips = 0; B.ms = MOBILE ? 22 : 45; } if (!mapBloom(W)) W.renderer.render(W.scene, W.camera); if (B) { B.scene = null; W.compSkip = B.skips; if (B.skips && !W.paceN) { W.paceN = 1; try { crumb("map shaders paced over several frames"); } catch (e) {} } } } /* v530 */
+  { const B = W.renderer.pace; if (B) { B.scene = W.scene; B.used = 0; B.n = 0; B.skips = 0; B.ms = MOBILE ? 22 : 45; } if (!mapBloom(W)) W.renderer.render(W.scene, W.camera); if (B) { B.scene = null; W.compSkip = B.skips; if (B.skips && !W.paceN) { W.paceN = 1; try { crumb("map shaders paced over several frames"); } catch (e) {} } } } /* v530 */
   if (W.snapReq) { W.snapReq = 0; cineSnap(W); } // v96: a screenshot is grabbed right after the frame is drawn, while the buffer still holds it
   MAPPROF.mark("GPU submit");
   overlay3D(W, fx, w, h, dpr, t, T);
@@ -19497,7 +19498,7 @@ function drawColony(t) {
   if (W.prev) { const left = W.prev.until - performance.now(); if (left <= 0 || !W.blds[W.prev.k]) { W.scene.remove(W.prev.h); W.prev = null; } else { W.prev.h.position.y = .05 + Math.sin(t * .003) * .05; HOLO_WIRE().opacity = .35 + .2 * Math.sin(t * .006); } }
   try { colDayNight(W); } catch (e) {} // v355
   try { if (W.renderer.shadowMap.needsUpdate || (W.metF = (W.metF || 0) + 1) % 150 === 1) colMetal(W); } catch (e) {} // v360
-  { const P = W.renderer.pace; if (P) { P.scene = W.scene; P.used = 0; P.skips = 0; P.ms = MOBILE ? 22 : 45; } /* v537 the base paces its shaders too */
+  { const P = W.renderer.pace; if (P) { P.scene = W.scene; P.used = 0; P.n = 0; P.skips = 0; P.ms = MOBILE ? 22 : 45; } /* v537 the base paces its shaders too */
     const B = W.bloomOff ? null : colBloom(W); let ok = false; if (B) try { B.run(); ok = true; } catch (e) { W.bloom = null; W.renderer.setRenderTarget(null); } if (!ok) W.renderer.render(W.scene, W.cam); if (P) P.scene = null; } // v354 bloom
   // building tags
   const ctx = fx.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
@@ -27047,10 +27048,10 @@ function glNew(o, cap) { if (cap && o && o.canvas) try { glCap(o.canvas, cap); }
    paced (r.pace.scene), once this frame has spent its compile budget the remaining never-drawn materials wait for the next frame. */
 function glPace(r) { const gl = r.getContext(), lp = gl.linkProgram, rbd = r.renderBufferDirect, seen = new WeakSet(); let links = 0;
   gl.linkProgram = function (p) { links++; return lp.call(this, p); };
-  r.pace = { scene: null, ms: 30, used: 0, skips: 0 };
+  r.pace = { scene: null, ms: 30, used: 0, skips: 0, n: 0, max: IOS ? 2 : 0 }; /* fb-20261121 iOS: at most 2 new programs a frame */
   r.renderBufferDirect = function (cam, scene, geo, mat) { const B = r.pace, paced = !!B.scene && scene === B.scene;
-    if (paced && mat && !seen.has(mat) && B.used >= B.ms) { B.skips++; return; }
-    const l0 = links, t0 = paced ? performance.now() : 0, res = rbd.apply(this, arguments); if (mat) seen.add(mat); if (paced && links > l0) B.used += performance.now() - t0; return res; }; }
+    if (paced && mat && !seen.has(mat) && (B.used >= B.ms || (B.max && B.n >= B.max))) { B.skips++; return; }
+    const l0 = links, t0 = paced ? performance.now() : 0, res = rbd.apply(this, arguments); if (mat) seen.add(mat); if (paced && links > l0) { B.used += performance.now() - t0; B.n += links - l0; } return res; }; }
 function frame(t) {
   rafId = 0; { const rd = t - (frame.raw || t); hzSample(rd); pfFrame(rd); if (rd > 0 && rd < 200) frame.rawEma = (frame.rawEma || 16.7) * .94 + rd * .06; } frame.raw = t;
   if (idleSkip(t)) { frame.last = t; rafId = requestAnimationFrame(frame); return; }
