@@ -2317,6 +2317,48 @@ body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}
 .xsbr{display:flex;flex-direction:column;gap:8px;align-items:stretch}.xspair{display:flex;align-items:center;justify-content:center;gap:12px}.xspair img,.xspair i{width:68px;height:68px;border-radius:14px;object-fit:cover;background:#040a10;border:1px solid rgba(125,255,184,.3);display:grid;place-items:center;font-style:normal;color:var(--muted);font-size:24px}.xspair span{font-size:22px;color:#ffd25a}
 .xsbon{display:flex;flex-wrap:wrap;gap:6px}.xsbook{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}.xsbk{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}.xsbk img{width:62px;height:62px;border-radius:12px;object-fit:cover;background:#040a10}.xsbk.un img{filter:brightness(0) drop-shadow(0 0 4px rgba(125,255,184,.4));opacity:.7}.xsbk small{font-size:10.5px;line-height:1.2}
 @media (prefers-reduced-motion:reduce){.xsegg.pr,.xsinc.ready .xsegg,.xscr.pr .xsart img{animation:none}}
+/* v724 eggs: the reveal and the hatch */
+.xsfx{position:fixed;inset:0;z-index:9500;display:grid;place-items:center;background:radial-gradient(60% 45% at 50% 45%,color-mix(in srgb,var(--r) 22%,transparent),rgba(2,6,10,.88) 70%);opacity:0;transition:opacity .35s;padding:16px}
+.xsfx.on{opacity:1}
+.xsrays{position:absolute;left:50%;top:44%;width:150vmax;height:150vmax;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--r) 30%,transparent) 0deg 6deg,transparent 6deg 22deg);-webkit-mask:radial-gradient(closest-side,#000 10%,transparent 70%);mask:radial-gradient(closest-side,#000 10%,transparent 70%);animation:xsray 14s linear infinite;opacity:.8;pointer-events:none}
+.xsfx.pr .xsrays{background:repeating-conic-gradient(from 0deg,rgba(255,122,217,.35) 0deg 6deg,transparent 6deg 15deg,rgba(122,244,255,.35) 15deg 21deg,transparent 21deg 30deg,rgba(255,211,107,.35) 30deg 36deg,transparent 36deg 45deg)}
+@keyframes xsray{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.xsfxb{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;max-width:320px;transform:scale(.8);transition:transform .45s cubic-bezier(.2,1.6,.4,1)}
+.xsfx.on .xsfxb{transform:scale(1)}
+.xsfxb>small,.xshi>small{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+.xsfxb>b,.xshi>b{font-size:24px;font-family:Oxanium,sans-serif;color:#fff;text-shadow:0 0 18px var(--c)}
+.xsfxb p,.xshi p{margin:0;color:#c9d6de;font-size:13.5px;line-height:1.4}
+.xsegg.xl{width:96px;height:122px;box-shadow:0 0 40px var(--c),0 0 90px color-mix(in srgb,var(--c) 50%,transparent);animation:xsdrop .8s cubic-bezier(.2,1.5,.4,1) both,xswob 1.4s ease-in-out .8s infinite}
+@keyframes xsdrop{from{transform:translateY(-60px) scale(.4);opacity:0}to{transform:none;opacity:1}}
+.xstr{display:inline-block;width:max-content;font-size:11px;font-weight:700;padding:1px 8px;border-radius:8px;color:#ffe9a8;background:rgba(255,210,90,.12);border:1px solid rgba(255,210,90,.45)}
+.xstr.t-lucky{color:#9dffb0;border-color:rgba(120,255,150,.45);background:rgba(120,255,150,.1)}.xstr.t-swift{color:#9fe8ff;border-color:rgba(120,220,255,.45);background:rgba(120,220,255,.1)}.xstr.t-radiant{color:#fff;box-shadow:0 0 10px rgba(255,240,200,.6)}
+/* the hatch: shake, cracks, burst, the creature rises */
+.xshatch{position:relative;width:180px;height:180px;display:grid;place-items:center}
+.xshatch .xsegg.xl{animation:xsdrop .6s cubic-bezier(.2,1.5,.4,1) both,xsshake .12s linear .6s infinite}
+@keyframes xsshake{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-2px,1px) rotate(-3deg)}75%{transform:translate(2px,-1px) rotate(3deg)}}
+.xscrack{position:absolute;left:50%;top:50%;width:96px;height:122px;transform:translate(-50%,-50%);overflow:visible;pointer-events:none}
+.xscrack path{fill:none;stroke:#fff;stroke-width:1.6;stroke-linecap:round;filter:drop-shadow(0 0 3px var(--c)) drop-shadow(0 0 6px #fff);stroke-dasharray:60;stroke-dashoffset:60;animation:xscr 1.2s ease-out forwards;animation-delay:calc(.6s + var(--d))}
+@keyframes xscr{to{stroke-dashoffset:0}}
+.xsshards{position:absolute;inset:0;pointer-events:none}
+.xsshards i{position:absolute;left:50%;top:50%;width:22px;height:26px;margin:-13px -11px;border-radius:40% 40% 20% 60%;background:var(--c);box-shadow:0 0 10px var(--c);opacity:0;transform:rotate(var(--a)) translateY(0) scale(var(--s))}
+.xshatch img{position:absolute;width:170px;height:170px;object-fit:cover;border-radius:50%;opacity:0;transform:scale(.2);box-shadow:0 0 0 3px var(--r),0 0 50px var(--c),0 0 120px color-mix(in srgb,var(--c) 50%,transparent)}
+.xshi{display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0;transform:translateY(12px);transition:opacity .5s .4s,transform .5s .4s}
+.xsfx.burst .xshatch .xsegg.xl,.xsfx.burst .xscrack{opacity:0;transition:opacity .15s}
+.xsfx.burst .xsshards i{animation:xsshard .9s cubic-bezier(.1,.7,.3,1) forwards}
+@keyframes xsshard{0%{opacity:1;transform:rotate(var(--a)) translateY(0) scale(var(--s))}100%{opacity:0;transform:rotate(var(--a)) translateY(-150px) rotate(220deg) scale(var(--s))}}
+.xsfx.burst .xshatch img{animation:xsrise .9s cubic-bezier(.2,1.4,.4,1) .15s forwards}
+@keyframes xsrise{to{opacity:1;transform:scale(1)}}
+.xsfx.burst .xshi{opacity:1;transform:none}
+.xsfx.burst::after{content:"";position:fixed;inset:0;background:#fff;animation:xsflash .6s ease-out forwards;pointer-events:none}
+@keyframes xsflash{from{opacity:.85}to{opacity:0}}
+/* tap to warm */
+.xswarm{background:none;border:0;padding:0;cursor:pointer;display:grid;place-items:center}
+.xsinc .xsegg.big{animation:xswob calc(2.4s - 1.4s * var(--wb,0)) ease-in-out infinite;--wa:calc(3deg + 9deg * var(--wb,0))}
+.xsinc .xsegg.big.warm{box-shadow:0 0 26px #ffb45a,0 0 50px rgba(255,150,60,.5)}
+.xsinc small.xswt{color:#ffc98a}
+@keyframes xswob{0%,100%{transform:rotate(0)}25%{transform:rotate(calc(-1 * var(--wa,8deg)))}75%{transform:rotate(var(--wa,8deg))}}
+@media (prefers-reduced-motion:reduce){.xsrays,.xsegg.xl,.xshatch .xsegg.xl,.xsinc .xsegg.big{animation:none}.xsfx.burst .xsshards i{animation:none}.xsfx.burst .xshatch img{animation:none;opacity:1;transform:none}.xsfx.burst::after{display:none}}
+
 .caprow{margin-top:10px;display:flex;flex-direction:column;gap:6px}.caph{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.caph b{font-size:12.5px;text-align:right}.caph em{font-style:normal;color:#8affb4;font-weight:500}
 .caps{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.caps::-webkit-scrollbar{display:none}.cap{all:unset;cursor:pointer;flex:none;width:58px;display:flex;flex-direction:column;align-items:center;gap:3px}.cap img{width:52px;height:52px;border-radius:12px;object-fit:cover;object-position:top;border:2px solid rgba(255,255,255,.14);background:#0a1420}
 .cap small{font-size:10px;color:#cfdbe6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.cap.on img{border-color:#ffd25a;box-shadow:0 0 10px rgba(255,210,90,.6)}.cap.on small{color:#ffd25a;font-weight:700}.cap.busy img{filter:grayscale(.8) brightness(.6)}.cap.lk img{filter:grayscale(.9) brightness(.45)}.cap.lk small{color:#ffd25a}
@@ -5738,31 +5780,31 @@ const XS = { swhale: ["water", 0], ssquid: ["water", 0], swasp: ["air", 0], reat
   gwhale: ["spirit", 2], cserp: ["fire", 2], sent: ["earth", 2], ctort: ["earth", 3, 1], gspider: ["air", 3, 1], slevi: ["fire", 3, 1] }; // [element, rarity, breed-only]
 const XR = [["Common", "#9fb6c4", 4, .5], ["Rare", "#5ab8ff", 8, 1], ["Epic", "#c07aff", 16, 1.5], ["Legendary", "#ffc94a", 24, 2.5]]; // name, colour, hatch hours, % per creature
 const XS_RCP = [["earth", "water", "ctort"], ["air", "spirit", "gspider"], ["fire", "water", "slevi"]]; // element pair → breed-only legendary
+const XS_WARM = 20 * 3600e3; /* v724 */
 const XS_CAP_PCT = 15, XS_EGGS = 12, XS_BR_CD = 8 * 3600e3, XS_DROP = .15;
 const xsIncN = L => L ? Math.min(4, 1 + Math.floor(L / 3)) : 0, xsCap = L => L ? Math.min(14, 2 + L) : 0;
 const xsOf = () => { const X = (S.xs = S.xs || {}); X.eggs = X.eggs || []; X.inc = X.inc || []; X.hab = X.hab || []; X.seen = X.seen || {}; return X; };
 const xsName = k => (MON[k] && MON[k].n) || k, xsCol = k => (MON[k] && MON[k].col) || "#7dffb8", xsImg = k => `art/mon/${monImg(k)}.webp?v=1`;
 const xsLvl = () => (S && S.b && S.b.sanct) || 0;
-function xsPct(e) { if (!S || !S.xs || !xsLvl()) return 0; let v = 0; for (const c of S.xs.hab || []) { const D = XS[c.sp]; if (D && D[0] === e) v += XR[D[1]][3] * (c.pr ? 1.5 : 1); } return Math.min(XS_CAP_PCT, Math.round(v * 10) / 10); }
+function xsPct(e) { if (!S || !S.xs || !xsLvl()) return 0; let v = 0; for (const c of S.xs.hab || []) { const D = XS[c.sp]; if (D && D[0] === e) v += XR[D[1]][3] * (c.pr ? 1.5 : 1) * xsTrMul(c); /* v724 */ } return Math.min(XS_CAP_PCT, Math.round(v * 10) / 10); }
 function xsEggDrop(x, rep, f) { const sp = x.mon; if (!XS[sp] || XS[sp][2]) return; const X = xsOf(); if (X.eggs.length >= XS_EGGS) return;
-  if (Math.random() >= XS_DROP * (isElite(x) ? 2 : 1) * ((f && CAPS[f.cap] && CAPS[f.cap].egg) || 1)) return; const pr = Math.random() < .05; X.eggs.push({ sp, pr: pr ? 1 : 0 }); X.seen[sp] = X.seen[sp] || 1; if (rep) rep.egg = sp; dirty();
-  setTimeout(() => { try { toast(`${pr ? "A Prismatic " : "An "}${xsName(sp)} egg was left in the wreckage!${xsLvl() ? " It's waiting at the Xeno Sanctuary." : " Build a Xeno Sanctuary to hatch it."}`, "win");
-    advHolo(xsLvl() ? "An egg, Commander. Still warm. I've sent it to the Sanctuary." : "An egg, Commander. Still warm. We'll need a Xeno Sanctuary to hatch it.", true); } catch (e) {} }, 2200); }
+  if (Math.random() >= (XS_DROP + xsLuck()) * (isElite(x) ? 2 : 1) * ((f && CAPS[f.cap] && CAPS[f.cap].egg) || 1)) return; const pr = Math.random() < .05; X.eggs.push({ sp, pr: pr ? 1 : 0 }); X.seen[sp] = X.seen[sp] || 1; if (rep) rep.egg = sp; dirty();
+  setTimeout(() => { try { xsReveal(sp, pr); } catch (e) {} }, 2200); /* v724 */ }
 function xsEggHTML(sp, pr, big) { const c = xsCol(sp); return `<i class="xsegg${pr ? " pr" : ""}${big ? " big" : ""}" style="--c:${c}"></i>`; }
 function sanctCard() { const X = xsOf(), L = xsLvl(), T = now(), slots = xsIncN(L), cap = xsCap(L); if (L) advSay1("sanct");
   if (!L) return `<div class="dp"><p class="note">Build the Xeno Sanctuary to hatch eggs from monster hunts.${X.eggs.length ? ` You have <b>${X.eggs.length}</b> egg${X.eggs.length > 1 ? "s" : ""} waiting.` : " Every monster hunt you win has a chance to leave an egg."}</p></div>`;
   const sel = G.xsSel || [], R = e => `<span class="xsel" style="--c:${ELEM[e].col}">${ELEM[e].n}</span>`;
   const inc = [...Array(slots)].map((_, i) => { const it = X.inc[i]; if (!it) return `<div class="xsinc empty"><i class="xsegg ghost"></i><small>Empty incubator</small>${X.eggs.length ? `<small class="note">Pick an egg below</small>` : ""}</div>`;
     const done = it.e <= T, left = Math.max(0, it.e - T), hn = Math.max(1, Math.ceil(left / 3600e3 * 2)), k = "xsh|" + i;
-    return `<div class="xsinc${done ? " ready" : ""}">${xsEggHTML(it.sp, it.pr, 1)}<b>${it.pr ? "✦ " : ""}${esc(xsName(it.sp))}</b>${done ? `<button class="btn amber sm" data-act="xsHatch" data-i="${i}">Hatch!</button>`
-      : `<div class="xsbar"><i style="width:${Math.min(100, (T - it.s) / (it.e - it.s) * 100).toFixed(1)}%"></i></div><small><span data-end="${it.e}">${ftime(left)}</span> left</small><button class="btn sm${buyArmed(k) ? " pxarm" : ""}" data-act="xsRush" data-i="${i}" ${(S.shards || 0) >= hn ? "" : "disabled"}>${buyArmed(k) ? "Confirm" : "Hatch now"} ◆${hn}</button>`}</div>`; }).join("");
+    return `<div class="xsinc${done ? " ready" : ""}" style="--wb:${clamp((T - it.s) / Math.max(1, it.e - it.s), 0, 1).toFixed(2)}">${done ? xsEggHTML(it.sp, it.pr, 1) : `<button class="xswarm" data-act="xsWarm" data-i="${i}" aria-label="Warm the egg">${xsEggHTML(it.sp, it.pr, 1)}</button>`}<b>${it.pr ? "✦ " : ""}${esc(xsName(it.sp))}</b>${done ? `<button class="btn amber sm" data-act="xsHatch" data-i="${i}">Hatch!</button>`
+      : `<div class="xsbar"><i style="width:${Math.min(100, (T - it.s) / (it.e - it.s) * 100).toFixed(1)}%"></i></div><small><span data-end="${it.e}">${ftime(left)}</span> left</small>${T - (it.w || 0) >= XS_WARM ? `<small class="xswt">Tap the egg to warm it</small>` : `<small class="xswt">Warm again in ${ftime(XS_WARM - (T - it.w))}</small>`}<button class="btn sm${buyArmed(k) ? " pxarm" : ""}" data-act="xsRush" data-i="${i}" ${(S.shards || 0) >= hn ? "" : "disabled"}>${buyArmed(k) ? "Confirm" : "Hatch now"} ◆${hn}</button>`}</div>`; }).join("");
   const eg = {}; for (const x of X.eggs) { const key = x.sp + (x.pr ? "*" : ""); eg[key] = (eg[key] || 0) + 1; }
   const free = X.inc.filter(Boolean).length < slots;
   const eggs = Object.keys(eg).length ? Object.entries(eg).map(([key, n]) => { const sp = key.replace("*", ""), pr = key.endsWith("*"), r = XR[XS[sp][1]];
     return `<div class="xsegc">${xsEggHTML(sp, pr)}<div><b>${pr ? "✦ Prismatic " : ""}${esc(xsName(sp))} ×${n}</b><small style="color:${r[1]}">${r[0]} · hatches in ${r[2]} h</small></div><button class="btn sm" data-act="xsInc" data-sp="${sp}" data-pr="${pr ? 1 : 0}" ${free && X.hab.length < cap ? "" : "disabled"}>Incubate</button></div>`; }).join("")
     : `<p class="note">No eggs yet. Win monster hunts: each one has a chance to leave an egg.</p>`;
-  const hab = X.hab.length ? X.hab.map(c => { const D = XS[c.sp], r = XR[D[1]], on = sel.includes(c.id), pct = Math.round(r[3] * (c.pr ? 1.5 : 1) * 10) / 10, rk = "xsr|" + c.id;
-    return `<div class="xscr${on ? " on" : ""}${c.pr ? " pr" : ""}" style="--c:${xsCol(c.sp)};--r:${r[1]}"><div class="xsart"><img src="${xsImg(c.sp)}" alt="" loading="lazy"></div><div class="xsci"><b>${c.pr ? "✦ " : ""}${esc(xsName(c.sp))}</b><small style="color:${r[1]}">${r[0]}${c.pr ? " · Prismatic" : ""}</small>${R(D[0])}<em>+${pct}% ${esc(ELEM[D[0]].stat.toLowerCase())}</em></div>
+  const hab = X.hab.length ? X.hab.map(c => { const D = XS[c.sp], r = XR[D[1]], on = sel.includes(c.id), pct = xsCrPct(c), rk = "xsr|" + c.id;
+    return `<div class="xscr${on ? " on" : ""}${c.pr ? " pr" : ""}" style="--c:${xsCol(c.sp)};--r:${r[1]}"><div class="xsart"><img src="${xsImg(c.sp)}" alt="" loading="lazy"></div><div class="xsci"><b>${c.pr ? "✦ " : ""}${esc(xsName(c.sp))}</b><small style="color:${r[1]}">${r[0]}${c.pr ? " · Prismatic" : ""}</small>${R(D[0])}${xsTrChip(c)}<em>+${pct}% ${esc(ELEM[D[0]].stat.toLowerCase())}</em></div>
       <div class="xscb"><button class="btn sm${on ? " amber" : ""}" data-act="xsSel" data-id="${c.id}">${on ? "✓ Breeding" : "Breed"}</button><button class="btn ghost sm${buyArmed(rk) ? " pxarm" : ""}" data-act="xsRel" data-id="${c.id}">${buyArmed(rk) ? "Confirm" : "Release"}</button></div></div>`; }).join("")
     : `<p class="note">The habitat is empty. Hatched creatures live here.</p>`;
   const a = X.hab.find(c => c.id === sel[0]), b = X.hab.find(c => c.id === sel[1]), bc = xsBrCost(), cd = Math.max(0, (X.brT || 0) - T);
@@ -5780,6 +5822,47 @@ function sanctCard() { const X = xsOf(), L = xsLvl(), T = now(), slots = xsIncN(
     <div class="xsh"><b>Collection</b><small>${Object.keys(XS).filter(k => X.seen[k]).length}/${Object.keys(XS).length}</small></div><div class="xsbook">${book}</div></div>`; }
 const xsBrCost = () => { const L = Math.max(1, xsLvl()); return { m: 30000 * L, c: 30000 * L, g: 10000 * L }; };
 const xsRe = () => { if (sheet) renderSheet(); else render(true); };
+/* ---------- v724 eggs, phase 1 (owner: "I just want eggs to be another fun part of the game" ... "Build it all") ----------
+   - The drop is an event: an egg reveal over the screen (it wobbles in, light bursts in its rarity's colour, a Prismatic shimmers),
+     and the Advisor reacts to how rare it is. Queued until no battle or cinematic is playing.
+   - Tap to warm: each incubating egg can be warmed once every 20 hours, which takes 15% off what is left (at least 5 minutes).
+     The egg wobbles harder the nearer it is to hatching.
+   - Hatching is a cinematic: the egg shakes, cracks spread, light leaks, the shell bursts, and the creature rises in a glow of its
+     rarity, with its trait.
+   - Mystery traits: every hatchling rolls one (creatures hatched before this get one from their id, so it never changes).
+     Fierce, Giant, Radiant and Hardy raise its element bonus; Lucky raises the chance of eggs from hunts; Swift shortens the
+     breeding chamber's rest. */
+const XS_TR = { fierce: ["Fierce", "+30% to its element bonus", 15], giant: ["Giant", "+20% to its element bonus. It's huge for its kind.", 15], radiant: ["Radiant", "+15% to its element bonus. It glows.", 10],
+  hardy: ["Hardy", "+10% to its element bonus", 25], lucky: ["Lucky", "+2% chance of an egg from every won hunt (up to +6%)", 20], swift: ["Swift", "The breeding chamber rests 15% less (up to 45%)", 15] };
+const XS_TRK = Object.keys(XS_TR), XS_TRM = { fierce: 1.3, giant: 1.2, radiant: 1.15, hardy: 1.1 };
+function xsTrRoll(r) { const tot = XS_TRK.reduce((a, k) => a + XS_TR[k][2], 0); let x = r * tot; for (const k of XS_TRK) { x -= XS_TR[k][2]; if (x < 0) return k; } return "hardy"; }
+function xsTr(c) { if (!c) return "hardy"; if (!c.tr || !XS_TR[c.tr]) c.tr = xsTrRoll((hash(String(c.id) + "|tr") % 1000) / 1000); return c.tr; }
+const xsTrMul = c => XS_TRM[xsTr(c)] || 1;
+const xsCrPct = c => { const D = XS[c.sp]; return D ? Math.round(XR[D[1]][3] * (c.pr ? 1.5 : 1) * xsTrMul(c) * 10) / 10 : 0; };
+const xsLuck = () => { try { return Math.min(.06, (xsOf().hab || []).filter(c => xsTr(c) === "lucky").length * .02); } catch (e) { return 0; } };
+const xsSwift = () => { try { return Math.min(.45, (xsOf().hab || []).filter(c => xsTr(c) === "swift").length * .15); } catch (e) { return 0; } };
+const xsTrChip = c => { const t = XS_TR[xsTr(c)]; return `<span class="xstr t-${xsTr(c)}" title="${esc(t[1])}">✦ ${t[0]}</span>`; };
+const XS_EGG_ADV = ["An egg, Commander. Still warm. I've sent it to the Sanctuary.", "This shell is humming, Commander. Rare stock, and still warm.", "Commander... this egg is glowing from the inside. I've never seen one like it.", "That shell is older than our charts, Commander. Handle it gently."];
+const XS_PR_ADV = "It's prismatic, Commander. Every colour at once. I've only ever read about these.";
+/* the reveal */
+function xsReveal(sp, pr) { (G.eggQ || (G.eggQ = [])).push({ sp, pr: pr ? 1 : 0 }); xsRevealNext(); }
+function xsRevealNext() { if (!G.eggQ || !G.eggQ.length || document.getElementById("xsrv")) return;
+  if ((typeof battle !== "undefined" && battle) || (G.cineOn && (xsRevealNext.w = (xsRevealNext.w || 0) + 1) < 40) || document.hidden) { clearTimeout(xsRevealNext.t); xsRevealNext.t = setTimeout(xsRevealNext, 1500); return; } xsRevealNext.w = 0; /* a cinematic is waited out, at most a minute */
+  const e = G.eggQ.shift(), r = XR[XS[e.sp][1]], col = xsCol(e.sp), el = document.createElement("div"); el.id = "xsrv"; el.className = "xsfx" + (e.pr ? " pr" : ""); el.style.setProperty("--c", col); el.style.setProperty("--r", r[1]);
+  el.innerHTML = `<div class="xsrays"></div><div class="xsfxb"><i class="xsegg big xl${e.pr ? " pr" : ""}" style="--c:${col}"></i><small style="color:${r[1]}">${e.pr ? "✦ Prismatic · " : ""}${r[0]} egg</small><b>${esc(xsName(e.sp))}</b><p>${xsLvl() ? "Left in the wreckage, still warm. It's on its way to your Xeno Sanctuary." : "Left in the wreckage, still warm. Build a Xeno Sanctuary to hatch it."}</p><button class="btn amber">${xsLvl() ? "Wonderful" : "Got it"}</button></div>`;
+  document.body.appendChild(el); requestAnimationFrame(() => el.classList.add("on")); try { SFX.research(); } catch (e2) {}
+  const close = () => { el.classList.remove("on"); setTimeout(() => { el.remove(); xsRevealNext(); }, 350); }; el.addEventListener("click", close);
+  setTimeout(() => { try { advHolo(e.pr ? XS_PR_ADV : XS_EGG_ADV[XS[e.sp][1]] || XS_EGG_ADV[0], true); } catch (e2) {} }, 700); }
+/* the hatch */
+function xsHatchCine(c) { if (document.getElementById("xsrv")) document.getElementById("xsrv").remove(); const D = XS[c.sp], r = XR[D[1]], col = xsCol(c.sp), t = XS_TR[xsTr(c)], el = document.createElement("div"); el.id = "xsrv"; el.className = "xsfx hatch" + (c.pr ? " pr" : ""); el.style.setProperty("--c", col); el.style.setProperty("--r", r[1]);
+  const cracks = [...Array(6)].map((_, i) => { const a = i * 60 + (hash(c.id + i) % 30); let x = 50, y = 50, p = `M50 50`; for (let k = 1; k <= 4; k++) { const aa = (a + (k % 2 ? 18 : -18)) * Math.PI / 180; x += Math.cos(aa) * 9; y += Math.sin(aa) * 11; p += ` L${x.toFixed(1)} ${y.toFixed(1)}`; } return `<path d="${p}" style="--d:${.25 + i * .12}s"/>`; }).join("");
+  const shards = [...Array(10)].map((_, i) => `<i style="--a:${i * 36 + (hash(c.id + "s" + i) % 20)}deg;--s:${.6 + (i % 3) * .25}"></i>`).join("");
+  el.innerHTML = `<div class="xsrays"></div><div class="xsfxb"><div class="xshatch"><i class="xsegg big xl${c.pr ? " pr" : ""}" style="--c:${col}"></i><svg viewBox="0 0 100 100" class="xscrack">${cracks}</svg><div class="xsshards">${shards}</div><img src="${xsImg(c.sp)}" alt=""></div>
+    <div class="xshi"><small style="color:${r[1]}">${c.pr ? "✦ Prismatic · " : ""}${r[0]}</small><b>${esc(xsName(c.sp))} hatched!</b>${xsTrChip(c)}<p>${esc(t[1])} · +${xsCrPct(c)}% ${esc(ELEM[D[0]].stat.toLowerCase())}</p><button class="btn amber">Welcome home</button></div></div>`;
+  document.body.appendChild(el); requestAnimationFrame(() => el.classList.add("on")); try { SFX.charge && SFX.charge(0); } catch (e) {}
+  setTimeout(() => { try { el.classList.add("burst"); SFX.blast && SFX.blast(1.6, 0); SFX.research(); } catch (e) {} }, 1900);
+  let ok = 0; setTimeout(() => { ok = 1; }, 2600); el.addEventListener("click", ev => { if (!ok && !ev.target.closest("button")) return; el.classList.remove("on"); setTimeout(() => el.remove(), 350); }); }
+
 function elExtra(e) { let v = ringM(e) * MAST_PER + xsPct(e); /* v646 Sanctuary creatures */ for (const P of EL_PAIRS) if (pairOn(P)) v += P[3][e] || 0; if (harmonyOn()) v += 2; return v; }
 const runePct = e => S ? Math.round((runePct0(e) + elExtra(e)) * 10) / 10 : 0;
 /* affinity: the ring that counters a foe's element adds half its bonus as extra attack against it (up to +12%) */
@@ -6548,7 +6631,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 723;
+const GAME_V = 724;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -28060,16 +28143,18 @@ const ACT = {
     X.inc[i] = { sp: d.sp, pr, s: T, e: T + h * 3600e3 }; toast(`${xsName(d.sp)} egg in the incubator. It hatches in ${h} hours.`); }),
   xsRush: d => act(() => { const X = xsOf(), i = +d.i, it = X.inc[i]; if (!it) return; const left = it.e - now(); if (left <= 0) return; const n = Math.max(1, Math.ceil(left / 3600e3 * 2));
     if ((S.shards || 0) < n) return toast(`Hatching now costs ◆${n}.`, "warn"); if (!armBuy("xsh|" + i, n)) return; S.shards -= n; it.e = now(); }),
-  xsHatch: d => act(() => { const X = xsOf(), i = +d.i, it = X.inc[i]; if (!it || it.e > now()) return; X.inc[i] = null; const c = { id: "c" + (S.seq++), sp: it.sp, pr: it.pr || 0, at: now() };
-    X.hab.push(c); X.seen[it.sp] = 1; const r = XR[XS[it.sp][1]]; toast(`${it.pr ? "✦ Prismatic " : ""}${xsName(it.sp)} hatched! ${r[0]} · +${Math.round(r[3] * (it.pr ? 1.5 : 1) * 10) / 10}% ${ELEM[XS[it.sp][0]].stat.toLowerCase()}.`, "win");
-    try { SFX.research(); if (XS[it.sp][1] >= 2 || it.pr) advHolo(XS[it.sp][2] ? "Commander... that species hasn't been seen alive in a thousand years. And it hatched in our dome." : "Look at it, Commander. Something that rare, raised by us.", true); } catch (e) {} }),
+  xsWarm: d => act(() => { const X = xsOf(), it = X.inc[+d.i], T = now(); if (!it || it.e <= T) return; if (T - (it.w || 0) < XS_WARM) return toast(`It's still warm. Again in ${ftime(XS_WARM - (T - it.w))}.`); /* v724 */
+    const cut = Math.max(5 * 60e3, (it.e - T) * .15); it.e = Math.max(T, it.e - cut); it.w = T; try { SFX.research(); } catch (e) {} toast(`You warm the egg. Something inside stirs: ${ftime(cut)} sooner.`, "win"); }),
+  xsHatch: d => act(() => { const X = xsOf(), i = +d.i, it = X.inc[i]; if (!it || it.e > now()) return; X.inc[i] = null; const c = { id: "c" + (S.seq++), sp: it.sp, pr: it.pr || 0, at: now(), tr: xsTrRoll(Math.random()) }; /* v724 */
+    X.hab.push(c); X.seen[it.sp] = 1; const r = XR[XS[it.sp][1]]; xsHatchCine(c); /* v724 */
+    setTimeout(() => { try { if (XS[it.sp][1] >= 2 || it.pr) advHolo(XS[it.sp][2] ? "Commander... that species hasn't been seen alive in a thousand years. And it hatched in our dome." : "Look at it, Commander. Something that rare, raised by us.", true); } catch (e) {} }, 2700); }),
   xsSel: d => { const s0 = G.xsSel || []; G.xsSel = s0.includes(d.id) ? s0.filter(x => x !== d.id) : s0.concat(d.id).slice(-2); xsRe(); },
   xsRel: d => act(() => { const X = xsOf(), c = X.hab.find(x => x.id === d.id); if (!c) return; const n = [1, 2, 4, 8][XS[c.sp][1]] * (c.pr ? 2 : 1); const rk = "xsr|" + c.id; if (!buyArmed(rk)) { G.buyArm = { k: rk, t: Date.now() }; toast(`Tap Release again to let the ${xsName(c.sp)} go (+◆${n}).`); return; } G.buyArm = null;
     X.hab = X.hab.filter(x => x.id !== c.id); G.xsSel = (G.xsSel || []).filter(x => x !== c.id); S.shards = (S.shards || 0) + n; toast(`${xsName(c.sp)} released to the wild. The ranger guild sent ◆${n} in thanks.`); }),
   xsBreed: d => act(() => { const X = xsOf(), [ia, ib] = G.xsSel || [], a = X.hab.find(c => c.id === ia), b = X.hab.find(c => c.id === ib), T = now(); if (!a || !b || a === b || (X.brT || 0) > T) return;
     if (X.eggs.length >= XS_EGGS) return toast("The egg store is full. Incubate some first.", "warn"); if (!pay(xsBrCost())) return toast("Not enough resources.", "warn");
     const rc = XS_RCP.find(([x, y]) => (XS[a.sp][0] === x && XS[b.sp][0] === y) || (XS[a.sp][0] === y && XS[b.sp][0] === x)), leg = rc && Math.random() < .2;
-    const sp = leg ? rc[2] : Math.random() < .5 ? a.sp : b.sp, pr = !leg && Math.random() < ((a.pr || b.pr) ? .35 : .12) ? 1 : 0; X.eggs.push({ sp, pr }); X.brT = T + XS_BR_CD; X.seen[sp] = X.seen[sp] || 1; G.xsSel = [];
+    const sp = leg ? rc[2] : Math.random() < .5 ? a.sp : b.sp, pr = !leg && Math.random() < ((a.pr || b.pr) ? .35 : .12) ? 1 : 0; X.eggs.push({ sp, pr }); X.brT = T + XS_BR_CD * (1 - xsSwift()); /* v724 */ X.seen[sp] = X.seen[sp] || 1; G.xsSel = [];
     toast(leg ? `Something new is in the egg chamber, Commander: a ${xsName(sp)} egg!` : `A ${pr ? "Prismatic " : ""}${xsName(sp)} egg from the breeding chamber.`, "win"); if (leg) try { advHolo("I've never seen an egg like it. The records say this species died out before the convoy wars.", true); } catch (e) {} }),
   invCat: d => { G.invCat = d.v || ""; if (sheet) renderSheet(); else render(true); },
   hullTrim: d => { const k = d.k, t = d.t || "", f = hullOf(k); if (!f) return; if (t && !hullOk(t)) { toast(`${HULL_F[t].n} unlocks at Premium Tier ${HULL_F[t].t}.`, "warn"); return; }
