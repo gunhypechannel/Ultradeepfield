@@ -26,15 +26,17 @@ function serpDraw(ctx, b, scr, T, W, d, lo, t) { const Q = b.Q; if (!b.serpK) { 
   const sh = b.shed || (b.shed = {}), last = b.serpP || (b.serpP = {}); ctx.save();
   for (const i of b.serpK) { const q = Q[i], g = b.geo && b.geo[i], S0 = scr[i]; if (!g || !S0) continue; const alive = b.n[i] > 0;
     if (alive) last[i] = { x: S0.x, y: S0.y, L: g.L, face: g.face };
+    const nc = b.serpN || (b.serpN = {}); if (nc[i] == null) nc[i] = b.n[i]; if (b.n[i] < nc[i] && last[i]) { (b.serpD || (b.serpD = [])).push(Object.assign({ t: T, j: i * 7 + b.n[i] }, last[i])); nc[i] = b.n[i]; } else if (b.n[i] > nc[i]) nc[i] = b.n[i];
     if (alive && !sh[i] && T > 3 && (b.n[i] < q.n0 || T > (b.end || 40) * .45)) { sh[i] = { t: T, x: S0.x, y: S0.y, L: g.L, face: g.face }; if (!b.serpSaid) { b.serpSaid = 1; try { sbSay(SERP_SHED); } catch (e) {} } try { mimSfx("hiss", clamp(S0.x / W * 2 - 1, -1, 1)); } catch (e) {} b.flash = Math.max(b.flash || 0, .12); }
-    const s0 = sh[i]; if (s0) { const k = (T - s0.t) / 2.6; if (k >= 0 && k < 1) { const x = s0.x - s0.face * s0.L * .7 * k, y = s0.y - s0.L * .25 * k; serpGhost(ctx, x, y, s0.L, s0.face, .75 * (1 - k), 1 + .1 * k);
+    const s0 = sh[i]; if (s0) { const k = (T - s0.t) / 2.6; if (k >= 0 && k < 1) { const x = s0.x - s0.face * s0.L * .7 * k, y = s0.y - s0.L * .25 * k; serpGhost(ctx, x, y, s0.L, s0.face, .5 * (1 - k), 1 + .1 * k);
         ctx.globalCompositeOperation = "lighter"; for (let j = 0; j < (lo ? 8 : 18); j++) { const r1 = Math.sin(j * 91.7) * .5 + .5, r2 = Math.sin(j * 37.3) * .5 + .5, px = x + (r1 - .5) * s0.L * 1.6, py = y + (r2 - .5) * s0.L * .5 - k * s0.L * (.3 + r2 * .5); ctx.globalAlpha = (1 - k) * .9; ctx.drawImage(glowSprite(j % 3 ? "rgba(255,215,110,1)" : "rgba(200,140,255,1)"), px - 3 * d, py - 3 * d, 6 * d, 6 * d); } }
       if (alive && T >= s0.t) { const pr = .7 + .3 * Math.sin(t * .006 + i), L = g.L; ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .3 * pr; ctx.drawImage(glowSprite("rgba(255,205,100,1)"), S0.x - L * 1.1, S0.y - L * .55, L * 2.2, L * 1.1); ctx.globalAlpha = .2 * pr; ctx.drawImage(glowSprite("rgba(190,120,255,1)"), S0.x - L * .7, S0.y - L * .4, L * 1.4, L * .8); } }
-    /* death: it comes apart as golden light, rising */
-    if (!alive && b.deadAt && b.deadAt[i] != null && last[i]) { const k = (T - b.deadAt[i]) / 2.6, P = last[i]; if (k >= 0 && k < 1) { serpGhost(ctx, P.x, P.y - P.L * .15 * k, P.L, P.face, Math.max(0, .9 - k * 1.4), 1);
-        ctx.globalCompositeOperation = "lighter"; const n = lo ? 18 : 44; for (let j = 0; j < n; j++) { const r1 = Math.sin(j * 12.9 + i) * .5 + .5, r2 = Math.sin(j * 78.2 + i) * .5 + .5, st = r2 * .35, kk = clamp((k - st) / (1 - st), 0, 1); if (kk <= 0) continue;
-          const px = P.x + (r1 - .5) * P.L * 1.8 + Math.sin(kk * 6 + j) * P.L * .06, py = P.y + (r2 - .5) * P.L * .4 - kk * P.L * (1 + r1 * 1.2); ctx.globalAlpha = (1 - kk) * .95; const s = (3 + 4 * r2) * d * (1 - kk * .5); ctx.drawImage(glowSprite(j % 4 ? "rgba(255,215,110,1)" : "rgba(200,140,255,1)"), px - s, py - s, s * 2, s * 2); }
-        ctx.globalAlpha = (1 - k) * .45; const cw = P.L * .5; ctx.drawImage(glowSprite("rgba(255,225,150,1)"), P.x - cw, P.y - P.L * 1.6 * k - cw, cw * 2, cw * 2 + P.L * k); } } }
+  }
+  /* each hatchling that dies comes apart as golden light, rising (the last one with the whole body) */
+  for (const P of b.serpD || []) { const k = (T - P.t) / 2.6, i = P.j; if (k < 0 || k >= 1) continue; serpGhost(ctx, P.x, P.y - P.L * .15 * k, P.L, P.face, Math.max(0, .8 - k * 1.3), 1);
+    ctx.globalCompositeOperation = "lighter"; const n = lo ? 18 : 44; for (let j = 0; j < n; j++) { const r1 = Math.sin(j * 12.9 + i) * .5 + .5, r2 = Math.sin(j * 78.2 + i) * .5 + .5, st = r2 * .35, kk = clamp((k - st) / (1 - st), 0, 1); if (kk <= 0) continue;
+      const px = P.x + (r1 - .5) * P.L * 1.8 + Math.sin(kk * 6 + j) * P.L * .06, py = P.y + (r2 - .5) * P.L * .4 - kk * P.L * (1 + r1 * 1.2); ctx.globalAlpha = (1 - kk) * .95; const s = (3 + 4 * r2) * d * (1 - kk * .5); ctx.drawImage(glowSprite(j % 4 ? "rgba(255,215,110,1)" : "rgba(200,140,255,1)"), px - s, py - s, s * 2, s * 2); }
+    ctx.globalAlpha = (1 - k) * .45; const cw = P.L * .5; ctx.drawImage(glowSprite("rgba(255,225,150,1)"), P.x - cw, P.y - P.L * 1.6 * k - cw, cw * 2, cw * 2 + P.L * k); }
   ctx.restore(); }
 /* the story: a won fight against Serpents counts its dead hatchlings, once per report */
 function serpStory(r) { try { if (!S || !r || r.test || r.mon !== "cserp" || r.winner !== "a" || !(r.aUids || []).includes(G.me)) return; const id = r.id || (r.at + "|" + r.title), seen = S.serpR || (S.serpR = []); if (seen.includes(id)) return; seen.push(id); if (seen.length > 40) seen.shift();
