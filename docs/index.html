@@ -5896,7 +5896,10 @@ function openOrbitScan(T, near, layerF, k) {
   best.sort((a, b) => a[0] - b[0]);
   return { total, byL, near: best.map(([d, i]) => Object.assign(emptyAt(i), { d: Math.sqrt(d) })) };
 }
-const TELEPORT_SHARDS = 200, TELEPORT_RAND = 70, TELEPORT_CD = 24 * 3600e3; /* v640 owner: aimed ◆200, random ◆100 (was ◆25 both) */
+const TELEPORT_SHARDS = 200, TELEPORT_RAND = 70, TELEPORT_CD = 24 * 3600e3, TELEPORT_MAX = 3; /* v712 three jumps per planet in any 24 hours */
+function tpLogOf(id, T = now()) { const L = (((S && S.tpLog) || {})[id] || []).filter(t => T - t < TELEPORT_CD); const c = ((S && S.tpCd) || {})[id] || 0; if (c > T && !L.length) L.push(c - TELEPORT_CD); return L; }
+const tpReadyAt = (id, T = now()) => { const L = tpLogOf(id, T); return L.length < TELEPORT_MAX ? 0 : Math.min(...L) + TELEPORT_CD; }, tpLeft = (id, T = now()) => Math.max(0, TELEPORT_MAX - tpLogOf(id, T).length);
+const tpLeftTxt = (id, T) => { const n = tpLeft(id, T); return n < TELEPORT_MAX && n > 0 ? ` · ${n} of ${TELEPORT_MAX} jumps left` : ""; }; /* v640 owner: aimed ◆200, random ◆100 (was ◆25 both) */
 const buyArmed = k => !!(G.buyArm && G.buyArm.k === k && Date.now() - G.buyArm.t < 8000);
 function armBuy(k, cost) { if (buyArmed(k)) { G.buyArm = null; return true; } G.buyArm = { k, t: Date.now() }; toast(`Tap again to spend ◆${fmt(cost)}.`); if (sheet) renderSheet(); else render(true);
   setTimeout(() => { if (G.buyArm && G.buyArm.k === k && !buyArmed(k)) { G.buyArm = null; if (sheet) renderSheet(); else render(true); } }, 8100); return false; }
@@ -6542,7 +6545,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 711;
+const GAME_V = 712;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -7400,7 +7403,7 @@ function newState() {
     bq: null, rq: null, sq: [], fleets: [], reports: [], log: [], lp: {},
     quest: 0, qSeen: -1, chapter: 1, wins: 0, maxWin: 0, captures: 0, pvpWins: 0, boosts: 2, raid: null, nextRaid: null,
     spent: 0, intro: false, say: [], savedAt: 0, unread: 0, seq: 1, inboxSeen: 0, homeName: "Calder IV",
-    created: now(), boostBuys: 0, stats: {}, daily: null, ally: null, nexusRet: -1, shards: 10, botRaid: null, nextBotRaid: null, pir: {}, mis: { interceptor: 0, ballistic: 0 }, strikes: [], runes: {}, sock: {}, fav: {}, spy: {}, wrecks: {}, items: {}, probes: [], tpCd: {}, fog: "", explored: 0 };
+    created: now(), boostBuys: 0, stats: {}, daily: null, ally: null, nexusRet: -1, shards: 10, botRaid: null, nextBotRaid: null, pir: {}, mis: { interceptor: 0, ballistic: 0 }, strikes: [], runes: {}, sock: {}, fav: {}, spy: {}, wrecks: {}, items: {}, probes: [], tpCd: {}, tpLog: {}, fog: "", explored: 0 };
 }
 function migrate(st) {
   const base = newState();
@@ -20956,19 +20959,19 @@ function shFind() {
     if (cs && !pc) res = `<p class="note" style="color:var(--amber)">Type coordinates as Layer:System:Position, for example 3:82:5.</p>`;
     else if (pc && !loc) res = `<p class="note" style="color:var(--amber)">Nothing at ${esc(cs)}. Layers run 1-6 and systems 1-${SYS_N}${pc[0] >= 1 && pc[0] <= 6 && pc[1] >= 1 && pc[1] <= SYS_N ? `; system ${pc[0]}:${pc[1]} has ${sysSize(pc[0], pc[1])} positions` : ""}.</p>`;
     else if (loc) { const L = layerOf(loc.r), d = Math.round(dist(loc)), free = loc.kind === "empty" && !tileTaken().has(loc.id);
-      const tp = free ? mine.map(p => { const cd = (S.tpCd || {})[p.id] || 0; return `<div class="crow"><canvas data-p="${p.id}" style="width:30px;height:30px"></canvas><span class="nm">${esc(p.name)}${p.kind === "home" ? " ⌂" : ""}<small>[${coordStr(p)}] → [${coordStr(loc)}]</small></span>${cd > T ? `<span class="req">Ready in <span data-end="${cd}">${ftime(cd - T)}</span></span>` : `<span class="tpb"><button class="btn sm" data-act="teleport" data-pay="ticket" data-id="${p.id}" data-tile="${loc.id}" ${tickets && canPlay() ? "" : "disabled"}>Use ticket${tickets ? ` ×${tickets}` : ""}</button><button class="btn amber sm${buyArmed("tp|" + p.id + "|" + loc.id) ? " pxarm" : ""}" data-act="teleport" data-pay="buy" data-id="${p.id}" data-tile="${loc.id}" ${shards >= TELEPORT_SHARDS && canPlay() ? "" : "disabled"}>${buyArmed("tp|" + p.id + "|" + loc.id) ? "Confirm" : "Buy"} ◆${TELEPORT_SHARDS}</button></span>`}</div>`; }).join("") : "";
+      const tp = free ? mine.map(p => { const cd = tpReadyAt(p.id, T); return `<div class="crow"><canvas data-p="${p.id}" style="width:30px;height:30px"></canvas><span class="nm">${esc(p.name)}${p.kind === "home" ? " ⌂" : ""}<small>[${coordStr(p)}] → [${coordStr(loc)}]${tpLeftTxt(p.id, T)}</small></span>${cd > T ? `<span class="req">Ready in <span data-end="${cd}">${ftime(cd - T)}</span></span>` : `<span class="tpb"><button class="btn sm" data-act="teleport" data-pay="ticket" data-id="${p.id}" data-tile="${loc.id}" ${tickets && canPlay() ? "" : "disabled"}>Use ticket${tickets ? ` ×${tickets}` : ""}</button><button class="btn amber sm${buyArmed("tp|" + p.id + "|" + loc.id) ? " pxarm" : ""}" data-act="teleport" data-pay="buy" data-id="${p.id}" data-tile="${loc.id}" ${shards >= TELEPORT_SHARDS && canPlay() ? "" : "disabled"}>${buyArmed("tp|" + p.id + "|" + loc.id) ? "Confirm" : "Buy"} ◆${TELEPORT_SHARDS}</button></span>`}</div>`; }).join("") : "";
       const open = loc.kind === "empty" ? `data-act="tileGo" data-id="${loc.id}"` : loc.kind === "node" ? `data-act="node" data-id="${loc.id}"` : loc.kind === "pirate" ? `data-act="pirate" data-id="${loc.id}"` : loc.kind === "pyramid" ? `data-act="pyramid" data-id="${loc.id}"` : loc.kind === "seat" ? "" : `data-act="planet" data-id="${loc.id}"`;
       res = `<div class="card cres"><div class="crh"><span class="cbig">[${esc(coordStr(loc))}]</span><span class="pill" style="border-color:${L.col};color:${L.col}">L${L.n} ${L.name}</span></div>
         <b style="font-size:17px">${esc(loc.name || "")}</b><small class="note">${kindOf(loc)}${loc.lvl ? ` · Lv.${loc.lvl}` : ""}${loc.owner ? ` · ${esc(nameOf(loc.owner))}` : ""} · ${d} away from ${esc(h ? h.name : S.homeName)}</small>
         ${open ? `<button class="btn ghost wide" ${open}>View on map ›</button>` : ""}
-        ${loc.kind === "empty" ? (free ? `<h3 class="sec" style="margin-top:8px">Teleport a planet here</h3><p class="note">Moves the planet with its buildings, stockpile and garrison. Each planet's jump drive recharges for 24 hours.</p>${tp}` : `<p class="note" style="color:var(--amber)">Another world has already moved into this orbit.</p>`) : `<p class="note">Only open orbits can be teleported into. Try another position in this system.</p>`}</div>`; }
+        ${loc.kind === "empty" ? (free ? `<h3 class="sec" style="margin-top:8px">Teleport a planet here</h3><p class="note">Moves the planet with its buildings, stockpile and garrison. Each planet's jump drive holds 3 jumps in any 24 hours.</p>${tp}` : `<p class="note" style="color:var(--amber)">Another world has already moved into this orbit.</p>`) : `<p class="note">Only open orbits can be teleported into. Try another position in this system.</p>`}</div>`; }
     const sc = openOrbitScan(T, h ? pos(h, T) : { x: 0, y: 0 }, 0, 5);
     return `<div class="hd"><div><div class="chapter" style="color:#5dffa8">🔭 Finder</div><h2>Coordinates</h2><p class="note">Every one of the ${fmt(TILE_N)} locations has an address: <b>Layer : System : Position</b>. Type one in to find it, and teleport into any free open orbit.</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>${segAll}
       <div class="cin"><input id="coordin" class="minput" inputmode="text" autocomplete="off" spellcheck="false" placeholder="e.g. 3:82:5" value="${esc(cs)}" aria-label="Coordinates, Layer:System:Position"><button class="btn" data-act="coordGo">Locate</button></div>
       <dl class="kv"><dt>Teleport</dt><dd>Ticket (${tickets} owned) or ◆${TELEPORT_SHARDS} to a chosen orbit, ◆${TELEPORT_RAND} for a random jump · you have ◆${fmt(shards)}</dd></dl>
       ${res}
       <h3 class="sec">🎲 Random jump</h3><p class="note">Jump a planet to a random free orbit anywhere in the galaxy, in any layer. Cheaper than an aimed jump: ◆${TELEPORT_RAND}, or a ticket. Same 24-hour recharge.</p>
-      <div class="list">${mine.map(p => { const cd = (S.tpCd || {})[p.id] || 0; return `<div class="crow"><canvas data-p="${p.id}" style="width:30px;height:30px"></canvas><span class="nm">${esc(p.name)}${p.kind === "home" ? " ⌂" : ""}<small>[${coordStr(p)}] → somewhere new</small></span>${cd > T ? `<span class="req">Ready in <span data-end="${cd}">${ftime(cd - T)}</span></span>` : `<span class="tpb"><button class="btn sm" data-act="tpRandom" data-pay="ticket" data-id="${p.id}" ${tickets && canPlay() ? "" : "disabled"}>Ticket${tickets ? ` ×${tickets}` : ""}</button><button class="btn amber sm${buyArmed("tpr|" + p.id) ? " pxarm" : ""}" data-act="tpRandom" data-pay="buy" data-id="${p.id}" ${shards >= TELEPORT_RAND && canPlay() ? "" : "disabled"}>${buyArmed("tpr|" + p.id) ? "Confirm " : ""}◆${TELEPORT_RAND}</button></span>`}</div>`; }).join("")}</div>
+      <div class="list">${mine.map(p => { const cd = tpReadyAt(p.id, T); return `<div class="crow"><canvas data-p="${p.id}" style="width:30px;height:30px"></canvas><span class="nm">${esc(p.name)}${p.kind === "home" ? " ⌂" : ""}<small>[${coordStr(p)}] → somewhere new${tpLeftTxt(p.id, T)}</small></span>${cd > T ? `<span class="req">Ready in <span data-end="${cd}">${ftime(cd - T)}</span></span>` : `<span class="tpb"><button class="btn sm" data-act="tpRandom" data-pay="ticket" data-id="${p.id}" ${tickets && canPlay() ? "" : "disabled"}>Ticket${tickets ? ` ×${tickets}` : ""}</button><button class="btn amber sm${buyArmed("tpr|" + p.id) ? " pxarm" : ""}" data-act="tpRandom" data-pay="buy" data-id="${p.id}" ${shards >= TELEPORT_RAND && canPlay() ? "" : "disabled"}>${buyArmed("tpr|" + p.id) ? "Confirm " : ""}◆${TELEPORT_RAND}</button></span>`}</div>`; }).join("")}</div>
       <h3 class="sec">Your worlds</h3><div class="list">${mine.map(p => `<button class="orow" data-act="coordSet" data-v="${coordStr(p)}"><span class="oic">⌂</span><span class="nm">${esc(p.name)}<small>[${coordStr(p)}]</small></span><span class="go">Use ›</span></button>`).join("")}</div>
       <h3 class="sec">Nearest charted open orbits</h3><div class="list">${sc.near.map(e => `<button class="orow" data-act="coordSet" data-v="${coordStr(e)}"><span class="oic">⊕</span><span class="nm">[${coordStr(e)}]<small>${Math.round(e.d)} away · L${layerOf(e.r).n} ${layerOf(e.r).name}</small></span><span class="go">Select ›</span></button>`).join("") || '<p class="note">Explore to chart open orbits near you, or type any coordinates above.</p>'}</div>`;
   }
@@ -22630,7 +22633,7 @@ function planetExtras(p, st) {
   else if (mine && (S.items || {}).moonSeed > 0) out.push(`<button class="btn wide" data-act="moonSeed" data-id="${p.id}">☾ Plant a Moon Seed here (${S.items.moonSeed} left)</button>`);
   if (p.debris) out.push(`<div class="card"><b style="font-family:var(--f-display);letter-spacing:.08em">DEBRIS FIELD</b><p class="note" style="margin:4px 0">Wreckage from battles here. Send Recyclers to collect it. Big battles can also form a moon (20% at 1,000,000 resources of debris).</p>
     <dl class="kv"><dt>Recyclable</dt><dd>${costHTML(p.debris)}</dd></dl>${recBtn("recycle", p.id, p, p.debris)}</div>`);
-  if (mine) { const cd = (S.tpCd || {})[p.id] || 0; out.push(`<button class="btn ghost wide tpbtn" data-act="find" data-r="o">⊕ Teleport ${esc(p.name)}: show open orbits${cd > T ? ` · drives ready in ${ftime(cd - T)}` : ""}</button>`); }
+  if (mine) { const cd = tpReadyAt(p.id, T); out.push(`<button class="btn ghost wide tpbtn" data-act="find" data-r="o">⊕ Teleport ${esc(p.name)}: show open orbits${cd > T ? ` · drives ready in ${ftime(cd - T)}` : ""}</button>`); }
   return out.join("");
 }
 /* unexplored space: greyed out until a planet, fleet or probe reveals it */
@@ -22645,10 +22648,10 @@ function shTile() {
   const e = EB[sheet.id]; if (!e) return ""; const T = now(), q = pos(e, T);
   if (!fogSeen(q.x, q.y)) return shUnexplored(e);
   const taken = tileTaken().has(e.id), tickets = (S.items || {}).teleport || 0, mine = myPlanets();
-  const rows = mine.map(p => { const cd = (S.tpCd || {})[p.id] || 0, burning = myBurn(p.id);
-    return `<div class="crow"><canvas data-p="${p.id}" style="width:30px;height:30px"></canvas><span class="nm">${esc(p.name)}${p.kind === "home" ? " ⌂" : ""}<small>${zoneOf(p.r)} → ${zoneOf(e.r)}</small></span>${cd > T ? `<span class="req">Ready in <span data-end="${cd}">${ftime(cd - T)}</span></span>` : `<span class="tpb"><button class="btn sm" data-act="teleport" data-pay="ticket" data-id="${p.id}" data-tile="${e.id}" ${taken || !canPlay() || !tickets ? "disabled" : ""}>Use ticket${tickets ? ` ×${tickets}` : ""}</button><button class="btn amber sm${buyArmed("tp|" + p.id + "|" + e.id) ? " pxarm" : ""}" data-act="teleport" data-pay="buy" data-id="${p.id}" data-tile="${e.id}" ${taken || !canPlay() || (S.shards || 0) < TELEPORT_SHARDS ? "disabled" : ""}>${buyArmed("tp|" + p.id + "|" + e.id) ? "Confirm" : "Buy"} ◆${TELEPORT_SHARDS}</button></span>`}</div>`; }).join("");
+  const rows = mine.map(p => { const cd = tpReadyAt(p.id, T), burning = myBurn(p.id);
+    return `<div class="crow"><canvas data-p="${p.id}" style="width:30px;height:30px"></canvas><span class="nm">${esc(p.name)}${p.kind === "home" ? " ⌂" : ""}<small>${zoneOf(p.r)} → ${zoneOf(e.r)}${tpLeftTxt(p.id, T)}</small></span>${cd > T ? `<span class="req">Ready in <span data-end="${cd}">${ftime(cd - T)}</span></span>` : `<span class="tpb"><button class="btn sm" data-act="teleport" data-pay="ticket" data-id="${p.id}" data-tile="${e.id}" ${taken || !canPlay() || !tickets ? "disabled" : ""}>Use ticket${tickets ? ` ×${tickets}` : ""}</button><button class="btn amber sm${buyArmed("tp|" + p.id + "|" + e.id) ? " pxarm" : ""}" data-act="teleport" data-pay="buy" data-id="${p.id}" data-tile="${e.id}" ${taken || !canPlay() || (S.shards || 0) < TELEPORT_SHARDS ? "disabled" : ""}>${buyArmed("tp|" + p.id + "|" + e.id) ? "Confirm" : "Buy"} ◆${TELEPORT_SHARDS}</button></span>`}</div>`; }).join("");
   return `<div class="hd"><div><div class="chapter" style="color:#5dffa8">⊕ Open orbit · [${coordStr(e)}] · L${layerOf(e.r).n} ${layerOf(e.r).name}</div><h2>${esc(e.name)}</h2><p class="note">${taken ? "Another world has already been moved here." : "A free orbit. Teleport one of your planets here, with its buildings, stockpile and garrison."}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
-    <dl class="kv"><dt>Orbit</dt><dd>${Math.round(e.r)} · one lap in ${ftime(period(e.r))}</dd><dt>Teleport cost</dt><dd>${tickets ? `1 Teleport Ticket (${tickets} owned)` : `◆${TELEPORT_SHARDS}`}</dd><dt>Cooldown</dt><dd>24 hours per planet</dd></dl>
+    <dl class="kv"><dt>Orbit</dt><dd>${Math.round(e.r)} · one lap in ${ftime(period(e.r))}</dd><dt>Teleport cost</dt><dd>${tickets ? `1 Teleport Ticket (${tickets} owned)` : `◆${TELEPORT_SHARDS}`}</dd><dt>Jumps</dt><dd>3 per planet in any 24 hours</dd></dl>
     ${taken ? "" : outpostSection(e) + `<h2 class="sec">Teleport a planet here</h2><div>${rows}</div>`}`;
 }
 /* v94: occupy an open orbit with a fleet (an outpost, held 6 hours), or fight whoever holds it */
@@ -28451,14 +28454,14 @@ const ACT = {
   teleport: d => act(() => {
     const p = G.byId[d.id], e = EB[d.tile], T = now(); if (!p || !e || p.owner !== G.me || !canPlay()) return;
     if (tileTaken().has(e.id)) return toast("That orbit is taken.", "warn"); // coordinates reach any open orbit, charted or not
-    if (((S.tpCd || {})[p.id] || 0) > T) return toast(`${p.name}'s jump drives are still cooling down.`, "warn");
+    if ((tpReadyAt(p.id, T)) > T) return toast(`${p.name} has used all ${TELEPORT_MAX} of its jumps for now. Its drive recharges in ${ftime(tpReadyAt(p.id, T) - T)}.`, "warn");
     const cost = d.rnd ? TELEPORT_RAND : TELEPORT_SHARDS, tk = (S.items || {}).teleport > 0, sh = (S.shards || 0) >= cost;
     if (!d.rnd && (d.pay === "buy" || (d.pay !== "ticket" && !tk)) && sh && !armBuy("tp|" + d.id + "|" + d.tile, cost)) return; /* v640 a paid jump asks for a second tap (the random one asked in tpRandom) */
     if (d.pay === "ticket") { if (!tk) return toast("You have no Teleport Tickets. Buy one in the Void Shop or pay with shards.", "warn"); S.items.teleport--; }
     else if (d.pay === "buy") { if (!sh) return toast(`That jump costs ◆${cost}.`, "warn"); S.shards -= cost; }
     else if (tk) S.items.teleport--; else if (sh) S.shards -= cost; else return toast(`Teleporting needs a Teleport Ticket or ◆${cost}.`, "warn");
     if (p.kind !== "home") settle(p, T);
-    p.r = e.r; p.a0 = e.a0; p.tid = e.id; S.tpCd = S.tpCd || {}; S.tpCd[p.id] = T + TELEPORT_CD; putPlanet(p); reveal(pos(p, T).x, pos(p, T).y, 50); bump("teleports");
+    p.r = e.r; p.a0 = e.a0; p.tid = e.id; S.tpLog = S.tpLog || {}; S.tpLog[p.id] = tpLogOf(p.id, T).concat(T); if (S.tpCd) delete S.tpCd[p.id]; putPlanet(p); reveal(pos(p, T).x, pos(p, T).y, 50); bump("teleports");
     closeSheet(); toast(`${p.name} jumped to [${coordStr(e)}] in ${zoneOf(e.r)}.`, "win"); if (G3) { G3.cam.follow = p.id; G3.cam.goal = { dist: 40 }; }
   }),
   buy: d => act(() => { const s = SHOP[d.k]; if (!s || !s.cost) return; if (s.cat === "res" && podLeft(d.k) <= 0) return toast(`${s.n}: ${POD_DAY} a day from the shop. More tomorrow (UTC midnight).`, "warn"); if ((S.shards || 0) < s.cost) return toast(`That costs ◆${s.cost}.`, "warn"); S.shards -= s.cost;
