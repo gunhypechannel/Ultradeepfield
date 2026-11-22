@@ -6545,7 +6545,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 714;
+const GAME_V = 715;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -24622,7 +24622,7 @@ function gpuNap(on) { for (const W of [G3, C3]) { if (!W || !W.renderer) continu
 function bevOpen() { if (G.bevOpen == null) { try { G.bevOpen = localStorage.getItem("udf.bevOpen") === "1"; } catch (e) { G.bevOpen = false; } } return !!G.bevOpen; }
 function playBattle(r) {
   if (r && r.elAff && r.elAff.pct > 0) setTimeout(() => { if (battle) elAffFlash(r.elAff); }, 1400); /* v628 */
-  if (battle) closeBattle(); archFromRep(r); crumb("battle replay: " + String((r && r.title) || "battle").slice(0, 40)); gpuNap(true);
+  if (battle) closeBattle(); archFromRep(r); crumb("battle replay: " + String((r && r.title) || "battle").slice(0, 40)); if (IOS) { worldDrop("gal", "before a battle"); worldDrop("col", "before a battle"); } /* fb-20261120 only the world on screen stays */ gpuNap(true);
   const w = document.createElement("div"); w.className = "battle"; w.id = "battle";
   w.innerHTML = `<canvas id="bcv" aria-label="Battle replay"></canvas>
     <div class="bhud top" id="bhA"></div><div class="bhud bot" id="bhD"></div><div class="bev" id="bev" aria-live="polite"></div>
