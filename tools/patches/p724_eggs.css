@@ -1,0 +1,41 @@
+/* v724 eggs: the reveal and the hatch */
+.xsfx{position:fixed;inset:0;z-index:9500;display:grid;place-items:center;background:radial-gradient(60% 45% at 50% 45%,color-mix(in srgb,var(--r) 22%,transparent),rgba(2,6,10,.88) 70%);opacity:0;transition:opacity .35s;padding:16px}
+.xsfx.on{opacity:1}
+.xsrays{position:absolute;left:50%;top:44%;width:150vmax;height:150vmax;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--r) 30%,transparent) 0deg 6deg,transparent 6deg 22deg);-webkit-mask:radial-gradient(closest-side,#000 10%,transparent 70%);mask:radial-gradient(closest-side,#000 10%,transparent 70%);animation:xsray 14s linear infinite;opacity:.8;pointer-events:none}
+.xsfx.pr .xsrays{background:repeating-conic-gradient(from 0deg,rgba(255,122,217,.35) 0deg 6deg,transparent 6deg 15deg,rgba(122,244,255,.35) 15deg 21deg,transparent 21deg 30deg,rgba(255,211,107,.35) 30deg 36deg,transparent 36deg 45deg)}
+@keyframes xsray{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.xsfxb{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;max-width:320px;transform:scale(.8);transition:transform .45s cubic-bezier(.2,1.6,.4,1)}
+.xsfx.on .xsfxb{transform:scale(1)}
+.xsfxb>small,.xshi>small{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+.xsfxb>b,.xshi>b{font-size:24px;font-family:Oxanium,sans-serif;color:#fff;text-shadow:0 0 18px var(--c)}
+.xsfxb p,.xshi p{margin:0;color:#c9d6de;font-size:13.5px;line-height:1.4}
+.xsegg.xl{width:96px;height:122px;box-shadow:0 0 40px var(--c),0 0 90px color-mix(in srgb,var(--c) 50%,transparent);animation:xsdrop .8s cubic-bezier(.2,1.5,.4,1) both,xswob 1.4s ease-in-out .8s infinite}
+@keyframes xsdrop{from{transform:translateY(-60px) scale(.4);opacity:0}to{transform:none;opacity:1}}
+.xstr{display:inline-block;width:max-content;font-size:11px;font-weight:700;padding:1px 8px;border-radius:8px;color:#ffe9a8;background:rgba(255,210,90,.12);border:1px solid rgba(255,210,90,.45)}
+.xstr.t-lucky{color:#9dffb0;border-color:rgba(120,255,150,.45);background:rgba(120,255,150,.1)}.xstr.t-swift{color:#9fe8ff;border-color:rgba(120,220,255,.45);background:rgba(120,220,255,.1)}.xstr.t-radiant{color:#fff;box-shadow:0 0 10px rgba(255,240,200,.6)}
+/* the hatch: shake, cracks, burst, the creature rises */
+.xshatch{position:relative;width:180px;height:180px;display:grid;place-items:center}
+.xshatch .xsegg.xl{animation:xsdrop .6s cubic-bezier(.2,1.5,.4,1) both,xsshake .12s linear .6s infinite}
+@keyframes xsshake{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-2px,1px) rotate(-3deg)}75%{transform:translate(2px,-1px) rotate(3deg)}}
+.xscrack{position:absolute;left:50%;top:50%;width:96px;height:122px;transform:translate(-50%,-50%);overflow:visible;pointer-events:none}
+.xscrack path{fill:none;stroke:#fff;stroke-width:1.6;stroke-linecap:round;filter:drop-shadow(0 0 3px var(--c)) drop-shadow(0 0 6px #fff);stroke-dasharray:60;stroke-dashoffset:60;animation:xscr 1.2s ease-out forwards;animation-delay:calc(.6s + var(--d))}
+@keyframes xscr{to{stroke-dashoffset:0}}
+.xsshards{position:absolute;inset:0;pointer-events:none}
+.xsshards i{position:absolute;left:50%;top:50%;width:22px;height:26px;margin:-13px -11px;border-radius:40% 40% 20% 60%;background:var(--c);box-shadow:0 0 10px var(--c);opacity:0;transform:rotate(var(--a)) translateY(0) scale(var(--s))}
+.xshatch img{position:absolute;width:170px;height:170px;object-fit:cover;border-radius:50%;opacity:0;transform:scale(.2);box-shadow:0 0 0 3px var(--r),0 0 50px var(--c),0 0 120px color-mix(in srgb,var(--c) 50%,transparent)}
+.xshi{display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0;transform:translateY(12px);transition:opacity .5s .4s,transform .5s .4s}
+.xsfx.burst .xshatch .xsegg.xl,.xsfx.burst .xscrack{opacity:0;transition:opacity .15s}
+.xsfx.burst .xsshards i{animation:xsshard .9s cubic-bezier(.1,.7,.3,1) forwards}
+@keyframes xsshard{0%{opacity:1;transform:rotate(var(--a)) translateY(0) scale(var(--s))}100%{opacity:0;transform:rotate(var(--a)) translateY(-150px) rotate(220deg) scale(var(--s))}}
+.xsfx.burst .xshatch img{animation:xsrise .9s cubic-bezier(.2,1.4,.4,1) .15s forwards}
+@keyframes xsrise{to{opacity:1;transform:scale(1)}}
+.xsfx.burst .xshi{opacity:1;transform:none}
+.xsfx.burst::after{content:"";position:fixed;inset:0;background:#fff;animation:xsflash .6s ease-out forwards;pointer-events:none}
+@keyframes xsflash{from{opacity:.85}to{opacity:0}}
+/* tap to warm */
+.xswarm{background:none;border:0;padding:0;cursor:pointer;display:grid;place-items:center}
+.xsinc .xsegg.big{animation:xswob calc(2.4s - 1.4s * var(--wb,0)) ease-in-out infinite;--wa:calc(3deg + 9deg * var(--wb,0))}
+.xsinc .xsegg.big.warm{box-shadow:0 0 26px #ffb45a,0 0 50px rgba(255,150,60,.5)}
+.xsinc small.xswt{color:#ffc98a}
+@keyframes xswob{0%,100%{transform:rotate(0)}25%{transform:rotate(calc(-1 * var(--wa,8deg)))}75%{transform:rotate(var(--wa,8deg))}}
+@media (prefers-reduced-motion:reduce){.xsrays,.xsegg.xl,.xshatch .xsegg.xl,.xsinc .xsegg.big{animation:none}.xsfx.burst .xsshards i{animation:none}.xsfx.burst .xshatch img{animation:none;opacity:1;transform:none}.xsfx.burst::after{display:none}}
