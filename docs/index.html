@@ -6548,7 +6548,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 721;
+const GAME_V = 722;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -10725,7 +10725,7 @@ function battleXP(rep) {
   if (st) for (const k in st) v += st[k].killV || 0; else for (const [k, n] of Object.entries(side === "a" ? rep.lossD || {} : rep.lossA || {})) v += n * unitCost(k);
   const xp = Math.round(v / 2500) + (repWin(rep) ? 5 : 1); rep.xp = xp; S.bxp = (S.bxp || 0) + xp; return xp;
 }
-function addReport(rep) { try { tchRep(rep); } catch (e) {} /* v700 */ battleXP(rep); recordBattle(rep); try { advBattle(rep); } catch (e) {} try { bpDrop(rep); } catch (e) {} S.reports.unshift(rep); if (S.reports.length > 25) S.reports.length = 25; S.unread++; }
+function addReport(rep) { try { tchRep(rep); } catch (e) {} /* v700 */ try { serpStory(rep); } catch (e) {} /* v722 */ battleXP(rep); recordBattle(rep); try { advBattle(rep); } catch (e) {} try { bpDrop(rep); } catch (e) {} S.reports.unshift(rep); if (S.reports.length > 25) S.reports.length = 25; S.unread++; }
 
 /* ---------- joint strikes (shared) ---------- */
 const memberCount = a => Object.keys(a.members || {}).length;
@@ -11249,7 +11249,7 @@ function archUnlock(k, lv, quiet) { if (!S || !ARCH[k]) return; S.arch = S.arch 
   if (k !== "testament" && !/^[bslecoahdxmt]_/.test(k) && Object.entries(S.arch).filter(([q, v]) => v >= 2 && !/^[bslecoahdxmtq]_/.test(q)).length >= 10 && !S.arch.testament) setTimeout(() => archUnlock("testament", 2), 9000);
   try { if (typeof trayRender === "function") trayRender(); if (sheet && sheet.type === "archives") renderSheet(); } catch (e) {} }
 const archKeyOf = k => !k ? null : String(k)[0] === "c" && /^c\d$/.test(k) ? "ovl" : ARCH[k] ? k : null;
-function archFromRep(r) { try { if (!r) return; { const won = (r.winner === "a" && (r.aUids || []).includes(G.me)) || (r.winner === "d" && r.dUid === G.me), ks = JSON.stringify(r.start || {}); /* v535 the Hive and the Collective */
+function archFromRep(r) { try { serpStory(r); } catch (e) {} /* v722 */ try { if (!r) return; { const won = (r.winner === "a" && (r.aUids || []).includes(G.me)) || (r.winner === "d" && r.dUid === G.me), ks = JSON.stringify(r.start || {}); /* v535 the Hive and the Collective */
     const bk = r.test ? null : r.omega || /"(cube|sphere|cdrone)"/.test(ks) ? "b_coll" : r.alien && !r.mon ? "b_hive" : null; if (bk && ARCH[bk]) { archUnlock(bk, 1, true); if (won) setTimeout(() => archUnlock(bk, 2), 4000); } }
   if (r.mon && MON[r.mon] && ARCH["b_" + r.mon] && !r.test) { archUnlock("b_" + r.mon, 1, true); if (r.winner === "a" && (r.aUids || []).includes(G.me)) setTimeout(() => archUnlock("b_" + r.mon, 2), 4000); } /* v526 */ const k = archKeyOf(r.sbk || r.wb || (r.omega ? "cube" : null)); if (!k) return; archUnlock(k, 1); const sg = r.sbSeg || r.omSeg || r.wbSeg;
     if (!r.test && sg && sg[1] === 0 && r.winner === "a") setTimeout(() => archUnlock(k, 2), 4000); } catch (e) {} }
@@ -13876,7 +13876,7 @@ function monBatPose(root, kind, f) { if (!MON_WAVE[kind]) return null; const U =
   return [...done.values()]; }
 /* which frame a monster in battle shows: its own phase, a little faster while it moves; the nearer of two frames full, the other over it */
 function monBatFrame(b, i, k, real, moving) { if (!MON_WAVE[k]) return null; const pre = b.mfPre || (b.mfPre = {}); if (!pre[k]) { pre[k] = 1; for (let f = 0; f < MBF_N; f++) shipArtSoon(k, "~f" + f, "side"); }
-  const P = b.mph || (b.mph = []); P[i] = ((P[i] == null ? (i * .37) % 1 : P[i]) + Math.min(80, real || 16) / 1000 / MBF_P * (moving ? 1.35 : 1) * (MIM_D[k] ? .5 : 1)) % 1; /* v678 the Mimics move slower and heavier */
+  const P = b.mph || (b.mph = []); P[i] = ((P[i] == null ? (i * .37) % 1 : P[i]) + Math.min(80, real || 16) / 1000 / MBF_P * (moving ? 1.35 : 1) * (MIM_D[k] ? .5 : 1) * (b.shed && b.shed[i] ? 1.6 : 1)) % 1; /* v722 */ /* v678 the Mimics move slower and heavier */
   const x = P[i] * MBF_N, f0 = Math.floor(x) % MBF_N, f1 = (f0 + 1) % MBF_N, w = x - Math.floor(x), a0 = shipArtSoon(k, "~f" + f0, "side"), a1 = shipArtSoon(k, "~f" + f1, "side");
   if (!a0 && !a1) return null; if (!a1) return ["~f" + f0, null, 0]; if (!a0) return ["~f" + f1, null, 0]; return w < .5 ? ["~f" + f0, "~f" + f1, w] : ["~f" + f1, "~f" + f0, 1 - w]; }
 /* v651 a monster's shield: the ellipse round the solid part of its picture, over every frame of its loop (in picture units) */
@@ -25951,9 +25951,10 @@ const BEAST_ATK = { swhale: "jaws", slevi: "breath", ssquid: "ink", vmanta: "sla
 const BEAST_DUR = { jaws: .8, breath: 1.4, ink: 1.2, slash: .9, swarm: 1.3, pods: 1.4, quake: 1.3, web: 1.4, flare: 1.2, charge: 1.4, thorns: 1.0, song: 1.6, grind: 1.2, coil: 1.1, fist: 1.5 };
 const BEAST_HIT = { jaws: .42, breath: .4, ink: .3, slash: .45, swarm: .55, pods: .6, quake: .5, web: .3, flare: .55, charge: .48, thorns: .62, song: .6, grind: .4, coil: .45, fist: .6 };
 const BEAST_BIG = { breath: 1, quake: 1, charge: 1, grind: 1, coil: 1, fist: 1 };
-function beastAtkAdd(b, v) { const q = b.Q[v.s]; if (!q) return; const a = BEAST_ATK[q.k]; if (!a || v.e == null || v.e < 0) return; const L = b.bAtk || (b.bAtk = []), last = b.bAtkT || (b.bAtkT = {});
-  if (last[v.s] != null && v.t >= last[v.s] && v.t - last[v.s] < Math.max(2.4, BEAST_DUR[a] * 1.2)) return; /* a rewound replay starts over */ last[v.s] = v.t;
-  L.push({ s: v.s, e: v.e, t0: v.t, a, seed: (v.s * 7 + L.length) % 13 }); if (L.length > 24) L.shift(); }
+function beastAtkAdd(b, v) { const q = b.Q[v.s]; if (!q) return; let a = BEAST_ATK[q.k]; if (!a || v.e == null || v.e < 0) return; const L = b.bAtk || (b.bAtk = []), last = b.bAtkT || (b.bAtkT = {});
+  if (last[v.s] != null && v.t >= last[v.s] && v.t - last[v.s] < Math.max(b.shed && b.shed[v.s] ? 1.5 : 2.4, BEAST_DUR[a] * 1.2)) return; /* a rewound replay starts over */ last[v.s] = v.t;
+  let e = v.e; if (q.k === "cserp") { const e2 = serpPick(b, v, q); if (e2 != null) { a = "constrict"; e = e2; } } /* v722 */
+  L.push({ s: v.s, e, t0: v.t, a, seed: (v.s * 7 + L.length) % 13 }); if (L.length > 24) L.shift(); }
 /* the bodies move with the move: lunges, rears, dashes, the serpent's S-curve; the spider's web drags light prey in */
 function beastLunge(b, scr, T) { const done = new Set();
   for (const m of b.bAtk || []) { const D = BEAST_DUR[m.a], u = (T - m.t0) / D; if (u < 0 || u > 1) continue; const S0 = scr[m.s], E0 = scr[m.e]; if (!S0 || !E0 || !(b.n[m.s] > 0)) continue;
@@ -25967,6 +25968,7 @@ function beastLunge(b, scr, T) { const done = new Set();
         case "slash": f = .8 * bell(.1, .8); side = Lg * .45 * Math.sin(Math.PI * clamp((u - .1) / .7, 0, 1) * 2); break;
         case "quake": up = u < .35 ? -Lg * .28 * u / .35 : u < .45 ? -Lg * .28 * (1 - (u - .35) / .1) : 0; f = u > .35 && u < .6 ? .15 * bell(.35, .6) : 0; break;
         case "charge": { const R2 = Math.min(dl * .7, Lg * 1.5) / reach; f = u < .3 ? -.4 * u / .3 : u < .48 ? -.4 + (R2 + .4) * (u - .3) / .18 : u < .62 ? R2 : R2 * (1 - (u - .62) / .38); break; }
+        case "constrict": f = u < .2 ? 1.1 * u / .2 : u < .8 ? 1.1 : 1.1 * (1 - (u - .8) / .2); break; /* v722 */
         case "coil": f = u < .45 ? 1.1 * u / .45 : 1.1 * (1 - (u - .45) / .55); side = Lg * .32 * Math.sin(u * TAU * 1.5) * (1 - u); break;
         case "song": up = -Lg * .12 * bell(0, 1); break;
         case "flare": f = -.12 * bell(0, .4); up = -Lg * .08 * bell(0, .4); break;
@@ -25984,6 +25986,51 @@ function beastSfx(a, pan) { try { if (!SFX.ok()) return;
   if (a === "swarm" || a === "pods" || a === "thorns") { SFX.swarm ? SFX.swarm(a === "swarm" ? 10 : 6, pan) : mimSfx("hiss", pan); return; }
   if (a === "song" || a === "web") { mimSfx("hum", pan); return; }
   mimSfx("whip", pan); setTimeout(() => { try { SFX.blast(1.4, pan); } catch (e) {} }, BEAST_HIT[a] * BEAST_DUR[a] * 1000); } catch (e) {} }
+/* ---------- v722 the Celestial Serpent's overhaul on the battle screen (owner: "Build it, It def needs a overhaul in battle simulation") ----------
+   - Two moves, in turn: the Coil Strike (v721) and the Constrict, where it lunges at the biggest ship in reach, throws three gold-edged coils
+     round it, squeezes three times and crushes it in violet fire.
+   - It sheds its skin once in a fight (when it first loses a hatchling, or halfway through): a golden husk peels off and drifts away, and
+     from then on it burns brighter, moves faster and strikes more often. She says so.
+   - It does not explode when it dies: it dissolves into golden light that rises and fades.
+   - The storyline: kills are counted, and at 3, 7, 12, 20 and 30 hatchlings the Advisor notices something about them, building toward
+     their mother (the adults "have never been seen"). Visual and narrative only: the battle sim is untouched. */
+const SERP_SHED = "It's shedding its skin, Commander. Whatever comes out of that husk is faster.";
+const SERP_MILE = [[3, "Another hatchling down, Commander. The gold on its scales was brighter than the last one's."],
+  [7, "I compared the hatchlings we've killed. Each one was older than the one before it. Something is raising them, Commander."],
+  [12, "Their eyes all turned the same way as they died. Toward the rim of the galaxy. As if something out there was watching."],
+  [20, "The hatchlings aren't hunting us, Commander. They're practicing. I don't want to know for whom."],
+  [30, "Long-range scans caught a shadow on the rim tonight. Gold-edged, and larger than a moon. I think the mother has noticed what we've been doing to her children."]];
+Object.assign(BEAST_DUR, { constrict: 1.9 }); Object.assign(BEAST_HIT, { constrict: .78 }); Object.assign(BEAST_BIG, { constrict: 1 });
+/* the Serpent alternates its moves; the Constrict goes for the biggest enemy still flying */
+function serpPick(b, v, q) { const c = b.bSerpN || (b.bSerpN = {}); c[v.s] = (c[v.s] || 0) + 1; if (c[v.s] % 2) return null;
+  let best = v.e, bl = -1; for (let j = 0; j < b.Q.length; j++) { const o = b.Q[j]; if (!o || o.side === q.side || !(b.n[j] > 0)) continue; const l = bLen(o.k); if (l > bl) { bl = l; best = j; } } return best; }
+const SERP_TINT = new WeakMap();
+function serpTint(art) { let c = SERP_TINT.get(art); if (c) return c; c = document.createElement("canvas"); c.width = art.width; c.height = art.height; const x = c.getContext("2d"); x.drawImage(art, 0, 0);
+  x.globalCompositeOperation = "source-atop"; const g = x.createLinearGradient(0, 0, c.width, c.height); g.addColorStop(0, "rgba(255,226,140,.85)"); g.addColorStop(.6, "rgba(255,190,90,.75)"); g.addColorStop(1, "rgba(190,130,255,.7)"); x.fillStyle = g; x.fillRect(0, 0, c.width, c.height); SERP_TINT.set(art, c); return c; }
+function serpGhost(ctx, x, y, L, face, al, sc) { const art = shipArtSoon("cserp", "~f0", "side"); if (!art) return false; const w = L * (DRAWK.cserp || 2) * MBF_Z * (sc || 1), h = w / 2;
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = al; ctx.translate(x, y); ctx.scale(face, 1); ctx.drawImage(serpTint(art), -w / 2, -h / 2, w, h); ctx.restore(); return true; }
+/* the shed, the brighter body after it, and the death */
+function serpDraw(ctx, b, scr, T, W, d, lo, t) { const Q = b.Q; if (!b.serpK) { b.serpK = Q.map((q, i) => q && q.k === "cserp" ? i : -1).filter(i => i >= 0); } if (!b.serpK.length) return;
+  const sh = b.shed || (b.shed = {}), last = b.serpP || (b.serpP = {}); ctx.save();
+  for (const i of b.serpK) { const q = Q[i], g = b.geo && b.geo[i], S0 = scr[i]; if (!g || !S0) continue; const alive = b.n[i] > 0;
+    if (alive) last[i] = { x: S0.x, y: S0.y, L: g.L, face: g.face };
+    const nc = b.serpN || (b.serpN = {}); if (nc[i] == null) nc[i] = b.n[i]; if (b.n[i] < nc[i] && last[i]) { (b.serpD || (b.serpD = [])).push(Object.assign({ t: T, j: i * 7 + b.n[i] }, last[i])); nc[i] = b.n[i]; } else if (b.n[i] > nc[i]) nc[i] = b.n[i];
+    if (alive && !sh[i] && T > 3 && (b.n[i] < q.n0 || T > (b.end || 40) * .45)) { sh[i] = { t: T, x: S0.x, y: S0.y, L: g.L, face: g.face }; if (!b.serpSaid) { b.serpSaid = 1; try { sbSay(SERP_SHED); } catch (e) {} } try { mimSfx("hiss", clamp(S0.x / W * 2 - 1, -1, 1)); } catch (e) {} b.flash = Math.max(b.flash || 0, .12); }
+    const s0 = sh[i]; if (s0) { const k = (T - s0.t) / 2.6; if (k >= 0 && k < 1) { const x = s0.x - s0.face * s0.L * .7 * k, y = s0.y - s0.L * .25 * k; serpGhost(ctx, x, y, s0.L, s0.face, .5 * (1 - k), 1 + .1 * k);
+        ctx.globalCompositeOperation = "lighter"; for (let j = 0; j < (lo ? 8 : 18); j++) { const r1 = Math.sin(j * 91.7) * .5 + .5, r2 = Math.sin(j * 37.3) * .5 + .5, px = x + (r1 - .5) * s0.L * 1.6, py = y + (r2 - .5) * s0.L * .5 - k * s0.L * (.3 + r2 * .5); ctx.globalAlpha = (1 - k) * .9; ctx.drawImage(glowSprite(j % 3 ? "rgba(255,215,110,1)" : "rgba(200,140,255,1)"), px - 3 * d, py - 3 * d, 6 * d, 6 * d); } }
+      if (alive && T >= s0.t) { const pr = .7 + .3 * Math.sin(t * .006 + i), L = g.L; ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .3 * pr; ctx.drawImage(glowSprite("rgba(255,205,100,1)"), S0.x - L * 1.1, S0.y - L * .55, L * 2.2, L * 1.1); ctx.globalAlpha = .2 * pr; ctx.drawImage(glowSprite("rgba(190,120,255,1)"), S0.x - L * .7, S0.y - L * .4, L * 1.4, L * .8); } }
+  }
+  /* each hatchling that dies comes apart as golden light, rising (the last one with the whole body) */
+  for (const P of b.serpD || []) { const k = (T - P.t) / 2.6, i = P.j; if (k < 0 || k >= 1) continue; serpGhost(ctx, P.x, P.y - P.L * .15 * k, P.L, P.face, Math.max(0, .8 - k * 1.3), 1);
+    ctx.globalCompositeOperation = "lighter"; const n = lo ? 18 : 44; for (let j = 0; j < n; j++) { const r1 = Math.sin(j * 12.9 + i) * .5 + .5, r2 = Math.sin(j * 78.2 + i) * .5 + .5, st = r2 * .35, kk = clamp((k - st) / (1 - st), 0, 1); if (kk <= 0) continue;
+      const px = P.x + (r1 - .5) * P.L * 1.8 + Math.sin(kk * 6 + j) * P.L * .06, py = P.y + (r2 - .5) * P.L * .4 - kk * P.L * (1 + r1 * 1.2); ctx.globalAlpha = (1 - kk) * .95; const s = (3 + 4 * r2) * d * (1 - kk * .5); ctx.drawImage(glowSprite(j % 4 ? "rgba(255,215,110,1)" : "rgba(200,140,255,1)"), px - s, py - s, s * 2, s * 2); }
+    ctx.globalAlpha = (1 - k) * .45; const cw = P.L * .5; ctx.drawImage(glowSprite("rgba(255,225,150,1)"), P.x - cw, P.y - P.L * 1.6 * k - cw, cw * 2, cw * 2 + P.L * k); }
+  ctx.restore(); }
+/* the story: a won fight against Serpents counts its dead hatchlings, once per report */
+function serpStory(r) { try { if (!S || !r || r.test || r.mon !== "cserp" || r.winner !== "a" || !(r.aUids || []).includes(G.me)) return; const id = r.id || (r.at + "|" + r.title), seen = S.serpR || (S.serpR = []); if (seen.includes(id)) return; seen.push(id); if (seen.length > 40) seen.shift();
+    const k0 = S.serpK || 0, n = Math.max(1, (r.lossD && r.lossD.cserp) || 1), k1 = k0 + n; S.serpK = k1; dirty();
+    const m = SERP_MILE.filter(x => k0 < x[0] && k1 >= x[0]).pop(); if (m) setTimeout(() => { try { sbSay(m[1]); } catch (e) {} }, 5500); } catch (e) {} }
+
 function beastAtkDraw(ctx, b, scr, T, W, d, lo, t) { const A = b.bAtk; if (!A || !A.length) return; ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
   const hit = (m, x, y, big) => { if (m.hit) return; m.hit = 1; b.slowUntil = Math.max(b.slowUntil || 0, t + (big ? 240 : 130)); b.shake = Math.max(b.shake || 0, (big ? 13 : 6) * d); b.flash = Math.max(b.flash || 0, big ? .24 : .08); m.hx = x; m.hy = y; m.ht = T; };
   const rnd = (m, j) => { const v = Math.sin(m.seed * 12.9898 + j * 78.233) * 43758.5453; return v - Math.floor(v); };
@@ -26051,6 +26098,14 @@ function beastAtkDraw(ctx, b, scr, T, W, d, lo, t) { const A = b.bAtk; if (!A ||
       case "coil": { const tr = m.tr || (m.tr = []); if (m.px != null && u < .7) { tr.push([m.px, m.py, T]); if (tr.length > 22) tr.shift(); } for (let j = 1; j < tr.length; j++) { const age = T - tr[j][2]; if (age > .45) continue; ctx.globalAlpha = (1 - age / .45) * .75; ctx.strokeStyle = j % 2 ? "rgba(255,211,107,1)" : "rgba(200,140,255,1)"; ctx.lineWidth = Lg * .12 * (1 - age / .45); ctx.beginPath(); ctx.moveTo(tr[j - 1][0], tr[j - 1][1]); ctx.lineTo(tr[j][0], tr[j][1]); ctx.stroke(); }
         if (u > .38 && u < .62) { const k = (u - .38) / .24, r = Lt * 1.2; ctx.globalAlpha = 1 - k; ctx.strokeStyle = "rgba(255,225,140,1)"; ctx.lineWidth = 6 * d; for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(E0.x - ux * r + nx * s * r * .4, E0.y - uy * r + ny * s * r * .4); ctx.quadraticCurveTo(E0.x + nx * s * r * .5, E0.y + ny * s * r * .5, E0.x + ux * r * .3, E0.y + uy * r * .3); ctx.stroke(); } }
         if (u >= uh) { hit(m, E0.x, E0.y, true); const k = (u - uh) / (1 - uh); for (let j = 0; j < 8; j++) { const a = j / 8 * TAU + m.seed, rr = Lt * (.4 + 1.3 * k); G(E0.x + Math.cos(a) * rr, E0.y + Math.sin(a) * rr * .65 - k * Lt * .4, Lt * (.34 * (1 - k) + .1), j % 2 ? "rgba(200,140,255,1)" : "rgba(150,90,255,1)", (1 - k) * .95); } } break; }
+      case "constrict": { const R0 = clamp(Lt * 1.1, 30 * d, Lg * .42), tight = clamp((u - .15) / .55, 0, 1), tt = tight * tight * (3 - 2 * tight), unw = u > .82 ? (u - .82) / .18 : 0, rx = R0 * (1.5 - .75 * tt + unw * 1.2), al = unw ? 1 - unw : Math.min(1, u / .15);
+        if (u > .1) { const hx = S0.x + ux * Lg * .35, hy = S0.y + uy * Lg * .35; const ex = E0.x - ux * rx * .9, ey = E0.y - uy * rx * .3, mx = (hx + ex) / 2 + nx * Math.min(dl * .15, R0), my = (hy + ey) / 2 + ny * Math.min(dl * .15, R0); ctx.globalAlpha = al * .85; ctx.strokeStyle = "rgba(190,130,255,1)"; ctx.lineWidth = 3 * d; ctx.setLineDash([2 * d, 7 * d]); ctx.lineDashOffset = -T * 90 * d; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.quadraticCurveTo(mx, my, ex, ey); ctx.stroke(); ctx.setLineDash([]); ctx.strokeStyle = "rgba(255,211,107,1)"; ctx.lineWidth = 1.2 * d; ctx.stroke(); }
+        if (u > .15) for (let j = 0; j < 3; j++) { const tilt = (j - 1) * .38, oy = (j - 1) * R0 * .28 * (1 - tt * .4), ry = rx * .36; ctx.globalAlpha = al; ctx.globalCompositeOperation = "source-over"; ctx.strokeStyle = "rgba(35,18,70,1)"; ctx.lineWidth = R0 * .2; ctx.beginPath(); ctx.ellipse(E0.x, E0.y + oy, rx, ry, tilt, 0, TAU); ctx.stroke();
+          ctx.globalCompositeOperation = "lighter"; ctx.strokeStyle = "rgba(255,211,107,1)"; ctx.lineWidth = 2 * d; for (const e2 of [-1, 1]) { ctx.beginPath(); ctx.ellipse(E0.x, E0.y + oy, rx + e2 * R0 * .11, ry + e2 * R0 * .11, tilt, 0, TAU); ctx.stroke(); }
+          ctx.fillStyle = "rgba(255,235,170,1)"; for (let s = 0; s < 10; s++) { const a = s / 10 * TAU + T * 2 * (j % 2 ? 1 : -1), px = E0.x + Math.cos(a) * rx * Math.cos(tilt) - Math.sin(a) * ry * Math.sin(tilt), py = E0.y + oy + Math.cos(a) * rx * Math.sin(tilt) + Math.sin(a) * ry * Math.cos(tilt); ctx.globalAlpha = al * .8; ctx.beginPath(); ctx.arc(px, py, 1.5 * d, 0, TAU); ctx.fill(); } }
+        for (const p of [.5, .6, .7]) if (u >= p && !(m.sq || (m.sq = {}))[p]) { m.sq[p] = 1; b.shake = Math.max(b.shake || 0, 7 * d); b.flash = Math.max(b.flash || 0, .06); try { SFX.blast(1.2, pan); } catch (e) {} }
+        for (const p of [.5, .6, .7]) { const k = (u - p) / .08; if (k > 0 && k < 1) G(E0.x, E0.y, R0 * (.5 + k * .5), "rgba(255,211,107,1)", (1 - k) * .8); }
+        if (u >= uh) { hit(m, E0.x, E0.y, true); const k = (u - uh) / (1 - uh); for (let j = 0; j < 10; j++) { const a = j / 10 * TAU + m.seed, rr = R0 * (.3 + 1.2 * k); G(E0.x + Math.cos(a) * rr, E0.y + Math.sin(a) * rr * .65 - k * R0 * .5, R0 * (.3 * (1 - k) + .08), j % 2 ? "rgba(200,140,255,1)" : "rgba(150,90,255,1)", (1 - k) * .95); } } break; }
       case "fist": { const cx = E0.x, cy = E0.y; if (u < .65) { const k = Math.min(1, u / .35), R = Lt * .95 * k, rot = T * 1.5; ctx.globalAlpha = .85 * fade; ctx.strokeStyle = C(1); ctx.lineWidth = 2 * d; ctx.beginPath(); ctx.ellipse(cx, cy + Lt * .35, R, R * .35, 0, 0, TAU); ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx, cy + Lt * .35, R * .72, R * .25, 0, 0, TAU); ctx.stroke();
           for (let j = 0; j < 10; j++) { const a = j / 10 * TAU + rot; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * R * .74, cy + Lt * .35 + Math.sin(a) * R * .26); ctx.lineTo(cx + Math.cos(a) * R * .96, cy + Lt * .35 + Math.sin(a) * R * .34); ctx.stroke(); } }
         if (u > .4 && u < .62) { const k = (u - .4) / .2, H2 = Math.max(Lt * 4, 160 * d), y = cy - H2 * (1 - k * k), r = Lt * .8; ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1; ctx.fillStyle = "rgba(70,78,72,1)"; ctx.beginPath(); for (let j = 0; j < 9; j++) { const a = j / 9 * TAU, rr = r * (.82 + .2 * rnd(m, j)); j ? ctx.lineTo(cx + Math.cos(a) * rr, y + Math.sin(a) * rr) : ctx.moveTo(cx + Math.cos(a) * rr, y + Math.sin(a) * rr); } ctx.closePath(); ctx.fill();
@@ -26531,7 +26586,7 @@ function drawBattle(t) {
       if (art) { ctx.save(); ctx.translate(cx, cy); ctx.scale(-1, 1); ctx.drawImage(art, -Lr, -Lr / 2, Lr * 2, Lr); ctx.restore(); }
       else if (q.role === "turret") drawUnit(ctx, q.k, cx, cy, W * .032, col.main, -1); else drawFortress(ctx, cx, cy, W * .085, t, col.main); }
     else {
-      if (dying && b.wreckd && b.wreckd[i]) return; // a capital ship that broke apart is drawn as its wreck
+      if (dying && b.wreckd && b.wreckd[i]) return; if (dying && q.k === "cserp") return; /* v722 */ // a capital ship that broke apart is drawn as its wreck
       /* v255 a hull never turns on screen: it used to squash flat and flip through edge-on, which looked like folding in on itself. Each squadron takes its heading from its first advance and keeps it; to go the other way it fires its retro thrusters and backs up */
       const nx = bPos(b, i, T + .5), lk = b.lk || (b.lk = []); if (!lk[i]) { lk[i] = 1; const n3 = bPos(b, i, T + 3); if (Math.abs(n3.x - p.x) > .2) b.face[i] = n3.x > p.x ? 1 : -1; } const face = b.face[i];
       const L = bFitL(q.k, Math.max(8 * d, clamp(W * .1 * bLen(q.k), 11 * d, W * bCapW(q.k)) * zs * bVsK(b, q)), W), /* v645 */ vc = MON[q.k] || giant(q.k) ? 1 : bVc(q, Math.max(n, 1), 3), moving = Math.hypot(nx.x - p.x, nx.y - p.y) > .2;
@@ -26700,7 +26755,7 @@ function drawBattle(t) {
     for (let i = 0; i < s.n; i++) { const o = (i - (s.n - 1) / 2) * 5 * d + Math.sin(i * 12.9 + s.t0) * 2 * d, x0 = sx + nx * o + ux * 6 * d, y0 = sy + ny * o, x1 = x0 + ux * reach, y1 = y0 + uy * reach;
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.strokeStyle = col; ctx.globalAlpha = al * .22 * dim; ctx.lineWidth = w * 7; ctx.stroke(); ctx.globalAlpha = al * .85 * dim; ctx.lineWidth = w * 2.3; ctx.stroke(); ctx.strokeStyle = "#fff"; ctx.globalAlpha = al * dim; ctx.lineWidth = w * .9; ctx.stroke(); }
     const mr = (8 + s.w * 5) * d * al; ctx.globalAlpha = al; ctx.drawImage(glowSprite(col), sx - mr, sy - mr, mr * 2, mr * 2); }
-  try { wbStrike(ctx, b, scr, Q, W, H, t, d, lo); } catch (e) {} try { mimAtkDraw(ctx, b, scr, T, W, d, lo, t, H); } catch (e) {} /* v676, v677 */ try { beastAtkDraw(ctx, b, scr, T, W, d, lo, t); } catch (e) {} /* v721 */ try { crcAtkDraw(ctx, b, scr, T, W, d, lo, t); } catch (e) {} /* v704 */ try { aexwDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} try { aexDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v680 */ try { aexdDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} try { bShDraw(ctx, b, W, H, d, T, t); } catch (e) {} /* v683 */ try { bShHits(ctx, b, W, H, d, t); } catch (e) {} /* v685 */ try { bmvDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v681 */ // v407 the boss's attack across the whole field
+  try { wbStrike(ctx, b, scr, Q, W, H, t, d, lo); } catch (e) {} try { mimAtkDraw(ctx, b, scr, T, W, d, lo, t, H); } catch (e) {} /* v676, v677 */ try { beastAtkDraw(ctx, b, scr, T, W, d, lo, t); } catch (e) {} /* v721 */ try { serpDraw(ctx, b, scr, T, W, d, lo, t); } catch (e) {} /* v722 */ try { crcAtkDraw(ctx, b, scr, T, W, d, lo, t); } catch (e) {} /* v704 */ try { aexwDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} try { aexDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v680 */ try { aexdDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} try { bShDraw(ctx, b, W, H, d, T, t); } catch (e) {} /* v683 */ try { bShHits(ctx, b, W, H, d, t); } catch (e) {} /* v685 */ try { bmvDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v681 */ // v407 the boss's attack across the whole field
   // mega beams from stations, titans and beam batteries: a charge-up glow, then a roaring column with a blinding impact
   if (!b.cdQ) b.cdQ = cdPlan(b); while (b.cdQ.length && b.cdQ[0].t0 - 2.4 <= T) b.beams.push(b.cdQ.shift()); // v418 a staged shot joins 2.4 s ahead, so the station can turn onto it
   b.beams = b.beams.filter(m => T - m.t0 <= m.charge + m.life + (m.wb ? 3 : 0)); // v410: the Cube Destroyer's splash outlives its beam
