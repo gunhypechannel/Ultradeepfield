@@ -24698,6 +24698,12 @@ function gpuNap(on) { for (const W of [G3, C3]) { if (!W || !W.renderer) continu
   if (on) for (const id of ["#galaxyfx", "#colfx"]) { const c = $(id); if (c) { c.width = 1; c.height = 1; } } }
 /* v428 the battle log drop-down: closed unless the player opened it (remembered on this device) */
 function bevOpen() { if (G.bevOpen == null) { try { G.bevOpen = localStorage.getItem("udf.bevOpen") === "1"; } catch (e) { G.bevOpen = false; } } return !!G.bevOpen; }
+function btFreeFirst(go) { /* fb-20261122 iOS: release the off-screen 3D world, give Safari a second to free it, then open the battle */
+  if (G.btWaitT) return; /* a second tap while waiting */
+  if (!IOS || !((G3 && view !== "galaxy") || (C3 && view !== "base"))) return go();
+  worldDrop("gal", "before a battle"); worldDrop("col", "before a battle"); crumb("battle waits for the 3D world to be freed");
+  const app = $("#app"), w = document.createElement("div"); w.className = "glwait"; w.style.position = "fixed"; w.style.zIndex = "90"; w.innerHTML = "<i></i><span>Opening the battle\u2026</span>"; if (app) app.appendChild(w);
+  G.btWaitT = setTimeout(() => { G.btWaitT = 0; try { w.remove(); } catch (e) {} go(); }, 1000); }
 function playBattle(r) {
   if (r && r.elAff && r.elAff.pct > 0) setTimeout(() => { if (battle) elAffFlash(r.elAff); }, 1400); /* v628 */
   if (battle) closeBattle(); archFromRep(r); crumb("battle replay: " + String((r && r.title) || "battle").slice(0, 40)); if (IOS) { worldDrop("gal", "before a battle"); worldDrop("col", "before a battle"); } /* fb-20261120 only the world on screen stays */ gpuNap(true);
@@ -28931,7 +28937,7 @@ const ACT = {
   camVoid: () => { if (G3) { const c = G3.cam; c.follow = null; c.followFleet = null; c.goal = { tx: 0, ty: 0, tz: 0, dist: 950 }; c.ph = Math.min(c.ph, 1.05); return; }
     const cv = $("#galaxy"); if (!cv) return; camTo(0, 0, fitZ(cv.width, cv.height)); },
   report: d => { S.unread = 0; dirty(); openSheet({ type: "report", id: d.id }); },
-  replay: d => { const r = findRep(d.id); closeSheet(); if (r) { if (!S.tutReplay) { S.tutReplay = 1; dirty(); } playBattle(r); } },
+  replay: d => { const r = findRep(d.id); closeSheet(); if (r) { if (!S.tutReplay) { S.tutReplay = 1; dirty(); } btFreeFirst(() => playBattle(r)); } }, /* fb-20261122 */
   bsave: () => { const b = battle; if (!b) return; if (b.r.id === DUEL_ID) { S.duelSaved = S.duelSaved === 0 ? 1 : 0; dirty(); toast(S.duelSaved ? "Duel kept in Mail › Saved." : "Duel removed from Saved. Tap ☆ again during this replay to keep it.", S.duelSaved ? "win" : ""); battleCtl(); return; } if (b.r.id === LAB_ID) { S.labSaved = S.labSaved ? 0 : 1; dirty(); toast(S.labSaved ? "10 vs 10 saved. Find it under Mail › Saved." : "10 vs 10 removed from Saved.", S.labSaved ? "win" : ""); } else ACT.repSave({ id: b.r.id }); battleCtl(); },
   duel2Battle: () => { if (!duelOwner()) return; toast("Building the 10 million vs 5 million duel…"); setTimeout(() => { try { playBattle(duel2Battle()); } catch (e) { toast("Couldn't build the duel on this device.", "warn"); } }, 60); }, /* v598 */
   duelBattle: () => { if (!duelOwner()) return; toast("Building the 1 vs 1 duel…"); setTimeout(() => { try { playBattle(duelBattle()); } catch (e) { toast("Couldn't build the duel on this device.", "warn"); } }, 60); },
