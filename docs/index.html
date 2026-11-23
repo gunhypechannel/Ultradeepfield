@@ -6714,7 +6714,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 734;
+const GAME_V = 735;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -26642,7 +26642,7 @@ function bglCtx(c, opts) { const gl = c.getContext("webgl", Object.assign({ anti
   return { c, gl, prog, tex, full, qb: gl.createBuffer(), lost: 0 }; }
 /* a canvas layer over or under the 2D battle canvas */
 function bglLayer(b, cv, cls, before, opts) { const c = document.createElement("canvas"); c.className = cls; c.setAttribute("aria-hidden", "true"); cv.parentNode.insertBefore(c, before ? cv : cv.nextSibling);
-  const g = bglCtx(c, opts); if (!g) { c.remove(); return null; } c.addEventListener("webglcontextlost", e => { e.preventDefault(); g.lost = 1; b.glFail = 1; try { crumb("battle GPU layer lost"); } catch (er) {} }, false); return g; }
+  const g = bglCtx(c, opts); if (!g) { c.remove(); return null; } c.addEventListener("webglcontextlost", e => { e.preventDefault(); g.lost = 1; if (g.freed) return; b.glFail = 1; try { crumb("battle GPU layer lost"); } catch (er) {} }, false); return g; }
 function bglInit(b, cv) {
   const o = bglLayer(b, cv, "bgl", false, { alpha: true, premultipliedAlpha: true }), u = o && bglLayer(b, cv, "bgu", true, { alpha: false });
   if (!o || !u) { try { o && o.c.remove(); } catch (e) {} return null; }
@@ -26664,16 +26664,18 @@ function bglQuad(b, kind, ctx, A) { const g = b.gl && b.gl.o; if (!g) return fal
   let sx = 0, sy = 0, sw = iw, sh = ih, dx, dy, dw, dh; if (A.length >= 9) { sx = A[1]; sy = A[2]; sw = A[3]; sh = A[4]; dx = A[5]; dy = A[6]; dw = A[7]; dh = A[8]; } else if (A.length >= 5) { dx = A[1]; dy = A[2]; dw = A[3]; dh = A[4]; } else { dx = A[1]; dy = A[2]; dw = iw; dh = ih; }
   const m = ctx.getTransform(), W = b.glW, H = b.glH, X = (x, y) => (m.a * x + m.c * y + m.e) / W * 2 - 1, Y = (x, y) => 1 - (m.b * x + m.d * y + m.f) / H * 2;
   const x0 = dx, y0 = dy, x1 = dx + dw, y1 = dy + dh, u0 = sx / iw, v0 = sy / ih, u1 = (sx + sw) / iw, v1 = (sy + sh) / ih;
-  let arr = g.batch[kind === "l" ? "l" : "a"].get(img); if (!arr) { arr = []; g.batch[kind === "l" ? "l" : "a"].set(img, arr); }
-  const p00 = [X(x0, y0), Y(x0, y0)], p10 = [X(x1, y0), Y(x1, y0)], p01 = [X(x0, y1), Y(x0, y1)], p11 = [X(x1, y1), Y(x1, y1)];
-  arr.push(p00[0], p00[1], u0, v0, ga, p10[0], p10[1], u1, v0, ga, p01[0], p01[1], u0, v1, ga, p10[0], p10[1], u1, v0, ga, p11[0], p11[1], u1, v1, ga, p01[0], p01[1], u0, v1, ga);
+  const bm = g.batch[kind === "l" ? "l" : "a"]; let e = bm.get(img); if (!e) { e = { a: new Float32Array(30 * 64), n: 0 }; bm.set(img, e); } /* v735 one growing buffer per sprite, reused every frame */
+  if (e.n + 30 > e.a.length) { const na = new Float32Array(e.a.length * 2); na.set(e.a); e.a = na; }
+  const a = e.a; let n = e.n; const ax = X(x0, y0), ay = Y(x0, y0), bx = X(x1, y0), by = Y(x1, y0), cx = X(x0, y1), cy = Y(x0, y1), dx2 = X(x1, y1), dy2 = Y(x1, y1);
+  a[n++] = ax; a[n++] = ay; a[n++] = u0; a[n++] = v0; a[n++] = ga; a[n++] = bx; a[n++] = by; a[n++] = u1; a[n++] = v0; a[n++] = ga; a[n++] = cx; a[n++] = cy; a[n++] = u0; a[n++] = v1; a[n++] = ga;
+  a[n++] = bx; a[n++] = by; a[n++] = u1; a[n++] = v0; a[n++] = ga; a[n++] = dx2; a[n++] = dy2; a[n++] = u1; a[n++] = v1; a[n++] = ga; a[n++] = cx; a[n++] = cy; a[n++] = u0; a[n++] = v1; a[n++] = ga; e.n = n;
   return true; }
 function bglDrawBatch(g, map) { const gl = g.gl, Q = g.P.quad; if (!map.size) return; gl.useProgram(Q.p); gl.uniform1i(Q.u.t, 0); gl.activeTexture(gl.TEXTURE0); gl.bindBuffer(gl.ARRAY_BUFFER, g.qb);
   gl.enableVertexAttribArray(0); gl.enableVertexAttribArray(1); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 20, 0); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 20, 8); gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 20, 16);
   gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
-  for (const [img, arr] of map) { if (!arr.length) continue; let t = g.tx.get(img); if (!t) { t = g.tex(); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img); g.tx.set(img, t); }
-    gl.bindTexture(gl.TEXTURE_2D, t); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr), gl.STREAM_DRAW); gl.drawArrays(gl.TRIANGLES, 0, arr.length / 5); }
-  gl.disable(gl.BLEND); gl.disableVertexAttribArray(1); gl.disableVertexAttribArray(2); map.clear(); }
+  for (const [img, e] of map) { if (!e.n) continue; let t = g.tx.get(img); if (!t) { t = g.tex(); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img); g.tx.set(img, t); }
+    gl.bindTexture(gl.TEXTURE_2D, t); gl.bufferData(gl.ARRAY_BUFFER, e.a.subarray(0, e.n), gl.STREAM_DRAW); gl.drawArrays(gl.TRIANGLES, 0, e.n / 5); e.n = 0; }
+  gl.disable(gl.BLEND); gl.disableVertexAttribArray(1); gl.disableVertexAttribArray(2); }
 function bglFull(g) { const gl = g.gl; gl.bindBuffer(gl.ARRAY_BUFFER, g.full); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0); }
 /* start of a frame: true when this frame draws the GPU way (the caller then skips the 2D backdrop) */
 function bglBegin(b, cv, mainCtx, W, H, lo) {
@@ -26681,7 +26683,7 @@ function bglBegin(b, cv, mainCtx, W, H, lo) {
   try { let G = b.gl; if (G && (G.o.lost || G.u.lost)) { b.glFail = 1; bglHide(b); b.glOn = false; return false; }
     if (!G || !G.o.c.isConnected) { G = b.gl = bglInit(b, cv); if (!G) { b.glFail = 1; b.glOn = false; return false; } }
     for (const g of [G.o, G.u]) { if (g.c.width !== W || g.c.height !== H) { g.c.width = W; g.c.height = H; } if (g.c.style.visibility) g.c.style.visibility = ""; }
-    b.glW = W; b.glH = H; b.glOn = true; b.fxDirty = 0; bglHook(mainCtx, "a"); G.o.batch.l.clear(); G.o.batch.a.clear(); return true;
+    b.glW = W; b.glH = H; b.glOn = true; b.fxDirty = 0; bglHook(mainCtx, "a"); for (const m of [G.o.batch.l, G.o.batch.a]) for (const e of m.values()) e.n = 0; return true;
   } catch (e) { b.glFail = 1; b.glOn = false; bglHide(b); try { errCrumb("battle GPU begin: " + (e && e.message)); } catch (er) {} return false; } }
 /* the backdrop on the GPU: uploaded once (and again if it is rebuilt), then moved with the camera every frame */
 function bglBackdrop(b, W, H, vs, tx, ty) { const u = b.gl.u, gl = u.gl;
@@ -26689,7 +26691,7 @@ function bglBackdrop(b, W, H, vs, tx, ty) { const u = b.gl.u, gl = u.gl;
   gl.viewport(0, 0, W, H); gl.clearColor(.008, .02, .035, 1); gl.clear(gl.COLOR_BUFFER_BIT);
   const X = x => x / W * 2 - 1, Y = y => 1 - y / H * 2, x0 = X(tx), x1 = X(tx + vs * W), y0 = Y(ty), y1 = Y(ty + vs * H);
   const Q = u.P.quad; gl.useProgram(Q.p); gl.uniform1i(Q.u.t, 0); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, u.bgT); gl.bindBuffer(gl.ARRAY_BUFFER, u.qb);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([x0, y0, 0, 0, 1, x1, y0, 1, 0, 1, x0, y1, 0, 1, 1, x1, y0, 1, 0, 1, x1, y1, 1, 1, 1, x0, y1, 0, 1, 1]), gl.STREAM_DRAW);
+  const qa = u.qa || (u.qa = new Float32Array(30)); qa.set([x0, y0, 0, 0, 1, x1, y0, 1, 0, 1, x0, y1, 0, 1, 1, x1, y0, 1, 0, 1, x1, y1, 1, 1, 1, x0, y1, 0, 1, 1]); gl.bufferData(gl.ARRAY_BUFFER, qa, gl.STREAM_DRAW);
   gl.enableVertexAttribArray(0); gl.enableVertexAttribArray(1); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 20, 0); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 20, 8); gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 20, 16); gl.drawArrays(gl.TRIANGLES, 0, 6); }
 /* the light layer: the 2D part of it (only uploaded when something was drawn there) plus its GPU glows, into one full-size target, then the bloom */
 function bglLight(b, fxL, W, H, busy) { const G = b.gl; if (!G || !b.glOn) return false;
@@ -26713,7 +26715,7 @@ function bglFlush(b) { const G = b.gl; if (!G || !b.glOn) return;
     bglDrawBatch(g, g.batch.a); b.glComp = null;
   } catch (e) { b.glFail = 1; b.glOn = false; bglHide(b); try { errCrumb("battle GPU flush: " + (e && e.message)); } catch (er) {} } }
 function bglHide(b) { const G = b && b.gl; if (!G) return; for (const g of [G.o, G.u]) if (g && g.c && g.c.style.visibility !== "hidden") g.c.style.visibility = "hidden"; }
-function bglFree(b) { const G = b && b.gl; if (!G) return; for (const g of [G.o, G.u]) { if (!g) continue; try { const x = g.gl.getExtension("WEBGL_lose_context"); if (x) x.loseContext(); } catch (e) {} try { g.c.remove(); } catch (e) {} } b.gl = null; }
+function bglFree(b) { const G = b && b.gl; if (!G) return; for (const g of [G.o, G.u]) { if (!g) continue; g.freed = 1; try { const x = g.gl.getExtension("WEBGL_lose_context"); if (x) x.loseContext(); } catch (e) {} try { g.c.remove(); } catch (e) {} } b.gl = null; }
 function drawBattle(t) {
   const b = battle, cv = $("#bcv"); if (!cv) return; try { harbBattle(b); } catch (e) {} /* v718 the Harbinger's heart under the fight */
   /* v66 adaptive quality: phones start at 1.5x resolution (not 2x); if frames run long the battle steps down to 1.25x then 1x */
