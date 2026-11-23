@@ -4403,7 +4403,7 @@ const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform 
    platform as Android, is Android. */
 const ANDROID = /Android/i.test(navigator.userAgent) || /Android/i.test((navigator.userAgentData && navigator.userAgentData.platform) || "")
   || (navigator.maxTouchPoints > 1 && /Linux/.test(navigator.userAgent) && !/Windows|CrOS/.test(navigator.userAgent));
-const STANDALONE = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+const STANDALONE = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true || /UDFApp\//.test(navigator.userAgent); /* v727: the Android app (a WebView) counts as installed */
 // 2D canvases at most 2x: 3x Retina screens triple the memory for no visible gain, and Safari caps total canvas memory
 const FZ = () => { try { const f = window.frameElement; return f ? Math.max(1, parseFloat(f.style.zoom) || 1) : 1; } catch (e) { return 1; } }; // v383: the desktop-site frame zooms the page
 const DPR = () => Math.min(window.devicePixelRatio || 1, 2 * FZ());
@@ -6714,7 +6714,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 726;
+const GAME_V = 727;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;

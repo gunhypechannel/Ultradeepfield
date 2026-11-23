@@ -1,0 +1,20 @@
+plugins { id "com.android.application" }
+android {
+    namespace "com.udf.ultradeepfield"
+    compileSdk 36
+    defaultConfig {
+        applicationId "com.udf.ultradeepfield"   // unchanged: Google Play treats this build as an update
+        minSdk 24
+        targetSdk 36
+        versionCode 2                            // was 1 (the PWABuilder TWA)
+        versionName "1.0.1"
+    }
+    buildTypes {
+        release { minifyEnabled false }          // signed afterwards on the owner's computer with the existing upload key
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    lint { checkReleaseBuilds false }
+}
+dependencies {
+    implementation "androidx.core:core-splashscreen:1.0.1"
+}

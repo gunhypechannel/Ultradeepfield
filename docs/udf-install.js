@@ -3,7 +3,7 @@
    the browser offers it, an "Install now" button installs straight away. */
 (function () {
   var UA = navigator.userAgent, IOS = /iPad|iPhone|iPod/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1), AND = /Android/i.test(UA);
-  var STANDALONE = !!(navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches));
+  var STANDALONE = !!(navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || /UDFApp\//.test(navigator.userAgent)); /* v727: inside the Android app there is nothing to install */
   var deferred = null; window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); deferred = e; var b = document.querySelector("#udfInst .now"); if (b) b.hidden = false; });
   window.addEventListener("appinstalled", function () { deferred = null; var o = document.getElementById("udfInst"); if (o) o.remove(); });
   var css =
