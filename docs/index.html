@@ -6714,7 +6714,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 733;
+const GAME_V = 734;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -26723,8 +26723,8 @@ function drawBattle(t) {
   if (b.tier == null) b.tier = WEAK ? 2 : MOBILE ? 1 : 0;
   { const dt = b.lastF ? Math.min(100, t - b.lastF) : 16; b.lastF = t; b.ft = b.ft ? b.ft * .94 + dt * .06 : dt; b.fc = (b.fc || 0) + 1;
     b.fms = (b.fms || 0) + dt; /* v730 steps on a clock (0.8 s), not every 45 frames: at 10 fps that was 4.5 s a step and most of a battle */
-    if (b.fc > 8 && b.fms > 800 && b.ft > 22) { if (b.tier < 2) b.tier++; else if (b.qs > 1) b.qs = Math.max(1, b.qs - (b.ft > 45 ? .5 : .25)); b.fc = 0; b.fms = 0; }
-    else if (b.fms > 5000 && b.ft < 13.5) { if (b.tier > 0) b.tier--; b.fc = 0; b.fms = 0; } }
+    if (b.fc > 8 && b.fms > 800 && b.ft > 19) { /* v734 steps down below ~52 fps (was 45), so a battle holds 60 */ if (b.tier < 2) b.tier++; else if (b.qs > 1) b.qs = Math.max(1, b.qs - (b.ft > 45 ? .5 : .25)); b.fc = 0; b.fms = 0; }
+    else if (b.fms > 5000 && b.ft < 13.5) { if (b.tier > (MOBILE ? 1 : 0)) b.tier--; /* v734 phones never climb back to tier 0: on a 120 Hz screen they earned it, then its full-screen passes made the next seconds stutter, over and over */ b.fc = 0; b.fms = 0; } }
   const d = b.qs, cwid = Math.round(cv.clientWidth * d), chei = Math.round(cv.clientHeight * d); if (cv.width !== cwid || cv.height !== chei) { cv.width = cwid; cv.height = chei; }
   const W = cv.width, H = cv.height, mainCtx = cv.getContext("2d"); let ctx = mainCtx; if (W < 8 || H < 8) return;
   const real = b.last ? Math.min(80, t - b.last) : 16; b.last = t;
@@ -27231,7 +27231,7 @@ function drawBattle(t) {
     ctx.restore(); ctx.globalAlpha = 1; } else bglHide(b);
   /* v76 HDR grade: the frame is blended over itself in soft-light, deepening the blacks and lifting the highlights (filmic contrast),
      Skipped in low FX and once the adaptive quality has stepped down */
-  if (!lo && !WEAK && b.tier < 1 && b.qs >= 1.5) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = "soft-light"; ctx.globalAlpha = busy ? .35 : .5; ctx.drawImage(cv, 0, 0); ctx.restore(); }
+  if (!lo && !WEAK && !(b.glOn && MOBILE) && b.tier < 1 && b.qs >= 1.5) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = "soft-light"; ctx.globalAlpha = busy ? .35 : .5; ctx.drawImage(cv, 0, 0); ctx.restore(); }
   // a big blast lights up the whole screen for a moment
   if (busy) b.flash = Math.min(b.flash, .22); if (b.glOn) b.glFlash = b.flash > .01 && !reduced ? Math.min(.6, b.flash * .5) : 0; /* v732 the flash is added on the GPU layer */
   else if (b.flash > .01 && !reduced) { ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = `rgba(255,236,210,${Math.min(.6, b.flash * .5)})`; ctx.fillRect(0, 0, W, H); ctx.restore(); }
