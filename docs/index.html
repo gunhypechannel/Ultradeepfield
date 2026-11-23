@@ -6714,7 +6714,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 727;
+const GAME_V = 728;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13144,6 +13144,9 @@ if (G.lastCrashFresh && G.lastCrash && G.lastCrash.ev) { const C = G.lastCrash, 
    slow frames (under 30 fps), janky ones (under 20 fps) and freezes (over 0.7 s) are counted. The session's summary is sent when the
    game goes to the background or closes, and a session that never closed is sent on the next launch, marked as a crash. */
 try { document.documentElement.classList.add("nobd"); } catch (e) {} /* v604 also where the page is wrapped (the claude.ai copy) */ let PF = { t0: Date.now(), v: typeof GAME_V !== "undefined" ? GAME_V : 0, vw: {}, frz: [] };
+/* v728 the script time of each drawn frame, per screen: [frames, ms, frames over 12 ms]. Set against the frame interval it tells
+   whether a slow device is held up by the game's own work or by drawing and the screen (the GPU, the browser or a power limit). */
+function pfCpu(ms) { try { if (!(ms >= 0) || !G.ready || ms > 5000) return; const k = pfKey(), c = (PF.cpu || (PF.cpu = {}))[k] || (PF.cpu[k] = [0, 0, 0]); c[0]++; c[1] += ms; if (ms > 12) c[2]++; } catch (e) {} }
 function pfKey() { try { return battle ? "battle" : (view || "?") + (sheet ? "+panel" : ""); } catch (e) { return "?"; } }
 function pfFrame(rd) { if (!(rd > 0) || rd > 20000 || !G.ready || performance.now() - (G.pfOk || (G.pfOk = performance.now())) < 4000) return; /* start-up loading is not play */ const k = pfKey(), s = PF.vw[k] || (PF.vw[k] = [0, 0, 0, 0, 0]); s[0]++; s[1] += rd; if (rd > 34) s[2]++; if (rd > 50) s[3]++; if (rd > s[4]) s[4] = rd;
   if (G.evCur) { const e = (PF.ev || (PF.ev = {}))[G.evCur] || (PF.ev[G.evCur] = [0, 0, 0, 0, 0]); e[0]++; e[1] += rd; if (rd > 34) e[2]++; if (rd > 700) e[3]++; } /* v479 per event and stage */
@@ -13151,7 +13154,7 @@ function pfFrame(rd) { if (!(rd > 0) || rd > 20000 || !G.ready || performance.no
 function pfRec(P, end) { const vw = {}; let n = 0, ms = 0; for (const k in P.vw) { const s = P.vw[k]; if (s[0] < 30) continue; vw[k] = [s[0], Math.round(s[1]), s[2], s[3], Math.round(s[4])]; n += s[0]; ms += s[1]; }
   if (n < 600) return null; let mem = ""; try { if (performance.memory) mem = Math.round(performance.memory.usedJSHeapSize / 1e6) + " MB"; } catch (e) {}
   return { kind: "perf", status: "log", at: Date.now(), now: P.v, end, dur: Math.round(ms / 1000), fps: Math.round(n * 1000 / ms * 10) / 10, vw: JSON.stringify(vw), frz: JSON.stringify(P.frz || []).slice(0, 900), errs: (P.errs || []).slice(0, 8).join(" | ").slice(0, 900),
-    device: hqDev(), w: innerWidth, h: innerHeight, dpr: devicePixelRatio, pr: P.pr || 0, gpu: P.gpu || "", preset: P.preset || "", hz: P.hz || 0, mem, ev: JSON.stringify(P.ev || {}).slice(0, 900) }; }
+    device: hqDev(), w: innerWidth, h: innerHeight, dpr: devicePixelRatio, pr: P.pr || 0, gpu: P.gpu || "", preset: P.preset || "", hz: P.hz || 0, mem, ev: JSON.stringify(P.ev || {}).slice(0, 900), cpu: JSON.stringify(Object.fromEntries(Object.entries(P.cpu || {}).map(([k, c]) => [k, [c[0], Math.round(c[1]), c[2]]]))).slice(0, 600) }; }
 /* v479 this session's per-event numbers, for Boss Lab: [frames, ms, slow, freezes, attacks] per event:stage */
 function evMetricsHTML() { const E = PF.ev || {}, ks = Object.keys(E); if (!ks.length) return ""; return `<details class="note" style="margin:4px 0 8px"><summary>This session, by event</summary>${ks.map(k => { const e = E[k]; return `${esc(k.replace(":", " · "))}: ${Math.round(e[1] / 1000)} s · ${e[1] ? (e[0] * 1000 / e[1]).toFixed(0) : 0} fps · ${e[2]} slow · ${e[3]} freezes · ${e[4] || 0} attacks`; }).join("<br>")}</details>`; }
 function pfSave() { try { PF.errs = [...ERR_SEEN]; PF.gpu = gfxGpu(); PF.preset = gfxPreset(); PF.hz = gfxHz(); try { if (G3 && G3.renderer) PF.pr = +G3.renderer.getPixelRatio().toFixed(2); } catch (e) {} localStorage.setItem(PF_K, JSON.stringify(PF)); } catch (e) {} }
@@ -27476,7 +27479,8 @@ function glPace(r) { const gl = r.getContext(), lp = gl.linkProgram, rbd = r.ren
   r.renderBufferDirect = function (cam, scene, geo, mat) { const B = r.pace, paced = !!B.scene && scene === B.scene;
     if (paced && mat && !seen.has(mat) && (B.used >= B.ms || (B.max && B.n >= B.max))) { B.skips++; return; }
     const l0 = links, t0 = paced ? performance.now() : 0, res = rbd.apply(this, arguments); if (mat) seen.add(mat); if (paced && links > l0) { B.used += performance.now() - t0; B.n += links - l0; } return res; }; }
-function frame(t) {
+function frame(t) { const c0 = performance.now(); try { frameIn(t); } finally { pfCpu(performance.now() - c0); } }
+function frameIn(t) {
   rafId = 0; { const rd = t - (frame.raw || t); hzSample(rd); pfFrame(rd); if (rd > 0 && rd < 200) frame.rawEma = (frame.rawEma || 16.7) * .94 + rd * .06; } frame.raw = t;
   if (idleSkip(t)) { frame.last = t; rafId = requestAnimationFrame(frame); return; }
   { const cap = gfx("fps"); if (cap && cap < gfxHz() - 3 && !battle && t - (frame.drawn || 0) < 1000 / cap - 1.5) { rafId = requestAnimationFrame(frame); return; } frame.drawn = t; } // v124: optional frame-rate cap
