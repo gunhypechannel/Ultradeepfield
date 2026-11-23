@@ -104,6 +104,11 @@ public class MainActivity extends Activity {
             @Override public void onReceivedError(WebView v, WebResourceRequest req, WebResourceError err) {
                 if (req.isForMainFrame()) showOffline();
             }
+            /* if the page's renderer dies (low memory), start the page again instead of letting Android close the app */
+            @Override public boolean onRenderProcessGone(WebView v, android.webkit.RenderProcessGoneDetail d) {
+                if (v == web) { ((ViewGroup) v.getParent()).removeView(v); v.destroy(); web = null; recreate(); }
+                return true;
+            }
         });
         web.setWebChromeClient(new WebChromeClient() {
             @Override public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> cb, FileChooserParams p) {
@@ -124,7 +129,19 @@ public class MainActivity extends Activity {
 
         if (saved != null) web.restoreState(saved);
         else web.loadUrl(START);
+
+        // when the connection comes back while the offline screen is up, load the game again by itself
+        try {
+            android.net.ConnectivityManager cm = (android.net.ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+            netCb = new android.net.ConnectivityManager.NetworkCallback() {
+                @Override public void onAvailable(android.net.Network n) {
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> { if (offline && web != null) { offline = false; web.loadUrl(START); } }, 1500);
+                }
+            };
+            cm.registerDefaultNetworkCallback(netCb);
+        } catch (Exception e) { netCb = null; }
     }
+    android.net.ConnectivityManager.NetworkCallback netCb;
 
     /** Our own pages stay in the app; other websites, email and store links open outside it. */
     boolean route(Uri u) {
@@ -150,7 +167,8 @@ public class MainActivity extends Activity {
     }
 
     void back() {
-        if (offline) { offline = false; web.loadUrl(START); return; }
+        if (web == null) return;
+        if (offline) { moveTaskToBack(true); return; }
         if (web.canGoBack()) web.goBack();
         else moveTaskToBack(true);
     }
@@ -158,10 +176,12 @@ public class MainActivity extends Activity {
     @SuppressWarnings("deprecation")
     @Override public void onBackPressed() { back(); }
 
-    @Override protected void onSaveInstanceState(Bundle out) { super.onSaveInstanceState(out); web.saveState(out); }
-    @Override protected void onPause() { super.onPause(); web.onPause(); CookieManager.getInstance().flush(); }
-    @Override protected void onResume() { super.onResume(); web.onResume(); }
-    @Override protected void onDestroy() { if (web != null) { web.destroy(); } super.onDestroy(); }
+    @Override protected void onSaveInstanceState(Bundle out) { super.onSaveInstanceState(out); if (web != null) web.saveState(out); }
+    @Override protected void onPause() { super.onPause(); if (web != null) web.onPause(); CookieManager.getInstance().flush(); }
+    @Override protected void onResume() { super.onResume(); if (web != null) web.onResume(); }
+    @Override protected void onDestroy() {
+        try { if (netCb != null) ((android.net.ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE)).unregisterNetworkCallback(netCb); } catch (Exception e) { }
+        if (web != null) { web.destroy(); } super.onDestroy(); }
 
     @Override protected void onActivityResult(int req, int res, Intent data) {
         if (req == PICK && pickCb != null) {
