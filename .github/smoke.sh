@@ -20,10 +20,14 @@ adb shell am start -n com.udf.ultradeepfield/.MainActivity; sleep 20
 adb exec-out screencap -p > /tmp/shots/5-offline-fresh.png
 adb shell dumpsys activity activities | grep -E "topResumed" > /tmp/shots/offline-top.txt
 adb logcat -d > /tmp/shots/logcat-offline.txt
-# back online: tap Retry
-adb shell cmd connectivity airplane-mode disable; sleep 8
+# still offline: tap Retry, the offline screen must come back (no crash)
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb shell cat /sdcard/ui.xml > /tmp/shots/offline-ui.xml
 B=$(grep -o 'text="Retry"[^>]*bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' /tmp/shots/offline-ui.xml | grep -o '\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]' | tr -d '[]' | tr ',' ' ')
-set -- $B; if [ -n "$1" ]; then adb shell input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 )); else adb shell input tap 540 1300; fi
-sleep 30; adb exec-out screencap -p > /tmp/shots/6-after-retry.png
+set -- $B; [ -n "$1" ] && adb shell input tap $(( ($1+$3)/2 )) $(( ($2+$4)/2 ))
+sleep 15; adb exec-out screencap -p > /tmp/shots/6-retry-still-offline.png
+# back online: the game must load by itself
+adb shell cmd connectivity airplane-mode disable; for i in $(seq 1 30); do adb shell ping -c1 -W2 8.8.8.8 >/dev/null 2>&1 && break; sleep 2; done; sleep 25
+adb exec-out screencap -p > /tmp/shots/7-back-online.png
+adb shell dumpsys activity activities | grep -E "topResumed" > /tmp/shots/final-top.txt
+adb logcat -d > /tmp/shots/logcat-offline.txt
 true
