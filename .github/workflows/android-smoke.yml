@@ -3,7 +3,7 @@ name: Android smoke test
 on:
   push:
     branches: [android-webview]
-    paths: ["android/**", ".github/workflows/android-smoke.yml"]
+    paths: ["android/**", ".github/workflows/android-smoke.yml", ".github/smoke.sh"]
   workflow_dispatch:
 permissions:
   contents: write
