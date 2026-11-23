@@ -242,7 +242,7 @@
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   /* v230: iPhone/iPad keep a Home Screen web app's storage apart from Safari's, so a sign-in made in Safari doesn't carry over to the icon */
   var IOS_TAB = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1), DEV = /iPhone|iPod/.test(navigator.userAgent) ? "iPhone" : "iPad";
-  var STANDALONE = !!(navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches));
+  var STANDALONE = !!(navigator.standalone || (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || /UDFApp\//.test(navigator.userAgent));
   function lastEmail() { try { return localStorage.getItem("udf.lastEmail") || ""; } catch (x) { return ""; } }
   function authMsg(e) {
     var m = String((e && (e.message || e.error_description)) || e || "");
