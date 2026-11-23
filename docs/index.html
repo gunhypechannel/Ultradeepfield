@@ -173,7 +173,7 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 #tutguide .tg-tip{position:fixed;max-width:240px;padding:8px 12px;border-radius:12px;background:linear-gradient(180deg,#ffe08a,#f0a945);color:#1a1004;font:700 14px/1.25 var(--f-display);letter-spacing:.02em;box-shadow:0 6px 18px rgba(0,0,0,.5);transition:left .18s,top .18s}
 #tutguide.info .tg-hand{display:none}#tutguide.info .tg-ring{animation:none;border:2px dashed rgba(127,232,255,.9);box-shadow:0 0 14px rgba(85,214,232,.45)}#tutguide.info .tg-tip{background:linear-gradient(180deg,#123447,#0b2231)!important;color:#d8f6ff!important;border:1px solid rgba(127,232,255,.5)!important}
 .qready{margin:0 0 12px;padding:10px 12px;border:1px solid rgba(240,169,69,.55);border-radius:12px;background:rgba(240,169,69,.08)}.qready b{display:block;font:700 11px/1 var(--f-display);letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}.qready div{display:flex;flex-wrap:wrap;gap:8px}
-#toasts .toast.gdfade{opacity:.12!important;pointer-events:none!important;transition:opacity .15s}#tutguide.nudge .tg-tip{box-shadow:0 0 0 3px rgba(255,211,107,.55),0 6px 18px rgba(0,0,0,.5)}#tutguide.nudge .tg-hand{font-size:48px}
+#toasts .toast.gdfade{opacity:.12!important;pointer-events:none!important;transition:opacity .15s}#toasts .toast.advhide{opacity:0!important;pointer-events:none!important;transition:opacity .2s}#tutguide.nudge .tg-tip{box-shadow:0 0 0 3px rgba(255,211,107,.55),0 6px 18px rgba(0,0,0,.5)}#tutguide.nudge .tg-hand{font-size:48px}
 @keyframes tgnudge{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 @media (prefers-reduced-motion:reduce){#tutguide .tg-ring,#tutguide .tg-hand,#tutguide.nudge .tg-tip{animation:none;transition:none}}
 #tutring{position:absolute;z-index:60;pointer-events:none;display:none;border-radius:14px;border:3px solid #ffd36b;box-shadow:0 0 0 4px rgba(255,211,107,.25),0 0 28px rgba(255,211,107,.8);animation:tutp .8s ease-in-out infinite alternate}
@@ -1757,7 +1757,7 @@ main.full{padding:0;overflow:hidden;gap:0}
 .dirmini.ok .b{border-color:var(--amber);color:#1a1000;background:var(--amber)}
 .ticker{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:6px 12px;background:linear-gradient(180deg,rgba(4,14,24,.55),rgba(4,14,24,.94));font-size:12px;color:#9fd6e8;display:flex;flex-direction:column;gap:2px;min-height:50px;pointer-events:none}
 .ticker div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ticker time{color:#4f8fa8;font-family:var(--f-display)}
+.ticker time{color:#4f8fa8;font-family:var(--f-display)}.ticker{padding-left:var(--tkPL,12px)}
 .ticker .win{color:var(--green)}.ticker .loss{color:var(--red)}.ticker .warn{color:var(--amber)}
 .selbar{position:absolute;left:8px;right:8px;bottom:62px;z-index:4;display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px 12px;background:rgba(7,24,38,.96);border:1px solid var(--amber);border-radius:12px;box-shadow:0 0 18px rgba(240,169,69,.25)}
 .selbar .sb-l{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -6714,7 +6714,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 728;
+const GAME_V = 729;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13154,10 +13154,11 @@ function pfFrame(rd) { if (!(rd > 0) || rd > 20000 || !G.ready || performance.no
 function pfRec(P, end) { const vw = {}; let n = 0, ms = 0; for (const k in P.vw) { const s = P.vw[k]; if (s[0] < 30) continue; vw[k] = [s[0], Math.round(s[1]), s[2], s[3], Math.round(s[4])]; n += s[0]; ms += s[1]; }
   if (n < 600) return null; let mem = ""; try { if (performance.memory) mem = Math.round(performance.memory.usedJSHeapSize / 1e6) + " MB"; } catch (e) {}
   return { kind: "perf", status: "log", at: Date.now(), now: P.v, end, dur: Math.round(ms / 1000), fps: Math.round(n * 1000 / ms * 10) / 10, vw: JSON.stringify(vw), frz: JSON.stringify(P.frz || []).slice(0, 900), errs: (P.errs || []).slice(0, 8).join(" | ").slice(0, 900),
-    device: hqDev(), w: innerWidth, h: innerHeight, dpr: devicePixelRatio, pr: P.pr || 0, gpu: P.gpu || "", preset: P.preset || "", hz: P.hz || 0, mem, ev: JSON.stringify(P.ev || {}).slice(0, 900), cpu: JSON.stringify(Object.fromEntries(Object.entries(P.cpu || {}).map(([k, c]) => [k, [c[0], Math.round(c[1]), c[2]]]))).slice(0, 600) }; }
+    device: hqDev(), w: innerWidth, h: innerHeight, dpr: devicePixelRatio, pr: P.pr || 0, gpu: P.gpu || "", preset: P.preset || "", hz: P.hz || 0, mem, ev: JSON.stringify(P.ev || {}).slice(0, 900), map: P.map || "", gl: P.gl || "", cpu: JSON.stringify(Object.fromEntries(Object.entries(P.cpu || {}).map(([k, c]) => [k, [c[0], Math.round(c[1]), c[2]]]))).slice(0, 600) }; }
 /* v479 this session's per-event numbers, for Boss Lab: [frames, ms, slow, freezes, attacks] per event:stage */
 function evMetricsHTML() { const E = PF.ev || {}, ks = Object.keys(E); if (!ks.length) return ""; return `<details class="note" style="margin:4px 0 8px"><summary>This session, by event</summary>${ks.map(k => { const e = E[k]; return `${esc(k.replace(":", " · "))}: ${Math.round(e[1] / 1000)} s · ${e[1] ? (e[0] * 1000 / e[1]).toFixed(0) : 0} fps · ${e[2]} slow · ${e[3]} freezes · ${e[4] || 0} attacks`; }).join("<br>")}</details>`; }
-function pfSave() { try { PF.errs = [...ERR_SEEN]; PF.gpu = gfxGpu(); PF.preset = gfxPreset(); PF.hz = gfxHz(); try { if (G3 && G3.renderer) PF.pr = +G3.renderer.getPixelRatio().toFixed(2); } catch (e) {} localStorage.setItem(PF_K, JSON.stringify(PF)); } catch (e) {} }
+function pfSave() { try { PF.errs = [...ERR_SEEN]; PF.gpu = gfxGpu(); PF.preset = gfxPreset(); PF.hz = gfxHz(); try { if (G3 && G3.renderer) PF.pr = +G3.renderer.getPixelRatio().toFixed(2); } catch (e) {}
+  /* v729 where the galaxy's frame time goes, and how much the GPU is asked to draw */ try { if (MAPPROF.frames.length > 30) { const r = MAPPROF.report(), o = {}; for (const k in r) o[k] = k === "frame" ? [r[k].avg, r[k].p95, r[k].stutters] : r[k].avg; PF.map = JSON.stringify(o).slice(0, 700); } if (G3 && G3.renderer) { const i = G3.renderer.info; let n = 0; try { G3.scene.traverseVisible(() => n++); } catch (e) {} PF.gl = JSON.stringify({ calls: i.render.calls, tris: i.render.triangles, progs: (i.programs || []).length, geos: i.memory.geometries, tex: i.memory.textures, vis: n }); } } catch (e) {} localStorage.setItem(PF_K, JSON.stringify(PF)); } catch (e) {} }
 function pfSend(end) { try { pfSave(); const r = pfRec(PF, end); if (r) hqPush(r); PF = { t0: Date.now(), v: PF.v, vw: {}, frz: [] }; localStorage.removeItem(PF_K); } catch (e) {} }
 try { const old = JSON.parse(localStorage.getItem(PF_K) || "null"); localStorage.removeItem(PF_K); if (old && old.vw) { const r = pfRec(old, G.crashSent ? "crash" : "closed"); if (r) hqPush(r); } } catch (e) {}
 setInterval(() => { if (!document.hidden) pfSave(); }, 15000);
@@ -15581,7 +15582,7 @@ function updateOrbit(W, o, p, T) { const a = o.geometry.attributes.position, per
 const V3 = TH ? new TH.Vector3() : null, V3B = TH ? new TH.Vector3() : null, QE = TH ? new TH.Euler() : null, QQ = TH ? new TH.Quaternion() : null, SV = TH ? new TH.Vector3() : null, M4 = TH ? new TH.Matrix4() : null;
 /* v85 frame profiler for the galaxy map: off by default (zero cost); turn it on from the Command menu (or with #perf in the address)
    to see average and worst time per section of a frame, frame-time percentiles and stutters, sampled over the last 300 frames */
-const MAPPROF = { on: /[#&?]perf\b/.test(location.href), s: {}, t0: 0, last: 0, frames: [], begin() { if (!this.on) return; this.t0 = this.last = performance.now(); },
+const MAPPROF = { on: true /* v729 always on: about a dozen clock reads a frame; its averages go out with the frame-rate report */, hud: /[#&?]perf\b/.test(location.href), s: {}, t0: 0, last: 0, frames: [], begin() { if (!this.on) return; this.t0 = this.last = performance.now(); },
   mark(n) { if (!this.on) return; const t = performance.now(), o = this.s[n] || (this.s[n] = { a: [], i: 0 }); o.a[o.i++ % 300] = t - this.last; this.last = t; },
   end() { if (!this.on) return; const f = this.frames; f.push(performance.now() - this.t0); if (f.length > 300) f.shift(); },
   report() { const st = a => { const s = a.slice().sort((x, y) => x - y), n = s.length || 1; return { avg: +(s.reduce((p, q) => p + q, 0) / n).toFixed(2), p95: +(s[Math.floor(n * .95)] || 0).toFixed(1), max: +(s[n - 1] || 0).toFixed(1) }; };
@@ -20588,10 +20589,17 @@ function render(keepScroll) {
   const inSheet = ae && ae.tagName === "INPUT" && ae.type !== "range" && ae.closest && ae.closest(".sheet");
   if (sheet && !inSheet) renderSheet();
 }
+/* v729 alerts tidy (owner: "clean up and optimize the view when alerts come in"): a finished job showed twice, as its card and as a
+   plain line ("Drone Works reached Lv.1"); now the card wins. Plain toasts are kept to two at once, job cards to one per kind, and the
+   Advisor's hologram hides whatever toast it would cover until she is done (the lines stay in the log under the base). */
+const toastKey = m => String(m || "").toLowerCase().replace(/research complete:|reached|finished|joined the garrison/g, " ").replace(/[·:]/g, " ").replace(/\s+/g, " ").trim();
 function toast(msg, kind = "info") {
-  const el = document.createElement("div"); el.className = "toast " + kind; el.textContent = msg; $("#toasts").appendChild(el);
+  const box = $("#toasts"); if (!box) return; const k = toastKey(msg);
+  for (const c of box.querySelectorAll(".toast.rmd b")) if (toastKey(c.textContent) === k) return; /* its job card is already up */
+  const el = document.createElement("div"); el.className = "toast " + kind; el.textContent = msg; el.dataset.k = k; box.appendChild(el);
   setTimeout(() => el.remove(), 3800);
-  while ($("#toasts").children.length > 3) $("#toasts").firstChild.remove();
+  const plain = [...box.children].filter(x => !x.classList.contains("rmd")); for (let i = 0; i < plain.length - 2; i++) plain[i].remove();
+  while (box.children.length > 3) box.firstChild.remove();
 }
 
 /* ---------- views ---------- */
@@ -23172,7 +23180,7 @@ function shSettings() {
   return `<div class="hd"><div><h2>Command menu</h2><p class="note">${store.mode === "cloud" ? "Progress syncs to your Ultra Deep Field account, so it follows you between phone and computer." : "Progress is saved in this browser only."}</p></div><button class="x" data-act="close" aria-label="Close">✕</button></div>
     <h2 class="sec">Galaxy</h2><p class="note">${net} Other people can join if the owner shares this page with them as Editors.</p>
     <h2 class="sec">Security</h2>${secPanel()}
-    <h2 class="sec">Performance</h2><p class="note">Live galaxy-map timings in a corner of the screen: frame time, 95th percentile, worst frame, stutters (frames over 33 ms) and how many worlds are near the camera.</p><button class="btn ghost wide" data-act="perfToggle">${MAPPROF.on ? "Hide performance stats" : "Show performance stats"}</button>
+    <h2 class="sec">Performance</h2><p class="note">Live galaxy-map timings in a corner of the screen: frame time, 95th percentile, worst frame, stutters (frames over 33 ms) and how many worlds are near the camera.</p><button class="btn ghost wide" data-act="perfToggle">${MAPPROF.hud ? "Hide performance stats" : "Show performance stats"}</button>
     <h2 class="sec">Play on Android</h2>
     <p class="note">Open this page in Chrome on your phone, tap the ⋮ menu, then <b>Add to Home screen</b>. It opens like an app, and the game keeps running while you're away.</p>
     <h2 class="sec">Records</h2>
@@ -23336,7 +23344,8 @@ function mElem() { const sel = ELEM[G.elSel] ? G.elSel : "fire", L = myCmdLv(), 
 /* ---------- v625 the Commander tab: the header card, then a 2-column grid of picture tiles (each opens its own clean page) ---------- */
 const CMD_PAGES = { alliance: ["Alliance", "#55d6e8"], elements: ["Elements", "#e06bd8"], vshop: ["Void Shop", "#c9a6ff"], settings: ["Settings", "#9ab6c8"] };
 function cmdPageBody(k) { return k === "alliance" ? pactCard() + allySection() : k === "elements" ? mElem() : k === "vshop" ? mShopVoid() : k === "settings" ? mSave() + mGame() : ""; }
-setInterval(() => { try { const cb = document.querySelector(".chatbar"), r = cb && cb.getBoundingClientRect(); document.documentElement.style.setProperty("--fbB", r && r.height > 0 && r.top < innerHeight && !document.getElementById("battle") ? Math.round(innerHeight - r.top + 8) + "px" : ""); } catch (e) {} }, 1200); /* v628 */
+setInterval(() => { try { const cb = document.querySelector(".chatbar"), r = cb && cb.getBoundingClientRect(); document.documentElement.style.setProperty("--fbB", r && r.height > 0 && r.top < innerHeight && !document.getElementById("battle") ? Math.round(innerHeight - r.top + 8) + "px" : "");
+  /* v729 the base's log lines start to the right of the Feedback button when it sits on them */ const fb = $("#fbBtn"), tk = document.querySelector(".ticker"); if (tk) { const fs = fb && getComputedStyle(fb), fr = fs && fs.display !== "none" && fs.visibility !== "hidden" && +fs.opacity > 0 ? fb.getBoundingClientRect() : null, tr = tk.getBoundingClientRect(), pl = fr && fr.width && fr.bottom > tr.top + 2 && fr.top < tr.bottom - 2 ? Math.max(12, Math.round(fr.right - tr.left + 10)) + "px" : ""; document.documentElement.style.setProperty("--tkPL", pl); } } catch (e) {} }, 1200); /* v628 */
 /* the Advisor's pill folds to its portrait while you scroll, so it never covers a button */
 (() => { let tm = 0; addEventListener("scroll", () => { const w = document.getElementById("coach"); if (!w) return; w.classList.add("mini"); clearTimeout(tm); tm = setTimeout(() => w.classList.remove("mini"), 900); }, { capture: true, passive: true }); })();
 function mSave() {
@@ -24061,6 +24070,8 @@ function remind(kind, head, title, subHTML, idle, pid) {
   const el = document.createElement("div"); el.className = "toast rmd " + (idle ? "idle" : "busy");
   el.innerHTML = `<span class="ric">${NAVI[(RM_KIND[kind] || RM_KIND.b)[1]] || ""}</span><span class="rtx"><small>${esc(head)}</small><b>${esc(title)}</b><em>${subHTML}</em></span>
     <span class="rbt"><button class="btn sm" data-act="qgo" data-q="${kind === "away" ? "b" : kind}"${pid ? ` data-pid="${pid}"` : ""}>${idle ? "Queue next" : "Open"} ›</button><button class="rx" data-act="rmx" aria-label="Dismiss">✕</button></span>`;
+  { const k = toastKey(title); for (const x of [...box.children]) if (!x.classList.contains("rmd") && x.dataset.k === k) x.remove(); } /* v729 the plain line of the same job */
+  for (const x of [...box.querySelectorAll(".toast.rmd")]) if (x.dataset.kind === kind) x.remove(); el.dataset.kind = kind; /* v729 one card per kind: the newest */
   box.appendChild(el); while (box.children.length > 3) box.firstChild.remove();
   setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 400); }, idle ? 9000 : 6500);
   try { if (navigator.vibrate && !document.hidden && (navigator.userActivation && navigator.userActivation.hasBeenActive)) navigator.vibrate(idle ? [30, 60, 30] : 30); } catch (e) {}
@@ -24160,6 +24171,10 @@ function advHolo(line, force) { if (!line || G.cineOn || (sheet && sheet.type ==
   w.classList.toggle("color", force !== 1 && force !== "arch" && advColor()); /* v576 live-event calls stay the hologram */ w.querySelector(".hsay span").textContent = line; for (const im of w.querySelectorAll(".advimg,.hscan")) { im.style.animation = "none"; void im.offsetWidth; im.style.animation = ""; } w.classList.add("on"); document.body.classList.add("advtalk"); /* she materializes each time; the Academy card steps aside while she talks */ advHoloPlace(); clearTimeout(G.advhT); speak(line);
   const hide = () => { clearTimeout(G.advhT); G.advhT = setTimeout(() => { const x = $("#advh"); if (x) x.classList.remove("on", "talk"); document.body.classList.remove("advtalk"); }, 900); };
   const a = VOICE.au; if (a && !a.ended) { a.addEventListener("ended", hide, { once: true }); a.addEventListener("error", hide, { once: true }); G.advhT = setTimeout(hide, 30000); } else G.advhT = setTimeout(hide, Math.max(4500, line.length * 65)); }
+/* v729 while the Advisor's hologram is up, a toast under her portrait or her speech box steps aside (and comes back after) */
+setInterval(() => { try { const box = $("#toasts"); if (!box || !box.children.length) return; const w = $("#advh"), on = w && w.classList.contains("on") && document.body.classList.contains("advtalk");
+  const rs = on ? [...w.querySelectorAll(".holo,.hsay")].map(e => e.getBoundingClientRect()).filter(r => r.width) : [], hit = b => rs.some(r => b.right > r.left - 6 && b.left < r.right + 6 && b.bottom > r.top - 6 && b.top < r.bottom + 6);
+  for (const t of box.children) { const h = on && hit(t.getBoundingClientRect()); if (t.classList.contains("advhide") !== h) t.classList.toggle("advhide", h); } } catch (e) {} }, 200);
 /* v567 her hologram breathes with her voice: each clip's loudness envelope (docs/voice/env.json, 25 steps a second) */
 let VENV = null; try { fetch("voice/env.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => { if (j) VENV = j; }).catch(() => {}); } catch (e) {}
 function lipRun(k) { const env = VENV && VENV[k]; if (!env) return; const R = document.documentElement, t0 = performance.now(); cancelAnimationFrame(G.lipRaf);
@@ -27281,12 +27296,12 @@ function battleErr(e) {
 }
 /* v85: the live performance readout (Command menu > Performance) */
 function perfHud() {
-  let el = document.getElementById("perfhud"); if (!MAPPROF.on) { if (el) el.remove(); clearInterval(perfHud.iv); perfHud.iv = 0; return; }
+  let el = document.getElementById("perfhud"); if (!MAPPROF.hud) { if (el) el.remove(); clearInterval(perfHud.iv); perfHud.iv = 0; return; }
   if (!el) { el = document.createElement("div"); el.id = "perfhud"; document.body.appendChild(el); }
-  if (!perfHud.iv) perfHud.iv = setInterval(() => { const r = MAPPROF.report(), f = r.frame, e = document.getElementById("perfhud"); if (!e || !MAPPROF.on) return;
+  if (!perfHud.iv) perfHud.iv = setInterval(() => { const r = MAPPROF.report(), f = r.frame, e = document.getElementById("perfhud"); if (!e || !MAPPROF.hud) return;
     e.textContent = view !== "galaxy" ? "Map stats: open the galaxy map" : `map ${f.avg} ms avg · p95 ${f.p95} · worst ${f.max} · stutters ${f.stutters}/${f.samples} · near ${G3 && G3.PL ? G3.PL.near.length : 0}`; }, 1000);
 }
-if (MAPPROF.on) setTimeout(perfHud, 3000);
+if (MAPPROF.hud) setTimeout(perfHud, 3000);
 function startAnim() { if (!rafId) { frame.raw = 0; rafId = requestAnimationFrame(frame); } } // v373: a restarted loop is not a frozen frame
 /* ---------- v124 graphics settings, display detection and frame pacing (premium PC tablets such as the ROG Flow Z13) ----------
    Three presets plus manual overrides for every setting. "Auto" picks a preset from the GPU the browser reports (and caps at 60 fps
@@ -29303,7 +29318,7 @@ const ACT = {
     if (i >= 0) { S.savedReps.splice(i, 1); toast("Report removed from Saved."); } else { if (S.savedReps.length >= 30) return toast("You can keep 30 saved reports. Remove one first.", "warn"); S.savedReps.unshift(r); toast("Report saved. Find it under Mail › Saved.", "win"); }
     dirty(); renderSheet(); },
   bskip: () => { const b = battle; if (!b || b.done) return; if (b.ending) return finishBattle(); b.intro = 0; settleBattle(b); b.hold = 1e9; },
-  perfToggle: () => { MAPPROF.on = !MAPPROF.on; MAPPROF.s = {}; MAPPROF.frames = []; perfHud(); if (sheet) renderSheet(); },
+  perfToggle: () => { MAPPROF.hud = !MAPPROF.hud; MAPPROF.s = {}; MAPPROF.frames = []; perfHud(); if (sheet) renderSheet(); },
   authOut: () => { closeSheet(); authSignOut(); },
   bcam: () => { const b = battle; if (!b || !b.vw) return; if (b.vw.mode === "free") { b.vw.mode = "auto"; } else camFree(b); battleCtl(); },
   bcine: () => { const b = battle; if (!b) return; b.cine = !b.cine; try { localStorage.setItem("udf.cineRep", b.cine ? "1" : "0"); } catch (e) {} if (!b.cine && b.focus && b.focus.cine) b.focus = null; toast(b.cine ? "Cinematic replays: slower, with a director camera." : "Quick replays: full speed, fixed camera."); battleCtl(); }, /* v678 */
