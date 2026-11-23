@@ -6714,7 +6714,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 729;
+const GAME_V = 730;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13146,6 +13146,11 @@ if (G.lastCrashFresh && G.lastCrash && G.lastCrash.ev) { const C = G.lastCrash, 
 try { document.documentElement.classList.add("nobd"); } catch (e) {} /* v604 also where the page is wrapped (the claude.ai copy) */ let PF = { t0: Date.now(), v: typeof GAME_V !== "undefined" ? GAME_V : 0, vw: {}, frz: [] };
 /* v728 the script time of each drawn frame, per screen: [frames, ms, frames over 12 ms]. Set against the frame interval it tells
    whether a slow device is held up by the game's own work or by drawing and the screen (the GPU, the browser or a power limit). */
+/* v730 a fixed piece of script, timed five times (best kept): the same work on the same phone should take the same time in Chrome
+   and in the app, so a big gap means the app is being given less CPU (a power limit or a game throttle), not that the game got heavier */
+function pfBench() { const run = () => { const t0 = performance.now(); let a = 0; const A = new Float64Array(4096); for (let k = 0; k < 60; k++) for (let i = 0; i < 4096; i++) { A[i] = Math.sin(i * .01 + k) * A[(i * 7) & 4095] + i; a += A[i]; } return [performance.now() - t0, a]; };
+  let best = 1e9, n = 0; const go = () => { if (document.hidden || battle) return setTimeout(go, 2000); best = Math.min(best, run()[0]); if (++n < 5) setTimeout(go, 1500); else PF.bench = +best.toFixed(2); }; setTimeout(go, 9000); }
+try { pfBench(); } catch (e) {}
 function pfCpu(ms) { try { if (!(ms >= 0) || !G.ready || ms > 5000) return; const k = pfKey(), c = (PF.cpu || (PF.cpu = {}))[k] || (PF.cpu[k] = [0, 0, 0]); c[0]++; c[1] += ms; if (ms > 12) c[2]++; } catch (e) {} }
 function pfKey() { try { return battle ? "battle" : (view || "?") + (sheet ? "+panel" : ""); } catch (e) { return "?"; } }
 function pfFrame(rd) { if (!(rd > 0) || rd > 20000 || !G.ready || performance.now() - (G.pfOk || (G.pfOk = performance.now())) < 4000) return; /* start-up loading is not play */ const k = pfKey(), s = PF.vw[k] || (PF.vw[k] = [0, 0, 0, 0, 0]); s[0]++; s[1] += rd; if (rd > 34) s[2]++; if (rd > 50) s[3]++; if (rd > s[4]) s[4] = rd;
@@ -13154,12 +13159,12 @@ function pfFrame(rd) { if (!(rd > 0) || rd > 20000 || !G.ready || performance.no
 function pfRec(P, end) { const vw = {}; let n = 0, ms = 0; for (const k in P.vw) { const s = P.vw[k]; if (s[0] < 30) continue; vw[k] = [s[0], Math.round(s[1]), s[2], s[3], Math.round(s[4])]; n += s[0]; ms += s[1]; }
   if (n < 600) return null; let mem = ""; try { if (performance.memory) mem = Math.round(performance.memory.usedJSHeapSize / 1e6) + " MB"; } catch (e) {}
   return { kind: "perf", status: "log", at: Date.now(), now: P.v, end, dur: Math.round(ms / 1000), fps: Math.round(n * 1000 / ms * 10) / 10, vw: JSON.stringify(vw), frz: JSON.stringify(P.frz || []).slice(0, 900), errs: (P.errs || []).slice(0, 8).join(" | ").slice(0, 900),
-    device: hqDev(), w: innerWidth, h: innerHeight, dpr: devicePixelRatio, pr: P.pr || 0, gpu: P.gpu || "", preset: P.preset || "", hz: P.hz || 0, mem, ev: JSON.stringify(P.ev || {}).slice(0, 900), map: P.map || "", gl: P.gl || "", cpu: JSON.stringify(Object.fromEntries(Object.entries(P.cpu || {}).map(([k, c]) => [k, [c[0], Math.round(c[1]), c[2]]]))).slice(0, 600) }; }
+    device: hqDev(), w: innerWidth, h: innerHeight, dpr: devicePixelRatio, pr: P.pr || 0, gpu: P.gpu || "", preset: P.preset || "", hz: P.hz || 0, mem, ev: JSON.stringify(P.ev || {}).slice(0, 900), map: P.map || "", gl: P.gl || "", bench: P.bench || 0, cpu: JSON.stringify(Object.fromEntries(Object.entries(P.cpu || {}).map(([k, c]) => [k, [c[0], Math.round(c[1]), c[2]]]))).slice(0, 600) }; }
 /* v479 this session's per-event numbers, for Boss Lab: [frames, ms, slow, freezes, attacks] per event:stage */
 function evMetricsHTML() { const E = PF.ev || {}, ks = Object.keys(E); if (!ks.length) return ""; return `<details class="note" style="margin:4px 0 8px"><summary>This session, by event</summary>${ks.map(k => { const e = E[k]; return `${esc(k.replace(":", " · "))}: ${Math.round(e[1] / 1000)} s · ${e[1] ? (e[0] * 1000 / e[1]).toFixed(0) : 0} fps · ${e[2]} slow · ${e[3]} freezes · ${e[4] || 0} attacks`; }).join("<br>")}</details>`; }
 function pfSave() { try { PF.errs = [...ERR_SEEN]; PF.gpu = gfxGpu(); PF.preset = gfxPreset(); PF.hz = gfxHz(); try { if (G3 && G3.renderer) PF.pr = +G3.renderer.getPixelRatio().toFixed(2); } catch (e) {}
   /* v729 where the galaxy's frame time goes, and how much the GPU is asked to draw */ try { if (MAPPROF.frames.length > 30) { const r = MAPPROF.report(), o = {}; for (const k in r) o[k] = k === "frame" ? [r[k].avg, r[k].p95, r[k].stutters] : r[k].avg; PF.map = JSON.stringify(o).slice(0, 700); } if (G3 && G3.renderer) { const i = G3.renderer.info; let n = 0; try { G3.scene.traverseVisible(() => n++); } catch (e) {} PF.gl = JSON.stringify({ calls: i.render.calls, tris: i.render.triangles, progs: (i.programs || []).length, geos: i.memory.geometries, tex: i.memory.textures, vis: n }); } } catch (e) {} localStorage.setItem(PF_K, JSON.stringify(PF)); } catch (e) {} }
-function pfSend(end) { try { pfSave(); const r = pfRec(PF, end); if (r) hqPush(r); PF = { t0: Date.now(), v: PF.v, vw: {}, frz: [] }; localStorage.removeItem(PF_K); } catch (e) {} }
+function pfSend(end) { try { pfSave(); const r = pfRec(PF, end); if (r) hqPush(r); PF = { t0: Date.now(), v: PF.v, vw: {}, frz: [], bench: PF.bench }; localStorage.removeItem(PF_K); } catch (e) {} }
 try { const old = JSON.parse(localStorage.getItem(PF_K) || "null"); localStorage.removeItem(PF_K); if (old && old.vw) { const r = pfRec(old, G.crashSent ? "crash" : "closed"); if (r) hqPush(r); } } catch (e) {}
 setInterval(() => { if (!document.hidden) pfSave(); }, 15000);
 document.addEventListener("visibilitychange", () => { try { frame.raw = 0; } catch (e) {} if (document.hidden) pfSend("background"); });
@@ -26617,8 +26622,9 @@ function drawBattle(t) {
      and fewer particles. Slow frames raise the tier first and only then lower the resolution; fast frames earn it back */
   if (b.tier == null) b.tier = WEAK ? 2 : MOBILE ? 1 : 0;
   { const dt = b.lastF ? Math.min(100, t - b.lastF) : 16; b.lastF = t; b.ft = b.ft ? b.ft * .94 + dt * .06 : dt; b.fc = (b.fc || 0) + 1;
-    if (b.fc > 45 && b.ft > 22) { if (b.tier < 2) b.tier++; else if (b.qs > 1) b.qs = Math.max(1, b.qs - .25); b.fc = 0; }
-    else if (b.fc > 300 && b.ft < 13.5) { if (b.tier > 0) b.tier--; b.fc = 0; } }
+    b.fms = (b.fms || 0) + dt; /* v730 steps on a clock (0.8 s), not every 45 frames: at 10 fps that was 4.5 s a step and most of a battle */
+    if (b.fc > 8 && b.fms > 800 && b.ft > 22) { if (b.tier < 2) b.tier++; else if (b.qs > 1) b.qs = Math.max(1, b.qs - (b.ft > 45 ? .5 : .25)); b.fc = 0; b.fms = 0; }
+    else if (b.fms > 5000 && b.ft < 13.5) { if (b.tier > 0) b.tier--; b.fc = 0; b.fms = 0; } }
   const d = b.qs, cwid = Math.round(cv.clientWidth * d), chei = Math.round(cv.clientHeight * d); if (cv.width !== cwid || cv.height !== chei) { cv.width = cwid; cv.height = chei; }
   const W = cv.width, H = cv.height, mainCtx = cv.getContext("2d"); let ctx = mainCtx; if (W < 8 || H < 8) return;
   const real = b.last ? Math.min(80, t - b.last) : 16; b.last = t;
