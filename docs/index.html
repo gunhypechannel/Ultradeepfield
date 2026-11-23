@@ -6714,7 +6714,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 732;
+const GAME_V = 733;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -15646,7 +15646,7 @@ function draw3D(t) {
   // worlds near the camera: sphere instances, close-up detail and shields. Colours and the near set refresh in slices.
   // v165 on a clock, not a frame count: every ~45 ms (every third frame at 60 fps, every sixth at 120), so a 120 Hz screen doesn't
   // double the heaviest CPU job of the frame
-  W.fr = (W.fr || 0) + 1; const fullPass = !W.PL || t - (W.fpT || 0) >= 44 || W.forceFull; if (fullPass) W.fpT = t; W.forceFull = false;
+  W.fr = (W.fr || 0) + 1; const fpGap = G.vmode === "planet" || (W.dets && W.dets.length) || (W.cam && W.cam.cine) ? 44 : 88; /* v733 zoomed out, where an orbit moves well under a pixel, the pass over the worlds near the camera runs half as often (it was the biggest job of a galaxy frame: about 11 ms on a Fold); close up and in cinematics it stays at 44 ms */ const fullPass = !W.PL || t - (W.fpT || 0) >= fpGap || W.forceFull; if (fullPass) W.fpT = t; W.forceFull = false;
   const pxK = (W.size[1] / 2) / Math.tan(W.camera.fov * Math.PI / 360), prs = W.renderer.getPixelRatio();
   if (!W.orbT0 || T - W.orbT0 > 3.6e7) { W.orbT0 = T; if (W.PL) { W.scene.remove(W.PL.halo.pts); W.scene.remove(W.PL.marks.pts); W.scene.remove(W.PL.terr.pts); W.PL = null; } if (W.MK) { W.scene.remove(W.MK.L.pts); W.MK = null; } }
   if (W.PL && W.PL.ref) plSweep(W, T, pxK, Math.ceil(PERF.plSlice / 3 * clamp(W.dtk || 1, .5, 2))); // v165: sized by frame time, so the work per second is the same at 120 Hz // v85: the marker sweep runs a third as big every frame (it was one big chunk every third frame: a regular hitch)
