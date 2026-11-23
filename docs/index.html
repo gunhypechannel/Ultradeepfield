@@ -13263,7 +13263,7 @@ function worldDrop(k, why) { try {
     if (mapHost && mapHost.parentNode) mapHost.parentNode.removeChild(mapHost); mapHost = null; crumb("map released (" + why + ")"); }
   if (k === "col" && C3 && view !== "base") { const old = C3; C3 = null; glFree(old.renderer); if (colHost && colHost.parentNode) colHost.parentNode.removeChild(colHost); colHost = null; crumb("base released (" + why + ")"); }
   if (k === "stu" && STU) { const s = STU; G.stuCache = s.cache; STU = null; glFree(s.renderer); }
-  if (glw0) G.glWait = performance.now() + 1000; /* v588 the wait starts once the release is done */
+  if (glw0) G.glWait = Math.max(G.glWait || 0, performance.now() + 2500); /* v588 the wait starts once the release is done; fb-20261123 2.5 s, 1 s was not enough */
   G.memEst = null; /* fb-20261121 the next heartbeat measures again instead of reporting the released world */
 } catch (e) { try { crumb("release failed: " + (e && e.message)); } catch (er) {} } }
 const MEM_DIET = IOS;
@@ -24889,7 +24889,7 @@ function gpuNap(on) { for (const W of [G3, C3]) { if (!W || !W.renderer) continu
 function bevOpen() { if (G.bevOpen == null) { try { G.bevOpen = localStorage.getItem("udf.bevOpen") === "1"; } catch (e) { G.bevOpen = false; } } return !!G.bevOpen; }
 function playBattle(r) {
   if (r && r.elAff && r.elAff.pct > 0) setTimeout(() => { if (battle) elAffFlash(r.elAff); }, 1400); /* v628 */
-  if (battle) closeBattle(); archFromRep(r); crumb("battle replay: " + String((r && r.title) || "battle").slice(0, 40)); if (IOS) { worldDrop("gal", "before a battle"); worldDrop("col", "before a battle"); } /* fb-20261120 only the world on screen stays */ gpuNap(true);
+  if (battle) closeBattle(); archFromRep(r); crumb("battle replay: " + String((r && r.title) || "battle").slice(0, 40)); if (IOS || /UDFApp\//.test(navigator.userAgent)) { worldDrop("gal", "before a battle"); worldDrop("col", "before a battle"); } /* fb-20261120 only the world on screen stays; fb-20261123 also in the Android app */ gpuNap(true);
   const w = document.createElement("div"); w.className = "battle"; w.id = "battle";
   w.innerHTML = `<canvas id="bcv" aria-label="Battle replay"></canvas>
     <div class="bhud top" id="bhA"></div><div class="bhud bot" id="bhD"></div><div class="bev" id="bev" aria-live="polite"></div>
