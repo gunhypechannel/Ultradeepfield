@@ -15722,7 +15722,7 @@ function draw3D(t) {
       else if (o.skx) cosSkxFree(o); }
     if (o.grp.children.length) { if (!o.grp.parent) W.scene.add(o.grp); } else if (o.grp.parent) W.scene.remove(o.grp);
   }
-  for (const [k, e] of W.inst) { if (k === "rings") { e.mesh.count = ringI; } else e.mesh.count = used.get(k) || 0; e.mesh.instanceMatrix.needsUpdate = true; if (e.mesh.instanceColor) e.mesh.instanceColor.needsUpdate = true; }
+  for (const [k, e] of W.inst) { if (k === "rings") { e.mesh.count = ringI; } else e.mesh.count = used.get(k) || 0; e.mesh.visible = e.mesh.count > 0; /* v732 an empty batch is not drawn (three.js still made a draw call for it: about 150 a frame) */ if (!e.mesh.count) continue; e.mesh.instanceMatrix.needsUpdate = true; if (e.mesh.instanceColor) e.mesh.instanceColor.needsUpdate = true; }
   for (const [id, o] of W.planets) if (!seen.has(id)) { hiDrop(W, o); cosAuraFree(o); cosSkxFree(o); if (o.deb) { o.deb.children[0].dispose(); o.deb = null; } if (o.bill) { o.bill.material.map.dispose(); o.bill.material.dispose(); } if (o.det) o.det.traverse(x => { if (x.material) x.material.dispose(); if (x.isPoints) x.geometry.dispose(); }); if (o.grp.parent) W.scene.remove(o.grp); W.planets.delete(id); }
   // open orbits (about 170,000): one GPU point layer that moves every slot along its orbit in the vertex shader, so the CPU never
   // touches them per frame. Which ones are charted and free is refreshed in slices (tileScan).
