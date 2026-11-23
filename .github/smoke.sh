@@ -11,8 +11,11 @@ adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumed" > 
 adb shell am force-stop com.udf.ultradeepfield
 adb shell pm clear com.udf.ultradeepfield
 adb shell svc wifi disable; adb shell svc data disable; sleep 3
-adb shell am start -n com.udf.ultradeepfield/.MainActivity; sleep 12
+adb logcat -c
+adb shell am start -W -n com.udf.ultradeepfield/.MainActivity; sleep 12
 adb exec-out screencap -p > /tmp/shots/5-offline.png
+adb logcat -d | grep -iE "udf|AndroidRuntime|FATAL|chromium|ActivityManager" | tail -200 > /tmp/shots/logcat-offline.txt
+adb shell dumpsys activity activities | grep -E "topResumed" > /tmp/shots/offline-top.txt
 adb shell svc wifi enable; adb shell svc data enable; sleep 8
 adb shell input tap 540 1400; sleep 1
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb shell cat /sdcard/ui.xml > /tmp/shots/offline-ui.xml
