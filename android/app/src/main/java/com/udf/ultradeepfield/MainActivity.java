@@ -104,6 +104,11 @@ public class MainActivity extends Activity {
             @Override public void onReceivedError(WebView v, WebResourceRequest req, WebResourceError err) {
                 if (req.isForMainFrame()) showOffline();
             }
+            /* if the page's renderer dies (low memory), start the page again instead of letting Android close the app */
+            @Override public boolean onRenderProcessGone(WebView v, android.webkit.RenderProcessGoneDetail d) {
+                if (v == web) { ((ViewGroup) v.getParent()).removeView(v); v.destroy(); web = null; recreate(); }
+                return true;
+            }
         });
         web.setWebChromeClient(new WebChromeClient() {
             @Override public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> cb, FileChooserParams p) {
@@ -150,6 +155,7 @@ public class MainActivity extends Activity {
     }
 
     void back() {
+        if (web == null) return;
         if (offline) { offline = false; web.loadUrl(START); return; }
         if (web.canGoBack()) web.goBack();
         else moveTaskToBack(true);
@@ -158,9 +164,9 @@ public class MainActivity extends Activity {
     @SuppressWarnings("deprecation")
     @Override public void onBackPressed() { back(); }
 
-    @Override protected void onSaveInstanceState(Bundle out) { super.onSaveInstanceState(out); web.saveState(out); }
-    @Override protected void onPause() { super.onPause(); web.onPause(); CookieManager.getInstance().flush(); }
-    @Override protected void onResume() { super.onResume(); web.onResume(); }
+    @Override protected void onSaveInstanceState(Bundle out) { super.onSaveInstanceState(out); if (web != null) web.saveState(out); }
+    @Override protected void onPause() { super.onPause(); if (web != null) web.onPause(); CookieManager.getInstance().flush(); }
+    @Override protected void onResume() { super.onResume(); if (web != null) web.onResume(); }
     @Override protected void onDestroy() { if (web != null) { web.destroy(); } super.onDestroy(); }
 
     @Override protected void onActivityResult(int req, int res, Intent data) {
