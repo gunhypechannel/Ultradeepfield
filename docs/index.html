@@ -6714,7 +6714,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 737;
+const GAME_V = 738;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -18029,10 +18029,11 @@ function cardGrade(cv, P, k) {
     D[i] = Math.min(255, nr * 255); D[i + 1] = Math.min(255, ng * 255); D[i + 2] = Math.min(255, nb * 255); }
   x.putImageData(im, 0, 0);
   const lc = P.light.map(v => Math.round(v * 255)), lw = `rgb(${lc.map(v => Math.min(255, v + 90)).join(",")})`, lt = `rgba(${lc.join(",")},.9)`, dh = Math.max(1.5, h / 110);
-  x.save(); x.globalCompositeOperation = "source-atop"; // window strips and nav lights land on solid hull only
+  const mk = document.createElement("canvas"); mk.width = w; mk.height = h; { const mx2 = mk.getContext("2d"), mi = mx2.createImageData(w, h), A = mi.data; for (let i = 3; i < D.length; i += 4) A[i] = D[i] > 200 ? 255 : 0; mx2.putImageData(mi, 0, 0); } /* v738 the solid hull only: the bloom halo round a hull has alpha too, so strips used to run out past its edges into space */
+  const lay = document.createElement("canvas"); lay.width = w; lay.height = h; const x0 = x; { const x = lay.getContext("2d");
   for (let row = 0; row < 11; row++) { const y = h * (.3 + r() * .42), on = .35 + r() * .4; for (let xx = w * (.08 + r() * .1); xx < w * (.92 - r() * .1); xx += dh * (2.4 + r() * 2)) { if (r() > on) continue; const L2 = dh * (1.5 + r() * 3); x.fillStyle = r() < .15 ? lw : lt; x.fillRect(xx, y, L2, dh); } }
   for (let i = 0; i < 6; i++) { x.fillStyle = i % 3 ? lw : "rgb(255,255,240)"; const px = w * (.1 + r() * .8), py = h * (.32 + r() * .36); x.beginPath(); x.arc(px, py, dh * 1.2, 0, TAU); x.fill(); }
-  x.restore();
+  x.globalCompositeOperation = "destination-in"; x.drawImage(mk, 0, 0); } x0.drawImage(lay, 0, 0);
 }
 function shipArt(k, accent, view) {
   const kind = SH[k] || k === "flagship" ? "s" : AL[k] ? "a" : DF[k] || k === "fortress" ? "d" : MS[k] ? "m" : null;
@@ -18050,7 +18051,7 @@ function shipArt(k, accent, view) {
     for (const [x, y, z, rr] of ship.userData.eng) { for (const [d, s, c] of [[.05, 5, gc[0]], [.5, 3.2, gc[1]]]) { const sp = new TH.Sprite(new TH.SpriteMaterial({ map: gl, color: c, transparent: true, blending: TH.AdditiveBlending, depthWrite: false })); sp.position.set(x - rr * d * 2, y, z); sp.scale.setScalar(rr * s * (FG ? .62 : 1)); ship.add(sp); } }
     const fxs = []; ship.traverse(c => { if (c.userData && c.userData.fx) fxs.push([c, c.parent]); }); fxs.forEach(([c, p]) => p.remove(c)); // frame the hull, not the plume
     const bb = new TH.Box3().setFromObject(ship), size = bb.getSize(new TH.Vector3()), ctr = bb.getCenter(new TH.Vector3()); ship.position.sub(ctr); fxs.forEach(([c, p]) => { if (!(view === "side" && c.userData.fx === 2)) p.add(c); }); /* v86: card-only effects (the superlaser) stay off battle sprites */
-    const hero = view === "hero", grand = !hero && (k === "worldbreaker" || k === "flagship" || BOSSK[k]), W = k === "flagship" ? (WEAK ? 640 : IOS ? 768 : 1024) : hero || grand ? (grand && WEAK ? 512 : 640) : WEAK ? 352 : 448, H = W / 2, ss = hero ? SSAA : WEAK ? 1.25 : 1.5; /* v86: bosses and the Cube Destroyer bake at hero size */ /* v79: weaker phones bake lighter sprites */ /* v76: ultra HD battle sprites, sharp even when the fit scale makes ships big */ /* v66: battle sprites at 352 px, lighter supersampling: sharp at their on-screen size, a third of the memory, twice as fast to bake */ S.renderer.setSize(Math.round(W * ss), Math.round(H * ss), false); S.camera.aspect = W / H;
+    const hero = view === "hero", grand = !hero && (k === "worldbreaker" || k === "flagship" || BOSSK[k]), W = k === "flagship" ? (WEAK ? 640 : IOS ? 768 : 1024) : hero || grand ? (grand && WEAK ? 512 : grand && k === "worldbreaker" && !MOBILE ? 1024 /* v738 sharp on a computer screen */ : 640) : WEAK ? 352 : 448, H = W / 2, ss = hero ? SSAA : WEAK ? 1.25 : 1.5; /* v86: bosses and the Cube Destroyer bake at hero size */ /* v79: weaker phones bake lighter sprites */ /* v76: ultra HD battle sprites, sharp even when the fit scale makes ships big */ /* v66: battle sprites at 352 px, lighter supersampling: sharp at their on-screen size, a third of the memory, twice as fast to bake */ S.renderer.setSize(Math.round(W * ss), Math.round(H * ss), false); S.camera.aspect = W / H;
     const dir = hero ? new TH.Vector3(.62, .45, 1) : FG ? new TH.Vector3(.34, .46, 1) : new TH.Vector3(.06, .32, 1); dir.normalize(); // v256 a three-quarter view from above shows the flagship's deck, turrets and depth
     const span = Math.max(size.x, size.z * (hero ? .9 : .4), size.y * 2.2), dist = span * (hero ? 1.2 : 1.12) * (kind === "d" ? 1.38 : kind === "m" ? .78 : 1); // batteries stand tall: pull back so the whole gun fits
     S.camera.position.copy(dir.multiplyScalar(dist * (mfr >= 0 ? MBF_Z : 1))); S.camera.lookAt(0, 0, 0); S.camera.updateProjectionMatrix(); /* v651 room for the limbs in motion */
@@ -18061,7 +18062,7 @@ function shipArt(k, accent, view) {
     const ex0 = S.renderer.toneMappingExposure; if (FG) S.renderer.toneMappingExposure = .72; S.renderer.render(S.scene, S.camera); S.renderer.toneMappingExposure = ex0; if (fgL) for (const L0 of fgL) S.scene.remove(L0);
     const out = document.createElement("canvas"); out.width = W; out.height = H; const ox = out.getContext("2d"); ox.imageSmoothingQuality = "high"; ox.drawImage(S.cv, 0, 0, W, H); if (hero || FG || fin) hdrBloom(ox, W, H, S.renderer.toneMappingExposure, FG ? .42 : fin ? .4 : 1); else if (kind === "s") { const hid = []; ship.traverse(o => { if (o.isSprite && o.visible) { o.visible = false; hid.push(o); } }); hdrBloom(ox, W, H, S.renderer.toneMappingExposure, .6); hid.forEach(o => o.visible = true); } // v359 the windows' glow (not the engines')
     if (FG) { ship.updateMatrixWorld(true); out.guns = (ship.userData.guns || []).map(([x, y, z]) => { const v = new TH.Vector3(x, y, z).applyMatrix4(ship.matrixWorld).project(S.camera); return [v.x, -v.y * .5]; }); const pr = (x, y, z) => { const v = new TH.Vector3(x, y, z).applyMatrix4(ship.matrixWorld).project(S.camera); return [v.x, -v.y * .5]; }; out.thr = ship.userData.eng.slice(0, 3).map(e => pr(e[0], e[1], e[2])); out.bow = pr(6.1, -.12, 0); const st = pr(-7, -.12, 0); out.ang = Math.atan2(st[1] - out.bow[1], st[0] - out.bow[0]); } // where each muzzle and nozzle lands on the picture, and the way the hull points /* the battle adds its own bloom to sprites */
-    if (fin) finSpark(out, fin, k); if (view === "side" && kind === "s" && k !== "eclipse" && k !== "flagship" && !ship.userData.glb && !fin) { const P = cardPal(k); if (P) cardGrade(out, P, k); } // v78: battle hulls take their card's look (v170: not the Discovery, whose own plating, windows and lights already match its card)
+    if (fin) finSpark(out, fin, k); if (view === "side" && kind === "s" && k !== "eclipse" && k !== "worldbreaker" && k !== "flagship" && !ship.userData.glb && !fin) { const P = cardPal(k); if (P) cardGrade(out, P, k); } // v78: battle hulls take their card's look (v170: not the Discovery, whose own plating, windows and lights already match its card)
     S.scene.remove(ship); if (mfM) mfM.forEach(m => m.dispose()); ship.traverse(o => { if (o.geometry && !ship.userData.glb && !ship.userData.keepGeo) o.geometry.dispose(); if (o.isSprite) o.material.dispose(); if (ship.userData.glb && o.isMesh && o.material) for (const t of [o.material.map, o.material.normalMap, o.material.roughnessMap, o.material.metalnessMap, o.material.emissiveMap]) if (t) t.dispose(); }); /* v345 a model shares its geometry with the loaded copy */
     return cachePut(S, key, out);
   } catch (e) { return cachePut(S, key, null); }
@@ -26815,11 +26816,13 @@ function drawBattle(t) {
      bigger and brighter, so a crowded 10 vs 10 fight opens out in depth instead of piling into one strip */
   if (!b.z) b.z = Q.map((q, i) => q.k === "worldbreaker" || (CRC_U[q.k] && bHero(q.k)) ? .98 : q.role === "station" || q.role === "turret" ? .78 : ((hash(q.k + "|" + i + "|" + q.side) % 1000) / 1000) * .9 + .05);
   let alive = 0; Q.forEach((q, i) => { if (b.n[i] > 0 && !(pos[i].fl & 6)) alive++; });
+  /* v738 wide screens (a computer): ships and their effects are sized from the field's height, not its width, so a landscape window no longer blows every hull up (a Cube Destroyer filled the whole field) */
+  const wdk = b.wdk = clamp(H * .8 / W, .4, 1);
   const crowd = clamp(Math.sqrt(22 / Math.max(22, alive)), .46, .92), fitOf = sd => (b.fitS && b.fitS[sd]) || b.fit || crowd, zy = (bot - top) * (alive > 30 ? .27 : .14), busy = alive > 30; // v75: the fit scale (below) sizes every ship to the free space
   // squadrons of the same type from different commanders share a position in the simulation: fan them apart on screen
   if (!b.jx) { b.jx = Q.map((q, i) => (hash("jx" + i + q.own) % 1000) / 1000 - .5); b.jy = Q.map((q, i) => (hash("jy" + i + q.own) % 1000) / 1000 - .5); b.jitA = 0; }
   b.jitA += (clamp((alive - 16) / 24, 0, 1) - b.jitA) * Math.min(1, real / 1500);
-  const scr = pos.map((p, i) => ({ x: X(p.x + b.jx[i] * (11 + 5 * b.jitA) * Math.max(.35, b.jitA)), y: Y(p.y + b.jy[i] * (7 + 3 * b.jitA) * Math.max(.35, b.jitA)) + Math.sin(t * .0016 + i * 1.7) * 1.4 * d + (b.z[i] - .5) * zy, s: fitOf(Q[i].side) * (.66 + .54 * b.z[i]) }));
+  const scr = pos.map((p, i) => ({ x: X(p.x + b.jx[i] * (11 + 5 * b.jitA) * Math.max(.35, b.jitA)), y: Y(p.y + b.jy[i] * (7 + 3 * b.jitA) * Math.max(.35, b.jitA)) + Math.sin(t * .0016 + i * 1.7) * 1.4 * d + (b.z[i] - .5) * zy, s: fitOf(Q[i].side) * (.66 + .54 * b.z[i]) * wdk }));
   if (!b.ord) b.ord = Q.map((q, i) => i).sort((i, j) => b.z[i] - b.z[j]);
   if (!lo) { b.dustL = b.dustL || dustLayer(W, H, d); const dr = reduced ? 0 : Math.sin(t * .00009) * W * .02; ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .55; ctx.drawImage(b.dustL, -W * .05 + dr, -H * .04 + dr * .3, W * 1.1, H * 1.08); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over"; }
   // big fights: same-type squadrons of one side flying in the same patch of sky are drawn as one formation with their combined count
