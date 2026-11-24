@@ -9,7 +9,7 @@ def rep(a, b, n=1):
     c = s.count(a); assert c == n, (c, a[:120]); s = s.replace(a, b)
 A = open(os.path.join(D, "p740_cnt_a.js"), encoding="utf-8").read()
 B = open(os.path.join(D, "p740_cnt_b.js"), encoding="utf-8").read()
-CSS = open(os.path.join(D, "p740_cnt.css"), encoding="utf-8").read()
+CSS = open(os.path.join(D, "p740_cnt.css"), encoding="utf-8").read().replace("\n", "")  # the head is one line (tools/to_artifact.py reads it so)
 rep("const GAME_V = 739;", "const GAME_V = 740;")
 rep("const PIRATES = PIRATES_ALL.filter(", A + "\nconst PIRATES = PIRATES_ALL.filter(")
 rep("CRC_NESTS, CRC_PATS, CRC_KRAK,", "CRC_NESTS, CRC_PATS, CRC_KRAK, CNT_NET, CNT_PATS, CNT_PLATS,")
