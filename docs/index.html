@@ -6714,7 +6714,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 735;
+const GAME_V = 736;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -16982,10 +16982,19 @@ function buildShip(k, M) {
       const sph = add(new TH.Mesh(new TH.SphereGeometry(R0, 128, 80), hull), 0, 0, 0); sph.rotation.set(.16, .55, 0);
       const trench = add(new TH.Mesh(new TH.TorusGeometry(R0 * .997, .032, 10, 160), new TH.MeshStandardMaterial({ color: 0x060505, roughness: .75, metalness: .4, emissive: 0x8a1408, emissiveIntensity: .7 })), 0, 0, 0); trench.rotation.x = Math.PI / 2 + .16;
       const n = new TH.Vector3(.84, -.1, .54).normalize(), at = k => n.clone().multiplyScalar(R0 * k), up = new TH.Vector3(0, 1, 0);
-      const dish = add(new TH.Mesh(new TH.CircleGeometry(R0 * .43, 72), new TH.MeshBasicMaterial({ map: TX.dish, toneMapped: false, transparent: true })), ...at(.93).toArray()); dish.lookAt(at(3));
+      /* v736 the dish is a real opening (owner: "Cube destroyer looks like it has an overlapping texture"): the disc used to sit just
+         under the sphere's skin, so the plating, its lights and the equatorial trench were drawn straight across it. The skin and the
+         trench now stop at a clean circle around the dish (cut per pixel in the shader), the dish sits recessed inside a dark collar,
+         and the red lip ring covers the cut edge. */
+      const HC = Math.cos(.43), hole = (m, mesh) => { const nl = n.clone().applyQuaternion(mesh.quaternion.clone().invert()); m.onBeforeCompile = sh => { sh.uniforms.uHoleN = { value: nl }; sh.vertexShader = "varying vec3 vHoleP;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\nvHoleP = position;"); sh.fragmentShader = "varying vec3 vHoleP;\nuniform vec3 uHoleN;\n" + sh.fragmentShader.replace("void main() {", "void main() {\nif (dot(normalize(vHoleP), uHoleN) > " + HC.toFixed(5) + ") discard;"); }; m.customProgramCacheKey = () => "wbHole" + nl.toArray().map(x => x.toFixed(3)).join(","); m.needsUpdate = true; };
+      hole(hull, sph); { const tm = trench.material; hole(tm, trench); }
+      const rimR = R0 * Math.sin(.43), rimD = Math.cos(.43), dishD = .865;
+      const dish = add(new TH.Mesh(new TH.CircleGeometry(rimR * .985, 72), new TH.MeshBasicMaterial({ map: TX.dish, toneMapped: false, transparent: true })), ...at(dishD).toArray()); dish.lookAt(at(3));
+      { const coll = add(new TH.Mesh(new TH.CylinderGeometry(rimR * .99, rimR * .985, R0 * (rimD - dishD) + .01, 72, 1, true), new TH.MeshStandardMaterial({ color: 0x0b0909, metalness: .55, roughness: .55, emissive: 0x2a0503, emissiveIntensity: .6, side: TH.DoubleSide })), ...at((rimD + dishD) / 2).toArray()); coll.quaternion.setFromUnitVectors(up, n); }
       const ringM = new TH.MeshBasicMaterial({ color: 0xe0140a, toneMapped: false }), darkM = new TH.MeshStandardMaterial({ color: 0x0a0909, metalness: .6, roughness: .5 });
-      for (let i = 0; i < 4; i++) { const t = add(new TH.Mesh(new TH.TorusGeometry(R0 * (.43 - i * .085), i ? .009 : .014, 8, 96), i % 2 ? darkM : ringM), ...at(.935 + i * .004).toArray()); t.lookAt(at(3)); }
-      add(new TH.Mesh(new TH.SphereGeometry(.12, 20, 14), new TH.MeshBasicMaterial({ color: 0xfff0e8, toneMapped: false })), ...at(.96).toArray());
+      { const t = add(new TH.Mesh(new TH.TorusGeometry(rimR, .018, 10, 120), ringM), ...at(rimD).toArray()); t.lookAt(at(3)); } /* the lip, on the cut */
+      for (let i = 1; i < 4; i++) { const t = add(new TH.Mesh(new TH.TorusGeometry(rimR * (1 - i * .2), .009, 8, 96), i % 2 ? darkM : ringM), ...at(dishD + .004 + i * .003).toArray()); t.lookAt(at(3)); }
+      add(new TH.Mesh(new TH.SphereGeometry(.11, 20, 14), new TH.MeshBasicMaterial({ color: 0xfff0e8, toneMapped: false })), ...at(dishD + .06).toArray());
       // the red superlaser firing forward (excluded from framing so the card shows the whole sphere)
       const q = new TH.Quaternion().setFromUnitVectors(up, n);
       for (const [rad, op, len, col] of [[.42, .22, 7, 0xff1206], [.2, .55, 7.1, 0xff2010], [.08, 1, 7.2, 0xfff2ec]]) { const b = add(new TH.Mesh(new TH.CylinderGeometry(rad * .8, rad, len, 20, 1, true), new TH.MeshBasicMaterial({ color: col, transparent: true, opacity: op, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })), ...at(1).add(n.clone().multiplyScalar(len / 2)).toArray()); b.quaternion.copy(q); b.userData.fx = 2; } // fx 2: card art only, the battle draws its own beam
