@@ -35,6 +35,7 @@ if os.path.exists(lst):
         if p.startswith('art/season/'): return 'season'
         if p.startswith(('art/arch/', 'art/lore/', 'art/chron/', 'art/ev/')): return 'arch'
         if p.startswith('art/carcinid/'): return 'crc' # v703
+        if p.startswith('art/rwar/'): return 'cnt' # v742 sculpted hulls
         return 'misc'
     packs = {}
     for p in paths:
