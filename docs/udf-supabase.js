@@ -410,6 +410,11 @@
     alert: function (uid, tag, title, body) { return need().then(function () { return run(sb.rpc("push_alert", { p_uid: uid, p_tag: tag, p_title: title, p_body: body })); }); }
   };
   /* v613 the shared story: each commander's choices and Titan count, and the galaxy's tally of them (for the Seal Strain and "62% spared it") */
+  /* v748 the Resurrection War at scale: fights and war points are applied by the server (cnt_apply), never read-modify-write */
+  window.udfCnt = {
+    apply: function (p, k, ops) { return need().then(function () { return run(sb.rpc("cnt_apply", { p_path: p, p_k: k, p_ops: ops })); }); },
+    me: function (p, k) { return need().then(function () { return run(sb.rpc("cnt_me", { p_path: p, p_k: k })); }); }
+  };
   window.udfStory = {
     act: function (k, v, n) { return need().then(function () { return run(sb.rpc("story_act", { p_k: k, p_v: v || "", p_n: n | 0 })); }); },
     tally: function () { return need().then(function () { return run(sb.rpc("story_tally")); }); }
