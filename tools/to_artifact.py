@@ -35,7 +35,7 @@ if os.path.exists(lst):
         if p.startswith('art/season/'): return 'season'
         if p.startswith(('art/arch/', 'art/lore/', 'art/chron/', 'art/ev/')): return 'arch'
         if p.startswith('art/carcinid/'): return 'crc' # v703
-        if p.startswith('art/rwar/'): return 'cnt' # v742 sculpted hulls
+        if p.startswith('art/rwar/'): return 'crc' # v742 sculpted hulls (the artifact is at its 511-file cap, so they share the Carcinid pack)
         return 'misc'
     packs = {}
     for p in paths:
