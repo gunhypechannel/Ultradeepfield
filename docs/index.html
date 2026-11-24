@@ -13368,7 +13368,7 @@ setInterval(() => { if (!document.hidden) pfSave(); }, 15000);
 document.addEventListener("visibilitychange", () => { try { frame.raw = 0; } catch (e) {} if (document.hidden) pfSend("background"); });
 addEventListener("pagehide", () => pfSend("closed"));
 function crumbSave() { try { localStorage.setItem(CRUMB_K, JSON.stringify(CRUMBS)); } catch (e) {} }
-function crumb(msg) { CRUMBS.open = true; CRUMBS.ev.push([Date.now(), String(msg).slice(0, 160)]); /* v178: 160, room for an error's stack line or a stress-test result */ if (CRUMBS.ev.length > 24) CRUMBS.ev.splice(0, CRUMBS.ev.length - 24); crumbSave(); }
+function crumb(msg) { if (!document.hidden) CRUMBS.open = true; /* fb-20261124 a crumb while hidden must not reopen the session */ CRUMBS.ev.push([Date.now(), String(msg).slice(0, 160)]); /* v178: 160, room for an error's stack line or a stress-test result */ if (CRUMBS.ev.length > 24) CRUMBS.ev.splice(0, CRUMBS.ev.length - 24); crumbSave(); }
 /* fb-20261115 memory readout for crash reports (MB, estimated): textures per 3D world, cached ship pictures, decoded paintings, canvases */
 function memEst() { try { const T = Date.now(); if (G.memEst && T - G.memEst.t < 12000) return G.memEst.v;
   const px = im => !im ? 0 : Array.isArray(im) ? im.reduce((a, x) => a + px(x), 0) : (im.naturalWidth || im.width || 0) * (im.naturalHeight || im.height || 0), v = {};
