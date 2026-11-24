@@ -1,0 +1,24 @@
+/* v742 sculpted hulls (tools/sculpt): signed-distance models carved after the owner's paintings, meshed, baked with per-vertex
+   albedo, roughness, metalness, emission and ambient occlusion, simplified and packed as CNT2 files in art/rwar/m/. They load on
+   first use; until then (or if a file fails) the procedural hull stands in, and once loaded the cached art and map models rebuild. */
+function cntMeshGeo(buf) { const dv = new DataView(buf); if (dv.getUint32(0, true) !== 0x324E5443) throw Error("not CNT2"); const nv = dv.getUint32(4, true), ni = dv.getUint32(8, true), mn = [0, 1, 2].map(k => dv.getFloat32(12 + k * 4, true)), mx = [0, 1, 2].map(k => dv.getFloat32(24 + k * 4, true));
+  let o = 36; const pq = new Uint16Array(buf, o, nv * 3); o += (nv * 3 + (nv * 3) % 2) * 2; const nq = new Int8Array(buf, o, nv * 4); o += nv * 4; const aq = new Uint8Array(buf, o, nv * 4); o += nv * 4; const eq = new Uint8Array(buf, o, nv * 4); o += nv * 4;
+  const idx = nv > 65535 ? new Uint32Array(buf.slice(o, o + ni * 4)) : new Uint16Array(buf.slice(o, o + ni * 2));
+  const P = new Float32Array(nv * 3), N = new Float32Array(nv * 3), C = new Float32Array(nv * 3), E = new Float32Array(nv * 3), R = new Float32Array(nv * 2);
+  for (let i = 0; i < nv; i++) { for (let k = 0; k < 3; k++) { P[i * 3 + k] = mn[k] + pq[i * 3 + k] / 65535 * (mx[k] - mn[k]); N[i * 3 + k] = nq[i * 4 + k] / 127; const a = aq[i * 4 + k] / 255; C[i * 3 + k] = a * a; E[i * 3 + k] = eq[i * 4 + k] / 255; } R[i * 2] = aq[i * 4 + 3] / 255; R[i * 2 + 1] = eq[i * 4 + 3] / 255; }
+  const g = new TH.BufferGeometry(); g.setAttribute("position", new TH.BufferAttribute(P, 3)); g.setAttribute("normal", new TH.BufferAttribute(N, 3)); g.setAttribute("color", new TH.BufferAttribute(C, 3)); g.setAttribute("aEm", new TH.BufferAttribute(E, 3)); g.setAttribute("aRM", new TH.BufferAttribute(R, 2)); g.setIndex(new TH.BufferAttribute(idx, 1)); g.computeBoundingBox(); g.computeBoundingSphere(); return g; }
+/* the studio's rim light is strong and blue; on broad dark metal it turned the hull pale, so direct specular is damped on dark albedo */
+function cntMeshMat() { if (cntMeshMat.M) return cntMeshMat.M; const m = new TH.MeshStandardMaterial({ vertexColors: true, roughness: 1, metalness: 1, envMapIntensity: .28 });
+  m.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nattribute vec3 aEm; attribute vec2 aRM; varying vec3 vEm; varying vec2 vRM;").replace("#include <begin_vertex>", "#include <begin_vertex>\nvEm = aEm; vRM = aRM;");
+    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec3 vEm; varying vec2 vRM;").replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor = max(.05, vRM.x);").replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\nmetalnessFactor = vRM.y;")
+      .replace("#include <aomap_fragment>", "reflectedLight.directSpecular *= mix(.16, 1., smoothstep(.03, .3, max(diffuseColor.r, max(diffuseColor.g, diffuseColor.b))));\n#include <aomap_fragment>").replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\ntotalEmissiveRadiance += vEm;"); };
+  m.customProgramCacheKey = () => "cntsculpt1"; return cntMeshMat.M = m; }
+/* each sculpted class: its scale into the procedural hull's frame, and its engine mouths [x, y, z, radius] */
+const CNT_SC = { cnark: { s: .8, eng: [[-4.92, .04, .44, .34], [-4.92, .04, -.44, .34], [-4.92, .5, .44, .24], [-4.92, .5, -.44, .24], [-4.92, -.44, .44, .24], [-4.92, -.44, -.44, .24]] } }, CNT_GEO = {};
+function cntSculptLoad() { if (cntSculptLoad.on || !TH || typeof fetch !== "function") return; cntSculptLoad.on = 1;
+  for (const k in CNT_SC) fetch("art/rwar/m/" + k + ".bin").then(r => r.ok ? r.arrayBuffer() : Promise.reject(Error("HTTP " + r.status))).then(b => { CNT_GEO[k] = cntMeshGeo(b); cntSculptSwap(k); }).catch(e => console.warn("sculpt " + k, e && e.message)); }
+function cntSculptSwap(k) { try { if (STU && STU.cache) for (const key in STU.cache) if (key.startsWith(k + "|")) delete STU.cache[key]; delete MMERGE[k];
+  const ms = Object.keys(CNT_M).filter(m => CNT_M[m] === k); if (G3) { if (G3.monMaster) for (const m of ms) delete G3.monMaster[m];
+    if (G3.pirates) for (const [id, o] of [...G3.pirates]) { const x = PB[id]; if (x && ms.includes(x.mon)) { G3.scene.remove(o.grp); G3.pirates.delete(id); } } } } catch (e) { console.warn("sculpt swap", e); } }
+function cntSculpted(k) { const D = CNT_SC[k], g = new TH.Group(), m = new TH.Mesh(CNT_GEO[k], cntMeshMat()); m.userData.sculpt = 1; m.scale.setScalar(D.s); g.add(m);
+  g.userData.eng = D.eng.map(e => e.slice()); g.userData.engCol = [0xffc0c6, 0xff2a3a]; g.userData.cnt = 3; g.userData.keepGeo = 1; return g; }
