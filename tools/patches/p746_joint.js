@@ -1,0 +1,8 @@
+/* ---------- v746 joint strikes on the resurrection network: relays, Arks, commanders, the Eternal Commander and the Prime Ark take
+   joint strikes like any boss. Each member's fleet fights its own battle when the strike lands (the network record takes them one at a
+   time under its lock), and every extra commander in the strike adds +10% firepower and shields to every member's fleet, up to +30%. */
+const cntTeam = f => { try { const a = f && f.assault && G.assaults && G.assaults[f.assault]; return a ? 1 + .1 * teamBonus(Object.keys(a.members || {}).length) : 1; } catch (e) { return 1; } };
+function cntStrikesHTML(T) { if (G.mode !== "online") return ""; const L = Object.values(G.assaults || {}).filter(a => a && !a.disb && a.rally && a.xid && CNT_BOSS[a.xid] && T < (a.launch || 0) - 5000);
+  const rows = L.map(a => { const B = CNT_BOSS[a.xid], mine = !!(a.members || {})[G.me], n = Object.keys(a.members || {}).length;
+    return `<div class="cntjs"><div><b>${esc(B.name)}</b><small>Led by ${esc(a.leader === G.me ? "you" : nameOf(a.leader))} · ${n} commander${n === 1 ? "" : "s"} · +${10 * teamBonus(n)}% · launches in <span data-end="${a.launch}">${ftime(a.launch - T)}</span></small></div>${mine ? `<span class="pill">Joined</span>` : `<button class="btn pri sm" data-act="joinAssault" data-id="${a.id}">Join</button>`}</div>`; }).join("");
+  return `<h3>Joint strikes on the network</h3><p class="note">Open one from any relay, Ark or commander: tick "Start a joint strike" on its launch screen. Every commander who joins adds 10% to everyone's fleet, up to 30%.</p>${rows || `<p class="note">None open right now.</p>`}`; }
