@@ -6714,7 +6714,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 736;
+const GAME_V = 737;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -6955,12 +6955,13 @@ function hullAccK(k, a) { a = String(a); if (a.includes("^me")) { const f = hull
 function finMat(m, f, obj, o) { o = o || {}; const F = HULL_F[f]; if (!F || !TH || !m || !m.isMeshStandardMaterial) return m;
   const T2 = o.auto && HULL_F[o.auto] && o.auto !== f ? o.auto : null, F2 = T2 && HULL_F[T2], tex = hullTex(f), tex2 = T2 ? hullTex(T2) : null, sm = !obj && o.ps > 0, inl = o.inl || new TH.Color(F.rim);
   const gly = f === "glyph"; /* v654 */
-  const n = m.clone(); if (gly) { n.transparent = true; n.depthWrite = true; } n.metalness = tex ? (F.tm != null ? F.tm : .2) : F.met; n.roughness = tex ? .32 : F.rough; n.envMapIntensity = tex ? .8 : 1.7;
+  const n = m.clone(), solid = !!(m.userData && m.userData.solidHolo); if (gly && !solid) { n.transparent = true; n.depthWrite = true; } /* v737 a hull marked solidHolo wears the runes without going see-through (the Cube Destroyer: five translucent spheres stacked in one formation read as one tangled ghost) */
+  const keep = m.userData && m.userData.keepOBC ? m.onBeforeCompile : null, keepK = keep && m.customProgramCacheKey ? m.customProgramCacheKey() : ""; /* v737 a hull's own shader change (the Cube Destroyer's dish opening) survives the finish */ n.metalness = tex ? (F.tm != null ? F.tm : .2) : F.met; n.roughness = tex ? .32 : F.rough; n.envMapIntensity = tex ? .8 : 1.7;
   if (sm) n.extensions = Object.assign({}, n.extensions, { derivatives: true });
   const br = (i, tx) => tx ? `{ vec3 t = texture2D(uHT${i}, vHW.zy * uTs${i}).rgb * bw.x + texture2D(uHT${i}, vHW.xz * uTs${i}).rgb * bw.y + texture2D(uHT${i}, vHW.xy * uTs${i}).rgb * bw.z; t = pow(t, vec3(2.2)); float tl = dot(t, vec3(.3, .59, .11)); t = max(mix(vec3(tl), t, 1.35), 0.0); c${i} = t * (0.35 + 0.75 * smoothstep(0.0, 0.85, hl)); g${i} = t * pow(tl, 3.0) * uGl${i};${obj ? ` c${i} = mix(c${i}, uFin${i} * (0.3 + 0.8 * smoothstep(0.0, 0.85, hl)), .45); g${i} *= .3;` : ""} }`
     : `{ c${i} = mix(diffuseColor.rgb, uFin${i} * clamp(pow(hl, 1.35) * uFk${i} + .04, 0.0, 1.5), .94); g${i} = vec3(0.0); }`;
   const dec = i => ` uniform vec3 uFin${i}; uniform float uFk${i}; uniform float uTs${i}; uniform float uGl${i};` + ((i === 1 ? tex : tex2) ? ` uniform sampler2D uHT${i};` : "");
-  n.onBeforeCompile = sh => { const U = sh.uniforms; U.uFin1 = { value: new TH.Color(F.col) }; U.uFk1 = { value: F.k }; U.uTs1 = { value: F.ts || .8 }; U.uGl1 = { value: F.gl || .45 }; if (tex) U.uHT1 = { value: tex };
+  n.onBeforeCompile = sh => { if (keep) keep(sh); const U = sh.uniforms; U.uFin1 = { value: new TH.Color(F.col) }; U.uFk1 = { value: F.k }; U.uTs1 = { value: F.ts || .8 }; U.uGl1 = { value: F.gl || .45 }; if (tex) U.uHT1 = { value: tex };
       if (T2) { U.uFin2 = { value: new TH.Color(F2.col) }; U.uFk2 = { value: F2.k }; U.uTs2 = { value: F2.ts || .8 }; U.uGl2 = { value: F2.gl || .45 }; if (tex2) U.uHT2 = { value: tex2 }; }
       U.uRim = { value: new TH.Color(F.rim) }; U.uInl = { value: inl }; if (gly) U.uGA = { value: glyTex() }; U.uGlw = { value: o.glow ? 1.6 : 0 }; U.uT = HULL_TU; U.uPs = { value: o.ps || 1 };
       sh.vertexShader = "varying vec3 vHW; varying vec3 vHN;" + (sm ? " varying vec3 vHO; varying vec3 vHL; uniform float uPs;" : "") + "\n" + sh.vertexShader.replace("#include <project_vertex>", "#include <project_vertex>\n" + (obj ? "vHW = transformed * 1.4; vHN = normalize(objectNormal);" : "vHW = (modelMatrix * vec4(transformed, 1.0)).xyz; vHN = normalize(mat3(modelMatrix) * objectNormal);") + (sm ? " vHO = transformed * uPs; vHL = normalize(objectNormal);" : ""));
@@ -6973,7 +6974,7 @@ function finMat(m, f, obj, o) { o = o || {}; const F = HULL_F[f]; if (!F || !TH 
         .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n { float hf = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.2); totalEmissiveRadiance += uRim * hf * (" + (obj ? "1.1" : tex ? ".35" : ".85") + ") + hGl + uInl * (hf * 1.2 + .25) * uGlw;"
           + (sm ? " totalEmissiveRadiance += uInl * hIn * (.55 + .45 * sin(uT * 1.6 + hPh * 6.283)) * 2.4;" : "")
           + (gly ? " totalEmissiveRadiance += fgC * fgM * 1.5 + lvHsv(fract(hf * 1.5 + uT * .05), .55, 1.0) * pow(hf, 1.3) * .9; diffuseColor.a *= clamp(.24 + .76 * pow(hf, 1.3) + fgM * .75, 0.0, 1.0);" : "") + " }"); };
-  n.customProgramCacheKey = () => "hullfin3-" + f + (tex ? "-t" : "") + (obj ? "-o" : "") + (o.glow ? "-g" : "") + (T2 ? "-a" + T2 + (tex2 ? "t" : "") : "") + (sm ? "-s" : ""); n.needsUpdate = true; return n; }
+  n.customProgramCacheKey = () => "hullfin3-" + f + (tex ? "-t" : "") + (obj ? "-o" : "") + (o.glow ? "-g" : "") + (T2 ? "-a" + T2 + (tex2 ? "t" : "") : "") + (sm ? "-s" : "") + (solid ? "-solid" : "") + (keepK ? "|" + keepK : ""); n.needsUpdate = true; return n; }
 /* v654 the Glyph Holo's runes: 64 procedural runes in an 8 x 8 atlas, white on black */
 let GLY_T = null;
 const GLY_GLSL = "float lvGly(vec3 qi, vec3 on, float t, out vec3 col) { vec3 an = abs(on); vec2 g = an.x > an.y && an.x > an.z ? qi.zy : (an.y > an.z ? qi.xz : qi.xy); g *= 9.0;\n  vec2 ce = floor(g), f = fract(g); float h = fract(sin(dot(ce, vec2(12.99, 78.23))) * 43758.55); col = vec3(0.0); if (h < .3) return 0.0;\n  float ph = t * .22 + h * 9.0, cy = floor(ph), env = sin(fract(ph) * 3.14159); float id = floor(fract(sin((cy + h * 31.0) * 12.99) * 43758.55) * 64.0);\n  vec2 uv = (vec2(mod(id, 8.0), floor(id / 8.0)) + .08 + f * .84) / 8.0; float m = texture2D(uGA, uv).r;\n  col = lvHsv(fract(h * 5.7 + cy * .13 + t * .02), 1.0, 1.0); return m * (.3 + .7 * env); }\n";
@@ -6994,9 +6995,10 @@ const LIV_P = { def: [.58, .6, .84, .05] }; // lateral fins, top, nose/tail, spi
 function livMat(m, f, t, k, geo) { const F = HULL_F[f]; if (!F || !TH || !m || !m.isMeshStandardMaterial) return m; t = t && HULL_F[t] ? t : f;
   if (!geo.boundingBox) geo.computeBoundingBox(); const bb = geo.boundingBox, c = bb.getCenter(new TH.Vector3()), h = bb.getSize(new TH.Vector3()).multiplyScalar(.5);
   const ka = LIV_K[f], kb = LIV_K[t], P = LIV_P[k] || LIV_P.def, lt = new TH.Color(HULL_F[t].rim);
-  const n = m.clone(); n.envMapIntensity = 1.75; if (ka === 4 || kb === 4) { n.transparent = true; n.depthWrite = true; } /* v654 */ n.extensions = Object.assign({}, n.extensions, { derivatives: true });
+  const solid = !!(m.userData && m.userData.solidHolo), keep = m.userData && m.userData.keepOBC ? m.onBeforeCompile : null, keepK = keep && m.customProgramCacheKey ? m.customProgramCacheKey() : ""; /* v737 see finMat */
+  const n = m.clone(); n.envMapIntensity = 1.75; if ((ka === 4 || kb === 4) && !solid) { n.transparent = true; n.depthWrite = true; } /* v654 */ n.extensions = Object.assign({}, n.extensions, { derivatives: true });
   const lin = h => new TH.Color(h).convertSRGBToLinear(); /* colours were going in as if already linear: everything came out pale */
-  n.onBeforeCompile = sh => { const U = sh.uniforms; U.uA = { value: lin(LIV_C[f]) }; U.uB = { value: lin(LIV_C[t]) }; U.uRA = { value: lin(F.rim) }; U.uRB = { value: lin(HULL_F[t].rim) };
+  n.onBeforeCompile = sh => { if (keep) keep(sh); const U = sh.uniforms; U.uA = { value: lin(LIV_C[f]) }; U.uB = { value: lin(LIV_C[t]) }; U.uRA = { value: lin(F.rim) }; U.uRB = { value: lin(HULL_F[t].rim) };
       U.uK = { value: new TH.Vector2(ka, kb) }; U.uMR = { value: new TH.Vector4(LIV_MR[ka][0], LIV_MR[ka][1], LIV_MR[kb][0], LIV_MR[kb][1]) }; U.uLt = { value: lt.clone().convertSRGBToLinear() };
       U.uBc = { value: c }; U.uBh = { value: h }; U.uGA = { value: glyTex() }; U.uLP = { value: new TH.Vector4(P[0], P[1], P[2], P[3]) }; U.uT = HULL_TU;
       sh.vertexShader = "uniform vec3 uBc; uniform vec3 uBh; varying vec3 vLN; varying vec3 vON;\n" + sh.vertexShader.replace("#include <project_vertex>", "#include <project_vertex>\n vLN = (position - uBc) / max(uBh, vec3(1e-4)); vON = normalize(normal);");
@@ -7042,8 +7044,9 @@ float lvGly(vec3 qi, vec3 on, float t, out vec3 col) { vec3 an = abs(on); vec2 g
    diffuseColor.a *= lvAl; }`)
         .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n roughnessFactor = mix(mix(uMR.y, uMR.w, lvTr), .6, lvLt);")
         .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\n metalnessFactor = mix(mix(uMR.x, uMR.z, lvTr), 0.0, lvLt);")
-        .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n totalEmissiveRadiance += lvE;"); };
-  n.customProgramCacheKey = () => "livery3"; n.needsUpdate = true; return n; }
+        .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n totalEmissiveRadiance += lvE;");
+    if (solid) sh.fragmentShader = sh.fragmentShader.replace("gl_FragColor = vec4( outgoingLight, diffuseColor.a );", "gl_FragColor = vec4( outgoingLight * lvAl, 1.0 );"); /* v737 solid glyph hull: the see-through parts go dark like glass over space instead of showing what's behind */ };
+  n.customProgramCacheKey = () => "livery3" + (solid ? "-solid" : "") + (keepK ? "|" + keepK : ""); n.needsUpdate = true; return n; }
 function hullFinish(obj, sp, k) { const [f, t] = finSplit(sp); if (!f || !TH) return; const inl = finInl(f, t), pc = new TH.Color(0xffffff).lerp(inl, .35), v = new TH.Vector3();
   obj.updateMatrixWorld(true); const sz = new TH.Box3().setFromObject(obj).getSize(new TH.Vector3()), L = Math.max(sz.x, sz.y, sz.z) || 1;
   obj.traverse(o => { if (!o.isMesh || !o.material) return; const ps = o.getWorldScale(v).x / L;
@@ -7058,7 +7061,8 @@ function hullFinish(obj, sp, k) { const [f, t] = finSplit(sp); if (!f || !TH) re
 function finSpark(cv, f, k) { try { const F = HULL_F[f]; if (!F) return; const x = cv.getContext("2d"), w = cv.width, h = cv.height, D = x.getImageData(0, 0, w, h).data, r = rnd(hash(k + f)), pts = [];
   for (let i = 0; i < 2600 && pts.length < 9; i++) { const px = (r() * w) | 0, py = (r() * h) | 0, j = (py * w + px) * 4; if (D[j + 3] > 200 && D[j] + D[j + 1] + D[j + 2] > 560) pts.push([px, py]); }
   x.save(); x.globalCompositeOperation = "lighter"; const R0 = Math.max(4, w / 70);
-  for (const [px, py] of pts) { const s = R0 * (.6 + r() * .9), g = x.createRadialGradient(px, py, 0, px, py, s); g.addColorStop(0, "rgba(255,255,255,.95)"); g.addColorStop(.3, F.rim + "aa"); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.beginPath(); x.arc(px, py, s, 0, TAU); x.fill();
+  const inS = (X, Y) => { X |= 0; Y |= 0; return X >= 0 && Y >= 0 && X < w && Y < h && D[(Y * w + X) * 4 + 3] > 200; }; /* v737 a glint's cross stays on the hull: no streaks out into space past the silhouette */
+  for (const [px, py] of pts) { let s = R0 * (.6 + r() * .9); while (s > R0 * .35 && ![[1, 0], [-1, 0], [0, 1], [0, -1]].every(([a, b]) => inS(px + a * s * 1.8, py + b * s * 1.8))) s *= .8; if (s <= R0 * .35) continue; const g = x.createRadialGradient(px, py, 0, px, py, s); g.addColorStop(0, "rgba(255,255,255,.95)"); g.addColorStop(.3, F.rim + "aa"); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.beginPath(); x.arc(px, py, s, 0, TAU); x.fill();
     x.strokeStyle = "rgba(255,255,255,.75)"; x.lineWidth = Math.max(1, s / 7); x.beginPath(); x.moveTo(px - s * 1.8, py); x.lineTo(px + s * 1.8, py); x.moveTo(px, py - s * 1.8); x.lineTo(px, py + s * 1.8); x.stroke(); }
   x.restore(); } catch (e) {} }
 function hullSection() { const ownN = k => { try { return own(k) || 0; } catch (e) { return (S.ships || {})[k] || 0; } }, mine = Object.keys(SH).filter(k => ownN(k) > 0 || hullOf(k)), soon = Object.keys(SH).filter(k => !mine.includes(k) && !missing(SH[k].req || {}).length), ks = mine.length || soon.length ? mine.concat(soon) : ["fighter", "corvette", "battleship"], sel = SH[G.hullK] ? G.hullK : ks[0], fin = hullOf(sel);
@@ -16986,11 +16990,11 @@ function buildShip(k, M) {
          under the sphere's skin, so the plating, its lights and the equatorial trench were drawn straight across it. The skin and the
          trench now stop at a clean circle around the dish (cut per pixel in the shader), the dish sits recessed inside a dark collar,
          and the red lip ring covers the cut edge. */
-      const HC = Math.cos(.43), hole = (m, mesh) => { const nl = n.clone().applyQuaternion(mesh.quaternion.clone().invert()); m.onBeforeCompile = sh => { sh.uniforms.uHoleN = { value: nl }; sh.vertexShader = "varying vec3 vHoleP;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\nvHoleP = position;"); sh.fragmentShader = "varying vec3 vHoleP;\nuniform vec3 uHoleN;\n" + sh.fragmentShader.replace("void main() {", "void main() {\nif (dot(normalize(vHoleP), uHoleN) > " + HC.toFixed(5) + ") discard;"); }; m.customProgramCacheKey = () => "wbHole" + nl.toArray().map(x => x.toFixed(3)).join(","); m.needsUpdate = true; };
+      const HC = Math.cos(.43), hole = (m, mesh) => { const nl = n.clone().applyQuaternion(mesh.quaternion.clone().invert()); m.onBeforeCompile = sh => { sh.uniforms.uHoleN = { value: nl }; sh.vertexShader = "varying vec3 vHoleP;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\nvHoleP = position;"); sh.fragmentShader = "varying vec3 vHoleP;\nuniform vec3 uHoleN;\n" + sh.fragmentShader.replace("void main() {", "void main() {\nif (dot(normalize(vHoleP), uHoleN) > " + HC.toFixed(5) + ") discard;"); }; m.customProgramCacheKey = () => "wbHole" + nl.toArray().map(x => x.toFixed(3)).join(","); m.userData.keepOBC = 1; m.userData.solidHolo = 1; m.needsUpdate = true; };
       hole(hull, sph); { const tm = trench.material; hole(tm, trench); }
       const rimR = R0 * Math.sin(.43), rimD = Math.cos(.43), dishD = .865;
       const dish = add(new TH.Mesh(new TH.CircleGeometry(rimR * .985, 72), new TH.MeshBasicMaterial({ map: TX.dish, toneMapped: false, transparent: true })), ...at(dishD).toArray()); dish.lookAt(at(3));
-      { const coll = add(new TH.Mesh(new TH.CylinderGeometry(rimR * .99, rimR * .985, R0 * (rimD - dishD) + .01, 72, 1, true), new TH.MeshStandardMaterial({ color: 0x0b0909, metalness: .55, roughness: .55, emissive: 0x2a0503, emissiveIntensity: .6, side: TH.DoubleSide })), ...at((rimD + dishD) / 2).toArray()); coll.quaternion.setFromUnitVectors(up, n); }
+      { const coll = add(new TH.Mesh(new TH.CylinderGeometry(rimR * .99, rimR * .985, R0 * (rimD - dishD) + .01, 72, 1, true), new TH.MeshStandardMaterial({ color: 0x0b0909, metalness: .55, roughness: .55, emissive: 0x2a0503, emissiveIntensity: .6, side: TH.DoubleSide })), ...at((rimD + dishD) / 2).toArray()); coll.quaternion.setFromUnitVectors(up, n); coll.material.userData.solidHolo = 1; }
       const ringM = new TH.MeshBasicMaterial({ color: 0xe0140a, toneMapped: false }), darkM = new TH.MeshStandardMaterial({ color: 0x0a0909, metalness: .6, roughness: .5 });
       { const t = add(new TH.Mesh(new TH.TorusGeometry(rimR, .018, 10, 120), ringM), ...at(rimD).toArray()); t.lookAt(at(3)); } /* the lip, on the cut */
       for (let i = 1; i < 4; i++) { const t = add(new TH.Mesh(new TH.TorusGeometry(rimR * (1 - i * .2), .009, 8, 96), i % 2 ? darkM : ringM), ...at(dishD + .004 + i * .003).toArray()); t.lookAt(at(3)); }
