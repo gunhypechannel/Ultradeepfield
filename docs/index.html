@@ -5681,7 +5681,7 @@ const cntFlag = () => !!(G.flags && G.flags.cnt);
 function cntClock(T) { T = T || now(); if (cntPrevOn()) { const p = S.cntPrev; return { e: CNT_STG[p.s - 1] + 3600e3 + Math.max(0, T - p.at), prev: 1 }; } const t0 = cntT0(T); return { e: T - t0, t0 }; }
 function cntStage(T) { const e = cntClock(T).e; if (e < 0) return 0; if (e >= CNT_LEN) return 8; let s = 1; for (let i = 1; i < CNT_STG.length; i++) if (e >= CNT_STG[i]) s = i + 1; return s; }
 const cntOn = T => { const s = cntStage(T); return s >= 1 && s <= 7 && (cntPrevOn() || cntFlag()); };
-const cntKey = () => cntPrevOn() ? "prev" : String(cntT0());
+const cntKey = () => cntPrevOn() ? "prev" + (S.cntPrev.at || "") : String(cntT0()); /* v748 */
 const cntDoc = () => cntPrevOn() ? "event/cnt_prev" : "event/cnt";
 /* when each map target is in play */
 const cntEm = x => x.mon === "cnpat" ? (x.pj % 10) * 7 * 3600e3 : x.mon === "cnplat" ? CNT_STG[1] + (x.fj % 12) * 4 * 3600e3 : 0;
@@ -5695,6 +5695,7 @@ function cntNorm(src, T) { T = T || now(); const k = cntKey(); let o = src && sr
   for (const B of CNT_NET) { if (B.cnt === "ark") { const a = o.ark[B.id] = o.ark[B.id] || {}; a.hp = a.hp == null ? B.hp : +a.hp; a.cap = a.cap == null ? CNT_CAP : +a.cap; a.dead = +a.dead || 0; a.dmg = a.dmg || {}; }
     else if (B.cnt === "rel") { const r = o.rel[B.id] = o.rel[B.id] || {}; r.hp = r.hp == null ? B.hp : +r.hp; r.down = +r.down || 0; r.dmg = r.dmg || {}; }
     else { const c = o.cmd[B.id] = o.cmd[B.id] || {}; c.hp = c.hp == null ? B.hp : +c.hp; c.dead = +c.dead || 0; c.back = +c.back || 0; c.res = +c.res || 0; c.dmg = c.dmg || {}; } }
+  if (o.v2) cntV2Fill(o); /* v748 */
   for (const B of CNT_NET) if (B.cnt === "rel") { const r = o.rel[B.id], arkDead = o.ark[CNT_ARKS[B.reg][0]].dead; if (r.down && !arkDead && T - r.down >= CNT_RELBACK) { r.down = 0; r.hp = B.hp; } } /* a relay rebuilds itself, unless its Ark is gone */
   return o; }
 let CNTC = {};
@@ -5704,7 +5705,7 @@ const cntArkOf = B => CNT_ARKS[B.reg] ? CNT_ARKS[B.reg][0] : null;
 const cntRelUp = (st, reg) => CNT_NET.filter(B => B.cnt === "rel" && B.reg === reg && !st.rel[B.id].down).length;
 const cntShield = (st, reg) => cntRelUp(st, reg) > 0; /* an Ark is shielded while any of its relays stands */
 const cntCanRes = (st, reg) => { if (reg < 0) return true; const a = st.ark[CNT_ARKS[reg][0]]; return !a.dead && a.cap > 0 && cntRelUp(st, reg) > 0; };
-function cntWar(st) { const arks = CNT_ARKS.filter(([id]) => st.ark[id].dead).length, perm = CNT_NET.filter(B => B.cnt === "cmd" && st.cmd[B.id].dead).length, n = Object.keys(st.con).length;
+function cntWar(st) { const arks = CNT_ARKS.filter(([id]) => st.ark[id].dead).length, perm = CNT_NET.filter(B => B.cnt === "cmd" && st.cmd[B.id].dead).length, n = st.v2 ? +st.n || 0 : Object.keys(st.con).length;
   return Math.min(100, Math.round(40 * arks / 4 + 20 * perm / 8 + 15 * Math.min(1, st.rk / 12) + 25 * Math.min(1, st.sup / (300 + 90 * n)))); }
 /* each player's own record */
 function cntS() { const k = cntKey(); if (!S.cnt || S.cnt.k !== k) S.cnt = { k, m: {}, pts: 0, got: {}, wk: {}, sv: {}, kills: { pat: 0, plat: 0, rel: 0, ark: 0, cmd: 0 }, pend: 0 }; return S.cnt; }
@@ -5741,7 +5742,8 @@ function cntSurvey(x) { const T = now(), s = cntStage(T); if (!cntOn(T) || s >= 
   else if (x.mon === "cnrelay" && s >= 3) { M.sv[key] = 1; W.scan++; dirty(); try { archUnlock("cn_ark", 1, true); } catch (e) {} toast(`${x.name} scanned: its transmission lines are mapped.`, "info"); } }
 let CNT_FL = 0;
 async function cntFlush(force) { const M = cntS(), T = now(); if (!M.pend || G.cntFlushing || (!force && T - CNT_FL < 90e3) || !G.ready) return; CNT_FL = T; G.cntFlushing = 1;
-  try { const ref = adb().doc(cntDoc()); await crcLock(ref); const snap = await casGet(ref), cur = cntNorm(snap.exists ? snap.data() : null, T); const add = cntCon(cur, M.pend, T);
+  try { if (await cntSrvW()) { const pend = M.pend, r = await window.udfCnt.apply(cntDoc(), cntKey(), [{ t: "con", pts: pend }]); M.pend = Math.max(0, (M.pend || 0) - pend); cntMeSet(r && r.me); dirty(); return; } /* v748 */
+    const ref = adb().doc(cntDoc()); await crcLock(ref); const snap = await casGet(ref), cur = cntNorm(snap.exists ? snap.data() : null, T); const add = cntCon(cur, M.pend, T);
     if (await casSet(ref, snap, cur)) { M.pend = 0; cntLocal(cur); dirty(); } } catch (e) {} finally { G.cntFlushing = 0; } }
 function cntCon(st, pts, T) { const day = Math.floor(T / 864e5), c = st.cday[G.me] && st.cday[G.me][0] === day ? st.cday[G.me] : [day, 0], add = Math.max(0, Math.min(pts, CNT_DAYCAP - c[1]));
   c[1] += add; st.cday[G.me] = c; st.con[G.me] = (st.con[G.me] || 0) + add; st.sup += add; return add; }
@@ -6866,7 +6868,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 746;
+const GAME_V = 748;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -22143,7 +22145,7 @@ function cineBar() { if (!G3 || !G3.cam.cine) return; let el = $("#cinebar"); if
   const m = G3.cam.cine.m; el.innerHTML = `<div class="cb-top"><span class="cb-rec">● CINEMATIC</span><span class="cb-w" id="cbw"></span><button class="cb-shot" data-act="cineShot" aria-label="Take a screenshot">📷</button><button data-act="cineOff" aria-label="Leave cinematic view">✕</button></div>
     <div class="cb-bot"><div class="cb-ang">${G3.cam.cineObj && wbById(G3.cam.cineObj.id) ? `<button class="${G.wbWide ? "on" : ""}" data-act="cineWide">${G.wbWide ? "Close" : "Wide"}</button>` : ""}${CINE_M.map(([k, l]) => `<button class="${k === m ? "on" : ""}" data-act="cineMode" data-m="${k}">${l}</button>`).join("")}</div><small>Drag to look around · pinch to zoom${G3.cam.cineObj && wbById(G3.cam.cineObj.id) ? " out to take in its size" : ""}</small></div>`; }
 setInterval(() => { if (G3 && G3.cam.cine && view !== "galaxy") cineEnd(); const w = $("#cbw"); if (!w || !G3) return; const c = G3.cam, T = now();
-  if (c.cineObj) { const id = c.cineObj.id, it = PB[id] || YB[id] || (id[0] === "r" ? NB[id] : null), wo = wbById(id); if (wo) w.textContent = `${WB[wo.wb].ic} Scanning · ${WB[wo.wb].n} · ${Math.round(wbHp(wo.wb) / WB_SEG * 100)}% hull`; else if (it) w.textContent = `${it.res ? (it.res === "s" ? "◆ Void Shard mine" : RES_N[it.res] + " field") : it.mon ? MON[it.mon].ic + " " + MON[it.mon].n : it.boss ? "■ Assimilation Cube" : id[0] === "y" ? "▲ Pyramid station" : "☠ Pirate hideout"} · ${it.name} · Lv.${it.lvl}`; else if (G.byId[id]) w.textContent = G.byId[id].name; return; }
+  if (c.cineObj) { const id = c.cineObj.id, it = PB[id] || YB[id] || (id[0] === "r" ? NB[id] : null), wo = wbById(id); if (wo) w.textContent = `${WB[wo.wb].ic} Scanning · ${WB[wo.wb].n} · ${Math.round(wbHp(wo.wb) / WB_SEG * 100)}% hull`; else if (it) w.textContent = `${it.res ? (it.res === "s" ? "◆ Void Shard mine" : RES_N[it.res] + " field") : it.mon ? MON[it.mon].ic + " " + MON[it.mon].n : it.boss ? "■ Assimilation Cube" : id[0] === "y" ? "▲ Pyramid station" : "☠ Pirate hideout"}${it.mon && MON[it.mon] && MON[it.mon].n === it.name ? "" : " · " + it.name} · Lv.${it.lvl}`; else if (G.byId[id]) w.textContent = G.byId[id].name; return; }
   if (c.cineGather && !c.cineBattle) { const f = c.cineGather !== "mv" && S.fleets.find(x => x.id === c.cineGather), n = f ? NB[f.nid] : c.followMv && tgtById(c.followMv.m.t), res = n ? RES_N[n.res || "m"].toLowerCase() : "";
     if (f) { const k = clamp((T - f.arrive) / Math.max(1, f.gend - f.arrive), 0, 1); w.textContent = `⛏ ${n && n.kind === "empty" ? "Salvaging" : "Mining"} ${res} at ${n ? n.name : "the field"} · ${Math.round(k * 100)}% · ${fmt(Math.floor((f.haul || { amt: 0 }).amt * k))} loaded · done in ${ftime(Math.max(0, f.gend - T))}`; }
     else w.textContent = `⛏ ${c.followMv && c.followMv.uid ? fieldName(c.followMv.uid) : "A commander"} mining ${res} at ${n ? n.name : "a field"}`; }
@@ -25536,20 +25538,23 @@ function cntBlock(B, st, T) { const s = cntStage(T); if (!cntBossOn(B, T)) retur
   return null; }
 async function cntBossResolve(f) { if (CNT_BOSS[f.xid] && CNT_BOSS[f.xid].cnt === "prime") return cntFinResolve(f); /* v744 */ const B = CNT_BOSS[f.xid], x = PB[f.xid]; G.resolving.add(f.id); const T0 = now();
   const home = () => { f.phase = "back"; f.back = Math.max(T0, f.arrive) + (f.tt || 60000); if (!Object.values(f.n || {}).some(v => v > 0)) S.fleets = S.fleets.filter(q => q !== f); };
-  try { const at = f.arrive, ref = adb().doc(cntDoc()); await crcLock(ref); const snap = await casGet(ref), cur = cntNorm(snap.exists ? snap.data() : null, at), why = cntBlock(B, cur, at);
+  try { const at = f.arrive, ref = adb().doc(cntDoc()), srv = await cntSrvW(); if (!srv) await crcLock(ref); const snap = await casGet(ref), cur = cntNorm(snap.exists ? snap.data() : null, at), why = cntBlock(B, cur, at);
     if (why) { note(`${why} Fleet returning, nothing lost.`, "warn"); return home(); }
     const Z = cntBossSet(B, cur, at), n0 = Math.max(1, Z.n0);
     const tw = cntTeam(f), mkA = () => { const st = stacksOf(f.n, techVs(x), G.me); for (const s of st) { s.atk *= Z.mods.pA * tw; s.sh *= Z.mods.pS * tw; } return st; };
     const mkD = () => { const st = stacksOf(Object.assign({ [Z.u]: n0 }, Z.esc), { mon: B.lvl }, "monster"); for (const s of st) { s.atk *= Z.mods.bA; s.hull *= Z.mods.bH; } return st; };
     const mine0 = Object.assign({}, f.n), { res, rise } = mimRise(mkA, mkD, Z.u, n0, n0);
-    const left = clamp(Math.round(((res.dLeft || {})[Z.u]) || 0), 0, n0), seg = n0 - left; let pts = 0, event = "";
-    if (seg) { pts = 4 * seg;
+    const left = clamp(Math.round(((res.dLeft || {})[Z.u]) || 0), 0, n0); let seg = n0 - left, pts = 0, event = "", counted = 0;
+    if (srv) { if (seg) { const r = await window.udfCnt.apply(cntDoc(), cur.k, [{ t: "hit", id: B.id, seg, at }]), q = (r && r.o && r.o[0]) || {}; if (r && r.d) cntLocal(r.d); cntMeSet(r && r.me); /* v748 */
+        if (q.ev === "blocked") { note(`${B.name} changed while our fleet was on the way: another commander got there first. Fleet returning, nothing lost.`, "warn"); return home(); }
+        seg = q.seg || 0; event = q.ev || ""; counted = q.counted || 0; } }
+    else { if (seg) { pts = 4 * seg;
       if (B.cnt === "rel") { const r = cur.rel[B.id]; r.hp -= seg; r.dmg[G.me] = (r.dmg[G.me] || 0) + seg; if (r.hp <= 0) { r.hp = 0; r.down = at; cur.rk++; event = "reldown"; } }
       else if (B.cnt === "ark") { const a = cur.ark[B.id]; a.hp -= seg; a.dmg[G.me] = (a.dmg[G.me] || 0) + seg; if (a.hp <= 0) { a.hp = 0; a.dead = at; a.last = G.me; event = "arkdead"; } }
       else { const c = cur.cmd[B.id]; c.hp -= seg; c.dmg[G.me] = (c.dmg[G.me] || 0) + seg;
         if (c.hp <= 0) { if (cntCanRes(cur, B.reg)) { c.hp = B.hp; c.back = at + CNT_BACK; c.res++; if (B.reg >= 0) cur.ark[CNT_ARKS[B.reg][0]].cap--; event = "transfer"; } else { c.hp = 0; c.dead = at; c.last = G.me; event = "dead"; } } } }
-    const counted = pts ? cntCon(cur, pts, at) : 0;
-    if (!(await casSet(ref, snap, cur))) throw CAS_RETRY; f.casN = 0; cntLocal(cur);
+    counted = pts ? cntCon(cur, pts, at) : 0;
+    if (!(await casSet(ref, snap, cur))) throw CAS_RETRY; f.casN = 0; cntLocal(cur); }
     const rep = mkRep({ at, kind: "attack", simLeft: left, title: `Assault on ${B.name}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: B.name, mon: B.mon, mimB: B.id, mimSeg: [n0, n0 - seg], omRise: rise > 1.01 ? Math.round(rise) : undefined, cntTac: Z.tac,
       start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
     f.n = cleanShips(res.aLeft); repairDocks(rep, lossesOf(mine0, f.n), 1); if (rep.wrecks) note(`No ships lost for good: ${fmt(rep.wrecks)} damaged ships are coming home to the Repair Yard.`, "info");
@@ -25580,7 +25585,7 @@ const CNT_MILE = [[25, 6, { echo: 40 }], [50, 10, { alloy: 20 }], [75, 14, { cel
 function cntGrant(r, why) { if (r.sh) S.shards = (S.shards || 0) + r.sh; const mt = {}; for (const k in CNT_MAT) if (r[k]) mt[k] = r[k]; cntAddM(mt); logReward(why, null, { shards: r.sh || 0, kind: "event" }); dirty(); }
 function cntClaim() { if (!S || !G.ready) return; const T = now(); if (!cntOn(T) && cntStage(T) !== 8) return; const st = cntStC(T), M = cntS();
   for (const [id, nm] of CNT_ARKS) { const a = st.ark[id], my = a.dmg[G.me] || 0, key = "ark" + id; if (!a.dead || !my || M.got[key]) continue; M.got[key] = 1;
-    const tot = Object.values(a.dmg).reduce((p, q) => p + q, 0) || 1, share = my / tot, last = a.last === G.me ? 2 : 0, r = { sh: Math.min(50, 15 + Math.round(share * 60)), core: 2 + Math.round(share * 8) + last, cell: 3 };
+    const tot = (a.tot != null ? +a.tot : Object.values(a.dmg).reduce((p, q) => p + q, 0)) || 1, share = Math.min(1, my / tot), last = a.last === G.me ? 2 : 0, r = { sh: Math.min(50, 15 + Math.round(share * 60)), core: 2 + Math.round(share * 8) + last, cell: 3 };
     S.medals = S.medals || {}; S.medals.ark = (S.medals.ark || 0) + 1; cntGrant(r, `${nm} destroyed`); try { archUnlock("cn_ark", 2, true); } catch (e) {} note(`${nm} is destroyed. Arkbreaker: ${cntMatTxt(r)} and ◆${r.sh}${last ? ", with the final blow" : ""}.`, "win"); } }
 function cntObjN(s, id) { return cntWk(cntS(), s)[id] || 0; }
 /* the map layer: a red sector round each Ark, crimson transmission lines from its relays; a destroyed Ark's sector goes dark */
@@ -25606,7 +25611,7 @@ const CNT_CD = { cnint: ["A fast machine fighter with one red sensor eye. Patrol
 function shCnt() { const T = now(), s = cntStage(T), st = cntStC(T), M = cntS(), c = cntClock(T), own = ownerFree() && G.mode !== "offline" || G.owner, on = cntOn(T), war = cntWar(st);
   const nextS = s >= 1 && s < 7 ? CNT_STG[s] : null, when = s === 0 ? `Begins in ${ftime(-c.e)}` : s === 8 ? "The war is over" : s === 7 ? "The final battle" : `${CNT_STN[s + 1]} in ${ftime(nextS - c.e)}`;
   const stg = [1, 2, 3, 4, 5, 6, 7].map(i => `<div class="mimwk cntwk${i === s ? " on" : i < s ? " past" : ""}"><b>${i}</b><span>${CNT_STN[i]}</span></div>`).join("");
-  const my = (st.con[G.me] || 0) + (M.pend || 0), n = Object.keys(st.con).length, top = Object.entries(st.con).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  cntMeLoad(); const my = (st.con[G.me] || 0) + (M.pend || 0), n = st.v2 ? Math.max(+st.n || 0, my > 0 ? 1 : 0) : Object.keys(st.con).length, top = Object.entries(st.con).sort((a, b) => b[1] - a[1]).slice(0, 5);
   const warH = `<h3>War progress</h3><div class="mimsup"><div class="mimbar big cntbar"><i style="width:${war}%"></i></div><b>${war}%</b></div><p class="note" style="margin-top:4px">Destroyed Arks count most (40%), then commanders gone for good (20%), relays broken (15%) and every commander's war points (25%). ${n} commander${n === 1 ? "" : "s"} fighting · your share ${fmt(my)} point${my === 1 ? "" : "s"}${M.pend ? " (sending)" : ""}.</p>
     <div class="crcms">${CNT_MILE.map(([p, sh, mt]) => { const got = M.got["m" + p], ok = war >= p && my > 0; return `<div class="crcm${got ? " got" : ok ? " ok" : ""}"><b>${p}%</b><small>◆${sh} · ${cntMatTxt(mt)}</small>${got ? `<span class="pill">Claimed</span>` : `<button class="btn${ok ? " pri" : ""}" data-act="cntMile" data-p="${p}"${ok ? "" : " disabled"}>Claim</button>`}</div>`; }).join("")}</div>`;
   const net = s >= 3 && s <= 8 ? `<h3>The resurrection network</h3><p class="note">Destroying fleets only buys time: a commander whose Ark lives is rebuilt 6 hours after it dies. Break an Ark's three relays to drop its shield, then destroy the Ark. A destroyed Ark stays destroyed.</p><div class="cntnet">${[0, 1, 2, 3].map(i => cntNetRow(st, T, i)).join("")}</div>
@@ -25629,7 +25634,7 @@ function shCnt() { const T = now(), s = cntStage(T), st = cntStC(T), M = cntS(),
   ${cntMedalsHTML()}${cntForgeHTML()}${cntTrackHTML()}
   <h3>The Continuum fleet</h3><div class="mimcls">${cls.map(k => `<div class="mimcl cntcl">${CNT_ART[k] ? `<img src="art/rwar/${CNT_ART[k]}.webp" alt="" loading="lazy">` : `<canvas data-ship="${k}" width="224" height="112"></canvas>`}<div><b>${AL[k].n}</b><small>${CNT_CD[k][0]}</small><em>${CNT_CD[k][1]}</em></div></div>`).join("")}</div>
   ${own ? `<div class="mimown"><small>Owner preview: see the war as it will look at each stage (this device only). Players see nothing until it is switched on.</small><div>${[0, 1, 2, 3, 4, 5, 6, 7].map(k => `<button class="btn${((S.cntPrev || {}).s || 0) === k && !(S.cntPrev || {}).fin ? " pri" : ""}" data-act="cntPrev" data-s="${k}">${k ? "Stage " + k : "Off"}</button>`).join("")}<button class="btn${(S.cntPrev || {}).fin ? " pri" : ""}" data-act="cntFinPrev">Finale now ×4</button></div></div>` : ""}`; }
-function cntBossInfo(x, T) { if (CNT_BOSS[x.id].cnt === "prime") return cntFinInfo(x, T); /* v744 */ const B = CNT_BOSS[x.id], st = cntStC(T), why = cntBlock(B, st, T), Z = cntBossSet(B, st, T), hp = Z.n0, my = B.cnt === "rel" ? st.rel[B.id].dmg[G.me] || 0 : B.cnt === "ark" ? st.ark[B.id].dmg[G.me] || 0 : st.cmd[B.id].dmg[G.me] || 0;
+function cntBossInfo(x, T) { if (CNT_BOSS[x.id].cnt === "prime") return cntFinInfo(x, T); /* v744 */ cntMeLoad(); const B = CNT_BOSS[x.id], st = cntStC(T), why = cntBlock(B, st, T), Z = cntBossSet(B, st, T), hp = Z.n0, my = B.cnt === "rel" ? st.rel[B.id].dmg[G.me] || 0 : B.cnt === "ark" ? st.ark[B.id].dmg[G.me] || 0 : st.cmd[B.id].dmg[G.me] || 0;
   const net = B.cnt === "rel" ? `Feeds ${CNT_ARKS[B.reg][1]}. While it stands, the Ark keeps its shield and can rebuild its commanders.` : B.cnt === "ark" ? `${cntRelUp(st, B.reg)} of 3 relays up · ${st.ark[B.id].cap} rebuilds left. Destroyed, it stays destroyed.` : B.cnt === "cmd" ? `Linked to ${CNT_ARKS[B.reg][1]}: ${cntCanRes(st, B.reg) ? "if destroyed now, it will be rebuilt in 6 hours" : "if destroyed now, it is gone for good"}.` : `${cntCanRes(st, -1) ? "Answers to no Ark: it is rebuilt 6 hours after it falls, every time." : ""}`;
   return `<div class="crcbi cntbi">${B.art ? `<img src="art/rwar/${B.art}.webp" alt="">` : ""}<div><b>${hp} of ${B.hp} sections</b><div class="mimbar cntbar"><i style="width:${Math.round(hp / B.hp * 100)}%"></i></div><small>${net} Your share: ${my} section${my === 1 ? "" : "s"}.</small></div></div>
     ${why ? `<p class="note cntwarn">${esc(why)}</p>` : ""}${Z.tac.map(t => `<div class="crctac cnttac"><i></i><div><b>${CNT_TAC[t][0]}</b><small>${CNT_TAC[t][1]}</small></div></div>`).join("")}
@@ -25681,7 +25686,7 @@ const CNT_FTRAVEL = 90e3, CNT_FY = 46; /* the battle hangs above the galactic di
 /* finale-time: ms since the finale began (negative before it); the owner's preview can start it now and run it faster */
 function cntFinE(T) { T = T || now(); if (cntPrevOn()) { const p = S.cntPrev; if (p.s !== 7) return -1e12; return p.fin ? (T - p.fin) * (p.fs || 1) : -3600e3; } return T - (cntT0(T) + CNT_FIN); }
 const cntFinSpd = () => cntPrevOn() && S.cntPrev.fin ? (S.cntPrev.fs || 1) : 1;
-function cntFinInit(cur) { const n = Math.max(1, Object.keys(cur.con || {}).length), k = Math.max(.5, Math.min(3, n / 4)), dead = CNT_ARKS.filter(([id]) => cur.ark[id] && cur.ark[id].dead).length, H = Math.max(1, 4 - dead);
+function cntFinInit(cur) { const n = Math.max(1, cur.v2 ? +cur.n || 0 : Object.keys(cur.con || {}).length), k = Math.max(.5, Math.min(3, n / 4)), dead = CNT_ARKS.filter(([id]) => cur.ark[id] && cur.ark[id].dead).length, H = Math.max(1, 4 - dead);
   const A = Math.round(18 * k), Hh = Math.round(14 * k), C = Math.round(12 * k);
   return { k: cur.k, sc: k, dead, anc: [A, A, A], anc0: A, hang: Array(H).fill(Hh), hang0: Hh, cond: [C, C, C], cond0: C, conv: 0, esc: 0, rx: Math.round(26 * k), rx0: Math.round(26 * k), tx: Math.round(16 * k), tx0: Math.round(16 * k),
     p3: 0, p4: 0, cut: 0, dead_: 0, out: "", end: 0, rg: 0, dmg: {}, hits: {}, last: "" }; }
@@ -25725,7 +25730,7 @@ function cntFinSet(o, tg, fe) { const P = cntFinPh(o, fe), live = o.hang.filter(
 const cntFinTgName = tg => ({ conv: "a reinforcement convoy", esc: "the strike force's escort", tx: "the transmitter array", rx: "the central reactor" }[tg] || (/^anc/.test(tg) ? `Neural Anchor ${+tg.slice(3) + 1}` : /^hang/.test(tg) ? `Fabrication Hangar ${+tg.slice(4) + 1}` : `Energy Conduit ${+tg.slice(4) + 1}`));
 async function cntFinResolve(f) { const B = CNT_PX, x = PB[B.id]; G.resolving.add(f.id); const T0 = now();
   const home = () => { f.phase = "back"; f.back = Math.max(T0, f.arrive) + (f.tt || 60000); if (!Object.values(f.n || {}).some(v => v > 0)) S.fleets = S.fleets.filter(q => q !== f); };
-  try { const at = f.arrive, fe = cntFinE(at), ref = adb().doc(cntDoc()); await crcLock(ref); const snap = await casGet(ref), cur = cntNorm(snap.exists ? snap.data() : null, at), o = cntFinNorm(cur, fe), P = cntFinPh(o, fe);
+  try { const at = f.arrive, fe = cntFinE(at), ref = adb().doc(cntDoc()), srv = await cntSrvW(); if (!srv) await crcLock(ref); const snap = await casGet(ref), cur = cntNorm(snap.exists ? snap.data() : null, at), o = cntFinNorm(cur, fe), P = cntFinPh(o, fe);
     if (P.ph < 2 || P.ph > 4) { note(P.ph < 2 ? "The Prime Ark isn't open to attack yet. Fleet returning, nothing lost." : "The battle for the Prime Ark is over. Fleet returning.", "warn"); return home(); }
     const tgs = cntFinTg(o, fe); let tg = f.cntT; if (!tgs.some(t => t[0] === tg)) tg = (tgs.find(t => t[2] != null && !(t[0] === "rx" && cntXfer(o, fe))) || tgs[0])[0];
     if (tg === "rx" && cntXfer(o, fe)) { note("The reactor is still shielded by the transfer. Cut the transmitter array first. Fleet returning, nothing lost.", "warn"); return home(); }
@@ -25733,8 +25738,11 @@ async function cntFinResolve(f) { const B = CNT_PX, x = PB[B.id]; G.resolving.ad
     const mkA = () => { const s = stacksOf(f.n, techVs(x), G.me); for (const q of s) { q.atk *= Z.mods.pA * bonus; q.sh *= Z.mods.pS * cntTeam(f); } return s; };
     const mkD = () => { const s = stacksOf(Object.assign(Z.n0 ? { [Z.u]: Z.n0 } : {}, Z.esc), { mon: B.lvl }, "monster"); for (const q of s) { q.atk *= Z.mods.bA; q.hull *= Z.mods.bH; } return s; };
     const { res, rise } = Z.n0 ? mimRise(mkA, mkD, Z.u, Z.n0, Z.n0) : { res: simulate(mkA(), mkD()), rise: 1 };
-    const left = Z.n0 ? clamp(Math.round(((res.dLeft || {})[Z.u]) || 0), 0, Z.n0) : 0, seg = Z.n0 - left; let pts = 0, msg = "", ev = "";
-    if (tg === "conv" || tg === "esc") { if (res.winner === "a") { pts = 3; if (tg === "conv") { o.conv++; msg = `Convoy intercepted (${o.conv}): the hangars rebuild ${Math.min(100, o.conv * 15)}% slower.`; } else { o.esc++; msg = `Strike force escorted (${o.esc}): every fleet hits ${Math.min(50, o.esc * 5)}% harder.`; } } else msg = `Our fleet couldn't break ${cntFinTgName(tg)}. Bring more warships.`; }
+    const left = Z.n0 ? clamp(Math.round(((res.dLeft || {})[Z.u]) || 0), 0, Z.n0) : 0; let seg = Z.n0 - left, pts = 0, msg = "", ev = "", counted = 0;
+    if (srv) { const r = await window.udfCnt.apply(cntDoc(), cur.k, [{ t: "fin", tg, seg, fe, win: res.winner === "a" }]), q = (r && r.o && r.o[0]) || {}; if (r && r.d) cntLocal(r.d); cntMeSet(r && r.me); /* v748 */
+      if (q.ev === "closed" || q.ev === "gone" || q.ev === "shielded") { note(q.ev === "closed" ? "The battle for the Prime Ark moved on while our fleet was jumping. Fleet returning, nothing lost." : q.ev === "shielded" ? "The reactor is still shielded by the transfer. Cut the transmitter array first. Fleet returning, nothing lost." : `${cntFinTgName(tg)} fell to another fleet first. Fleet returning, nothing lost.`, "warn"); return home(); }
+      const o2 = cntFinNorm(cntNorm(r && r.d, at), fe); seg = q.seg || 0; counted = q.counted || 0; ev = q.ev || ""; pts = tg === "conv" || tg === "esc" ? (ev === tg ? 3 : 0) : 4 * seg; msg = cntFinMsg(tg, ev, o2, seg); }
+    else { if (tg === "conv" || tg === "esc") { if (res.winner === "a") { pts = 3; if (tg === "conv") { o.conv++; msg = `Convoy intercepted (${o.conv}): the hangars rebuild ${Math.min(100, o.conv * 15)}% slower.`; } else { o.esc++; msg = `Strike force escorted (${o.esc}): every fleet hits ${Math.min(50, o.esc * 5)}% harder.`; } } else msg = `Our fleet couldn't break ${cntFinTgName(tg)}. Bring more warships.`; }
     else if (seg) { pts = 4 * seg;
       if (/^anc/.test(tg)) { const i = +tg.slice(3); o.anc[i] -= seg; if (o.anc[i] <= 0) { o.anc[i] = 0; if (o.anc.every(v => v <= 0)) { o.p3 = fe; o.rg = fe; ev = "p3"; msg = "The last Neural Anchor is down. The Prime Ark's shield has collapsed: its fabrication chambers are exposed!"; } else msg = `Neural Anchor ${i + 1} is down. ${o.anc.filter(v => v > 0).length} still hold the shield.`; } else msg = `Neural Anchor ${i + 1}: ${o.anc[i]} of ${o.anc0} left.`; }
       else if (/^hang/.test(tg)) { const i = +tg.slice(4); o.hang[i] = Math.max(0, o.hang[i] - seg); msg = o.hang[i] ? `Fabrication Hangar ${i + 1}: ${o.hang[i]} of ${o.hang0} left.` : `Fabrication Hangar ${i + 1} is destroyed. It builds nothing more.`; }
@@ -25744,8 +25752,8 @@ async function cntFinResolve(f) { const B = CNT_PX, x = PB[B.id]; G.resolving.ad
       if (ev !== "dead" && !o.p4 && o.p3 && cntDef(o) <= .25) { o.p4 = fe; ev = "p4"; msg += " Its defences are broken: the Prime Ark is trying to send its mind away. Cut the transmitter array!"; }
       o.dmg[G.me] = (o.dmg[G.me] || 0) + Math.min(100, seg); }
     else msg = `Our fleet couldn't break a section off ${cntFinTgName(tg)}. Send more firepower.`;
-    o.hits[G.me] = (o.hits[G.me] || 0) + 1; const counted = pts ? cntCon(cur, pts, at) : 0;
-    if (!(await casSet(ref, snap, cur))) throw CAS_RETRY; f.casN = 0; cntLocal(cur);
+    o.hits[G.me] = (o.hits[G.me] || 0) + 1; counted = pts ? cntCon(cur, pts, at) : 0;
+    if (!(await casSet(ref, snap, cur))) throw CAS_RETRY; f.casN = 0; cntLocal(cur); }
     const rep = mkRep({ at, kind: "attack", simLeft: left, title: `Extinction Protocol · ${cntFinTgName(tg)}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: B.name, mon: B.mon, mimB: B.id, omRise: rise > 1.01 ? Math.round(rise) : undefined, cntTac: Z.tac,
       start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
     f.n = cleanShips(res.aLeft); repairDocks(rep, lossesOf(mine0, f.n), 1); if (rep.wrecks) note(`No ships lost for good: ${fmt(rep.wrecks)} damaged ships are coming home to the Repair Yard.`, "info");
@@ -25758,7 +25766,7 @@ async function cntFinResolve(f) { const B = CNT_PX, x = PB[B.id]; G.resolving.ad
   } catch (e) { if (e === CAS_RETRY && await casAgain(f, cntFinResolve)) return; note("Lost contact with the battle for the Prime Ark. Fleet returning.", "warn"); home(); }
   finally { G.resolving.delete(f.id); dirty(); progress(); softRender(); } }
 /* everyone who fought is rewarded once, by how the hour ended and how much they did */
-function cntFinPart(o, uid) { const d = o.dmg[uid] || 0, h = o.hits[uid] || 0; if (!h) return 0; const top = Object.entries(o.dmg).sort((a, b) => b[1] - a[1]).slice(0, 10).some(([u]) => u === uid); return d >= 16 || top ? 3 : d >= 4 || h >= 3 ? 2 : 1; }
+function cntFinPart(o, uid) { const d = o.dmg[uid] || 0, h = o.hits[uid] || 0; if (!h) return 0; const top = o.t10 != null && uid === G.me ? !!o.t10 : Object.entries(o.dmg).sort((a, b) => b[1] - a[1]).slice(0, 10).some(([u]) => u === uid); return d >= 16 || top ? 3 : d >= 4 || h >= 3 ? 2 : 1; }
 const CNT_PART = ["", "Participant", "Contender", "Champion"];
 const CNT_FREW = { win: [{}, { echo: 80, core: 2, matrix: 1, elite: 1, sh: 30 }, { echo: 160, core: 4, matrix: 2, elite: 2, sh: 60 }, { echo: 260, core: 7, matrix: 4, elite: 3, sh: 100 }],
   part: [{}, { echo: 50, core: 1, matrix: 1, sh: 18 }, { echo: 100, core: 2, matrix: 1, sh: 36 }, { echo: 160, core: 4, matrix: 2, sh: 60 }],
@@ -25791,7 +25799,7 @@ function cntCineCheck() { if (!S || !G.ready || G.cineOn || battle || document.g
   if (P.ph === 2 && once("p2")) return cntCine("p2"); if (P.ph === 3 && once("p3")) { try { advSay1("cntP3"); } catch (e) {} return cntCine("p3"); } if (P.ph === 4 && once("p4")) { try { advSay1("cntP4"); } catch (e) {} return cntCine("p4"); }
   if (P.ph === 5 && once("p5")) { try { advSay1(o.out === "fail" ? "cntAway" : "cntColl"); } catch (e) {} return cntCine(o.out === "fail" ? "away" : "coll"); } }
 /* the sheet: phase, timers, targets, and a way to watch */
-function cntFinInfo(x, T) { const { o, fe, P } = cntFinSt(T), spd = cntFinSpd(), real = ms => T + ms / spd, bar = (v, mx) => `<div class="mimbar cntbar"><i style="width:${Math.max(0, v) / Math.max(1, mx) * 100}%"></i></div>`;
+function cntFinInfo(x, T) { cntMeLoad(); const { o, fe, P } = cntFinSt(T), spd = cntFinSpd(), real = ms => T + ms / spd, bar = (v, mx) => `<div class="mimbar cntbar"><i style="width:${Math.max(0, v) / Math.max(1, mx) * 100}%"></i></div>`;
   if (fe < 0) return `<div class="mimboss cntfin"><b>Extinction Protocol</b><p class="note">The Prime Ark arrives in <b data-end="${Math.round(real(-fe))}">${ftime(-fe / spd)}</b>. Every regional Ark destroyed before then is one fabrication hangar fewer and a quarter fewer escorts in the battle.</p></div>`;
   if (P.ph >= 5) return `<div class="mimboss cntfin"><b>${o.out === "win" ? "The Prime Ark is destroyed. Full victory." : o.out === "part" ? "The Prime Ark is destroyed. Its mind escaped." : "The Prime Ark withdrew."}</b><p class="note">${P.ph === 5 ? `Phase 5 · ${o.out === "fail" ? "The gateway closing" : CNT_FPH[5]}` : "Everyone who fought has been rewarded once."} You: ${o.dmg[G.me] || 0} sections · ${o.hits[G.me] || 0} attacks · ${CNT_PART[cntFinPart(o, G.me)] || "not in the fight"}.</p>
     <button class="btn wide" data-act="cntWatch">Watch the Ark</button>${P.ph >= 6 ? `<button class="btn ghost wide" data-act="cntFinal">Replay the final transmission</button>` : ""}</div>`;
@@ -25824,14 +25832,14 @@ function cntPrimePose(o0, it, t, T) { const fe = cntFinE(T); if (fe < 0) return;
   b.visible = !(o.out && o.out !== "fail" && fe > end + CNT_FT.coll + CNT_FMIN) && !(away >= 1); }
 function cntFinTick(W, t, T) { let X = W.cntF; const on = cntOn(T) && cntStage(T) === 7, fe = on ? cntFinE(T) : -1, { o, P } = on && fe >= 0 ? cntFinSt(T) : { o: null, P: { ph: 0 } };
   const show = o && P.ph >= 1 && P.ph <= 6;
-  if (!show) { if (X) { W.scene.remove(X.grp); X.grp.traverse(q => { if (q.geometry && !q.userData.keep) q.geometry.dispose(); if (q.material && q.material.dispose && !q.userData.keep) q.material.dispose(); }); W.cntF = null; } return; }
+  if (!show) { if (X) { W.scene.remove(X.grp); X.grp.traverse(q => { if (q.geometry && (!q.userData.keep || q.userData.mg)) q.geometry.dispose(); if (q.material && q.material.dispose && !q.userData.keep) q.material.dispose(); }); W.cntF = null; } return; }
   if (!X) { X = W.cntF = { grp: new TH.Group(), anc: [], beams: [], hang: [], q: {} }; W.scene.add(X.grp); const G0 = X.grp, add = (tex, col, op) => { const s = new TH.Sprite(W.additive(tex, col, op)); G0.add(s); return s; };
     const ringT = W.glow.cntRing || (W.glow.cntRing = (() => { const c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d"), g = x.createRadialGradient(128, 128, 60, 128, 128, 128); g.addColorStop(0, "rgba(255,40,60,0)"); g.addColorStop(.72, "rgba(255,40,60,.15)"); g.addColorStop(.86, "rgba(255,70,90,1)"); g.addColorStop(.92, "rgba(255,30,50,.4)"); g.addColorStop(1, "rgba(255,30,50,0)"); x.fillStyle = g; x.fillRect(0, 0, 256, 256); return new TH.CanvasTexture(c); })());
     const swirlT = W.glow.cntSwirl || (W.glow.cntSwirl = (() => { const c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d"); x.translate(128, 128); for (let i = 0; i < 260; i++) { const a = i * .29, r = 6 + i * .42; x.fillStyle = `rgba(255,${40 + (i % 5) * 18},70,${.5 - i / 600})`; x.beginPath(); x.arc(Math.cos(a) * r, Math.sin(a) * r, 2 + i / 50, 0, 7); x.fill(); } return new TH.CanvasTexture(c); })());
     const gate = new TH.Mesh(new TH.PlaneGeometry(1, 1), W.additive ? new TH.MeshBasicMaterial({ map: ringT, transparent: true, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide }) : null); gate.renderOrder = 12; G0.add(gate); X.gate = gate;
     const sw = new TH.Mesh(new TH.PlaneGeometry(1, 1), new TH.MeshBasicMaterial({ map: swirlT, transparent: true, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, opacity: .8 })); sw.renderOrder = 11; G0.add(sw); X.swirl = sw;
     const shell = new TH.Mesh(new TH.SphereGeometry(1, 32, 20), new TH.MeshBasicMaterial({ color: 0xff2a40, transparent: true, opacity: .1, blending: TH.AdditiveBlending, depthWrite: false })); G0.add(shell); X.shell = shell;
-    for (let i = 0; i < 3; i++) { const a = buildCnt("cnrel"); a.scale.setScalar(.85); a.traverse(q => { q.userData.keep = 1; }); G0.add(a); X.anc.push(a); const g = new TH.BufferGeometry(); g.setAttribute("position", new TH.BufferAttribute(new Float32Array(6), 3)); const l = new TH.Line(g, new TH.LineBasicMaterial({ color: 0xff3346, transparent: true, opacity: .8, blending: TH.AdditiveBlending, depthWrite: false })); l.frustumCulled = false; G0.add(l); X.beams.push(l); }
+    X.ancSc = !!CNT_GEO.cnrel; for (let i = 0; i < 3; i++) { const a = cntAnc(); G0.add(a); X.anc.push(a); const g = new TH.BufferGeometry(); g.setAttribute("position", new TH.BufferAttribute(new Float32Array(6), 3)); const l = new TH.Line(g, new TH.LineBasicMaterial({ color: 0xff3346, transparent: true, opacity: .8, blending: TH.AdditiveBlending, depthWrite: false })); l.frustumCulled = false; G0.add(l); X.beams.push(l); }
     { const g = new TH.BufferGeometry(); g.setAttribute("position", new TH.BufferAttribute(new Float32Array(6), 3)); X.tx = new TH.Line(g, new TH.LineBasicMaterial({ color: 0xff6070, transparent: true, opacity: 1, blending: TH.AdditiveBlending, depthWrite: false })); X.tx.frustumCulled = false; G0.add(X.tx); }
     const dotT = W.glow.cntDot || (W.glow.cntDot = glowTex("255,50,70", .6)), blueT = W.glow.cntBlue || (W.glow.cntBlue = glowTex("200,235,255", .9));
     for (let i = 0; i < 4; i++) { const s = add(dotT, 0xffffff, .9); X.hang.push(s); }
@@ -25843,6 +25851,8 @@ function cntFinTick(W, t, T) { let X = W.cntF; const on = cntOn(T) && cntStage(T
   /* the gateway: opens over the first minute, holds while the Ark comes through, then fades to a scar (or reopens to take it back) */
   const gOpen = ease(inP(0, CNT_FMIN)) * (1 - .75 * inP(4 * CNT_FMIN, 6 * CNT_FMIN)) + .8 * Math.sin(Math.PI * Math.min(1, away)), gR = 34 * (.2 + .8 * gOpen);
   X.gate.position.set(-22, 4, 0); X.gate.rotation.set(0, Math.PI / 2, 0); X.gate.scale.setScalar(gR); X.gate.material.opacity = Math.min(1, gOpen * 1.2); X.swirl.position.copy(X.gate.position); X.swirl.rotation.set(0, Math.PI / 2, t * .0004); X.swirl.scale.setScalar(gR * .9); X.swirl.material.opacity = .7 * gOpen;
+  /* v747 the sculpted relay arrived after the scene was built: swap the anchors over */
+  if (!X.ancSc && CNT_GEO.cnrel) { X.ancSc = 1; X.anc = X.anc.map(a => { const b = cntAnc(); X.grp.add(b); X.grp.remove(a); a.traverse(q => { if (q.userData.mg) q.geometry.dispose(); }); return b; }); }
   /* the shield while the anchors stand, the anchors themselves and their beams */
   const shieldUp = P.ph <= 2 && !o.p3 && !o.out; X.shell.visible = shieldUp && arr > .3; X.shell.scale.setScalar(15 * (.9 + .1 * arr)); X.shell.material.opacity = .13 + .05 * Math.sin(t * .003);
   X.anc.forEach((a, i) => { const ang = i * TAU / 3 + t * .00004, alive = o.anc[i] > 0 && !o.out, r = 23; a.position.set(Math.cos(ang) * r, 4 + 2 * Math.sin(t * .001 + i), Math.sin(ang) * r); a.visible = arr > .5 && (alive || P.ph < 2); a.rotation.y = -ang;
@@ -25857,9 +25867,12 @@ function cntFinTick(W, t, T) { let X = W.cntF; const on = cntOn(T) && cntStage(T
       d.scale.setScalar(vis < .05 || (o.out === "fail" && away > .7) ? 0 : 1); d.updateMatrix(); im.setMatrixAt(i, d.matrix); } im.instanceMatrix.needsUpdate = true; }
   /* explosions through the collapse, then the blue-white shockwave */
   if (cf > 0 && cf < .95) for (const b of X.booms) if (t - b.t0 > 900 + (b.d || 0)) { if (Math.random() < .05 + cf * .1) { b.t0 = t; b.d = Math.random() * 600; b.s.position.set((Math.random() - .5) * 16, (Math.random() - .5) * 14, (Math.random() - .5) * 16); } }
-  for (const b of X.booms) { const k = (t - b.t0) / 900; b.s.material.opacity = k >= 0 && k < 1 ? (1 - k) * .9 : 0; b.s.scale.setScalar(4 + k * 10); }
-  { const w = (fe - (end + .62 * CNT_FT.coll)) / 14000; X.wave.material.opacity = w > 0 && w < 1 && o.out !== "fail" ? (1 - w) * .9 : 0; X.wave.scale.setScalar(20 + w * 300); X.flash.material.opacity = w > -.05 && w < .35 && o.out !== "fail" ? (1 - Math.abs(w) * 3) : 0; X.flash.scale.setScalar(60 + w * 80); }
+  for (const b of X.booms) { const k = (t - b.t0) / 900; b.s.material.opacity = k >= 0 && k < 1 ? (1 - k) * .9 : 0; b.s.visible = b.s.material.opacity > .005; b.s.scale.setScalar(4 + k * 10); }
+  { const w = (fe - (end + .62 * CNT_FT.coll)) / 14000; X.wave.material.opacity = w > 0 && w < 1 && o.out !== "fail" ? (1 - w) * .9 : 0; X.wave.scale.setScalar(20 + w * 300); X.flash.material.opacity = w > -.05 && w < .35 && o.out !== "fail" ? (1 - Math.abs(w) * 3) : 0; X.flash.scale.setScalar(60 + w * 80); X.wave.visible = X.wave.material.opacity > .005; X.flash.visible = X.flash.material.opacity > .005; X.gate.visible = X.gate.material.opacity > .005; X.swirl.visible = X.swirl.material.opacity > .005; }
   if (t - (X.cc || 0) > 2000) { X.cc = t; try { cntCineCheck(); } catch (e) {} } }
+/* v747 one finale anchor: the sculpted relay (a single draw), or the hand-built one merged by material until it loads */
+function cntAnc() { const a = buildCnt("cnrel"); if (CNT_GEO.cnrel) { a.scale.setScalar(.85); a.traverse(q => { q.userData.keep = 1; }); return a; }
+  const g = mergeGroup(a); g.scale.setScalar(.85); g.traverse(q => { q.userData.keep = 1; if (q.isMesh && !q.userData.sculpt) q.userData.mg = 1; }); return g; }
 /* War Command's finale card */
 function cntFinHub(T) { const s = cntStage(T); if (s !== 7 && !(s === 8 && (cntS().finEnd))) return ""; const fe = cntFinE(T), spd = cntFinSpd(); if (fe < 0) return `<div class="omhub soon cnthub"><b>Extinction Protocol</b><span>The Prime Ark arrives in <b data-end="${Math.round((T - fe / spd))}">${ftime(-fe / spd)}</b>, Saturday 6 pm Phoenix time. Every Ark destroyed before then makes the battle easier.</span></div>`;
   const { o, P } = cntFinSt(T); return `<div class="omhub cnthub"><b>Extinction Protocol${P.ph <= 4 ? " · LIVE" : ""}</b><span>${P.ph <= 6 ? `Phase ${P.ph} · ${CNT_FPH[P.ph]}` : o.out === "win" ? "The Prime Ark is destroyed." : o.out === "part" ? "The Prime Ark is destroyed; its mind escaped." : "The Prime Ark withdrew."}</span><button class="btn pri" data-act="cntGo" data-id="kx0">${P.ph >= 2 && P.ph <= 4 ? "Join the fight" : "Go to the Prime Ark"}</button><button class="btn" data-act="cntWatch">Watch</button></div>`; }
@@ -25920,6 +25933,39 @@ function cntStrikesHTML(T) { if (G.mode !== "online") return ""; const L = Objec
   const rows = L.map(a => { const B = CNT_BOSS[a.xid], mine = !!(a.members || {})[G.me], n = Object.keys(a.members || {}).length;
     return `<div class="cntjs"><div><b>${esc(B.name)}</b><small>Led by ${esc(a.leader === G.me ? "you" : nameOf(a.leader))} · ${n} commander${n === 1 ? "" : "s"} · +${10 * teamBonus(n)}% · launches in <span data-end="${a.launch}">${ftime(a.launch - T)}</span></small></div>${mine ? `<span class="pill">Joined</span>` : `<button class="btn pri sm" data-act="joinAssault" data-id="${a.id}">Join</button>`}</div>`; }).join("");
   return `<h3>Joint strikes on the network</h3><p class="note">Open one from any relay, Ark or commander: tick "Start a joint strike" on its launch screen. Every commander who joins adds 10% to everyone's fleet, up to 30%.</p>${rows || `<p class="note">None open right now.</p>`}`; }
+/* ---------- v748 the Resurrection War at 10,000 commanders. On the Supabase server, war points and fights go through cnt_apply: the
+   server applies them in one short transaction (no lock, no compare-and-set, nothing lost to a race), keeps each commander's points and
+   damage in its own tables, and keeps the shared record small (no per-commander maps; n commanders, the top five). This commander's own
+   numbers come back with every call and from cnt_me. Elsewhere (the claude.ai artifact, offline) the old path is unchanged. */
+/* the server path is used only once the server has answered (the functions exist and this commander is signed in); until then, or if
+   it never does, the old path stays in use. Asked again every minute while it hasn't answered. */
+function cntProbe() { if (!window.udfCnt || G.mode !== "online" || G.cntSrvOk === true || G.cntProbing || Date.now() - (G.cntProbeT || 0) < 60e3) return; G.cntProbing = 1; G.cntProbeT = Date.now();
+  window.udfCnt.me(cntDoc(), cntKey()).then(m => { G.cntSrvOk = !!m; if (m) cntMeSet(m); }, () => { G.cntSrvOk = false; }).finally(() => { G.cntProbing = 0; }); }
+const cntSrv = () => { cntProbe(); return !!(window.udfCnt && G.mode === "online" && G.cntSrvOk === true); };
+setInterval(() => { try { if (G.ready) cntProbe(); } catch (e) {} }, 15e3);
+async function cntSrvW() { if (window.udfCnt && G.mode === "online" && G.cntSrvOk !== true) { G.cntProbeT = 0; cntProbe(); for (let i = 0; i < 40 && G.cntProbing; i++) await sleep(250); } return cntSrv(); } /* a fight waits for the answer */
+function cntMeSet(m) { if (!m || typeof m !== "object") return false; const k = cntKey(), p = cntDoc(), o = G.cntMe, ch = !o || o.k !== k || o.p !== p || JSON.stringify(o.m) !== JSON.stringify(m);
+  G.cntMe = { k, p, m, t: Date.now() }; if (ch) CNTC = {}; return ch; }
+function cntMeLoad(force) { if (!cntSrv()) return; const k = cntKey(), p = cntDoc(), o = G.cntMe; if (!force && o && o.k === k && o.p === p && Date.now() - o.t < 20e3) return; if (G.cntMeBusy) return; G.cntMeBusy = 1;
+  window.udfCnt.me(p, k).then(m => { if (cntMeSet(m)) { try { if (sheet && (sheet.type === "cnt" || sheet.type === "pirate")) renderSheet(); else softRender(); } catch (e) {} } }).catch(() => {}).finally(() => { G.cntMeBusy = 0; }); }
+/* a v2 record carries no per-commander maps: fill in this commander's own (and the top five) so the rest of the game reads it as before */
+function cntV2Fill(o) { const me = G.me, M = G.cntMe && G.cntMe.k === o.k && G.cntMe.p === cntDoc() ? G.cntMe.m : null;
+  o.con = {}; for (const [u, v] of (o.top || [])) o.con[u] = v; o.cday = {};
+  if (M) { o.con[me] = Math.max(o.con[me] || 0, M.con || 0); o.cday[me] = [M.day, M.today || 0]; }
+  for (const g of ["rel", "ark", "cmd"]) for (const id in o[g]) o[g][id].dmg = M && M.dmg && M.dmg[id] ? { [me]: M.dmg[id] } : {};
+  if (o.fin) { const f = M && M.fin; o.fin.dmg = f ? { [me]: f.dmg || 0 } : {}; o.fin.hits = f ? { [me]: f.hits || 0 } : {}; o.fin.t10 = !!(f && f.t10); }
+  return o; }
+/* what a finale fight did, from the server's result and the record after it */
+function cntFinMsg(tg, ev, o, seg) { const evs = String(ev || "").split("+"), has = e => evs.includes(e); let m = "";
+  if (tg === "conv" || tg === "esc") return has(tg) ? (tg === "conv" ? `Convoy intercepted (${o.conv}): the hangars rebuild ${Math.min(100, o.conv * 15)}% slower.` : `Strike force escorted (${o.esc}): every fleet hits ${Math.min(50, o.esc * 5)}% harder.`) : `Our fleet couldn't break ${cntFinTgName(tg)}. Bring more warships.`;
+  if (!seg) return `Our fleet couldn't break a section off ${cntFinTgName(tg)}. Send more firepower.`;
+  if (/^anc/.test(tg)) { const i = +tg.slice(3); m = has("p3") ? "The last Neural Anchor is down. The Prime Ark's shield has collapsed: its fabrication chambers are exposed!" : o.anc[i] <= 0 ? `Neural Anchor ${i + 1} is down. ${o.anc.filter(v => v > 0).length} still hold the shield.` : `Neural Anchor ${i + 1}: ${o.anc[i]} of ${o.anc0} left.`; }
+  else if (/^hang/.test(tg)) { const i = +tg.slice(4); m = o.hang[i] ? `Fabrication Hangar ${i + 1}: ${o.hang[i]} of ${o.hang0} left.` : `Fabrication Hangar ${i + 1} is destroyed. It builds nothing more.`; }
+  else if (/^cond/.test(tg)) { const i = +tg.slice(4); m = o.cond[i] ? `Energy Conduit ${i + 1}: ${o.cond[i]} of ${o.cond0} left.` : `Energy Conduit ${i + 1} is cut.`; }
+  else if (tg === "tx") m = has("cut") ? "The transmitter array is down! The transfer is broken off, and the reactor is exposed. Everyone: the reactor!" : `The transmitter array: ${o.tx} of ${o.tx0} left.`;
+  else if (tg === "rx") m = has("dead") ? (o.out === "win" ? "THE PRIME ARK'S REACTOR IS GONE. The transfer was stopped. The Ark is dying." : "The Prime Ark's reactor is gone, but the transfer finished first. The Ark is dying; its mind is not.") : `The central reactor: ${o.rx} of ${o.rx0} left.`;
+  if (has("p4")) m += " Its defences are broken: the Prime Ark is trying to send its mind away. Cut the transmitter array!";
+  return m; }
 /* ---------- the Continuum's hulls: black chrome and gunmetal, crimson neural light used sparingly, icy blue only on quantum parts.
    Angular prisms (an outline seen from above, extruded with chamfered top and bottom), visible joints, rings and reactor cores.
    Every hull points along +x; engines sit at the stern. ---------- */
