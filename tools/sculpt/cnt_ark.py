@@ -4,11 +4,7 @@
 # of spires and a domed tower on its back, stalactite spikes hanging under it, and crimson window slits along every deck.
 import sys, numpy as np
 sys.path.insert(0, __file__.rsplit('/', 1)[0])
-from sdf import *
-HULL = {'c': (.036, .033, .034), 'r': .34, 'm': .85}; PLATE = {'c': (.055, .051, .052), 'r': .26, 'm': .9}
-GUN = {'c': (.19, .18, .18), 'r': .22, 'm': 1}; DARK = {'c': (.012, .011, .012), 'r': .5, 'm': .5}
-RED = {'c': (.3, .01, .01), 'r': .4, 'm': .1, 'e': (1, .015, .02)}; GLASS = {'c': (.12, .005, .01), 'r': .12, 'm': .1, 'e': (.8, .02, .03)}
-LITE = {'c': (.3, .3, .3), 'r': .4, 'm': .2, 'e': (.32, .5, .62)}
+from cnt_lib import *
 rng = np.random.default_rng(7)
 body = lambda p: hull(p, [(5.0, 0), (3.6, .95), (-4.8, 1.15), (-5.6, .85), (-5.6, 0)], 1.05, -1.0, .32)
 M = Model((-6.8, -3.3, -2.6), (7.6, 4.6, 2.6), float(sys.argv[2]) if len(sys.argv) > 2 else .04)
@@ -41,8 +37,10 @@ for i, x in enumerate([1.0, .35, -.3, -2.1, -2.75, -3.4]):
         M.add(f'ch{i}{s}', lambda p, x=x, s=s: cap(p, (x, -.45, 1.25 * s), (x, .75, 1.25 * s), .27), GLASS)
         M.add(f'cf{i}{s}', lambda p, x=x, s=s: ring(p, (x, .92, 1.25 * s), 'y', .28, .09, .06), GUN)
         M.add(f'cg{i}{s}', lambda p, x=x, s=s: ring(p, (x, -.62, 1.25 * s), 'y', .28, .09, .06), GUN)
-        M.add(f'cm{i}{s}', lambda p, x=x, s=s: cap(p, (x, -.35, 1.32 * s), (x, .35, 1.32 * s), .06), DARK)
-        M.add(f'ck{i}{s}', lambda p, x=x, s=s: sphere(p, (x, .5, 1.33 * s), .08), DARK)
+        for dx in (-.06, .06): M.add(f'cl{i}{s}{dx}', lambda p, x=x, s=s, dx=dx: cap(p, (x + dx, -.38, 1.47 * s), (x + dx * .6, .02, 1.48 * s), .035), DARK)
+        M.add(f'cm{i}{s}', lambda p, x=x, s=s: cap(p, (x, .02, 1.48 * s), (x, .36, 1.49 * s), .065), DARK)
+        for dx in (-.11, .11): M.add(f'ca{i}{s}{dx}', lambda p, x=x, s=s, dx=dx: cap(p, (x + dx * .6, .34, 1.48 * s), (x + dx, .02, 1.47 * s), .028), DARK)
+        M.add(f'ck{i}{s}', lambda p, x=x, s=s: sphere(p, (x, .47, 1.48 * s), .07), DARK)
 # landing decks underneath, with pale running lights on their lips
 for i, x in enumerate([.9, -1.0, -2.9]):
     for s in (1, -1):
@@ -61,12 +59,12 @@ M.add('tower', lambda p: spike(p, (-2.2, 1.6, 0), (-2.2, 4.4, 0), .22), GUN)
 # carves: panel seams, crimson window slits along the decks, red bands on the hoops' faces, red engine throats
 shell = lambda p: body(p) + .06
 def seams(p):
-    q = p.copy(); q[..., 0] = np.mod(q[..., 0] + 20, .62) - .31; return np.maximum(box(q, (0, 0, 0), (.014, 3, 3)), -shell(p))
+    q = p.copy(); q[..., 0] = np.mod(q[..., 0] + 20, .62) - .31; return np.maximum(box(q, (0, 0, 0), (.014, 3, 3)), np.abs(body(p)) - .06)
 M.carve('seams', seams, DARK)
 def slits(p):
-    q = p.copy(); q[..., 0] = np.mod(q[..., 0] + 20, .3) - .15; w = box(q, (0, 0, 0), (.09, .028, 3))
+    q = p.copy(); q[..., 0] = np.mod(q[..., 0] + 20, .3) - .15; q[..., 1] = 0; w = box(q, (0, 0, 0), (.09, 1, 3))
     band = np.minimum(np.minimum(np.abs(p[..., 1] - .72), np.abs(p[..., 1] + .62)), np.abs(p[..., 1] - 1.25))
-    return np.maximum(np.maximum(w, band - .035), np.maximum(-(shell(p) + .3 * 0), np.abs(p[..., 0] - .2) - 4.9))
+    return np.maximum(np.maximum(w, band - .035), np.maximum(np.abs(body(p)) - .06, np.abs(p[..., 0] - .2) - 4.9))
 M.carve('slits', slits, RED)
 for x in (1.75, -1.35, -4.2):
     M.carve(f'hband{x}', lambda p, x=x: ring(p, (x, .2, 0), 'x', 2.16, .045, .06, .01), RED)

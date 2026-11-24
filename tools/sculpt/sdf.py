@@ -68,15 +68,36 @@ class Model:
             d = di if d is None else smin(d, di, k)
         for j, (n, f, m, k) in enumerate(self.carves):
             c = f(p).astype(f32); d = smax(d, -c, k) if k else np.maximum(d, -c)
-            if labels: idx = np.where(np.abs(c) < max(self.vox * 1.6, .03), 1000 + j, idx)
+            if labels: idx = np.where(np.abs(c) < max(self.vox * 1.05, .025), 1000 + j, idx)
         return (d, idx) if labels else d
     def mesh(self):
         n = np.ceil((self.hi - self.lo) / self.vox).astype(int) + 1; xs = [self.lo[i] + np.arange(n[i], dtype=f32) * self.vox for i in range(3)]
         D = np.empty(n, f32); Y, Z = np.meshgrid(xs[1], xs[2], indexing='ij')
+        # each part and carve is evaluated only inside its own box (found once on a coarse grid), which makes the mesh several times faster
+        st = max(self.vox * 4, .12); cx = [np.arange(self.lo[i], self.hi[i] + st, st, dtype=f32) for i in range(3)]; CP = np.stack(np.meshgrid(*cx, indexing='ij'), -1)
+        def box_of(f):
+            d = f(CP); m = d < st * 1.0
+            if not m.any(): return None
+            ii = np.nonzero(m); pad = st + .06
+            return [(cx[a][ii[a].min()] - pad, cx[a][ii[a].max()] + pad) for a in range(3)]
+        rng_ = lambda a, lo, hi: (int(max(0, np.floor((lo - self.lo[a]) / self.vox))), int(min(n[a], np.ceil((hi - self.lo[a]) / self.vox) + 1)))
+        PB = [(box_of(f), f, k) for (_, f, _, k) in self.parts]; CB = [(box_of(f), f, k) for (_, f, _, k) in self.carves]
         for i, x in enumerate(xs[0]):
-            p = np.stack([np.full(Y.shape, x, f32), Y, Z], -1); D[i] = self.field(p)
+            d = np.full(Y.shape, 1.0, f32)
+            for B, f, k in PB:
+                if B is None or not (B[0][0] <= x <= B[0][1]): continue
+                j0, j1 = rng_(1, *B[1]); k0, k1 = rng_(2, *B[2])
+                if j1 <= j0 or k1 <= k0: continue
+                p = np.stack([np.full((j1 - j0, k1 - k0), x, f32), Y[j0:j1, k0:k1], Z[j0:j1, k0:k1]], -1); w = d[j0:j1, k0:k1]; d[j0:j1, k0:k1] = smin(w, f(p).astype(f32), k)
+            for B, f, k in CB:
+                if B is None or not (B[0][0] <= x <= B[0][1]): continue
+                j0, j1 = rng_(1, *B[1]); k0, k1 = rng_(2, *B[2])
+                if j1 <= j0 or k1 <= k0: continue
+                p = np.stack([np.full((j1 - j0, k1 - k0), x, f32), Y[j0:j1, k0:k1], Z[j0:j1, k0:k1]], -1); c = f(p).astype(f32); w = d[j0:j1, k0:k1]
+                d[j0:j1, k0:k1] = smax(w, -c, k) if k else np.maximum(w, -c)
+            D[i] = d
         Pv, F, Nv, _ = marching_cubes(D, 0, spacing=(self.vox,) * 3, allow_degenerate=False)
-        Pv = (Pv + self.lo).astype(f32); F = F[:, ::-1].copy()
+        Pv = (Pv + self.lo).astype(f32)  # skimage winds faces so they face outward for a field that is negative inside
         # normals from the field's gradient, materials from the nearest part, ambient occlusion along the normal
         e = self.vox * .5; g = np.stack([self.field(Pv + V(*o)) - self.field(Pv - V(*o)) for o in ((e, 0, 0), (0, e, 0), (0, 0, e))], -1); Nv = g / np.maximum(L(g)[:, None], 1e-6)
         _, idx = self.field(Pv, True); ao = np.ones(len(Pv), f32)
@@ -90,7 +111,7 @@ class Model:
             sel = idx == i; m = cm[i - 1000] if i >= 1000 else mats[i]
             A[sel, :3] = m['c']; A[sel, 3] = m.get('r', .5); E[sel, :3] = m.get('e', (0, 0, 0)); E[sel, 3] = m.get('m', .7)
         if paint: paint(P, N, A, E, idx)
-        A[:, :3] *= ao[:, None] ** 1.2; E[:, :3] *= np.clip(ao[:, None] * 1.3, 0, 1)
+        A[:, :3] *= ao[:, None] ** 1.2; E[:, :3] *= np.clip(ao[:, None] + .45, 0, 1)
         import os; os.makedirs(path, exist_ok=True)
         for k, a in (('P', P), ('N', N), ('A', A), ('E', E)): np.ascontiguousarray(a, f32).tofile(f'{path}/{k}.bin')
         np.ascontiguousarray(F, np.uint32).tofile(f'{path}/F.bin'); print(path, len(P), 'verts', len(F), 'tris')
@@ -104,3 +125,22 @@ def ring(p, c, axis, R, w, h, r=.02):
     # a ring with a rounded-box cross-section: w half-width along the axis, h half-thickness radially
     q = p - V(*c); i = 'xyz'.index(axis); a = q[..., i]; o = np.delete(q, i, axis=-1)
     d = np.stack([np.abs(L(o) - R) - (h - r), np.abs(a) - (w - r)], -1); return np.minimum(np.max(d, -1), 0) + L(np.maximum(d, 0)) - r
+def prism(p, pts, ytop, ybot, ch=.05, r=.01, c=(0, 0, 0), R=None):
+    # a convex outline [(x, z)...] (not mirrored) extruded from ybot to ytop, chamfered top and bottom
+    q = p - V(*c)
+    if R is not None: q = q @ R
+    x, y, z = q[..., 0], q[..., 1], q[..., 2]; d2 = poly2(x, z, pts)
+    d = np.maximum(np.maximum(d2, y - ytop), ybot - y); s2 = .7071
+    if ch > 0: d = np.maximum(d, (d2 + y - ytop + ch) * s2); d = np.maximum(d, (d2 + ybot - y + ch) * s2)
+    return d - r
+XYZ_XZY = np.array([[1, 0, 0], [0, 0, 1], [0, 1, 0]], f32)  # R for an outline drawn in (x, y), extruded along z
+def noise3(P, s=1.0, seed=0):
+    # cheap smooth value-free noise: a sum of sines along scrambled directions, about -1..1
+    rng = np.random.default_rng(seed); out = 0
+    for o in range(5):
+        dvec = rng.normal(size=3); dvec /= np.linalg.norm(dvec); f = s * (1.9 ** o); ph = rng.uniform(0, 6.28)
+        out = out + np.sin((P @ dvec.astype(f32)) * f + ph) / (1.7 ** o)
+    return out * .45
+def profile(p, pts, c=(0, 0, 0)):
+    # a convex side profile [(x, y)...], infinite across z: intersect a hull with it to taper its nose and tail
+    q = p - V(*c); return poly2(q[..., 0], q[..., 1], pts)
