@@ -2318,6 +2318,20 @@ body:has(#cine) #fbBtn,body:has(#cine) .fbchip{display:none!important}
 .xsbon{display:flex;flex-wrap:wrap;gap:6px}.xsbook{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}.xsbk{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}.xsbk img{width:62px;height:62px;border-radius:12px;object-fit:cover;background:#040a10}.xsbk.un img{filter:brightness(0) drop-shadow(0 0 4px rgba(125,255,184,.4));opacity:.7}.xsbk small{font-size:10.5px;line-height:1.2}
 @media (prefers-reduced-motion:reduce){.xsegg.pr,.xsinc.ready .xsegg,.xscr.pr .xsart img{animation:none}}
 /* v724 eggs: the reveal and the hatch */
+body.xs3on #fbBtn{display:none!important}
+#xs3{position:fixed;inset:0;z-index:59;background:#02060a;animation:xs3in .35s ease both}@keyframes xs3in{from{opacity:0}}
+.xs3slot{position:absolute;inset:0}.xs3slot canvas{width:100%;height:100%;display:block}
+.xs3top{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));display:flex;justify-content:space-between;align-items:flex-start;gap:10px;pointer-events:none}
+.xs3top>div{background:rgba(5,16,20,.74);border:1px solid rgba(127,255,208,.35);border-radius:12px;padding:6px 12px;display:flex;flex-direction:column;gap:1px;min-width:0}
+.xs3top b{color:#7fffd0;font-family:Oxanium,sans-serif;letter-spacing:.08em;text-transform:uppercase;font-size:13px}.xs3top small{color:#bfe8dc;font-size:11px}
+.xs3x{pointer-events:auto;flex:none;width:42px;height:42px;border-radius:50%;background:rgba(5,16,20,.82);border:1px solid rgba(127,255,208,.5);color:#e6fff6;font-size:18px;cursor:pointer}
+.xs3hint{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);text-align:center;font-size:12px;color:#d6fff2;background:rgba(5,16,20,.7);border:1px solid rgba(127,255,208,.25);border-radius:20px;padding:6px 14px;pointer-events:none}
+.xs3card{position:absolute;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 10px);max-width:520px;margin:0 auto;background:linear-gradient(180deg,rgba(14,34,42,.95),rgba(5,14,20,.97));border:1px solid rgba(127,255,208,.4);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px;max-height:48vh;overflow:auto;animation:up .22s ease-out}
+.xs3cr{display:flex;gap:12px;align-items:center}.xs3cr>div{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}.xs3cr b{color:#f2fff9}.xs3cr small{color:#bcd8d0}
+.xs3cr img{width:76px;height:76px;flex:none;border-radius:14px;object-fit:cover;border:2px solid var(--r,#7fffd0);box-shadow:0 0 18px color-mix(in srgb,var(--c,#7fffd0) 55%,transparent)}
+.xs3star{color:#ffd36b;font-size:12px;font-weight:600}.xs3tr b{color:#ffe7a8!important}
+.xs3b,.xs3eggs{display:flex;flex-wrap:wrap;gap:6px}.xs3eggs .btn{display:flex;align-items:center;gap:6px}.xs3eggs .btn span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
+.xs3go{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px}
 .xsfx{position:fixed;inset:0;z-index:9500;display:grid;place-items:center;background:radial-gradient(60% 45% at 50% 45%,color-mix(in srgb,var(--r) 22%,transparent),rgba(2,6,10,.88) 70%);opacity:0;transition:opacity .35s;padding:16px}
 .xsfx.on{opacity:1}
 .xsrays{position:absolute;left:50%;top:44%;width:150vmax;height:150vmax;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--r) 30%,transparent) 0deg 6deg,transparent 6deg 22deg);-webkit-mask:radial-gradient(closest-side,#000 10%,transparent 70%);mask:radial-gradient(closest-side,#000 10%,transparent 70%);animation:xsray 14s linear infinite;opacity:.8;pointer-events:none}
@@ -5982,7 +5996,7 @@ function sanctCard() { const X = xsOf(), L = xsLvl(), T = now(), slots = xsIncN(
     ${cd ? `<p class="note">The breeding chamber is resting: <b data-end="${X.brT}">${ftime(cd)}</b>.</p>` : `<button class="btn wide amber" data-act="xsBreed" ${a && b && can(bc) && X.eggs.length < XS_EGGS ? "" : "disabled"}>Breed · ${costHTML(bc)}</button>`}</div>`;
   const book = Object.keys(XS).map(k => { const seen = X.seen[k], r = XR[XS[k][1]]; return `<div class="xsbk${seen ? "" : " un"}" title="${seen ? esc(xsName(k)) : "Undiscovered"}"><img src="${xsImg(k)}" alt="" loading="lazy"><small style="color:${seen ? r[1] : "var(--muted)"}">${seen ? esc(xsName(k)) : XS[k][3] ? "Event only" : XS[k][2] ? "Bred only" : "???"}</small></div>`; }).join("");
   const bon = Object.keys(ELEM).map(e => [e, xsPct(e)]).filter(x => x[1] > 0).map(([e, v]) => `<span class="xsel" style="--c:${ELEM[e].col}">${ELEM[e].n} +${v}%</span>`).join("") || '<span class="note">None yet</span>';
-  return `<div class="dp xsc"><div class="xsh"><b>Incubators</b><small>${X.inc.filter(Boolean).length}/${slots}</small></div><div class="xsincs">${inc}</div>
+  return `<div class="dp xsc"><button class="btn wide amber xs3go" data-act="xs3Open">◉ Walk the Sanctuary in 3D</button><div class="xsh"><b>Incubators</b><small>${X.inc.filter(Boolean).length}/${slots}</small></div><div class="xsincs">${inc}</div>
     <div class="xsh"><b>Eggs</b><small>${X.eggs.length}/${XS_EGGS}</small></div><div class="xsegs">${eggs}</div>${xsGiftHTML()}
     <div class="xsh"><b>Habitat</b><small>${X.hab.length}/${cap}</small></div><div class="xshab">${hab}</div>
     <div class="xsh"><b>Breeding chamber</b></div>${breed}
@@ -6072,6 +6086,187 @@ function compMap(W, grp) { try { const c = xsComp(); if (!c || !TH) return; cons
     const ph = (hash(c.id) % 628) / 100; halo.onBeforeRender = () => { const tt = performance.now() * .001 + ph; holder.position.y = y0 + Math.sin(tt * 1.6) * span * .04; holder.position.x = x0 + Math.sin(tt * .7) * span * .03; m.rotation && (m.rotation.y = Math.sin(tt * .5) * .4); };
     grp.userData.comp = holder; } catch (e) {} }
 const xsHexRgb = h => { const n = parseInt(String(h).replace("#", ""), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255].join(","); };
+/* ---------- v758 the Xeno Sanctuary in 3D (owner: "is there any way to make the xeno sanctuary a 3d experience?" ... "Do it all") ----------
+   A glass bio-dome you can walk round: five element zones (Water's pool, Fire's lava field, Earth's crags and amber crystals, Air's
+   floating islands, Spirit's glowing shards), each with its bonus on a banner. Your hatched creatures live in their element's zone as
+   their own 3D models, swimming with the same body waves as on the map; the companion roams the whole dome under a gold star.
+   The incubators stand in the middle (each egg glows brighter as it nears hatching and pulses when it is ready) and the egg store sits
+   in a nest by the plaza. Drag to look round, pinch or scroll to zoom, tap a creature, an incubator or the nest: the camera glides to it
+   and a card opens with the same actions as the Sanctuary page (Companion, Feed, Warm, Hatch, Incubate). A creature hatched while the
+   dome is open flies out of its incubator to its zone. On phones the dome draws at a lower resolution and steps it down further if the
+   frames get slow; the map behind it nearly pauses. */
+const XS3_Z = ["water", "fire", "earth", "air", "spirit"], XS3_R = 26, XS3U = { value: 0 }, XS3M = {};
+const xs3Ang = i => i * TAU / 5 - Math.PI / 2;
+const xs3Size = c => [3.2, 3.8, 4.6, 5.8][XS[c.sp][1]] * [.72, .86, 1][clamp(c.g || 0, 0, 2)] * (xsTr(c) === "giant" ? 1.3 : 1);
+const xs3Sig = () => { const X = xsOf(), T = now(); return JSON.stringify([X.hab.map(c => c.id + ":" + (c.g || 0) + ":" + (c.pr ? 1 : 0)), X.comp || "", X.inc.map(it => it ? it.sp + (it.pr ? "*" : "") + (it.e <= T ? "!" : "") : 0), X.eggs.length, xsLvl()]); };
+function xs3Open() { if (G.xs3) return; if (!TH) return toast("The 3D Sanctuary needs 3D graphics, which this device has turned off.", "warn"); if (!xsLvl()) return toast("Build the Xeno Sanctuary first.", "warn");
+  const el = document.createElement("div"); el.id = "xs3"; el.innerHTML = `<div class="xs3slot"></div><div class="xs3top"><div><b>Xeno Sanctuary</b><small id="xs3sub"></small></div><button class="xs3x" aria-label="Close the 3D Sanctuary">✕</button></div>
+    <div class="xs3hint" id="xs3hint">Drag to look round · pinch to zoom · tap a creature or an incubator</div><div class="xs3card" id="xs3card" hidden></div>`;
+  document.body.appendChild(el); document.body.classList.add("xs3on"); el.querySelector(".xs3x").addEventListener("click", xs3Close);
+  try { xs3Build(el.querySelector(".xs3slot")); } catch (e) { console.warn("xs3", e); el.remove(); document.body.classList.remove("xs3on"); G.xs3 = null; return toast("The 3D Sanctuary could not start on this device.", "warn"); }
+  el.addEventListener("click", e => { if (e.target.closest("[data-act]")) setTimeout(() => { try { xs3Sync(1); } catch (e2) {} }, 60); }); /* the card's buttons run the Sanctuary's own actions */
+  try { crumb("3D Sanctuary opened"); } catch (e) {} }
+function xs3Close() { const V = G.xs3; G.xs3 = null; if (V) { cancelAnimationFrame(V.raf); try { V.rd.dispose(); V.rd.forceContextLoss(); } catch (e) {} for (const t of V.tex) try { t.dispose(); } catch (e) {} } const el = document.getElementById("xs3"); if (el) el.remove(); document.body.classList.remove("xs3on"); }
+addEventListener("keydown", e => { if (e.key === "Escape" && G.xs3) xs3Close(); });
+function xs3Build(slot) {
+  const cv = document.createElement("canvas"); slot.appendChild(cv); const rd = glNew({ canvas: cv, antialias: !WEAK, alpha: false }), pr0 = Math.min(devicePixelRatio || 1, WEAK ? 1 : MOBILE ? 1.5 : 2);
+  rd.setPixelRatio(pr0); rd.toneMapping = TH.ACESFilmicToneMapping; rd.toneMappingExposure = .95; rd.outputEncoding = TH.sRGBEncoding; rd.setClearColor(0x02060a, 1);
+  const sc = new TH.Scene(), tex = [], R = XS3_R, V = G.xs3 = { cv, rd, sc, tex, pr: pr0, cam: new TH.PerspectiveCamera(46, 1, .1, 600), th: Math.PI / 2, ph: .9, dist: 46, tth: Math.PI / 2 + .35, tph: .95, tdist: 36, tgt: new TH.Vector3(0, 2, 0), ttgt: new TH.Vector3(0, 2, 0),
+    cr: new Map(), pods: [], nest: null, anim: [], sel: null, last: 0, lastIn: performance.now(), t0: performance.now(), sig: "", slow: 0, born: new Set(xsOf().hab.map(c => c.id)) };
+  /* the sky and the light the glass and the sculpts reflect */
+  { const pm = new TH.PMREMGenerator(rd), env = new TH.Scene(), sk = texCanvas(512, 256, (x, W, H) => { const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#123038"); g.addColorStop(.45, "#071319"); g.addColorStop(1, "#030507"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+      x.fillStyle = "#9aa89a"; x.fillRect(W * .15, H * .12, W * .22, H * .06); x.fillStyle = "#5a8a94"; x.fillRect(W * .6, H * .2, W * .26, H * .05); x.fillStyle = "#7a5838"; x.fillRect(W * .4, H * .72, W * .2, H * .04); });
+    env.add(new TH.Mesh(new TH.SphereGeometry(50, 32, 16), new TH.MeshBasicMaterial({ map: sk, side: TH.BackSide }))); sc.environment = pm.fromScene(env, .02).texture; pm.dispose(); sk.dispose();
+    const neb = texCanvas(1024, 512, (x, W, H) => { const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#071a24"); g.addColorStop(.5, "#0a1420"); g.addColorStop(1, "#020407"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+      for (const [cx, cy, r, c] of [[.2, .3, .25, "rgba(60,220,190,.16)"], [.62, .22, .3, "rgba(150,90,255,.14)"], [.85, .4, .2, "rgba(255,120,80,.10)"], [.4, .45, .35, "rgba(70,160,255,.10)"]]) { const rg = x.createRadialGradient(cx * W, cy * H, 0, cx * W, cy * H, r * W); rg.addColorStop(0, c); rg.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = rg; x.fillRect(0, 0, W, H); }
+      for (let i = 0; i < 900; i++) { const y = Math.pow(Math.random(), 1.5) * H * .6, a = Math.random(); x.fillStyle = `rgba(${200 + a * 55},${220 + a * 35},255,${.25 + a * .7})`; const s = a > .97 ? 2.2 : 1.1; x.fillRect(Math.random() * W, y, s, s); } });
+    xs3Tx(neb); tex.push(neb); sc.add(new TH.Mesh(new TH.SphereGeometry(400, 48, 24), new TH.MeshBasicMaterial({ map: neb, side: TH.BackSide, toneMapped: false })));
+    sc.add(new TH.HemisphereLight(0x9fdcff, 0x14200c, .55)); const key = new TH.DirectionalLight(0xfff0dc, 1.45); key.position.set(18, 40, 22); sc.add(key); const rim = new TH.DirectionalLight(0x7affd8, 1.2); rim.position.set(-30, 14, -26); sc.add(rim); }
+  /* the floor: five element zones round a metal plaza */
+  { const ground = texCanvas(1024, 1024, (x, W) => { const c = W / 2, rr = W / 2;
+      for (let i = 0; i < 5; i++) { const a0 = xs3Ang(i) - TAU / 10, a1 = xs3Ang(i) + TAU / 10, k = XS3_Z[i], base = { water: ["#0e3a52", "#1b6f8c"], fire: ["#2a1410", "#5a2412"], earth: ["#3a2c14", "#5d4a22"], air: ["#2c3a24", "#5a7a46"], spirit: ["#241838", "#4a2c6a"] }[k];
+        const g = x.createRadialGradient(c, c, rr * .2, c, c, rr); g.addColorStop(0, base[1]); g.addColorStop(1, base[0]); x.fillStyle = g; x.beginPath(); x.moveTo(c, c); x.arc(c, c, rr, a0, a1); x.closePath(); x.fill();
+        x.save(); x.beginPath(); x.moveTo(c, c); x.arc(c, c, rr, a0, a1); x.closePath(); x.clip();
+        for (let n = 0; n < 340; n++) { const a = a0 + Math.random() * (a1 - a0), d = rr * (.25 + Math.random() * .75), px = c + Math.cos(a) * d, py = c + Math.sin(a) * d, s = 2 + Math.random() * 14;
+          x.fillStyle = k === "fire" ? (Math.random() < .2 ? `rgba(255,${90 + Math.random() * 80 | 0},30,.55)` : "rgba(10,6,6,.35)") : k === "water" ? "rgba(140,230,255,.08)" : k === "earth" ? (Math.random() < .5 ? "rgba(80,120,40,.3)" : "rgba(20,14,6,.3)") : k === "air" ? "rgba(220,255,200,.12)" : "rgba(220,140,255,.12)";
+          x.beginPath(); x.ellipse(px, py, s, s * (.4 + Math.random() * .6), Math.random() * 3, 0, TAU); x.fill(); }
+        if (k === "fire") { x.strokeStyle = "rgba(255,120,40,.6)"; x.lineWidth = 2; for (let n = 0; n < 40; n++) { let a = a0 + Math.random() * (a1 - a0), d = rr * (.3 + Math.random() * .6); x.beginPath(); x.moveTo(c + Math.cos(a) * d, c + Math.sin(a) * d); for (let s = 0; s < 6; s++) { a += (Math.random() - .5) * .05; d += (Math.random() - .3) * 18; x.lineTo(c + Math.cos(a) * d, c + Math.sin(a) * d); } x.stroke(); } }
+        if (k === "spirit") { x.strokeStyle = "rgba(230,150,255,.35)"; x.lineWidth = 2; for (const d of [.45, .62, .8]) { x.beginPath(); x.arc(c, c, rr * d, a0 + .05, a1 - .05); x.stroke(); } }
+        x.restore(); x.strokeStyle = "rgba(160,255,230,.35)"; x.lineWidth = 3; x.beginPath(); x.moveTo(c + Math.cos(a0) * rr * .24, c + Math.sin(a0) * rr * .24); x.lineTo(c + Math.cos(a0) * rr, c + Math.sin(a0) * rr); x.stroke(); }
+      const pg = x.createRadialGradient(c, c, 0, c, c, rr * .25); pg.addColorStop(0, "#5c7078"); pg.addColorStop(.85, "#2e3c44"); pg.addColorStop(1, "#7ff0d0"); x.fillStyle = pg; x.beginPath(); x.arc(c, c, rr * .245, 0, TAU); x.fill();
+      x.strokeStyle = "rgba(127,255,208,.5)"; x.lineWidth = 2; for (const d of [.08, .16]) { x.beginPath(); x.arc(c, c, rr * d, 0, TAU); x.stroke(); }
+      x.strokeStyle = "rgba(127,255,208,.8)"; x.lineWidth = 6; x.beginPath(); x.arc(c, c, rr - 4, 0, TAU); x.stroke(); });
+    xs3Tx(ground); tex.push(ground); const gm = new TH.Mesh(new TH.CircleGeometry(R, 120), new TH.MeshStandardMaterial({ map: ground, color: 0x9a9a9a, emissiveMap: ground, emissive: 0xffffff, emissiveIntensity: .1, roughness: .9, metalness: .05 })); gm.rotation.x = -Math.PI / 2; sc.add(gm);
+    const under = new TH.Mesh(new TH.CylinderGeometry(R, R * .82, 4, 96, 1, true), new TH.MeshStandardMaterial({ color: 0x0a1014, metalness: .6, roughness: .5, side: TH.DoubleSide })); under.position.y = -2; sc.add(under);
+    const rimR = new TH.Mesh(new TH.TorusGeometry(R, .28, 10, 160), new TH.MeshStandardMaterial({ color: 0x142024, metalness: .8, roughness: .3, emissive: 0x2affc0, emissiveIntensity: .35 })); rimR.rotation.x = Math.PI / 2; rimR.position.y = .15; sc.add(rimR); }
+  /* the glass: a clear dome with fine ribs */
+  { const dm = new TH.Mesh(new TH.SphereGeometry(R + .4, 64, 24, 0, TAU, 0, Math.PI / 2), new TH.MeshStandardMaterial({ color: 0xb8fff0, transparent: true, opacity: .07, roughness: .05, metalness: 0, envMapIntensity: 2.2, side: TH.DoubleSide, depthWrite: false })); sc.add(dm);
+    const rib = new TH.LineSegments(new TH.EdgesGeometry(new TH.SphereGeometry(R + .45, 18, 7, 0, TAU, 0, Math.PI / 2), 1), new TH.LineBasicMaterial({ color: 0x8affe0, transparent: true, opacity: .2, depthWrite: false })); sc.add(rib);
+    const cap = new TH.Mesh(new TH.TorusGeometry(2.2, .18, 8, 48), new TH.MeshStandardMaterial({ color: 0x142024, metalness: .8, roughness: .3, emissive: 0x2affc0, emissiveIntensity: .6 })); cap.rotation.x = Math.PI / 2; cap.position.y = R + .3; sc.add(cap); }
+  xs3Zones(V); xs3Plaza(V); xs3Wire(cv); xs3Sync(1); V.raf = requestAnimationFrame(xs3Frame); }
+const xs3Glow = (V, rgb, core) => new TH.SpriteMaterial({ map: glowTex(rgb, core || .6), transparent: true, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false });
+const xs3Tx = t => (t.encoding = TH.sRGBEncoding, t);
+function xs3Label(V, txt, sub, col) { const t = xs3Tx(texCanvas(512, 160, (x, W, H) => { x.textAlign = "center"; x.shadowColor = "rgba(0,0,0,.85)"; x.shadowBlur = 10; x.fillStyle = col; x.font = "700 60px Oxanium, sans-serif"; x.fillText(txt.toUpperCase(), W / 2, 66); x.fillStyle = "#eafff6"; x.font = "500 38px Oxanium, sans-serif"; x.fillText(sub, W / 2, 128); }));
+  V.tex.push(t); const s = new TH.Sprite(new TH.SpriteMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false })); s.scale.set(7.2, 2.25, 1); return s; }
+function xs3Zones(V) { const sc = V.sc, rnd = finR(758), M = (c, o) => new TH.MeshStandardMaterial(Object.assign({ color: c, roughness: .8, metalness: .05 }, o || {})), mats = {
+    rock: M(0x161210), basalt: M(0x080606, { roughness: .95 }), sand: M(0x2a1e10), moss: M(0x14300c), amber: M(0xffb43a, { emissive: 0xff8a10, emissiveIntensity: .9, roughness: .25, transparent: true, opacity: .88 }),
+    lava: M(0xff5a18, { emissive: 0xff4a10, emissiveIntensity: 1.6, roughness: .5 }), pool: M(0x1a7fb0, { emissive: 0x0a3a60, emissiveIntensity: .7, roughness: .04, metalness: .3, transparent: true, opacity: .82 }),
+    float: M(0x1e2418), spirit: M(0xd070ff, { emissive: 0xb040ff, emissiveIntensity: 1.3, roughness: .2, transparent: true, opacity: .85 }), ring: new TH.MeshBasicMaterial({ color: 0xc8ff7a, transparent: true, opacity: .35, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false }),
+    sring: new TH.MeshBasicMaterial({ color: 0xf0a8ff, transparent: true, opacity: .45, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false }) };
+  const at = (i, r, da) => { const a = xs3Ang(i) + (da || 0); return [Math.cos(a) * r, Math.sin(a) * r]; }, put = (m, x, y, z) => { m.position.set(x, y, z); sc.add(m); return m; };
+  const rocky = (geo, mat, x, y, z, s) => { const m = put(new TH.Mesh(geo, mat), x, y, z); m.scale.set(s * (.8 + rnd() * .5), s * (.6 + rnd() * .8), s * (.8 + rnd() * .5)); m.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3); return m; };
+  const dodec = new TH.DodecahedronGeometry(1, 0), ico = new TH.IcosahedronGeometry(1, 1), oct = new TH.OctahedronGeometry(1, 0);
+  XS3_Z.forEach((k, i) => { const E = ELEM[k], spread = .42;
+    if (k === "water") { const [x, z] = at(i, 15.5); const p = put(new TH.Mesh(new TH.CircleGeometry(7.2, 64), mats.pool), x, .06, z); p.rotation.x = -Math.PI / 2; const rimP = put(new TH.Mesh(new TH.TorusGeometry(7.2, .35, 8, 64), mats.rock), x, .1, z); rimP.rotation.x = Math.PI / 2; rimP.scale.z = .6;
+      for (let n = 0; n < 9; n++) { const a = rnd() * TAU, d = 7.4 + rnd() * 1.4; rocky(ico, mats.rock, x + Math.cos(a) * d, .2, z + Math.sin(a) * d, .5 + rnd() * .7); }
+      for (let n = 0; n < 7; n++) { const s = new TH.Sprite(xs3Glow(V, "120,230,255", .7)); const a = rnd() * TAU, d = rnd() * 6; s.position.set(x + Math.cos(a) * d, .4, z + Math.sin(a) * d); s.scale.setScalar(1 + rnd()); s.material.opacity = .35; sc.add(s); V.anim.push({ s, k: "bob", y0: .4, ph: rnd() * 9 }); } V.pool = p; }
+    if (k === "fire") { const [x, z] = at(i, 15.5); const L = put(new TH.Mesh(new TH.CircleGeometry(5.2, 48), mats.lava), x, .07, z); L.rotation.x = -Math.PI / 2; V.lava = mats.lava;
+      for (let n = 0; n < 16; n++) { const [px, pz] = at(i, 9 + rnd() * 14, (rnd() - .5) * spread * 2); if (Math.hypot(px - x, pz - z) < 5.8) continue; rocky(dodec, mats.basalt, px, .4, pz, .7 + rnd() * 1.4).scale.y *= 1.8; }
+      for (let n = 0; n < 6; n++) { const s = new TH.Sprite(xs3Glow(V, "255,110,40", .8)); s.position.set(x + (rnd() - .5) * 7, 1 + rnd() * 2, z + (rnd() - .5) * 7); s.scale.setScalar(1.6 + rnd() * 2); sc.add(s); V.anim.push({ s, k: "ember", y0: .5, ph: rnd() * 9, x0: s.position.x, z0: s.position.z }); } }
+    if (k === "earth") { for (let n = 0; n < 7; n++) { const [px, pz] = at(i, 9 + rnd() * 14, (rnd() - .5) * spread * 2), h = 2 + rnd() * 5; const m = put(new TH.Mesh(new TH.CylinderGeometry(.6 + rnd() * .5, 1.2 + rnd() * .8, h, 7), mats.rock), px, h / 2, pz); m.rotation.y = rnd() * 3; put(new TH.Mesh(ico, mats.moss), px, h, pz).scale.set(1, .35, 1); }
+      for (let n = 0; n < 10; n++) { const [px, pz] = at(i, 9 + rnd() * 14, (rnd() - .5) * spread * 2), m = put(new TH.Mesh(oct, mats.amber), px, .8, pz); m.scale.set(.35, 1 + rnd() * 1.2, .35); m.rotation.set((rnd() - .5) * .6, rnd() * 3, (rnd() - .5) * .6); }
+      for (let n = 0; n < 10; n++) { const [px, pz] = at(i, 9 + rnd() * 15, (rnd() - .5) * spread * 2); rocky(ico, mats.moss, px, 0, pz, .7 + rnd()).scale.y = .4; } }
+    if (k === "air") { for (let n = 0; n < 4; n++) { const [px, pz] = at(i, 12 + rnd() * 7, (rnd() - .5) * spread * 2), y = 10 + rnd() * 6, g = new TH.Group(); g.position.set(px, y, pz); sc.add(g);
+        const top = new TH.Mesh(new TH.CylinderGeometry(.5 + rnd() * .4, .1, .9 + rnd() * .5, 7), mats.float); g.add(top); const moss = new TH.Mesh(ico, mats.moss); moss.position.y = .5; moss.scale.set(.7, .18, .7); g.add(moss); V.anim.push({ s: g, k: "float", y0: y, ph: rnd() * 9 }); }
+      for (let n = 0; n < 3; n++) { const [px, pz] = at(i, 13 + n * 3, (n - 1) * .25), r = put(new TH.Mesh(new TH.TorusGeometry(2.4 + n * .6, .05, 6, 64), mats.ring), px, 9 + n * 2.5, pz); r.rotation.x = Math.PI / 2 + .3; V.anim.push({ s: r, k: "spin", ph: n }); } }
+    if (k === "spirit") { for (let n = 0; n < 12; n++) { const [px, pz] = at(i, 9 + rnd() * 14, (rnd() - .5) * spread * 2), h = 1.5 + rnd() * 4.5, m = put(new TH.Mesh(oct, mats.spirit), px, h * .5, pz); m.scale.set(.45, h * .5, .45); m.rotation.set((rnd() - .5) * .4, rnd() * 3, (rnd() - .5) * .4); }
+      for (let n = 0; n < 3; n++) { const [px, pz] = at(i, 15.5, (n - 1) * .3), r = put(new TH.Mesh(new TH.TorusGeometry(1.6 + n * .4, .06, 6, 48), mats.sring), px, 3 + n * 2.2, pz); V.anim.push({ s: r, k: "spin2", ph: n * 2 }); }
+      const s = new TH.Sprite(xs3Glow(V, "220,120,255", .5)); const [x, z] = at(i, 15.5); s.position.set(x, 4, z); s.scale.setScalar(7); s.material.opacity = .5; sc.add(s); }
+    const [lx, lz] = at(i, R - 2.5), lab = xs3Label(V, E.n, "", E.col); lab.position.set(lx, 7.5, lz); sc.add(lab); V["lab" + k] = lab; }); }
+function xs3Plaza(V) { const sc = V.sc, metal = new TH.MeshStandardMaterial({ color: 0x1e2a30, metalness: .85, roughness: .32 }), teal = new TH.MeshStandardMaterial({ color: 0x0e1a1e, metalness: .7, roughness: .4, emissive: 0x2affc0, emissiveIntensity: .5 });
+  const base = new TH.Mesh(new TH.CylinderGeometry(3.2, 3.8, .7, 48), metal); base.position.y = .35; sc.add(base); const ring = new TH.Mesh(new TH.TorusGeometry(3.3, .1, 6, 64), teal); ring.rotation.x = Math.PI / 2; ring.position.y = .72; sc.add(ring);
+  V.podMat = { glass: new TH.MeshStandardMaterial({ color: 0x7fffe0, transparent: true, opacity: .09, roughness: .05, envMapIntensity: 2, depthWrite: false }), metal, teal };
+  /* the nest for eggs not yet incubated, by the plaza's edge toward you */
+  const nest = new TH.Group(); nest.position.set(0, 0, 7.2); sc.add(nest); const bowl = new TH.Mesh(new TH.TorusGeometry(1.25, .45, 8, 24), new TH.MeshStandardMaterial({ color: 0x2a1c0c, roughness: 1 })); bowl.rotation.x = Math.PI / 2; bowl.scale.z = .7; bowl.position.y = .3; nest.add(bowl);
+  V.nest = { g: nest, eggs: new TH.Group() }; nest.add(V.nest.eggs); }
+const xs3EggGeo = () => xs3EggGeo.g || (xs3EggGeo.g = (() => { const g = new TH.SphereGeometry(.5, 24, 16); g.scale(1, 1.32, 1); return g; })());
+function xs3Pods(V) { const X = xsOf(), n = xsIncN(xsLvl()), T = now(); for (const p of V.pods) V.sc.remove(p.g); V.pods = [];
+  for (let i = 0; i < n; i++) { const a = i / n * TAU + (n > 1 ? Math.PI / 4 : 0), g = new TH.Group(), r = n > 1 ? 1.9 : 0; g.position.set(Math.cos(a) * r, .7, Math.sin(a) * r); V.sc.add(g);
+    const it = X.inc[i], col = it ? xsCol(it.sp) : "#335048", pad = new TH.Mesh(new TH.CylinderGeometry(.85, .95, .25, 32), V.podMat.metal); pad.position.y = .12; g.add(pad);
+    const glass = new TH.Mesh(new TH.CylinderGeometry(.78, .78, 2.1, 32, 1, true), V.podMat.glass); glass.position.y = 1.3; g.add(glass); const lip = new TH.Mesh(new TH.TorusGeometry(.78, .05, 6, 32), V.podMat.teal); lip.rotation.x = Math.PI / 2; lip.position.y = 2.35; g.add(lip);
+    const p = { g, i, it, egg: null, glow: null };
+    if (it) { const mat = new TH.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: .4, roughness: .3, metalness: .1 }); p.egg = new TH.Mesh(xs3EggGeo(), mat); p.egg.position.y = 1.1; g.add(p.egg); p.prog = clamp((T - it.s) / Math.max(1, it.e - it.s), 0, 1);
+      p.glow = new TH.Sprite(xs3Glow(V, xsHexRgb(col), .7)); p.glow.position.y = 1.15; p.glow.scale.setScalar(2.4); g.add(p.glow); }
+    V.pods.push(p); } }
+function xs3NestEggs(V) { const X = xsOf(), E = V.nest.eggs; while (E.children.length) E.remove(E.children[0]);
+  X.eggs.slice(0, XS_EGGS).forEach((e, j) => { const col = xsCol(e.sp), m = new TH.Mesh(xs3EggGeo(), new TH.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: e.pr ? .9 : .35, roughness: .35 })); const a = j * 2.4, d = j ? .35 + (j % 4) * .18 : 0;
+    m.position.set(Math.cos(a) * d, .45 + Math.floor(j / 6) * .35, Math.sin(a) * d * .7); m.scale.setScalar(.55); m.rotation.z = (j % 3 - 1) * .3; m.userData.pr = e.pr; E.add(m); }); }
+/* a creature's model, sized for its rarity and growth (a Giant is bigger still), centred on its middle */
+function xs3Model(c) { const sp = c.sp, size = xs3Size(c); let m, wait = false;
+  if (XS_HAS3D.has(sp)) { if (MON_SC[sp] && !MON_GEO[sp]) { monSculptLoad(sp); wait = true; } const key = sp + (MON_GEO[sp] ? "#s" : "#h"); let M = XS3M[key]; if (!M) { M = XS3M[key] = mergeGroup(buildMonster(sp)); monAnimate(M, sp, XS3U); } m = M.clone(); }
+  else { const col = xsCol(sp); m = new TH.Group(); m.add(new TH.Mesh(new TH.IcosahedronGeometry(.55, 2), new TH.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 1.1, roughness: .25 }))); const sh = new TH.Mesh(new TH.TorusGeometry(.85, .06, 6, 40), new TH.MeshBasicMaterial({ color: col, toneMapped: false })); sh.rotation.x = 1.2; m.add(sh); }
+  const inner = new TH.Group(); inner.add(m); inner.updateMatrixWorld(true); const bb = new TH.Box3().setFromObject(inner), sz = bb.getSize(new TH.Vector3()), ctr = bb.getCenter(new TH.Vector3()), s = size / Math.max(sz.x, sz.y, sz.z, .01);
+  m.scale.multiplyScalar(s); m.position.sub(ctr.multiplyScalar(s)); return { inner, wait, size }; }
+function xs3Creature(V, c) { const X = xsOf(), D = XS[c.sp], zi = XS3_Z.indexOf(D[0]), comp = X.comp === c.id, h = hash(String(c.id)), r = n => ((h >>> n) % 1000) / 1000;
+  const holder = new TH.Group(), body = new TH.Group(); holder.add(body); V.sc.add(holder); const md = xs3Model(c); body.add(md.inner);
+  const rgb = xsHexRgb(xsCol(c.sp)), halo = new TH.Sprite(xs3Glow(V, rgb, xsTr(c) === "radiant" ? .9 : .5)); halo.scale.setScalar(md.size * (xsTr(c) === "radiant" ? 2.6 : 1.9)); halo.material.opacity = xsTr(c) === "radiant" ? .75 : .38; holder.add(halo);
+  let star = null; if (comp) { star = new TH.Sprite(xs3Glow(V, "255,214,110", .9)); star.scale.setScalar(1.1); star.position.y = md.size * .75; holder.add(star); }
+  const o = { c, holder, body, halo, star, wait: md.wait, size: md.size, zi, comp, a0: r(3) * TAU, sp: .05 + r(7) * .04, rx: 3 + r(11) * 2.5, rz: 2 + r(13) * 2, da: (r(5) - .5) * .5, rad: 13 + r(9) * 4,
+    hy: D[0] === "air" || D[0] === "spirit" ? 5 + r(15) * 3 : D[0] === "water" ? 1 + md.size * .4 : 1.2 + md.size * .5, pos: new TH.Vector3(), prev: null, intro: V.born.has(c.id) ? null : { t0: performance.now() } };
+  V.born.add(c.id); return o; }
+function xs3Sync(force) { const V = G.xs3; if (!V) return; const sig = xs3Sig(); if (!force && sig === V.sig) { xs3Card(); return; } V.sig = sig; const X = xsOf();
+  const keep = new Set(X.hab.map(c => c.id)); for (const [id, o] of V.cr) { const c = X.hab.find(x => x.id === id); if (!keep.has(id) || !c || (c.g || 0) !== (o.c.g || 0) || (X.comp === id) !== o.comp || (c.pr ? 1 : 0) !== (o.c.pr ? 1 : 0)) { V.sc.remove(o.holder); V.cr.delete(id); } }
+  for (const c of X.hab) if (!V.cr.has(c.id)) { try { V.cr.set(c.id, xs3Creature(V, c)); } catch (e) { console.warn("xs3 creature", c.sp, e); } }
+  xs3Pods(V); xs3NestEggs(V);
+  for (const k of XS3_Z) { const lab = V["lab" + k]; if (!lab) continue; const n = X.hab.filter(c => XS[c.sp][0] === k).length, p = xsPct(k), t = texCanvas(512, 160, (x, W) => { x.textAlign = "center"; x.shadowColor = "rgba(0,0,0,.85)"; x.shadowBlur = 10; x.fillStyle = ELEM[k].col; x.font = "700 60px Oxanium, sans-serif"; x.fillText(ELEM[k].n.toUpperCase(), W / 2, 66); x.fillStyle = "#eafff6"; x.font = "500 36px Oxanium, sans-serif"; x.fillText(`${n} creature${n === 1 ? "" : "s"} · +${p}% ${ELEM[k].stat.toLowerCase()}`, W / 2, 128); }); xs3Tx(t);
+    const old = lab.material.map; lab.material.map = t; lab.material.needsUpdate = true; V.tex.push(t); if (old) { try { old.dispose(); } catch (e) {} V.tex = V.tex.filter(x => x !== old); } }
+  const sub = document.getElementById("xs3sub"); if (sub) sub.textContent = `Lv.${xsLvl()} · ${X.hab.length}/${xsCap(xsLvl())} creatures · ${X.eggs.length} egg${X.eggs.length === 1 ? "" : "s"} in store`;
+  if (V.sel && V.sel.k === "c" && !V.cr.has(V.sel.id)) V.sel = null; xs3Card(); }
+function xs3Frame(tNow) { const V = G.xs3; if (!V) return; V.raf = requestAnimationFrame(xs3Frame); if (!document.getElementById("xs3")) { xs3Close(); return; } if (typeof battle !== "undefined" && battle) { xs3Close(); return; } if (document.hidden) return;
+  const slot = V.cv.parentNode, w = slot.clientWidth, h = slot.clientHeight; if (!w || !h) return; if (V.w !== w || V.h !== h) { V.w = w; V.h = h; V.rd.setSize(w, h, false); V.cam.aspect = w / h; V.cam.updateProjectionMatrix(); }
+  const dt = clamp(tNow - (V.last || tNow), 0, 100), dk = dt / 16.67; V.last = tNow; const t = tNow - V.t0, ts = t * .001; XS3U.value = ts * .6; /* calmer than on the map: they live here */
+  if (dt > 0) { V.ft = (V.ft || 16) * .95 + dt * .05; if (V.ft > 34 && V.pr > .75 && t > 3000 && tNow - (V.prAt || 0) > 2500) { V.pr = Math.max(.75, V.pr - .25); V.prAt = tNow; V.rd.setPixelRatio(V.pr); V.w = 0; } } /* slow frames: draw fewer pixels */
+  if ((V.sy = (V.sy || 0) + dt) > 1000) { V.sy = 0; xs3Sync(); for (const [id, o] of [...V.cr]) if (o.wait && MON_GEO[o.c.sp]) { try { const n = xs3Creature(V, o.c); n.intro = o.intro; n.prev = o.prev; n.pos.copy(o.pos); n.body.rotation.copy(o.body.rotation); n.holder.position.copy(o.pos); V.sc.remove(o.holder); V.cr.set(id, n); } catch (e) {} } }
+  for (const a of V.anim) { const s = a.s; if (a.k === "bob") s.position.y = a.y0 + Math.sin(ts * 1.3 + a.ph) * .12; else if (a.k === "ember") { const u = (ts * .25 + a.ph) % 1; s.position.y = a.y0 + u * 6; s.material.opacity = Math.sin(u * Math.PI) * .9; }
+    else if (a.k === "float") { s.position.y = a.y0 + Math.sin(ts * .5 + a.ph) * .6; s.rotation.y = ts * .05 + a.ph; } else if (a.k === "spin") s.rotation.z = ts * (.15 + a.ph * .05); else if (a.k === "spin2") { s.rotation.x = ts * .3 + a.ph; s.rotation.y = ts * .2; } }
+  if (V.lava) V.lava.emissiveIntensity = 1.4 + Math.sin(ts * 1.7) * .3 + Math.sin(ts * 4.1) * .1;
+  const T = now(); for (const p of V.pods) { if (!p.egg) continue; const it = p.it, ready = it.e <= T, k = ready ? 1 : clamp((T - it.s) / Math.max(1, it.e - it.s), 0, 1), pul = ready ? .5 + .5 * Math.sin(ts * 5) : .5 + .5 * Math.sin(ts * (1 + k * 2));
+    p.egg.material.emissiveIntensity = .12 + k * .4 + pul * (ready ? .35 : .1); if (it.pr) { p.egg.material.emissive.setHSL((ts * .1) % 1, .9, .5); p.egg.material.color.copy(p.egg.material.emissive); } p.glow.material.opacity = .25 + k * .4 + pul * (ready ? .45 : .1); p.egg.rotation.z = Math.sin(ts * (2 + k * 6)) * (.03 + k * k * .12); p.egg.position.y = 1.1 + Math.sin(ts * 1.4 + p.i) * .05; }
+  for (const e of V.nest.eggs.children) if (e.userData.pr) e.material.emissive.setHSL((ts * .1 + e.position.x) % 1, .9, .55);
+  /* creatures: a slow figure-eight in their zone, facing where they swim and banking; the companion roams the whole dome */
+  for (const o of V.cr.values()) { let x, y, z; const u = ts * o.sp + o.a0;
+    if (o.comp) { const A = ts * .045 + o.a0; x = Math.cos(A) * 13 + Math.sin(A * 2.3) * 4; z = Math.sin(A) * 13 + Math.cos(A * 1.7) * 3; y = 6 + Math.sin(A * 3) * 2; }
+    else { const za = xs3Ang(o.zi) + o.da, cx = Math.cos(za) * o.rad, cz = Math.sin(za) * o.rad, ex = Math.sin(u) * o.rx, ez = Math.sin(2 * u) * o.rz * .5; x = cx + ex * -Math.sin(za) + ez * Math.cos(za); z = cz + ex * Math.cos(za) + ez * Math.sin(za); y = o.hy + Math.sin(ts * .7 + o.a0) * .4; }
+    if (o.intro) { const k = clamp((performance.now() - o.intro.t0) / 3200, 0, 1), e = k * k * (3 - 2 * k); if (k >= 1) o.intro = null; else { const hy = 3 + Math.sin(k * Math.PI) * 7; x = x * e; z = z * e; y = 2 + (y - 2) * e + Math.sin(k * Math.PI) * hy * (1 - e * .5); } }
+    const p = o.pos; if (o.prev) { const vx = x - p.x, vz = z - p.z; if (vx * vx + vz * vz > 1e-7) { const want = Math.atan2(-vz, vx); let d = want - o.body.rotation.y; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; o.body.rotation.y += d * Math.min(1, .08 * dk); o.bank = (o.bank || 0) + (clamp(d * 3, -.35, .35) - (o.bank || 0)) * .05 * dk; o.body.rotation.x = o.bank; } }
+    o.prev = 1; p.set(x, y, z); o.holder.position.copy(p); if (o.star) { o.star.material.opacity = .7 + .3 * Math.sin(ts * 3); } if (o.c.pr) o.halo.material.color.setHSL((ts * .08) % 1, .9, .65); }
+  /* camera: orbit round the target, which glides to whatever is selected; it drifts slowly round when left alone */
+  if (V.sel) { const s = V.sel; if (s.k === "c") { const o = V.cr.get(s.id); if (o) { V.ttgt.copy(o.pos); } } else if (s.k === "p") { const p = V.pods[s.i]; if (p) p.g.getWorldPosition(V.ttgt).setY(1.6); } else if (s.k === "n") V.ttgt.set(0, .8, 7.2); }
+  else V.ttgt.set(0, 2, 0); if (tNow - V.lastIn > 9000 && !V.sel) V.tth += .0007 * dk;
+  const e = 1 - Math.pow(.92, dk); V.th += (V.tth - V.th) * e; V.ph += (V.tph - V.ph) * e; V.dist += (V.tdist - V.dist) * e; V.tgt.lerp(V.ttgt, 1 - Math.pow(.9, dk));
+  const sp = Math.sin(V.ph); let cx = V.tgt.x + V.dist * sp * Math.cos(V.th), cy = V.tgt.y + V.dist * Math.cos(V.ph), cz = V.tgt.z + V.dist * sp * Math.sin(V.th);
+  if (cy < .8) cy = .8; V.cam.position.set(cx, cy, cz); V.cam.lookAt(V.tgt); V.rd.render(V.sc, V.cam); }
+function xs3Wire(cv) { const pts = new Map(); let down = null; cv.style.touchAction = "none";
+  cv.addEventListener("pointerdown", e => { pts.set(e.pointerId, [e.clientX, e.clientY]); try { cv.setPointerCapture(e.pointerId); } catch (x) {} const V = G.xs3; if (V) V.lastIn = performance.now(); down = pts.size === 1 ? { x: e.clientX, y: e.clientY, t: performance.now(), m: 0 } : null; });
+  cv.addEventListener("pointermove", e => { const V = G.xs3, p = pts.get(e.pointerId); if (!V || !p) return; V.lastIn = performance.now(); if (down) down.m = Math.max(down.m, Math.hypot(e.clientX - down.x, e.clientY - down.y));
+    if (pts.size === 1) { V.tth += (e.clientX - p[0]) * .006; V.tph = clamp(V.tph - (e.clientY - p[1]) * .005, .3, 1.5); }
+    else if (pts.size === 2) { const L = [...pts.values()], d0 = Math.hypot(L[0][0] - L[1][0], L[0][1] - L[1][1]); pts.set(e.pointerId, [e.clientX, e.clientY]); const M2 = [...pts.values()], d1 = Math.hypot(M2[0][0] - M2[1][0], M2[0][1] - M2[1][1]); if (d0 > 0 && d1 > 0) V.tdist = clamp(V.tdist * d0 / d1, 5, 46); return; }
+    pts.set(e.pointerId, [e.clientX, e.clientY]); });
+  const up = e => { pts.delete(e.pointerId); if (down && pts.size === 0 && down.m < 10 && performance.now() - down.t < 500) xs3Pick(e.clientX, e.clientY); if (pts.size === 0) down = null; }; cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", e => { pts.delete(e.pointerId); down = null; });
+  cv.addEventListener("wheel", e => { const V = G.xs3; if (!V) return; e.preventDefault(); V.lastIn = performance.now(); V.tdist = clamp(V.tdist * (1 + Math.sign(e.deltaY) * .1), 5, 46); }, { passive: false }); }
+/* a tap picks the nearest creature, incubator or the nest on screen (generous targets: fingers are wide) */
+function xs3Pick(x, y) { const V = G.xs3; if (!V) return; const r = V.cv.getBoundingClientRect(), P = new TH.Vector3(), cand = [], scr = (v, rad) => { P.copy(v).project(V.cam); if (P.z > 1) return null; const sx = r.left + (P.x + 1) / 2 * r.width, sy = r.top + (1 - P.y) / 2 * r.height, d = V.cam.position.distanceTo(v), px = rad / d / Math.tan(V.cam.fov * Math.PI / 360) * r.height / 2; return [Math.hypot(sx - x, sy - y), Math.max(30, px * 1.2)]; };
+  for (const o of V.cr.values()) { const s = scr(o.pos, o.size * .6); if (s && s[0] < s[1]) cand.push([s[0] / s[1], { k: "c", id: o.c.id }, o.size]); }
+  V.pods.forEach((p, i) => { const v = p.g.getWorldPosition(new TH.Vector3()).setY(1.6), s = scr(v, 1.2); if (s && s[0] < s[1]) cand.push([s[0] / s[1], { k: "p", i }, 2]); });
+  { const s = scr(new TH.Vector3(0, .6, 7.2), 1.4); if (s && s[0] < s[1]) cand.push([s[0] / s[1], { k: "n" }, 2.5]); }
+  cand.sort((a, b) => a[0] - b[0]); const hit = cand[0]; if (!hit) { if (V.sel) { V.sel = null; V.tdist = 36; V.tph = .95; xs3Card(); } return; }
+  V.sel = hit[1]; V.tdist = clamp(hit[2] * 2.6, 7, 16); V.tph = hit[1].k === "c" ? Math.min(V.tph, 1.2) : .85; try { SFX.ok() && SFX.tap && SFX.tap(); } catch (e) {} xs3Card(); }
+function xs3Card() { const V = G.xs3, el = document.getElementById("xs3card"), hint = document.getElementById("xs3hint"); if (!V || !el) return; const s = V.sel, X = xsOf(), T = now(); if (hint) hint.hidden = !!s; if (!s) { el.hidden = true; el.innerHTML = ""; return; } let h = "";
+  if (s.k === "c") { const c = X.hab.find(x => x.id === s.id); if (!c) { V.sel = null; el.hidden = true; return; } const D = XS[c.sp], r = XR[D[1]], tr = XS_TR[xsTr(c)];
+    h = `<div class="xs3cr" style="--c:${xsCol(c.sp)};--r:${r[1]}"><img src="${xsImg(c.sp)}" alt=""><div><b>${c.pr ? "✦ " : ""}${esc(xsName(c.sp))}${X.comp === c.id ? ' <span class="xs3star">★ Companion</span>' : ""}</b><small style="color:${r[1]}">${r[0]}${c.pr ? " · Prismatic" : ""} · ${xsGrow(c)[0]}</small>
+      <span class="xsel" style="--c:${ELEM[D[0]].col}">${ELEM[D[0]].n} +${xsCrPct(c)}% ${esc(ELEM[D[0]].stat.toLowerCase())}</span><small class="xs3tr"><b>${esc(tr[0])}</b>: ${esc(tr[1])}</small></div></div><div class="xs3b">${xsCrExtra(c)}<button class="btn ghost sm" data-xs3="close">Back to the dome</button></div>${xsCrFeedNote(c)}`; }
+  else if (s.k === "p") { const i = s.i, it = X.inc[i];
+    if (!it) { const eg = {}; for (const x of X.eggs) { const key = x.sp + (x.pr ? "*" : ""); eg[key] = (eg[key] || 0) + 1; } const full = X.hab.length + X.inc.filter(Boolean).length >= xsCap(xsLvl());
+      h = `<div class="xs3cr"><div><b>Empty incubator</b><small>${Object.keys(eg).length ? (full ? "The habitat is full: raise the Sanctuary or release a creature." : "Pick an egg to warm in it.") : "No eggs in store. Win monster hunts: each one has a chance to leave an egg."}</small></div></div>
+        <div class="xs3eggs">${Object.entries(eg).map(([key, n]) => { const sp = key.replace("*", ""), pr = key.endsWith("*"); return `<button class="btn sm" data-act="xsInc" data-sp="${sp}" data-pr="${pr ? 1 : 0}" ${full ? "disabled" : ""}>${xsEggHTML(sp, pr)}<span>${pr ? "✦ " : ""}${esc(xsName(sp))} ×${n}</span></button>`; }).join("")}</div><div class="xs3b"><button class="btn ghost sm" data-xs3="close">Back to the dome</button></div>`; }
+    else { const done = it.e <= T, left = Math.max(0, it.e - T), hn = Math.max(1, Math.ceil(left / 3600e3 * 2)), k = "xsh|" + i, r = XR[XS[it.sp][1]], warm = T - (it.w || 0) >= XS_WARM;
+      h = `<div class="xs3cr" style="--c:${xsCol(it.sp)};--r:${r[1]}">${xsEggHTML(it.sp, it.pr, 1)}<div><b>${it.pr ? "✦ Prismatic " : ""}${esc(xsName(it.sp))} egg</b><small style="color:${r[1]}">${r[0]}</small>${done ? "<small>It's ready to hatch!</small>" : `<div class="xsbar"><i style="width:${Math.min(100, (T - it.s) / (it.e - it.s) * 100).toFixed(1)}%"></i></div><small><span data-end="${it.e}">${ftime(left)}</span> left${warm ? "" : ` · warm again in ${ftime(XS_WARM - (T - it.w))}`}</small>`}</div></div>
+        <div class="xs3b">${done ? `<button class="btn amber" data-act="xsHatch" data-i="${i}">Hatch!</button>` : `${warm ? `<button class="btn sm amber" data-act="xsWarm" data-i="${i}">Warm the egg</button>` : ""}<button class="btn sm${buyArmed(k) ? " pxarm" : ""}" data-act="xsRush" data-i="${i}" ${(S.shards || 0) >= hn ? "" : "disabled"}>${buyArmed(k) ? "Confirm" : "Hatch now"} ◆${hn}</button>`}<button class="btn ghost sm" data-xs3="close">Back to the dome</button></div>`; } }
+  else if (s.k === "n") { const eg = {}; for (const x of X.eggs) { const key = x.sp + (x.pr ? "*" : ""); eg[key] = (eg[key] || 0) + 1; } const free = X.inc.filter(Boolean).length < xsIncN(xsLvl()) && X.hab.length + X.inc.filter(Boolean).length < xsCap(xsLvl());
+    h = `<div class="xs3cr"><div><b>Egg store</b><small>${X.eggs.length}/${XS_EGGS} eggs${X.eggs.length ? (free ? " · tap one to put it in a free incubator" : " · every incubator is busy") : ". Win monster hunts: each one has a chance to leave an egg."}</small></div></div>
+      <div class="xs3eggs">${Object.entries(eg).map(([key, n]) => { const sp = key.replace("*", ""), pr = key.endsWith("*"), r = XR[XS[sp][1]]; return `<button class="btn sm" data-act="xsInc" data-sp="${sp}" data-pr="${pr ? 1 : 0}" ${free ? "" : "disabled"}>${xsEggHTML(sp, pr)}<span>${pr ? "✦ " : ""}${esc(xsName(sp))} ×${n}<small style="color:${r[1]}"> ${r[0]} · ${r[2]} h</small></span></button>`; }).join("")}</div><div class="xs3b"><button class="btn ghost sm" data-xs3="close">Back to the dome</button></div>`; }
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } el.hidden = false;
+  if (!el.dataset.w) { el.dataset.w = 1; el.addEventListener("click", e => { const b = e.target.closest("[data-xs3]"); if (!b) return; const V2 = G.xs3; if (V2) { V2.sel = null; V2.tdist = 36; V2.tph = .95; } xs3Card(); }); } }
 /* the Serpent's eggs (the storyline's payoff) */
 function serpEgg(pr) { try { const X = xsOf(); if (X.eggs.length >= XS_EGGS) { S.serpOwe = (S.serpOwe || []).concat(pr ? 1 : 0); return; } X.eggs.push({ sp: "cserp", pr: pr ? 1 : 0 }); dirty(); setTimeout(() => { try { xsReveal("cserp", pr); } catch (e) {} }, 9000); } catch (e) {} }
 
@@ -6868,7 +7063,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 757;
+const GAME_V = 758;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -28426,7 +28621,7 @@ function adaptRes(t) {
 }
 /* v178 a map frame that throws is now traced: the first error (and every 300th after) goes to the console and the crash recorder with
    its top stack lines, so a frame that keeps failing (a frozen or blank map) shows up in Settings > Graphics > Last unexpected close */
-function sheetCap() { if (!sheet || battle || (view !== "galaxy" && view !== "base")) return 0; const el = document.querySelector(".sheet"); return !el ? 0 : el.classList.contains("full") ? 12 : 30; }
+function sheetCap() { if (G.xs3 && !battle) return 3; /* v758 the 3D Sanctuary covers the screen */ if (!sheet || battle || (view !== "galaxy" && view !== "base")) return 0; const el = document.querySelector(".sheet"); return !el ? 0 : el.classList.contains("full") ? 12 : 30; }
 function mapErr(e) { mapErr.n = (mapErr.n || 0) + 1; if (mapErr.n === 1 || mapErr.n % 300 === 0) { console.error(e); try { crumb(`map frame error x${mapErr.n}: ${String(e && e.message || e).slice(0, 80)} @ ${String(e && e.stack || "").split("\n").slice(1, 3).join(" | ").replace(/\s+/g, " ").slice(0, 160)}`); } catch (_) {} } }
 document.addEventListener("pointerdown", () => { G.lastIn = performance.now(); }, { capture: true, passive: true }); // v409 the last touch, for mapPrewarm
 /* v409 every 3D renderer is made here: shader error checks only with ?gldebug (they block until each compile finishes) */
@@ -29221,6 +29416,7 @@ const ACT = {
   xsHatch: d => act(() => { const X = xsOf(), i = +d.i, it = X.inc[i]; if (!it || it.e > now()) return; X.inc[i] = null; const c = { id: "c" + (S.seq++), sp: it.sp, pr: it.pr || 0, at: now(), tr: xsTrRoll(Math.random()) }; /* v724 */
     X.hab.push(c); X.seen[it.sp] = 1; const r = XR[XS[it.sp][1]]; xsHatchCine(c); /* v724 */
     setTimeout(() => { try { if (XS[it.sp][1] >= 2 || it.pr) advHolo(XS[it.sp][2] ? "Commander... that species hasn't been seen alive in a thousand years. And it hatched in our dome." : "Look at it, Commander. Something that rare, raised by us.", true); } catch (e) {} }, 2700); }),
+  xs3Open: () => xs3Open(), /* v758 */
   xsSel: d => { const s0 = G.xsSel || []; G.xsSel = s0.includes(d.id) ? s0.filter(x => x !== d.id) : s0.concat(d.id).slice(-2); xsRe(); },
   xsRel: d => act(() => { const X = xsOf(), c = X.hab.find(x => x.id === d.id); if (!c) return; const n = [1, 2, 4, 8][XS[c.sp][1]] * (c.pr ? 2 : 1); const rk = "xsr|" + c.id; if (!buyArmed(rk)) { G.buyArm = { k: rk, t: Date.now() }; toast(`Tap Release again to let the ${xsName(c.sp)} go (+◆${n}).`); return; } G.buyArm = null;
     X.hab = X.hab.filter(x => x.id !== c.id); if (X.comp === c.id) X.comp = null; G.xsSel = (G.xsSel || []).filter(x => x !== c.id); S.shards = (S.shards || 0) + n; toast(`${xsName(c.sp)} released to the wild. The ranger guild sent ◆${n} in thanks.`); }),
