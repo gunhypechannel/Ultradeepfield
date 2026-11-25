@@ -2506,38 +2506,42 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
   /* ---------- Energy Conduit: a stepped plinth with four buttress legs, a towering violet crystal threaded through three
      plated rings (the top one split into two horned arcs), dark shard collars, and lightning everywhere ---------- */
   function conduit() { const grp = new TH.Group(), M = hullMat("cond", { rows: 6, bronze: .2, rep: [14, 1] }), M2 = hullMat("cond2", { rows: 6, slits: .5, rep: [4, 1] });
-    // stepped plinth: three square tiers with glowing risers
-    [[3.3, 3.6, .55, .28], [2.6, 3.0, .55, .83], [1.9, 2.35, .55, 1.38], [1.25, 1.6, .5, 1.9]].forEach(([a, b, h, y]) => { const m = new TH.Mesh(new TH.CylinderGeometry(a, b, h, 4), M2); m.rotation.y = Math.PI / 4; m.position.y = y; grp.add(m);
-      const gl = new TH.Mesh(new TH.CylinderGeometry(a * 1.004, a * 1.004, .07, 4, 1, true), glowMat(VIO, .8)); gl.rotation.y = Math.PI / 4; gl.position.y = y + h / 2 - .05; grp.add(gl); });
-    // four buttress legs leaning in to the crystal's base, each with a spike cap
-    for (let k = 0; k < 4; k++) { const a = k * TAU / 4 + TAU / 8, c = Math.cos(a), s = Math.sin(a), foot = V(c * 4.6, 0, s * 4.6), top = V(c * 1.9, 3.3, s * 1.9);
-      grp.add(strut(foot, top, .38, .26, M)); const cap = shard(.32, 1.1, M); cap.position.copy(top).add(V(c * .35, -.2, s * .35)); grp.add(cap);
-      const st = strut(foot.clone().add(V(0, .02, 0)), top.clone().add(V(0, -.05, 0)), .09, .07, glowMat(VIO2, .85)); st.position.add(V(-s * .28, .05, c * .28)); grp.add(st); }
-    // front spine: a tall plated blade down the middle of the plinth
-    { const sp = box(.55, 2.6, .35, M); sp.position.set(0, 1.4, 2.0); grp.add(sp); const sg = box(.12, 2.2, .05, glowMat(VIO2)); sg.position.set(0, 1.45, 2.19); grp.add(sg); }
-    // the crystal: one long faceted shard from the plinth to the crown
-    const cr = crystal([[0, 0], [.75, .5], [1.25, 2.6], [1.5, 4.7], [1.3, 6.4], [.75, 7.9], [0, 10.2]], 6); cr.position.y = 1.9; cr.userData.dyn = 1; grp.add(cr);
-    const inner = crystal([[0, 0], [.4, .6], [.7, 4.4], [.35, 7.6], [0, 9.2]], 6); inner.material = glowMat(0x9a40ff, .22); inner.userData.dyn = 1; inner.position.y = 2.0; grp.add(inner);
-    // shard collars: low (round the crystal's foot), mid (an emblem), crown
-    const collar = (y, n, R, h, lean) => { for (let k = 0; k < n; k++) { const a = k * TAU / n, s = shard(.22, h, M); s.position.set(Math.cos(a) * R, y, Math.sin(a) * R); s.rotation.set(Math.sin(a) * lean, 0, -Math.cos(a) * lean); grp.add(s); } };
-    collar(2.0, 8, 1.3, 1.9, .18); collar(5.0, 6, 1.15, 1.5, .1); collar(7.1, 6, 1.0, 1.6, .14);
-    const emb = box(.7, 1.3, .3, M); emb.position.set(0, 5.6, 1.12); emb.rotation.z = Math.PI / 4; grp.add(emb); const eg = box(.18, .9, .06, glowMat(VIO2)); eg.position.set(0, 5.6, 1.29); grp.add(eg);
-    // three rings: wide middle, low, and the split horned crown
+    /* v763 remodelled to its painting (see p763): bronze-edged dark steel, glowing inlays, one long crystal opening into the crown */
+    const MH = hsMat(0x08070c, { hi: 0x4a3420, env: .35, rough: .38, metal: .6 }), GL = hsGlow(0xa448ff, 1.5);
+    // the stepped plinth: five square tiers to 3.3, each riser lit
+    [[3.0, 3.4, .7, .35], [2.42, 2.85, .7, 1.05], [1.85, 2.28, .7, 1.75], [1.3, 1.7, .7, 2.45], [.85, 1.12, .55, 3.05]].forEach(([a, b, h, y]) => { const m = hsFlat(new TH.CylinderGeometry(a, b, h, 4), MH, .12); m.rotation.y = Math.PI / 4; m.position.y = y; grp.add(m);
+      const gl = new TH.Mesh(new TH.CylinderGeometry(a * 1.006, a * 1.006, .06, 4, 1, true), GL); gl.rotation.y = Math.PI / 4; gl.position.y = y + h / 2 - .07; grp.add(gl);
+      const fw = (a + b) / 2 * Math.SQRT1_2; for (let f = 0; f < 4; f++) for (const j of [-.55, 0, .55]) { const F = new TH.Group(); F.userData.flat = 1; F.rotation.y = f * Math.PI / 2; const bar = new TH.Mesh(new TH.BoxGeometry(.07, h * .55, .03), GL); bar.position.set(j * fw, y, fw + .02); bar.rotation.x = Math.atan2(b - a, h) * .7; F.add(bar); grp.add(F); } });
+    // four buttress legs leaning in to the crystal's base, a blade cap at each top, a light line down each
+    for (let k = 0; k < 4; k++) { const a = k * TAU / 4 + TAU / 8, c = Math.cos(a), s = Math.sin(a), foot = V(c * 4.6, 0, s * 4.6), top = V(c * 1.9, 3.4, s * 1.9);
+      grp.add(hsBeam(foot, top, .62, .5, MH, .7)); const cap = hsSpike(1.5, .34, MH); cap.position.copy(top).add(V(c * .3, -.1, s * .3)); cap.rotation.set(-s * .5, 0, c * .5); grp.add(cap);
+      const ft = hsFlat(new TH.BoxGeometry(1.0, .5, 1.0), MH); ft.position.copy(foot).add(V(0, .25, 0)); ft.rotation.y = -a; grp.add(ft);
+      const st = new TH.Mesh(hsSweep([[-.03, -.03], [.03, -.03], [.03, .03], [-.03, .03]], hsLine(foot.clone().add(V(0, .1, 0)), top.clone().add(V(0, -.05, 0)), 1)), GL); st.position.add(V(c * .02, .27, s * .02)); grp.add(st); }
+    // front spine: a tall plated blade down the middle of the plinth, lit
+    { const sp = hsFlat(new TH.BoxGeometry(.6, 2.9, .4), MH); sp.position.set(0, 1.5, 2.05); grp.add(sp); const sg = new TH.Mesh(new TH.BoxGeometry(.1, 2.5, .04), GL); sg.position.set(0, 1.55, 2.27); grp.add(sg); }
+    // the crystal: a slim shaft from the plinth opening into the great crown crystal
+    const cr = crystal([[0, 0], [.48, .35], [.58, 2.6], [.7, 4.6], [.55, 5.7], [1.18, 7.4], [1.05, 8.2], [0, 9.1]], 6); cr.position.y = 3.0; cr.userData.dyn = 1; cr.material.color.setHex(0x2a0874); cr.material.emissive.setHex(0x5a18e8); grp.add(cr);
+    const inner = crystal([[0, 0], [.3, .5], [.4, 4.4], [.75, 7.3], [0, 8.6]], 6); inner.material = glowMat(0x9a40ff, .22); inner.userData.dyn = 1; inner.position.y = 3.05; grp.add(inner);
+    // shard collars of tall dark blades: low, mid (with the emblem), and the crown's cradle
+    const collar = (y, n, R, h, lean, r = .26) => { for (let k = 0; k < n; k++) { const a = k * TAU / n + .3, sp = hsSpike(h, r, MH); sp.position.set(Math.cos(a) * R, y, Math.sin(a) * R); sp.rotation.set(Math.sin(a) * lean, 0, -Math.cos(a) * lean); grp.add(sp); } };
+    collar(3.2, 8, .95, 1.9, .16); collar(5.0, 6, .85, 1.5, .1); collar(8.1, 7, 1.0, 2.1, .22, .3);
+    const emb = hsFlat(new TH.BoxGeometry(.75, 1.4, .32), MH); emb.position.set(0, 5.6, .9); emb.rotation.z = Math.PI / 4; grp.add(emb); const eg = new TH.Mesh(new TH.BoxGeometry(.16, .9, .05), GL); eg.position.set(0, 5.6, 1.08); grp.add(eg);
+    // three rings, measured: low r3.9 at 5.0, middle r4.6 at 7.2, the split horned crown ring r4.0 at 9.6
     const rings = [];
     const mk = (R, y, w, h, tilt, arcs) => { const g = new TH.Group(); g.position.y = y; g.rotation.x = tilt;
-      g.userData.arcs = []; for (const [p0, pl] of arcs) { const ag = new TH.Group(); ag.userData.c = p0 + pl / 2; ag.add(band(R, w, h, M, p0, pl)); ag.add(bandGlow(R - w / 2 - .012, h * .28, p0, pl)); ag.add(bandGlow(R + w / 2 + .012, h * .14, p0, pl, VIO)); g.add(ag); g.userData.arcs.push(ag); }
+      g.userData.arcs = []; for (const [p0, pl] of arcs) { const ag = new TH.Group(); ag.userData.c = p0 + pl / 2; ag.add(hsRing(R, w, h, MH, GL, { a0: p0, al: pl })); g.add(ag); g.userData.arcs.push(ag); }
       grp.add(g); rings.push(g); return g; };
-    mk(3.5, 3.3, .55, .6, .05, [[0, TAU]]); mk(4.7, 4.95, .62, .66, -.04, [[0, TAU]]);
-    const top = mk(4.1, 6.9, .55, .6, .06, [[.25, Math.PI - .5], [Math.PI + .25, Math.PI - .5]]);
-    for (const a of [.25, Math.PI - .25, Math.PI + .25, TAU - .25]) { const h = shard(.32, 1.4, M); h.position.set(Math.sin(a) * 4.1, .1, Math.cos(a) * 4.1); h.rotation.set(0, a, (a % Math.PI < 1 ? -1 : 1) * .9); top.userData.arcs[a < Math.PI ? 0 : 1].add(h); }
+    mk(3.9, 5.0, .5, .42, .04, [[0, TAU]]); mk(4.6, 7.2, .58, .5, -.03, [[0, TAU]]);
+    const top = mk(4.0, 9.6, .52, .46, .05, [[.25, Math.PI - .5], [Math.PI + .25, Math.PI - .5]]);
+    for (const a of [.25, Math.PI - .25, Math.PI + .25, TAU - .25]) { const h = hsSpike(1.5, .3, MH); h.position.set(Math.sin(a) * 4.0, .1, Math.cos(a) * 4.0); h.rotation.set(0, a, (a % Math.PI < 1 ? -1 : 1) * .9); top.userData.arcs[a < Math.PI ? 0 : 1].add(h); }
     // detail: conduit cables from each leg foot into the plinth, and vent greebles on every tier
     for (let k = 0; k < 4; k++) { const a = k * TAU / 4 + TAU / 8 + .32, c = Math.cos(a), s = Math.sin(a), pts = [V(c * 4.4, .1, s * 4.4), V(c * 3.9, .6, s * 3.9), V(c * 3.2, .5, s * 3.2), V(c * 2.6, 1.2, s * 2.6)];
       grp.add(new TH.Mesh(new TH.TubeGeometry(new TH.CatmullRomCurve3(pts), 16, .12, 6), M2)); const gl = new TH.Mesh(new TH.TubeGeometry(new TH.CatmullRomCurve3(pts.map(p => p.clone().add(V(0, .13, 0)))), 16, .03, 4), glowMat(VIO2, .8)); grp.add(gl); }
     [[3.45, .28], [2.8, .83], [2.12, 1.38]].forEach(([r, y]) => { for (let k = 0; k < 4; k++) for (let j = -1; j <= 1; j++) { const F = new TH.Group(); F.userData.flat = 1; F.rotation.y = k * Math.PI / 2; const v = box(.45, .22, .16, M); v.position.set(j * r * .5, y, r * Math.SQRT1_2 + .04); F.add(v); const vg = box(.3, .05, .04, glowMat(VIO2, .9)); vg.position.set(j * r * .5, y, r * Math.SQRT1_2 + .13); F.add(vg); grp.add(F); } });
     // light
     const core = sprite(7, "rgba(190,110,255,1)"); core.position.y = 5; grp.add(core); const base = sprite(6, "rgba(190,100,255,1)"); base.position.y = 1.2; grp.add(base);
-    const crPts = () => { const y = 2.5 + rnd() * 6.5, a = rnd() * TAU; return V(Math.cos(a) * .9, y, Math.sin(a) * .9); };
-    const ringPt = () => { const g = rings[rnd() * 3 | 0], a = rnd() * TAU, R = g === rings[1] ? 4.4 : g === rings[0] ? 3.2 : 3.8; return V(Math.cos(a) * R, g.position.y, Math.sin(a) * R); };
+    const crPts = () => { const y = 3.5 + rnd() * 7.5, a = rnd() * TAU; return V(Math.cos(a) * .7, y, Math.sin(a) * .7); };
+    const ringPt = () => { const g = rings[rnd() * 3 | 0], a = rnd() * TAU, R = g === rings[1] ? 4.3 : g === rings[0] ? 3.6 : 3.7; return V(Math.cos(a) * R, g.position.y, Math.sin(a) * R); };
     const bt = bolts(grp, 22, () => rnd() < .75 ? [crPts(), ringPt()] : [ringPt(), V((rnd() - .5) * 5, .4, (rnd() - .5) * 5)]);
     // moves: charge (rings spin up and spread, the crown opens), discharge (a bolt up from the tip, a ring shockwave),
     // link (a feed beam out along +x: the Overlord's shield), hit
@@ -2551,8 +2555,8 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
       const spin = 1 + ch * 9; rings[0].userData.a = (rings[0].userData.a || 0) + .00022 * 16 * spin; rings[1].userData.a = (rings[1].userData.a || 0) - .00015 * 16 * spin; rings[2].userData.a = (rings[2].userData.a || 0) + .0001 * 16 * spin;
       rings.forEach((r, i) => { r.rotation.y = r.userData.a; r.userData.y0 ??= r.position.y; r.position.y = r.userData.y0 + Math.sin(t * .0011 + i * 2) * .12 + (i - 1) * ch * .8 + (i === 2 ? ch * .9 : 0); });
       for (const ag of rings[2].userData.arcs) { const c = ag.userData.c, o = ch * .9 + Math.sin(t * .0013) * .05; ag.position.set(Math.sin(c) * o * 1.3, o * .4, Math.cos(c) * o * 1.3); ag.rotation.set(Math.cos(c) * o * .35, 0, -Math.sin(c) * o * .35); }
-      const hov = Math.sin(t * .0012) * .15 + ch * .5; cr.position.y = 1.9 + hov; inner.position.y = 2.0 + hov; cr.rotation.y = t * .0002 + ch * t * .002;
-      const p = .85 + Math.sin(t * .004) * .15 + ch * .9; cr.material.emissiveIntensity = .8 * p + .15; inner.material.opacity = Math.min(.9, .2 * p); core.material.opacity = Math.min(1, .35 * p); core.scale.setScalar(7 * (1 + ch * .5));
+      const hov = Math.sin(t * .0012) * .15 + ch * .5; cr.position.y = 3.0 + hov; inner.position.y = 3.05 + hov; cr.rotation.y = t * .0002 + ch * t * .002;
+      const p = .85 + Math.sin(t * .004) * .15 + ch * .9; cr.material.emissiveIntensity = .42 * p + .12; inner.material.opacity = Math.min(.9, .2 * p); core.material.opacity = Math.min(1, .35 * p); core.scale.setScalar(7 * (1 + ch * .5));
       const fire = bell(fd, .15, .2, .55, .9); for (const b of [up1, up2]) b.visible = fire > .01; up1.material.opacity = .6 * fire * (.8 + rnd() * .2); up2.material.opacity = fire; tipS.material.opacity = .3 + ch * .7; tipS.scale.setScalar(5 * (1 + fire * 1.5)); sw(fd < 0 ? -1 : (fd - .18) / .6);
       const lk = Math.max(bell(fl, 0, .1, .9, 1), api.feed ? .7 : 0); lnk.visible = lk > .01; if (lnk.visible) { lb.scale.set(1 + Math.sin(t * .03) * .25, lnk.userData.len * (fl >= 0 ? ss(0, .15, fl) : 1), 1 + Math.sin(t * .03) * .25); lb.material.opacity = .75 * lk * (.8 + Math.sin(t * .02) * .2); }
       bt(t, 1 + ch * 5 + lk * 2); hit(bell(fh, 0, .05, .4, 1), t); };
@@ -2594,13 +2598,13 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
     if (!groove) return [[[-W, -H + C], [-W + C, -H], [W - C, -H], [W, -H + C], [W, H - C], [W - C, H], [-W + C, H], [-W, H - C]], [1, 0, 1, 0, 1, 0, 1, 0]];
     const G = h * groove / 2, D = w * gd; return [[[-W, -H + C], [-W + C, -H], [W - C, -H], [W, -H + C], [W, -G], [W - D, -G * .8], [W - D, G * .8], [W, G], [W, H - C], [W - C, H], [-W + C, H], [-W, H - C]], [1, 0, 1, 0, .6, 0, .6, 0, 1, 0, 1, 0]]; }
   // a ring of machined plates (gaps between them), its groove's light channel, raised caps on alternate plates; axis y
-  function hsRing(R, w, h, M, G, opt = {}) { const g = new TH.Group(), n = opt.n || Math.max(8, Math.round(R * 2.2)), gap = opt.gap ?? Math.min(.06, .22 / R), each = TAU / n, sub = Math.max(3, Math.round(48 / n * (LOD === 1 ? .6 : 1)));
+  function hsRing(R, w, h, M, G, opt = {}) { const g = new TH.Group(), A0 = opt.a0 || 0, AL = opt.al || TAU, n = opt.n || Math.max(8, Math.round(R * 2.2 * AL / TAU)), gap = opt.gap ?? Math.min(.06, .22 / R), each = AL / n, sub = Math.max(3, Math.round(48 / n * (LOD === 1 ? .6 : 1)));
     const [pr, hi] = hsProf(w, h, .2, opt.groove ?? .34, .28), base = M.userData.hsBase;
-    for (let i = 0; i < n; i++) { const a0 = i * each + gap / 2, a1 = (i + 1) * each - gap / 2; g.add(new TH.Mesh(hsSweep(pr, hsArc(R, a0, a1, sub), { hi, base, hiC: M.userData.hsHi }), M));
+    for (let i = 0; i < n; i++) { const a0 = A0 + i * each + gap / 2, a1 = A0 + (i + 1) * each - gap / 2; g.add(new TH.Mesh(hsSweep(pr, hsArc(R, a0, a1, sub), { hi, base, hiC: M.userData.hsHi }), M));
       if (opt.caps !== false && i % 2 === 0) { const [cp, ch] = hsProf(w * .55, h * .5, .3), am = (a0 + a1) / 2, da = (a1 - a0) * .32; g.add(new TH.Mesh(hsSweep(cp, hsArc(R + w * .5, am - da, am + da, 4), { hi: ch, base, hiC: M.userData.hsHi }), M)); } }
-    if (G && (opt.groove ?? .34) > 0) { const gw = w * .22; g.add(new TH.Mesh(hsSweep(hsProf(gw, h * (opt.groove ?? .34) * .55, .05)[0], hsArc(R + w / 2 - w * .28 + gw * .45, 0, TAU, Math.max(48, n * 6)), { cap: false }), G)); }
-    if (G && opt.faces !== false) for (const sy of [-1, 1]) g.add(new TH.Mesh(hsSweep([[-w * .035, -.01], [w * .035, -.01], [w * .035, .01], [-w * .035, .01]], hsArc(R + w * .12, 0, TAU, Math.max(48, n * 6)).map(f => (f.p.y += sy * (h / 2 + .006), f)), { cap: false }), G));
-    if (opt.inner && G) g.add(new TH.Mesh(hsSweep(hsProf(.04, h * .2, 0)[0], hsArc(R - w / 2 - .02, 0, TAU, Math.max(48, n * 6)), { cap: false }), G));
+    if (G && (opt.groove ?? .34) > 0) { const gw = w * .22; g.add(new TH.Mesh(hsSweep(hsProf(gw, h * (opt.groove ?? .34) * .55, .05)[0], hsArc(R + w / 2 - w * .28 + gw * .45, A0, A0 + AL, Math.max(24, Math.round(n * 6 * AL / TAU) + 2)), { cap: AL < TAU }), G)); }
+    if (G && opt.faces !== false) for (const sy of [-1, 1]) g.add(new TH.Mesh(hsSweep([[-w * .035, -.01], [w * .035, -.01], [w * .035, .01], [-w * .035, .01]], hsArc(R + w * .12, A0, A0 + AL, Math.max(24, Math.round(n * 6 * AL / TAU) + 2)).map(f => (f.p.y += sy * (h / 2 + .006), f)), { cap: false }), G));
+    if (opt.inner && G) g.add(new TH.Mesh(hsSweep(hsProf(.04, h * .2, 0)[0], hsArc(R - w / 2 - .02, A0, A0 + AL, Math.max(24, Math.round(n * 6 * AL / TAU) + 2)), { cap: false }), G));
     return g; }
   // runes on a band: a glowing strip of glyphs wrapped round radius R (axis y)
   function hsRunes(key, R, h, n = 24, col = "#e2b8ff") { const t = cache["rn_" + key] || (cache["rn_" + key] = (() => { const c = cv(1024, 64), x = c.getContext("2d"); x.clearRect(0, 0, 1024, 64); x.strokeStyle = col; x.lineWidth = 4; x.lineCap = "round"; x.shadowColor = col; x.shadowBlur = 6; const r = (() => { let s = 77; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
@@ -2618,6 +2622,11 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
       for (const [x0, x1] of [[-.6, -.555], [-.36, -.33], [-.86, -.84]]) g.add(new TH.Mesh(hsSweep([[x0, .47], [x1, .47], [x1, .53], [x0, .53]], hsArc(R, a0 + (a1 - a0) * .04, a1 - (a1 - a0) * .04, N * 3, "xy", cx, cy, zf), { sc, cap: false }), G));
       g.add(new TH.Mesh(hsSweep([[-1.02, -.07], [-.97, -.07], [-.97, .07], [-1.02, .07]], hsArc(R, a0, a1, N * 3, "xy", cx, cy, zf), { sc, cap: false }), G)); }
     return g; }
+  // any geometry, flat-shaded, coloured: steep faces in the base colour, sloped ones lighter (the light catches bevels)
+  function hsFlat(geo, M, k = .45) { const g = geo.index ? geo.toNonIndexed() : geo; g.computeVertexNormals(); const b = new TH.Color(M.userData.hsBase ?? 0x0b0812), h = new TH.Color(M.userData.hsHi ?? 0x3e2c3a), N = g.attributes.normal, a = [];
+    for (let i = 0; i < N.count; i++) { const y = Math.abs(N.getY(i)), c = b.clone().lerp(h, y > .15 && y < .9 ? k : 0); a.push(c.r, c.g, c.b); } g.setAttribute("color", new TH.Float32BufferAttribute(a, 3)); return new TH.Mesh(g, M); }
+  // a straight chamfered beam from a to b, w x h at a tapering by k at b
+  function hsBeam(a, b, w, h, M, k = .7, up) { const [pr, hi] = hsProf(w, h, .22); return new TH.Mesh(hsSweep(pr, hsLine(a, b, 1, up || new TH.Vector3(0, 1, 0).cross(b.clone().sub(a)).lengthSq() < 1e-6 ? new TH.Vector3(1, 0, 0) : new TH.Vector3(0, 1, 0)), { hi, base: M.userData.hsBase, hiC: M.userData.hsHi, sc: u => 1 - (1 - k) * u }), M); }
   function hsSpike(len, r, M, sides = 4) { const g = new TH.ConeGeometry(r, len, sides, 1); g.translate(0, len / 2, 0); const ng = g.toNonIndexed(); ng.computeVertexNormals(); const c = new TH.Color(M.userData.hsBase ?? 0x0b0812), a = []; for (let i = 0; i < ng.attributes.position.count; i++) a.push(c.r, c.g, c.b); ng.setAttribute("color", new TH.Float32BufferAttribute(a, 3)); return new TH.Mesh(ng, M); }
   function warden() { const grp = new TH.Group(), M = hullMat("ward", { rows: 5, bronze: .22, rep: [18, 1] }), MG = hullMat("wardg", { rows: 1, cols: 16, slits: 0, glyphs: 1, bronze: .3, rep: [3, 1] });
     const core = new TH.Mesh(new TH.SphereGeometry(2.0, 48, 32), new TH.MeshBasicMaterial({ color: 0x07000f })); core.userData.dyn = 1; grp.add(core); const cor = new TH.Mesh(new TH.RingGeometry(2.0, 3.1, 64), new TH.MeshBasicMaterial({ map: radial("corona", [[0, "rgba(255,255,255,0)"], [.62, "rgba(255,255,255,0)"], [.66, "rgba(230,170,255,1)"], [.75, "rgba(170,70,255,.7)"], [1, "rgba(90,20,200,0)"]]), transparent: true, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); cor.userData.dyn = 1; grp.add(cor);
@@ -7130,7 +7139,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 762;
+const GAME_V = 763;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
