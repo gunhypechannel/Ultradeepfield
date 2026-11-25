@@ -2700,8 +2700,8 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
      Moves: walk (tripod gait), beam (rears back, the front sigil fires), stomp (front legs rise and slam, ground shockwave),
      summon (belly claws open, the down-beam surges), hit. ---------- */
   function overlord() { const grp = new TH.Group(), shk = new TH.Group(), body = new TH.Group(); grp.add(shk); shk.add(body);
-    const M = hullMat("ovl", { rows: 6, bronze: .16, slits: .35, rep: [1, 1] }), MP = hullMat("ovlp", { rows: 3, slits: .55, bronze: .3, rep: [1, 1] }), ML = hullMat("ovl2", { rows: 5, slits: .4, rep: [2, 3] }), MD = hullMat("ovld", { rows: 8, base: "#26242c", slits: .2, rep: [3, 2] });
-    const B = 4.3, H = 5.8, y0 = .45, Ls = Math.hypot(B, H), phi = Math.atan2(B, H);
+    const M = hullMat("ovl", { rows: 6, bronze: .16, slits: .35, rep: [1, 1], base: "#1a1424" }), MP = hullMat("ovlp", { rows: 3, slits: .55, bronze: .3, rep: [1, 1], base: "#211830" }), ML = hullMat("ovl2", { rows: 5, slits: .4, rep: [2, 3], base: "#1a1424" }), MD = hullMat("ovld", { rows: 8, base: "#26242c", slits: .2, rep: [3, 2] });
+    const B = 4.2, H = 2.6, y0 = .45, /* v764 low and wide, as painted */ Ls = Math.hypot(B, H), phi = Math.atan2(B, H);
     const core = new TH.Mesh(new TH.ConeGeometry(B * Math.SQRT2, H, 4, 1), MD); core.rotation.y = Math.PI / 4; core.position.y = y0 + H / 2; body.add(core);
     const sigils = [];
     for (let k = 0; k < 4; k++) { const F = new TH.Group(); F.userData.flat = 1; F.rotation.y = k * Math.PI / 2; body.add(F); const S = new TH.Group(); S.userData.flat = 1; S.position.set(0, y0, B); S.rotation.x = -phi; F.add(S);
@@ -2742,17 +2742,18 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
     const bm2 = new TH.Mesh(new TH.CylinderGeometry(.12, .32, 9, 16, 1, true), glowMat(0xf0d8ff, .8)); bm2.position.y = -6.4; bm2.userData.dyn = 1; belly.add(bm2); const em = sprite(4.5); em.position.y = -2.0; belly.add(em);
     // six legs: hip drum, armoured femur rising to a peaked knee, a long blade-shin plunging to a three-claw foot
     const legs = [];
-    for (let k = 0; k < 6; k++) { const a = k * TAU / 6, L = new TH.Group(); L.position.set(Math.cos(a) * 3.9, -.55, Math.sin(a) * 3.9); L.rotation.y = -a; body.add(L);
+    for (let k = 0; k < 4; k++) { const a = [.38, Math.PI - .38, Math.PI + .38, TAU - .38][k], L = new TH.Group(); /* v764 four legs, two to a side */ L.position.set(Math.cos(a) * 3.9, -.55, Math.sin(a) * 3.9); L.rotation.y = -a; body.add(L);
       const hip = new TH.Mesh(new TH.CylinderGeometry(.95, .95, 1.6, 14), ML); hip.rotation.x = Math.PI / 2; L.add(hip); for (const z of [-.83, .83]) { const r = new TH.Mesh(new TH.TorusGeometry(.6, .06, 6, 24), glowMat(VIO2)); r.position.z = z; L.add(r); }
       const cx = new TH.Group(); L.add(cx);
-      const kp = V(3.4, 2.8, 0); cx.add(beam(V(0, 0, 0), kp, 1.5, 1.1, 1.0, M));
+      const kp = V(2.4, 3.6, 0); cx.add(beam(V(0, 0, 0), kp, 1.5, 1.1, 1.0, M));
       { const fin = beam(V(.3, .75, 0), V(3.2, 3.6, 0), .6, .3, .8, ML); cx.add(fin); for (const z of [-.53, .53]) { const s = strut(V(.5, .2, z), V(3.1, 2.55, z), .05, .04, glowMat(VIO2)); cx.add(s); } }
       { const cyl = strut(V(.3, -.55, 0), V(2.0, 1.1, 0), .16, .16, MD, 8); cx.add(cyl); const rod = strut(V(2.0, 1.1, 0), V(2.9, 2.0, 0), .08, .08, M, 8); cx.add(rod); }
       const kn = new TH.Group(); kn.position.copy(kp); cx.add(kn);
       { const d = new TH.Mesh(new TH.CylinderGeometry(1.0, 1.0, 1.5, 14), ML); d.rotation.x = Math.PI / 2; kn.add(d); const r = new TH.Mesh(new TH.TorusGeometry(.5, .07, 6, 24), glowMat(VIO2)); r.position.z = .78; kn.add(r); const r2 = r.clone(); r2.position.z = -.78; kn.add(r2);
-        const pk = shard(.6, 2.0, M); pk.position.set(.2, .5, 0); pk.rotation.z = -.35; kn.add(pk); const ks = sprite(1.6); ks.position.z = .65; kn.add(ks); }
-      const fp = V(1.7, -8.4, 0); kn.add(beam(V(0, 0, 0), fp, 1.55, .4, .85, M));
+        const pk = shard(.45, 1.1, M); pk.position.set(.2, .5, 0); pk.rotation.z = -.35; kn.add(pk); const ks = sprite(1.6); ks.position.z = .65; kn.add(ks); }
+      const fp = V(5.0, -6.2, 0); kn.add(beam(V(0, 0, 0), fp, 1.55, .4, .85, M));
       { const blade = beam(V(.65, -.6, 0), V(1.75, -7.2, 0), .8, .14, .3, ML); kn.add(blade); kn.add(strut(V(.62, -.8, 0), V(1.72, -7.4, 0), .06, .03, glowMat(VIO2)));
+        { const st = new TH.Mesh(new TH.BoxGeometry(.12, fp.length() * .78, .62), glowMat(VIO, .9)); st.position.copy(fp).multiplyScalar(.5).add(V(.62, 0, 0)); st.rotation.z = Math.atan2(fp.x, -fp.y); kn.add(st); } /* the broad lit stripe down each shin */
         for (let q = 1; q < 4; q++) { const p = V(0, 0, 0).lerp(fp, q / 5), ar = box(1.3, .6, 1.05, ML); ar.position.copy(p); ar.rotation.z = -.2; kn.add(ar); const gl = box(.06, .3, 1.08, glowMat(VIO, .6)); gl.position.copy(p).add(V(.66, 0, 0)); gl.rotation.z = -.2; kn.add(gl); } }
       const foot = new TH.Group(); foot.position.copy(fp); kn.add(foot); for (const za of [-.6, 0, .6]) { const c = horn(1.5, .45, .2, M); c.rotation.set(za, 0, -Math.PI / 2 + .35); foot.add(c); }
       legs.push({ L, cx, kn, a, front: Math.sin(a) > .2, ph: (k % 2) * Math.PI }); }
@@ -2761,7 +2762,7 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
     const fBeam = new TH.Group(); fBeam.visible = false; body.add(fBeam); { const sg = sigils[0].sg; sg.updateWorldMatrix(true, false); }
     const fb1 = new TH.Mesh(new TH.CylinderGeometry(.9, .55, 40, 24, 1, true), glowMat(0xc070ff, .5)), fb2 = new TH.Mesh(new TH.CylinderGeometry(.3, .2, 40, 16, 1, true), glowMat(0xf6e6ff, .9)); for (const b of [fb1, fb2]) { b.rotation.x = Math.PI / 2; b.position.z = 20; b.userData.dyn = 1; fBeam.add(b); }
     const fbS = sprite(7, "rgba(240,210,255,1)", "hot2"); fBeam.add(fbS);
-    const groundY = -.55 + 2.8 - 8.4 - .4, quake = wave(grp, 9, false);
+    const groundY = -.55 + 3.6 - 6.2 - .4, quake = wave(grp, 9, false);
     /* v470 footfalls, the shield of four layers, the four-face beams of its overload */
     const steps = []; for (let k = 0; k < 6; k++) { const m = new TH.Mesh(new TH.RingGeometry(.55, 1, 40), glowMat(VIO2, 0)); m.rotation.x = -Math.PI / 2; m.userData.dyn = 1; m.visible = false; grp.add(m); const d = new TH.Mesh(new TH.CircleGeometry(1, 24), glowMat(0x9a80c0, 0)); d.rotation.x = -Math.PI / 2; d.userData.dyn = 1; d.visible = false; grp.add(d); steps.push({ m, d, t: -1e9 }); } let si = 0; const fw0 = V(0, 0, 0);
     const shM = () => new TH.ShaderMaterial({ uniforms: { uO: { value: 0 }, uC: { value: new TH.Color(0xb070ff) }, uT: { value: 0 } }, transparent: true, depthWrite: false, blending: TH.AdditiveBlending, side: TH.DoubleSide, toneMapped: false,
@@ -2782,9 +2783,9 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
       fBeam.visible = fire > .01; if (fBeam.visible) { const sg = sigils[0].sg; fBeam.position.set(0, y0 + Math.cos(phi) * Ls * .3 + .1, B - Math.sin(phi) * Ls * .3 + .7); fBeam.rotation.x = -rear * .05; fb1.material.opacity = .5 * fire * (.85 + rnd() * .15); fb2.material.opacity = .9 * fire; fb1.scale.set(1 + fire * .2, 1, 1 + fire * .2); fbS.material.opacity = fire; }
       quake(fst < 0 ? -1 : (fst - .5) / .5);
       const surge = bell(fsu, 0, .2, .75, 1); for (const c of claws) c.rotation.z = -surge * .7 + Math.sin(t * .002) * .04;
-      const f = (.8 + Math.sin(t * .006) * .12 + (rnd() < .05 ? .15 : 0)) * (1 + surge * .8); bm.material.opacity = .4 * f; bm2.material.opacity = .75 * Math.min(1.3, f); bm.scale.set(1 + surge * .6, 1, 1 + surge * .6); em.material.opacity = Math.min(1, f);
+      const f = (.8 + Math.sin(t * .006) * .12 + (rnd() < .05 ? .15 : 0)) * (1 + surge * .8); bm.material.opacity = .4 * f * (.35 + surge * .65); bm2.material.opacity = .75 * Math.min(1.3, f) * (.35 + surge * .65); bm.scale.set(1 + surge * .6, 1, 1 + surge * .6); em.material.opacity = Math.min(1, f);
             // footfalls: each foot that comes down lands with a jolt and a ring
-      { let jolt = 0; for (const g of legs) { const p = t * sp + g.ph, up = Math.cos(p); if (g.upL > .05 && up <= .05 && W > .5) { const S0 = steps[si++ % steps.length]; g.kn.updateWorldMatrix(true, false); fw0.set(1.7, -8.4, 0); g.kn.localToWorld(fw0); grp.worldToLocal(fw0); S0.m.position.set(fw0.x, groundY + .05, fw0.z); S0.d.position.copy(S0.m.position); S0.t = t; jolt = 1; } g.upL = up; }
+      { let jolt = 0; for (const g of legs) { const p = t * sp + g.ph, up = Math.cos(p); if (g.upL > .05 && up <= .05 && W > .5) { const S0 = steps[si++ % steps.length]; g.kn.updateWorldMatrix(true, false); fw0.set(5.0, -6.2, 0); g.kn.localToWorld(fw0); grp.worldToLocal(fw0); S0.m.position.set(fw0.x, groundY + .05, fw0.z); S0.d.position.copy(S0.m.position); S0.t = t; jolt = 1; } g.upL = up; }
         if (jolt) out.jolt = t; const ja = (t - (out.jolt || -1e9)) / 260; if (ja < 1) body.position.y -= Math.sin(ja * Math.PI) * .14; }
       for (const S0 of steps) { const a = (t - S0.t) / 900; S0.m.visible = S0.d.visible = a >= 0 && a < 1; if (S0.m.visible) { S0.m.scale.setScalar(1 + a * 3.2); S0.m.material.opacity = (1 - a) * .7; S0.d.scale.setScalar(1.2 + a * 2.4); S0.d.material.opacity = (1 - a) * (1 - a) * .35; } }
       // the belly emitters turn, faster while it charges or summons
@@ -7139,7 +7140,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 763;
+const GAME_V = 764;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
