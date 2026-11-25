@@ -2962,10 +2962,10 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
      scythes rise and smash down in a shockwave), hit. ---------- */
   function matriarch() { const grp = new TH.Group(), shk = new TH.Group(), body = new TH.Group(); grp.add(shk); shk.add(body);
     const GRN = 0xa8ff3a, GRN2 = 0xe2ff9e, RC = [.5, 1, .16];
-    const MC = hullMat("brd", { rows: 7, pal: ["#2e2b20", "#25231a", "#383322", "#1f1d16"], slits: .2, sc: "#e0ff90", sg: "#9dff2a", veins: 16, vc: "#a6e640", metal: .55, rough: .22, rc: RC, ei: 2.4, rep: [3, 2] });
-    const MB = hullMat("brdb", { rows: 3, pal: ["#1b1a14", "#24221a", "#2e2a1c"], slits: .08, sc: "#e0ff90", sg: "#9dff2a", veins: 10, vc: "#a6e640", metal: .5, rough: .18, rc: RC, ei: 2.2, rep: [1, 2], side: 1 });
+    const MC = hullMat("brd", { rows: 7, pal: ["#16150e", "#121109", "#1c1a10", "#0e0d08"], slits: .2, sc: "#e0ff90", sg: "#9dff2a", veins: 16, vc: "#a6e640", metal: .35, rough: .38, rc: RC, ei: 2.6, rep: [3, 2] }); MC.envMapIntensity = .45; /* v767 near-black olive chitin, as painted */
+    const MB = hullMat("brdb", { rows: 3, pal: ["#100f0a", "#16150e", "#1c1a10"], slits: .08, sc: "#e0ff90", sg: "#9dff2a", veins: 10, vc: "#a6e640", metal: .35, rough: .32, rc: RC, ei: 2.4, rep: [1, 2], side: 1 }); MB.envMapIntensity = .45;
     // the nest mound she stands on: a hump of resin and chitin with roots hanging beneath and acid pools glowing on top
-    const MN = hullMat("brdn", { rows: 5, pal: ["#16150f", "#1c1a12", "#121109"], slits: 0, sg: "#7ad020", veins: 22, vc: "#5e9a1c", metal: .15, rough: .8, rc: RC, rim: .4, ei: 1.6, rep: [5, 1] });
+    const MN = hullMat("brdn", { rows: 5, pal: ["#0e0d08", "#12110a", "#0a0906"], slits: 0, sg: "#7ad020", veins: 22, vc: "#5e9a1c", metal: .1, rough: .9, rc: RC, rim: .15, ei: 1.8, rep: [5, 1] }); MN.envMapIntensity = .3;
     { const pr = [[0, -3.4], [3.6, -3.1], [6.6, -2.3], [8.4, -1.2], [8.8, -.5], [8.2, -.1], [5, .2], [0, .3]]; body.add(new TH.Mesh(new TH.LatheGeometry(pr.map(([r, y]) => new TH.Vector2(r + (rnd() - .5) * .3, y)), 26), MN));
       for (let k = 0; k < 16; k++) { const a = rnd() * TAU, r = 3 + rnd() * 5, h = new TH.Mesh(new TH.IcosahedronGeometry(.6 + rnd() * .9, 0), MN); h.position.set(Math.cos(a) * r, .1, Math.sin(a) * r); h.scale.y = .5; body.add(h); }
       for (let k = 0; k < 11; k++) { const a = k * TAU / 11 + rnd() * .3, r = 5 + rnd() * 3, P = V(Math.cos(a) * r, -1.8, Math.sin(a) * r); body.add(new TH.Mesh(taper([P, P.clone().add(V(Math.cos(a) * 1.5, -2.4, Math.sin(a) * 1.5)), P.clone().add(V(Math.cos(a) * 1.2, -4.8 - rnd() * 2, Math.sin(a) * 1.2 + .8))], .45 + rnd() * .25, 12, 6), MN)); }
@@ -3074,7 +3074,7 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
   function tyrant() { const grp = new TH.Group(), shk = new TH.Group(), body = new TH.Group(); grp.add(shk); shk.add(body); body.position.x = -2;
     const RC = [1, .42, .12], PAL = ["#7a3420", "#8c4b22", "#9a7a2a", "#4a5a66", "#6a6e70", "#8a8478", "#5a2a1c", "#a08a50", "#3c4a3a"];
     const hm = (k, pal, sl) => { const m = hullMat(k, { rows: 3, cols: 3, pal, slits: sl, sc: "#ffe0a0", sg: "#ff9a30", rust: 1, metal: .5, rough: .7, rc: RC, ei: 2.2, rep: [1, 1] }); m.envMapIntensity = .45; return m; };
-    const HM = [hm("tyrR", ["#6a2a16", "#5a2414", "#74321a"], .25), hm("tyrY", ["#74581e", "#66501a", "#806224"], .2), hm("tyrS", ["#3e4c58", "#46545e", "#36424c"], .3), hm("tyrW", ["#625c52", "#58524a", "#6c665a"], .15), hm("tyrB", ["#5a3a24", "#4a3020", "#64422a"], .2)];
+    const HM = [hm("tyrR", ["#3c1a0e", "#33170c", "#462011"], .25), hm("tyrY", ["#4a3214", "#3e2a10", "#563a18"], .2), hm("tyrS", ["#2a2420", "#322a24", "#241e1a"], .3), hm("tyrW", ["#3a3028", "#332a22", "#42362c"], .15), hm("tyrB", ["#2e1e14", "#26180f", "#36241a"], .2)]; /* v767 rust and burnt iron, as painted */
     const pick = () => HM[rnd() * HM.length | 0], MP = HM[0], MQ = HM[1];
     const MD = hullMat("tyrd", { rows: 4, cols: 4, pal: ["#2e2a28", "#3a3430", "#24201e", "#443a32"], slits: .18, sc: "#ffc070", sg: "#ff7a20", rust: 1, metal: .7, rough: .6, rc: RC, ei: 2, rep: [1, 1] }); MD.envMapIntensity = .4;
     const W = x => x > 9 ? 4.2 * (1 - (x - 9) / 6.5) + .7 : x < -13 ? 3.4 : 4.2, H = x => x > 9 ? 5.8 - (x - 9) * .35 : 5.8;
@@ -3085,7 +3085,7 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
     // decks: shacks, cabins and gun towers stacked on top, red tarps, a bridge tower
     const deckY = 2.75; for (let i = 0; i < 14; i++) { const x = -13 + rnd() * 21, w = 1.8 + rnd() * 3, h = 1.2 + rnd() * 2.2, d = 2.4 + rnd() * 4, b = box(w, h, d, pick()); b.position.set(x, deckY + h / 2, (rnd() - .5) * (8 - d)); body.add(b);
       if (rnd() < .5) { const b2 = box(w * .7, h * .8, d * .6, pick()); b2.position.set(x + (rnd() - .5), deckY + h + h * .4, b.position.z); body.add(b2); } }
-    const tarpM = new TH.MeshStandardMaterial({ color: 0x8a1c14, roughness: .9, metalness: 0, side: TH.DoubleSide, emissive: 0x200402 });
+    const tarpM = new TH.MeshStandardMaterial({ color: 0x4a1a0c, roughness: .9, metalness: 0, side: TH.DoubleSide, emissive: 0x200402 });
     for (let i = 0; i < 9; i++) { const t2 = box(2 + rnd() * 3, .06, 2 + rnd() * 2, tarpM); t2.position.set(-12 + rnd() * 20, deckY + 2 + rnd() * 2, (rnd() - .5) * 5); t2.rotation.set((rnd() - .5) * .5, rnd(), (rnd() - .5) * .4); body.add(t2); }
     { const tw = box(3, 5, 3.4, MP); tw.position.set(-9, deckY + 2.5, 0); body.add(tw); const tw2 = box(4.2, 1.4, 4.6, MD); tw2.position.set(-9, deckY + 5.6, 0); body.add(tw2); const wl = box(4.25, .25, 4.65, glowMat(0xffb050, .9)); wl.position.set(-9, deckY + 5.6, 0); body.add(wl); }
     // smokestacks with fire at the top
@@ -7152,7 +7152,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 766;
+const GAME_V = 767;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
