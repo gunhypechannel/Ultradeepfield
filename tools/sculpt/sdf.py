@@ -68,7 +68,7 @@ class Model:
             d = di if d is None else smin(d, di, k)
         for j, (n, f, m, k) in enumerate(self.carves):
             c = f(p).astype(f32); d = smax(d, -c, k) if k else np.maximum(d, -c)
-            if labels: idx = np.where(np.abs(c) < max(self.vox * 1.05, .025), 1000 + j, idx)
+            if labels: idx = np.where(np.abs(c) < max(self.vox * 1.05, .025), 100000 + j, idx)
         return (d, idx) if labels else d
     def mesh(self):
         n = np.ceil((self.hi - self.lo) / self.vox).astype(int) + 1; xs = [self.lo[i] + np.arange(n[i], dtype=f32) * self.vox for i in range(3)]
@@ -108,7 +108,7 @@ class Model:
         P, N, F, idx, ao = self.mesh(); mats = [m for (_, _, m, _) in self.parts]; cm = [m for (_, _, m, _) in self.carves]
         A = np.zeros((len(P), 4), f32); E = np.zeros((len(P), 4), f32)
         for i in np.unique(idx):
-            sel = idx == i; m = cm[i - 1000] if i >= 1000 else mats[i]
+            sel = idx == i; m = cm[i - 100000] if i >= 100000 else mats[i]
             A[sel, :3] = m['c']; A[sel, 3] = m.get('r', .5); E[sel, :3] = m.get('e', (0, 0, 0)); E[sel, 3] = m.get('m', .7)
         if paint: paint(P, N, A, E, idx)
         A[:, :3] *= ao[:, None] ** 1.2; E[:, :3] *= np.clip(ao[:, None] + .45, 0, 1)
