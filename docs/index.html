@@ -3645,7 +3645,7 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
     const CORE = new TH.MeshBasicMaterial({ color: 0xf6e8ff, toneMapped: false });
     /* ---- the spine: torso, neck and tail are chains of armoured scale rings with gold collars, violet seams and gold dorsal blades ---- */
     const NT = 7, NN = LO ? 9 : 12, NL = LO ? 18 : 28, N = NT + NN + NL;
-    const scG = new TH.LatheGeometry([[0, -.62], [.82, -.66], [1.04, -.28], [1.0, .3], [.76, .58], [0, .64]].map(([r, y]) => new TH.Vector2(r, y)), LO ? 10 : 14); scG.rotateX(Math.PI / 2);
+    const scG = new TH.LatheGeometry([[0, -.62], [.82, -.7], [1.1, -.3], [1.02, .34], [.7, .6], [0, .64]].map(([r, y]) => new TH.Vector2(r, y)), 6); scG.rotateX(Math.PI / 2); scG.rotateZ(Math.PI / 6); scG.computeVertexNormals(); { const g2 = scG.toNonIndexed(); g2.computeVertexNormals(); scG.copy(g2); }
     const segs = inst(scG, MA, N), colG = new TH.TorusGeometry(1.0, .055, 4, LO ? 18 : 28), cols = inst(colG, MG, N), seamM = new TH.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false }), seams = inst(new TH.TorusGeometry(1.03, .045, 4, LO ? 18 : 30), seamM, N);
     const finG = new TH.ConeGeometry(.22, 1.5, 4); finG.translate(0, 1.5 / 2 + .8, 0); finG.scale(.6, 1, 1.6); const fins = inst(finG, MG, N);
     for (const m of [segs, cols, seams, fins]) body.add(m); for (let i = 0; i < N; i++) seams.setColorAt(i, new TH.Color(.6, .3, 1));
@@ -3688,7 +3688,7 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
       for (let k = 0; k < 7; k++) { const y = 1.4 - k * 1.25, w = 2.6 - k * .22, pl = box(w, .85, .5, k % 2 ? MS : MG); pl.position.set(0, y, 2.55 - k * .5); pl.rotation.x = .35 + k * .05; body.add(pl); } }
     const coreS = sprite(7, "rgba(230,200,255,1)", "vae_core"); core.add(coreS);
     const arms = []; for (const sx of [-1, 1]) { const sh = new TH.Group(); sh.position.set(sx * 2.5, 5.6, 2.0); sh.scale.setScalar(1.6); body.add(sh); const up = new TH.Group(); sh.add(up);
-      up.add(strut(V(0, 0, 0), V(sx * 1.4, -2.6, 1.6), 1.0, .75, MA, 7)); const pd = new TH.Mesh(crescentGeo(1.9, .7, 1.1, .5), MG); pd.position.set(sx * .3, .5, -.1); pd.rotation.set(-.4, sx * .5, sx * -.9); up.add(pd);
+      up.add(strut(V(0, 0, 0), V(sx * 1.4, -2.6, 1.6), 1.0, .75, MA, 7)); const pd = new TH.Mesh(crescentGeo(2.4, 1.0, 1.15, .7), MG); pd.position.set(sx * .3, .7, -.1); pd.rotation.set(-.4, sx * .5, sx * -.9); up.add(pd);
       for (let k = 0; k < 3; k++) { const s = shard(.2, 1.4 - k * .25, MG); s.position.set(sx * (.4 + k * .3), .9, -.3 - k * .3); s.rotation.set(-.6, 0, sx * -.5); up.add(s); }
       const el = new TH.Group(); el.position.set(sx * 1.4, -2.6, 1.6); up.add(el); el.add(strut(V(0, 0, 0), V(-sx * .4, -1.4, 3.0), .75, .55, MA, 7)); el.add(beam(V(-sx * .1, -.3, .5), V(-sx * .35, -1.2, 2.7), .9, .6, .55, MG));
       const hand = new TH.Group(); hand.position.set(-sx * .4, -1.4, 3.0); el.add(hand); hand.add(new TH.Mesh(new TH.SphereGeometry(.6, 10, 8), MA));
@@ -3698,7 +3698,7 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
     const memT = paint("vae_mem", 256, (x, N2) => { const g = x.createLinearGradient(0, 0, N2, N2); g.addColorStop(0, "#2a0b4a"); g.addColorStop(.6, "#4a1a86"); g.addColorStop(1, "#8e5cff"); x.fillStyle = g; x.fillRect(0, 0, N2, N2);
       x.strokeStyle = "#e0c0ff"; for (let i = 0; i < 70; i++) { let px = rnd() * N2, py = rnd() * N2, a = rnd() * TAU; x.globalAlpha = .25 + rnd() * .55; x.lineWidth = .6 + rnd() * 1.8; x.beginPath(); x.moveTo(px, py); for (let k = 0; k < 24; k++) { a += (rnd() - .5) * .7; px += Math.cos(a) * 7; py += Math.sin(a) * 7; x.lineTo(px, py); } x.stroke(); }
       x.globalAlpha = 1; for (let i = 0; i < 160; i++) { x.fillStyle = `rgba(255,${200 + rnd() * 55 | 0},255,${.3 + rnd() * .6})`; x.fillRect(rnd() * N2, rnd() * N2, 1.2, 1.2); } });
-    const memM = new TH.MeshBasicMaterial({ map: memT, color: 0x9a86b8, transparent: true, opacity: .9, side: TH.DoubleSide, depthWrite: false, toneMapped: false });
+    const memM = new TH.MeshBasicMaterial({ map: memT, color: 0x6e5e92, transparent: true, opacity: .9, side: TH.DoubleSide, depthWrite: false, toneMapped: false });
     const wings = []; for (const sx of [-1, 1]) { const root = new TH.Group(); root.position.set(sx * 1.8, 6.6, -.4); body.add(root); const w = new TH.Group(); root.add(w);
       const J = [V(0, 0, 0), V(sx * 6, 6.5, -.8), V(sx * 11.5, 11.5, -1.6)], tips = [V(sx * 19, 20, -2.6), V(sx * 24, 13, -3), V(sx * 24, 5, -2.6), V(sx * 20, -1, -2), V(sx * 12, -4.5, -1.2)];
       w.add(strut(J[0], J[1], .55, .42, MG, 6)); w.add(strut(J[1], J[2], .42, .32, MG, 6)); for (const tp of tips) w.add(strut(J[2], tp, .26, .06, MG, 5));
@@ -3778,11 +3778,11 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
         a.up.rotation.set(-.15 + Math.sin(t * .0011 + k) * .06 - rake * 1.1 + align * .3, a.sx * (.1 - rake * .25), a.sx * (.15 + st.spread * .1)); a.el.rotation.set(.2 - rake * .6 + Math.sin(t * .0013 + k) * .05, 0, 0); a.hand.rotation.set(-.2 + rake * .9, 0, 0);
         a.trail.material.opacity = bell(sw, .2, .35, .55, .75); a.trail.scale.setScalar(4 + rake * 6); });
       // wings: folded half open at rest, flung wide for the warning and the wingstorm, beating in the storm
-      wings.forEach(W => { const sp = .35 + st.spread * .65; W.root.rotation.set(-.1 + st.beat * .25 + Math.sin(t * .0009) * .04, W.sx * (.55 - sp * .5), W.sx * (-.1 + st.beat * .5 - sp * .1)); W.w.scale.set(.75 + sp * .25, .85 + sp * .15, 1); });
-      memM.opacity = .36 + st.spread * .16 + acc * .12 + fire * .15; wingWave(fw < 0 ? -1 : ss(.35, 1, fw));
+      wings.forEach(W => { const sp = .72 + st.spread * .28; W.root.rotation.set(-.1 + st.beat * .25 + Math.sin(t * .0009) * .04, W.sx * (.55 - sp * .5), W.sx * (-.1 + st.beat * .5 - sp * .1)); W.w.scale.set(.75 + sp * .25, .85 + sp * .15, 1); });
+      memM.opacity = .8 + st.spread * .06 + acc * .06 + fire * .08; wingWave(fw < 0 ? -1 : ss(.35, 1, fw));
       // the wheel: majestic idle turn; it spins up through the charge, the rings counter-rotate, the runes ignite in sequence, then align
       const dt = Math.min(64, t - (out.lt || t)); out.lt = t; const crack = out.crack, Lg = out.lean || 0;
-      body.rotation.x = Lg * .42; wheel.rotation.set(Lg * .22, .12 * (1 - Lg), 0); { const Lw = A < 0 ? 0 : ss(0, .1, A) * (1 - ss(.94, 1, A)); wheel.position.set(0, 12.2 + Lw * 5.5, -11 - Lg * 2.5); }
+      body.rotation.x = Lg * .42; wheel.rotation.set(Lg * .22, .12 * (1 - Lg), 0); { const Lw = A < 0 ? 0 : ss(0, .1, A) * (1 - ss(.94, 1, A)); wheel.position.set(0, 14.5 + Lw * 5.5, -14 - Lg * 2.5); }
       // the aura: a violet glow along his whole body, brighter and brighter through the charge, peaking as he fires
       const au = A < 0 ? .12 + .05 * Math.sin(t * .002) : .15 + warn * .25 + runes * .35 + acc * .8 + align * 1.5 + fire * 1.1 - after * .9;
       for (let k = 0; k < NA; k++) { const i = k * 2, p = P[i], s = aura[k]; s.position.copy(p); const z = SC[i] * (2.4 + au * 1.1) * (1 + .12 * Math.sin(t * .006 + k)); s.scale.setScalar(z); s.material.opacity = Math.min(.42, .06 + au * .11); }
@@ -7164,7 +7164,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 772;
+const GAME_V = 773;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
