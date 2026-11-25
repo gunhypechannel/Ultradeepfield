@@ -6868,7 +6868,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 749;
+const GAME_V = 750;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -15968,13 +15968,15 @@ function draw3D(t) {
         if (MIM_BOSS[it.id]) { o.body.position.set(0, Math.sin(t * .0003 + it.a0) * .25, 0); o.body.rotation.set(0, it.mon === "nexus" ? 0 : it.a0 + Math.sin(t * .0001 + it.a0) * .5, 0); o.body.scale.setScalar((.6 + it.lvl * .0082) * (it.crc ? it.sc : it.om === 1 ? 4.2 : it.om === 2 ? 2.6 : it.mon === "nexus" ? 1.5 : 1.8)); if (it.cnt === "prime") o.body.scale.setScalar((.6 + it.lvl * .0082) * it.sc); } /* v665 the Alphas and Nexuses loom; v744 the Prime Ark */
         if (it.mon === "mimic") { o.body.position.set(0, Math.sin(t * .0004 + it.a0) * .2, 0); o.body.rotation.set(0, t * .00003 + it.a0, 0); o.body.scale.setScalar((.6 + it.lvl * .0082) * (.5 + .17 * mimStage(it, T))); } /* v663 a hive stays put and grows with its stage */
         if (it.mon === "carcinid") { o.body.position.set(0, Math.sin(t * .0004 + it.a0) * .15, 0); o.body.rotation.set(0, t * .00002 + it.a0, 0); o.body.scale.setScalar((.6 + it.lvl * .0082) * (.42 + .16 * crcStage(it, T))); } /* v703 a Breach Zone stays put and grows with its stage */ /* v529 the Sentinel does not move */
-        if (it.mon === "swasp") { o.body.position.set(0, Math.sin(t * .0005 + it.a0) * .3, 0); o.body.rotation.set(0, t * .00008 + it.a0, 0); } // v515 a Starhive hangs where it is; its swarm does the moving
+        if (it.mon === "swasp") { o.body.position.set(0, Math.sin(t * .0005 + it.a0) * .3, 0); o.body.rotation.set(0, t * .00008 + it.a0, 0); }
+        const evStay = !!(MIM_BOSS[it.id] || CNT_M[it.mon] || CRC_M[it.mon] || it.mon === "mimic"); /* v750 an event unit holds its spot */
+        if (evStay && !MIM_BOSS[it.id] && it.mon !== "mimic" && it.mon !== "carcinid") { o.body.position.set(0, Math.sin(t * .0004 + it.a0) * .2, 0); o.body.rotation.set(0, it.a0 + Math.sin(t * .00006 + it.a0 * 3) * .5, 0); } // v515 a Starhive hangs where it is; its swarm does the moving
         if (it.mon === "ssquid") { const p = 1 + .07 * Math.sin(t * .006 + it.a0); o.body.scale.set(o.body.scale.y * p, o.body.scale.y, o.body.scale.y / Math.sqrt(p)); }
         /* v264 a monster in a battle stays on screen until the fight is over (it was marked slain, and hidden, the moment the result was known),
            and stops swimming to face the fleet where it stands */
         const inClash = G.clashes.some(c => c.loc === it && performance.now() - c.t0 < c.dur * .93); if (inClash) { o.cl = Math.min(1, (o.cl || 0) + .02); } else if (o.cl) o.cl = Math.max(0, o.cl - .01);
         if (o.cl) o.body.position.multiplyScalar(1 - o.cl);
-        o.grp.scale.setScalar(MK_K * (hl && !down ? 1.25 : 1)); if ((!down || inClash) && it.cnt !== "prime") monAvoid(W, o, q); /* v619 round planets and other monsters */ o.body.visible = !down || inClash; if (it.cnt === "prime") try { cntPrimePose(o, it, t, T); } catch (e) {} /* v744 */ o.beacon.position.copy(o.body.position); o.beacon.material.opacity = down ? 0 : .4; }
+        o.grp.scale.setScalar(MK_K * (hl && !down ? 1.25 : 1)); if ((!down || inClash) && it.cnt !== "prime") { if (evStay) { o.av = null; if (W.obG) obAdd(W.obG, q.x, q.y, q.z, 1.6 * (o.grp.scale.x || 1)); } else monAvoid(W, o, q); } /* v619 round planets and other monsters */ o.body.visible = !down || inClash; if (it.cnt === "prime") try { cntPrimePose(o, it, t, T); } catch (e) {} /* v744 */ o.beacon.position.copy(o.body.position); o.beacon.material.opacity = down ? 0 : .4; }
       else { const hl = findHit(it), down = pirDown(it) > T; o.grp.rotation.y = t * (it.boss ? .00008 : .0002) + it.a0; o.ring.rotation.z = t * .0006;
         o.beacon.material.opacity = down ? .15 : it.boss ? .32 : .55; if (it.boss) { o.grp.rotation.x = Math.sin(t * 1.5e-4 + it.a0) * .12; o.grp.position.y = q.y + Math.sin(t * .00035 + it.a0 * 7) * .4; } o.grp.scale.setScalar(MK_K * (hl && !down ? 1.3 : 1)); } } /* v109: Cubes turn slowly and tilt as they hover; no swelling */
     if (W.obG) for (const M2 of [W.nodes, W.pyramids, W.pirates]) for (const [id, o] of M2) if (!o.mon && M.near.has(id) && o.grp.visible) obAdd(W.obG, o.grp.position.x, o.grp.position.y, o.grp.position.z, 1.6 * (o.grp.scale.x || 1)); /* v619 */
