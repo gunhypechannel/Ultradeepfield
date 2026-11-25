@@ -6868,7 +6868,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 750;
+const GAME_V = 751;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -14244,10 +14244,10 @@ function monMerged(k) { let M = MMERGE[k]; if (!M) { const s0 = buildAlien(k); M
   const c = M.clone(); c.userData = Object.assign({}, M.userData, { keepGeo: 1 }); return c; } /* v652 one piece, as on the map, so the body motion moves every part with the body; merged once per species */
 function monBatPose(root, kind, f) { if (!MON_WAVE[kind]) return null; const U = { value: f / MBF_N * MBF_P }, done = new Map(), wave = mbfQ(MON_WAVE[kind]);
   root.traverse(o => { if (!o.isMesh || !o.material || Array.isArray(o.material)) return; let m = done.get(o.material);
-    if (!m) { m = o.material.clone(); const pu = m.userData && m.userData.pulse ? mbfQ(m.userData.pulse) : null;
-      m.onBeforeCompile = sh => { sh.uniforms.uMT = U; sh.vertexShader = "uniform float uMT;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\nfloat mt = uMT;\n" + wave);
+    if (!m) { const pre = o.material.userData && o.material.userData.obc; m = o.material.clone(); const pu = m.userData && m.userData.pulse ? mbfQ(m.userData.pulse) : null;
+      m.onBeforeCompile = sh => { if (pre) pre(sh); sh.uniforms.uMT = U; sh.vertexShader = "uniform float uMT;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\nfloat mt = uMT;\n" + wave);
         if (pu) sh.fragmentShader = "uniform float uMT;\n" + sh.fragmentShader.replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n totalEmissiveRadiance *= " + pu + ";"); };
-      m.customProgramCacheKey = () => "monbat-" + kind + (pu ? "-p" + hash(pu) : ""); done.set(o.material, m); } o.material = m; });
+      m.customProgramCacheKey = () => "monbat-" + kind + (pu ? "-p" + hash(pu) : "") + (pre ? "-s" : ""); done.set(o.material, m); } o.material = m; });
   return [...done.values()]; }
 /* which frame a monster in battle shows: its own phase, a little faster while it moves; the nearer of two frames full, the other over it */
 function monBatFrame(b, i, k, real, moving) { if (!MON_WAVE[k]) return null; const pre = b.mfPre || (b.mfPre = {}); if (!pre[k]) { pre[k] = 1; for (let f = 0; f < MBF_N; f++) shipArtSoon(k, "~f" + f, "side"); }
@@ -14272,9 +14272,9 @@ function monShFit(k, cx, cy, L, face) { const S0 = studio(); if (!S0) return nul
   return [cx + face * (e[0] - .5) * w, cy + (e[1] - .5) * h, rx, ry]; }
 function monAnimate(master, kind, U) { if (!MON_WAVE[kind] && CNT_M[kind]) return; /* v742 */ const done = new Map();
   master.traverse(o => { if (!o.isMesh || !o.material || Array.isArray(o.material)) return; let m = done.get(o.material);
-    if (!m) { m = o.material.clone(); m.onBeforeCompile = sh => { sh.uniforms.uMT = U; sh.vertexShader = "uniform float uMT;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\nfloat mt = uMT + modelMatrix[3].x * .37 + modelMatrix[3].z * .23;\n" + MON_WAVE[kind]); };
+    if (!m) { const pre = o.material.userData && o.material.userData.obc; m = o.material.clone(); m.onBeforeCompile = sh => { if (pre) pre(sh); sh.uniforms.uMT = U; sh.vertexShader = "uniform float uMT;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\nfloat mt = uMT + modelMatrix[3].x * .37 + modelMatrix[3].z * .23;\n" + MON_WAVE[kind]); }; if (pre) m.userData.sc = 1; /* v751 */
       const pu = m.userData && m.userData.pulse; if (pu) { const vb = m.onBeforeCompile; m.onBeforeCompile = sh => { vb(sh); sh.fragmentShader = "uniform float uMT;\n" + sh.fragmentShader.replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n totalEmissiveRadiance *= " + pu + ";"); }; } /* v518 glow that breathes */
-      m.customProgramCacheKey = () => "monwave-" + kind + (pu ? "-p" + hash(pu) : ""); done.set(o.material, m); } o.material = m; }); }
+      m.customProgramCacheKey = () => "monwave-" + kind + (pu ? "-p" + hash(pu) : "") + (m.userData.sc ? "-s" : ""); done.set(o.material, m); } o.material = m; }); }
 function monsterObj(W, x) {
   W.monMaster = W.monMaster || {}; W.monU = W.monU || { value: 0 };
   const master = W.monMaster[x.mon] || (W.monMaster[x.mon] = (m => (monAnimate(m, x.mon, W.monU), m))(mergeGroup(buildMonster(x.mon))));
@@ -25994,7 +25994,7 @@ function cntMeshMat() { if (cntMeshMat.M) return cntMeshMat.M; const m = new TH.
   m.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nattribute vec3 aEm; attribute vec2 aRM; varying vec3 vEm; varying vec2 vRM;").replace("#include <begin_vertex>", "#include <begin_vertex>\nvEm = aEm; vRM = aRM;");
     sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec3 vEm; varying vec2 vRM;").replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor = max(.05, vRM.x);").replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\nmetalnessFactor = vRM.y;")
       .replace("#include <aomap_fragment>", "reflectedLight.directSpecular *= mix(.14, 1., smoothstep(.04, .3, max(diffuseColor.r, max(diffuseColor.g, diffuseColor.b)))) * mix(.3, 1., smoothstep(.12, .55, saturate(dot(geometry.normal, geometry.viewDir))));\n#include <aomap_fragment>").replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\ntotalEmissiveRadiance += vEm;"); };
-  m.customProgramCacheKey = () => "cntsculpt2"; return cntMeshMat.M = m; }
+  m.customProgramCacheKey = () => "cntsculpt2"; m.userData.obc = m.onBeforeCompile; /* v751 kept for the animation clone */ return cntMeshMat.M = m; }
 /* each sculpted class: its scale into the procedural hull's frame, and its engine mouths [x, y, z, radius] */
 /* each sculpted class: its scale into the procedural hull's frame and its engine mouths [x, y, z, radius]; a class loads its own file
    the first time it is built (v743: all eleven; the Corvette, Fabrication Carrier and Command Frame have no painting yet and follow the family's style) */
@@ -26169,7 +26169,20 @@ const CRC_CRAB = { /* w half-width, l half-length, h height, claw size, fangs, h
   ckbr: { w: 1.4, l: 1.3, h: .85, kk: 1.6, fg: 10, hn: 1, th: 1.3, t: "krak", tent: 10 }, cpal: { w: 1.4, l: 1.3, h: .85, kk: 1.55, fg: 8, hn: 1, th: 1.25, t: "pale", crys: 14 },
   ccrown: { w: 1.75, l: 1.5, h: 1.2, kk: 1.8, fg: 12, hn: 5, th: 1.45, t: "gold", crown: 1, city: 1, coral: 8 }, ccrownm: { w: 1.75, l: 1.5, h: 1.2, kk: 1.8, fg: 12, hn: 5, th: 1.45, t: "pale", crown: 1, molt: 1 } };
 for (const k of CRC_CRABS) CRC_FACE[k] = -.55; for (const k of Object.keys(CRC_SHIP)) CRC_FACE[k] = -.22; CRC_FACE.ckrak = -.3;
-function buildCarc(k) { const D = CRC_CRAB[k] || CRC_SHIP[k] || {}, C = crcMats(D.t), g = new TH.Group(), r = rnd(hash("crc" + k)); g.userData.eng = [];
+/* ---------- v751 the Carcinid sculpted (tools/sculpt/crc_lib.py, crc_crab.py, crc_ship.py): each unit loads its own mesh
+   (art/carcinid/m/<k>.bin, CNT2 format, the same loader and material as the Continuum) the first time it is built; until it arrives,
+   and if it never does, the hand-built model stands in. The crabs keep their walk (MON_WAVE's crab wave, same frame: +x forward,
+   claws past x 1.3, legs out beyond |z| .95), which now runs on the sculpted mesh too. */
+const CRC_SC = {"cscut":{"s":1},"cspit":{"s":1},"charv":{"s":1},"cguard":{"s":1},"cbrood":{"s":1},"cwar":{"s":1},"ccrys":{"s":1},"clanc":{"s":1},"cmolt":{"s":1},"cmar":{"s":1},"cmat":{"s":1},"ctyr":{"s":1},"cora":{"s":1},"ckor":{"s":1},"cbeh":{"s":1},"ckbr":{"s":1},"cpal":{"s":1},"ccrown":{"s":1},"ccrownm":{"s":1},"cfrig":{"s":1},"cint":{"s":1},"cdest":{"s":1},"cvang":{"s":1},"ccarr":{"s":1},"cpearl":{"s":1},"cmint":{"s":1},"cregent":{"s":1},"cempr":{"s":1},"cbrlord":{"s":1},"ckrak":{"s":1}}, CRC_GEO = {};
+function crcSculptLoad(k) { if (!CRC_SC[k] || !TH || typeof fetch !== "function") return; const L = crcSculptLoad.L || (crcSculptLoad.L = {}); if (L[k]) return; L[k] = 1;
+  fetch("art/carcinid/m/" + k + ".bin").then(r => r.ok ? r.arrayBuffer() : Promise.reject(Error("HTTP " + r.status))).then(b => { CRC_GEO[k] = cntMeshGeo(b); crcSculptSwap(k); }).catch(e => console.warn("sculpt " + k, e && e.message)); }
+function crcSculptSwap(k) { try { const ks = [k].concat(k === "cfrig" || k === "cint" ? ["cpat"] : []); /* the map patrol is a frigate with two interceptors */
+  if (STU && STU.cache) for (const key in STU.cache) if (ks.some(q => key.startsWith(q + "|"))) delete STU.cache[key]; for (const q of ks) delete MMERGE[q];
+  const ms = Object.keys(CRC_M).filter(m => ks.includes(CRC_M[m])); for (const m of ms) delete MMERGE[m]; if (G3) { if (G3.monMaster) for (const m of ms) delete G3.monMaster[m];
+    if (G3.pirates) for (const [id, o] of [...G3.pirates]) { const x = PB[id]; if (x && ms.includes(x.mon)) { G3.scene.remove(o.grp); G3.pirates.delete(id); } } } } catch (e) { console.warn("sculpt swap", e); } }
+function crcSculpted(k) { const D = CRC_SC[k], g = new TH.Group(), m = new TH.Mesh(CRC_GEO[k], cntMeshMat()); m.userData.sculpt = 1; m.scale.setScalar(D.s || 1); g.add(m);
+  g.userData.eng = (D.eng || []).map(e => e.slice()); g.userData.engCol = [0xbffcf4, 0x3fe0c8]; g.userData.keepGeo = 1; return g; }
+function buildCarc(k) { crcSculptLoad(k); if (CRC_GEO[k]) return crcSculpted(k); /* v751 */ const D = CRC_CRAB[k] || CRC_SHIP[k] || {}, C = crcMats(D.t), g = new TH.Group(), r = rnd(hash("crc" + k)); g.userData.eng = [];
   const V = (x, y, z) => new TH.Vector3(x, y, z), add = (m, x, y, z) => { if (x != null) m.position.set(x, y || 0, z || 0); g.add(m); return m; };
   const ell = (sx, sy, sz, mat, x, y, z, seg) => { const m = add(new TH.Mesh(new TH.SphereGeometry(1, seg || 18, Math.round((seg || 18) * .7)), mat), x, y, z); m.scale.set(sx, sy, sz); return m; };
   const seg = (a, b, r0, r1, mat) => { const d = b.clone().sub(a), L = d.length(), m = new TH.Mesh(new TH.CylinderGeometry(r1, r0, L, 8, 1), mat); m.position.copy(a).addScaledVector(d, .5); m.quaternion.setFromUnitVectors(V(0, 1, 0), d.normalize()); g.add(m); return m; };
