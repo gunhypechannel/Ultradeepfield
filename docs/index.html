@@ -6868,7 +6868,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 754;
+const GAME_V = 755;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -7110,7 +7110,7 @@ function hullAccK(k, a) { a = String(a); if (a.includes("^me")) { const f = hull
 function finMat(m, f, obj, o) { o = o || {}; const F = HULL_F[f]; if (!F || !TH || !m || !m.isMeshStandardMaterial) return m;
   const T2 = o.auto && HULL_F[o.auto] && o.auto !== f ? o.auto : null, F2 = T2 && HULL_F[T2], tex = hullTex(f), tex2 = T2 ? hullTex(T2) : null, sm = !obj && o.ps > 0, inl = o.inl || new TH.Color(F.rim);
   const gly = f === "glyph"; /* v654 */
-  const n = m.clone(), solid = !!(m.userData && m.userData.solidHolo); if (gly && !solid) { n.transparent = true; n.depthWrite = true; } /* v737 a hull marked solidHolo wears the runes without going see-through (the Cube Destroyer: five translucent spheres stacked in one formation read as one tangled ghost) */
+  const n = m.clone(), solid = !!((m.userData && m.userData.solidHolo) || o.solid); if (gly && !solid) { n.transparent = true; n.depthWrite = true; } /* v737 a hull marked solidHolo wears the runes without going see-through (the Cube Destroyer: five translucent spheres stacked in one formation read as one tangled ghost) */
   const keep = m.userData && m.userData.keepOBC ? m.onBeforeCompile : null, keepK = keep && m.customProgramCacheKey ? m.customProgramCacheKey() : ""; /* v737 a hull's own shader change (the Cube Destroyer's dish opening) survives the finish */ n.metalness = tex ? (F.tm != null ? F.tm : .2) : F.met; n.roughness = tex ? .32 : F.rough; n.envMapIntensity = tex ? .8 : 1.7;
   if (sm) n.extensions = Object.assign({}, n.extensions, { derivatives: true });
   const br = (i, tx) => tx ? `{ vec3 t = texture2D(uHT${i}, vHW.zy * uTs${i}).rgb * bw.x + texture2D(uHT${i}, vHW.xz * uTs${i}).rgb * bw.y + texture2D(uHT${i}, vHW.xy * uTs${i}).rgb * bw.z; t = pow(t, vec3(2.2)); float tl = dot(t, vec3(.3, .59, .11)); t = max(mix(vec3(tl), t, 1.35), 0.0); c${i} = t * (0.35 + 0.75 * smoothstep(0.0, 0.85, hl)); g${i} = t * pow(tl, 3.0) * uGl${i};${obj ? ` c${i} = mix(c${i}, uFin${i} * (0.3 + 0.8 * smoothstep(0.0, 0.85, hl)), .45); g${i} *= .3;` : ""} }`
@@ -7128,7 +7128,8 @@ function finMat(m, f, obj, o) { o = o || {}; const F = HULL_F[f]; if (!F || !TH 
             + " float w = fwidth(d) + 1e-4; hSm = (1.0 - smoothstep(w * .6, w * 1.8, d)) * (1.0 - smoothstep(.1, .28, w)); hPh = fract(sin(dot(ce, vec2(12.9898, 78.233))) * 43758.5453); hIn = (1.0 - smoothstep(w * .8, w * 3.2, d)) * (1.0 - smoothstep(.1, .28, w)) * step(.68, hPh); diffuseColor.rgb *= 1.0 - hSm * .72; }" : "") + (gly ? "\n { vec3 gq = " + (sm ? "vHO * 2.2; vec3 gn = vHL;" : "vHW * .9; vec3 gn = vHN;") + " fgM = lvGly(gq, gn, uT, fgC); diffuseColor.rgb = mix(diffuseColor.rgb * .55, fgC * .5, fgM * .6); }" : ""))
         .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n { float hf = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.2); totalEmissiveRadiance += uRim * hf * (" + (obj ? "1.1" : tex ? ".35" : ".85") + ") + hGl + uInl * (hf * 1.2 + .25) * uGlw;"
           + (sm ? " totalEmissiveRadiance += uInl * hIn * (.55 + .45 * sin(uT * 1.6 + hPh * 6.283)) * 2.4;" : "")
-          + (gly ? " totalEmissiveRadiance += fgC * fgM * 1.5 + lvHsv(fract(hf * 1.5 + uT * .05), .55, 1.0) * pow(hf, 1.3) * .9; diffuseColor.a *= clamp(.24 + .76 * pow(hf, 1.3) + fgM * .75, 0.0, 1.0);" : "") + " }"); };
+          + (gly ? " totalEmissiveRadiance += fgC * fgM * 1.5 + lvHsv(fract(hf * 1.5 + uT * .05), .55, 1.0) * pow(hf, 1.3) * .9; diffuseColor.a *= clamp(.24 + .76 * pow(hf, 1.3) + fgM * .75, 0.0, 1.0);" : "") + " }");
+    if (solid) sh.fragmentShader = sh.fragmentShader.replace("gl_FragColor = vec4( outgoingLight, diffuseColor.a );", "gl_FragColor = vec4( outgoingLight * mix(.3, 1.0, diffuseColor.a), 1.0 );"); /* v755 */ };
   n.customProgramCacheKey = () => "hullfin3-" + f + (tex ? "-t" : "") + (obj ? "-o" : "") + (o.glow ? "-g" : "") + (T2 ? "-a" + T2 + (tex2 ? "t" : "") : "") + (sm ? "-s" : "") + (solid ? "-solid" : "") + (keepK ? "|" + keepK : ""); n.needsUpdate = true; return n; }
 /* v654 the Glyph Holo's runes: 64 procedural runes in an 8 x 8 atlas, white on black */
 let GLY_T = null;
@@ -7150,7 +7151,7 @@ const LIV_P = { def: [.58, .6, .84, .05] }; // lateral fins, top, nose/tail, spi
 function livMat(m, f, t, k, geo) { const F = HULL_F[f]; if (!F || !TH || !m || !m.isMeshStandardMaterial) return m; t = t && HULL_F[t] ? t : f;
   if (!geo.boundingBox) geo.computeBoundingBox(); const bb = geo.boundingBox, c = bb.getCenter(new TH.Vector3()), h = bb.getSize(new TH.Vector3()).multiplyScalar(.5);
   const ka = LIV_K[f], kb = LIV_K[t], P = LIV_P[k] || LIV_P.def, lt = new TH.Color(HULL_F[t].rim);
-  const solid = !!(m.userData && m.userData.solidHolo), keep = m.userData && m.userData.keepOBC ? m.onBeforeCompile : null, keepK = keep && m.customProgramCacheKey ? m.customProgramCacheKey() : ""; /* v737 see finMat */
+  const solid = !!((m.userData && m.userData.solidHolo) || k === "worldbreaker"), keep = m.userData && m.userData.keepOBC ? m.onBeforeCompile : null, keepK = keep && m.customProgramCacheKey ? m.customProgramCacheKey() : ""; /* v737 see finMat; v755 every part of the Cube Destroyer */
   const n = m.clone(); n.envMapIntensity = 1.75; if ((ka === 4 || kb === 4) && !solid) { n.transparent = true; n.depthWrite = true; } /* v654 */ n.extensions = Object.assign({}, n.extensions, { derivatives: true });
   const lin = h => new TH.Color(h).convertSRGBToLinear(); /* colours were going in as if already linear: everything came out pale */
   n.onBeforeCompile = sh => { if (keep) keep(sh); const U = sh.uniforms; U.uA = { value: lin(LIV_C[f]) }; U.uB = { value: lin(LIV_C[t]) }; U.uRA = { value: lin(F.rim) }; U.uRB = { value: lin(HULL_F[t].rim) };
@@ -7210,7 +7211,7 @@ function hullFinish(obj, sp, k) { const [f, t] = finSplit(sp); if (!f || !TH) re
       if (nm === "plume") { const n = m.clone(); n.color.copy(inl); return n; } if (nm === "plumeCore") { const n = m.clone(); n.color.copy(pc); return n; }
       if (nm === "glass" || nm === "bell") return m;
       if (!nm && o.geometry && o.geometry.attributes.uv) return livMat(m, f, t, k, o.geometry); /* v643 */
-      return finMat(m, t && (nm === "dark" || nm === "trim" || nm === "gold") ? t : f, false, { ps, inl, auto: !nm && t ? t : null }); }; /* untagged (imported) models: the darker plating takes the trim */
+      return finMat(m, t && (nm === "dark" || nm === "trim" || nm === "gold") ? t : f, false, { ps, inl, auto: !nm && t ? t : null, solid: k === "worldbreaker" }); }; /* v755 */ /* untagged (imported) models: the darker plating takes the trim */
     o.material = Array.isArray(o.material) ? o.material.map(one) : one(o.material); }); }
 /* sparkles on the brightest parts of a finished render */
 function finSpark(cv, f, k) { try { const F = HULL_F[f]; if (!F) return; const x = cv.getContext("2d"), w = cv.width, h = cv.height, D = x.getImageData(0, 0, w, h).data, r = rnd(hash(k + f)), pts = [];
@@ -18281,7 +18282,7 @@ function shipArt(k, accent, view) {
     S.camera.position.copy(dir.multiplyScalar(dist * (mfr >= 0 ? MBF_Z : 1))); S.camera.lookAt(0, 0, 0); S.camera.updateProjectionMatrix(); /* v651 room for the limbs in motion */
     /* v256 flagship lighting: a hard key for crisp specular, and a rim of its faction's light from behind and below that edges the metal */
     let fgL = null; if (FG) { fgL = [new TH.DirectionalLight(FG, 6), new TH.DirectionalLight(FG, 1.6), new TH.DirectionalLight(0xffffff, .9)]; fgL[0].position.set(-3, -1.5, -5); fgL[1].position.set(4, -4, 1); fgL[2].position.set(1.5, 7, 3.5); for (const L0 of fgL) S.scene.add(L0); }
-    if (rotK) { const R = phi => { const yp = cdYawPitch(phi); return new TH.Matrix4().makeRotationX(yp[1]).multiply(new TH.Matrix4().makeRotationY(yp[0])); }, M = R(CD_PHI0 + rotK * Math.PI / 6).multiply(R(CD_PHI0).invert());
+    if (rotK) { const R = phi => { const yp = cdYawPitch(phi); return new TH.Matrix4().makeRotationX(yp[1]).multiply(new TH.Matrix4().makeRotationY(yp[0])); }, M = R(CD_PHI0 + rotK * CD_ST).multiply(R(CD_PHI0).invert()); /* v755 15-degree steps */
       const qc = S.camera.quaternion, qW = qc.clone().multiply(new TH.Quaternion().setFromRotationMatrix(M)).multiply(qc.clone().invert()); ship.position.applyQuaternion(qW); ship.quaternion.premultiply(qW); } /* in camera space: yaw, then pitch, no roll */
     const ex0 = S.renderer.toneMappingExposure; if (FG) S.renderer.toneMappingExposure = .72; S.renderer.render(S.scene, S.camera); S.renderer.toneMappingExposure = ex0; if (fgL) for (const L0 of fgL) S.scene.remove(L0);
     const out = document.createElement("canvas"); out.width = W; out.height = H; const ox = out.getContext("2d"); ox.imageSmoothingQuality = "high"; ox.drawImage(S.cv, 0, 0, W, H); if (hero || FG || fin) hdrBloom(ox, W, H, S.renderer.toneMappingExposure, FG ? .42 : fin ? .4 : 1); else if (kind === "s") { const hid = []; ship.traverse(o => { if (o.isSprite && o.visible) { o.visible = false; hid.push(o); } }); hdrBloom(ox, W, H, S.renderer.toneMappingExposure, .6); hid.forEach(o => o.visible = true); } // v359 the windows' glow (not the engines')
@@ -27432,8 +27433,11 @@ function settleBattle(b) { // jump to the end: apply every remaining volley so t
    drawn in a little to the port's middle. */
 const CD_PORT = [[.474, .169], [.495, -.116], [.383, -.340], [.123, -.501], [-.116, -.503], [-.359, -.375], [-.490, -.157], [-.497, .106], [-.398, .320], [-.151, .486], [.082, .499], [.344, .377]];
 /* the port of the pose actually on screen: a pose not baked yet is drawn as the nearest one that is (cdPose), so the beam follows the picture */
-function cdPortDrawn(phi, base) { const u = (phi - CD_PHI0) / (Math.PI / 6), k0 = Math.floor(u), w = u - k0, A = ((k0 % 12) + 12) % 12, B = (A + 1) % 12, got = k => !k || !base || !!shipArtSoon("worldbreaker", base + "~p" + k, "side");
-  const a = got(A), bb = got(B), PA = CD_PORT[A], PB = CD_PORT[B]; if (a && bb) return [PA[0] + (PB[0] - PA[0]) * w, PA[1] + (PB[1] - PA[1]) * w]; return a ? PA : bb ? PB : CD_PORT[0]; }
+const CD_N = 24, CD_ST = 2 * Math.PI / 24; /* v755 */
+function cdPort24(k) { const h = k / 2, A = Math.floor(h) % 12, B = (A + 1) % 12, w = h - Math.floor(h); return [CD_PORT[A][0] + (CD_PORT[B][0] - CD_PORT[A][0]) * w, CD_PORT[A][1] + (CD_PORT[B][1] - CD_PORT[A][1]) * w]; }
+function cdNear(phi, base) { const k0 = ((Math.round((phi - CD_PHI0) / CD_ST) % CD_N) + CD_N) % CD_N, got = k => !k || !base || !!shipArtSoon("worldbreaker", base + "~p" + k, "side");
+  for (let d = 0; d <= CD_N / 2; d++) for (const k of d ? [(k0 + d) % CD_N, (k0 - d + CD_N) % CD_N] : [k0]) if (got(k)) return k; return 0; } /* the nearest baked pose */
+function cdPortDrawn(phi, base) { return cdPort24(cdNear(phi, base)); }
 const CD_PHI0 = -.314; // v416 the Cube Destroyer's rest aim: its baked dish points 18 degrees below forward
 function cdYawPitch(phi) { const cy = .85 * Math.cos(phi), sy = -Math.sqrt(Math.max(1e-6, 1 - cy * cy)); return [Math.atan2(sy, cy), Math.asin(clamp(.85 * Math.sin(phi) / sy, -1, 1))]; }
 /* the aim (on screen, up positive, in the sprite's own facing) a Cube Destroyer formation has turned to, eased toward the target it fires at */
@@ -27445,7 +27449,8 @@ const CD_MODES = [{ m: "beam", charge: 1.2, life: 1.6, lead: 1.4 }, { m: "sweep"
 function cdPlan(b) { const out = [], last = {}, ord = {}, cnt = {}; let no = 0; for (const v of b.R.vols || []) { const q = b.Q[v.s]; if (!q || q.k !== "worldbreaker" || v.bounce || v.e == null || v.e < 0) continue; if (ord[v.s] == null) ord[v.s] = no++; if (v.t < ord[v.s] * 1.7) continue; /* formations take turns: a rolling barrage */ if (last[v.s] != null && v.t < last[v.s] + 5) continue; last[v.s] = v.t;
     const md = CD_MODES[(cnt[v.s] = (cnt[v.s] || 0) + 1) % 3 === 1 ? 0 : cnt[v.s] % 3 === 2 ? 1 : 2]; out.push({ t0: Math.max(.3, v.t - md.lead), s: v.s, e: v.e, side: q.side, w: 12, charge: md.charge, life: md.life, wb: 1, mode: md.m }); } return out.sort((x, y) => x.t0 - y.t0); }
 /* the two baked poses either side of an aim, and how far between them */
-function cdPose(phi, base) { const st = Math.PI / 6, u = (phi - CD_PHI0) / st, k0 = Math.floor(u), w = u - k0, A = ((k0 % 12) + 12) % 12, B = (A + 1) % 12, got = k => !k || !!shipArtSoon("worldbreaker", base + "~p" + k, "side"), acc = k => k ? base + "~p" + k : base;
+function cdPose(phi, base) { const k = cdNear(phi, base); return [k ? base + "~p" + k : base, null, 0]; } /* v755 one pose at a time */
+function cdPoseOld(phi, base) { const st = Math.PI / 6, u = (phi - CD_PHI0) / st, k0 = Math.floor(u), w = u - k0, A = ((k0 % 12) + 12) % 12, B = (A + 1) % 12, got = k => !k || !!shipArtSoon("worldbreaker", base + "~p" + k, "side"), acc = k => k ? base + "~p" + k : base;
   if (got(A) && got(B)) return [acc(A), acc(B), w]; if (got(A)) return [acc(A), null, 0]; if (got(B)) return [acc(B), null, 0]; return [base, null, 0]; }
 /* ---------- v731/v732 the battle on the graphics chip (owner: "How can we make our game run directly on phones graphic chip?" ... "Yes finish up") ----------
    In the Android app the browser draws 2D canvases without the GPU, so every full-screen copy and every glow cost real time.
@@ -27737,7 +27742,7 @@ function drawBattle(t) {
       let acc3 = null, acc3b = null, w3 = 0; for (let j = vc - 1; j >= 0; j--) { const o = OFFS[j], sz = L * (j ? .8 : 1), sx = cx - face * o[0] * L * .62 + (dying ? (j - 1) * dk * L * .35 : 0), sy = cy + o[1] * L * .5 + wv(j) + (dying ? dk * L * (.12 + j * .08) : 0);
         if (dying) { ctx.save(); ctx.translate(sx, sy); ctx.rotate(dk * (j % 2 ? .9 : -.7)); ctx.translate(-sx, -sy); }
         ctx.save(); { const ba = bang + (small ? Math.cos(t * .0024 + i * 1.7 + j * 2.3) * .2 * face : 0) ; acc3 = null; acc3b = null;
-          if (q.k === "worldbreaker") { const base = (q.acc || b.acc[q.side]); if (!b.cdPre) { b.cdPre = 1; for (let k = 1; k < 12; k++) shipArtSoon("worldbreaker", base + "~p" + k, "side"); } /* v416 bake every pose up front */
+          if (q.k === "worldbreaker") { const base = (q.acc || b.acc[q.side]); if (!b.cdPre) { b.cdPre = 1; for (let k = 1; k < CD_N; k++) shipArtSoon("worldbreaker", base + "~p" + k, "side"); } /* v416 bake every pose up front (v755 24) */
             const phi = j ? ((b.cdPhi || {})[i] == null ? CD_PHI0 : b.cdPhi[i]) : cdTurn(b, i, cx, cy, face, scr, T, real); if (Math.abs(phi - CD_PHI0) > .01) { const P = cdPose(phi, base); acc3 = P[0]; acc3b = P[1]; w3 = P[2]; } if (!j) (b.cdPt || (b.cdPt = []))[i] = Math.abs(phi - CD_PHI0) > .01 ? cdPortDrawn(phi, base) : CD_PORT[0]; } /* v431 where the lead hull's gun port is on screen */
           if (mf) { acc3 = mf[0]; acc3b = mf[1]; w3 = mf[2]; } /* v651 the monster's body in motion */
           if (ba) { ctx.translate(sx, sy); ctx.rotate(ba); ctx.translate(-sx, -sy); } }
