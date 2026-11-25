@@ -34,6 +34,7 @@ if os.path.exists(lst):
     def grp(p):
         if p.startswith('art/season/'): return 'season'
         if p.startswith(('art/arch/', 'art/lore/', 'art/chron/', 'art/ev/')): return 'arch'
+        if p.startswith('art/mon/m/'): return 'season' # v752 the monster sculpts
         if p.startswith('art/carcinid/m/'): # v751 the Carcinid sculpts ride in the season and archive packs (the artifact is at its file cap; each pack stays under 16 MB)
             return 'season' if p.rsplit('/', 1)[-1][:-4] in ('cscut', 'cspit', 'charv', 'cguard', 'cbrood', 'cwar', 'ccrys', 'clanc', 'cmolt', 'cmar', 'cmat') else 'arch'
         if p.startswith('art/carcinid/'): return 'crc' # v703
