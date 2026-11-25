@@ -197,6 +197,7 @@ begin
     else raise exception 'cnt: bad op'; end if;
   end loop;
   if need then update docs set data = d where path = p_path; end if;
+  perform set_config('udf.cnt_rpc', '', true); -- the permission ends with this call
   return jsonb_build_object('d', case when need then d else null end, 'o', outs, 'me', cnt_me_of(p_path, p_k, me));
 end $$;
 
@@ -223,6 +224,7 @@ begin
     if coalesce((d->>'sup')::bigint, -1) <> s or coalesce((d->>'n')::int, -1) <> n or coalesce(d->'top', 'null'::jsonb) <> t then
       perform set_config('udf.cnt_rpc', '1', true);
       update docs set data = data || jsonb_build_object('sup', s, 'n', n, 'top', t) where path = p and data->>'k' = d->>'k';
+      perform set_config('udf.cnt_rpc', '', true);
     end if;
   end loop;
 end $$;
@@ -282,7 +284,7 @@ begin
   for k in select jsonb_object_keys(coalesce(o->'con', '{}'::jsonb)) loop
     if not (coalesce(n->'con', '{}'::jsonb) ? k) then raise exception 'cnt: contributions cannot be removed'; end if;
   end loop;
-  if coalesce((n->>'sup')::numeric, 0) - coalesce((o->>'sup')::numeric, 0) > dsum then raise exception 'cnt: war points grew without contribution'; end if;
+  if not (n ? 'v2') and coalesce((n->>'sup')::numeric, 0) - coalesce((o->>'sup')::numeric, 0) > dsum then raise exception 'cnt: war points grew without contribution'; end if; -- v2: the server totals them
   -- the Arks: dead stays dead, no healing, no capacity regained, damage shares only your own
   for id in select jsonb_object_keys(coalesce(o->'ark', '{}'::jsonb)) loop
     oa := o->'ark'->id; na := coalesce(n->'ark'->id, '{}'::jsonb);
@@ -356,3 +358,7 @@ grant execute on function public.cnt_apply(text, text, jsonb), public.cnt_me(tex
 select cron.unschedule(jobid) from cron.job where jobname in ('cnt_roll', 'cnt_bcast');
 select cron.schedule('cnt_roll', '15 seconds', 'select public.cnt_roll()');
 select cron.schedule('cnt_bcast', '3 seconds', 'select public.cnt_bcast()');
+
+-- the 3-second broadcast job writes ~29,000 run records a day: keep one day of them
+select cron.unschedule(jobid) from cron.job where jobname = 'cron_log_trim';
+select cron.schedule('cron_log_trim', '17 * * * *', $$delete from cron.job_run_details where end_time < now() - interval '1 day'$$);
