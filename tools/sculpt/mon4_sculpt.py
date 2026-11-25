@@ -1,0 +1,195 @@
+# The rest of the aliens and event units sculpted after the owner's paintings (owner: "Build all of them!"):
+# the Hive (Drone, Spore Spitter, Carapace Brute, Hive Lord, Hive Leviathan; docs/art/mon/drone, spitter, brute, lord, leviathan),
+# the Collective (Collective Drone, Assimilation Cube, Tactical Sphere; cdrone, cube, sphere), Omega's Neural Node and Assimilation
+# Pylon, the Carcinid Breach nest and the fallen Leviathan. python3 mon4_sculpt.py <key> <outdir> [voxel] -> <outdir>/<key>[_g].
+import sys, numpy as np
+sys.path.insert(0, __file__.rsplit('/', 1)[0])
+from sdf import *
+from crc_lib import lerp, chain, spk, blade, norm, oell
+from mon_sculpt import M_, lathe_x, seg2, _fin, Rx, Ry, Rz
+from mon2_sculpt import bez3, taper, leviathan as levi_body
+from mon3_sculpt import crag, _mats, _spire
+
+# ---------------------------------------------------------------- the Hive: purple-black chitin, ivory claws, magenta light
+_HC = {}
+def hive_mats(glow=(1.0, .2, .85)):
+    global _HC; _HC = dict(CH=M_((.025, .01, .03), .3, .55), PL=M_((.06, .02, .07), .28, .65), RIM=M_((.16, .06, .15), .25, .75), CLAW=M_((.55, .48, .44), .25, .3),
+                GL=M_(tuple(x * .15 for x in glow), .2, .1, glow), EYE=M_((.1, .05, .2), .1, .2, (.5, .4, 1.0)), DARK=M_((.01, .005, .015), .5, .2)); return _HC
+def plates_along(M, n, P, rads, mat, under, up=(0, 1, 0), cnt=1, spikes=None, sp_mat=None, sp_len=.3):
+    """armour plates over a body chain: one shingle per segment on its back (and on its flanks if cnt 3), spikes off their rear edges"""
+    for i in range(1, len(P) - 1):
+        q = np.array(P[i]); tg = np.array(P[i + 1]) - np.array(P[i - 1]); tg /= np.linalg.norm(tg); u = np.array(up, float) - tg * np.dot(up, tg); u /= np.linalg.norm(u); sd = np.cross(tg, u); rr = rads[i]
+        for a in ([0] if cnt == 1 else [0, .9, -.9]):
+            out = u * np.cos(a) + sd * np.sin(a); c = q + out * rr * .85; Rm = np.array([tg, np.cross(out, tg), out], f32)
+            M.add(f'{n}u{i}{a}', lambda p, c=tuple(c - out * .02), Rm=Rm, r=(rr * .95, rr * .85, rr * .2): oell(p, c, Rm, r), under)
+            M.add(f'{n}p{i}{a}', lambda p, c=tuple(c), Rm=Rm, r=(rr * .9, rr * .8, rr * .2): oell(p, c, Rm, r), mat)
+            if spikes is not None and (i % spikes == 0): spk(M, f'{n}s{i}{a}', tuple(c + out * rr * .1), tuple(out * .9 - tg * .6), sp_len * rr * 3, rr * .14, sp_mat or mat)
+
+def leg(M, n, a, kn, ft, r0, claw=.0, spikes=2, C=None):
+    C = C or _HC
+    taper(M, n + 'a', [a, kn], r0, r0 * .75, C['CH']); taper(M, n + 'b', [kn, ft], r0 * .7, r0 * .2, C['PL'])
+    M.add(n + 'j', lambda p: sphere(p, kn, r0 * .85), C['GL'] if spikes else C['RIM'])
+    for j in range(spikes): q = lerp(a, kn, (j + 1) / (spikes + 1)); spk(M, f'{n}s{j}', q, (-.3, 1, 0), r0 * 2.2, r0 * .35, C['CLAW'])
+    spk(M, n + 't', ft, tuple(np.array(ft) - np.array(kn)), r0 * 2.5 + claw, r0 * .35, C['CLAW'])
+def head(M, n, c, s, C, gape=.35, fangs=6, horn=True):
+    M.add(n + 'sk', lambda p: ell(p, c, (.55 * s, .32 * s, .36 * s)), C['PL'], .04)
+    M.add(n + 'jw', lambda p: ell(p, (c[0] + .1 * s, c[1] - .2 * s - gape * .2 * s, c[2]), (.45 * s, .12 * s, .3 * s)), C['CH'], .02)
+    M.add(n + 'mo', lambda p: ell(p, (c[0] + .2 * s, c[1] - .12 * s, c[2]), (.35 * s, .05 * s + gape * .08 * s, .24 * s)), C['GL'])
+    for sd in (1, -1):
+        M.add(f'{n}e{sd}', lambda p, sd=sd: sphere(p, (c[0] + .25 * s, c[1] + .12 * s, c[2] + sd * .22 * s), .08 * s), C['EYE'])
+        for j in range(fangs // 2):
+            spk(M, f'{n}f{sd}{j}', (c[0] + (.42 - j * .1) * s, c[1] - .08 * s, c[2] + sd * (.08 + j * .06) * s), (.2, -1, 0), max(.08, .28 - j * .03) * s, .04 * s, C['CLAW'])
+            spk(M, f'{n}g{sd}{j}', (c[0] + (.38 - j * .1) * s, c[1] - (.22 + gape * .2) * s, c[2] + sd * (.07 + j * .05) * s), (.2, 1, 0), max(.06, .18 - j * .02) * s, .035 * s, C['CLAW'])
+        if horn:
+            for j in range(3): spk(M, f'{n}h{sd}{j}', (c[0] - (.1 + j * .15) * s, c[1] + .22 * s, c[2] + sd * (.15 + j * .05) * s), (-1, .6, sd * .35), (.55 - j * .1) * s, .07 * s, C['RIM'])
+
+def hdrone(M, G):
+    C = hive_mats(); P = [(1.0, .05, 0), (.4, .08, 0), (-.2, .1, 0), (-.8, .05, 0), (-1.3, -.05, 0)]; R = [.22, .3, .28, .22, .1]
+    chain(M, 'b', P, R, C['CH'], .08); plates_along(M, 'p', P, R, C['PL'], C['GL'], spikes=1, sp_mat=C['RIM'], sp_len=.35)
+    head(M, 'h', (1.05, .1, 0), .55, C, .3)
+    for sd in (1, -1):
+        for i, x in enumerate((.55, .1, -.35)): leg(M, f'l{sd}{i}', (x, -.05, sd * .2), (x - .05, .3, sd * .75), (x - .3, -.3, sd * 1.25), .055)
+        chain(M, f'sc{sd}', [(.8, 0, sd * .2), (1.05, .25, sd * .55), (1.4, .1, sd * .6)], [.07, .06, .04], C['PL']); spk(M, f'sct{sd}', (1.4, .1, sd * .6), (.4, -1, -sd * .2), .5, .06, C['CLAW'])
+        for j, (x, L) in enumerate(((.1, 1.1), (-.25, .9))):  # the wings, see-through magenta veined
+            c = (x - L * .4, .3, sd * L * .55); Rm = rot('y', sd * .4).T
+            G.add(f'w{sd}{j}', lambda p, c=c, Rm=Rm, L=L: oell(p, c, Rm, (L * .45, .015, L * .55)), M_((0, 0, 0), .2, 0, (.35, .06, .3)))
+def hspitter(M, G):
+    C = hive_mats((.4, 1.0, .25)); ACID = M_((.15, .35, .05), .1, .1, (.5, 1.0, .2))
+    P = [(1.1, .1, 0), (.5, .15, 0), (-.1, .2, 0), (-.7, .15, 0), (-1.25, 0, 0)]; R = [.24, .34, .36, .3, .15]
+    chain(M, 'b', P, R, C['CH'], .08); plates_along(M, 'p', P, R, C['PL'], C['CH'], spikes=2, sp_mat=C['RIM'])
+    for j, (x, y, z, r0) in enumerate(((-.2, .55, .12, .26), (-.6, .52, -.12, .24), (.2, .5, -.05, .2), (-.9, .4, .08, .18))): M.add(f'sac{j}', lambda p, c=(x, y, z), r0=r0: sphere(p, c, r0), ACID, .03)
+    head(M, 'h', (1.25, .12, 0), .6, C, .6, 8)
+    for j in range(5): M.add(f'ac{j}', lambda p, j=j: sphere(p, (1.75 + j * .08, .0 - j * .03, 0), .07 - j * .008), ACID)
+    for sd in (1, -1):
+        for i, x in enumerate((.6, .15, -.3, -.75)): leg(M, f'l{sd}{i}', (x, -.05, sd * .25), (x - .1, .35, sd * .65), (x - .3, -.52, sd * .55), .05, spikes=1)
+def hbrute(M, G):
+    C = hive_mats((1.0, .35, .2)); P = [(1.0, .25, 0), (.4, .3, 0), (-.3, .25, 0), (-1.0, .1, 0), (-1.6, -.05, 0)]; R = [.42, .55, .52, .4, .18]
+    chain(M, 'b', P, R, C['CH'], .1); plates_along(M, 'p', P, R, C['PL'], C['RIM'], cnt=3, spikes=1, sp_mat=C['RIM'], sp_len=.3)
+    head(M, 'h', (1.2, .25, 0), .85, C, .6, 10)
+    for sd in (1, -1):
+        for i, x in enumerate((.55, -.6)): leg(M, f'l{sd}{i}', (x, .05, sd * .4), (x + .1, -.25, sd * .62), (x + .25, -.62, sd * .66), .14, claw=.1)
+        chain(M, f'ar{sd}', [(.8, .2, sd * .45), (1.2, -.1, sd * .72), (1.55, -.35, sd * .6)], [.14, .12, .1], C['PL']);
+        for j in range(3): spk(M, f'cl{sd}{j}', (1.55, -.35, sd * .6), (.6, -.4 + j * .2, sd * (j - 1) * .2), .45, .05, C['CLAW'])
+def hlord(M, G):
+    C = hive_mats(); P = [(1.2, .1, 0), (.5, .15, 0), (-.3, .15, 0), (-1.2, .05, 0), (-2.1, -.05, 0), (-2.9, -.1, 0)]; R = [.3, .4, .45, .38, .26, .1]
+    chain(M, 'b', P, R, C['CH'], .1); plates_along(M, 'p', P, R, C['PL'], C['GL'], cnt=3, spikes=1, sp_mat=C['RIM'])
+    for i in range(6): M.carve(f'sg{i}', lambda p, i=i: np.maximum(np.abs(p[..., 0] - (.6 - i * .45)) - .03, -(p[..., 1] - .1)), C['GL'])
+    head(M, 'h', (1.35, .15, 0), .7, C, .3)
+    for j in range(7):  # the crown of blades
+        a = (j - 3) * .3; blade(M, f'cr{j}', (1.3, .4, a * .4), norm((-.6, 1, a)), .7 + (3 - abs(j - 3)) * .15, .08, C['RIM'], up=(0, 0, 1))
+    for sd in (1, -1):  # great carapace wings of blades and scythe arms held out
+        for j in range(4):
+            b = (.3 - j * .35, .3, sd * .4); blade(M, f'wg{sd}{j}', b, norm((-.5, .25, sd)), 1.9 - j * .25, .14, C['PL'], up=(0, 1, 0))
+        chain(M, f'ar{sd}', [(.8, .1, sd * .35), (1.3, .35, sd * 1.1), (1.75, .1, sd * 1.5)], [.1, .08, .06], C['PL']); spk(M, f'as{sd}', (1.75, .1, sd * 1.5), (.3, -1, -sd * .4), .9, .08, C['CLAW'])
+        for i, x in enumerate((.4, -.3, -1.0)): leg(M, f'l{sd}{i}', (x, -.05, sd * .3), (x - .1, -.2, sd * .7), (x - .4, -.38, sd * .9), .05, spikes=0)
+def hleviathan(M, G):
+    C = hive_mats(); n = 12; P = [(4.2 - t * 9.6, .1 * np.sin(t * 4), .25 * np.sin(t * 5) * t) for t in np.linspace(0, 1, n)]; R = [.75 * (1 - t * .85) + .08 for t in np.linspace(0, 1, n)]
+    chain(M, 'b', P, R, C['CH'], .12); plates_along(M, 'p', P, R, C['PL'], C['GL'], cnt=3, spikes=1, sp_mat=C['RIM'], sp_len=.35)
+    head(M, 'h', (4.35, .3, 0), 2.4, C, 1.1, 12)
+    for sd in (1, -1):
+        for i, x in enumerate((2.8, 1.5, .2, -1.1)): leg(M, f'l{sd}{i}', (x, -.1, sd * .5), (x + .25, .35, sd * 1.25), (x - .2, -.85, sd * 1.4), .15, claw=.15, spikes=1)
+def cdrone(M, G):
+    MET = M_((.08, .09, .09), .35, .85); DK = M_((.03, .035, .035), .5, .7); GL = M_((.1, .4, .1), .1, .1, (.4, 1.0, .45))
+    M.add('core', lambda p: ell(p, (0, .05, 0), (.38, .3, .38)) + noise3(p, 9, 2) * .01, MET)
+    for i in range(10):
+        a = i / 10 * 2 * np.pi; M.add(f'pl{i}', lambda p, a=a: box(p, (np.cos(a) * .3, .25, np.sin(a) * .3), (.08, .02, .12), .01, rot('y', -a) @ rot('z', .5)), DK)
+    M.add('eye', lambda p: sphere(p, (.33, .05, 0), .1), GL); M.add('eyr', lambda p: torus(p, (.33, .05, 0), 'x', .12, .03), MET)
+    for i in range(8):  # curved claw legs all round, as in the painting
+        a = (i + .5) / 8 * 2 * np.pi; o = np.array((np.cos(a), 0, np.sin(a)))
+        pts = bez3(tuple(o * .3 + (0, .1, 0)), tuple(o * .55 + (0, .4, 0)), tuple(o * .75 + (0, .1, 0)), tuple(o * .68 + (0, -.55, 0)), 7)
+        taper(M, f'lg{i}', pts, .05, .01, MET); M.add(f'lj{i}', lambda p, q=pts[3]: sphere(p, q, .04), GL)
+def cube(M, G):
+    MET = M_((.06, .07, .07), .45, .85); DK = M_((.025, .03, .03), .55, .7); GL = M_((.08, .35, .1), .1, .1, (.35, 1.0, .4)); rng = np.random.default_rng(31); S = 1.3
+    M.add('hull', lambda p: box(p, (0, 0, 0), (S, S, S), .03), MET)
+    for i in range(260):  # blocks, recesses, pipes on every face
+        ax = rng.integers(3); sg = rng.choice((-1, 1)); w, h = rng.uniform(.05, .3) * S, rng.uniform(.05, .3) * S; d = rng.uniform(.015, .08) * S
+        c = [0, 0, 0]; c[ax] = sg * (S + d * .5); c[(ax + 1) % 3] = rng.uniform(-1, 1) * (S - w); c[(ax + 2) % 3] = rng.uniform(-1, 1) * (S - h)
+        hs = [0, 0, 0]; hs[ax] = d / 2 + .01; hs[(ax + 1) % 3] = w / 2; hs[(ax + 2) % 3] = h / 2
+        M.add(f'bk{i}', lambda p, c=tuple(c), hs=tuple(hs): box(p, c, hs, .005), MET if i % 3 else DK)
+    for ax in range(3):  # glowing conduit grid cut into every face, both ways
+        for k in range(1, 6):
+            v = -S + k * S / 3
+            for o in (1, 2): M.carve(f'gc{ax}{k}{o}', lambda p, ax=ax, v=v, o=o: np.maximum(np.maximum(np.abs(p[..., (ax + o) % 3] - v) - .012, -(np.abs(p[..., ax]) - S + .03)), np.abs(p[..., ax]) - S - .2), GL)
+def sphere_(M, G):
+    MET = M_((.06, .07, .07), .4, .85); DK = M_((.02, .025, .025), .55, .7); GL = M_((.08, .35, .1), .1, .1, (.4, 1.0, .45)); R = 1.1
+    M.add('hull', lambda p: sphere(p, (0, 0, 0), R), MET)
+    for lat in np.linspace(-1.2, 1.2, 7): M.carve(f'la{lat:.2f}', lambda p, lat=lat: np.maximum(np.abs(np.arcsin(np.clip(p[..., 1] / (np.linalg.norm(p, axis=-1) + 1e-6), -1, 1)) - lat) * R - .012, -(np.linalg.norm(p, axis=-1) - R + .04)), DK)
+    for lo in range(12): M.carve(f'lo{lo}', lambda p, a=lo / 12 * np.pi: np.maximum(np.abs(-np.sin(a) * p[..., 0] + np.cos(a) * p[..., 2]) - .012, -(np.linalg.norm(p, axis=-1) - R + .04)), GL if lo % 3 == 0 else DK)
+    for j, r0 in enumerate((.55, .4, .26)): M.add(f'em{j}', lambda p, r0=r0: np.maximum(torus(p, (R * .96, 0, 0), 'x', r0, .03), -1), GL)
+    M.add('emc', lambda p: sphere(p, (R * .97, 0, 0), .14), GL)
+    for j in range(8): M.add(f'gl{j}', lambda p, a=j / 8 * 2 * np.pi: torus(p, (0, 0, 0), 'y', R * .99, .018) if False else sphere(p, (np.cos(a) * R * .7, np.sin(a) * R * .7, -R * .7), .05), GL)
+    M.add('belt', lambda p: np.maximum(torus(p, (0, 0, 0), 'y', R * 1.0, .045), -1), MET)
+# ---------------------------------------------------------------- Omega's Neural Node and Assimilation Pylon (Mimic frame)
+def mnode(M, G):
+    C = _mats(); cp = (0, .9, 0)
+    M.add('core', lambda p: ell(p, cp, (.55, 1.1, .55)), M_((.05, .2, .25), .05, .2, (.35, .95, 1.0)))
+    for i in range(6):
+        a = i / 6 * 2 * np.pi; taper(M, f'cg{i}', bez3((np.cos(a) * 1.4, -1.3, np.sin(a) * 1.4), (np.cos(a) * 1.3, 0, np.sin(a) * 1.3), (np.cos(a) * 1.1, 1.8, np.sin(a) * 1.1), (np.cos(a) * .3, 2.8, np.sin(a) * .3), 8), .14, .04, C['CABL'] if i % 2 else C['CAB'])
+    for j, (rr, y) in enumerate(((1.3, .2), (1.0, 1.7))): G.add(f'hr{j}', lambda p, rr=rr, y=y: torus(p, (0, y, 0), 'y', rr, .03), C['HOLO'])
+    G.add('halo', lambda p: np.abs(ell(p, cp, (1.0, 1.6, 1.0))) - .02, C['HOLO'])
+    _roots(M, C, 9, 1.8)
+def mpylon(M, G):
+    C = _mats(); b, mid, tip = (0, -1.4, 0), (.7, 1.2, 0), (-.1, 3.6, 0)
+    taper(M, 'sp', bez3(b, (.4, -.2, 0), mid, tip, 10), .55, .04, C['SHELL'], .02, .8)
+    for j in range(5): taper(M, f'cb{j}', [tuple(np.array(q) + np.array((np.cos(j * 1.3), 0, np.sin(j * 1.3))) * .4 * (1 - i / 8)) for i, q in enumerate(bez3(b, (.4, -.2, 0), mid, tip, 9)[:7])], .08, .04, C['CABL'] if j % 2 else C['CAB'])
+    M.add('tip', lambda p: sphere(p, tip, .3), C['GLOW']); G.add('tipg', lambda p: np.abs(sphere(p, tip, .7)) - .02, C['HOLO'])
+    G.add('ring', lambda p: torus(p, (.5, 1.0, 0), 'y', 1.1, .03), C['HOLO'])
+    _roots(M, C, 9, 1.8)
+def _roots(M, C, n, R0):
+    rng = np.random.default_rng(n * 7)
+    for i in range(n):
+        a = i / n * 2 * np.pi + rng.uniform(0, .3); R = R0 + rng.uniform(0, 1.2)
+        taper(M, f'rt{i}', bez3((np.cos(a) * .4, -1.35, np.sin(a) * .4), (np.cos(a) * 1.4, -1.5, np.sin(a) * 1.4), (np.cos(a + .2) * R, -1.6, np.sin(a + .2) * R), (np.cos(a + .25) * R * 1.1, -1.55, np.sin(a + .25) * R * 1.1), 7), .16, .05, C['CAB'])
+# ---------------------------------------------------------------- the Carcinid Breach nest: a rift into the Abyss in a mound of rock, crescent spires, coral, eggs
+def bnest(M, G):
+    ROCK = M_((.07, .06, .065), .9, .1); SH = M_((.08, .04, .1), .3, .6); CLAW = M_((.75, .48, .18), .25, .9); GL = M_((.05, .3, .3), .1, .1, (.2, .95, .9))
+    COR = M_((.4, .04, .04), .7, .05, (.12, 0, 0)); PUR = M_((.25, .06, .3), .7, .05, (.18, .02, .25)); EGG = M_((.25, .08, .02), .2, .1, (.9, .45, .1)); VOID = M_((.005, .005, .01), 1, 0)
+    rng = np.random.default_rng(77)
+    M.add('mound', lambda p: crag(p, (0, -1.55, 0), (3.0, .96, 2.55), 5, .3, 1.2), ROCK)
+    for i in range(9): M.add(f'bo{i}', lambda p, c=(np.cos(i * 2.3) * (1.6 + i % 3 * .4), -1.05, np.sin(i * 2.3) * (1.4 + i % 3 * .3)), r0=.35 + (i % 3) * .12: sphere(p, c, r0) + noise3(p, 6, i) * .08, ROCK)
+    for i in range(9):  # crescent spires closing round the rift, gold-tipped
+        a = i / 9 * 2 * np.pi + .2; b = (np.cos(a) * 2.35, -1.1, np.sin(a) * 2.0); inw = np.array((-np.cos(a), 0, -np.sin(a)))
+        L = 3.4 + rng.uniform(0, 1.2); pts = bez3(b, tuple(np.array(b) + np.array((0, L * .45, 0)) + inw * .1), tuple(np.array(b) + np.array((0, L * .8, 0)) + inw * .5), tuple(np.array(b) + np.array((0, L * .95, 0)) + inw * 1.1), 8)
+        taper(M, f'sp{i}', pts, .26, .02, SH if i % 2 else CLAW, .02, .9)
+        for j in range(2, 7, 2): spk(M, f'ss{i}{j}', pts[j], tuple(-inw + np.array((0, .4, 0))), .35, .06, CLAW)
+    M.add('ring', lambda p: torus((p - V(0, 1.1, 0)) / V(1, 1.35, 1), (0, 0, 0), 'z', 1.15, .2) * .85, CLAW)
+    M.add('void', lambda p: np.maximum((np.sqrt(p[..., 0] ** 2 + ((p[..., 1] - 1.1) / 1.35) ** 2) - 1.02) * .8, np.abs(p[..., 2]) - .05), VOID)
+    M.add('core', lambda p: ell(p, (0, 1.1, 0), (.55, .75, .2)), GL)
+    G.add('glow', lambda p: np.abs(ell(p, (0, 1.1, 0), (1.0, 1.35, .5))) - .02, M_((0, 0, 0), .2, 0, (.1, .45, .45)))
+    for i in range(12): a = i / 12 * 2 * np.pi; spk(M, f'rs{i}', (np.cos(a) * 1.25, 1.1 + np.sin(a) * 1.6, 0), (np.cos(a), np.sin(a) * 1.3, 0), .42, .08, CLAW)
+    for i in range(14):  # coral trees
+        a = rng.uniform(0, 2 * np.pi); d = .9 + rng.uniform(0, 1.7); base = (np.cos(a) * d, -1.0, np.sin(a) * d * .85); c = COR if i % 3 else PUR
+        for bb in range(3):
+            dd = norm((rng.uniform(-.6, .6), 1, rng.uniform(-.6, .6))); L = rng.uniform(.4, .8); tip = tuple(base[k] + dd[k] * L for k in range(3))
+            M.add(f'co{i}{bb}', lambda p, a=base, t=tip: cap(p, a, t, .05), c)
+            for e in range(2): t2 = tuple(np.array(lerp(base, tip, .6)) + np.array(norm((dd[0] + rng.uniform(-.8, .8), 1, dd[2] + rng.uniform(-.8, .8)))) * L * .45); M.add(f'ce{i}{bb}{e}', lambda p, a=lerp(base, tip, .6), t=t2: cap(p, a, t, .035), c)
+    for i in range(26):
+        a = rng.uniform(0, 2 * np.pi); d = .6 + rng.uniform(0, 1.8); s = .14 + rng.uniform(0, .16)
+        M.add(f'eg{i}', lambda p, c=(np.cos(a) * d, -.95 + s * .6, np.sin(a) * d * .85), s=s: ell(p, c, (s, s * 1.15, s)), EGG)
+# ---------------------------------------------------------------- the fallen Leviathan: its body gone dark, cyan rot in the wounds, gilded chains and a war-saddle
+def fallen(M, G):
+    levi_body(M)
+    for (n, f, mat, k) in M.parts:
+        pass
+    for i, (nm, f, mat, k) in enumerate(list(M.parts)):  # its own colours drained toward violet-grey
+        c = mat['c']; nc = tuple(min(1, x * .6 * .75 + y * .25) for x, y in zip(c, (.24, .2, .33))); M.parts[i] = (nm, f, dict(mat, c=nc, e=(.03, .3, .32) if 'e' in mat else mat.get('e', (0, 0, 0))), k)
+    GOLD = M_((.7, .5, .15), .25, .9); SH = M_((.08, .04, .1), .3, .6); ROT = M_((.05, .3, .3), .1, .1, (.2, .9, .9))
+    for i in range(4):
+        x = -1.2 - i * 1.0; M.add(f'ch{i}', lambda p, x=x, i=i: torus(p, (x, .05, .12 * i), 'x', .85 - i * .08, .07), GOLD)
+    for i in range(3): M.add(f'cl{i}', lambda p, i=i: cap(p, (-1.2 - i, .85 - i * .08, 0), (-2.2 - i, .8 - i * .08, 0), .05), GOLD)
+    M.add('saddle', lambda p: np.maximum(ell(p, (.9, 1.0, 0), (.9, .35, .6)), .8 - p[..., 1]), SH, .05)
+    for i in range(5): spk(M, f'sd{i}', (.5 + i * .2, 1.25, 0), (-.2, 1, 0), .6 + (i % 2) * .3, .06, GOLD)
+    rng = np.random.default_rng(9)
+    for i in range(8): M.add(f'wd{i}', lambda p, c=(rng.uniform(-6, 3), rng.uniform(-.2, .5), rng.uniform(-.5, .5)): sphere(p, c, .12), ROT)
+
+SPEC = {'drone': (hdrone, (-1.8, -.8, -1.8), (2.0, 1.2, 1.8)), 'spitter': (hspitter, (-1.6, -.9, -1.0), (2.2, 1.0, 1.0)), 'brute': (hbrute, (-2.0, -1.1, -1.3), (2.3, 1.4, 1.3)),
+        'lord': (hlord, (-3.2, -.8, -2.6), (2.6, 1.6, 2.6)), 'leviathan': (hleviathan, (-5.8, -1.6, -2.2), (6.0, 2.2, 2.2)), 'cdrone': (cdrone, (-1.0, -.8, -1.0), (1.0, .8, 1.0)),
+        'cube': (cube, (-1.5, -1.5, -1.5), (1.5, 1.5, 1.5)), 'sphere': (sphere_, (-1.3, -1.3, -1.3), (1.3, 1.3, 1.3)),
+        'mnode': (mnode, (-3.6, -2.0, -3.6), (3.6, 3.2, 3.6)), 'mpylon': (mpylon, (-3.4, -2.0, -3.4), (3.4, 4.6, 3.4)),
+        'cnest': (bnest, (-3.5, -2.6, -3.2), (3.5, 4.2, 3.2)), 'clevd': (fallen, (-9.6, -1.6, -2.2), (6.2, 2.4, 2.2))}
+def paint(P, N, A, E, idx):
+    glowing = E[:, 0] + E[:, 1] + E[:, 2] > .05; top = np.clip(N[:, 1], 0, 1); A[~glowing, :3] *= (1 + .3 * top[~glowing])[:, None]
+if __name__ == '__main__':
+    k = sys.argv[1]; f, lo, hi = SPEC[k]; vox = float(sys.argv[3]) if len(sys.argv) > 3 else .03
+    M = Model(lo, hi, vox); Gm = Model(lo, hi, vox); f(M, Gm); M.bake(sys.argv[2] + '/' + k, paint)
+    if Gm.parts: Gm.bake(sys.argv[2] + '/' + k + '_g', None)
