@@ -34,6 +34,8 @@ if os.path.exists(lst):
     def grp(p):
         if p.startswith('art/season/'): return 'season'
         if p.startswith(('art/arch/', 'art/lore/', 'art/chron/', 'art/ev/')): return 'arch'
+        if p.startswith('art/carcinid/m/'): # v751 the Carcinid sculpts, crabs and ships in packs of their own (each file stays under 16 MB)
+            return 'crcm' if p.rsplit('/', 1)[-1][:-4] in ('cscut', 'cspit', 'charv', 'cguard', 'cbrood', 'cwar', 'ccrys', 'clanc', 'cmolt', 'cmar', 'cmat') else 'crcm2'
         if p.startswith('art/carcinid/'): return 'crc' # v703
         if p.startswith('art/rwar/'): return 'crc' # v742 sculpted hulls (the artifact is at its 511-file cap, so they share the Carcinid pack)
         return 'misc'
