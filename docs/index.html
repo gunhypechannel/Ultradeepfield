@@ -3185,19 +3185,21 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
   function colossus() { const grp = new TH.Group(), shk = new TH.Group(), body = new TH.Group(); grp.add(shk); shk.add(body);
     const RC = [.62, .3, 1], MR = hullMat("col", { rows: 5, pal: ["#2c2a36", "#22202c", "#34303f", "#1c1a24"], slits: .05, sc: "#e0b0ff", sg: "#b050ff", veins: 18, vc: "#a868ff", metal: .25, rough: .62, rc: RC, ei: 2.6, rep: [2, 2] });
     const CV = crystalMat(); CV.color.setHex(0x3a0c90); CV.emissive.setHex(0x8a30ff); CV.emissiveIntensity = .4; CV.roughness = .1; CV.envMapIntensity = 1.2; const CC = new TH.MeshStandardMaterial({ color: 0x0a3a56, emissive: 0x28c8ff, emissiveIntensity: .42, metalness: .5, roughness: .14, flatShading: true, transparent: true, opacity: .95, envMapIntensity: .8 }); rimOn(CC, .5, [.3, .85, 1]);
+    const SG = root.wbSculpt ? root.wbSculpt("colossus") : null, SM = SG ? root.wbScMat() : null; /* v759 the sculpted rig parts, when they have arrived */
+    const rk = (nm, mir, ...a) => { if (SG && SG[nm]) { const m = new TH.Mesh(SG[nm], SM); m.userData.sculpt = 1; if (mir < 0) m.scale.x = -1; return m; } return rock(...a); };
     const rock = (r, det, sx, sy, sz) => { const g = new TH.IcosahedronGeometry(r, det), P = g.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i), h = Math.sin(Math.round(x * 97) * 12.9898 + Math.round(y * 97) * 78.233 + Math.round(z * 97) * 37.719) * 43758.5453, k = .8 + (h - Math.floor(h)) * .34; P.setXYZ(i, x * k * sx, y * k * sy, z * k * sz); } g.computeVertexNormals(); return new TH.Mesh(g, MR); };
     const cluster = (par, p, n, len, dir, spread, mats) => { for (let i = 0; i < n; i++) { const d = dir.clone().add(V((rnd() - .5) * spread, (rnd() - .5) * spread, (rnd() - .5) * spread)).normalize(), L = len * (.55 + rnd() * .6), c = cry(L * .16, L, mats[rnd() * mats.length | 0]); c.position.copy(p).addScaledVector(d, .2); c.quaternion.setFromUnitVectors(V(0, 1, 0), d); par.add(c); } };
     // the floating chunk of the mine, crystals breaking through it
-    { const pl = rock(8.5, 2, 1, .3, 1); pl.position.y = -1.5; body.add(pl); for (let k = 0; k < 9; k++) { const a = k * TAU / 9 + rnd() * .3, r = 4.5 + rnd() * 3.2; cluster(body, V(Math.cos(a) * r, -.4, Math.sin(a) * r), 3 + (rnd() * 3 | 0), 2 + rnd() * 3, V(Math.cos(a) * .5, 1, Math.sin(a) * .5), .7, [CV, CC]); }
+    { const pl = rk("plat", 1, 8.5, 2, 1, .3, 1); pl.position.y = -1.5; body.add(pl); for (let k = 0; k < 9; k++) { const a = k * TAU / 9 + rnd() * .3, r = 4.5 + rnd() * 3.2; cluster(body, V(Math.cos(a) * r, -.4, Math.sin(a) * r), 3 + (rnd() * 3 | 0), 2 + rnd() * 3, V(Math.cos(a) * .5, 1, Math.sin(a) * .5), .7, [CV, CC]); }
       for (let k = 0; k < 6; k++) { const a = rnd() * TAU; cluster(body, V(Math.cos(a) * 5, -3.2, Math.sin(a) * 5), 3, 2.5, V(0, -1, 0), .6, [CV, CC]); } }
     // legs
     const parts = [], part = (g, d) => { g.userData.p0 = g.position.clone(); g.userData.d = d.normalize(); parts.push(g); return g; };
     const legs = []; for (const sx of [-1, 1]) { const hip = new TH.Group(); hip.position.set(sx * 2, 6.7, 0); body.add(hip); part(hip, V(sx, -.3, 0));
-      const th = rock(1.3, 1, .95, 2.2, .95); th.position.set(sx * .3, -1.6, 0); hip.add(th); cluster(hip, V(sx * 1, -1, -.4), 3, 1.8, V(sx, .4, -.5), .6, [CV]);
-      const kn = new TH.Group(); kn.position.set(sx * .5, -3.3, .2); hip.add(kn); const sh = rock(1.25, 1, 1, 2.1, 1); sh.position.y = -1.6; kn.add(sh); cluster(kn, V(0, .2, .9), 3, 1.6, V(0, .4, 1), .5, [CV, CC]);
-      const ft = rock(1.4, 1, 1.25, .6, 1.6); ft.position.set(0, -3.25, .5); kn.add(ft); cluster(kn, V(0, -3.3, 1.9), 3, 1, V(0, .1, 1), .6, [CV]); legs.push({ hip, kn, sx }); }
+      const th = rk("thigh", sx, 1.3, 1, .95, 2.2, .95); th.position.set(sx * .3, -1.6, 0); hip.add(th); cluster(hip, V(sx * 1, -1, -.4), 3, 1.8, V(sx, .4, -.5), .6, [CV]);
+      const kn = new TH.Group(); kn.position.set(sx * .5, -3.3, .2); hip.add(kn); const sh = rk("shin", sx, 1.25, 1, 1, 2.1, 1); sh.position.y = -1.6; kn.add(sh); cluster(kn, V(0, .2, .9), 3, 1.6, V(0, .4, 1), .5, [CV, CC]);
+      const ft = rk("foot", sx, 1.4, 1, 1.25, .6, 1.6); ft.position.set(0, -3.25, .5); kn.add(ft); cluster(kn, V(0, -3.3, 1.9), 3, 1, V(0, .1, 1), .6, [CV]); legs.push({ hip, kn, sx }); }
     // torso, wings of crystal on the back, the heart in its cage
-    const T = new TH.Group(); T.position.set(0, 11, 0); body.add(T); { const c = rock(3.2, 1, 1.15, 1.05, .85); T.add(c); const pv = rock(1.9, 1, 1.3, .8, 1); pv.position.y = -3.6; T.add(pv); }
+    const T = new TH.Group(); T.position.set(0, 11, 0); body.add(T); { const c = rk("chest", 1, 3.2, 1, 1.15, 1.05, .85); T.add(c); const pv = rk("pelvis", 1, 1.9, 1, 1.3, .8, 1); pv.position.y = -3.6; T.add(pv); }
     const wings = new TH.Group(); wings.position.set(0, 1, -1.8); T.add(wings); part(wings, V(0, .4, -1));
     for (const sx of [-1, 1]) for (let k = 0; k < 6; k++) { const a = .35 + k * .22, d = V(sx * Math.cos(a), Math.sin(a) + .3, -.45).normalize(), L = 6 + rnd() * 5 - Math.abs(k - 2.5) * .6, c = cry(L * .14, L, k % 2 ? CC : CV); c.position.set(sx * .8, 0, 0); c.quaternion.setFromUnitVectors(V(0, 1, 0), d); wings.add(c); }
     cluster(wings, V(0, .5, 0), 5, 4, V(0, 1, -.6), .7, [CV, CC]);
@@ -3208,14 +3210,14 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
       g.setAttribute("position", new TH.Float32BufferAttribute(P, 3)); heart.add(new TH.LineSegments(g, new TH.LineBasicMaterial({ color: 0xff80ff, transparent: true, blending: TH.AdditiveBlending, toneMapped: false }))); }
     const cage = []; for (let k = 0; k < 8; k++) { const a = k * TAU / 8, g = new TH.Group(); g.rotation.z = a; heart.add(g); const c = cry(.35, 2.2, k % 2 ? CC : CV); c.position.set(0, 1.1, 0); c.rotation.x = .5; g.add(c); cage.push(g); }
     // head with a crown of shards and glowing eyes
-    const head = new TH.Group(); head.position.set(0, 3.9, .5); head.scale.setScalar(1.35); T.add(head); part(head, V(0, 1, .2)); { const h = rock(1.15, 1, 1, 1.1, 1); head.add(h); cluster(head, V(0, .8, -.2), 6, 2.4, V(0, 1, -.3), .9, [CV, CC]); }
+    const head = new TH.Group(); head.position.set(0, 3.9, .5); head.scale.setScalar(1.35); T.add(head); part(head, V(0, 1, .2)); { const h = rk("head", 1, 1.15, 1, 1, 1.1, 1); head.add(h); cluster(head, V(0, .8, -.2), 6, 2.4, V(0, 1, -.3), .9, [CV, CC]); }
     const eyeP = puffs(2, 0xb8f4ff); head.add(eyeP); eyeP.put(0, -.42, .2, 1.02, 1.1, 1); eyeP.put(1, .42, .2, 1.02, 1.1, 1); eyeP.done();
     // arms: boulder shoulders spiked with crystal, rock limbs crusted with shards, clawed crystal hands
     const arms = []; for (const sx of [-1, 1]) { const sh = new TH.Group(); sh.position.set(sx * 3.7, 1.7, 0); T.add(sh); part(sh, V(sx, .3, 0));
-      sh.add(rock(1.5, 1, 1, 1, 1)); cluster(sh, V(sx * .6, .9, 0), 4, 3.4, V(sx * .6, 1, -.2), .6, [CV, CC]);
-      const up = rock(1, 1, .85, 2.2, .85); up.position.set(sx * .8, -2, 0); up.rotation.z = sx * .2; sh.add(up);
-      const el = new TH.Group(); el.position.set(sx * 1.3, -4, .3); sh.add(el); const fa = rock(1.05, 1, .95, 2.1, .95); fa.position.set(0, -1.9, .4); el.add(fa); cluster(el, V(sx * .7, -1.4, .2), 4, 1.8, V(sx, .1, .2), .6, [CV, CC]);
-      const hand = new TH.Group(); hand.position.set(0, -3.9, .7); el.add(hand); hand.add(rock(.95, 1, 1, .9, 1)); for (let k = 0; k < 4; k++) { const c = cry(.32, 2.3, CV); c.position.set((k - 1.5) * .45, -.4, .3); c.quaternion.setFromUnitVectors(V(0, 1, 0), V((k - 1.5) * .25, -1, .5).normalize()); hand.add(c); }
+      sh.add(rk("shoulder", sx, 1.5, 1, 1, 1, 1)); cluster(sh, V(sx * .6, .9, 0), 4, 3.4, V(sx * .6, 1, -.2), .6, [CV, CC]);
+      const up = rk("uarm", sx, 1, 1, .85, 2.2, .85); up.position.set(sx * .8, -2, 0); up.rotation.z = sx * .2; sh.add(up);
+      const el = new TH.Group(); el.position.set(sx * 1.3, -4, .3); sh.add(el); const fa = rk("farm", sx, 1.05, 1, .95, 2.1, .95); fa.position.set(0, -1.9, .4); el.add(fa); cluster(el, V(sx * .7, -1.4, .2), 4, 1.8, V(sx, .1, .2), .6, [CV, CC]);
+      const hand = new TH.Group(); hand.position.set(0, -3.9, .7); el.add(hand); hand.add(rk("hand", sx, .95, 1, 1, .9, 1)); for (let k = 0; k < 4; k++) { const c = cry(.32, 2.3, CV); c.position.set((k - 1.5) * .45, -.4, .3); c.quaternion.setFromUnitVectors(V(0, 1, 0), V((k - 1.5) * .25, -1, .5).normalize()); hand.add(c); }
       arms.push({ sh, el, sx }); }
     // the shard storm
     const shG = new TH.OctahedronGeometry(.5, 0); shG.scale(.5, 1.7, .5); const NS = LOD === 1 ? 36 : 80, storm = inst(shG, CV, NS); body.add(storm); const sD = []; for (let i = 0; i < NS; i++) sD.push({ r: 10 + rnd() * 6, y: 4 + rnd() * 11, w: .00018 + rnd() * .0003, a: rnd() * TAU, s: .6 + rnd() * 1.2, sp: rnd() * TAU });
@@ -4317,7 +4319,7 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
     for (const o of fl.reverse()) { o.updateMatrix(); const par = o.parent; for (const c of [...o.children]) { c.applyMatrix4(o.matrix); par.add(c); } par.remove(o); }
     const work = []; root.traverse(o => { if (o.children && o.children.length) work.push(o); });
     for (const o of work) { const G = new Map();
-      for (const c of o.children) { if (!c.isMesh || c.userData.dyn || c.children.length || !c.geometry || !c.geometry.attributes.position) continue; const m = c.material;
+      for (const c of o.children) { if (!c.isMesh || c.userData.dyn || c.userData.sculpt || c.children.length || !c.geometry || !c.geometry.attributes.position) continue; const m = c.material;
         const k = m.isMeshBasicMaterial && !m.map ? `b${m.color.getHex()}|${m.opacity}|${m.blending}|${m.side}` : m.uuid; if (!G.has(k)) G.set(k, []); G.get(k).push(c); }
       for (const [, L] of G) { if (L.length < 2) continue; let n = 0; const parts = L.map(c => { c.updateMatrix(); const g = c.geometry.index ? c.geometry.toNonIndexed() : c.geometry.clone(); g.applyMatrix4(c.matrix);
           if (!g.attributes.normal) g.computeVertexNormals(); if (!g.attributes.uv) g.setAttribute("uv", new TH.BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2)); n += g.attributes.position.count; return g; });
@@ -7063,7 +7065,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 758;
+const GAME_V = 759;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -26226,6 +26228,15 @@ function cntGhostMat() { if (cntGhostMat.M) return cntGhostMat.M; const b = cntM
   m.transparent = true; m.opacity = .45; m.depthWrite = false; m.blending = TH.AdditiveBlending; m.envMapIntensity = 0; return cntGhostMat.M = m; }
 function sculptFetch(dir, k, g, done) { const get = u => fetch(u).then(r => r.ok ? r.arrayBuffer() : Promise.reject(Error("HTTP " + r.status)));
   Promise.all([get(dir + k + ".bin"), g ? get(dir + k + "_g.bin").catch(() => null) : null]).then(([b, bg]) => done(cntMeshGeo(b), bg ? cntMeshGeo(bg) : null)).catch(e => console.warn("sculpt " + k, e && e.message)); }
+/* v759 World Boss sculpts: each boss's rig parts in art/boss/m/<file prefix>_<part>.bin, loaded together the first time it is built */
+const WB_SC = { colossus: ["col", ["chest", "pelvis", "head", "shoulder", "uarm", "farm", "hand", "thigh", "shin", "foot", "plat"]] }, WB_GEO = {};
+function wbSculpt(b) { const D = WB_SC[b]; if (!D || !TH || typeof fetch !== "function") return null; if (WB_GEO[b]) return WB_GEO[b]; const L = wbSculpt.L || (wbSculpt.L = {}); if (L[b]) return null; L[b] = 1;
+  const out = {}; Promise.all(D[1].map(k => fetch("art/boss/m/" + D[0] + "_" + k + ".bin").then(r => r.ok ? r.arrayBuffer() : Promise.reject(Error("HTTP " + r.status))).then(buf => { out[k] = cntMeshGeo(buf); })))
+    .then(() => { WB_GEO[b] = out; wbSculptSwap(b); }).catch(e => console.warn("boss sculpt " + b, e && e.message)); return null; }
+function wbScMat() { const b = cntMeshMat(), m = b.clone(); m.onBeforeCompile = b.userData.obc; m.userData.obc = b.userData.obc; m.customProgramCacheKey = () => "cntsculpt2"; m.envMapIntensity = .45; return m; } /* its own copy: the boss's renderer sets its envMap */
+function wbSculptSwap(b) { try { const ks = Object.keys(WB).filter(k => WB[k].m3 === b); if (G3 && G3.wbM) for (const k of ks) { const M = G3.wbM[k]; if (M && M.b && !M.pd) { try { G3.scene.remove(M.b.grp); } catch (e) {} delete G3.wbM[k]; } }
+  if (typeof WBR !== "undefined" && WBR.key && ks.includes(WBR.key)) WBR.key = null; /* the battle and card view rebuilds it */ } catch (e) { console.warn("boss sculpt swap", e); } }
+window.wbSculpt = wbSculpt; window.wbScMat = wbScMat; /* BOSS3D lives in its own script */
 function sculptGhost(g, geo, sc) { if (!geo) return; const m = new TH.Mesh(geo, cntGhostMat()); m.userData.sculpt = 1; m.scale.setScalar(sc || 1); m.renderOrder = 3; g.add(m); }
 /* each sculpted class: its scale into the procedural hull's frame, and its engine mouths [x, y, z, radius] */
 /* each sculpted class: its scale into the procedural hull's frame and its engine mouths [x, y, z, radius]; a class loads its own file

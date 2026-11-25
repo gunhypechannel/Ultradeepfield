@@ -35,6 +35,7 @@ if os.path.exists(lst):
         if p.startswith('art/season/'): return 'season'
         if p.startswith(('art/arch/', 'art/lore/', 'art/chron/', 'art/ev/')): return 'arch'
         if p.startswith('art/mimic/m/'): return 'mons2' # v754
+        if p.startswith('art/boss/m/'): return 'boss' # v759 the World Boss sculpts (their own pack; the artifact had room for one more file)
         if p.startswith('art/mon/m/'): return 'mons' # v752/v753 the monster and Mimic sculpts (v753: their own pack; the forge's art/mat pictures moved into misc to free the file slot)
         if p.startswith('art/carcinid/m/'): # v751 the Carcinid sculpts ride in the season and archive packs (the artifact is at its file cap; each pack stays under 16 MB)
             return 'season' if p.rsplit('/', 1)[-1][:-4] in ('cscut', 'cspit', 'charv', 'cguard', 'cbrood', 'cwar', 'ccrys', 'clanc', 'cmolt', 'cmar', 'cmat', 'cnest', 'cnest_g', 'clevd') else 'arch'
