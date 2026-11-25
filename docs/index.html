@@ -6868,7 +6868,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 756;
+const GAME_V = 757;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8895,6 +8895,15 @@ function levInCam(W, t) { const L = G.levIn; if (!L || L.hp == null) return; con
   else if (e < LEVIN.d) { if (!L.cutC) L.cutC = 1; const k = (e - LEVIN.c) / (LEVIN.d - LEVIN.c); pos = at(H, s * (17 - 3 * levEase(k)), -s * 7, s * 2.6); look = at(H, 0, 0, s * .4); } /* three-quarter head-on: the roar */
   else { const k = levEase(clamp((e - LEVIN.d) / 3000, 0, 1)), A = at(H, s * 14, -s * 7, s * 2.6), B = at(H, -s * 12, -s * 46, s * 28); pos = { x: A.x + (B.x - A.x) * k, y: A.y + (B.y - A.y) * k, z: A.z + (B.z - A.z) * k }; const LA = at(H, 0, 0, s * .4), LB = at(H, -s * 26, 0, 0); look = { x: LA.x + (LB.x - LA.x) * k, y: LA.y + (LB.y - LA.y) * k, z: LA.z + (LB.z - LA.z) * k }; } /* the pull-back */
   camClear(W, pos); W.camera.position.set(pos.x, pos.y, pos.z); W.camera.lookAt(look.x, look.y, look.z); L.look = look; }
+/* v757 the cinematic camera is a boom: it stays on the line to its subject and only draws in (easing back out) to keep out of a planet
+   (the glass worlds may pass between it and its subject) or in front of a star, instead of being shoved out of each planet's bubble, which teleported it round the far side */
+function camBoom(W, cam) { const P = W.camera.position, tx = cam.tx, ty = cam.ty, tz = cam.tz, dx = P.x - tx, dy = P.y - ty, dz = P.z - tz, L = Math.hypot(dx, dy, dz); if (!(L > .01)) return;
+  const ux = dx / L, uy = dy / L, uz = dz / L; let lim = L; const V = W._ccV || (W._ccV = new TH.Vector3());
+  const hit = (cx, cy, cz, r, inOnly) => { const ox = tx - cx, oy = ty - cy, oz = tz - cz, c = ox * ox + oy * oy + oz * oz - r * r; if (c <= 0) return; if (inOnly && (P.x - cx) ** 2 + (P.y - cy) ** 2 + (P.z - cz) ** 2 > r * r) return; const b = ox * ux + oy * uy + oz * uz, h = b * b - c; if (h <= 0) return; const t0 = -b - Math.sqrt(h); if (t0 > 0 && t0 < lim) lim = t0; };
+  for (const b of W.binaries || []) for (const st of [b.big, b.small]) { if (!st || !st.userData) continue; st.getWorldPosition(V); hit(V.x, V.y, V.z, (st.userData.rad || 4) * 3); }
+  if (W.planets) for (const [, o] of W.planets) { if (!o.grp || !o.grp.visible) continue; const q = o.grp.position, r = (o.rad || 2) * (o.grp.scale.x || 1) * 1.15 + .2; if (Math.abs(q.x - P.x) > r || Math.abs(q.z - P.z) > r) continue; hit(q.x, q.y, q.z, r, 1); }
+  const want = Math.max(Math.min(L, 1.2), lim * .92 - .2) / L, k = cam.boom == null ? want : cam.boom, e = 1 - Math.pow(want < k ? .55 : .93, W.dtk || 1); cam.boom = k + (want - k) * e;
+  if (cam.boom < .999) { P.set(tx + dx * cam.boom, ty + dy * cam.boom, tz + dz * cam.boom); W.camera.lookAt(tx, ty, tz); } }
 /* every cinematic camera keeps clear of stars and planets (it used to fly straight through the binary suns at the galaxy's edge) */
 function camClear(W, P) { const V = W._ccV || (W._ccV = new TH.Vector3()), push = (cx, cy, cz, r) => { const dx = P.x - cx, dy = P.y - cy, dz = P.z - cz, d = Math.hypot(dx, dy, dz); if (d >= r) return; const k = d > 1e-3 ? r / d : 1; P.x = cx + (d > 1e-3 ? dx * k : r); P.y = cy + (d > 1e-3 ? dy * k : 0); P.z = cz + (d > 1e-3 ? dz * k : 0); };
   for (const b of W.binaries || []) for (const st of [b.big, b.small]) { if (!st || !st.userData) continue; st.getWorldPosition(V); push(V.x, V.y, V.z, (st.userData.rad || 4) * 6); }
@@ -14237,8 +14246,8 @@ const MON_WAVE = {
   cram: "float tl = clamp((-2.2 - position.x) / 6., 0., 1.); transformed.z += tl * tl * .8 * sin(position.x * .9 + mt * 4.); transformed.y += tl * tl * .45 * cos(position.x * .7 + mt * 3.3); float hb = smoothstep(.8, 2.8, position.x); transformed.y += hb * .1 * sin(mt * 1.6);",
   ssquid: "float ar = clamp((-.9 - position.x) / 3., 0., 1.), ang = atan(position.z, position.y), e = pow(ar, 1.4); transformed.y += .36 * e * sin(position.x * 2.2 + mt * 4. + ang * 2.); transformed.z += .36 * e * cos(position.x * 2. + mt * 3.6 + ang * 3.); transformed.yz *= 1. + .24 * ar * sin(mt * 2.);" };
 /* v651 battle frames: MON_WAVE with every rhythm rounded to a whole number of beats in MBF_P seconds, so the loop closes */
-const MBF_P = 3, MBF_Z = 1.25, MBF_N = (typeof WEAK !== "undefined" && WEAK) || (typeof IOS !== "undefined" && IOS) ? 10 : 16, MBF_W = 2 * Math.PI / MBF_P;
-const mbfQ = src => String(src).replace(/mt \* \(1\.5 - rr \* \.18\)/g, "mt * " + MBF_W.toFixed(5)).replace(/(uMT|mt) \* (\d+\.\d*|\.\d+|\d+)/g, (m, v, f) => v + " * " + (Math.max(+f >= .6 ? 1 : 0, Math.round(+f / MBF_W)) * MBF_W).toFixed(5));
+const MBF_P = 6, MBF_Z = 1.25, MBF_N = (typeof WEAK !== "undefined" && WEAK) || (typeof IOS !== "undefined" && IOS) ? 14 : 24, MBF_W = 2 * Math.PI / MBF_P, MBF_SL = .5; /* v757 a 6 s loop at half the map's pace (was 3 s of 16 poses at full pace) */
+const mbfQ = src => String(src).replace(/mt \* \(1\.5 - rr \* \.18\)/g, "mt * " + MBF_W.toFixed(5)).replace(/(uMT|mt) \* (\d+\.\d*|\.\d+|\d+)/g, (m, v, f) => v + " * " + (Math.max(+f >= .6 ? 1 : 0, Math.round(+f * MBF_SL / MBF_W)) * MBF_W).toFixed(5));
 const MMERGE = {};
 function monMerged(k) { let M = MMERGE[k]; if (!M) { const s0 = buildAlien(k); M = MMERGE[k] = mergeGroup(s0); M.userData = s0.userData; M.position.copy(s0.position); M.quaternion.copy(s0.quaternion); M.scale.copy(s0.scale);
     s0.traverse(o => { if (o.geometry && !o.userData.sculpt) o.geometry.dispose(); }); } /* v752 a sculpt's geometry is shared */
@@ -14252,7 +14261,7 @@ function monBatPose(root, kind, f) { if (!MON_WAVE[kind]) return null; const U =
   return [...done.values()]; }
 /* which frame a monster in battle shows: its own phase, a little faster while it moves; the nearer of two frames full, the other over it */
 function monBatFrame(b, i, k, real, moving) { if (!MON_WAVE[k]) return null; const pre = b.mfPre || (b.mfPre = {}); if (!pre[k]) { pre[k] = 1; for (let f = 0; f < MBF_N; f++) shipArtSoon(k, "~f" + f, "side"); }
-  const P = b.mph || (b.mph = []); P[i] = ((P[i] == null ? (i * .37) % 1 : P[i]) + Math.min(80, real || 16) / 1000 / MBF_P * (moving ? 1.35 : 1) * (MIM_D[k] ? .5 : 1) * (b.shed && b.shed[i] ? 1.6 : 1)) % 1; /* v722 */ /* v678 the Mimics move slower and heavier */
+  const P = b.mph || (b.mph = []); P[i] = ((P[i] == null ? (i * .37) % 1 : P[i]) + Math.min(80, real || 16) / 1000 / MBF_P * (moving ? 1.2 : 1) * (MIM_D[k] ? .7 : 1) * (b.shed && b.shed[i] ? 1.6 : 1)) % 1; /* v722 */ /* v678 the Mimics move slower and heavier */
   const x = P[i] * MBF_N, f0 = Math.floor(x) % MBF_N, f1 = (f0 + 1) % MBF_N, w = x - Math.floor(x), a0 = shipArtSoon(k, "~f" + f0, "side"), a1 = shipArtSoon(k, "~f" + f1, "side");
   if (!a0 && !a1) return null; if (!a1) return ["~f" + f0, null, 0]; if (!a0) return ["~f" + f1, null, 0]; return w < .5 ? ["~f" + f0, "~f" + f1, w] : ["~f" + f1, "~f" + f0, 1 - w]; }
 /* v651 a monster's shield: the ellipse round the solid part of its picture, over every frame of its loop (in picture units) */
@@ -16161,7 +16170,7 @@ function draw3D(t) {
   const sp = Math.sin(cam.ph);
   W.camera.position.set(cam.tx + cam.dist * sp * Math.cos(cam.th), cam.ty + cam.dist * Math.cos(cam.ph), cam.tz + cam.dist * sp * Math.sin(cam.th));
   W.camera.lookAt(cam.tx, cam.ty, cam.tz);
-  if (G.levIn) { try { levInCam(W, t); } catch (e) {} } else if (cam.cine) { try { const P = W.camera.position, Q = { x: P.x, y: P.y, z: P.z }; camClear(W, Q); if (Q.x !== P.x || Q.y !== P.y || Q.z !== P.z) { P.set(Q.x, Q.y, Q.z); W.camera.lookAt(cam.tx, cam.ty, cam.tz); } } catch (e) {} } /* v695 the Leviathan's arrival directs the camera; cinematic cameras keep clear of stars and planets */
+  if (G.levIn) { try { levInCam(W, t); } catch (e) {} } else if (cam.cine) { try { camBoom(W, cam); } catch (e) {} } /* v695 the Leviathan's arrival directs the camera; cinematic cameras keep clear of stars and planets */
   MAPPROF.mark("fleets");
   fleetLod(W, pxK);
   { const B = W.renderer.pace; if (B) { B.scene = W.scene; B.used = 0; B.n = 0; B.skips = 0; B.ms = MOBILE ? 22 : 45; } if (!mapBloom(W)) W.renderer.render(W.scene, W.camera); if (B) { B.scene = null; W.compSkip = B.skips; if (B.skips && !W.paceN) { W.paceN = 1; try { crumb("map shaders paced over several frames"); } catch (e) {} } } } /* v530 */
@@ -22158,7 +22167,7 @@ function cineObjStart(id, n) { cineSharp(); const it = PB[id] || YB[id] || G.byI
 /* where the filmed object is now (a monster swims its loop, so its body is tracked when the model exists) */
 function cineObjPos(W, T) { const id = W.cam.cineObj.id, it = PB[id] || YB[id] || G.byId[id] || wbById(id) || (id[0] === "r" ? NB[id] : null); if (it && it.wb) { const q = P3(it, T); return { x: q.x, y: q.y + 6 * WB[it.wb].sc, z: q.z, yaw: null }; } if (!it) return null;
   if (G.byId[id] && !PB[id] && !YB[id]) { const o = W.planets && W.planets.get(id); if (o) { const v = o.grp.position; return { x: v.x, y: v.y, z: v.z, yaw: null }; } } const M3 = id[0] === "y" ? W.pyramids : id[0] === "r" ? W.nodes : W.pirates, o = M3 && M3.get(id);
-  if (o && o.mon && o.body && o.grp.visible) { const v = o.body.getWorldPosition(V3); return { x: v.x, y: v.y, z: v.z, yaw: Math.atan2(Math.cos(o.body.rotation.y), -Math.sin(o.body.rotation.y)) }; } // v144: the heading it swims (the fleets' convention)
+  if (o && o.mon && o.body && o.dc != null) { const v = o.body.getWorldPosition(V3); return { x: v.x, y: v.y, z: v.z, yaw: Math.atan2(Math.cos(o.body.rotation.y), -Math.sin(o.body.rotation.y)) }; } // v144: the heading it swims (the fleets' convention)
   const q = P3(it, T); return { x: q.x, y: q.y, z: q.z, yaw: null }; }
 /* v188 watch a fight on the map in cinematic view: the camera cuts to it and circles it (the existing battle shot, with the angle buttons
    and free look), and the view ends by itself when the fight does */
