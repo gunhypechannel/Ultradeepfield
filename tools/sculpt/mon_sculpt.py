@@ -27,10 +27,10 @@ def Ry(a): return rot('y', a)
 
 # ---------------------------------------------------------------- the Void Shark (art: a great white, open jaws, scars of blue light)
 def shark(M):
-    HIDE = M_((.1, .125, .16), .4, .2); BELLY = M_((.5, .52, .54), .5, .05); DARK = M_((.02, .02, .03), .6, .1); GUM = M_((.4, .05, .07), .5, .05, (.12, .01, .02))
-    BONE = M_((.9, .88, .8), .3, .05); GLOW = M_((.05, .35, .6), .2, .1, (.25, .75, 1.0)); EYE = M_((.02, .05, .1), .1, .3, (.1, .5, .9)); GUN = M_((.08, .09, .11), .3, .85); RED = M_((.3, .02, .02), .3, .2, (1., .18, .12))
+    HIDE = M_((.035, .045, .06), .34, .12); BELLY = M_((.36, .38, .41), .4, .06); SEAM = M_((.01, .015, .02), .5, .2); DARK = M_((.02, .02, .03), .6, .1); GUM = M_((.4, .05, .07), .5, .05, (.12, .01, .02))
+    BONE = M_((.9, .88, .8), .3, .05); GLOW = M_((.0, .08, .16), .2, .1, (.1, .55, 1.0)); EYE = M_((.02, .05, .1), .1, .3, (.25, .7, 1.0)); GUN = M_((.07, .08, .1), .22, .9); CY = M_((.1, .5, .7), .2, .3, (.35, .9, 1.0)); RED = M_((.3, .02, .02), .3, .2, (1., .18, .12))
     prof = [(3.6, 0), (3.52, .11), (3.35, .27), (3.05, .45), (2.55, .63), (1.85, .78), (1.05, .85), (.2, .82), (-.6, .7), (-1.4, .52), (-2.2, .33), (-2.85, .19), (-3.25, .13), (-3.5, .1)]
-    HX, HY, JA = 2.0, -.22, .5
+    HX, HY, JA = 2.0, -.22, .62  # v785 a wider gape
     mreg = lambda p: np.maximum(np.maximum(p[..., 1] + .06, HX + .02 - p[..., 0]), -(p[..., 1] + 1.2))  # the gape under the snout
     body0 = lambda p: lathe_x(p, prof, .96, .8)
     body = lambda p: np.maximum(body0(p), -mreg(p))
@@ -49,20 +49,20 @@ def shark(M):
     M.add('throat', lambda p: ell(p, (2.15, -.32, 0), (.32, .3, .4)), GUM, .05)
     M.add('tongue', lambda p: ell(jawq(p), (2.45, -.4, 0), (.45, .08, .22)), GUM)
     for row in (0, 1):
-        n_ = 17 if row == 0 else 15
+        n_ = 21 if row == 0 else 19
         for i in range(n_):
             a = (i / (n_ - 1) - .5) * 2.7
             if row == 0:
                 x = 2.25 + np.cos(a) * 1.05; z = np.sin(a) * .5; y = -.07
                 if x < 2.15: continue
-                L_ = .19 + .09 * (1 - abs(a) / 1.35); spk(M, f'tu{i}', (x, y, z), norm((.12, -1, -z * .3)), L_, .04, BONE)
+                L_ = .25 + .12 * (1 - abs(a) / 1.35); spk(M, f'tu{i}', (x, y, z), norm((.12, -1, -z * .3)), L_, .048, BONE)
                 if i % 2: spk(M, f'tv{i}', (x - .1, y + .01, z * .88), norm((.05, -1, -z * .3)), L_ * .7, .032, BONE)
             else:
                 x0 = 2.2 + np.cos(a) * .9; z = np.sin(a) * .42; y0 = -.34
                 if x0 < 2.1: continue
                 c_, sn = np.cos(-JA), np.sin(-JA); qx, qy = x0 - HX, y0 - HY; x = HX + qx * c_ - qy * sn; y = HY + qx * sn + qy * c_
-                d = norm((-.2 + np.sin(JA) * .9, np.cos(JA), -z * .3)); L_ = .17 + .07 * (1 - abs(a) / 1.35)
-                spk(M, f'tl{i}', (x, y, z), d, L_, .038, BONE)
+                d = norm((-.2 + np.sin(JA) * .9, np.cos(JA), -z * .3)); L_ = .22 + .1 * (1 - abs(a) / 1.35)
+                spk(M, f'tl{i}', (x, y, z), d, L_, .046, BONE)
     for s in (1, -1):
         M.add(f'eye{s}', lambda p, s=s: ell(p, (2.72, .16, s * .43), (.09, .075, .05)), EYE)
         M.add(f'eyr{s}', lambda p, s=s: torus(p, (2.72, .16, s * .45), 'z', .095, .016), RED)
@@ -71,7 +71,12 @@ def shark(M):
         M.add(f'pec{s}', lambda p, s=s: _fin(p, [(.55, 0), (.35, .7), (-.55, 1.3), (-.6, 0)], .07, (1.35, -.42, s * .5), Rx(s * (np.pi / 2 + .55)) @ Rz(-.18)), HIDE, .04)
         M.add(f'pel{s}', lambda p, s=s: _fin(p, [(.18, 0), (.06, .22), (-.2, .34), (-.26, 0)], .045, (-1.3, -.38, s * .28), Rx(s * (np.pi / 2 + .7))), HIDE, .02)
         # scars of light down the flanks, as in the painting
-        for j, (x0, y0, L_) in enumerate(((1.2, .35, .9), (.2, .1, 1.1), (-.9, .3, .7))):
+        for j, (x0, y0, L_, sl) in enumerate(((1.3, .36, 1.0, .3), (.3, .12, 1.3, .22), (-.9, .3, .9, -.25), (-1.7, .14, .7, .35), (2.15, .28, .5, -.45))):
+            M.carve(f'sc{s}{j}', lambda p, s=s, x0=x0, y0=y0, L_=L_, sl=sl: np.maximum(np.maximum(np.abs((p[..., 1] - y0) - (p[..., 0] - x0) * sl) - .011, np.abs(p[..., 0] - x0) - L_ / 2), -s * p[..., 2] + .16), GLOW)
+            pass  # v785 no branches: they crossed into X marks
+        for j, x0 in enumerate((1.6, 1.0, .4, -.2, -.8, -1.4, -2.0)):  # armour seams across the back
+            M.carve(f'se{s}{j}', lambda p, s=s, x0=x0: np.maximum(np.maximum(np.abs(p[..., 0] - x0 - .1 * p[..., 1]) - .011, -(p[..., 1] - .05)), -s * p[..., 2] - .02), SEAM)
+        if False:
             M.carve(f'sc{s}{j}', lambda p, s=s, x0=x0, y0=y0, L_=L_: np.maximum(np.maximum(np.abs((p[..., 1] - y0) - (p[..., 0] - x0) * .35) - .022, np.abs(p[..., 0] - x0) - L_ / 2), -s * p[..., 2] + .2), GLOW)
     M.add('dor', lambda p: _fin(p, [(.75, 0), (.45, .95), (-.38, 1.55), (-.32, .72), (-.8, 0)], .08, (.45, .62, 0), None), HIDE, .05)
     M.add('dor2', lambda p: _fin(p, [(.25, 0), (.1, .32), (-.18, .5), (-.32, 0)], .055, (-2.15, .28, 0), None), HIDE, .03)
@@ -79,13 +84,16 @@ def shark(M):
     M.add('tail', lambda p: _fin(p, [(.25, .12), (-1.4, 1.75), (-.95, .7), (-1.0, .05), (-1.08, -1.0), (.25, -.12)], .07, (-3.25, .02, 0), None), HIDE, .05)
     M.carve('nick', lambda p: sphere(p, (-4.2, .2, 0), .25), DARK)
     # two laser turrets on the back (the game's lore: twin laser turrets bolted into its hide)
-    for x, y in ((1.75, .72), (-1.05, .55)):
-        M.add(f'tb{x}', lambda p, x=x, y=y: cyl(p, (x, y, 0), 'y', .27, .05, .02), GUN, .03)
-        M.add(f'td{x}', lambda p, x=x, y=y: ell(p, (x, y + .07, 0), (.23, .16, .2)), GUN)
-        M.add(f'tr{x}', lambda p, x=x, y=y: torus(p, (x, y + .04, 0), 'y', .27, .018), RED)
-        for dz in (-.07, .07):
-            M.add(f'bl{x}{dz}', lambda p, x=x, y=y, dz=dz: cap(p, (x, y + .12, dz), (x + .85, y + .12, dz), .04), GUN)
-            M.add(f'em{x}{dz}', lambda p, x=x, y=y, dz=dz: sphere(p, (x + .9, y + .12, dz), .045), RED)
+    for x, y, z, sc in ((1.75, .74, 0, 1.25), (-1.05, .57, 0, 1.15), (.55, .12, .8, .9), (.55, .12, -.8, .9)):  # v785 four armoured twin turrets, cyan barrels
+        M.add(f'tb{x}{z}', lambda p, x=x, y=y, z=z, k=sc: cyl(p, (x, y, z), 'y', .3 * k, .06 * k, .02), GUN, .03)
+        M.add(f'tk{x}{z}', lambda p, x=x, y=y, z=z, k=sc: cyl(p, (x, y + .05 * k, z), 'y', .34 * k, .025 * k, .01), SEAM)
+        M.add(f'td{x}{z}', lambda p, x=x, y=y, z=z, k=sc: ell(p, (x, y + .1 * k, z), (.27 * k, .17 * k, .23 * k)), GUN)
+        M.add(f'tr{x}{z}', lambda p, x=x, y=y, z=z, k=sc: torus(p, (x, y + .05 * k, z), 'y', .31 * k, .02 * k), CY)
+        M.add(f'ts{x}{z}', lambda p, x=x, y=y, z=z, k=sc: ell(p, (x + .16 * k, y + .17 * k, z), (.05 * k, .03 * k, .14 * k)), CY)  # the sight
+        for dz in (-.085, .085):
+            M.add(f'bl{x}{z}{dz}', lambda p, x=x, y=y, z=z, dz=dz, k=sc: cap(p, (x, y + .14 * k, z + dz * k), (x + 1.05 * k, y + .14 * k, z + dz * k), .045 * k), GUN)
+            M.add(f'bm{x}{z}{dz}', lambda p, x=x, y=y, z=z, dz=dz, k=sc: cap(p, (x + .55 * k, y + .14 * k, z + dz * k), (x + .62 * k, y + .14 * k, z + dz * k), .058 * k), SEAM)  # a muzzle brake band
+            M.add(f'em{x}{z}{dz}', lambda p, x=x, y=y, z=z, dz=dz, k=sc: cap(p, (x + .98 * k, y + .14 * k, z + dz * k), (x + 1.08 * k, y + .14 * k, z + dz * k), .05 * k), CY)
 
 # ---------------------------------------------------------------- the Nebula Squid (art: dark red, a great orange eye, thick suckered arms)
 def squid(M):
@@ -222,8 +230,12 @@ def ram(M):
 
 SPEC = {'swhale': (shark, (-4.9, -1.5, -2.0), (4.0, 2.5, 2.0)), 'ssquid': (squid, (-6.3, -1.4, -1.6), (2.7, 1.2, 1.6)),
         'vmanta': (manta, (-7.4, -.7, -3.9), (3.0, .8, 3.9)), 'smoth': (moth, (-2.4, -.8, -3.9), (2.3, 1.1, 3.9)), 'cram': (ram, (-7.8, -1.4, -1.6), (3.5, 1.9, 1.6))}
+PAINT_K = ''
 def paint(P, N, A, E, idx):
     v = .5 + .5 * hashf(idx.astype(np.int64), idx.astype(np.int64) * 7 + 1, 3); glowing = E[:, 0] + E[:, 1] + E[:, 2] > .05
     A[~glowing, :3] *= (.85 + .3 * v[~glowing])[:, None]; top = np.clip(N[:, 1], 0, 1); A[:, :3] *= (1 + .15 * top)[:, None]
+    if PAINT_K == 'swhale':  # v785 a mottled, scarred hide: low-frequency blotches from position, darker along the spine
+        x, y, z = P[:, 0], P[:, 1], P[:, 2]; m = .5 + .25 * np.sin(x * 3.1 + z * 2.3) * np.sin(y * 4.7 - x * 1.3) + .25 * np.sin(x * 7.9 + y * 5.1 + z * 6.3)
+        A[~glowing, :3] *= (.72 + .5 * m[~glowing])[:, None]
 if __name__ == '__main__':
-    k = sys.argv[1]; f, lo, hi = SPEC[k]; M = Model(lo, hi, float(sys.argv[3]) if len(sys.argv) > 3 else .03); f(M); M.bake(sys.argv[2], paint)
+    k = sys.argv[1]; PAINT_K = k; f, lo, hi = SPEC[k]; M = Model(lo, hi, float(sys.argv[3]) if len(sys.argv) > 3 else .03); f(M); M.bake(sys.argv[2], paint)

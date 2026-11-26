@@ -7264,7 +7264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 784;
+const GAME_V = 785;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -17962,7 +17962,13 @@ function monSculptLoad(k) { if (!MON_SC[k] || !TH || typeof fetch !== "function"
   sculptFetch("art/mon/m/", k, MON_SC[k].g, (a, b) => { MON_GEO[k + "_g"] = b; MON_GEO[k] = a; monSculptSwap(k); }); }
 function monSculptSwap(k) { try { if (k === "swasp_nest" || k === "swasp_swarm") { const u = k === "swasp_nest" ? "snest" : "swasp"; delete MMERGE[u]; if (STU && STU.cache) for (const key in STU.cache) if (key.startsWith(u + "|")) delete STU.cache[key]; } if (k === "slevi" && typeof crcSculptSwap === "function") crcSculptSwap("clevd"); if (STU && STU.cache) for (const key in STU.cache) if (key.startsWith(k + "|")) delete STU.cache[key]; delete MMERGE[k];
   if (G3) { if (G3.monMaster) delete G3.monMaster[k]; if (G3.pirates) for (const [id, o] of [...G3.pirates]) { const x = PB[id]; if (x && x.mon === k) { G3.scene.remove(o.grp); G3.pirates.delete(id); } } } } catch (e) { console.warn("sculpt swap", e); } }
-function monSculpted(k) { const D = MON_SC[k], g = new TH.Group(), m = new TH.Mesh(MON_GEO[k], cntMeshMat()); m.userData.sculpt = 1; m.scale.setScalar(D.s || 1); if (D.r) m.rotation.set(D.r[0], D.r[1], D.r[2]); g.add(m); sculptGhost(g, MON_GEO[k + "_g"], D.s); if (D.r && g.children[1]) g.children[1].rotation.copy(m.rotation); g.userData.eng = []; g.userData.keepGeo = 1; return g; }
+/* v785 each hunt monster's own sculpt material: wetter and sharper, brighter glow, a rim light in its colour, its glow pulsing as it swims */
+function monSculptMat(k) { const C = monSculptMat.C || (monSculptMat.C = {}); if (C[k]) return C[k]; const b = cntMeshMat(), m = b.clone(), D = typeof MON !== "undefined" && MON[k], rgb = (D && D.rgb ? D.rgb : "140,200,255").split(",").map(v => (+v / 255).toFixed(3)).join(", ");
+  const obc = sh => { b.userData.obc(sh); sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec3 vMP;").replace("#include <begin_vertex>", "#include <begin_vertex>\nvMP = position;");
+    sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec3 vMP;").replace("roughnessFactor = max(.05, vRM.x);", "roughnessFactor = max(.04, vRM.x * .55);")
+      .replace("totalEmissiveRadiance += vEm;", "totalEmissiveRadiance += vEm * 1.7; { float fr = pow(1. - saturate(abs(dot(normal, normalize(vViewPosition)))), 3.); totalEmissiveRadiance += vec3(" + rgb + ") * fr * .26; }"); };
+  m.envMapIntensity = .75; m.onBeforeCompile = obc; m.userData.obc = obc; m.userData.pulse = "(1. + .55 * pow(.5 + .5 * sin(uMT * 2. - vMP.x * 1.4), 6.))"; m.customProgramCacheKey = () => "monsculpt-" + k; return C[k] = m; }
+function monSculpted(k) { const D = MON_SC[k], g = new TH.Group(), m = new TH.Mesh(MON_GEO[k], monSculptMat(k)); m.userData.sculpt = 1; m.scale.setScalar(D.s || 1); if (D.r) m.rotation.set(D.r[0], D.r[1], D.r[2]); g.add(m); sculptGhost(g, MON_GEO[k + "_g"], D.s); if (D.r && g.children[1]) g.children[1].rotation.copy(m.rotation); g.userData.eng = []; g.userData.keepGeo = 1; return g; }
 function buildMonster(k, part) {
   if (k === "mimic") return buildMimic("mnest"); /* v663 */
   if (CRC_M[k]) return buildCarc(CRC_M[k]); /* v703 */
