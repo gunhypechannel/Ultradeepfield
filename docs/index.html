@@ -8445,7 +8445,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 810;
+const GAME_V = 811;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -15455,7 +15455,7 @@ const orbAll = (L, names) => { for (const k of names) { const at = L.pts.geometr
 /* how much map work each frame does: phones and small tablets get smaller slices, fewer close-up models and lighter battles */
 // v145: iPhones and iPads are never judged "weak" by core count: Safari reports a capped core count (4) whatever the chip, which put
 // every iPhone on the Performance preset with no anti-aliasing and 0.6x resolution (the blocky, grainy map)
-const MOBILE = IOS || ANDROID || /Mobi/i.test(navigator.userAgent) || !!(navigator.userAgentData && navigator.userAgentData.mobile), WEAK = MOBILE && !IOS && ((navigator.hardwareConcurrency || 4) <= 4 || (navigator.deviceMemory || 4) <= 3);
+const MOBILE = IOS || ANDROID || /Mobi/i.test(navigator.userAgent) || !!(navigator.userAgentData && navigator.userAgentData.mobile) || (() => { try { return (navigator.maxTouchPoints || 0) > 0 && matchMedia("(pointer: coarse)").matches && matchMedia("(hover: none)").matches; } catch (e) { return false; } })(), /* v811 desktop-site mode */ WEAK = MOBILE && !IOS && ((navigator.hardwareConcurrency || 4) <= 4 || (navigator.deviceMemory || 4) <= 3);
 if (MOBILE) { try { if (G.crashBoot) localStorage.setItem("udf.safeUntil", String(Date.now() + 3 * 864e5)); if (+localStorage.getItem("udf.safeUntil") > Date.now()) G.glSafe = 1; } catch (e) {} } /* v445 */
 /* v537 the memory tier: 0 normal .. 3 lightest; +1 after a session that crashed, -1 after three clean sessions of 10+ minutes in a row */
 const MEMT = (() => { if (!MOBILE) return 0; try { const o = JSON.parse(localStorage.getItem("udf.memTier") || "{}") || {}; let t = clamp(+o.t || 0, 0, 3), ok = +o.ok || 0; if (G.crashBoot) { t = Math.min(3, t + 1); ok = 0; }
