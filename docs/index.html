@@ -4370,9 +4370,9 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
       { put(hd, new TH.Mesh(VHT, MSk), [0, .08, 0]); { const hood = put(hd, sph(MSk, 16), [0, .15, -.75], [-.5, 0, 0], [1.25, .95, .2]); } /* v781 a cobra hood */
         for (const sx of [-1, 1]) { const br = new TH.ConeGeometry(.12, 1.1, 6); br.rotateX(-Math.PI / 2 - .35); put(hd, new TH.Mesh(br, MG), [sx * .5, .5, -.1], [0, sx * -.25, 0]); }
         put(hd, new TH.Mesh(new TH.BoxGeometry(.08, .06, 1.7), MG), [0, .56, .5], [.1, 0, 0]); }
-      const jaw = put(hd, new TH.Group(), [0, -.25, -.4]); { put(jaw, new TH.Mesh(VHJ, MSk), [0, .04, .45], null, [.9, 1, .88]); put(jaw, sph(MOU, 8), [0, .14, 1.1], null, [.62, .1, 1.1]); for (const sx of [-1, 1]) for (let q = 0; q < 6; q++) put(jaw, new TH.Mesh(TOOTH, IVO), [sx * (.36 - q * .03), .2, 2.05 - q * .26], [.15, 0, 0], [.75, .8 - q * .07, .75]); }
-      put(hd, sph(MOU, 8), [0, -.1, 1.3], null, [.62, .14, 1.0]); for (const sx of [-1, 1]) { put(hd, new TH.Mesh(FANG, IVO), [sx * .4, -.12, 2.0], [.25, 0, sx * .1]); for (let q = 0; q < 5; q++) put(hd, new TH.Mesh(TOOTH, IVO), [sx * (.34 - q * .03), -.16, 1.75 - q * .26], [Math.PI - .15, 0, 0], [.7, .7 - q * .06, .7]);
-        put(hd, new TH.Mesh(new TH.BoxGeometry(.5, .14, .55), MSk), [sx * .6, .6, .72], [.25, sx * -.35, sx * .2]); // the brow ridge over the eye
+      const jaw = put(hd, new TH.Group(), [0, -.25, -.4]); { put(jaw, new TH.Mesh(VHJ, MSk), [0, .04, .45], null, [.9, 1, .88]); put(jaw, sph(MOU, 8), [0, .14, 1.1], null, [.62, .1, 1.1]); for (const sx of [-1, 1]) for (let q = 0; q < 6; q++) put(jaw, new TH.Mesh(TOOTH, IVO), [sx * (.33 - q * .03), .16, 2.0 - q * .24], [Math.PI - .12, 0, 0], [.75, .8 - q * .07, .75]); }
+      put(hd, sph(MOU, 8), [0, -.1, 1.3], null, [.62, .14, 1.0]); for (const sx of [-1, 1]) { put(hd, new TH.Mesh(FANG, IVO), [sx * .26, -.08, 1.92], [-.3, 0, sx * -.06], .72); for (let q = 0; q < 5; q++) put(hd, new TH.Mesh(TOOTH, IVO), [sx * (.31 - q * .03), -.12, 1.72 - q * .24], [.12, 0, 0], [.7, .7 - q * .06, .7]);
+        put(hd, new TH.Mesh(new TH.ConeGeometry(.14, .62, 4), MSk), [sx * .5, .56, .8], [Math.PI / 2 + .35, 0, sx * .3]); // the brow ridge over the eye
         const eg = put(hd, new TH.Group(), [sx * .64, .4, .74], [0, sx * .5, 0]); put(eg, sph(SEYE, 10), [0, 0, 0], null, [.2, .13, .12]); put(eg, new TH.Mesh(new TH.BoxGeometry(.035, .2, .02), SPUP), [0, 0, .115]);
         const e = sprite(1.1, "rgba(255,50,30,1)", "med_se3"); e.position.set(0, 0, .15); e.material.opacity = .7; eg.add(e); }
       const pulse = sprite(5, "rgba(255,60,50,1)", "med_pu"); pulse.material.opacity = 0; g.add(pulse);
@@ -7264,7 +7264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 782;
+const GAME_V = 783;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
