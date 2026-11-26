@@ -6,10 +6,10 @@
 import sys, numpy as np
 sys.path.insert(0, __file__.rsplit('/', 1)[0])
 from sdf import *
-from crc_lib import lerp, chain, spk, norm, oell
+from crc_lib import blade,  lerp, chain, spk, norm, oell
 
 MIM_D = {
-    'mstalk': dict(s=1, mane=44, hump=0.7, len=1, gape=0.95, tail=10), 'mhunt': dict(s=0.95, mane=8, hump=0.05, len=1.75, gape=0.85, tail=30),
+    'mstalk': dict(stalk=1, s=1, mane=44, hump=0.7, len=1, gape=0.95, tail=10), 'mhunt': dict(hunt=1, s=0.95, mane=8, hump=0.05, len=1.75, gape=0.85, tail=30),
     'mharv': dict(s=1.05, mane=6, hump=0, len=0.65, gape=0.3, tail=3, sac=1), 'massim': dict(s=1.1, mane=22, hump=1.0, len=1.0, gape=0.6, tail=6, plates=1),
     'mguard': dict(s=1.3, mane=10, hump=0.45, len=0.8, gape=0.35, tail=4, armour=1), 'mtitan': dict(s=1.5, mane=64, hump=1.15, len=1.15, gape=0.8, tail=18, brood=1),
     'malpha1': dict(s=1.35, mane=46, hump=.9, len=1.15, gape=.8, tail=14, alpha=1), 'malpha2': dict(s=1.3, mane=36, hump=.3, len=1.45, gape=.9, tail=24, alpha=1, tint=(.6, .42, 1.0)),
@@ -125,10 +125,29 @@ def mimic(M, k):
             cable(M, f'arm{s}', [sh, el, wr], .28, .2, SHELL)
             for u in (1, -1): spk(M, f'pz{s}{u}', wr, norm((1, .35 * u, -s * .35)), 1.1, .14, FANG)
     if D.get('plates'):  # the Assimilator: torn starship plating fused into its hull, running lights still lit
-        for i in range(8):
-            x = (-1.9 + i * .52) * L; top = yc(x) + rad(x) * .6; R = rot('y', rng.uniform(0, 3)) @ rot('x', rng.uniform(-.5, .5))
-            c = (x, top + rng.uniform(0, .25), rng.uniform(-.5, .5)); M.add(f'pl{i}', lambda p, c=c, R=R, w=rng.uniform(.25, .45): box(p, c, (w, .04, w * .7), .01, R), PLATE)
+        for i in range(12):  # v797 bigger, so the stolen plating reads at a glance
+            x = (-2.0 + i * .36) * L; top = yc(x) + rad(x) * .55; R = rot('y', rng.uniform(0, 3)) @ rot('x', rng.uniform(-.6, .6)) @ rot('z', rng.uniform(-.4, .4))
+            c = (x, top + rng.uniform(0, .3), rng.uniform(-.7, .7)); M.add(f'pl{i}', lambda p, c=c, R=R, w=rng.uniform(.5, .8): box(p, c, (w, .06, w * .6), .015, R), PLATE)
             M.add(f'pll{i}', lambda p, c=c: sphere(p, (c[0], c[1] + .06, c[2]), .05), PLL)
+    if D.get('stalk'):  # v797 the Stalker, after its painting: a writhing mass of cables arching high over its back, and hooked
+        # grapple tendrils reaching forward beneath the jaws (still no legs: they trail like a ship's grapples)
+        for i in range(12):
+            bx = (-1.6 + i * .24) * L; z = rng.uniform(-.7, .7); hgt = rng.uniform(1.4, 2.6); a = (bx, yc(bx) + rad(bx) * .6, z)
+            pts = bez3(a, (bx + .3, a[1] + hgt, z * 1.4), (bx - 1.4, a[1] + hgt * 1.1, z * 2.0), (bx - 2.2, a[1] + hgt * .45, z * 2.4), 8)
+            cable(M, f'sw{i}', pts, .12, .03, CABL if i % 4 == 1 else CAB)
+        for s_ in (1, -1):
+            for j in range(3):
+                a = (hx - .4 * hs, hy - .45 * hs, s_ * (.25 + .2 * j) * hs); Lg = 1.6 + .4 * j
+                pts = bez3(a, (a[0] + Lg * .3, a[1] - .7, a[2] * 1.5), (a[0] + Lg * .75, a[1] - .9, a[2] * 1.9), (a[0] + Lg, a[1] - .55, a[2] * 2.0), 7)
+                cable(M, f'gt{s_}{j}', pts, .12, .07, CAB)
+                for u in range(3): spk(M, f'gc{s_}{j}{u}', pts[-1], norm((1, -.8 + u * .35, s_ * (u - 1) * .5)), .55, .07, FANG)
+    if D.get('hunt'):  # v797 the Hunter: a sleek interceptor, twin long blades swept back from its flanks and a lance under its prow
+        for s_ in (1, -1):
+            for j in range(2):
+                bx = (.6 - j * 1.1) * L; base = (bx, yc(bx) + .1, s_ * rad(bx) * .9)
+                blade(M, f'hb{s_}{j}', base, norm((-1, .12 + .1 * j, s_ * (.75 - j * .2))), (3.0 - j * .8) * L * .8, .26 - j * .05, PLATE, 2.6, (0, 1, -s_ * .7))
+                M.add(f'hbl{s_}{j}', lambda p, a=base, b=tuple(np.array(base) + np.array(norm((-1, .12 + .1 * j, s_ * (.75 - j * .2)))) * (2.4 - j * .6) * L * .8): rcone(p, a, b, .04, .015), GLOW)
+        blade(M, 'hlance', (hx - .6 * hs, hy - .35 * hs, 0), norm((1, -.08, 0)), 2.2 * hs, .14, FANG, 2.4, (0, 0, 1))
     if D.get('brood'):  # the Brood Titan: violet brood sacs swelling along its flanks
         for i in range(8):
             s = 1 if i % 2 else -1; x = (-1.8 + (i >> 1) * .8) * L
