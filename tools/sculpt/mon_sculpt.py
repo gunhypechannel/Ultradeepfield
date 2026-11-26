@@ -117,8 +117,8 @@ def squid(M):
     M.add('head', lambda p: ell(p, (-.75, 0, 0), (.42, .38, .45)), SK, .15)
     for i in range(10):
         a = i / 10 * 2 * np.pi; long = i in (2, 7); ln = 4.6 if long else 2.6; y0, z0 = np.sin(a) * .28, np.cos(a) * .28
-        pts = [(-1 - t * ln, y0 * (1 + t * 1.6) + np.sin(t * 5 + i) * .25 * t, z0 * (1 + t * 1.6) + np.cos(t * 4 + i * 1.3) * .25 * t) for t in np.linspace(0, 1, 9)]
-        rads = [((.075 if long else .15) * (1 - t * .82) + (.07 * np.sin((t - .8) / .2 * np.pi) if long and t > .8 else 0)) for t in np.linspace(0, 1, 9)]
+        pts = [(-1 - t * ln, y0 * (1 + t * 1.6) + np.sin(t * 5 + i) * .5 * t * t, z0 * (1 + t * 1.6) + np.cos(t * 4 + i * 1.3) * .5 * t * t) for t in np.linspace(0, 1, 9)]
+        rads = [((.09 if long else .23) * (1 - t * .8) + (.07 * np.sin((t - .8) / .2 * np.pi) if long and t > .8 else 0)) for t in np.linspace(0, 1, 9)]
         chain(M, f'arm{i}', pts, rads, SK, .03)
         inw = np.array((0, -y0, -z0)); inw = inw / np.linalg.norm(inw)
         for j in range(1, 8):  # suckers on the inner face
@@ -216,12 +216,12 @@ def ram(M):
         # a spiral horn: from the brow back, down and round, forward to a point
         pts = []; rads = []
         for t in np.linspace(0, 1, 16):
-            ang = t * 1.75 * np.pi; R = .72 * (1 - .45 * t)
-            pts.append((2.55 - np.sin(ang) * R + .1, .65 + (np.cos(ang) - 1) * R * .9 + .35 * np.sin(t * np.pi), s * (.38 + .35 * t + .05 * np.sin(ang)))); rads.append(.27 * (1 - t * .85))
+            ang = t * 1.85 * np.pi; R = .95 * (1 - .45 * t)
+            pts.append((2.55 - np.sin(ang) * R + .1, .65 + (np.cos(ang) - 1) * R * .9 + .35 * np.sin(t * np.pi), s * (.38 + .35 * t + .05 * np.sin(ang)))); rads.append(.34 * (1 - t * .85))
         chain(M, f'horn{s}', pts, rads, HORN, .02)
         for j in range(1, 15, 2): M.add(f'hr{s}{j}', lambda p, a=pts[j], r=rads[j]: sphere(p, a, r * 1.1), HORN, .03)  # ridged
         for x0, leg in ((1.75, 0), (-.35, 1)):  # legs tucked as it charges
-            k_ = (x0 + (-.35 if leg else .25), -.75, s * .55); f_ = (x0 + (-.9 if leg else .6), -1.05, s * .5)
+            k_ = (x0 + (-.35 if leg else .25), -.75, s * .55); f_ = (x0 + (-1.25 if leg else 1.05), -1.2, s * .5)
             chain(M, f'lg{s}{leg}', [(x0, -.35, s * .55), k_, f_], [.24, .17, .12], ROCK, .05); M.add(f'hf{s}{leg}', lambda p, f_=f_: ell(p, f_, (.15, .1, .13)), HOOF)
     M.add('beard', lambda p: spike(p, (3.0, -.05, 0), (2.85, -.55, 0), .12), ROCK)
     # the comet tail: shards of ice and stone streaming back, bright at their cores (the wave streams it past x -2.2)
