@@ -79,30 +79,50 @@ def mimic(M, k):
         M.add(f'core{j}', lambda p, c=(cx, top - .02, 0): ell(p, c, (.26, .16, .2)), GLOW)
         M.add(f'cring{j}', lambda p, c=(cx, top - .02, 0): torus(p, c, 'y', .27, .05), CABL)
     # ------------------------------------------------ the prow: a long fanged skull, the jaw dropped open on a glowing throat, cyan eyes
-    sk = [(-.3, .02), (-.22, .42), (.05, .56), (.4, .5), (.75, .38), (1.1, .26), (1.38, .15), (1.5, .03)]
+    # v798 after the paintings: a long low wedge of a skull with a pointed snout, jaws open at a snarl (not hanging), packed with long
+    # curved needle fangs (longest at the front), the jaws ribbed with cables, a cyan glow deep in the mouth
+    sk = [(-.3, .02), (-.22, .42), (.05, .55), (.45, .47), (.85, .34), (1.25, .23), (1.6, .12), (1.78, .02)]
+    SKY, SKZ = .62, .98
     def lathe(p, prof, c, sy, sz):
         q = p - V(*c); x = q[..., 0]; xs = np.array([a for a, _ in prof], f32); rs = np.array([b for _, b in prof], f32)
         r = np.interp(x, xs, rs, left=0, right=0); d = np.sqrt((q[..., 1] / sy) ** 2 + (q[..., 2] / sz) ** 2) - r
         return np.maximum(d * min(sy, sz) * .9, np.maximum(x - xs[-1], xs[0] - x))
     def hq(p):  # into the head's frame (unit skull)
         return (p - V(hx, hy, 0)) / hs
-    skull = lambda p: lathe(hq(p), sk, (0, .12, 0), .74, 1.1) * hs
+    skull = lambda p: lathe(hq(p), sk, (0, .12, 0), SKY, SKZ) * hs
     M.add('skull', skull, SHELL, .06)
-    ga = D['gape']; c_, s_ = np.cos(ga), np.sin(ga)
+    skr = lambda x: float(np.interp(x, [a_ for a_, _ in sk], [b_ for _, b_ in sk]))
+    ga = .28 + .32 * D['gape']; c_, s_ = np.cos(ga), np.sin(ga)
     def jq(p):  # the jaw's frame: rotate back up by the gape round its hinge
         q = hq(p) - V(-.05, -.16, 0); x = q[..., 0] * c_ - q[..., 1] * s_; y = q[..., 0] * s_ + q[..., 1] * c_
         return np.stack([x, y, q[..., 2]], -1)
-    jaw = lambda p: lathe(jq(p), [(-.05, .02), (.15, .3), (.6, .3), (1.05, .16), (1.3, .03)], (0, 0, 0), .5, 1.05) * hs
+    def jw(x, y, z): return (hx + (x * c_ + y * s_ - .05) * hs, hy + (-x * s_ + y * c_ - .16) * hs, z * hs)  # jaw frame -> world
+    def jd(x, y, z): return norm((x * c_ + y * s_, -x * s_ + y * c_, z))
+    jp = [(-.05, .02), (.15, .36), (.7, .32), (1.25, .2), (1.62, .04)]; JY, JZ = .42, .95
+    jr = lambda x: float(np.interp(x, [a_ for a_, _ in jp], [b_ for _, b_ in jp]))
+    jaw = lambda p: lathe(jq(p), jp, (0, 0, 0), JY, JZ) * hs
     M.add('jaw', jaw, SHELL, .04)
-    M.add('throat', lambda p: ell(hq(p), (.15, -.05, 0), (.45, .16, .3)) * hs, GLOW)
+    M.add('throat', lambda p: ell(hq(p), (.25, -.08, 0), (.5, .16, .3)) * hs, GLOW)
+    M.add('maw', lambda p: ell(jq(p), (.6, .1, 0), (.85, .07, .26)) * hs, GLOW)  # the glow lining the open mouth
     for s in (1, -1):
-        M.add(f'eye{s}', lambda p, s=s: ell(hq(p), (.62, .3, s * .33), (.12, .06, .06)) * hs, GLOW)
-        for i in range(6):  # fangs, upper and lower
-            u = i / 5; xu = .2 + 1.05 * u; zu = s * (.36 * (1 - u * .75) + .02)
-            Lf = (.42 - .18 * u) * (1.2 if i == 1 else 1)
-            a = (hx + xu * hs, hy + .02 * hs, zu * hs); spk(M, f'fu{s}{i}', a, norm((.15, -1, -s * .1)), Lf * hs * .75, .06 * hs, FANG)
-            jx, jy = .15 + .95 * u, .05; X = jx * c_ + jy * s_; Y = -jx * s_ + jy * c_  # back into the open jaw
-            b = (hx + (X - .05) * hs, hy + (Y - .16) * hs, s * (.3 * (1 - u * .7)) * hs); spk(M, f'fl{s}{i}', b, norm((s_ * .4, c_, -s * .1)), Lf * hs * .6, .055 * hs, FANG)
+        M.add(f'eye{s}', lambda p, s=s: ell(hq(p), (.72, .3, s * .3), (.14, .055, .065)) * hs, GLOW)
+        M.add(f'brow{s}', lambda p, s=s: ell(hq(p), (.68, .38, s * .3), (.26, .06, .1)) * hs, SHELL, .03)
+        # upper fangs along the gum, front ones longest, each curving in and back like a viperfish's
+        nu = 11
+        for i in range(nu):
+            u = i / (nu - 1); x = 1.62 - 1.42 * u; r = skr(x); L0 = (.58 if i == 1 else .4 if i == 0 else .16 + .16 * (1 - u)) * rng.uniform(.7, 1.25)
+            b0 = np.array((hx + x * hs, hy + (.12 - r * SKY * .62) * hs, s * r * SKZ * .78 * hs)); d1 = np.array(norm((.2, -1, s * .1))); d2 = np.array(norm((-.25, -1, -s * .4)))
+            m = b0 + d1 * L0 * .55 * hs; t = m + d2 * L0 * .5 * hs
+            chain(M, f'fu{s}{i}', [tuple(b0), tuple(m), tuple(t)], [.042 * hs, .024 * hs, .004 * hs], FANG)
+        nl = 10
+        for i in range(nl):
+            u = i / (nl - 1); x = 1.5 - 1.3 * u; r = jr(x); L0 = (.46 if i == 1 else .3 if i == 0 else .14 + .14 * (1 - u)) * rng.uniform(.7, 1.25)
+            b0 = np.array(jw(x, r * JY * .6, s * r * JZ * .78)); d1 = np.array(jd(.2, 1, s * .1)); d2 = np.array(jd(-.25, 1, -s * .4))
+            m = b0 + d1 * L0 * .55 * hs; t = m + d2 * L0 * .5 * hs
+            chain(M, f'fl{s}{i}', [tuple(b0), tuple(m), tuple(t)], [.038 * hs, .022 * hs, .004 * hs], FANG)
+        # cables ribbing the jaws: along the snout's flank and down each side of the lower jaw
+        cable(M, f'ju{s}', [(hx + x * hs, hy + (.12 - skr(x) * SKY * .2) * hs, s * skr(x) * SKZ * .97 * hs) for x in np.linspace(-.1, 1.5, 7)], .055 * hs, .03 * hs, CABL)
+        cable(M, f'jl{s}', [jw(x, -jr(x) * JY * .1, s * jr(x) * JZ * .97) for x in np.linspace(0, 1.4, 7)], .05 * hs, .025 * hs, CAB)
         for j in range(3):  # cables over the crown, swept back into the hull
             a = (hx + (1.0 - j * .25) * hs, hy + (.35 + .05 * j) * hs, s * (.15 + .1 * j) * hs)
             cable(M, f'cr{s}{j}', bez3(a, (hx + .3 * hs, hy + .55 * hs, s * .3 * hs), (hx - .4 * hs, hy + .5 * hs, s * .35 * hs), (x1 - .6, yc(x1 - .6) + .45, s * .3), 7), .09, .07, CAB)
