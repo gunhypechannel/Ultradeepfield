@@ -97,8 +97,8 @@ def shark(M):
 
 # ---------------------------------------------------------------- the Nebula Squid (art: dark red, a great orange eye, thick suckered arms)
 def squid(M):
-    SK = M_((.15, .025, .045), .36, .25); SKD = M_((.06, .01, .02), .45, .2); PALE = M_((.38, .2, .22), .45, .05); GLO = M_((.25, .05, .2), .2, .1, (.85, .3, 1.0))
-    EYE = M_((.3, .1, .0), .1, .2, (1., .5, .1)); PUP = M_((.01, .0, .0), .1, .2); BONE = M_((.85, .8, .72), .3, .1)
+    SK = M_((.07, .01, .022), .26, .38); SKD = M_((.025, .004, .01), .4, .25); PALE = M_((.2, .07, .08), .35, .1); GLO = M_((.2, .03, .02), .2, .1, (1.0, .32, .1))  # v787 wine-dark, ember glow
+    EYE = M_((.3, .06, .0), .1, .2, (1., .35, .05)); PUP = M_((.01, .0, .0), .1, .2); BONE = M_((.6, .52, .45), .3, .2)
     mprof = [(2.45, 0), (2.3, .25), (1.8, .52), (.9, .66), (0, .62), (-.45, .48), (-.6, .42)]
     mant = lambda p: lathe_x(p, mprof, .9, 1)
     M.add('mantle', mant, SK)
@@ -130,7 +130,7 @@ def squid(M):
 
 # ---------------------------------------------------------------- the Void Manta (art: violet-black wings veined with purple light)
 def manta(M):
-    SK = M_((.07, .03, .13), .35, .25); TOP = M_((.13, .05, .22), .3, .3); GLO = M_((.25, .08, .4), .2, .1, (.75, .3, 1.0)); CY = M_((.05, .3, .4), .2, .1, (.3, .9, 1.0))
+    SK = M_((.025, .01, .06), .24, .4); TOP = M_((.05, .02, .1), .24, .4); GLO = M_((.15, .03, .25), .2, .1, (.95, .25, 1.0)); EDG = M_((.3, .08, .0), .2, .1, (1.0, .42, .08)); CY = M_((.05, .3, .4), .2, .1, (.3, .9, 1.0))
     body = lambda p: ell(p, (0, 0, 0), (2.1, .38, 1.1))
     def wing(p, s):
         # an arrowhead wing, thick at the root and thin at the tip, its leading edge curving forward then back to a point
@@ -140,9 +140,11 @@ def manta(M):
         return np.maximum(d * .7, np.maximum(-z + .3, z - 3.6))
     for s in (1, -1):
         M.add(f'w{s}', lambda p, s=s: wing(p, s), SK, .25)
-        for j in range(7):  # veins of light from the root out to the edge, raised on both faces
-            A = (1.25 - j * .45, .55); B = (1.05 - j * .52 - .2 * (j > 3), 3.45 - abs(j - 2.5) * .28)
-            M.add(f'v{s}{j}', lambda p, s=s, A=A, B=B: np.maximum(seg2(p[..., 0], s * p[..., 2], A, B) - .028, np.abs(wing(p, s)) - .022), GLO)
+        for j in range(11):  # v787 thin vivid veins of light from the root out to the edge, raised on both faces
+            A = (1.25 - j * .29, .55); B = (1.05 - j * .33 - .2 * (j > 6), 3.45 - abs(j - 4) * .2)
+            M.add(f'v{s}{j}', lambda p, s=s, A=A, B=B: np.maximum(seg2(p[..., 0], s * p[..., 2], A, B) - .017, np.abs(wing(p, s)) - .02), GLO)
+            if j % 2: M.add(f'vb{s}{j}', lambda p, s=s, A=((A[0] + B[0]) / 2, (A[1] + B[1]) / 2), B=((A[0] + B[0]) / 2 - .45, (A[1] + B[1]) / 2 + .6): np.maximum(seg2(p[..., 0], s * p[..., 2], A, B) - .012, np.abs(wing(p, s)) - .02), GLO)
+        M.add(f'edge{s}', lambda p, s=s: (lambda z: np.maximum(np.maximum(np.abs(p[..., 0] - (1.75 - 1.95 * np.clip(z / 3.55, 0, 1) ** 1.15) + .04) - .05, np.abs(wing(p, s)) - .02), -z + .5))(s * p[..., 2]), EDG)
         M.add(f'lobe{s}', lambda p, s=s: oell(p, (2.15, -.02, s * .52), (Ry(s * .5) @ Rx(0)).T, (.42, .06, .18)), TOP, .05)
         M.add(f'lt{s}', lambda p, s=s: spike(p, (2.3, -.02, s * .62), (2.75, .05, s * .5), .07), TOP)
         M.add(f'eye{s}', lambda p, s=s: sphere(p, (1.82, .15, s * .62), .1), CY)
@@ -155,7 +157,7 @@ def manta(M):
 
 # ---------------------------------------------------------------- the Solar Moth (art: wings of burning gold veined with light, a furred body)
 def moth(M):
-    FUR = M_((.3, .18, .06), .8, .05, (.05, .025, .0)); FURD = M_((.12, .065, .025), .8, .05); WING = M_((.2, .1, .02), .45, .4, (.22, .1, .01)); VEIN = M_((.5, .33, .08), .3, .5, (.85, .55, .12))
+    FUR = M_((.3, .18, .06), .8, .05, (.05, .025, .0)); FURD = M_((.12, .065, .025), .8, .05); WING = M_((.1, .04, .005), .35, .3, (.42, .14, .0)); VEIN = M_((.5, .33, .08), .25, .5, (1.0, .78, .28))
     EYE = M_((.3, .05, .0), .2, .1, (1., .45, .08)); EYC = M_((.05, .3, .35), .2, .1, (.3, 1., 1.)); DARK = M_((.06, .03, .02), .6, .1)
     rng = np.random.default_rng(5)
     for j, (x, r) in enumerate(((1.05, .2), (.75, .26), (.3, .3), (-.15, .27), (-.55, .24), (-.9, .2), (-1.2, .15), (-1.45, .1))):
@@ -179,11 +181,11 @@ def moth(M):
             M.add(f'w{s}{w}', wf, WING, .02)
             M.add(f'rim{s}{w}', lambda p, pts=pts, y0=y0: np.maximum(np.abs(poly2(p[..., 0], p[..., 2], pts) - .08) - .035, np.abs(p[..., 1] - y0) - .04), VEIN)
             root = (.15 if w == 0 else -.5, .35); tips = WP[w][1:4]
-            for v in range(8):  # veins from the root out to the edge
-                u = v / 7; seg = min(2, int(u * 2.999)); f = u * 3 - seg if seg < 2 else (u * 3 - 2)
+            for v in range(13):  # veins from the root out to the edge
+                u = v / 12; seg = min(2, int(u * 2.999)); f = u * 3 - seg if seg < 2 else (u * 3 - 2)
                 tx = tips[min(seg, 2)][0] + (tips[min(seg + 1, 2)][0] - tips[min(seg, 2)][0]) * f * (seg < 2); tz = tips[min(seg, 2)][1] + (tips[min(seg + 1, 2)][1] - tips[min(seg, 2)][1]) * f * (seg < 2)
                 B = (root[0] + (tx - root[0]) * .93, root[1] + (tz - root[1]) * .93)
-                M.add(f'v{s}{w}{v}', lambda p, A=root, B=B, wf=wf, s=s: np.maximum(seg2(p[..., 0], s * p[..., 2], A, B) - .03, np.abs(wf(p)) - .022), VEIN)
+                M.add(f'v{s}{w}{v}', lambda p, A=root, B=B, wf=wf, s=s: np.maximum(seg2(p[..., 0], s * p[..., 2], A, B) - .02, np.abs(wf(p)) - .022), VEIN)
             ec = ((.55, 2.0) if w == 0 else (-1.0, 1.55)); r0 = .32 if w == 0 else .24
             M.add(f'se{s}{w}', lambda p, ec=ec, r0=r0, y0=y0: cyl(p, (ec[0], y0, s * ec[1]), 'y', r0, .05, .02), EYE)
             M.add(f'sr{s}{w}', lambda p, ec=ec, r0=r0, y0=y0: torus(p, (ec[0], y0, s * ec[1]), 'y', r0 * 1.12, .035), VEIN)
@@ -193,8 +195,8 @@ def moth(M):
 
 # ---------------------------------------------------------------- the Comet Ram (art: a ram of craggy stone and bronze, spiral horns, a trail of burning debris)
 def ram(M):
-    ROCK = M_((.075, .065, .06), .85, .1); ROCKL = M_((.14, .115, .09), .8, .15); HORN = M_((.42, .28, .12), .35, .75); CRK = M_((.1, .3, .45), .2, .1, (.45, .85, 1.0))
-    ICE = M_((.4, .65, .8), .1, .2, (.25, .55, .8)); EYE = M_((.1, .3, .4), .1, .1, (.5, .95, 1.0)); HOOF = M_((.08, .07, .07), .5, .3)
+    ROCK = M_((.05, .04, .035), .75, .2); ROCKL = M_((.2, .12, .05), .4, .7); HORN = M_((.62, .42, .14), .25, .9); CRK = M_((.4, .1, .0), .2, .1, (1.0, .45, .08));
+    ICE = M_((.2, .07, .01), .3, .2, (1.0, .5, .1)); EYE = M_((.4, .15, .0), .1, .1, (1.0, .6, .15)); HOOF = M_((.08, .07, .07), .5, .3)
     def bodyf(p):
         b = ell(p, (.6, 0, 0), (1.55, .9, .95)); b = smin(b, ell(p, (1.9, .25, 0), (.75, .75, .7)), .4)  # shoulders
         b = smin(b, ell(p, (2.7, .35, 0), (.55, .45, .4)), .25)  # the head

@@ -120,7 +120,7 @@ def spider(M):
 
 # ---------------------------------------------------------------- the Star Leviathan (art: an armoured whale-headed sea serpent, cyan light in its seams)
 def leviathan(M):
-    SK = M_((.025, .035, .055), .35, .5); PL = M_((.06, .075, .1), .3, .75); PLR = M_((.1, .12, .15), .25, .85); BONE = M_((.75, .72, .65), .3, .1)
+    SK = M_((.025, .05, .1), .3, .45); PL = M_((.07, .09, .13), .28, .75); PLR = M_((.18, .21, .26), .22, .9); BONE = M_((.75, .72, .65), .3, .1)
     GL = M_((.05, .3, .4), .15, .1, (.25, .9, 1.0)); MOL = M_((.4, .1, .02), .2, .1, (1.0, .45, .1)); FIN = M_((.05, .2, .3), .2, .2, (.12, .5, .65))
     S = 1.25; HXo = 2.6; T = lambda x, y, z=0: (HXo + (x - HXo) * S, y * S, z * S)
     hprof = [(4.7, 0), (4.62, .3), (4.4, .6), (4.0, .84), (3.5, .96), (3.0, .98), (2.6, .92)]
@@ -156,8 +156,12 @@ def leviathan(M):
 
 SPEC = {'ctort': (tortoise, (-3.3, -1.4, -2.2), (4.0, 2.9, 2.2)), 'gspider': (spider, (-3.6, -1.3, -3.6), (3.9, 2.8, 3.6)),
         'slevi': (leviathan, (-9.6, -1.6, -2.2), (6.2, 2.0, 2.2))}
+PAINT_K = ''
 def paint(P, N, A, E, idx):
     v = .5 + .5 * hashf(idx.astype(np.int64), idx.astype(np.int64) * 7 + 1, 3); glowing = E[:, 0] + E[:, 1] + E[:, 2] > .05
     A[~glowing, :3] *= (.8 + .4 * v[~glowing])[:, None]; top = np.clip(N[:, 1], 0, 1); A[:, :3] *= (1 + .25 * top)[:, None]
+    if PAINT_K == 'slevi':  # v787 streaks of cyan light across the hide, as in the painting
+        x, y, z = P[:, 0], P[:, 1], P[:, 2]; st = np.sin(x * 5.3 + z * 2.1 + np.sin(x * 1.7) * 2.) * np.sin(x * 2.3 - y * 4.1 + z * 1.3)
+        m = (st > .86) & (~glowing) & (x < 2.6); E[m, 0] += .12; E[m, 1] += .6; E[m, 2] += .95
 if __name__ == '__main__':
-    k = sys.argv[1]; f, lo, hi = SPEC[k]; M = Model(lo, hi, float(sys.argv[3]) if len(sys.argv) > 3 else .035); f(M); M.bake(sys.argv[2], paint)
+    k = sys.argv[1]; PAINT_K = k; f, lo, hi = SPEC[k]; M = Model(lo, hi, float(sys.argv[3]) if len(sys.argv) > 3 else .035); f(M); M.bake(sys.argv[2], paint)
