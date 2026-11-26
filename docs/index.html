@@ -7320,7 +7320,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 793;
+const GAME_V = 794;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -14680,7 +14680,7 @@ const MON_WAVE = {
   /* v221 the shark swims like a shark: an S-wave runs from head to tail, small through the body and growing smoothly to a full
      tail sweep, while the head yaws gently against the tail and the body rolls a touch (it used to flick only its tail tip) */
   swhale: "float su = clamp((2.2 - position.x) / 6.9, 0., 1.), sh = clamp((position.x - 1.) / 2.6, 0., 1.), sb = mt * 4.2; transformed.z += (.04 + .72 * su * su) * sin(position.x * .78 + sb) - .1 * sh * sin(sb + 1.1); transformed.y += .03 * su * sin(sb * .5 + 1.); if (position.x > 2. && position.y < -.12) { float jo = .32 * pow(max(0., sin(mt * .9)), 6.), dx = position.x - 2.; transformed.y -= dx * sin(jo); transformed.x -= dx * (1. - cos(jo)); }",
-  slevi: "float tl = clamp((3.2 - position.x) / 11.8, 0., 1.); transformed.z += (.12 + .85 * tl) * sin(position.x * .62 + mt * 2.4); transformed.y += .2 * tl * sin(position.x * .4 + mt * 1.6); if (position.x > 3.2 && position.y < -.45) { float jo = .45 * pow(max(0., sin(mt * .5)), 4.), dx = position.x - 3.2; transformed.y -= dx * sin(jo); transformed.x -= dx * (1. - cos(jo)); }",
+  slevi: "float tl = clamp((2.4 - position.x) / 10.5, 0., 1.); transformed.y += (.04 + .95 * tl * tl) * sin(position.x * .42 + mt * 1.5); transformed.z += .08 * tl * sin(position.x * .3 + mt * .9); if (position.x > 3.2 && position.y < -.45) { float jo = .45 * pow(max(0., sin(mt * .5)), 4.), dx = position.x - 3.2; transformed.y -= dx * sin(jo); transformed.x -= dx * (1. - cos(jo)); }",
   /* v515 the Manta's wings ripple from root to tip and its tail whips; the Starhive's swarm circles its nest; the Tortoise paddles
      its four flippers in turn; the Spider walks its legs in waves; the Moth beats its wings; the Ram's comet tail streams behind it */
   /* v529 the special creatures: the clutch breathes and its branches and roots sway; the Ghost Whale swims with slow beats of its tail and
