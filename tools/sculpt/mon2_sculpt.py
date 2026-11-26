@@ -122,7 +122,7 @@ def spider(M):
 def leviathan(M):
     SK = M_((.025, .05, .1), .3, .45); PL = M_((.07, .09, .13), .28, .75); PLR = M_((.18, .21, .26), .22, .9); BONE = M_((.75, .72, .65), .3, .1)
     GL = M_((.05, .3, .4), .15, .1, (.25, .9, 1.0)); MOL = M_((.4, .1, .02), .2, .1, (1.0, .45, .1)); FIN = M_((.05, .2, .3), .2, .2, (.12, .5, .65))
-    S = 1.25; HXo = 2.6; T = lambda x, y, z=0: (HXo + (x - HXo) * S, y * S, z * S)
+    S = 1.45; HXo = 2.6; T = lambda x, y, z=0: (HXo + (x - HXo) * S, y * S, z * S)
     hprof = [(4.7, 0), (4.62, .3), (4.4, .6), (4.0, .84), (3.5, .96), (3.0, .98), (2.6, .92)]
     hq = lambda p: np.stack([HXo + (p[..., 0] - HXo) / S, p[..., 1] / S, p[..., 2] / S], -1)
     M.add('head', lambda p: lathe_x(hq(p), hprof, .78, .95) * S, SK, .1)
@@ -139,7 +139,7 @@ def leviathan(M):
     for j in range(5): M.carve(f'hs{j}', lambda p, j=j: np.maximum(np.maximum(np.abs(p[..., 0] - (4.6 - j * .38)) - .025, np.abs(p[..., 2]) - .9), -(p[..., 1] - .55)), GL)
     # the body: a long eel ringed with armour plates, spikes forward, a glowing fin membrane down the tail
     pts = [(2.9 - t * 11.6, np.sin(t * 3.2) * .12, np.sin(t * 6.2) * .75 * t) for t in np.linspace(0, 1, 15)]
-    rad = lambda t: .8 * (.95 + t if t < .05 else 1.0 - t * .88) + .04
+    rad = lambda t: .95 * (.95 + t if t < .05 else 1.0 - t * .84) + .04
     ts = np.linspace(0, 1, 15); chain(M, 'body', pts, [rad(t) for t in ts], SK, .15)
     from scipy.interpolate import CubicSpline
     cs = CubicSpline(ts, np.array(pts)); dcs = cs.derivative()
@@ -150,7 +150,7 @@ def leviathan(M):
         if i % 2: M.carve(f'gs{i}', lambda p, q=tuple(q), tg=tg, rr=rr: (lambda d, a: np.maximum(np.abs(a - .18) - .025, np.sqrt(np.maximum(0, np.sum(d * d, -1) - a * a)) - rr * .9))(p - V(*q), (p - V(*q)) @ tg.astype(f32)), GL)
     for i in range(40):
         t = .02 + i / 40 * .9; q = cs(t); rr = rad(t)
-        if t < .5: spk(M, f'sp{i}', (q[0], q[1] + rr * .9, q[2]), norm((-.5, 1, 0)), .25 + rr * .45, .05 + rr * .06, PLR)
+        if t < .5: spk(M, f'sp{i}', (q[0], q[1] + rr * .9, q[2]), norm((-.5, 1, 0)), .35 + rr * .75, .05 + rr * .06, PLR)
         else: M.add(f'fn{i}', lambda p, q=tuple(q), rr=rr: _fin(p, [(.16, 0), (.05, .3), (-.2, .55), (-.3, 0)], .03, (q[0], q[1] + rr * .85, q[2]), None) * 1.0, FIN, .02)
     q = cs(1.0); M.add('tail', lambda p: _fin(p, [(.2, 0), (-1.1, .9), (-.8, .1), (-1.15, -.7), (.2, -.05)], .05, (q[0] - .05, q[1], q[2]), None), FIN, .03)
 
