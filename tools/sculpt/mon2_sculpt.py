@@ -147,6 +147,14 @@ def leviathan(M):
             q0 = np.array(T(2.1, -.32, s * .62)); R = Rx(s * (np.pi / 2 + .45)) @ Rz(-.3)
             A = q0 + R @ np.array([.25 - v * .2, .1, 0]) * 1.0; B = q0 + R @ np.array([-.15 - v * .25, 1.9 - v * .35, 0])
             M.add(f'pv{s}{v}', lambda p, A=tuple(A), B=tuple(B): rcone(p, A, B, .05, .025), VEIN)
+        for v in range(6):  # a ragged glowing trailing edge, as in the painting
+            q0 = np.array(T(2.1, -.32, s * .62)); R = Rx(s * (np.pi / 2 + .45)) @ Rz(-.3); u = (v + .5) / 6
+            A = q0 + R @ np.array([-.7 - .1 * u, 2.3 * u, 0]); spk(M, f'pe{s}{v}', tuple(A), tuple(R @ np.array([-1, .15, 0])), .32 + .18 * (v % 2), .06, VEIN)
+    # v796 layered head armour: plates that follow the skull, each overlapping the one behind like the painting's helm
+    for j in range(6):
+        x0 = 4.85 - j * .36; off = .05 + j * .012
+        M.add(f'ha{j}', lambda p, x0=x0, off=off: np.maximum(np.maximum(np.abs(lathe_x(hq(p), hprof, .74, .92) * S - off) - .035, np.abs(hq(p)[..., 0] - (x0 - .22)) - .22), .3 * S - p[..., 1] - (x0 - 3.6) * .1 * S), PL)
+        M.carve(f'hg{j}', lambda p, x0=x0: np.maximum(np.abs(hq(p)[..., 0] - (x0 - .45)) - .012, np.abs(lathe_x(hq(p), hprof, .74, .92) * S) - .12), SK)
     # throat pleats: glowing grooves along the underside of the head
     for k in range(-4, 5):
         z = k * .2 * S; M.add(f'tp{k}', lambda p, z=z: np.maximum(ell(p, T(3.4, -.5), (1.45 * S, .17 * S, .78 * S)), np.abs(p[..., 2] - z) - .02), PLT)
