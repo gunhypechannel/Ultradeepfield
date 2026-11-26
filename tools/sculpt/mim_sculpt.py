@@ -9,9 +9,9 @@ from sdf import *
 from crc_lib import lerp, chain, spk, norm, oell
 
 MIM_D = {
-    'mstalk': dict(s=1, mane=26, hump=.5, len=1, gape=.55, tail=8), 'mhunt': dict(s=.95, mane=18, hump=.15, len=1.35, gape=.8, tail=16),
-    'mharv': dict(s=1, mane=12, hump=0, len=.8, gape=.35, tail=4, sac=1), 'massim': dict(s=1.05, mane=20, hump=.45, len=1.05, gape=.6, tail=8, plates=1),
-    'mguard': dict(s=1.15, mane=14, hump=.25, len=.9, gape=.4, tail=6, armour=1), 'mtitan': dict(s=1.25, mane=40, hump=.8, len=1.1, gape=.7, tail=12, brood=1),
+    'mstalk': dict(s=1, mane=44, hump=0.7, len=1, gape=0.95, tail=10), 'mhunt': dict(s=0.95, mane=8, hump=0.05, len=1.75, gape=0.85, tail=30),
+    'mharv': dict(s=1.05, mane=6, hump=0, len=0.65, gape=0.3, tail=3, sac=1), 'massim': dict(s=1.1, mane=22, hump=1.0, len=1.0, gape=0.6, tail=6, plates=1),
+    'mguard': dict(s=1.3, mane=10, hump=0.45, len=0.8, gape=0.35, tail=4, armour=1), 'mtitan': dict(s=1.5, mane=64, hump=1.15, len=1.15, gape=0.8, tail=18, brood=1),
     'malpha1': dict(s=1.35, mane=46, hump=.9, len=1.15, gape=.8, tail=14, alpha=1), 'malpha2': dict(s=1.3, mane=36, hump=.3, len=1.45, gape=.9, tail=24, alpha=1, tint=(.6, .42, 1.0)),
     'malpha3': dict(s=1.4, mane=30, hump=.5, len=1.0, gape=.6, tail=10, armour=1, alpha=1, tint=(.85, .94, 1.0)), 'malpha4': dict(s=1.35, mane=40, hump=.8, len=1.1, gape=.7, tail=12, brood=1, alpha=1, tint=(.25, 1.0, .75)),
     'momega': dict(s=2.0, mane=70, hump=1.2, len=1.3, gape=1.0, tail=30, alpha=1, omega=1), 'momegax': dict(s=2.0, mane=70, hump=1.2, len=1.3, gape=1.1, tail=30, alpha=1, omega=2, tint=(.85, .97, 1.0)),
