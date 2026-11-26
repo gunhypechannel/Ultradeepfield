@@ -2749,6 +2749,8 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
       const kp = V(2.4, 3.6, 0); cx.add(beam(V(0, 0, 0), kp, 1.5, 1.1, 1.0, M));
       { const fin = beam(V(.3, .75, 0), V(3.2, 3.6, 0), .6, .3, .8, ML); cx.add(fin); for (const z of [-.53, .53]) { const s = strut(V(.5, .2, z), V(3.1, 2.55, z), .05, .04, glowMat(VIO2)); cx.add(s); } }
       { const cyl = strut(V(.3, -.55, 0), V(2.0, 1.1, 0), .16, .16, MD, 8); cx.add(cyl); const rod = strut(V(2.0, 1.1, 0), V(2.9, 2.0, 0), .08, .08, M, 8); cx.add(rod); }
+      { /* v774 thigh armour collars and a second piston */ const th = Math.atan2(kp.y, kp.x); for (const q of [.3, .52, .74]) { const c = box(.42, 1.8, 1.3, q === .52 ? M : ML); c.position.copy(kp).multiplyScalar(q); c.rotation.z = th; cx.add(c); const g = box(.08, 1.1, 1.34, glowMat(VIO2, .8)); g.position.copy(c.position); g.rotation.z = th; g.translateX(.24); cx.add(g); }
+        for (const z of [-.62, .62]) { const p2 = strut(V(-.2, .5, z), V(1.6, 2.6, z), .12, .12, MD, 8); cx.add(p2); } }
       const kn = new TH.Group(); kn.position.copy(kp); cx.add(kn);
       { const d = new TH.Mesh(new TH.CylinderGeometry(1.0, 1.0, 1.5, 14), ML); d.rotation.x = Math.PI / 2; kn.add(d); const r = new TH.Mesh(new TH.TorusGeometry(.5, .07, 6, 24), glowMat(VIO2)); r.position.z = .78; kn.add(r); const r2 = r.clone(); r2.position.z = -.78; kn.add(r2);
         const pk = shard(.45, 1.1, M); pk.position.set(.2, .5, 0); pk.rotation.z = -.35; kn.add(pk); const ks = sprite(1.6); ks.position.z = .65; kn.add(ks); }
@@ -3698,7 +3700,7 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
     const memT = paint("vae_mem", 256, (x, N2) => { const g = x.createLinearGradient(0, 0, N2, N2); g.addColorStop(0, "#2a0b4a"); g.addColorStop(.6, "#4a1a86"); g.addColorStop(1, "#8e5cff"); x.fillStyle = g; x.fillRect(0, 0, N2, N2);
       x.strokeStyle = "#e0c0ff"; for (let i = 0; i < 70; i++) { let px = rnd() * N2, py = rnd() * N2, a = rnd() * TAU; x.globalAlpha = .25 + rnd() * .55; x.lineWidth = .6 + rnd() * 1.8; x.beginPath(); x.moveTo(px, py); for (let k = 0; k < 24; k++) { a += (rnd() - .5) * .7; px += Math.cos(a) * 7; py += Math.sin(a) * 7; x.lineTo(px, py); } x.stroke(); }
       x.globalAlpha = 1; for (let i = 0; i < 160; i++) { x.fillStyle = `rgba(255,${200 + rnd() * 55 | 0},255,${.3 + rnd() * .6})`; x.fillRect(rnd() * N2, rnd() * N2, 1.2, 1.2); } });
-    const memM = new TH.MeshBasicMaterial({ map: memT, color: 0x6e5e92, transparent: true, opacity: .9, side: TH.DoubleSide, depthWrite: false, toneMapped: false });
+    const memM = new TH.MeshBasicMaterial({ map: memT, vertexColors: true, color: 0x6e5e92, transparent: true, opacity: .9, side: TH.DoubleSide, depthWrite: false, toneMapped: false });
     const wings = []; for (const sx of [-1, 1]) { const root = new TH.Group(); root.position.set(sx * 1.8, 6.6, -.4); body.add(root); const w = new TH.Group(); root.add(w);
       const J = [V(0, 0, 0), V(sx * 6, 6.5, -.8), V(sx * 11.5, 11.5, -1.6)], tips = [V(sx * 19, 20, -2.6), V(sx * 24, 13, -3), V(sx * 24, 5, -2.6), V(sx * 20, -1, -2), V(sx * 12, -4.5, -1.2)];
       w.add(strut(J[0], J[1], .55, .42, MG, 6)); w.add(strut(J[1], J[2], .42, .32, MG, 6)); for (const tp of tips) w.add(strut(J[2], tp, .26, .06, MG, 5));
@@ -3706,9 +3708,11 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
       for (let k = 0; k < 6; k++) { const f = k / 5, s = shard(.12, .9, MG); s.position.lerpVectors(J[0], J[1], f); s.position.y += .45; s.rotation.z = sx * -.3; w.add(s); }
       // membrane: a fan from the wrist between consecutive tips, and a panel from the root along the arm to the last tip and back to the flank
       const pts = [J[2], ...tips], pos = [], uv = [], uvOf = p => [.5 + p.x / 46 * sx, .5 + p.y / 30];
-      for (let k = 0; k < tips.length - 1; k++) { const a = J[2], b = tips[k], c = tips[k + 1], m1 = b.clone().lerp(c, .5).lerp(a, .18); for (const tri of [[a, b, m1], [a, m1, c]]) for (const p of tri) { pos.push(p.x, p.y, p.z); uv.push(...uvOf(p)); } }
-      { const fl = V(sx * .4, -5.5, .3); for (const tri of [[J[0], J[1], tips[4]], [J[1], J[2], tips[4]], [J[0], tips[4], fl]]) for (const p of tri) { pos.push(p.x, p.y, p.z); uv.push(...uvOf(p)); } }
-      const mg = new TH.BufferGeometry(); mg.setAttribute("position", new TH.Float32BufferAttribute(pos, 3)); mg.setAttribute("uv", new TH.Float32BufferAttribute(uv, 2)); mg.computeVertexNormals(); const mem = new TH.Mesh(mg, memM); mem.userData.dyn = 1; w.add(mem);
+      const vc = [], put = (p, k) => { pos.push(p.x, p.y, p.z); uv.push(...uvOf(p)); vc.push(k, k, k); }, NS = LO ? 5 : 9; /* v774 scalloped trailing edges, shaded membrane */
+      const scal = (a, b, c, dep, ka, kb, kc) => { let prev = b, pk = kb; for (let i = 1; i <= NS; i++) { const t = i / NS, q = b.clone().lerp(c, t).lerp(a, dep * Math.sin(Math.PI * t)), qk = (kb + (kc - kb) * t) * (1 - .3 * Math.sin(Math.PI * t)); put(a, ka); put(prev, pk); put(q, qk); prev = q; pk = qk; } };
+      for (let k = 0; k < tips.length - 1; k++) scal(J[2], tips[k], tips[k + 1], .3, 1.25, .8, .8);
+      { const fl = V(sx * .4, -5.5, .3); for (const [tri, ks] of [[[J[0], J[1], tips[4]], [.9, 1.1, .8]], [[J[1], J[2], tips[4]], [1.1, 1.25, .8]]]) tri.forEach((q, i) => put(q, ks[i])); scal(J[0], tips[4], fl, .26, .9, .8, .65); }
+      const mg = new TH.BufferGeometry(); mg.setAttribute("position", new TH.Float32BufferAttribute(pos, 3)); mg.setAttribute("uv", new TH.Float32BufferAttribute(uv, 2)); mg.setAttribute("color", new TH.Float32BufferAttribute(vc, 3)); mg.computeVertexNormals(); const mem = new TH.Mesh(mg, memM); mem.userData.dyn = 1; w.add(mem);
       wings.push({ sx, root, w, tips: tips.map(p => p.clone()), J }); }
     /* ---- the celestial wheel ---- */
     const wheel = new TH.Group(); wheel.position.set(0, 14, -14); wheel.rotation.y = .12; body.add(wheel); const WR = 11.5;
@@ -3887,6 +3891,12 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
       { const sp = slab(1.3, 36, 1.8, MA, .5, .3); sp.rotation.z = Math.PI; sp.position.set(sx * .62, 5.5, -2.6); h.add(sp); const gl = glowBar(.12, 30, .12); gl.position.set(sx * 1.32, 6.5, -2.9); h.add(gl); }
       { const tw = slab(2.6, 6.5, 2.6, MD, .6, .6); tw.position.set(sx * 2.3, -9.5, -3.2); h.add(tw); const tw2 = spike(1.4, 4.2, .9, MA); tw2.position.set(sx * 2.3, -11.5, -4.6); tw2.rotation.x = -Math.PI / 2 + .35; h.add(tw2); for (const yy of [-8, -10.5]) { const w = glowBar(2.2, .14, .14); w.position.set(sx * 2.3, yy, -4.55); h.add(w); } }
       for (const y of [8, 1, -6, -12]) { const m = glowBar(Math.abs(O[2][0]) * .55, .12, .12); m.position.set(sx * Math.abs(O[2][0]) * .45, y, -2.12); h.add(m); }
+      { /* v774 deck detail */ const ex = y => { const P = O.map(([x, yy]) => [Math.abs(x), yy]); for (let k = 0; k < P.length - 2; k++) { const [x0, y0] = P[k], [x1, y1] = P[k + 1]; if ((y <= y0 && y >= y1)) return x0 + (x1 - x0) * (y - y0) / ((y1 - y0) || 1); } return 4; };
+        for (const [y, x] of [[15, 2.2], [7, 3.3], [-1, 3.9], [-8.5, 3.7]]) { const t = new TH.Group(); t.position.set(sx * x, y, -2.2); h.add(t); const bs = new TH.Mesh(new TH.CylinderGeometry(.8, .95, .45, 10), MD); bs.rotation.x = Math.PI / 2; t.add(bs);
+          const hd = slab(1.0, 1.2, .55, MA, .3, .8); hd.position.z = -.45; t.add(hd); for (const dx of [-.26, .26]) { const br = new TH.Mesh(new TH.CylinderGeometry(.1, .12, 2.0, 6), MA); br.position.set(dx, 1.4, -.5); t.add(br); } const ey = glowBar(.5, .12, .1); ey.position.set(0, .3, -.75); t.add(ey); }
+        for (let k = 0; k < 10; k++) { const y = 21 - k * 3.6, wx = ex(y); const pl = slab(.9, 2.6, .32, k % 2 ? MD : MA, .25, .85); pl.position.set(sx * Math.max(.8, wx - .95), y, -1.6); pl.rotation.z = sx * .06; h.add(pl); }
+        for (const y0 of [11.5, -4]) for (let k = 0; k < 5; k++) { const v = slab(1.7, .2, .2, MD, .08, 1); v.position.set(sx * 1.6, y0 - k * .45, -2.05); h.add(v); }
+        for (const [y, L] of [[23, 2.6], [20.5, 1.6]]) { const ms = new TH.Mesh(new TH.CylinderGeometry(.06, .1, L, 5), MA); ms.rotation.x = Math.PI / 2; ms.position.set(sx * .9, y, -1.9 - L / 2); h.add(ms); const tp = glowBar(.16, .16, .16); tp.position.set(sx * .9, y, -1.9 - L); h.add(tp); } }
       return h; });
     const halo = J(chest, [0, 7.4, -3.4], [0, 3.0, -4.6], [0, 0, 0], [0, 0, 0], .6, .76); { const b = band(5.2, .55, .5, MA, 0, TAU, 72, 24); b.rotation.x = Math.PI / 2; halo.add(b); const rr = runeRing(5.0, 0x7ac8ff, .9); halo.add(rr); halo.userData.rr = rr; for (let k = 0; k < 4; k++) { const a = k / 4 * TAU; const o = new TH.Mesh(new TH.SphereGeometry(.45, 10, 8), CORE); o.position.set(Math.sin(a) * 5.4, Math.cos(a) * 5.4, 0); halo.add(o); } const top = spike(1.2, 3, .5, MA); top.position.y = 5.2; halo.add(top); }
     const cannons = [-1, 1].map(sx => { const c = J(chest, [sx * 2.4, 7.0, -2.8], [sx * 2.0, 6.0, -2.9], [Math.PI / 2 - .1, 0, 0], [0, 0, 0], .7, .82); put(c, slab(2.2, 2.0, 2.2, MD), [0, .4, 0]); const mz = []; for (const dx of [-.45, .45]) { const b = new TH.Mesh(new TH.CylinderGeometry(.22, .26, 4.4, 8), MA); b.position.set(dx, 3.0, 0); c.add(b); const f = sprite(2.2, "rgba(170,220,255,1)", "aex_mz"); f.position.set(dx, 5.5, 0); f.material.opacity = 0; c.add(f); mz.push(f); } return { c, mz }; });
@@ -4267,7 +4277,7 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
         x.strokeStyle = "rgba(255,255,255,.25)"; x.lineWidth = N * .003; x.beginPath(); x.moveTo(cx, cy + H * .2); x.lineTo(cx, cy + H * 1.2); x.stroke(); } } }, true);
   function medusara() { const grp = new TH.Group(), shk = new TH.Group(), body = new TH.Group(), hull = new TH.Group(); grp.add(shk); shk.add(body); body.add(hull);
     const LO = LOD === 1, RC = [1, .45, .35], S = scr(), RED = 0xff3a2a, GOLD = 0xffc85a, out0 = {};
-    const MS = hullMat("med3", { rows: 1, cols: 1, pal: ["#2c2930"], rim: .5, slits: 0, sg: "#ffc860", veins: 48, vc: "#ffd890", metal: .12, rough: .7, rc: [1, .8, .55], ei: 2.6, rep: [1, 1], relief: 1.1, n: 1024, rust: 0 }); MS.envMapIntensity = .35; MS.normalScale.set(1, 1); // v494 petrified starstone
+    const MS = hullMat("med3", { rows: 1, cols: 1, pal: ["#57535e"], slits: 0, sg: "#ffc860", veins: 48, vc: "#ffd890", metal: .12, rough: .7, rc: [1, .8, .55], ei: 2.6, rep: [1, 1], relief: 1.1, n: 1024, rust: 0 }); MS.envMapIntensity = .35; MS.normalScale.set(1, 1); // v494 petrified starstone
     const MSd = hullMat("medd", { rows: 1, cols: 1, pal: ["#2a2632"], slits: 0, sg: "#ffa030", veins: 30, vc: "#d89a40", metal: .2, rough: .85, rc: [.75, .45, 1], ei: 2.6, rep: [2, 2], relief: 3 });
     const MG = hullMat("medg", { rows: 3, pal: ["#c8901e", "#e6b23c", "#a87418", "#f5c84a"], bronze: 0, slits: .2, sc: "#fff4d0", sg: "#ff6a3a", metal: 1, rough: .14, rc: [1, .7, .4], ei: 1.8, rep: [3, 1] }); MG.envMapIntensity = 2.2;
     const scT = paint("med_scale", 256, (x, N) => { x.fillStyle = "#3a2c1c"; x.fillRect(0, 0, N, N); for (let r = 0; r < 12; r++) for (let c = 0; c < 8; c++) { const cx = c * N / 8 + (r % 2) * N / 16, cy = r * N / 12; const g = x.createRadialGradient(cx, cy - 4, 1, cx, cy, N / 12); g.addColorStop(0, "#f4cf72"); g.addColorStop(.6, "#b07a26"); g.addColorStop(1, "#2a1c0e"); x.fillStyle = g; x.beginPath(); x.ellipse(cx, cy, N / 15, N / 20, 0, 0, Math.PI); x.fill(); } });
@@ -4310,7 +4320,7 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
     const stormS = sprite(64, "rgba(170,80,255,1)", "med_storm"); stormS.position.set(0, 0, 4); stormS.material.opacity = .5; body.add(stormS);
     const bt = bolts(body, LO ? 8 : 14, () => { const a = rnd() * TAU, b = rnd() * TAU; return [V(Math.cos(a) * 9, 4 + rnd() * 4, Math.sin(a) * 9), V(Math.cos(b) * 20, -6 - rnd() * 10, Math.sin(b) * 20)]; }, 0xd8a0ff);
     /* ---- v490 the serpent crown: biomechanical serpents rising from behind and around her head, each its own living weapon ---- */
-    const MSk = new TH.MeshStandardMaterial({ color: 0x4a3826, metalness: .75, roughness: .34, envMapIntensity: .55, map: medScale(0), emissiveMap: medScale(1), emissive: 0xffa83a, emissiveIntensity: .7 }); MSk.userData.P = {}; // v495 stone scales, gold between rimOn(MSk, .3, [.9, .45, .35]);
+    const MSk = new TH.MeshStandardMaterial({ color: 0xb4b0bc, metalness: .7, roughness: .32, envMapIntensity: .6, map: medScale(0), emissiveMap: medScale(1), emissive: 0xffa83a, emissiveIntensity: .9 }); MSk.userData.P = {}; // v495 stone scales, gold between rimOn(MSk, .3, [.9, .45, .35]);
     const CRM = new TH.MeshBasicMaterial({ color: 0xff2a3a, toneMapped: false }), segG = new TH.CylinderGeometry(1, 1.08, 1, LO ? 8 : 12, 1), bandG = new TH.TorusGeometry(1.06, .16, 4, LO ? 10 : 16), seamG = new TH.TorusGeometry(1.02, .07, 3, LO ? 10 : 16);
     // v494 the serpents' teeth and eyes: ivory, curved; amber eyes with a slit pupil
     const IVO = new TH.MeshStandardMaterial({ color: 0xd8cbb0, roughness: .45, metalness: .05, envMapIntensity: .6 }); IVO.userData.P = {};
@@ -4319,7 +4329,7 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
     const SEYE = new TH.MeshBasicMaterial({ color: 0xffa020, toneMapped: false }), SPUP = new TH.MeshBasicMaterial({ color: 0x080200 }), MOU = new TH.MeshStandardMaterial({ color: 0x160205, roughness: .8, metalness: 0, envMapIntensity: .08 }); MOU.userData.P = {};
     const VH = top => { const g = new TH.SphereGeometry(1, LO ? 14 : 26, LO ? 10 : 18), p = g.attributes.position; for (let k = 0; k < p.count; k++) { let x = p.getX(k), y = p.getY(k); const z = p.getZ(k), zz = -.9 + (z + 1) / 2 * 3.3, u = (zz + .9) / 3.3, w = 1.02 - .56 * u * u, h = .62 - .3 * u;
         x *= w * (1 + .08 * Math.max(0, y)); y = top ? Math.max(y, -.1) * h : Math.min(y, .1) * h * .5; p.setXYZ(k, x, y, zz); } g.computeVertexNormals(); return g; }, VHT = VH(1), VHJ = VH(0);
-    const NSN = 9, snakes = []; for (let i = 0; i < NSN; i++) { const a = -1.95 + i / (NSN - 1) * 3.9, root = V(Math.sin(a) * 9.5, 14 + Math.cos(a) * 10.5, -5.5), out = V(Math.sin(a), Math.cos(a) * .9 + .2, .05).normalize();
+    const NSN = 9, snakes = []; for (let i = 0; i < NSN; i++) { const a = -2.75 + i / (NSN - 1) * 5.5, root = V(Math.sin(a) * 9.5, 14 + Math.cos(a) * 10.5, -5.5), out = V(Math.sin(a), Math.cos(a) * .9 + .2, .05).normalize();
       const g = put(body, new TH.Group(), root.toArray()); g.userData.dyn = 1; const L = 17 + (i % 3) * 3.5, pts = [], up = V(0, 1, 0), fw = V(0, 0, 1);
       for (let k = 0; k <= 12; k++) { const u = k / 12, w = Math.sin(u * Math.PI * 2 + i * 1.3) * 3.2 * (1 - u * .35); pts.push(out.clone().multiplyScalar(L * .62 * u + w).addScaledVector(up, L * .28 * Math.sin(u * Math.PI * .9)).addScaledVector(fw, L * .62 * u * u + 2 * u)); }
       const cur = new TH.CatmullRomCurve3(pts); { const TS = LO ? 40 : 80, RS = LO ? 10 : 16, tb = new TH.TubeGeometry(cur, TS, 1, RS, false), P2 = tb.attributes.position, U2 = tb.attributes.uv, c0 = V(0, 0, 0), q2 = V(0, 0, 0);
@@ -4427,7 +4437,49 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
         const g2 = new TH.BufferGeometry(); g2.setAttribute("position", new TH.BufferAttribute(P, 3)); g2.setAttribute("normal", new TH.BufferAttribute(N, 3)); g2.setAttribute("uv", new TH.BufferAttribute(U, 2)); if (C) g2.setAttribute("color", new TH.BufferAttribute(C, 3)); g2.computeBoundingSphere();
         const mesh = new TH.Mesh(g2, L[0].material); for (const c of L) o.remove(c); o.add(mesh); } } }
   // light the boss's own materials from an environment map (the galaxy scene has none); count its draw calls
-  function prep(b, env) { b.grp.traverse(o => { const m = o.material; if (m && m.isMeshStandardMaterial && env) { m.envMap = env; m.needsUpdate = true; } }); return b; }
+
+  /* v774 remaster: a fine surface layer for the remodelled World Bosses, drawn in the shader in the part's own space (triplanar):
+     staggered panels with recessed seams, rivets, panels at slightly different heights and finishes, grime in the recesses.
+     Styles: 0 machined plate, 1 carved stone, 2 living scales, 3 battered scrap plate. uDS = panel size in model units. */
+  const DET_GLSL = `uniform float uDS; uniform float uDK; uniform float uDB; varying vec3 vDP; varying vec3 vDN;
+float dH21(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float dVN(vec3 p) { vec3 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); float n = dot(i, vec3(1., 57., 113.));
+  vec4 a = fract(sin(vec4(n, n + 1., n + 57., n + 58.)) * 43758.5453), b = fract(sin(vec4(n + 113., n + 114., n + 170., n + 171.)) * 43758.5453);
+  vec4 m = mix(a, b, f.z); vec2 q = mix(m.xy, m.zw, f.y); return mix(q.x, q.y, f.x); }
+vec3 dPlane(vec2 p) { float aa = clamp(length(fwidth(p)), .0005, .5);
+#if DSTYLE == 2
+  p *= vec2(1., 1.4); float row = floor(p.y); p.x += mod(row, 2.) * .5; vec2 c = floor(p), f = fract(p); float id = dH21(c);
+  vec2 d = f - vec2(.5, .15); float r = length(d * vec2(1., 1.25)); float sc = 1. - smoothstep(.62 - aa * 1.5, .62, r);
+  float seam = 1. - smoothstep(.0, .1 + aa, .62 - r); return vec3(sc * (.35 + f.y * .5) - seam * .6, seam * .7, id);
+#else
+  float row = floor(p.y); p.x += dH21(vec2(row, 3.7)) * 2.3; p.x *= (DSTYLE == 1 ? .55 : .8); vec2 c = floor(p), f = fract(p); float id = dH21(c);
+  if (DSTYLE != 1 && id > .62) { float h2 = step(.5, f.x); f.x = fract(f.x * 2.); c.x += h2 * .5; id = dH21(c + 1.7); }
+  vec2 e = min(f, 1. - f); float w = DSTYLE == 1 ? .045 : .03, ed = min(e.x * (DSTYLE == 1 ? .55 : .8), e.y);
+  float seam = 1. - smoothstep(w, w + aa * 1.8 + .012, ed);
+  float rv = 0.; if (DSTYLE != 1) { vec2 rp = vec2(fract(f.x * 7.) - .5, (f.y - .12) * 7. * (DSTYLE == 3 ? 1. : .8)); rv = (1. - smoothstep(.16, .24 + aa * 7., length(rp))) * step(.45, fract(id * 7.31));
+    vec2 rp2 = vec2(rp.x, (f.y - .88) * 7.); rv = max(rv, (1. - smoothstep(.16, .24 + aa * 7., length(rp2))) * step(.45, fract(id * 7.31))); }
+  float inset = 0.; if (id < .22 && DSTYLE != 1) { vec2 e2 = min(f - .18, .82 - f); inset = smoothstep(0., .02 + aa, min(e2.x * .8, e2.y)) ; }
+  return vec3((id - .5) * .3 - seam + rv * .55 - inset * .25, max(seam, inset * .25), id);
+#endif
+}
+vec4 udfDet() { vec3 P = vDP / uDS, N = abs(normalize(vDN)); N = pow(N, vec3(4.)); N /= (N.x + N.y + N.z + 1e-4);
+  vec3 a = dPlane(P.zy + vec2(.0, .0)), b = dPlane(P.xz + vec2(3.1, 1.3)), c = dPlane(P.xy + vec2(7.7, 5.2)); vec3 r = a * N.x + b * N.y + c * N.z;
+  float g = dVN(vDP / uDS * .9) * .6 + dVN(vDP / uDS * 3.7) * .4; return vec4(r, g); }
+`;
+  function detOn(m, st, ds) { if (!m || m.userData.det) return; m.userData.det = 1; const prev = m.onBeforeCompile, pk = m.customProgramCacheKey ? m.customProgramCacheKey.bind(m) : null, k = m.normalMap && m.normalMap !== cache.flatN ? .6 : 1;
+    m.extensions = Object.assign({}, m.extensions, { derivatives: true }); if (!m.normalMap) { if (!cache.flatN) { cache.flatN = new TH.DataTexture(new Uint8Array([128, 128, 255, 255]), 1, 1, TH.RGBAFormat); cache.flatN.needsUpdate = true; } m.normalMap = cache.flatN; m.normalScale = new TH.Vector2(1, 1); } /* a flat normal map turns on the derivative extension on WebGL1 phones */ m.customProgramCacheKey = () => (pk ? pk() : "") + "|det" + st;
+    m.onBeforeCompile = (sh, r) => { if (prev) prev(sh, r); sh.uniforms.uDS = { value: ds }; sh.uniforms.uDK = { value: k }; sh.uniforms.uDB = { value: st === 1 ? .045 : st === 2 ? .03 : .035 };
+      sh.vertexShader = "varying vec3 vDP; varying vec3 vDN;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n vDP = position; vDN = normal;");
+      sh.fragmentShader = "#define DSTYLE " + st + "\n" + DET_GLSL + sh.fragmentShader
+        .replace("#include <color_fragment>", "#include <color_fragment>\n vec4 DT = udfDet(); float DG = smoothstep(.35, .85, DT.w); diffuseColor.rgb *= (1. - DT.y * .5 * uDK) * (.9 + DT.z * .2 * uDK) * (1. - DG * " + (st === 3 ? ".35" : ".16") + " * uDK);" + (st === 3 ? " diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.32, .14, .05) * (.5 + DT.w), smoothstep(.62, .9, DT.w) * .45);" : ""))
+        .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n roughnessFactor = clamp(roughnessFactor + (DT.z - .5) * .16 * uDK + DT.y * .3 * uDK + DG * " + (st === 3 ? ".3" : ".12") + " * uDK, .04, 1.);")
+        .replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n { float DH = DT.x * uDS * uDB * uDK + DT.w * uDS * .006; vec3 sX = dFdx(-vViewPosition), sY = dFdy(-vViewPosition), R1 = cross(sY, normal), R2 = cross(normal, sX); float fD = dot(sX, R1); vec3 gr = sign(fD) * (dFdx(DH) * R1 + dFdy(DH) * R2); normal = normalize(abs(fD) * normal - gr); }"); }; }
+  const DET_ST = { warden: [0, 26], conduit: [0, 26], overlord: [0, 30], devourer: [0, 34], kraken: [0, 34], leviathan: [0, 40], elemental: [0, 30], vaelthar: [0, 38], aexion: [0, 34], khezaroth: [1, 16], tyrant: [3, 30], matriarch: [2, 60] };
+  function detail(b) { const st = b.det; if (!st || !b.grp) return; const box = new TH.Box3(); b.grp.updateMatrixWorld(true);
+    b.grp.traverse(o => { if (o.isMesh && o.material && !Array.isArray(o.material) && !o.material.transparent && o.material.blending !== TH.AdditiveBlending) box.expandByObject(o); }); if (box.isEmpty()) return;
+    const L = box.getSize(new TH.Vector3()).length(), ds = L / st[1];
+    b.grp.traverse(o => { const ms = Array.isArray(o.material) ? o.material : [o.material]; for (const m of ms) if (m && m.isMeshStandardMaterial && !(m.transparent && m.opacity < .95) && m.blending !== TH.AdditiveBlending) detOn(m, st[0], ds); }); }
+  function prep(b, env) { if (b && b.det && env) try { detail(b); } catch (e) {} b.grp.traverse(o => { const m = o.material; if (m && m.isMeshStandardMaterial && env) { m.envMap = env; m.needsUpdate = true; } }); return b; }
   /* v480 the Omega Cube's final form for battle reports: a 5x5x5 shell of 98 cubes (each one an Assimilation Cube, gridded in green
      light) round the Super Cube's glowing core, energy channels running out to the faces, a few cubes always shifting out and
      locking back. Moves: pulse (every cube pushes out, a green shock shell), beam (the front face opens and fires), lock (the cubes
@@ -4470,6 +4522,7 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
       shell(wv); wring(wv < 0 ? -1 : wv * .9); bt(t, 1 + gather * 6 + sto * 5 + hold * 2); hit(bell(fh, 0, .05, .4, 1), t); };
     bake(body); return { grp, tick, act: n => mv.play(n), moves: Object.keys(mv.dur), r: 9, h: 12 }; }
   root.BOSS3D = { init(T) { TH = T; }, artLoad, set lod(v) { LOD = v | 0; }, get lod() { return LOD; }, set paint(v) { PAINT = v ? 1 : 0; }, get paint() { return PAINT; }, conduit: (...a) => painted("conduit", conduit(...a)), warden: (...a) => painted("warden", warden(...a)), overlord: (...a) => painted("overlord", overlord(...a)), devourer: (...a) => painted("devourer", devourer(...a)), matriarch: (...a) => painted("matriarch", matriarch(...a)), tyrant: (...a) => painted("tyrant", tyrant(...a)), wyrm: (...a) => painted("wyrm", wyrm(...a)), leviathan: () => painted("leviathan", wyrm("lev")), kraken: () => painted("kraken", devourer("krk")), colossus: (...a) => painted("colossus", colossus(...a)), station, elemental: kind => painted("el-" + kind, elemental(kind)), pentarch, vaelthar, aexion, omega, khezaroth, medusara, EL, prep };
+  for (const k of Object.keys(DET_ST)) { const f = root.BOSS3D[k]; if (typeof f === "function") root.BOSS3D[k] = (...a) => { const o = f(...a); if (o && o.grp && !PAINT) o.det = DET_ST[k]; return o; }; } /* v774 */
 })(typeof window !== "undefined" ? window : globalThis);
 
 </script>
@@ -7164,7 +7217,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 773;
+const GAME_V = 775;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
