@@ -32,6 +32,7 @@ if os.path.exists(lst):
     inl = [p for p in paths if p in css]
     for p in inl: page = re.sub(r'url\((["\']?)' + re.escape(p) + r'(\?[^"\')]*)?\1\)', lambda m: f'url("data:{mt(p)};base64,{b64(p)}")', page)
     def grp(p):
+        if p.startswith('art/aet/'): return 'mons2' # v805 the Aetherion art (misc is full)
         if p.startswith('art/season/'): return 'season'
         if p.startswith(('art/arch/', 'art/lore/', 'art/chron/', 'art/ev/')): return 'arch'
         if p.startswith('art/mimic/m/'): return 'mons2' # v754
