@@ -3960,7 +3960,7 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
       arcM.visible = fb >= 0 && u > .99 && !out.swordGone; if (arcM.visible) { const k = bell(fb, .28, .36, .58, .8); arcM.material.opacity = k * .9; arcM.position.set(arms[1].sx * 4, 6.5, 0); arcM.rotation.set(Math.PI / 2 + .06, .2 * arms[1].sx, -.25); arcM.scale.setScalar(1.25 + ss(.3, .6, fb) * .35); }
       const bl = u > .99 ? 1 : ss(.74, .88, u); blade.scale.set(1, .001 + bl * 17 * (1 + od * .15), 1); blade.visible = bl > .01; bladeS.material.opacity = bl * (.5 + .3 * Math.sin(t * .02)); bladeS.scale.setScalar(3 + bl * 3 + bell(fb, .3, .4, .6, .8) * 6);
       const sh = Math.max(ss(.7, .85, u) * .5, bell(fa, 0, .15, .8, 1), od * .6); hexM.uniforms.uO.value = u < .99 ? sh : .5 + bell(fa, 0, .15, .8, 1) * .35 + od * .4; /* v486 calmer, so the impacts read */ hexM.uniforms.uT.value = t; shield.scale.setScalar((u < .7 ? .55 : .55 + ss(.7, .85, u) * .45) * (1 + gd * .3 + ag * .3)); if (gd > 0) { body.updateMatrixWorld(true); const qb = body.getWorldQuaternion(S.q.clone()), ql = LF.getWorldQuaternion(new TH.Quaternion()); const tq = ql.invert().multiply(qb); shield.quaternion.copy(shield.userData.q0 || (shield.userData.q0 = shield.quaternion.clone())).slerp(tq, Math.min(1, gd * 1.2)); { const W = out._shw || (out._shw = [new TH.Vector3(), new TH.Vector3()]), lp = LF.getWorldPosition(W[0]); body.worldToLocal(lp); const side = Math.sign(lp.x) || -1; /* v777 beside the forearm, on its outer side */
-          lp.set(lp.x + side * 6.4, lp.y - .6, lp.z + 1.6); body.localToWorld(lp); LF.worldToLocal(lp); W[1].set(-2.4, -3.2, .3); shield.position.copy(W[1].lerp(lp, Math.min(1, gd * 1.2))); } } else if (shield.userData.q0) { shield.quaternion.copy(shield.userData.q0); shield.position.set(-2.4, -3.2, .3); }
+          lp.set(lp.x + side * 2.2, lp.y + .2, lp.z + 4.2); body.localToWorld(lp); LF.worldToLocal(lp); W[1].set(-2.4, -3.2, .3); shield.position.copy(W[1].lerp(lp, Math.min(1, gd * 1.2))); } } else if (shield.userData.q0) { shield.quaternion.copy(shield.userData.q0); shield.position.set(-2.4, -3.2, .3); }
       const hq = fa >= 0 ? (fa * 3) % 1 : -1; hexM.uniforms.uHit.value.set(Math.sin(t * .001) * 2.5, Math.cos(t * .0013) * 2, hq);
       { const R = out._rip || (out._rip = { a: [0, 1, 2, 3].map(() => ({ x: 0, y: 0, t0: -1e9, s: 0 })), i: 0, nx: 0, si: 0 }), on = shield.visible && gd > .3 && u > .99 && !(fsb >= 0); /* v486 the shield reacts */
         const land = (s0, x, y) => { const P = R.a[R.i++ % 4]; P.x = x; P.y = y; P.t0 = t; P.s = s0; for (let k = 0; k < (s0 > 1 ? 6 : 3); k++) { const Q = shSp[R.si++ % shSp.length], a = rnd() * 6.283, v = (.006 + rnd() * .012) * (s0 > 1 ? 1.4 : 1); Object.assign(Q, { t0: t, x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, vz: .004 + rnd() * .01, l: 260 + rnd() * 260 }); } };
@@ -7226,7 +7226,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 778;
+const GAME_V = 779;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -27208,7 +27208,7 @@ Object.assign(WB_STRIKE, { aex: { missiles: ["bolts", .3, .8, 8, 3000], broadsid
    (turn toward the target, fire in step with the model's own animation, hold, turn back, rest), fired from the ship itself:
    missiles from the launch cells along its spine, a broadside rippling down the hull, the rail from the bow, and its own special,
    the Sovereign Rail (a charged spinal beam swept across the whole fleet, at most twice a fight, past 30% and 70%) */
-const AEXD = { turn: 1500, hold: 500, rest: 2600 }, AEXD_MS = { missiles: 3000, broadside: 2200, lance: 2600, rail: 4600 }, AEXD_MV = { missiles: "missiles", broadside: "broadside", lance: "rail", rail: "rail" };
+const AEXD = { turn: 3200, hold: 700, rest: 2600 }, AEXD_MS = { missiles: 3000, broadside: 2200, lance: 2600, rail: 4600 }, AEXD_MV = { missiles: "missiles", broadside: "broadside", lance: "rail", rail: "rail" };
 const aexdOn = b => !!(b && b.r && b.r.sbk === "aex" && !b.r.sbForm);
 /* v691 Aexion's Warform remastered (owner: "slow aexions war form turning speed and frequency in battle simulator, also his attacks
    need to be timed better with his animation"). The Warform used the generic boss fencing cycle (a 0.65 s snap to a random side
@@ -27264,7 +27264,7 @@ function aexdDraw(ctx, b, scr, T, W, H, d, lo, t) { if (!aexdOn(b) || !b.scC) re
   const spine = cy + B.ah * .06, deck = cy + B.ah * .18, out = p => p.y > deck + B.ah * .1 || Math.abs(p.x - cx) > B.aw * .4, far = foes.filter(i => out(scr[i])); /* squadrons tangling with the hull are not targets for the big guns */
   let fx = 0, fy = 0; for (const i of far) { fx += scr[i].x; fy += scr[i].y; } if (far.length) { fx /= far.length; fy /= far.length; } else { fx = mx; fy = Math.max(my, deck + B.ah * .3); }
   const E = c.a !== "rail" && scr[c.e] && b.n[c.e] > 0 && out(scr[c.e]) ? scr[c.e] : c.a !== "rail" && far.length ? scr[far[c.seed % far.length]] : { x: fx, y: fy };
-  if (c.dir == null) { const dx = E.x - cx; c.dir = Math.abs(dx) < W * .06 ? 0 : Math.sign(dx); c.tn = c.dir ? AEXD.turn : 500; c.fireAt = c.t0 + c.tn; c.end = c.fireAt + c.ms + AEXD.hold + c.tn + AEXD.rest + (c.a === "rail" ? 1500 : 0); } /* no side to turn to: a short settle, not a turn */
+  if (c.dir == null) { const dx = E.x - cx; c.dir = Math.abs(dx) < W * .15 || Math.random() > .25 ? 0 : Math.sign(dx); /* v779 rarely turns */ c.tn = c.dir ? AEXD.turn : 500; c.fireAt = c.t0 + c.tn; c.end = c.fireAt + c.ms + AEXD.hold + c.tn + AEXD.rest + (c.a === "rail" ? 1500 : 0); } /* no side to turn to: a short settle, not a turn */
   const e = t - c.t0, tOut = c.tn + c.ms + AEXD.hold, f = e < c.tn ? sm(e / c.tn) : e < tOut ? 1 : 1 - sm((e - tOut) / c.tn);
   if (own) WBR.face = -c.dir * f; /* the model's bow points the other way to the face sign */ /* the turn is slow and only comes with an attack */
   if (!c.fired && t >= c.fireAt) { c.fired = 1; try { if (own && WBR.b && WBR.b.act) { WBR.b.act(AEXD_MV[c.a]); WBR.mv = { m: AEXD_MV[c.a], t0: t }; } } catch (e2) {} aexdSfx(c.a, c.ms); if (c.a === "rail") try { bVoice(b, "sig"); } catch (e2) {} }
