@@ -1,0 +1,39 @@
+/* ---------- v805 the event remaster kit: one look for every event and season. Hero banners, one big "next move" button, reward chips,
+   win-chance meters, milestone paths, and a burst of light, sound and a buzz on every claim. Used by the Aetherion screens directly;
+   every other event sheet gets the next-move button (built from its own claim/go buttons) and the restyle automatically. ---------- */
+const EVK_T = new Set(["aet", "aettgt", "aetsaga", "mimic", "carcinid", "cnt", "finale", "sboss", "wboss", "events", "vault"]);
+const EVK_CLAIM = /(claim|Claim|Mile|Ord|Don)$/, EVK_GO = /^(mimFind|crcFind|crcGoB|cntFind|cntGo|sbGo|sbTgt|wbGo|wboss|aetSgFind|aetSgGo|achOpen)$/;
+const evk = {
+  hero: o => `<div class="evk-hero" style="--c:${o.col || AET_COL}">${o.art ? `<div class="evk-art" style="background-image:url('${o.art}')"></div>` : ""}<div class="evk-sh"></div>
+    <div class="evk-ht"><small>${o.kick || ""}</small><b>${o.title}</b>${o.sub ? `<span>${o.sub}</span>` : ""}${o.chips ? `<div class="evk-hc">${o.chips.map(c => `<i>${c}</i>`).join("")}</div>` : ""}</div>${o.ring ? evk.ring(o.ring) : ""}
+    <button class="x evk-x" data-act="close" aria-label="Close">✕</button></div>`,
+  ring: r => { const p = Math.max(0, Math.min(1, r.p || 0)), C = 2 * Math.PI * 26; return `<div class="evk-ring"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" class="t"/><circle cx="32" cy="32" r="26" class="f" stroke-dasharray="${(p * C).toFixed(1)} ${C.toFixed(1)}"/></svg><b>${r.v}</b><small>${r.l}</small></div>`; },
+  next: o => `<button class="evk-next${o.dis ? " dis" : ""}" data-act="${o.act}"${Object.entries(o.data || {}).map(([k, v]) => ` data-${k}="${esc(String(v))}"`).join("")}${o.dis ? " disabled" : ""}><i>${o.ic || "✦"}</i><span><small>${o.k || "Your next move"}</small><b>${o.t}</b>${o.s ? `<em>${o.s}</em>` : ""}</span><u>›</u></button>`,
+  tabs: (list, cur, act) => `<div class="evk-tabs">${list.map(([k, n, b]) => `<button class="${k === cur ? "on" : ""}" data-act="${act}" data-t="${k}">${n}${b ? `<i>${b}</i>` : ""}</button>`).join("")}</div>`,
+  chips: items => `<div class="evk-chips">${items.map(([ic, n, l, c]) => `<span class="evk-chip" style="--c:${c || "#9fb6c8"}"><i>${ic}</i><b>${n}</b><small>${l}</small></span>`).join("")}</div>`,
+  meter: (pct, l) => { const p = Math.max(0, Math.min(100, Math.round(pct))), c = p >= 80 ? "#5fe8a0" : p >= 45 ? "#ffc85a" : "#ff6a6a"; return `<div class="evk-meter" style="--p:${p}%;--c:${c}"><div><b>${l || "Win chance"}</b><span>${p >= 95 ? "Certain" : p >= 80 ? "Very likely" : p >= 55 ? "Likely" : p >= 30 ? "Risky" : "Unlikely"} · ${p}%</span></div><i><u></u></i></div>`; },
+  power: (mine, need) => { const p = need ? Math.min(100, mine / need * 100) : 100, c = p >= 100 ? "#5fe8a0" : p >= 60 ? "#ffc85a" : "#ff6a6a"; return `<div class="evk-meter" style="--p:${p}%;--c:${c}"><div><b>Fleet power</b><span>${fmt(mine)} of ${fmt(need)} recommended</span></div><i><u></u></i></div>`; },
+  path: (nodes) => `<div class="evk-path">${nodes.map((n, i) => `<div class="evk-node${n.done ? " done" : ""}${n.ready ? " ready" : ""}${n.cur ? " cur" : ""}">${i ? "<s></s>" : ""}${n.ready && n.act ? `<button data-act="${n.act}"${Object.entries(n.data || {}).map(([k, v]) => ` data-${k}="${esc(String(v))}"`).join("")}>${n.ic || "🎁"}</button>` : `<span>${n.done ? "✓" : n.ic || "◆"}</span>`}<small>${n.l}</small></div>`).join("")}</div>`,
+  streak: (n, today) => `<div class="evk-streak${today ? " lit" : ""}"><i>🔥</i><b>${n}</b><small>day streak${today ? "" : " · do one order today to keep it"}</small></div>` };
+/* the win chance: a few quick simulated fights, cached for a minute */
+const EVK_WC = {};
+function evkWin(sel, x, T) { if (!sumShips(sel)) return 0; const key = x.id + "|" + JSON.stringify(sel) + "|" + Math.floor((T || now()) / 60e3); if (EVK_WC[key] != null) return EVK_WC[key];
+  let w = 0; try { for (let i = 0; i < 3; i++) { const r = simulate(stacksOf(sel, techElVs(x), G.me), xStacks(x)); w += r.winner === "a" ? 1 : r.winner === "draw" ? .35 : 0; } } catch (e) { return 50; } for (const k in EVK_WC) if (!k.endsWith("|" + Math.floor((T || now()) / 60e3))) delete EVK_WC[k]; return (EVK_WC[key] = w / 3 * 100); }
+/* every other event sheet: lift its own most useful button to the top as the "next move" */
+function evkWrap(html) { if (!sheet || !EVK_T.has(sheet.type) || html.includes("evk-next")) return html;
+  let claim = null, go = null; for (const m of html.matchAll(/<button([^>]*)>([\s\S]*?)<\/button>/g)) { const at = m[1], a = (at.match(/data-act="([^"]+)"/) || [])[1]; if (!a || /\sdisabled/.test(at) || a === "close") continue;
+    if (!claim && EVK_CLAIM.test(a) && !/Prev/.test(a)) claim = m; else if (!go && EVK_GO.test(a)) go = m; }
+  const m = claim || go; if (!m) return html; const at = m[1].replace(/class="[^"]*"/, "").replace(/\sid="[^"]*"/, ""), lab = m[2].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 70) || (claim ? "Claim" : "Go");
+  const cta = `<button class="evk-next${claim ? " claim" : ""}"${at}><i>${claim ? "🎁" : "➤"}</i><span><small>${claim ? "Ready to collect" : "Your next move"}</small><b>${esc(lab)}</b></span><u>›</u></button>`;
+  const end = html.indexOf('aria-label="Close">✕</button></div>'); if (end < 0) return cta + html; const p = end + 'aria-label="Close">✕</button></div>'.length; return html.slice(0, p) + cta + html.slice(p); }
+/* juice: a burst of light from the button, sparks flying up to your stores, a chime and a short buzz */
+function evkBurst(el, big) { try { const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, box = document.createElement("div"); box.className = "evk-burst"; box.style.left = cx + "px"; box.style.top = cy + "px";
+    let h = `<b class="evk-ring0"></b>`; for (let i = 0; i < (big ? 26 : 16); i++) { const a = Math.random() * Math.PI * 2, d = 40 + Math.random() * (big ? 120 : 70); h += `<i style="--dx:${(Math.cos(a) * d).toFixed(0)}px;--dy:${(Math.sin(a) * d).toFixed(0)}px;--h:${[168, 45, 190, 280][i % 4]};animation-delay:${(Math.random() * 80) | 0}ms"></i>`; }
+    const hud = document.getElementById("hud"), hr = hud ? hud.getBoundingClientRect() : { left: innerWidth / 2, top: 0, width: 0, height: 60 }; for (let i = 0; i < 6; i++) h += `<em style="--tx:${(hr.left + hr.width * (.2 + i * .12) - cx).toFixed(0)}px;--ty:${(hr.top + hr.height * .6 - cy).toFixed(0)}px;animation-delay:${120 + i * 60}ms"></em>`;
+    box.innerHTML = h; document.body.appendChild(box); setTimeout(() => box.remove(), 1500); if (hud) setTimeout(() => { hud.classList.remove("evk-glow"); void hud.offsetWidth; hud.classList.add("evk-glow"); }, 600);
+    try { navigator.vibrate && navigator.vibrate(big ? [20, 40, 30] : 18); } catch (e) {} evkChime(big); } catch (e) {} }
+function evkChime(big) { try { if (!AU.ctx || AU.muted || !AU.sfxOn) return; const c = AU.ctx, t = c.currentTime, g = c.createGain(); g.gain.value = .0001; g.connect(AU.master || c.destination);
+  (big ? [523.25, 659.25, 783.99, 1046.5] : [659.25, 987.77]).forEach((f, i) => { const o = c.createOscillator(), e = c.createGain(); o.type = "triangle"; o.frequency.value = f; o.connect(e); e.connect(g); const s = t + i * .07; e.gain.setValueAtTime(.0001, s); e.gain.exponentialRampToValueAtTime(.22, s + .02); e.gain.exponentialRampToValueAtTime(.0001, s + .45); o.start(s); o.stop(s + .5); });
+  g.gain.setValueAtTime(.5, t); setTimeout(() => g.disconnect(), 1400); } catch (e) {} }
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("button[data-act]"); if (!b || b.disabled) return; const a = b.dataset.act, inEv = b.closest(".sheet.evk") || b.classList.contains("evk-next");
+  if (!inEv) return; if (/Buy$/.test(a) && !/Confirm/i.test(b.textContent)) return; if (EVK_CLAIM.test(a) || /Buy$|BossClaim|AllyClaim/.test(a)) evkBurst(b, /Mile|Boss|Ally/.test(a) || b.classList.contains("evk-next")); }, true);
