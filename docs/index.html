@@ -3687,13 +3687,13 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
     const spine = t => { const T = t * .001;
       for (let i = 0; i < NN; i++) { const u = i / (NN - 1), up = 1 - u; // 0 head end .. 1 chest
         const lx = Math.sin(T * .55 + u * 1.6) * .9 * up * (1 - st.lift * .6) + st.sway * up * 2.2, ly = 7.6 + up * (6.2 + st.lift * 2.4) - Math.pow(up, 2) * 1.4 * (1 - st.lift), lz = 2.1 + up * (4.6 - st.lift * 1.7) - st.recoil * up * up * 1.8 + st.look * up * 1.2;
-        P[i].set(lx, ly, lz); SC[i] = 1.35 + u * 1.15; }
-      for (let i = 0; i < NT; i++) { const u = i / (NT - 1), k = NN + i; P[k].set(Math.sin(T * .4) * .15 * (1 - u), 6.6 - u * 8.2 + Math.sin(T * .7) * .12, 1.7 - u * 2.9 + st.beat * .15); SC[k] = 3.0 + Math.sin(u * Math.PI) * 1.3 - u * .4; }
+        P[i].set(lx, ly, lz); SC[i] = 1.65 + u * 1.7; }
+      for (let i = 0; i < NT; i++) { const u = i / (NT - 1), k = NN + i; P[k].set(Math.sin(T * .4) * .15 * (1 - u), 6.6 - u * 8.2 + Math.sin(T * .7) * .12, 1.7 - u * 2.9 + st.beat * .15); SC[k] = 3.8 + Math.sin(u * Math.PI) * 2.1 - u * .6; /* v792 bulk */ }
       for (let i = 0; i < NL; i++) { const u = (i + 1) / NL, k = NN + NT + i, a = u * (3.3 + st.curl * 1.4) + Math.sin(T * .6 + u * 4) * .35 * u + st.coil * u * 1.2, R = 3.4 + u * 6.5;
         P[k].set(Math.sin(T * .5 + u * 5) * u * 2.4 + Math.sin(a) * u * 4.5, -2.0 - Math.sin(a) * R * .55 - u * 2, -1.6 - (1 - Math.cos(a)) * R * .6 - u * 1.5); SC[k] = 2.5 * (1 - u * .86); }
       P[N].copy(P[N - 1]).multiplyScalar(2).sub(P[N - 2]); };
     /* ---- the head: a long armoured skull, gold crown of swept horns and a forehead blade, a hinged jaw full of teeth, violet-white eyes ---- */
-    const head = new TH.Group(); body.add(head); const hd = new TH.Group(); head.add(hd); hd.scale.setScalar(1.25);
+    const head = new TH.Group(); body.add(head); const hd = new TH.Group(); head.add(hd); hd.scale.setScalar(1.75); /* v792 a dragon's head on that frame */
     { const sk = new TH.Mesh(new TH.LatheGeometry([[.15, -1.6], [1.15, -1.25], [1.45, -.1], [1.25, 1.3], [.92, 2.6], [.5, 3.6], [.12, 4.1]].map(([r, y]) => new TH.Vector2(r, y)), 14), MA); sk.rotation.x = Math.PI / 2; sk.scale.set(1, 1, .62); sk.position.set(0, .45, 0); hd.add(sk);
       const brow = new TH.Mesh(new TH.LatheGeometry([[.1, -1.0], [1.05, -.6], [1.15, .5], [.8, 1.6], [.2, 2.2]].map(([r, y]) => new TH.Vector2(r, y)), 10, 0, Math.PI), MG); brow.rotation.set(Math.PI / 2, 0, Math.PI / 2); brow.scale.set(1, 1, .5); brow.position.set(0, .95, -.2); hd.add(brow);
       const crest = new TH.Mesh(bladeGeo(5.2, 1.4, .18), MG); crest.rotation.set(0, Math.PI / 2, Math.PI - .35); crest.position.set(0, 1.35, 1.4); hd.add(crest);
@@ -3719,7 +3719,7 @@ small.xsfeed{display:block;color:var(--muted);font-size:11px;margin-top:2px}
       for (const sx of [-1, 1]) { body.add(beam(V(sx * 2.5, 6.6, 2.0), V(sx * .4, 1.6, 3.4), .5, .25, .3, MG)); body.add(beam(V(sx * 2.7, 6.8, 1.6), V(sx * 1.2, 7.6, 3.0), .5, .3, .3, MG)); }
       for (let k = 0; k < 7; k++) { const y = 1.4 - k * 1.25, w = 2.6 - k * .22, pl = box(w, .85, .5, k % 2 ? MS : MG); pl.position.set(0, y, 2.55 - k * .5); pl.rotation.x = .35 + k * .05; body.add(pl); } }
     const coreS = sprite(7, "rgba(230,200,255,1)", "vae_core"); core.add(coreS);
-    const arms = []; for (const sx of [-1, 1]) { const sh = new TH.Group(); sh.position.set(sx * 2.5, 5.6, 2.0); sh.scale.setScalar(1.6); body.add(sh); const up = new TH.Group(); sh.add(up);
+    const arms = []; for (const sx of [-1, 1]) { const sh = new TH.Group(); sh.position.set(sx * 3.4, 5.9, 2.0); sh.scale.setScalar(2.05); body.add(sh); const up = new TH.Group(); sh.add(up);
       up.add(strut(V(0, 0, 0), V(sx * 1.4, -2.6, 1.6), 1.0, .75, MA, 7)); const pd = new TH.Mesh(crescentGeo(2.4, 1.0, 1.15, .7), MG); pd.position.set(sx * .3, .7, -.1); pd.rotation.set(-.4, sx * .5, sx * -.9); up.add(pd);
       for (let k = 0; k < 3; k++) { const s = shard(.2, 1.4 - k * .25, MG); s.position.set(sx * (.4 + k * .3), .9, -.3 - k * .3); s.rotation.set(-.6, 0, sx * -.5); up.add(s); }
       const el = new TH.Group(); el.position.set(sx * 1.4, -2.6, 1.6); up.add(el); el.add(strut(V(0, 0, 0), V(-sx * .4, -1.4, 3.0), .75, .55, MA, 7)); el.add(beam(V(-sx * .1, -.3, .5), V(-sx * .35, -1.2, 2.7), .9, .6, .55, MG));
@@ -7320,7 +7320,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 791;
+const GAME_V = 792;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
