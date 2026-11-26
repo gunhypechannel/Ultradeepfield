@@ -6078,7 +6078,7 @@ const aetRealmPos = k => { const R = AET_RB[k]; return { x: R.c[0], y: R.c[1], z
 /* ---------- Nhalis and the gateway on the galaxy map ---------- */
 const AET_NH = { r: 64 * SC, a0: 2.2 };
 function aetNhalis(T, out) { const a = AET_NH.a0 + TAU * T / period(AET_NH.r), o = out || {}; o.x = Math.cos(a) * AET_NH.r; o.y = 0; o.z = Math.sin(a) * AET_NH.r; return o; }
-function aetGatePos(T, out) { const q = aetNhalis(T, out), L = Math.hypot(q.x, q.z) || 1; q.x += q.x / L * 9; q.z += q.z / L * 9; q.y = 5; return q; }
+function aetGatePos(T, out) { const q = aetNhalis(T, out); q.y = 20; return q; } /* v808 above Nhalis: beside it, 17-19 worlds sat inside the ring */
 /* ---------- the ledger: the server's when online, the same rules on this device when not ---------- */
 const aetId = () => "tx-" + now().toString(36) + "-" + Math.floor(Math.random() * 1e9).toString(36);
 function aetLocalTx(op, id, p) { const T = now(), L = (S.ldb = S.ldb || {}).aetTx = S.ldb.aetTx || {}, r = L[id], tt = (AET_RB[(r || p).realm] || {}).tt || 180, row = x => Object.assign({}, x, { now: T });
@@ -8442,7 +8442,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 807;
+const GAME_V = 808;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
