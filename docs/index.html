@@ -7116,6 +7116,9 @@ function evkHub(html) { const sk = evkSkinOf("events"); let out = html;
   return `<div class="evhubv sheet-like evk-hub" data-skin="${sk.motif}" style="--sc:${sk.col};--sc2:${sk.col2}">${out}</div>`; }
 document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("button[data-act]"); if (!b || b.disabled || b.classList.contains("evk-next") || !b.closest(".evk-hub")) return; if (EVK_CLAIM.test(b.dataset.act)) evkBurst(b, /Mile|claim$/i.test(b.dataset.act)); }, true);
 
+function aetLabHTML(T) { const cur = S.aetPrev ? (S.aetPrev.m === "open" ? "open" : `s${S.aetPrev.j}_${S.aetPrev.w}`) : "off", b = (v, l) => `<button class="btn ${cur === v ? "pri" : "ghost"}" data-act="labAet" data-v="${v}">${l}</button>`;
+  return `<h2 class="sec">The Aetherion (players: hidden until the switch is on)</h2><div class="strows">${AET_SAGA.map((s, j) => `<div class="strow" style="flex-wrap:wrap;gap:6px"><div style="flex:1 1 100%;min-width:0"><b>◈ ${esc(s[0])}</b><div class="note">Season ${vpSeason(AET_T0() + j * VP_LEN + 864e5) + 1} · ${new Date(AET_T0() + j * VP_LEN).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}</div></div>${[1, 2, 3, 4].map(w => b(`s${j}_${w}`, "W" + w)).join("")}${b("f" + j, "★ Finale")}</div>`).join("")}
+    <div class="strow" style="flex-wrap:wrap;gap:6px"><div style="flex:1 1 100%;min-width:0"><b>◈ The Gateway open</b><div class="note">Opens ${new Date(aetOpenAt()).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })} · Command Center, realms, bosses</div></div>${b("open", "▶ Open")}${b("off", "■ Off")}</div></div>`; }
 const PIRATES = PIRATES_ALL.filter(x => !cubeGone(x) && !pirGone(x)).concat(MON_EXTRA, MON_NEW, MON_SP, MIM_HIVES, MIM_BOSSES, MIM_OM, CRC_NESTS, CRC_PATS, CRC_KRAK, CNT_NET, [CNT_PX], CNT_PATS, CNT_PLATS, CRC_BOSSES, AET_TGT, AET_SG).filter(x => !monGone(x));
 const findHit = x => (G.find === "x" && !x.boss && !x.mon) || (G.find === "q" && !!x.boss) || (G.find === "w" && !!x.mon);const PB = Object.fromEntries(PIRATES.map(p => [p.id, p]));
 /* ---------- abandoned pyramids: 1,500 ancient vaults scattered evenly over the map ----------
@@ -8442,7 +8445,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 808;
+const GAME_V = 809;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -10672,7 +10675,7 @@ function shBossLab() { const T = now(), w0 = Math.max(0, rotW(T)), NM = { vae: [
   const rows = [...ROT, ...ROTS, ...ROTS_X].map(k => [k, rotNextOf(k, T - 1)]).sort((a, b) => a[1] - b[1]).map(([k, at]) => { const [ic, n] = nm(k);
     return `<div class="strow"><div style="flex:1;min-width:0"><b>${ic} ${esc(n)}</b><div class="note">${rotFinale(at) && !live(k) ? '<b style="color:#ffd36b">★ Season finale</b> · ' : ""}${live(k) ? "<b style=\"color:#7dff9a\">● live now</b>" : `${new Date(at).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}, ${new Date(at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} · in ${ftime(at - T)}`}</div></div><button class="btn ghost" data-act="labPrev" data-k="${k}">▶ Preview</button>${WB[k] ? `<button class="btn ghost" data-act="labDie" data-k="${k}">✝ Death</button>` : ""}</div>`; }).join("");
   return `<div class="hd"><div style="flex:1;min-width:0"><div class="chapter">Owner</div><h2>Boss Lab</h2><p class="note">The calendar follows the Void Pass seasons: each season has four Monday world bosses and four Wednesday great events, and its last week is the finale, with the bosses of that season. All at 18:00 UTC. Preview any of them on this device only; nothing is saved or shared.</p></div><div class="fhdb"><button class="x" data-act="close" aria-label="Close">✕</button></div></div>
-    ${(E => E ? `<p class="note"><b style="color:#7dff9a">● Now:</b> ${esc(E.n)} · ${esc(E.stage)}</p>` : "")(evNow(T))}${evMetricsHTML()}${G.wbShow ? `<button class="btn wide" data-act="labStop">■ Stop the ${esc(WB[G.wbShow].n)} preview</button>` : ""}<button class="btn ghost wide" data-act="stressOpen">⚔ Battle tests and reports (every boss)</button>${labAllHTML(T)}<h2 class="sec">The rotation calendar</h2><div class="strows">${rows}</div>`; }
+    ${(E => E ? `<p class="note"><b style="color:#7dff9a">● Now:</b> ${esc(E.n)} · ${esc(E.stage)}</p>` : "")(evNow(T))}${evMetricsHTML()}${G.wbShow ? `<button class="btn wide" data-act="labStop">■ Stop the ${esc(WB[G.wbShow].n)} preview</button>` : ""}<button class="btn ghost wide" data-act="stressOpen">⚔ Battle tests and reports (every boss)</button>${labAllHTML(T)}${typeof aetLabHTML === "function" ? aetLabHTML(T) : ""}<h2 class="sec">The rotation calendar</h2><div class="strows">${rows}</div>`; }
 /* v579 a new preview first ends the one before (and any cinematic), so nothing is left on the map */
 function labReset() { try { if (G.finSim) { G.finSim = null; if (G3 && G3.fin) finFree(G3); } } catch (e) {} try { if (G.sbSim) sbSimStop(); } catch (e) {} try { if (G.dvSim) dvSimStop(); } catch (e) {} try { if (G.convSim) G.convSim = null; } catch (e) {}
   G.wbShow = null; G.wbFakeDead = null; WBN = null; G.labMap = null; G.judgeSim = 0; try { cineEnd(); } catch (e) {} }
@@ -30896,7 +30899,7 @@ function publishInbound(uid, f) {
 const slotsFull = () => { if (fleetsUsed() >= maxFleets()) { toast(`All ${maxFleets()} fleet slots are in use. Research Computer Technology or settle a colony for more.`, "warn"); return true; } return false; };
 /* v289: the feedback form is its own script, outside the game's scope: this is what it can see of the game (it could not read the commander's name, or find the 3D views, before) */
 window.UDF_FB = { gl: () => [G3, C3], get g() { return G; }, toast: (m, k) => toast(m, k), v: GAME_V };
-const ACT = { ...AET_ACT,
+const ACT = { ...AET_ACT, labAet: d => { if (!ownerFree()) return; AET_ACT.aetPrev(d); if (d.v === "off") { renderSheet(); return; } closeSheet(); setTimeout(() => { if (/^(s\d_\d|f\d)$/.test(d.v)) AET_ACT.aetSgOpen ? AET_ACT.aetSgOpen() : openSheet({ type: "aetsaga" }); else openSheet({ type: "aet" }); }, 250); },
   instGuide: () => { try { window.udfInstallGuide && window.udfInstallGuide(); } catch (e) {} }, // v361
   menu: () => ACT.nav({ v: "cmd" }),
   menuClose: () => {},
