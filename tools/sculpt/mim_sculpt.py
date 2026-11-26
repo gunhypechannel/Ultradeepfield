@@ -120,6 +120,16 @@ def mimic(M, k):
             b0 = np.array(jw(x, r * JY * .6, s * r * JZ * .78)); d1 = np.array(jd(.2, 1, s * .1)); d2 = np.array(jd(-.25, 1, -s * .4))
             m = b0 + d1 * L0 * .55 * hs; t = m + d2 * L0 * .5 * hs
             chain(M, f'fl{s}{i}', [tuple(b0), tuple(m), tuple(t)], [.038 * hs, .022 * hs, .004 * hs], FANG)
+        # v799 the cable mass wrapping the face, as in the paintings: cables hugging the skull from behind the head toward the snout,
+        # some over the brow, some down the cheek, leaving the eyes and the snarl clear
+        for j in range(7):
+            th = [1.25, 1.05, .85, .25, .05, -.15, -.35][j]; xe = [1.15, .95, 1.3, 1.45, 1.2, 1.0, .8][j] + rng.uniform(-.08, .08)
+            if j < 3: th += .0
+            def sp_(x, th=th):
+                r = skr(x) * 1.04 + .035; ang = th + .12 * np.sin(x * 4. + j)
+                return (hx + x * hs, hy + (.12 + np.sin(ang) * r * SKY) * hs, s * np.cos(ang) * r * SKZ * hs)
+            pts = [sp_(x) for x in np.linspace(-.35, xe, 8)]
+            cable(M, f'fc{s}{j}', pts, (.07 + .015 * (j % 2)) * hs, .03 * hs, CABL if j == 2 else CAB)
         # cables ribbing the jaws: along the snout's flank and down each side of the lower jaw
         cable(M, f'ju{s}', [(hx + x * hs, hy + (.12 - skr(x) * SKY * .2) * hs, s * skr(x) * SKZ * .97 * hs) for x in np.linspace(-.1, 1.5, 7)], .055 * hs, .03 * hs, CABL)
         cable(M, f'jl{s}', [jw(x, -jr(x) * JY * .1, s * jr(x) * JZ * .97) for x in np.linspace(0, 1.4, 7)], .05 * hs, .025 * hs, CAB)
