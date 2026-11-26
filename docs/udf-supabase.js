@@ -415,6 +415,13 @@
     apply: function (p, k, ops) { return need().then(function () { return run(sb.rpc("cnt_apply", { p_path: p, p_k: k, p_ops: ops })); }); },
     me: function (p, k) { return need().then(function () { return run(sb.rpc("cnt_me", { p_path: p, p_k: k })); }); }
   };
+  /* v800 the Aetherion Gateway's ledger: every crossing is a server row (aet_tx), every reward claim too (aet_claim) */
+  window.udfAet = {
+    tx: function (op, id, p) { return need().then(function () { return run(sb.rpc("aet_tx", { p_op: op, p_txid: id, p: p || {} })); }); },
+    mine: function () { return need().then(function () { return run(sb.rpc("aet_mine")); }); },
+    claim: function (cid, v) { return need().then(function () { return run(sb.rpc("aet_claim", { p_cid: cid, p: v || null })); }); },
+    state: function () { return need().then(function () { return run(sb.rpc("aet_state")); }); }
+  };
   window.udfStory = {
     act: function (k, v, n) { return need().then(function () { return run(sb.rpc("story_act", { p_k: k, p_v: v || "", p_n: n | 0 })); }); },
     tally: function () { return need().then(function () { return run(sb.rpc("story_tally")); }); }
