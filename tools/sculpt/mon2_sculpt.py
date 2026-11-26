@@ -122,7 +122,7 @@ def spider(M):
 def leviathan(M):
     SK = M_((.025, .05, .1), .3, .45); PL = M_((.07, .09, .13), .28, .75); PLR = M_((.18, .21, .26), .22, .9); BONE = M_((.75, .72, .65), .3, .1)
     GL = M_((.05, .3, .4), .15, .1, (.25, .9, 1.0)); MOL = M_((.4, .1, .02), .2, .1, (1.0, .45, .1)); FIN = M_((.05, .2, .3), .2, .2, (.12, .5, .65))
-    S = 1.45; HXo = 2.6; T = lambda x, y, z=0: (HXo + (x - HXo) * S, y * S, z * S)
+    S = 1.7; HXo = 2.6; T = lambda x, y, z=0: (HXo + (x - HXo) * S, y * S, z * S)
     hprof = [(4.7, 0), (4.62, .3), (4.4, .6), (4.0, .84), (3.5, .96), (3.0, .98), (2.6, .92)]
     hq = lambda p: np.stack([HXo + (p[..., 0] - HXo) / S, p[..., 1] / S, p[..., 2] / S], -1)
     M.add('head', lambda p: lathe_x(hq(p), hprof, .78, .95) * S, SK, .1)
@@ -135,27 +135,27 @@ def leviathan(M):
         M.add(f'eye{s}', lambda p, s=s: sphere(p, T(3.75, .25, s * .78), .1 * S), GL)
         M.add(f'lid{s}', lambda p, s=s: box(p, T(3.8, .38, s * .74), (.21 * S, .03 * S, .07 * S), .01, rot('x', s * .35) @ rot('y', s * .2) @ rot('z', -.18)), PLR)
         for j in range(3): M.add(f'hp{s}{j}', lambda p, s=s, j=j: box(p, T(4.15 - j * .5, .5 + j * .12, s * (.36 + j * .12)), ((.3 - j * .05) * S, .035 * S, .16 * S), .015, rot('x', s * (.55 - j * .08)) @ rot('z', -.18)), PLR)
-        M.add(f'pec{s}', lambda p, s=s: _fin(p, [(.35, 0), (.2, .7), (-.5, 1.35), (-.45, 0)], .06 * S, T(2.1, -.25, s * .62), Rx(s * (np.pi / 2 + .45)) @ Rz(-.3)), FIN, .03)
+        M.add(f'pec{s}', lambda p, s=s: _fin(p, [(.5, 0), (.3, 1.1), (-.8, 2.2), (-.7, 0)], .06 * S, T(2.1, -.3, s * .62), Rx(s * (np.pi / 2 + .45)) @ Rz(-.3)), FIN, .03)
     for j in range(5): M.carve(f'hs{j}', lambda p, j=j: np.maximum(np.maximum(np.abs(p[..., 0] - (4.6 - j * .38)) - .025, np.abs(p[..., 2]) - .9), -(p[..., 1] - .55)), GL)
     # the body: a long eel ringed with armour plates, spikes forward, a glowing fin membrane down the tail
-    pts = [(2.9 - t * 11.6, np.sin(t * 3.2) * .12, np.sin(t * 6.2) * .75 * t) for t in np.linspace(0, 1, 15)]
-    rad = lambda t: .95 * (.95 + t if t < .05 else 1.0 - t * .84) + .04
+    pts = [(2.9 - t * 9.6, -.15 * t + .25 * np.sin(t * 2.6) * t, 0.) for t in np.linspace(0, 1, 15)]  # v794 a whale's body
+    rad = lambda t: 1.38 * (1.0 - .9 * t ** 1.7) + .05
     ts = np.linspace(0, 1, 15); chain(M, 'body', pts, [rad(t) for t in ts], SK, .15)
     from scipy.interpolate import CubicSpline
     cs = CubicSpline(ts, np.array(pts)); dcs = cs.derivative()
-    for i in range(1, 30):
+    for i in range(2, 30, 4):
         t = i / 31; q = cs(t); tg = dcs(t); tg = tg / np.linalg.norm(tg); rr = rad(t)
         R = np.array(norm(tg), f32)
         M.add(f'rg{i}', lambda p, q=tuple(q), tg=tg, rr=rr: (lambda d, a: np.maximum(np.abs(np.sqrt(np.maximum(0, np.sum(d * d, -1) - a * a)) - rr * 1.02) - .035 - rr * .02, np.abs(a) - .07 - rr * .03))(p - V(*q), (p - V(*q)) @ tg.astype(f32)), PLR)
         if i % 2: M.carve(f'gs{i}', lambda p, q=tuple(q), tg=tg, rr=rr: (lambda d, a: np.maximum(np.abs(a - .18) - .025, np.sqrt(np.maximum(0, np.sum(d * d, -1) - a * a)) - rr * .9))(p - V(*q), (p - V(*q)) @ tg.astype(f32)), GL)
-    for i in range(40):
-        t = .02 + i / 40 * .9; q = cs(t); rr = rad(t)
-        if t < .5: spk(M, f'sp{i}', (q[0], q[1] + rr * .9, q[2]), norm((-.5, 1, 0)), .35 + rr * .75, .05 + rr * .06, PLR)
+    for i in range(24):
+        t = .04 + i / 24 * .88; q = cs(t); rr = rad(t)
+        if t < .55: spk(M, f'sp{i}', (q[0], q[1] + rr * .9, q[2]), norm((-.6, 1, 0)), .3 + rr * .55, .07 + rr * .07, PLR)
         else: M.add(f'fn{i}', lambda p, q=tuple(q), rr=rr: _fin(p, [(.16, 0), (.05, .3), (-.2, .55), (-.3, 0)], .03, (q[0], q[1] + rr * .85, q[2]), None) * 1.0, FIN, .02)
-    q = cs(1.0); M.add('tail', lambda p: _fin(p, [(.2, 0), (-1.1, .9), (-.8, .1), (-1.15, -.7), (.2, -.05)], .05, (q[0] - .05, q[1], q[2]), None), FIN, .03)
+    q = cs(1.0); M.add('tail', lambda p: _fin(p, [(.3, 0), (-1.5, 2.3), (-1.05, .4), (-1.1, 0), (-1.05, -.4), (-1.5, -2.3)], .09, (q[0] + .1, q[1], q[2]), Rx(np.pi / 2)), FIN, .04)  # whale flukes
 
 SPEC = {'ctort': (tortoise, (-3.3, -1.4, -2.2), (4.0, 2.9, 2.2)), 'gspider': (spider, (-3.6, -1.3, -3.6), (3.9, 2.8, 3.6)),
-        'slevi': (leviathan, (-9.6, -1.6, -2.2), (6.2, 2.0, 2.2))}
+        'slevi': (leviathan, (-8.6, -2.2, -3.4), (6.4, 3.1, 3.4))}
 PAINT_K = ''
 def paint(P, N, A, E, idx):
     v = .5 + .5 * hashf(idx.astype(np.int64), idx.astype(np.int64) * 7 + 1, 3); glowing = E[:, 0] + E[:, 1] + E[:, 2] > .05
