@@ -7320,7 +7320,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 792;
+const GAME_V = 793;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -18379,8 +18379,8 @@ function buildMonster(k, part) {
    After the owner's paintings: bodies woven from segmented black cables, a monstrous fanged head, clawed limbs, and a cyan neural glow
    showing between the cables. Every class is built from the same parts so they read as one species. Models face +x, y up. */
 const MIMM = {};
-const MIM_D = { mstalk: { s: 1, legs: 4, mane: 26, hump: .5, len: 1, gape: .55, tail: 8 }, mhunt: { s: .95, legs: 2, mane: 18, hump: .15, len: 1.35, gape: .8, tail: 16 }, mharv: { s: 1, legs: 0, mane: 12, hump: 0, len: .8, gape: .35, tail: 4, sac: 1 },
-    massim: { s: 1.05, legs: 4, mane: 20, hump: .45, len: 1.05, gape: .6, tail: 8, plates: 1 }, mguard: { s: 1.15, legs: 4, mane: 14, hump: .25, len: .9, gape: .4, tail: 6, armour: 1 }, mtitan: { s: 1.25, legs: 4, mane: 40, hump: .8, len: 1.1, gape: .7, tail: 12, brood: 1 } };
+const MIM_D = { mstalk: { s: 1, legs: 4, mane: 44, hump: 0.7, len: 1, gape: 0.95, tail: 10}, mhunt: { s: 0.95, legs: 2, mane: 8, hump: 0.05, len: 1.75, gape: 0.85, tail: 30}, mharv: { s: 1.05, legs: 0, mane: 6, hump: 0, len: 0.65, gape: 0.3, tail: 3, sac: 1 },
+    massim: { s: 1.1, legs: 4, mane: 22, hump: 1.0, len: 1.0, gape: 0.6, tail: 6, plates: 1 }, mguard: { s: 1.3, legs: 4, mane: 10, hump: 0.45, len: 0.8, gape: 0.35, tail: 4, armour: 1 }, mtitan: { s: 1.5, legs: 4, mane: 64, hump: 1.15, len: 1.15, gape: 0.8, tail: 18, brood: 1 } };
 /* v665 the Alphas and the Neural Nexus. Each Alpha is the creature recipe grown huge, with a crown of hooked spines swept back from its
    skull and its neural core laid open along its back; each of the four wears its own glow. The Nexus follows the owner's vault painting:
    black spires closing round a turning holographic prism, a floating sphere over a spiked star of light, a beam through it all, and four
