@@ -7264,7 +7264,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 783;
+const GAME_V = 784;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -15087,9 +15087,9 @@ let FLEET_ARM = false;
 const PL_D = 2 * (.38 + .42) * VIS_K; /* a typical world's diameter on the map */
 function fleetTier(n) { n = n || {}; let c = 0, ti = 0; for (const k in n) { const v = +n[k] || 0; if (v <= 0) continue; c += v * unitCost(k); if (k === "worldbreaker") ti = 3; else if (MINI_CLS[k] === "x") ti = Math.max(ti, 2); }
   return Math.max(ti, c < 5e5 ? 0 : c < 2e7 ? 1 : c < 5e8 ? 2 : 3); }
-const FLEET_SPAN = [1.05, 1.35, 1.7, 2.1];
+const FLEET_SPAN = [.55, .7, .85, 1.0]; /* v784 never bigger than a planet (was 1.05 to 2.1) */
 /* the fleet's size multiplier (userData.size) so its formation spans the tier's share of a planet; span is the formation's own width */
-function fleetSzOf(n, grp, extra) { const sp = (grp && grp.userData.span) || 20, tgt = Math.min(2.6, FLEET_SPAN[fleetTier(n)] * (extra || 1)) * PL_D; return tgt / (FLEET_FS * sp); }
+function fleetSzOf(n, grp, extra) { const sp = (grp && grp.userData.span) || 20, tgt = Math.min(1.15, FLEET_SPAN[fleetTier(n)] * (extra || 1)) * PL_D; return tgt / (FLEET_FS * sp); }
 /* lanes: fleets flying out to the same world, ordered by id, so each knows its place across the approach */
 function fleetLanes(list) { const by = new Map(); for (const [id, f] of list) { if (!f || f.phase !== "out" || !f.pid || id === "raid") continue; const a = by.get(f.pid) || []; a.push(id); by.set(f.pid, a); }
   const out = new Map(); for (const a of by.values()) if (a.length > 1) { a.sort(); a.forEach((id, i) => out.set(id, [i, a.length])); } return out; }
@@ -16173,7 +16173,7 @@ function fleetObj(W, f, hostile, cube) {
   FLEET_ARM = !!(f.js && f.jsK !== "in"); FLEET_FIN = f.demo || f.raid || f.mission === "spy" ? null : hullFleet(fleetFlagU(f, hostile), f.n); const flag = fleetFlag(f, hostile), grp = (FLEET_SOLO = !(f.js && f.jsK !== "in"), fleet3D(W, FLEET_SOLO ? fleetSolo(f.n, hostile, flag) : hostile && !f.n ? null : cdEscort(f.n), col, hostile, f.js ? (f.jsK !== "in" ? (f.form || "wedge") : false) : hostile ? false : fformOf(f), !!cube, flag, flag ? uidLook(fleetFlagU(f, hostile)) : null)); FLEET_FIN = null; FLEET_ARM = false; FLEET_SOLO = false; if (!hostile && flag && !f.demo && !f.raid && fleetFlagU(f, false) === G.me) compMap(W, grp); /* v725 */ const tot = Object.values(f.n || {}).reduce((a, b) => a + b, 0) || 6;
   grp.userData.size = fleetSzOf(f.n || (hostile ? { destroyer: 2, corvette: 4 } : { fighter: 6 }), grp); /* v674 sized against a planet by strength (was a log of the ship count) */
   grp.userData.flagKeep = !!flag && !f.demo; // v250 (a demo's 140 fleets drop their glow from afar, to stay smooth)
-  if (f.js && f.jsK !== "in") grp.userData.size = fleetSzOf(f.n, grp, 1.15 + Math.min(.5, (f.cnt || 1) * .05)); // a joint strike army is one big formation, bigger with every commander
+  if (f.js && f.jsK !== "in") grp.userData.size = fleetSzOf(f.n, grp, 1.05 + Math.min(.15, (f.cnt || 1) * .02)); // a joint strike army is one big formation, bigger with every commander
   // warp flare: flashes where the fleet jumps out of and back into normal space
   const warp = new TH.Sprite(W.additive(W.glow.warp || (W.glow.warp = glowTex("255,255,255", 1)), col, 0)); warp.renderOrder = 13; W.scene.add(warp);
   const lg = new TH.BufferGeometry(); lg.setAttribute("position", new TH.BufferAttribute(new Float32Array(33 * 3), 3));
