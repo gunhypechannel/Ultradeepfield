@@ -120,48 +120,63 @@ def spider(M):
 
 # ---------------------------------------------------------------- the Star Leviathan (art: an armoured whale-headed sea serpent, cyan light in its seams)
 def leviathan(M):
-    SK = M_((.025, .05, .1), .3, .45); PL = M_((.07, .09, .13), .28, .75); PLR = M_((.18, .21, .26), .22, .9); BONE = M_((.75, .72, .65), .3, .1)
+    # v795 the whale refined after the painting: a long armoured head with a rostrum, a glowing mouth line and throat pleats, a pale
+    # belly, overlapping armour plates over the back only, a spiked crest from brow to tail, long glowing-veined fins, wide flukes
+    SK = M_((.025, .05, .1), .3, .45); BEL = M_((.12, .17, .24), .34, .35); PL = M_((.07, .09, .13), .28, .75); PLR = M_((.18, .21, .26), .22, .9); BONE = M_((.75, .72, .65), .3, .1)
     GL = M_((.05, .3, .4), .15, .1, (.25, .9, 1.0)); MOL = M_((.4, .1, .02), .2, .1, (1.0, .45, .1)); FIN = M_((.05, .2, .3), .2, .2, (.12, .5, .65))
+    PLT = M_((.2, .27, .36), .4, .35, (.02, .08, .12)); VEIN = M_((.05, .3, .4), .15, .1, (.4, 1.0, 1.0))
     S = 1.7; HXo = 2.6; T = lambda x, y, z=0: (HXo + (x - HXo) * S, y * S, z * S)
-    hprof = [(4.7, 0), (4.62, .3), (4.4, .6), (4.0, .84), (3.5, .96), (3.0, .98), (2.6, .92)]
+    hprof = [(5.05, 0), (4.95, .26), (4.7, .55), (4.25, .8), (3.7, .94), (3.1, .98), (2.6, .92)]
     hq = lambda p: np.stack([HXo + (p[..., 0] - HXo) / S, p[..., 1] / S, p[..., 2] / S], -1)
-    M.add('head', lambda p: lathe_x(hq(p), hprof, .78, .95) * S, SK, .1)
-    M.add('jaw', lambda p: lathe_x(hq(p), [(4.45, 0), (4.3, .22), (3.9, .38), (3.4, .44), (3.0, .4)], .55, .95, (0, -.42, 0)) * S, PL, .05)
-    M.add('throat', lambda p: ell(p, T(3.75, -.3), (.55 * S, .06 * S, .38 * S)), MOL)
+    M.add('head', lambda p: lathe_x(hq(p), hprof, .74, .92) * S, SK, .1)
+    M.add('jaw', lambda p: lathe_x(hq(p), [(4.85, 0), (4.7, .22), (4.2, .4), (3.5, .46), (3.0, .4)], .55, .9, (0, -.42, 0)) * S, BEL, .05)
+    M.add('throat', lambda p: ell(p, T(3.95, -.3), (.6 * S, .06 * S, .36 * S)), MOL)
     for s in (1, -1):
-        for i in range(9):
-            x = 4.3 - i * .14; z = s * (.18 + i * .05)
+        for i in range(10):
+            x = 4.65 - i * .15; z = s * (.16 + i * .05)
             spk(M, f'tu{s}{i}', T(x, -.3, z), (0, -1, 0), (.2 - i * .008) * S, .04 * S, BONE); spk(M, f'tl{s}{i}', T(x - .05, -.36, z * .92), (0, 1, 0), (.16 - i * .006) * S, .035 * S, BONE)
-        M.add(f'eye{s}', lambda p, s=s: sphere(p, T(3.75, .25, s * .78), .1 * S), GL)
-        M.add(f'lid{s}', lambda p, s=s: box(p, T(3.8, .38, s * .74), (.21 * S, .03 * S, .07 * S), .01, rot('x', s * .35) @ rot('y', s * .2) @ rot('z', -.18)), PLR)
-        for j in range(3): M.add(f'hp{s}{j}', lambda p, s=s, j=j: box(p, T(4.15 - j * .5, .5 + j * .12, s * (.36 + j * .12)), ((.3 - j * .05) * S, .035 * S, .16 * S), .015, rot('x', s * (.55 - j * .08)) @ rot('z', -.18)), PLR)
-        M.add(f'pec{s}', lambda p, s=s: _fin(p, [(.5, 0), (.3, 1.1), (-.8, 2.2), (-.7, 0)], .06 * S, T(2.1, -.3, s * .62), Rx(s * (np.pi / 2 + .45)) @ Rz(-.3)), FIN, .03)
-    for j in range(5): M.carve(f'hs{j}', lambda p, j=j: np.maximum(np.maximum(np.abs(p[..., 0] - (4.6 - j * .38)) - .025, np.abs(p[..., 2]) - .9), -(p[..., 1] - .55)), GL)
-    # the body: a long eel ringed with armour plates, spikes forward, a glowing fin membrane down the tail
-    pts = [(2.9 - t * 9.6, -.15 * t + .25 * np.sin(t * 2.6) * t, 0.) for t in np.linspace(0, 1, 15)]  # v794 a whale's body
+        M.add(f'eye{s}', lambda p, s=s: sphere(p, T(3.75, .22, s * .82), .1 * S), GL)
+        M.add(f'lid{s}', lambda p, s=s: box(p, T(3.82, .36, s * .78), (.3 * S, .045 * S, .09 * S), .015, rot('x', s * .4) @ rot('y', s * .15) @ rot('z', -.12)), PLR)
+        # the brow: two armour plates sweeping back over each eye, as in the painting
+        for j in range(2): M.add(f'br{s}{j}', lambda p, s=s, j=j: box(p, T(3.45 - j * .5, .5 - j * .03, s * (.6 - j * .03)), ((.34 - j * .06) * S, .03 * S, .13 * S), .02, rot('x', s * .62) @ rot('z', -.1)), PL)
+        # the mouth line, glowing from the tip of the snout back past the eye
+        mp = [T(4.9 - k * .3, -.24 - .03 * k, s * min(.62, .2 + k * .14)) for k in range(7)]
+        chain(M, f'ml{s}', mp, [.04 * S] * 7, GL)
+        M.add(f'pec{s}', lambda p, s=s: _fin(p, [(.5, 0), (.3, 1.1), (-.8, 2.3), (-.7, 0)], .06 * S, T(2.1, -.32, s * .62), Rx(s * (np.pi / 2 + .45)) @ Rz(-.3)), FIN, .03)
+        for v in range(3):  # glowing veins down each fin
+            q0 = np.array(T(2.1, -.32, s * .62)); R = Rx(s * (np.pi / 2 + .45)) @ Rz(-.3)
+            A = q0 + R @ np.array([.25 - v * .2, .1, 0]) * 1.0; B = q0 + R @ np.array([-.15 - v * .25, 1.9 - v * .35, 0])
+            M.add(f'pv{s}{v}', lambda p, A=tuple(A), B=tuple(B): rcone(p, A, B, .05, .025), VEIN)
+    # throat pleats: glowing grooves along the underside of the head
+    for k in range(-4, 5):
+        z = k * .2 * S; M.add(f'tp{k}', lambda p, z=z: np.maximum(ell(p, T(3.4, -.5), (1.45 * S, .17 * S, .78 * S)), np.abs(p[..., 2] - z) - .02), PLT)
+    # the body
+    pts = [(2.9 - t * 9.6, -.15 * t + .25 * np.sin(t * 2.6) * t, 0.) for t in np.linspace(0, 1, 15)]
     rad = lambda t: 1.38 * (1.0 - .9 * t ** 1.7) + .05
     ts = np.linspace(0, 1, 15); chain(M, 'body', pts, [rad(t) for t in ts], SK, .15)
+    chain(M, 'belly', [(x, y - .14, z) for x, y, z in pts], [rad(t) * .93 for t in ts], BEL, .1)
     from scipy.interpolate import CubicSpline
     cs = CubicSpline(ts, np.array(pts)); dcs = cs.derivative()
-    for i in range(2, 30, 4):
-        t = i / 31; q = cs(t); tg = dcs(t); tg = tg / np.linalg.norm(tg); rr = rad(t)
-        R = np.array(norm(tg), f32)
-        M.add(f'rg{i}', lambda p, q=tuple(q), tg=tg, rr=rr: (lambda d, a: np.maximum(np.abs(np.sqrt(np.maximum(0, np.sum(d * d, -1) - a * a)) - rr * 1.02) - .035 - rr * .02, np.abs(a) - .07 - rr * .03))(p - V(*q), (p - V(*q)) @ tg.astype(f32)), PLR)
-        if i % 2: M.carve(f'gs{i}', lambda p, q=tuple(q), tg=tg, rr=rr: (lambda d, a: np.maximum(np.abs(a - .18) - .025, np.sqrt(np.maximum(0, np.sum(d * d, -1) - a * a)) - rr * .9))(p - V(*q), (p - V(*q)) @ tg.astype(f32)), GL)
-    for i in range(24):
-        t = .04 + i / 24 * .88; q = cs(t); rr = rad(t)
-        if t < .55: spk(M, f'sp{i}', (q[0], q[1] + rr * .9, q[2]), norm((-.6, 1, 0)), .3 + rr * .55, .07 + rr * .07, PLR)
-        else: M.add(f'fn{i}', lambda p, q=tuple(q), rr=rr: _fin(p, [(.16, 0), (.05, .3), (-.2, .55), (-.3, 0)], .03, (q[0], q[1] + rr * .85, q[2]), None) * 1.0, FIN, .02)
-    q = cs(1.0); M.add('tail', lambda p: _fin(p, [(.3, 0), (-1.5, 2.3), (-1.05, .4), (-1.1, 0), (-1.05, -.4), (-1.5, -2.3)], .09, (q[0] + .1, q[1], q[2]), Rx(np.pi / 2)), FIN, .04)  # whale flukes
+    for i in range(1, 28, 3):  # overlapping plates over the back, leaning back like scales
+        t = .03 + i / 31 * .82; q = cs(t); tg = dcs(t); tg = tg / np.linalg.norm(tg); rr = rad(t)
+        M.add(f'rg{i}', lambda p, q=tuple(q), tg=tg, rr=rr: (lambda d, a: np.maximum(np.maximum(np.abs(np.sqrt(np.maximum(0, np.sum(d * d, -1) - a * a)) - rr * 1.03 - a * .25) - .03 - rr * .02, np.abs(a) - .1 - rr * .05), (q[1] + rr * .3) - p[..., 1]))(p - V(*q), (p - V(*q)) @ tg.astype(f32)), PL)
+    # the spiked crest: from the brow along the back, biggest over the shoulders
+    for i in range(30):
+        t = -.18 + i / 30 * .9
+        if t < 0: x = 2.9 - t * 9.6 * .55; q = (x, (.98 - .2 * (-t)) * S * .74 + .02, 0); rr = 1.0
+        else: q = cs(t); rr = rad(t); q = (q[0], q[1] + rr * .9, q[2])
+        L = (.32 + rr * .55) * (1 - .55 * max(0, (t - .45) / .45)); spk(M, f'sp{i}', q, norm((-.65, 1, 0)), L, .07 + rr * .06, PLR)
+    q = cs(1.0); M.add('tail', lambda p: _fin(p, [(.3, 0), (-1.5, 2.3), (-1.05, .4), (-1.1, 0), (-1.05, -.4), (-1.5, -2.3)], .09, (q[0] + .1, q[1], q[2]), Rx(np.pi / 2)), FIN, .04)
 
 SPEC = {'ctort': (tortoise, (-3.3, -1.4, -2.2), (4.0, 2.9, 2.2)), 'gspider': (spider, (-3.6, -1.3, -3.6), (3.9, 2.8, 3.6)),
-        'slevi': (leviathan, (-8.6, -2.2, -3.4), (6.4, 3.1, 3.4))}
+        'slevi': (leviathan, (-8.6, -2.3, -3.5), (7.0, 3.1, 3.5))}
 PAINT_K = ''
 def paint(P, N, A, E, idx):
     v = .5 + .5 * hashf(idx.astype(np.int64), idx.astype(np.int64) * 7 + 1, 3); glowing = E[:, 0] + E[:, 1] + E[:, 2] > .05
     A[~glowing, :3] *= (.8 + .4 * v[~glowing])[:, None]; top = np.clip(N[:, 1], 0, 1); A[:, :3] *= (1 + .25 * top)[:, None]
     if PAINT_K == 'slevi':  # v787 streaks of cyan light across the hide, as in the painting
-        x, y, z = P[:, 0], P[:, 1], P[:, 2]; st = np.sin(x * 5.3 + z * 2.1 + np.sin(x * 1.7) * 2.) * np.sin(x * 2.3 - y * 4.1 + z * 1.3)
-        m = (st > .86) & (~glowing) & (x < 2.6); E[m, 0] += .12; E[m, 1] += .6; E[m, 2] += .95
+        x, y, z = P[:, 0], P[:, 1], P[:, 2]  # v795 long veins of light along the flanks, not spots
+        w = np.abs(np.sin(np.arctan2(y, np.abs(z)) * 5. + x * .35 + np.sin(x * .8) * .9)); br = np.sin(x * 1.1 + z * .7) > -.35
+        m = (w < .07) & br & (~glowing) & (x < 2.4) & (y > -.6); E[m, 0] += .1; E[m, 1] += .55; E[m, 2] += .9
 if __name__ == '__main__':
     k = sys.argv[1]; PAINT_K = k; f, lo, hi = SPEC[k]; M = Model(lo, hi, float(sys.argv[3]) if len(sys.argv) > 3 else .035); f(M); M.bake(sys.argv[2], paint)
