@@ -8445,7 +8445,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 813;
+const GAME_V = 814;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -20431,8 +20431,8 @@ function glbNext() {
   try {
     GLB[k].t0 = performance.now(); setTimeout(() => { if (GLB[k] && !GLB[k].scene) { GLB[k].slow = true; if (C3 && C3.keys) C3.keys[k] = null; } }, 10000); // v356 too slow: show the plain building
     new TH.GLTFLoader().load("models/" + (MOBILE ? "m/" : "") + k + ".glb?h=" + (GLB_V[k] || GAME_V), g => {
-      const shipIOS = IOS && GLB_SHIPS.has(k), s = g.scene, big = shipIOS ? 512 : MOBILE ? (GLB_BLDS.has(k) && !IOS && GLB_BN++ < 8 ? 1536 : 1024) : 2048, aux = shipIOS ? 256 : MOBILE ? 512 : 1024, /* v381: iPhone ships at a quarter */ an = texAniso(), ps = [];
-      s.traverse(o => { if (o.isMesh) { const m = o.material; if (m && m.isMeshStandardMaterial) { m.envMapIntensity = .9; ps.push(glbShrink(m.map, big)); for (const t of new Set([m.normalMap, m.roughnessMap, m.metalnessMap])) ps.push(glbShrink(t, aux)); for (const t of [m.map, m.normalMap]) if (t) t.anisotropy = an; } } });
+      const shipIOS = MOBILE && GLB_SHIPS.has(k), s = g.scene, big = shipIOS ? 512 : MOBILE ? 1024 : 2048, aux = shipIOS ? 256 : MOBILE ? 512 : 1024, aux2 = MOBILE ? 256 : aux, /* v381: iPhone ships at a quarter; v814 every phone: ships 512/256, buildings 1024/512/256 (was 1536 for 8 of them) */ an = texAniso(), ps = [];
+      s.traverse(o => { if (o.isMesh) { const m = o.material; if (m && m.isMeshStandardMaterial) { m.envMapIntensity = .9; ps.push(glbShrink(m.map, big)); if (m.normalMap) ps.push(glbShrink(m.normalMap, aux)); for (const t of new Set([m.roughnessMap, m.metalnessMap])) if (t && t !== m.normalMap) ps.push(glbShrink(t, aux2)); for (const t of [m.map, m.normalMap]) if (t) t.anisotropy = an; } } });
       Promise.all(ps).then(() => GLB_BLDS.has(k) ? glbLights(k, s) : GLB_SHIPS.has(k) ? glbHull(k, s) : TITAN_GLOW[k] ? s.traverse(o => { if (o.isMesh && o.material && o.material.emissiveMap) { o.material.emissive.set(0xffffff); o.material.emissiveIntensity = TITAN_GLOW[k]; o.material.needsUpdate = true; } }) : null).then(() => { const bb = new TH.Box3().setFromObject(s); s.userData.bb = bb; GLB[k].scene = s; done(); glbReady(k); });
     }, undefined, () => { GLB[k].fail = true; done(); if (C3 && C3.keys) C3.keys[k] = null; });
   } catch (e) { GLB[k].fail = true; done(); }
