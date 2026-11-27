@@ -142,14 +142,18 @@ def leviathan(M):
         # the mouth line, glowing from the tip of the snout back past the eye
         mp = [T(4.9 - k * .3, -.24 - .03 * k, s * min(.62, .2 + k * .14)) for k in range(7)]
         chain(M, f'ml{s}', mp, [.04 * S] * 7, GL)
-        M.add(f'pec{s}', lambda p, s=s: _fin(p, [(.5, 0), (.3, 1.1), (-.8, 2.3), (-.7, 0)], .06 * S, T(2.1, -.32, s * .62), Rx(s * (np.pi / 2 + .45)) @ Rz(-.3)), FIN, .03)
+        PF = [(.55, 0), (.45, 1.6), (-.35, 3.7), (-1.0, 4.4), (-1.1, 2.4), (-.8, 0)]  # v817 the humpback's great blade fins, a third of its length
+        M.add(f'pec{s}', lambda p, s=s: _fin(p, PF, .07 * S, T(2.1, -.32, s * .62), Rx(s * (np.pi / 2 + .62)) @ Rz(-.42)), FIN, .03)
+        for v in range(9):  # knobs along the leading edge
+            q0 = np.array(T(2.1, -.32, s * .62)); R = Rx(s * (np.pi / 2 + .62)) @ Rz(-.42); u = (v + .5) / 9
+            a_ = np.array([.5 - .9 * u ** 1.4, 3.9 * u, 0]); M.add(f'pk{s}{v}', lambda p, c=tuple(q0 + R @ a_): sphere(p, c, .1 - .05 * u), PL)
         for v in range(3):  # glowing veins down each fin
-            q0 = np.array(T(2.1, -.32, s * .62)); R = Rx(s * (np.pi / 2 + .45)) @ Rz(-.3)
-            A = q0 + R @ np.array([.25 - v * .2, .1, 0]) * 1.0; B = q0 + R @ np.array([-.15 - v * .25, 1.9 - v * .35, 0])
+            q0 = np.array(T(2.1, -.32, s * .62)); R = Rx(s * (np.pi / 2 + .62)) @ Rz(-.42)
+            A = q0 + R @ np.array([.25 - v * .3, .1, 0]) * 1.0; B = q0 + R @ np.array([-.55 - v * .2, 3.7 - v * .5, 0])
             M.add(f'pv{s}{v}', lambda p, A=tuple(A), B=tuple(B): rcone(p, A, B, .05, .025), VEIN)
         for v in range(6):  # a ragged glowing trailing edge, as in the painting
-            q0 = np.array(T(2.1, -.32, s * .62)); R = Rx(s * (np.pi / 2 + .45)) @ Rz(-.3); u = (v + .5) / 6
-            A = q0 + R @ np.array([-.7 - .1 * u, 2.3 * u, 0]); spk(M, f'pe{s}{v}', tuple(A), tuple(R @ np.array([-1, .15, 0])), .32 + .18 * (v % 2), .06, VEIN)
+            q0 = np.array(T(2.1, -.32, s * .62)); R = Rx(s * (np.pi / 2 + .62)) @ Rz(-.42); u = (v + .5) / 6
+            A = q0 + R @ np.array([-.8 - .3 * u, 4.2 * u, 0]); spk(M, f'pe{s}{v}', tuple(A), tuple(R @ np.array([-1, .15, 0])), .32 + .18 * (v % 2), .06, VEIN)
     # v796 layered head armour: plates that follow the skull, each overlapping the one behind like the painting's helm
     for j in range(6):
         x0 = 4.85 - j * .36; off = .05 + j * .012
@@ -174,10 +178,15 @@ def leviathan(M):
         if t < 0: x = 2.9 - t * 9.6 * .55; q = (x, (.98 - .2 * (-t)) * S * .74 + .02, 0); rr = 1.0
         else: q = cs(t); rr = rad(t); q = (q[0], q[1] + rr * .9, q[2])
         L = (.32 + rr * .55) * (1 - .55 * max(0, (t - .45) / .45)); spk(M, f'sp{i}', q, norm((-.65, 1, 0)), L, .07 + rr * .06, PLR)
-    q = cs(1.0); M.add('tail', lambda p: _fin(p, [(.3, 0), (-1.5, 2.3), (-1.05, .4), (-1.1, 0), (-1.05, -.4), (-1.5, -2.3)], .09, (q[0] + .1, q[1], q[2]), Rx(np.pi / 2)), FIN, .04)
+    q = cs(1.0)
+    for sg in (1, -1): M.add(f'tail{sg}', lambda p, sg=sg: _fin(p, [(x_, sg * y_) for x_, y_ in ((.4, 0), (-.9, 1.9), (-2.1, 3.4), (-1.6, 1.5), (-1.3, 0))][::sg], .09, (q[0] + .1, q[1], q[2]), Rx(np.pi / 2)), FIN, .04)  # v817 broad flukes
+    # v817 the humpback's deep grooved belly: pleats from the chin back past the fins, as in the painting
+    M.add('gul', lambda p: ell(p, (2.2, -.75, 0), (3.6, .95, 1.15)), BEL, .5)
+    for k in range(-5, 6):
+        z = k * .19; M.carve(f'gp{k}', lambda p, z=z: np.maximum(np.maximum(np.abs(p[..., 2] - z * (1 + .25 * (p[..., 0] - 2.2) / 3.6)) - .022, ell(p, (2.2, -.75, 0), (3.62, .97, 1.17))), p[..., 1] + .55), PLT)
 
 SPEC = {'ctort': (tortoise, (-3.3, -1.4, -2.2), (4.0, 2.9, 2.2)), 'gspider': (spider, (-3.6, -1.3, -3.6), (3.9, 2.8, 3.6)),
-        'slevi': (leviathan, (-8.6, -2.3, -3.5), (7.0, 3.1, 3.5))}
+        'slevi': (leviathan, (-9.6, -3.4, -5.6), (7.0, 3.1, 5.6))}
 PAINT_K = ''
 def paint(P, N, A, E, idx):
     v = .5 + .5 * hashf(idx.astype(np.int64), idx.astype(np.int64) * 7 + 1, 3); glowing = E[:, 0] + E[:, 1] + E[:, 2] > .05
