@@ -20,10 +20,10 @@ def path_pts(pts, n):
 def starhive(M, G, part=None):
     PAP = [M_(c, .95, 0) for c in ((.1, .09, .075), (.14, .12, .09), (.17, .14, .1), (.08, .065, .05), (.13, .1, .07), (.15, .13, .11))]
     WALL = M_((.2, .16, .11), .9, 0); CELL = M_((.5, .25, .05), .3, 0, (1.0, .55, .12)); DARK = M_((.03, .02, .01), 1, 0)
-    GOLD = M_((.55, .38, .06), .3, .5, (.12, .07, .0)); BLK = M_((.02, .02, .02), .3, .4); EYE = M_((.3, .12, .0), .1, .2, (1., .6, .15)); WING = M_((.0, .0, .0), .1, .0, (.22, .15, .05))
+    GOLD = M_((.32, .19, .03), .3, .6, (.16, .06, .0)); BLK = M_((.02, .02, .02), .3, .4); EYE = M_((.3, .12, .0), .1, .2, (1., .6, .15)); WING = M_((.0, .0, .0), .1, .0, (.42, .26, .06))
     # v819 the nest as in the painting: a crown of dark resin bristling with spikes, under it an upturned cone of honeycomb whose cells
     # glow from inside, tapering to a point, resin dripping from the crown (all within r 1.95: the wave swings everything beyond as swarm)
-    RES = [M_(c, .55, .05) for c in ((.045, .03, .018), (.06, .04, .022), (.035, .022, .014))]; CELL2 = M_((.45, .2, .03), .35, 0, (1.0, .5, .08))
+    RES = [M_(c, .38, .75) for c in ((.06, .055, .05), (.085, .078, .07), (.045, .04, .036))]  # v831 dark gunmetal armour, as in the painting; CELL2 = M_((.45, .2, .03), .35, 0, (1.0, .5, .08))
     YT, YB, R0 = .95, -2.35, 1.6
     Rf = lambda y: R0 * np.clip((y - YB) / (YT - YB), 0, 1) ** .72
     def cone(p):
@@ -37,7 +37,20 @@ def starhive(M, G, part=None):
             fx = (dx > dy) & (dx > dz); fz = ~fx & (dz >= dy); rx = np.where(fx, -ry - rz, rx); rz = np.where(fz, -rx - ry, rz)
             cu = HXS * s3 * (rx + rz / 2); cv = HXS * 1.5 * rz; du, dv = np.abs(u - cu), np.abs(v - cv)
             return np.maximum(du, du * .5 + dv * s3 / 2) / (HXS * s3 / 2)
-        M.carve('cells', lambda p: np.maximum(np.maximum((hexm(p) - .7) * 1.2, np.abs(cone(p) + .02) - .12), p[..., 1] - .8), CELL2)
+        # v831 the painting's neon: cells in deep amber bands, a white-hot heart at the front, the glow brightest low and centre
+        CDEEP = M_((.22, .05, .0), .35, 0, (.5, .09, .0)); CMID = M_((.3, .07, .0), .3, 0, (.75, .17, .0)); CHOT = M_((.5, .2, .05), .25, 0, (1.0, .45, .1))
+        cellf = lambda p: np.maximum(np.maximum((hexm(p) - .7) * 1.2, np.abs(cone(p) + .02) - .12), p[..., 1] - .8)
+        hotr = lambda p: np.sqrt(((p - V(.0, -.55, 1.15)) ** 2).sum(-1)) - .75
+        M.carve('cellsT', lambda p: np.maximum(cellf(p), -.15 - p[..., 1]), CDEEP)
+        M.carve('cellsM', lambda p: np.maximum(np.maximum(cellf(p), p[..., 1] + .15), -hotr(p)), CMID)
+        M.carve('cellsH', lambda p: np.maximum(np.maximum(cellf(p), p[..., 1] + .15), hotr(p)), CHOT)
+        VEIN = M_((.35, .08, .0), .3, 0, (.85, .25, .0)); METAL = M_((.07, .07, .08), .32, .85)
+        for i in range(7):  # dark metal ribs down the comb, as the painting's armour plates
+            a = i / 7 * 2 * np.pi + .2; ys = [.75, .1, -.6, -1.3, -2.0]; pts = [(np.cos(a) * (Rf(y) + .06), y, np.sin(a) * (Rf(y) + .06)) for y in ys]
+            for j in range(len(pts) - 1): M.add(f'rib{i}{j}', lambda p, A=pts[j], B=pts[j + 1], r1=.085 - j * .012, r2=.073 - j * .012: rcone(p, A, B, r1, r2), METAL, .02)
+        # glowing seams across the crown
+        M.carve('seams', lambda p: np.maximum(np.maximum(np.abs(np.sin(np.arctan2(p[..., 2], p[..., 0]) * 6)) * np.sqrt(p[..., 0] ** 2 + p[..., 2] ** 2) - .035, np.abs(p[..., 1] - 1.2) - .5), (np.sqrt(p[..., 0] ** 2 + p[..., 2] ** 2) - 1.95)), VEIN)
+        G.add('haze', lambda p: np.maximum(cone(p) - .16, p[..., 1] - .85), M_((0, 0, 0), .2, 0, (.3, .07, .0)))  # a soft orange haze round the comb (drawn additively)
         M.add('cap', lambda p: ell(p, (0, 1.12, 0), (1.82, .45, 1.82)) + noise3(p, 2.5, 31) * .12, RES[0], .15)
         M.add('cap2', lambda p: ell(p, (0, 1.42, 0), (1.25, .38, 1.25)) + noise3(p, 3.5, 32) * .1, RES[1], .2)
         rng2 = np.random.default_rng(71)
@@ -49,6 +62,7 @@ def starhive(M, G, part=None):
         for i in range(18):  # resin dripping from the crown down the comb
             a = i / 18 * 2 * np.pi + .17; rb = 1.55 - (i % 3) * .08; L = .7 + (i % 4) * .28; b_ = (np.cos(a) * rb, .85, np.sin(a) * rb)
             M.add(f'dr{i}', lambda p, b_=b_, a=a, L=L, rb=rb: spike(p, b_, (np.cos(a) * (rb - L * .45), .85 - L, np.sin(a) * (rb - L * .45)), .13), RES[i % 3])
+            M.add(f'dg{i}', lambda p, a=a, L=L, rb=rb: sphere(p, (np.cos(a) * (rb - L * .43), .88 - L, np.sin(a) * (rb - L * .43)), .055), VEIN)  # v831 each drip's tip glows
         M.add('tip', lambda p: spike(p, (0, YB + .35, 0), (0, YB - .35, 0), .2), RES[0])
     if part == 'nest': return
     # the swarm: nine golden wasps the size of fighters, as in the painting (the wave carries everything beyond r 1.95 round the nest)
