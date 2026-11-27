@@ -8445,7 +8445,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 817;
+const GAME_V = 818;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -15979,9 +15979,9 @@ function obPush(Gd, x, y, z, rs, out, skip, up) { out.x = out.y = out.z = 0; if 
     for (const e of a) { if (e.q === q) continue; e.q = q; if (skip && skip(e)) continue; let dx = x - e.x, dy = y - e.y, dz = z - e.z; const d = Math.hypot(dx, dy, dz), need = rs + e.r + .6, zone = need * 1.35; if (d >= zone) continue;
       if (d < 1e-3) { dx = 0; dy = 1; dz = 0; } else { dx /= d; dy /= d; dz /= d; } dy += up || 0; const L = Math.hypot(dx, dy, dz) || 1, w = (zone - d) * (.55 + .45 * (1 - d / zone)) / L; /* out to the edge of its zone, softly at the rim */ out.x += dx * w; out.y += dy * w; out.z += dz * w; } }
   return out; }
-const OBV = { x: 0, y: 0, z: 0 }, OBV2 = { x: 0, y: 0, z: 0 };
+const OBV = { x: 0, y: 0, z: 0 }, OBV2 = { x: 0, y: 0, z: 0 }, MON_STILL = new Set(["kegg", "sent", "reat"]);
 function monAvoid(W, o, q) { if (!W.obG) return; const gs = o.grp.scale.x || 1, b = o.body.position; if (o.mr0 == null) { try { const sp = new TH.Box3().setFromObject(o.body).getBoundingSphere(new TH.Sphere()); o.mr0 = sp.radius > 0 ? Math.min(8, sp.radius / gs) : 2; } catch (e) { o.mr0 = 2; } }
-  const rM = o.mr0 * gs * .75, x = q.x + b.x * gs, y = q.y + b.y * gs, z = q.z + b.z * gs, P = obPush(W.obG, x, y, z, rM, OBV, null, .35), k = o.cl ? 0 : 1, f = 1 - Math.pow(.8, W.dtk || 1); o.av = o.av || { x: 0, y: 0, z: 0 };
+  const rM = o.mr0 * gs * .75, x = q.x + b.x * gs, y = q.y + b.y * gs, z = q.z + b.z * gs, P = obPush(W.obG, x, y, z, rM, OBV, null, .35), k = o.cl ? 0 : 1, f = 1 - Math.pow(.965, W.dtk || 1); { const pl = Math.hypot(P.x, P.y, P.z), cap = Math.max(1.2, rM * .9); if (pl > cap) { const c = cap / pl; P.x *= c; P.y *= c; P.z *= c; } } /* v818 */ o.av = o.av || { x: 0, y: 0, z: 0 };
   o.av.x += (P.x * k - o.av.x) * f; o.av.y += (P.y * k - o.av.y) * f; o.av.z += (P.z * k - o.av.z) * f; b.x += o.av.x / gs; b.y += o.av.y / gs; b.z += o.av.z / gs; obAdd(W.obG, x + o.av.x, y + o.av.y, z + o.av.z, rM); }
 const ARC = (a, b, k) => { const d = Math.hypot(b.x - a.x, b.z - a.z); return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k + Math.sin(Math.PI * k) * d * .16, z: a.z + (b.z - a.z) * k }; };
 /* v259 a fleet bound for a pirate crew, a space monster or a Cube boss stops at stand-off range on its side, and the battle opens there
@@ -17575,7 +17575,7 @@ function draw3D(t) {
         if (it.mon === "mimic") { o.body.position.set(0, Math.sin(t * .0004 + it.a0) * .2, 0); o.body.rotation.set(0, t * .00003 + it.a0, 0); o.body.scale.setScalar((.6 + it.lvl * .0082) * (.5 + .17 * mimStage(it, T))); } /* v663 a hive stays put and grows with its stage */
         if (it.mon === "carcinid") { o.body.position.set(0, Math.sin(t * .0004 + it.a0) * .15, 0); o.body.rotation.set(0, t * .00002 + it.a0, 0); o.body.scale.setScalar((.6 + it.lvl * .0082) * (.42 + .16 * crcStage(it, T))); } /* v703 a Breach Zone stays put and grows with its stage */ /* v529 the Sentinel does not move */
         if (it.mon === "swasp") { o.body.position.set(0, Math.sin(t * .0005 + it.a0) * .3, 0); o.body.rotation.set(0, t * .00008 + it.a0, 0); }
-        const evStay = !!(MIM_BOSS[it.id] || CNT_M[it.mon] || CRC_M[it.mon] || it.mon === "mimic"); /* v750 an event unit holds its spot */
+        const evStay = !!(MIM_BOSS[it.id] || CNT_M[it.mon] || CRC_M[it.mon] || it.mon === "mimic" || MON_STILL.has(it.mon)); /* v818 the egg clutch, the Sentinel and the Rock Eaters float where they are */ /* v750 an event unit holds its spot */
         if (evStay && !MIM_BOSS[it.id] && it.mon !== "mimic" && it.mon !== "carcinid") { o.body.position.set(0, Math.sin(t * .0004 + it.a0) * .2, 0); o.body.rotation.set(0, it.a0 + Math.sin(t * .00006 + it.a0 * 3) * .5, 0); } // v515 a Starhive hangs where it is; its swarm does the moving
         if (it.mon === "ssquid") { const p = 1 + .07 * Math.sin(t * .006 + it.a0); o.body.scale.set(o.body.scale.y * p, o.body.scale.y, o.body.scale.y / Math.sqrt(p)); }
         /* v264 a monster in a battle stays on screen until the fight is over (it was marked slain, and hidden, the moment the result was known),
