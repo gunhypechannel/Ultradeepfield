@@ -8445,7 +8445,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 824;
+const GAME_V = 825;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -17651,6 +17651,7 @@ function draw3D(t) {
     if (id === "raid") { const hp = homePlanet(); if (!hp) continue; const b = P3(hp, T), ang = (hash(G.me || "x") % 360) / 57.3; path = { a: { x: b.x + Math.cos(ang) * 160, y: 30, z: b.z + Math.sin(ang) * 160 }, b, k: 1 - clamp((S.raid.at - T) / 120000, 0, 1) }; }
     else path = fleetPath(f, T);
     if (!path) continue; fseen.add(id);
+    if (path.park && !path.cube && !hostile && f.phase !== "gather" && f.phase !== "muster" && G.clashes.some(c => c.loc === fleetTarget(f))) { const o0 = W.fleets.get(id); if (o0 && o0.grp.visible) { o0.grp.visible = false; o0.hidP = 1; } continue; } /* v825 the battle's escort is the fleet */
     // v174 during the Cube event (and the Cube demo) a fleet bound for the Cube, or holding station at it, takes the Cube's flagship formation
     const cf = !hostile && id !== "raid" && (path.cube || (f.phase === "out" && !f.retreat && fleetTarget(f) === NEXUS)) && (!!cubePhase(T) || !!f.demo);
     // v178 a rebuild (the army grew, or the Cube formation switched on or off) shares the 3-models-a-frame budget with new fleets, and the
@@ -17659,10 +17660,11 @@ function draw3D(t) {
     let o = W.fleets.get(id); if (o && ((f.js && o.nk !== sumShips(f.n) + f.jsK + f.form) || !!o.cf !== cf || o.fg !== (fleetFlag(f, hostile) || "") || (!f.js && !hostile && o.fm != null && o.fm !== fformOf(f))) && (W.fleetMade = (W.fleetMade || 0) + 1) <= 3) { const h0 = o.hist; disposeObj(W, o); o = fleetObj(W, f, hostile, cf); o.hist = h0; W.fleets.set(id, o); } // the army grows as members arrive
     if (!o) { if ((W.fleetMade = (W.fleetMade || 0) + 1) > 3) continue; o = fleetObj(W, f, hostile, cf); W.fleets.set(id, o); } if (f.js && o.nk == null) o.nk = sumShips(f.n) + f.jsK + f.form; if (o.cf == null) o.cf = cf; if (o.fm == null && !f.js && !hostile) o.fm = fformOf(f); // v124: at most 3 new fleet models a frame (v178: the keys are set by fleetObj, so a deferred rebuild is retried next frame)
     const fsT = path.cube ? 1.55 : fs; o.fsC = o.fsC ? o.fsC + (fsT - o.fsC) * .06 : fsT; const fsF = o.fsC; /* v194: fleets at the Cube keep one size (they rescaled, and re-orbited, with every zoom) */
+    if (o.hidP) { o.hidP = 0; o.grp.visible = true; }
     let pt, nx;
     if (path.cube) { const ws0 = fsF * (o.grp.userData.size || 1), rad = (o.grp.userData.R || 4) * ws0 * .7, r = cubeOrbit(path.b, id, T, rad, f); pt = r.pt; nx = r.nx;
       V3.set(pt.x, pt.y, pt.z); cubeSweep(W, o.lastC, V3, rad + 2); pt = { x: V3.x, y: V3.y, z: V3.z }; (o.lastC || (o.lastC = new TH.Vector3())).copy(V3); }
-    else if (path.park) { const gat = f.phase === "gather", R = path.hold ? .5 : gat ? 2.6 : f.jsK === "mass" ? 6.5 : f.parkR || 4, a = t * (gat ? .00035 : f.phase === "muster" ? .00009 : f.parkR ? .00011 : .0008) + (hash(id) % 10); /* v106: a strike waiting at the muster point holds a slow, stately orbit */ // v96: gatherers hold a slow, tight mining orbit
+    else if (path.park) { const gat = f.phase === "gather", R = path.hold ? .5 : gat ? 2.6 : f.jsK === "mass" ? 6.5 : f.parkR || 4, a = t * (gat ? .00035 : f.phase === "muster" ? .00009 : .00011) + (hash(id) % 10); /* v825 a stately orbit (was .0008) */ /* v106: a strike waiting at the muster point holds a slow, stately orbit */ // v96: gatherers hold a slow, tight mining orbit
       pt = { x: path.b.x + Math.cos(a) * R, y: path.b.y + (gat ? .7 + .25 * Math.sin(t * .0011) : 1), z: path.b.z + Math.sin(a) * R }; nx = { x: path.b.x + Math.cos(a + .1) * R, y: pt.y, z: path.b.z + Math.sin(a + .1) * R }; }
     else { pt = ARC(path.a, path.b, path.k); nx = ARC(path.a, path.b, Math.min(1, path.k + .01)); if (path.k >= 1) nx = { x: pt.x + (path.b.x - path.a.x) * .01, y: pt.y, z: pt.z + (path.b.z - path.a.z) * .01 };
       { const ln = W.lanes && W.lanes.get(id); if (ln) { const dx = path.b.x - path.a.x, dz = path.b.z - path.a.z, L = Math.hypot(dx, dz) || 1, w = clamp(path.k * 1.4, 0, 1), gap = (o.grp.userData.span || 20) * fsF * (o.grp.userData.size || 1) * 1.15, off = (ln[0] - (ln[1] - 1) / 2) * gap * w; pt.x += -dz / L * off; pt.z += dx / L * off; nx.x += -dz / L * off; nx.z += dx / L * off; } } /* v674 lanes into a shared target */
@@ -20214,6 +20216,7 @@ function glbOn() {
 }
 const GLB_Q = []; let GLB_RUN = 0;
 const GLB_V = {"sanct": "e45e883a", "armageddon": "5935b307", "sovereign": "9d0e7099", "harbinger": "96444209", "allyDepot":"c2dfe0e8","ark":"9b3cccf1","bastion":"70f5614b","battleship":"e235b570","bomber":"09efbb28","corvette":"1d10b235","crystalMine":"96bb71b9","crystalStore":"1a929fcf","destroyer":"831f8994","dreadnought":"7703142f","escortCarrier":"b4256abb","fighter":"80489844","fortress":"405286e5","fusion":"ec8965d4","gasSynth":"708df8c8","gasTank":"dbcabb5c","guardian":"a9a493f6","hauler":"0b4fb8e6","heavyCargo":"0b382b6b","heavyFighter":"1d458c8b","lab":"4a2529f7","lancer":"7f74a79b","lunarBase":"6e5b6c72","metalMine":"54532b9d","metalStore":"72d30726","nanite":"c3b6fb3e","phalanx":"4fe44153","radar":"8b652465","recycler":"4919e165","repairYard":"3374af55","robotics":"67616b88","shipyard":"e82b8bd0","solar":"32100219","spyProbe":"4c7bf229","supercarrier":"fa2ab171","tender":"054f88f4","terraformer":"fd97993c"}; // v356 each model file's fingerprint (tools/glb_versions.json)
+const GLB_VM = {"radar":"c3bdfefe","metalMine":"6c72614e","crystalMine":"b53df6c4","solar":"f4ad333e","gasSynth":"1c56bb66","metalStore":"721ccf2b","crystalStore":"40d3aef3","gasTank":"0d85a510","robotics":"61acfc50","shipyard":"d7614b96","lab":"f84fa884","fortress":"b5f29924","repairYard":"2765233b","fusion":"82b2937f","nanite":"cbe5cbde","terraformer":"bc6a890f","allyDepot":"c5d7ff15","phalanx":"aa74ec2f","lunarBase":"85755f65"}; // v825 the simplified mobile models
 /* v356 start loading your buildings' and hulls' models as soon as the game is ready, before the base is opened */
 function glbPreload() {
   if (glbPreload.done || !G.ready || typeof S === "undefined" || !S || !S.b) return; glbPreload.done = true; if (!glbOn() || WEAK) return;
@@ -20451,7 +20454,7 @@ function glbNext() {
   const done = () => { GLB_RUN = 0; setTimeout(glbNext, 120); };
   try {
     GLB[k].t0 = performance.now(); setTimeout(() => { if (GLB[k] && !GLB[k].scene) { GLB[k].slow = true; if (C3 && C3.keys) C3.keys[k] = null; } }, 10000); // v356 too slow: show the plain building
-    new TH.GLTFLoader().load("models/" + (MOBILE ? "m/" : "") + k + ".glb?h=" + (GLB_V[k] || GAME_V), g => {
+    new TH.GLTFLoader().load("models/" + (MOBILE ? "m/" : "") + k + ".glb?h=" + (MOBILE && GLB_VM[k] || GLB_V[k] || GAME_V), g => {
       const shipIOS = MOBILE && GLB_SHIPS.has(k), s = g.scene, big = shipIOS ? 512 : MOBILE ? 1024 : 2048, aux = shipIOS ? 256 : MOBILE ? 512 : 1024, aux2 = MOBILE ? 256 : aux, /* v381: iPhone ships at a quarter; v814 every phone: ships 512/256, buildings 1024/512/256 (was 1536 for 8 of them) */ an = texAniso(), ps = [];
       s.traverse(o => { if (o.isMesh) { const m = o.material; if (m && m.isMeshStandardMaterial) { m.envMapIntensity = .9; ps.push(glbShrink(m.map, big)); if (m.normalMap) ps.push(glbShrink(m.normalMap, aux)); for (const t of new Set([m.roughnessMap, m.metalnessMap])) if (t && t !== m.normalMap) ps.push(glbShrink(t, aux2)); for (const t of [m.map, m.normalMap]) if (t) t.anisotropy = an; } } });
       Promise.all(ps).then(() => GLB_BLDS.has(k) ? glbLights(k, s) : GLB_SHIPS.has(k) ? glbHull(k, s) : TITAN_GLOW[k] ? s.traverse(o => { if (o.isMesh && o.material && o.material.emissiveMap) { o.material.emissive.set(0xffffff); o.material.emissiveIntensity = TITAN_GLOW[k]; o.material.needsUpdate = true; } }) : null).then(() => { const bb = new TH.Box3().setFromObject(s); s.userData.bb = bb; GLB[k].scene = s; done(); glbReady(k); });
@@ -21101,13 +21104,13 @@ function initColony(host) {
   const C = colMats();
   { const PV = deckPoly(.06); PV.forEach(([ax, az], i) => { const [bx, bz] = PV[(i + 1) % 8], L = Math.hypot(bx - ax, bz - az), m = cbox(L, .1, .12, C.cyan, (ax + bx) / 2, -.02, (az + bz) / 2); m.rotation.y = -Math.atan2(bz - az, bx - ax); scene.add(m); }); } // v367 the border light
   const rockT = rockTex(), rockM = new TH.MeshStandardMaterial({ color: 0x6d4232, map: rockT.map, bumpMap: rockT.bump, bumpScale: .9, roughness: .96, metalness: 0 }), rockG = rockGeo(2, 44), r = rnd(44); // v354 smooth noise-displaced stone
-  for (let i = 0; i < 40; i++) { const a = r() * TAU, d = 44 + r() * 22; const m = new TH.Mesh(rockG, rockM); m.position.set(Math.cos(a) * d * 1.2, 2 + r() * 5, Math.sin(a) * d * 1); m.scale.set(1.5 + r() * 4, 1 + r() * 4, 1.5 + r() * 4); m.rotation.set(r(), r() * 3, r()); m.castShadow = true; scene.add(m); }
+  for (let i = 0; i < 40; i++) { const a = r() * TAU, d = 44 + r() * 22; const m = new TH.Mesh(rockG, rockM); m.position.set(Math.cos(a) * d * 1.2, 2 + r() * 5, Math.sin(a) * d * 1); m.scale.set(1.5 + r() * 4, 1 + r() * 4, 1.5 + r() * 4); m.rotation.set(r(), r() * 3, r()); m.castShadow = !MOBILE; scene.add(m); }
   const hq = hqModel(); hq.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(hq);
   // pebbles and boulders around the platform, sharing the tinted rock material
-  { const pg = rockGeo(1, 515).scale(.28, .28, .28), im = new TH.InstancedMesh(pg, rockM, 520), dm = new TH.Object3D(), pr = rnd(515); let c = 0;
-    for (let i = 0; i < 4000 && c < 520; i++) { const x = (pr() - .5) * 62, z = (pr() - .5) * 54; if (deckIn(x, z) > -.6) continue; if (Math.hypot(x * .82, z) > 25.5) continue;
+  { const pg = rockGeo(1, 515).scale(.28, .28, .28), im = new TH.InstancedMesh(pg, rockM, 520), dm = new TH.Object3D(), pr = rnd(515), NP = MOBILE ? 260 : 520; let c = 0; /* v825 half on phones */
+    for (let i = 0; i < 4000 && c < NP; i++) { const x = (pr() - .5) * 62, z = (pr() - .5) * 54; if (deckIn(x, z) > -.6) continue; if (Math.hypot(x * .82, z) > 25.5) continue;
       const s = pr() < .08 ? 2 + pr() * 2.5 : .4 + pr() * 1.1; dm.position.set(x, -1.3 + s * .08, z); dm.rotation.set(pr() * 3, pr() * 3, pr() * 3); dm.scale.set(s * (.8 + pr() * .5), s * (.5 + pr() * .4), s * (.8 + pr() * .5)); dm.updateMatrix(); im.setMatrixAt(c++, dm.matrix); }
-    im.count = c; im.castShadow = true; im.receiveShadow = true; im.frustumCulled = false; scene.add(im); }
+    im.count = c; im.castShadow = !MOBILE; im.receiveShadow = true; im.frustumCulled = false; scene.add(im); }
   // drifting dust in the air above the base
   const dust = (() => { const n = 260, pa = new Float32Array(n * 3), dr = rnd(616); for (let i = 0; i < n; i++) { pa[i * 3] = (dr() - .5) * 60; pa[i * 3 + 1] = .3 + dr() * 7; pa[i * 3 + 2] = (dr() - .5) * 50; }
     const g = new TH.BufferGeometry(); g.setAttribute("position", new TH.BufferAttribute(pa, 3)); const p = new TH.Points(g, new TH.PointsMaterial({ color: 0xffe2c0, size: .13, map: glowTex("255,255,255", 1), transparent: true, opacity: .55, depthWrite: false, blending: TH.AdditiveBlending })); p.frustumCulled = false; scene.add(p); return p; })();
@@ -21517,6 +21520,8 @@ function colBloom(W) {
   } catch (e) { W.bloom = null; }
   return W.bloom;
 }
+/* v825 is a base structure near the screen? (its plot centre projected through the base camera, with a generous margin) */
+function colOnScreen(W) { const v = colOnScreen.v || (colOnScreen.v = new TH.Vector3()); W.cam.updateMatrixWorld(); return m => { if (m.userData.alwaysAnim) return true; v.setFromMatrixPosition(m.matrixWorld); v.project(W.cam); return Math.abs(v.x) < 1.35 && Math.abs(v.y) < 1.45; }; }
 function drawColony(t) {
   const W = C3; if (!W || !colHost || !colHost.isConnected) return;
   const w = colHost.clientWidth, h = colHost.clientHeight; if (w < 8 || h < 8) return;
@@ -21550,7 +21555,7 @@ function drawColony(t) {
   const dn = Math.min(8, Math.ceil(Math.log2(bt.ships + 1))), dk = String(dn);
   if (W.dkey !== dk) { if (W.dock) W.scene.remove(W.dock); W.dock = dockedShips(dn); W.scene.add(W.dock); W.dkey = dk; W.renderer.shadowMap.needsUpdate = true; }
   const T = reduced ? 0 : t * MOT.base; // v822 the motion standard (was .55); v190 the base's ambient motion at a calmer pace (buildings' machinery, steam, the transit train, air traffic, the road lanes)
-  for (const m of [W.hq, W.dock].concat(Object.values(W.blds))) if (m) for (const [o, kind, p] of (m.userData.anim || [])) {
+  const onV = colOnScreen(W); for (const m of [W.hq, W.dock].concat(Object.values(W.blds))) if (m && onV(m)) for (const [o, kind, p] of (m.userData.anim || [])) { /* v825 off-screen buildings rest */
     if (kind === "spin") o.rotation.y = T * .001 * p; else if (kind === "bob") o.position.y += Math.sin(T * .002 + p) * .002;
     else if (kind === "pulse") o.scale.setScalar(1 + .12 * Math.sin(T * .004)); else if (kind === "swing") o.rotation.y = Math.sin(T * .0012) * 1.1;
     else if (kind === "hover") o.position.y = 1.2 + Math.sin(T * .0015) * .08; else if (kind === "slide") o.position.x = Math.sin(T * .0009) * 1.6;
@@ -21586,7 +21591,7 @@ function drawColony(t) {
   if (W.turrets) W.turrets.children.forEach((tg, i) => { if (tg.userData.head) tg.userData.head.rotation.y = Math.sin(T * .0007 + i) * 1.2; else if (tg.userData.dome) tg.material.opacity = (tg.isMesh && tg.material.wireframe ? .05 : .07) + .02 * Math.sin(T * .002); });
   // colonists and rovers: rebuilt when the planet or its development changes, animated every frame
   { const lv = bt.keys.reduce((a, k) => a + bt.lv(k), 0), N = clamp(6 + Math.round(lv * .9), 6, MOBILE ? 22 : 46), sp = bt.keys.filter(k => bt.lv(k) > 0 || k === "metalMine" || k === "solar").length;
-    if (!W.folk || W.folk.key !== bt.key + "|" + N + "|" + sp + "|" + facOf()) folkBuild(W, bt); folkStep(W, t); }
+    if (!W.folk || W.folk.key !== bt.key + "|" + N + "|" + sp + "|" + facOf()) folkBuild(W, bt); if (!MOBILE || !(t - (W.folkT || 0) < 31)) { W.folkT = t; folkStep(W, t); } } /* v825 30 Hz on phones */
   if (W.dust && !reduced) { W.dust.rotation.y = T * .00002; W.dust.position.y = Math.sin(T * .0003) * .3; }
   // v189 the props around the plots (rebuilt as buildings grow), the energy lanes flowing out from the hub, the console screens scrolling
   { const pk = bt.key + "|" + bt.keys.map(k => bt.lv(k) ? eraOf(bt.lv(k), k) + 1 : 0).join(""); if (W.propKey !== pk) { if (W.props) W.scene.remove(W.props); W.props = buildProps(bt); W.scene.add(W.props); W.propKey = pk; W.renderer.shadowMap.needsUpdate = true; } }
@@ -26858,6 +26863,7 @@ function playBattle(r) {
     roundShown: 0, roundAt: -1e9, shake: 0, hudAt: 0, done: false, hold: 0 };
   // each side flies its own faction: you always in yours; a rival commander in theirs, with the side colour on their trim
   battle.acc = battleAcc(r);
+  R.squads.forEach((q, i) => { if (q.k !== "harbinger") return; const v = (R.vols || []).find(v => v.s === i && v.e != null && v.e >= 0); if (v) battle.beams.push({ t0: Math.max(.6, v.t - 2.1), s: i, e: v.e, side: q.side, ti: "HC", charge: 0, life: 2.3, seed: hash("op|" + i) % 997, op: 1 }); }); /* v825 the Harbinger opens with the Eclipse Cage */
   { const own = R.squads.map(q => q.own).filter(u => typeof u === "string" && u !== "pirates" && u !== "cube" && (u === G.me || G.players[u] || isBot(u))); battle.notMine = own.length > 0 && !own.includes(G.me); } /* a friend's shared report: nobody in it is "you" */
   /* v341: every commander's squadrons fly in their own flagship's glow colour (a friend's or an ally's report shows their colours, not yours) */
   for (const q of R.squads) { const u = q.own; if (typeof u === "string" && u !== "pirates" && u !== "cube" && (u === G.me || G.players[u] || isBot(u) || FAC4_U[u])) { const f = playerFac(u); if (FLAG_GLOW[f] != null) Object.defineProperty(q, "acc", { value: "#" + FLAG_GLOW[f].toString(16).padStart(6, "0") + "@" + f + (u === G.me ? "^me" : G.players[u] ? "^u" + u + "^" : ""), enumerable: false, writable: true, configurable: true }); } }
@@ -31008,12 +31014,12 @@ setInterval(() => { try { if (!S || !G.ready || tutOn() || !harbOwned()) return;
     if (view === "base" && S.harbDay.base !== d && G.readyAt && Date.now() - G.readyAt > 120000) { S.harbDay.base = d; dirty(); advQueue(harbPick("base"), 1, "note"); } } catch (e) {} }, 15000);
 /* ---- the Eclipse Cage ---- */
 Object.assign(TX595, {
-  HC(ctx, b, m, age, S0, E0, fc, Lg, d, lo, T, scr) { if (!E0) return; const aw = !!(S && S.choices && S.choices.harb === "wake"), R = Lg * (aw ? .52 : .44), ry = .62;
+  HC(ctx, b, m, age, S0, E0, fc, Lg, d, lo, T, scr) { if (!E0) return; const LgS = Lg, qe = b.Q[m.e]; Lg = Math.min(Math.max(LgS, 420 * d), Math.max(Lg, qe ? Lg * bLen(qe.k) * (E0.s || 1) / Math.max(.2, bLen("harbinger") * (S0.s || 1)) * 1.25 : 0, 120 * d)); /* v825 the cage spans its target */ const aw = !!(S && S.choices && S.choices.harb === "wake"), R = Lg * (aw ? .52 : .44), ry = .62;
     const C = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => [E0.x + sx * R, E0.y + sy * R * ry]), COL = ["176,107,255", "61,255,154", "176,107,255", "61,255,154"], HEX = ["#b06bff", "#3dff9a", "#b06bff", "#3dff9a"];
     const FLY = .85, CLOSE = .32, IN = .3, COL0 = FLY + CLOSE, COL1 = COL0 + IN, END = COL1 + .75, ease = tx5.ease || (u => u * u * (3 - 2 * u));
     if (age > END) return;
-    /* the reactor gathers, beating */ tx5.glow(ctx, S0.x, S0.y, Lg * .3 * (.7 + .3 * Math.sin(age * 22)), "#3dff9a", age < FLY ? .75 : Math.max(0, .5 - (age - FLY)));
-    const P = C.map((c, i) => { const t0 = i * .12, u = clamp((age - t0) / (FLY - .36), 0, 1), e = ease(u), a0 = (i / 4) * TAU + .4, sx = S0.x + Math.cos(a0) * Lg * .34, sy = S0.y + Math.sin(a0) * Lg * .2;
+    /* the reactor gathers, beating */ tx5.glow(ctx, S0.x, S0.y, LgS * .3 * (.7 + .3 * Math.sin(age * 22)), "#3dff9a", age < FLY ? .75 : Math.max(0, .5 - (age - FLY)));
+    const P = C.map((c, i) => { const t0 = i * .12, u = clamp((age - t0) / (FLY - .36), 0, 1), e = ease(u), a0 = (i / 4) * TAU + .4, sx = S0.x + Math.cos(a0) * LgS * .34, sy = S0.y + Math.sin(a0) * LgS * .2;
       const mx = (sx + c[0]) / 2 + (i % 2 ? 1 : -1) * Lg * .25, my = (sy + c[1]) / 2 - Lg * .3; return { x: (1 - e) * (1 - e) * sx + 2 * (1 - e) * e * mx + e * e * c[0], y: (1 - e) * (1 - e) * sy + 2 * (1 - e) * e * my + e * e * c[1], u, i }; });
     /* the pylons: a long violet-emerald crystal with a white heart, a trail while they fly, a ring as each takes its corner */
     for (const p of P) { if (p.u <= 0) continue; const s = Lg * .07, live = age < COL1 + .1 ? 1 : Math.max(0, 1 - (age - COL1 - .1) / .4);
