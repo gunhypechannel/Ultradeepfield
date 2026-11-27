@@ -8445,7 +8445,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 820;
+const GAME_V = 821;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -29469,13 +29469,13 @@ function drawBattle(t) {
       const boss = sd => reps.some(i => Q[i].side === sd && (BOSSK[Q[i].k] || bBig(Q[i].k) || Q[i].k === "sphere" || Q[i].k === "cdrone")), tgt = { a: boss("a") ? Math.min(ta || com, com * 2.2) : com, d: boss("d") ? Math.min(td || com, com * 2.2) : com };
       const F0 = b.fitS || (b.fitS = { a: tgt.a, d: tgt.d }), ek = Math.min(1, real / 700); F0.a += (tgt.a - F0.a) * ek; F0.d += (tgt.d - F0.d) * ek; }
     const lay = b.lay || (b.lay = Q.map(() => ({ x: 0, y: 0 }))), P = b.lastP = reps.map(i => { const [rx, ry, w] = fpOf(i); return { i, x: scr[i].x + lay[i].x, y: scr[i].y + lay[i].y, rx, ry, w }; }), x0 = W * .03, x1 = W * .97, y0 = top - (bot - top) * .02, y1 = bot + (bot - top) * .04;
-    if (!b.superSide) for (const p of P) { const q = Q[p.i]; if (q.k !== "worldbreaker") continue; /* v531 the Cube Destroyer holds the rear */
+    for (const p of P) { const q = Q[p.i]; if (q.k !== "worldbreaker" || b.superSide === q.side) continue; /* v531 the Cube Destroyer holds the rear; v821 against bosses too */
       let mo = 0, no = 0, me = 0, ne = 0; for (const o of P) { if (o.i === p.i) continue; if (Q[o.i].side === q.side) { mo += o.x; no++; } else { me += o.x; ne++; } }
       let my = 0, ey = 0; for (const o of P) { if (o.i === p.i) continue; if (Q[o.i].side === q.side) my += o.y; else ey += o.y; } my = no ? my / no : p.y; ey = ne ? ey / ne : p.y;
       const ox = no ? mo / no : p.x, ex = ne ? me / ne : p.x, vert = ne ? Math.abs(ey - my) > Math.abs(ex - ox) : W < H; /* portrait: the sides face each other top and bottom */
-      const cd = b.cdA || (b.cdA = {}), ca = cd[p.i] || (cd[p.i] = { x: ox, y: my }), ck = Math.min(1, real / 9000); ca.x += (ox - ca.x) * ck; ca.y += (my - ca.y) * ck; /* v659 a steady post: drifts, never slides */
-      if (vert) { const down = ne ? my >= ey : q.side === "a"; p.y = down ? y1 - p.ry * 1.05 : y0 + p.ry * .6; p.x = clamp(ca.x, x0 + p.rx * .8, x1 - p.rx * .8); }
-      else { const left = ne ? ox <= ex : q.side === "a"; p.x = left ? x0 + p.rx * .8 : x1 - p.rx * .8; p.y = clamp(ca.y, y0 + p.ry * .6, y1 - p.ry * 1.05); } p.w = .03; }
+      const cd = b.cdA || (b.cdA = {}), ca = cd[p.i] || (cd[p.i] = { x: ox, y: my, v: vert, e: vert ? (ne ? my >= ey : q.side === "a") : (ne ? ox <= ex : q.side === "a") }), ck = Math.min(1, real / 9000); ca.x += (ox - ca.x) * ck; ca.y += (my - ca.y) * ck; /* v659 a steady post: drifts, never slides; v821 its edge chosen once */
+      if (ca.v) { const down = ca.e; p.y = down ? y1 - p.ry * 1.05 : y0 + p.ry * .6; p.x = clamp(ca.x, x0 + p.rx * .8, x1 - p.rx * .8); }
+      else { const left = ca.e; p.x = left ? x0 + p.rx * .8 : x1 - p.rx * .8; p.y = clamp(ca.y, y0 + p.ry * .6, y1 - p.ry * 1.05); } p.w = .03; }
     for (let it = 0; it < (P.length > 50 ? 3 : 5); it++) { for (let a = 0; a < P.length; a++) for (let c = a + 1; c < P.length; c++) { const A = P[a], C = P[c], dx = C.x - A.x, dy = C.y - A.y, ox = A.rx + C.rx - Math.abs(dx), oy = A.ry + C.ry - Math.abs(dy);
           if (ox <= 0 || oy <= 0) continue; const wa = A.w / (A.w + C.w), wc = 1 - wa;
           if (ox * .55 < oy) { const s = (dx >= 0 ? 1 : -1) * ox * .5; A.x -= s * wa * 1.0; C.x += s * wc * 1.0; } else { const s = (dy >= 0 ? 1 : -1) * oy * .5; A.y -= s * wa; C.y += s * wc; } }
