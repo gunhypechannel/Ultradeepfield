@@ -58,3 +58,5 @@ Object.assign(AET_ACT, {
 { const base = say; say = function (lines) { if (!lines || !lines.length || G.sayPass || tutOn() || !S || !S.intro || G.advThen || $("#adv") || advTapped()) return base(lines);
     if (!advCalmSay()) { for (const l of lines) if (l && !S.say.includes(l)) S.say.push(l); dirty(); return; } /* a story beat waits for the map, then plays once */
     return base(lines); }; }
+/* story beats held back above get their turn once things are calm (flushSay otherwise runs only at a few fixed moments) */
+setInterval(() => { try { if (S && S.say && S.say.length && !tutOn() && advCalmSay() && !$("#adv") && !$("#celeb") && !$("#advbar.on") && Date.now() - ADVQ.last > 8000 && !document.hidden) flushSay(); } catch (e) {} }, 2000);
