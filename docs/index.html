@@ -8445,7 +8445,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 823;
+const GAME_V = 824;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -21074,7 +21074,7 @@ function initColony(host) {
   const vn = (() => { const pr = rnd(808), P = []; for (let i = 0; i < 256; i++) P.push(pr()); const at = (x, y) => P[((x & 15) * 16 + (y & 15)) & 255], sm = q => q * q * (3 - 2 * q);
     return (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), xf = sm(x - xi), yf = sm(y - yi), a = at(xi, yi), b = at(xi + 1, yi), c2 = at(xi, yi + 1), d2 = at(xi + 1, yi + 1); return a + (b - a) * xf + (c2 - a) * yf + (a - b - c2 + d2) * xf * yf; }; })();
   const fbm = (x, y) => vn(x, y) * .55 + vn(x * 2.1, y * 2.1) * .3 + vn(x * 4.3, y * 4.3) * .15;
-  const gg = new TH.PlaneGeometry(220, 220, 160, 160), pa = gg.attributes.position, colArr = new Float32Array(pa.count * 3);
+  const gg = new TH.PlaneGeometry(220, 220, MOBILE ? 96 : 160, MOBILE ? 96 : 160) /* v824 */, pa = gg.attributes.position, colArr = new Float32Array(pa.count * 3);
   const strata = [[.45, .27, .17], [.58, .36, .22], [.36, .2, .13], [.66, .44, .28], [.3, .17, .11]];
   for (let i = 0; i < pa.count; i++) {
     const x = pa.getX(i), y = pa.getY(i), n = fbm(x * .06 + 10, y * .06 + 10), rr = Math.hypot(x * .82, y);
@@ -21233,22 +21233,23 @@ const SUITS = {
   nyx: { suit: ["#4a505c", "#3a3f4a", "#646b78", "#8a1e28"], helm: "#5a616c", visor: 0xff3b4a, pack: "#22262d", rover: "#5a606c" },
   verdant: { suit: ["#8cc4aa", "#5a9a7a", "#a8d8c0", "#3f7060"], helm: "#d8f0e4", visor: 0x6dffb0, pack: "#2f5a4a", rover: "#7fb8a0" }
 };
+const FSG = n => MOBILE ? Math.max(5, Math.round(n * .35)) : n; /* v824 colonists with fewer segments on phones and tablets */
 function folkBuild(W, bt) {
   if (W.folk) { for (const m of W.folk.meshes) W.scene.remove(m); W.folk = null; }
-  const lv = bt.keys.reduce((a, k) => a + bt.lv(k), 0), spokes = bt.keys.filter(k => bt.lv(k) > 0 || k === "metalMine" || k === "solar"), N = clamp(6 + Math.round(lv * .9), 6, 46), R = 3; if (!spokes.length) return;
+  const lv = bt.keys.reduce((a, k) => a + bt.lv(k), 0), spokes = bt.keys.filter(k => bt.lv(k) > 0 || k === "metalMine" || k === "solar"), N = clamp(6 + Math.round(lv * .9), 6, MOBILE ? 22 : 46), R = 3; if (!spokes.length) return;
   const fac = facOf(), SU = SUITS[fac] || SUITS.terran, lin = c => new TH.Color(c).convertSRGBToLinear(), nonIdx = g => g.index ? g.toNonIndexed() : g;
   // body parts, each modelled with its pivot at the joint so it can swing
   // v190 higher-detail figures with real joints: a shaped chest over an abdomen and pelvis, a belt and chest plate, shoulder joints, a
   // neck with a collar ring, a ridged helmet, a pack with twin tanks; thighs with knee pads and shins ending in boots; upper arms and
   // forearms ending in gloved hands. Hips, knees, shoulders and elbows all bend.
-  const torsoG = mergeGeos([new TH.CylinderGeometry(.1, .094, .14, 24).translate(0, .54, 0), new TH.CylinderGeometry(.128, .104, .2, 28).scale(1, 1, .8).translate(0, .69, 0), new TH.SphereGeometry(.128, 28, 12, 0, TAU, 0, Math.PI / 2).scale(1, .45, .8).translate(0, .79, 0),
-    new TH.SphereGeometry(.104, 24, 12, 0, TAU, Math.PI / 2, Math.PI / 2).scale(1, .7, .82).translate(0, .48, 0), new TH.TorusGeometry(.102, .014, 8, 32).rotateX(Math.PI / 2).translate(0, .475, 0), new TH.BoxGeometry(.15, .11, .025).translate(0, .7, .1),
-    new TH.SphereGeometry(.052, 16, 12).translate(-.142, .76, 0), new TH.SphereGeometry(.052, 16, 12).translate(.142, .76, 0), new TH.CylinderGeometry(.04, .046, .07, 16).translate(0, .84, 0), new TH.TorusGeometry(.058, .013, 8, 24).rotateX(Math.PI / 2).translate(0, .83, 0)].map(nonIdx));
-  const packG = mergeGeos([new TH.BoxGeometry(.16, .2, .075).translate(0, .67, -.125), ...[-1, 1].map(s => new TH.CylinderGeometry(.027, .027, .19, 14).translate(s * .056, .67, -.175))].map(nonIdx));
-  const helmG = mergeGeos([new TH.SphereGeometry(.1, 32, 22).translate(0, .93, 0), new TH.TorusGeometry(.098, .008, 6, 40).rotateY(Math.PI / 2).translate(0, .93, 0)].map(nonIdx)), visG = nonIdx(new TH.SphereGeometry(.087, 28, 16, -1.05, 2.1, .95, .8).translate(0, .935, .025));
-  const thighG = mergeGeos([new TH.CylinderGeometry(.052, .044, .21, 18).translate(0, -.105, 0), new TH.SphereGeometry(.03, 12, 8).scale(1.2, 1, .7).translate(0, -.205, .036)].map(nonIdx));
-  const shinG = mergeGeos([new TH.CylinderGeometry(.043, .035, .19, 18).translate(0, -.095, 0), new TH.BoxGeometry(.084, .055, .15).translate(0, -.21, .028), new TH.BoxGeometry(.088, .016, .156).translate(0, -.242, .028)].map(nonIdx));
-  const uArmG = nonIdx(new TH.CylinderGeometry(.037, .032, .15, 16).translate(0, -.075, 0)), fArmG = mergeGeos([new TH.CylinderGeometry(.032, .027, .14, 16).translate(0, -.07, 0), new TH.SphereGeometry(.031, 14, 10).scale(1, 1.25, .8).translate(0, -.165, 0)].map(nonIdx));
+  const torsoG = mergeGeos([new TH.CylinderGeometry(.1, .094, .14, FSG(24)).translate(0, .54, 0), new TH.CylinderGeometry(.128, .104, .2, FSG(28)).scale(1, 1, .8).translate(0, .69, 0), new TH.SphereGeometry(.128, FSG(28), FSG(12), 0, TAU, 0, Math.PI / 2).scale(1, .45, .8).translate(0, .79, 0),
+    new TH.SphereGeometry(.104, FSG(24), FSG(12), 0, TAU, Math.PI / 2, Math.PI / 2).scale(1, .7, .82).translate(0, .48, 0), new TH.TorusGeometry(.102, .014, FSG(8), FSG(32)).rotateX(Math.PI / 2).translate(0, .475, 0), new TH.BoxGeometry(.15, .11, .025).translate(0, .7, .1),
+    new TH.SphereGeometry(.052, FSG(16), FSG(12)).translate(-.142, .76, 0), new TH.SphereGeometry(.052, FSG(16), FSG(12)).translate(.142, .76, 0), new TH.CylinderGeometry(.04, .046, .07, FSG(16)).translate(0, .84, 0), new TH.TorusGeometry(.058, .013, FSG(8), FSG(24)).rotateX(Math.PI / 2).translate(0, .83, 0)].map(nonIdx));
+  const packG = mergeGeos([new TH.BoxGeometry(.16, .2, .075).translate(0, .67, -.125), ...[-1, 1].map(s => new TH.CylinderGeometry(.027, .027, .19, FSG(14)).translate(s * .056, .67, -.175))].map(nonIdx));
+  const helmG = mergeGeos([new TH.SphereGeometry(.1, FSG(32), FSG(22)).translate(0, .93, 0), new TH.TorusGeometry(.098, .008, FSG(6), FSG(40)).rotateY(Math.PI / 2).translate(0, .93, 0)].map(nonIdx)), visG = nonIdx(new TH.SphereGeometry(.087, FSG(28), FSG(16), -1.05, 2.1, .95, .8).translate(0, .935, .025));
+  const thighG = mergeGeos([new TH.CylinderGeometry(.052, .044, .21, FSG(18)).translate(0, -.105, 0), new TH.SphereGeometry(.03, FSG(12), FSG(8)).scale(1.2, 1, .7).translate(0, -.205, .036)].map(nonIdx));
+  const shinG = mergeGeos([new TH.CylinderGeometry(.043, .035, .19, FSG(18)).translate(0, -.095, 0), new TH.BoxGeometry(.084, .055, .15).translate(0, -.21, .028), new TH.BoxGeometry(.088, .016, .156).translate(0, -.242, .028)].map(nonIdx));
+  const uArmG = nonIdx(new TH.CylinderGeometry(.037, .032, .15, FSG(16)).translate(0, -.075, 0)), fArmG = mergeGeos([new TH.CylinderGeometry(.032, .027, .14, FSG(16)).translate(0, -.07, 0), new TH.SphereGeometry(.031, FSG(14), FSG(10)).scale(1, 1.25, .8).translate(0, -.165, 0)].map(nonIdx));
   const mk = (geo, mat, n, col) => { const m = new TH.InstancedMesh(geo, mat, n); m.instanceMatrix.setUsage(TH.DynamicDrawUsage); m.instanceColor = new TH.InstancedBufferAttribute(new Float32Array(n * 3).fill(1), 3); m.frustumCulled = false; W.scene.add(m); return m; };
   const suitM = new TH.MeshStandardMaterial({ roughness: .55, metalness: .15, envMapIntensity: .8 }), packM = new TH.MeshStandardMaterial({ color: lin(SU.pack), roughness: .5, metalness: .5 });
   // v189 helmets and visors take a colour per person, so each role reads at a glance
@@ -21263,7 +21264,7 @@ function folkBuild(W, bt) {
      Repair Yard and Metal Mine), engineers in white with cyan visors carrying tool cases, armoured guards with red visors and rifles who
      patrol slowly near the military buildings, and colonists in your faction's suits */
   const ROLE = ["worker", "worker", "worker", "worker", "engineer", "engineer", "guard", "colonist", "colonist", "colonist"], mil = spokes.filter(k => ERA_CAT[k] === "mil");
-  const vestG = mergeGeos([new TH.CylinderGeometry(.123, .108, .26, 12).translate(0, .63, 0)].map(nonIdx)), bandG = mergeGeos([.56, .68].map(y => nonIdx(new TH.CylinderGeometry(.126, .121, .028, 12).translate(0, y, 0))));
+  const vestG = mergeGeos([new TH.CylinderGeometry(.123, .108, .26, FSG(12)).translate(0, .63, 0)].map(nonIdx)), bandG = mergeGeos([.56, .68].map(y => nonIdx(new TH.CylinderGeometry(.126, .121, .028, FSG(12)).translate(0, y, 0))));
   const toolG = nonIdx(new TH.BoxGeometry(.13, .09, .05).translate(0, -.21, .02)) /* held in the hand at the end of the forearm */, rifleG = mergeGeos([new TH.BoxGeometry(.035, .05, .42).translate(.04, .66, .1), new TH.BoxGeometry(.03, .1, .05).translate(.04, .6, -.06)].map(nonIdx));
   const people = [], idx = { worker: [], engineer: [], guard: [] };
   for (let i = 0; i < N; i++) { const role = ROLE[i % ROLE.length], k0 = role === "guard" && mil.length ? mil : spokes, k = k0[(rn() * k0.length) | 0], out = rn() < .5;
@@ -21287,12 +21288,12 @@ function folkBuild(W, bt) {
   const truckG = mergeGeos([new TH.BoxGeometry(.5, .22, .44).translate(-.12, .3, 0), new TH.BoxGeometry(.26, .3, .42).translate(.3, .36, 0), new TH.BoxGeometry(.08, .12, .38).translate(.44, .44, 0)].map(nonIdx));
   const truck = mk(truckG, new TH.MeshStandardMaterial({ color: lin("#e2a426"), roughness: .4, metalness: .5, envMapIntensity: .9 }), nT);
   const oreG = mergeGeos([0, 1, 2, 3, 4].map(j => nonIdx(new TH.DodecahedronGeometry(.08 + (j % 2) * .03).translate(-.28 + j * .08, .46 + (j % 3) * .02, (j % 2 ? .08 : -.08))))), ore = mk(oreG, new TH.MeshStandardMaterial({ color: 0x6c7278, roughness: .55, metalness: .8, flatShading: true }), nT);
-  const wheelM = mk(nonIdx(new TH.CylinderGeometry(.1, .1, .5, 10).rotateX(Math.PI / 2).translate(0, .1, 0)), new TH.MeshStandardMaterial({ color: 0x1a1d22, roughness: .9 }), nT * 3);
-  const carG = mergeGeos([new TH.BoxGeometry(.62, .12, .3).translate(0, 0, 0), new TH.SphereGeometry(.15, 12, 8).scale(1.6, .55, .9).translate(.02, .08, 0), new TH.BoxGeometry(.1, .05, .34).translate(-.3, .04, 0)].map(nonIdx));
+  const wheelM = mk(nonIdx(new TH.CylinderGeometry(.1, .1, .5, FSG(10)).rotateX(Math.PI / 2).translate(0, .1, 0)), new TH.MeshStandardMaterial({ color: 0x1a1d22, roughness: .9 }), nT * 3);
+  const carG = mergeGeos([new TH.BoxGeometry(.62, .12, .3).translate(0, 0, 0), new TH.SphereGeometry(.15, FSG(12), FSG(8)).scale(1.6, .55, .9).translate(.02, .08, 0), new TH.BoxGeometry(.1, .05, .34).translate(-.3, .04, 0)].map(nonIdx));
   const car = mk(carG, new TH.MeshStandardMaterial({ roughness: .22, metalness: .75, envMapIntensity: 1.2 }), nC); for (let i = 0; i < nC; i++) car.setColorAt(i, col.set(["#eef2f5", "#c8d0d8", "#2a3038", "#55a8d8", "#e8e2d4"][i % 5]).convertSRGBToLinear()); car.instanceColor.needsUpdate = true;
   const glow = mk(nonIdx(new TH.CircleGeometry(.26, 16).rotateX(-Math.PI / 2).scale(1.4, 1, .8)), new TH.MeshBasicMaterial({ color: 0x55d6e8, transparent: true, opacity: .55, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false }), nC);
-  const headG = nonIdx(new TH.SphereGeometry(.035, 6, 4)), heads = mk(headG, new TH.MeshBasicMaterial({ color: 0xfff4dc, toneMapped: false }), (nT + nC) * 2), tails = mk(headG, new TH.MeshBasicMaterial({ color: 0xff3b30, toneMapped: false }), (nT + nC) * 2);
-  const droneG = mergeGeos([new TH.BoxGeometry(.18, .06, .18), ...[[1, 1], [1, -1], [-1, 1], [-1, -1]].map(([a, b]) => new TH.CylinderGeometry(.08, .08, .01, 12).translate(a * .14, .04, b * .14)), ...[[1, 1], [-1, -1]].map(([a]) => new TH.BoxGeometry(.32, .02, .02).rotateY(a * Math.PI / 4))].map(nonIdx));
+  const headG = nonIdx(new TH.SphereGeometry(.035, FSG(6), FSG(4))), heads = mk(headG, new TH.MeshBasicMaterial({ color: 0xfff4dc, toneMapped: false }), (nT + nC) * 2), tails = mk(headG, new TH.MeshBasicMaterial({ color: 0xff3b30, toneMapped: false }), (nT + nC) * 2);
+  const droneG = mergeGeos([new TH.BoxGeometry(.18, .06, .18), ...[[1, 1], [1, -1], [-1, 1], [-1, -1]].map(([a, b]) => new TH.CylinderGeometry(.08, .08, .01, FSG(12)).translate(a * .14, .04, b * .14)), ...[[1, 1], [-1, -1]].map(([a]) => new TH.BoxGeometry(.32, .02, .02).rotateY(a * Math.PI / 4))].map(nonIdx));
   const drone = mk(droneG, new TH.MeshStandardMaterial({ color: 0xd8dee4, roughness: .35, metalness: .6 }), nD), blink = mk(headG, new TH.MeshBasicMaterial({ color: 0xff4a3a, toneMapped: false }), nD);
   const pickSp = i => spokes[(i * 5 + 3) % spokes.length], veh = (i, kind) => { const k = pickSp(i + (kind === "car" ? 7 : 0)); return { k, leg: i % 2 ? "out" : "back", s: rn(), sp: kind === "car" ? 1.25 + rn() * .4 : .75 + rn() * .3, off: .3, /* v190 at a believable pace (were about 2.5x faster) */ wait: rn() * 2, ph: rn() * 6, nd: node(k), x: 0, z: 0, yaw: 0, rover: 1, kind }; };
   const trucks = Array.from({ length: nT }, (_, i) => veh(i, "truck")), cars = Array.from({ length: nC }, (_, i) => veh(i + 11, "car"));
@@ -21584,7 +21585,7 @@ function drawColony(t) {
   }
   if (W.turrets) W.turrets.children.forEach((tg, i) => { if (tg.userData.head) tg.userData.head.rotation.y = Math.sin(T * .0007 + i) * 1.2; else if (tg.userData.dome) tg.material.opacity = (tg.isMesh && tg.material.wireframe ? .05 : .07) + .02 * Math.sin(T * .002); });
   // colonists and rovers: rebuilt when the planet or its development changes, animated every frame
-  { const lv = bt.keys.reduce((a, k) => a + bt.lv(k), 0), N = clamp(6 + Math.round(lv * .9), 6, 46), sp = bt.keys.filter(k => bt.lv(k) > 0 || k === "metalMine" || k === "solar").length;
+  { const lv = bt.keys.reduce((a, k) => a + bt.lv(k), 0), N = clamp(6 + Math.round(lv * .9), 6, MOBILE ? 22 : 46), sp = bt.keys.filter(k => bt.lv(k) > 0 || k === "metalMine" || k === "solar").length;
     if (!W.folk || W.folk.key !== bt.key + "|" + N + "|" + sp + "|" + facOf()) folkBuild(W, bt); folkStep(W, t); }
   if (W.dust && !reduced) { W.dust.rotation.y = T * .00002; W.dust.position.y = Math.sin(T * .0003) * .3; }
   // v189 the props around the plots (rebuilt as buildings grow), the energy lanes flowing out from the hub, the console screens scrolling
@@ -30083,7 +30084,8 @@ function gfx(k) { if (IOS && k === "scale") { const v0 = GFX.over && GFX.over.sc
   if (G.glSafe && (k === "scale" || k === "fx" || k === "detail")) { const v0 = GFX.over && GFX.over[k] != null ? GFX.over[k] : GFX_PRESETS[gfxPreset()][k]; return k === "scale" ? Math.min(v0, 1) : Math.max(0, v0 - 1); } // v166 after a GPU reset on a phone: a notch lighter for the session
   if (GFX.over && GFX.over[k] != null) return GFX.over[k]; let v = GFX_PRESETS[gfxPreset()][k]; if (k === "fps" && GFX.preset === "auto" && G.batLow && !v) v = 60; /* v165: only with the battery low (it capped every unplugged phone at 60) */ return v; }
 const gfxHz = () => G.hz || 60;
-function gfxAimMs() { const cap = gfx("fps"), aim = GFX_PRESETS[gfxPreset()].aim, hz = gfxHz(); const f = cap ? Math.min(cap, hz) : aim === "max" ? hz : aim === "tgt" ? gfxTarget() : Math.min(aim, hz); return 1000 / f; }
+function fpsCap() { return gfx("fps") || (G && G.autoCap) || 0; } /* v824 */
+function gfxAimMs() { const cap = fpsCap(), aim = GFX_PRESETS[gfxPreset()].aim, hz = gfxHz(); const f = cap ? Math.min(cap, hz) : aim === "max" ? hz : aim === "tgt" ? gfxTarget() : Math.min(aim, hz); return 1000 / f; }
 const gfxMaxPR = () => clamp((window.devicePixelRatio || 1) * gfx("scale"), .6, 2.5 * FZ());
 /* v163 phones and tablets: the render resolution is capped by how many pixels it draws, not by screen width. Tablets were wider than the
    old phone check (700 px), so they got the desktop setting: 2.5x on an iPad, about 9 million pixels a frame, which heats up and lags.
@@ -30195,6 +30197,11 @@ setInterval(() => { const el = document.getElementById("fpshud"); if (!el) retur
 /* adaptive resolution: if frames run long, the active 3D scene drops its render resolution a step (and climbs back when there is headroom) to hold 60 fps */
 function adaptRes(t) {
   const dt = t - (frame.last || t); frame.last = t; if (dt > 0 && dt < 200) frame.ema = (frame.ema || 16.7) * .94 + dt * .06;
+  /* v824 a phone or tablet that cannot hold 60 fps even at its lowest resolution locks to a steady 30 (judder between 40 and 60 feels worse
+     than a smooth 30); every 2 minutes the lock lifts once to see whether 60 has become possible */
+  if (MOBILE && !gfx("fps") && !battle && (view === "base" || view === "galaxy")) { const L = adaptRes.lk || (adaptRes.lk = { slow: 0, at: 0 }), W0 = view === "galaxy" ? G3 : C3, low = !W0 || !W0.renderer || W0.renderer.getPixelRatio() <= 1.05;
+    if (!G.autoCap) { if (frame.ema > 23 && low) { if (++L.slow >= 90) { G.autoCap = 30; L.at = t; crumb("auto 30 fps lock (frame " + frame.ema.toFixed(1) + " ms)"); } } else L.slow = Math.max(0, L.slow - 2); }
+    else if (t - L.at > 120000) { G.autoCap = 0; L.slow = 0; crumb("auto 30 fps lock lifted to retry"); } }
   if ((frame.n = (frame.n || 0) + 1) % 30) return; // v95: react within half a second, not six
   const W = view === "galaxy" ? G3 : view === "base" ? C3 : null; if (!W || !W.renderer || battle) return;
   // v124: aims at the preset's frame target (120 Hz panels included) and the chosen render scale, instead of a fixed 60 fps / 2x
@@ -30254,7 +30261,7 @@ function frame(t) { const c0 = performance.now(); try { frameIn(t); } finally { 
 function frameIn(t) {
   rafId = 0; { const rd = t - (frame.raw || t); hzSample(rd); pfFrame(rd); if (rd > 0 && rd < 200) frame.rawEma = (frame.rawEma || 16.7) * .94 + rd * .06; } frame.raw = t;
   if (idleSkip(t)) { frame.last = t; rafId = requestAnimationFrame(frame); return; }
-  { const cap = gfx("fps"); if (cap && cap < gfxHz() - 3 && !battle && t - (frame.drawn || 0) < 1000 / cap - 1.5) { rafId = requestAnimationFrame(frame); return; } frame.drawn = t; } // v124: optional frame-rate cap
+  { const cap = fpsCap(); if (cap && cap < gfxHz() - 3 && !battle && t - (frame.drawn || 0) < 1000 / cap - 1.5) { rafId = requestAnimationFrame(frame); return; } frame.drawn = t; } // v124: optional frame-rate cap
   // v182 a panel open over the map or base (the Cube's page, the event card, a building): the 3D scene behind it is drawn at 30 fps, and at
   // 12 fps under a full-screen panel. It is mostly hidden, and the live event scene at full rate behind a panel made the panel itself lag.
   // The resolution manager sits out meanwhile, so the slower frames never look like a struggling device.
@@ -30271,7 +30278,7 @@ function frameIn(t) {
   if (more && !document.hidden) rafId = requestAnimationFrame(frame);
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden) { startAnim(); if (adaptRes.s) Object.assign(adaptRes.s, { hold: 4000, bad: 0, good: 0 }); } }); // v133: frames from a hidden window never count against the resolution
-const capped = () => { const c = gfx("fps"); return !!c && c < gfxHz() - 3 && !battle; };
+const capped = () => { const c = fpsCap(); return !!c && c < gfxHz() - 3 && !battle; };
 /* v84 foldables: opening or closing a folding phone (or turning a tablet) changes the screen a lot at once. After it settles, the
    whole interface is redrawn for the new size (phone column or tablet layout), the open sheet and the Academy follow, and a
    battle rebuilds its backdrop and layout for the new shape */
