@@ -168,7 +168,7 @@ def rockeaters(M, G):
 
 # ---------------------------------------------------------------- the Celestial Serpent: midnight scales rimmed with gold, violet fire beneath
 def serpent(M, G):
-    SC = M_((.03, .04, .1), .3, .5); GOLD = M_((.6, .42, .12), .25, .9); UND = M_((.12, .03, .25), .2, .1, (.42, .12, .9)); EYE = M_((.3, .1, .5), .1, .1, (.85, .4, 1.0))
+    SC = M_((.03, .04, .1), .3, .5); GOLD = M_((.6, .42, .12), .25, .9); UND = M_((.12, .03, .25), .2, .1, (.42, .12, .9)); EYE = M_((.12, .02, .3), .1, .1, (.5, .12, 1.0))
     CRY = M_((.2, .1, .35), .05, .2, (.55, .3, .95)); HEAD = M_((.04, .05, .12), .3, .55); rng = np.random.default_rng(65)
     # v819 coiled as in the painting: the body rises and falls in great S-loops (the swim wave adds the side-to-side)
     pts = [(2.6, 1.75, .01), (2.1, 1.5, .03), (1.6, .7, .06), (1.0, -.35, .04), (.3, -.95, -.04), (-.4, -.8, -.06), (-1.1, .05, 0), (-1.7, .95, .06), (-2.4, 1.2, .02), (-3.1, .55, -.04), (-3.7, -.35, -.01), (-4.3, -.75, .02), (-4.95, -.55, .02)]
@@ -189,23 +189,27 @@ def serpent(M, G):
         q = cs(t); tg = dc(t); tg /= np.linalg.norm(tg); up = np.array((0, 1., 0)) - tg * tg[1]; up /= np.linalg.norm(up)
         M.add(f'ub{t:.3f}', lambda p, c=tuple(q - up * pf(t) * .85), r=pf(t) * .26: sphere(p, c, r), UND, .1)
     # the head: a wedge skull, brow ridges, open jaw of gold teeth over violet glow, two long horns and two short, a spiked frill
-    f0t = -dc(0); f0t /= np.linalg.norm(f0t); hx = f0t + np.array((0, -.42, 0)); hx /= np.linalg.norm(hx); hz = np.cross(hx, (0, 1, 0)); hz /= np.linalg.norm(hz); hy = np.cross(hz, hx)
+    f0t = -dc(0); f0t /= np.linalg.norm(f0t); hx = f0t + np.array((0, -.2, 0)); hx /= np.linalg.norm(hx); hz = np.cross(hx, (0, 1, 0)); hz /= np.linalg.norm(hz); hy = np.cross(hz, hx)  # v826 head held level, as in the painting (was -.42, nose-down)
     H0 = cs(0); Hs = 1.6; W = lambda v: tuple(H0 + (hx * v[0] + hy * v[1] + hz * v[2]) * Hs); RH = np.array([hx, hy, hz], f32)
     hq = lambda p: ((p - V(*H0)) @ RH.T) / Hs
-    sk = [(-.42, .3), (-.1, .38), (.35, .4), (.75, .27), (1.15, .18), (1.5, .13), (1.7, .08), (1.78, .02)]
+    sk = [(-.42, .3), (-.1, .38), (.35, .41), (.75, .34), (1.1, .27), (1.4, .2), (1.6, .13), (1.72, .03)][::-1]  # v826 lathe_x wants it snout first: back to front it was empty (no skull since v819)
     M.add('skull', lambda p: lathe_x(hq(p), sk, .85, 1.05, (0, .04, 0)) * Hs, HEAD, .05)
-    jq = lambda p: (lambda q: np.stack([q[..., 0] * np.cos(.3) - (q[..., 1] + .16) * np.sin(.3), q[..., 0] * np.sin(.3) + (q[..., 1] + .16) * np.cos(.3), q[..., 2]], -1))(hq(p))
-    M.add('jaw', lambda p: lathe_x(jq(p), [(-.2, .25), (.4, .22), (.95, .15), (1.4, .1), (1.62, .02)], .45, 1.2) * Hs, HEAD, .03)
+    jq = lambda p: (lambda q: np.stack([q[..., 0] * np.cos(.09) - (q[..., 1] + .16) * np.sin(.09), q[..., 0] * np.sin(.09) + (q[..., 1] + .16) * np.cos(.09), q[..., 2]], -1))(hq(p))
+    M.add('jaw', lambda p: lathe_x(jq(p), [(-.2, .25), (.4, .23), (.95, .19), (1.3, .14), (1.52, .03)][::-1], .45, 1.2) * Hs, HEAD, .03)
     M.add('mglow', lambda p: ell(hq(p), (.8, -.13, 0), (.28, .025, .07)) * Hs, UND)  # v819 a glow inside the jaw, not hanging out of it
     for s in (1, -1):
-        M.add(f'eye{s}', lambda p, s=s: ell(hq(p), (.52, .2, s * .37), (.11, .06, .05)) * Hs, EYE)
+        M.add(f'eye{s}', lambda p, s=s: ell(hq(p), (.55, .2, s * .38), (.17, .1, .085)) * Hs, EYE)  # v826 bigger and set proud of the skull: it was buried
         M.add(f'brow{s}', lambda p, s=s: ell(hq(p), (.5, .32, s * .34), (.45, .06, .08)) * Hs, GOLD)
         chain(M, f'hl{s}', [W((-.1, .3, s * .24)), W((-.6, .58, s * .4)), W((-1.15, .72, s * .5)), W((-1.7, .68, s * .46))], [.085 * Hs, .06 * Hs, .035 * Hs, .008], GOLD)
         chain(M, f'hs{s}', [W((.1, .36, s * .16)), W((-.3, .62, s * .2)), W((-.75, .86, s * .22))], [.06 * Hs, .035 * Hs, .006], GOLD)
         for i in range(5):
             a = -.7 + i * .42; Lf = .55 + (.25 if i in (2, 3) else 0); d = np.array(norm((-1, np.sin(a) * .85, s * (.38 + np.cos(a) * .25))))
             spk(M, f'fr{s}{i}', W((-.28, .1, s * .3)), tuple(hx * d[0] + hy * d[1] + hz * d[2]), Lf * Hs, .06 * Hs, GOLD)
-        for i in range(9): spk(M, f'tt{s}{i}', W((.34 + i * .15, -.11 - i * .006, s * (.3 - i * .028))), tuple(-hy), (.12 - i * .005) * Hs, .022 * Hs, GOLD)
+        for i in range(9): spk(M, f'tt{s}{i}', W((.34 + i * .14, -.1 - i * .004, s * (.27 - i * .026))), tuple(-hy), (.09 - i * .004) * Hs, .02 * Hs, GOLD)  # v826 along the mouth line, jaw nearly closed
+    for i in range(6):  # v826 gold plates down the top of the skull and a gold snout, as in the painting
+        x0 = -.25 + i * .27; r0 = float(np.interp(x0, [a for a, _ in sk[::-1]], [b for _, b in sk[::-1]]))
+        M.add(f'hp{i}', lambda p, x0=x0, r0=r0: ell(hq(p), (x0, r0 * .82 + .02, 0), (.19, .05, r0 * .62)) * Hs, GOLD)
+    M.add('snout', lambda p: ell(hq(p), (1.42, .1, 0), (.3, .07, .13)) * Hs, GOLD)
     for i in range(7):  # crystal shards drifting beside it
         c = (2.6 - rng.uniform(0, 7), -.7 + rng.uniform(0, 2.2), (1 if rng.uniform() < .5 else -1) * (1.3 + rng.uniform(0, .5))); r0 = .1 + rng.uniform(0, .14)
         M.add(f'cz{i}', lambda p, c=c, r0=r0: (lambda q: np.abs(q[..., 0]) + np.abs(q[..., 1]) / 1.5 + np.abs(q[..., 2]) - r0)(p - V(*c)) * .55, CRY)
