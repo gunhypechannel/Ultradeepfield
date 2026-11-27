@@ -8445,7 +8445,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 818;
+const GAME_V = 819;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -19158,7 +19158,7 @@ function taperTube(pts, f, seg, rad) {
 /* ---------- v752 the space monsters sculpted after the owner's paintings (tools/sculpt/mon_sculpt.py): each species loads its mesh
    (art/mon/m/<k>.bin, CNT2) the first time it is built, through the same loader and material as the Continuum and the Carcinid; the
    hand-built model stands in until then. Same frame as before (+x the head), so each species' swim wave (MON_WAVE) runs on it. */
-const MON_SC = {"swhale":{"s":1},"ssquid":{"s":1},"vmanta":{"s":1},"smoth":{"s":1},"cram":{"s":1},"ctort":{"s":1},"gspider":{"s":1},"slevi":{"s":1},"swasp":{"s":1,"g":1},"sent":{"s":1},"gwhale":{"s":1,"g":1},"kegg":{"s":1,"g":1},"reat":{"s":1},"cserp":{"s":1},"swasp_nest":{"s":1},"swasp_swarm":{"s":1,"g":1},"drone":{"s":1},"spitter":{"s":1},"brute":{"s":1},"lord":{"s":1},"leviathan":{"s":1},"cdrone":{"s":1,"r":[0.2,0.5,0]},"cube":{"s":1,"r":[0.4,0.6,0]},"sphere":{"s":1}}, MON_GEO = {};
+const MON_SC = {"swhale":{"s":1},"ssquid":{"s":1},"vmanta":{"s":1},"smoth":{"s":1},"cram":{"s":1},"ctort":{"s":1},"gspider":{"s":1},"slevi":{"s":1},"swasp":{"s":1,"g":1},"sent":{"s":1},"gwhale":{"s":1,"g":1},"kegg":{"s":1,"g":1},"reat":{"s":1},"cserp":{"s":1},"swasp_nest":{"s":1},"swasp_swarm":{"s":1,"g":1},"drone":{"s":1},"spitter":{"s":1},"brute":{"s":1},"lord":{"s":1},"leviathan":{"s":1},"cdrone":{"s":0.7,"r":[0.2,0.5,0]},"cube":{"s":1,"r":[0.4,0.6,0]},"sphere":{"s":1}}, MON_GEO = {};
 function monSculptLoad(k) { if (!MON_SC[k] || !TH || typeof fetch !== "function") return; const L = monSculptLoad.L || (monSculptLoad.L = {}); if (L[k]) return; L[k] = 1;
   sculptFetch("art/mon/m/", k, MON_SC[k].g, (a, b) => { MON_GEO[k + "_g"] = b; MON_GEO[k] = a; monSculptSwap(k); }); }
 function monSculptSwap(k) { try { if (k === "swasp_nest" || k === "swasp_swarm") { const u = k === "swasp_nest" ? "snest" : "swasp"; delete MMERGE[u]; if (STU && STU.cache) for (const key in STU.cache) if (key.startsWith(u + "|")) delete STU.cache[key]; } if (k === "slevi" && typeof crcSculptSwap === "function") crcSculptSwap("clevd"); if (STU && STU.cache) for (const key in STU.cache) if (key.startsWith(k + "|")) delete STU.cache[key]; delete MMERGE[k];

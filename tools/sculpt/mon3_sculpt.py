@@ -21,33 +21,35 @@ def starhive(M, G, part=None):
     PAP = [M_(c, .95, 0) for c in ((.1, .09, .075), (.14, .12, .09), (.17, .14, .1), (.08, .065, .05), (.13, .1, .07), (.15, .13, .11))]
     WALL = M_((.2, .16, .11), .9, 0); CELL = M_((.5, .25, .05), .3, 0, (1.0, .55, .12)); DARK = M_((.03, .02, .01), 1, 0)
     GOLD = M_((.55, .38, .06), .3, .5, (.12, .07, .0)); BLK = M_((.02, .02, .02), .3, .4); EYE = M_((.3, .12, .0), .1, .2, (1., .6, .15)); WING = M_((.0, .0, .0), .1, .0, (.22, .15, .05))
-    NP = [(1.75, 0), (1.6, .55), (1.15, 1.1), (.45, 1.42), (-.3, 1.45), (-.95, 1.2), (-1.45, .78), (-1.7, .3), (-1.78, 0)]
-    ys = np.array([a for a, _ in NP][::-1]); rs = np.array([b for _, b in NP][::-1])
-    nr = lambda y: np.interp(y, ys, rs)
-    top, bot, Lb = 1.7, -1.5, 10
-    for i in range(Lb if part != 'swarm' else 0):  # overlapping envelopes, each flaring at its scalloped lower edge
-        y0 = top - (top - bot) * i / Lb + .08; y1 = y0 - (top - bot) / Lb * 1.75
-        def env(p, y0=y0, y1=y1, i=i):
-            y = p[..., 1]; u = np.clip((y0 - y) / (y0 - y1), 0, 1); th = np.arctan2(p[..., 2], p[..., 0])
-            R = nr(np.clip(y, bot, top)) * (1 + .045 * i / Lb) + .03 + u ** 2.2 * .16 + .05 * np.sin(th * 2 + i * 1.7) * .5
-            sc = .1 * np.maximum(0, np.sin(th * (5 + i % 3) + i)) ** 2
-            rr = np.sqrt(p[..., 0] ** 2 + p[..., 2] ** 2)
-            return np.maximum(np.maximum(np.abs(rr - R) - .035, y - y0), y1 + sc - y)
-        M.add(f'env{i}', env, PAP[i % 6])
-    if part == 'swarm': M.parts.clear()
-    if part != 'swarm': M.add('core', lambda p: np.maximum(np.sqrt(p[..., 0] ** 2 + p[..., 2] ** 2) - nr(np.clip(p[..., 1], bot, top)) * .96, np.maximum(p[..., 1] - top, bot - p[..., 1])), WALL)
-    cr = .17  # the comb under the open mouth: hexagonal cells glowing from inside
-    for q in (range(-4, 5) if part != 'swarm' else []):
-        for s_ in range(-4, 5):
-            x = cr * 1.74 * (q + s_ / 2); z = cr * 1.5 * s_
-            if np.hypot(x, z) < nr(bot) * .92 + .25:
-                M.add(f'cw{q}{s_}', lambda p, c=(x, bot - .02, z): np.maximum(np.abs(cyl(p, c, 'y', cr, .13)) - .02, -(p[..., 1] - (c[1] - .13))), WALL)
-                M.add(f'cc{q}{s_}', lambda p, c=(x, bot - .1, z): cyl(p, c, 'y', cr * .85, .02), CELL)
-    for i in range(6 if part != 'swarm' else 0):  # cells breaking through the envelope low on its sides
-        a = i * 2.39 + .4; y = -1.1 + (i % 3) * .28; rr = nr(y) * 1.08; M.add(f'bc{i}', lambda p, c=(np.cos(a) * rr, y, np.sin(a) * rr): sphere(p, c, .13), CELL)
-    pts = [(0, 1.55 + t * 1.2, 0) for t in np.linspace(0, 1, 6)]  # the twisted paper stalk
-    if part != 'swarm': M.add('stalk', lambda p: np.maximum(np.sqrt(p[..., 0] ** 2 + p[..., 2] ** 2) - (.34 - (p[..., 1] - 1.5) * .17) * (1 + .12 * np.sin(np.arctan2(p[..., 2], p[..., 0]) * 5 + p[..., 1] * 6)), np.maximum(p[..., 1] - 2.85, 1.4 - p[..., 1])), PAP[3])
-    if part != 'swarm': M.add('throat', lambda p: cyl(p, (0, bot + .02, 0), 'y', nr(bot) * .7, .02), DARK)
+    # v819 the nest as in the painting: a crown of dark resin bristling with spikes, under it an upturned cone of honeycomb whose cells
+    # glow from inside, tapering to a point, resin dripping from the crown (all within r 1.95: the wave swings everything beyond as swarm)
+    RES = [M_(c, .55, .05) for c in ((.045, .03, .018), (.06, .04, .022), (.035, .022, .014))]; CELL2 = M_((.45, .2, .03), .35, 0, (1.0, .5, .08))
+    YT, YB, R0 = .95, -2.35, 1.6
+    Rf = lambda y: R0 * np.clip((y - YB) / (YT - YB), 0, 1) ** .72
+    def cone(p):
+        y = p[..., 1]; rr = np.sqrt(p[..., 0] ** 2 + p[..., 2] ** 2); return np.maximum((rr - Rf(y)) * .8, np.maximum(y - YT, YB - y))
+    if part != 'swarm':
+        M.add('comb', cone, RES[2])  # v819 dark resin walls round the lit cells
+        HXS = 2 * np.pi * 1.3 / (9 * np.sqrt(3)); s3 = np.sqrt(3)
+        def hexm(p):  # the hex metric of the nearest cell (0 at its centre, 1 at its wall) over the cone's surface
+            u = np.arctan2(p[..., 2], p[..., 0]) * 1.3; v = p[..., 1]; q = (s3 / 3 * u - v / 3) / HXS; r = (2 / 3 * v) / HXS; x, z = q, r; y_ = -x - z
+            rx, ry, rz = np.round(x), np.round(y_), np.round(z); dx, dy, dz = np.abs(rx - x), np.abs(ry - y_), np.abs(rz - z)
+            fx = (dx > dy) & (dx > dz); fz = ~fx & (dz >= dy); rx = np.where(fx, -ry - rz, rx); rz = np.where(fz, -rx - ry, rz)
+            cu = HXS * s3 * (rx + rz / 2); cv = HXS * 1.5 * rz; du, dv = np.abs(u - cu), np.abs(v - cv)
+            return np.maximum(du, du * .5 + dv * s3 / 2) / (HXS * s3 / 2)
+        M.carve('cells', lambda p: np.maximum(np.maximum((hexm(p) - .7) * 1.2, np.abs(cone(p) + .02) - .12), p[..., 1] - .8), CELL2)
+        M.add('cap', lambda p: ell(p, (0, 1.12, 0), (1.82, .45, 1.82)) + noise3(p, 2.5, 31) * .12, RES[0], .15)
+        M.add('cap2', lambda p: ell(p, (0, 1.42, 0), (1.25, .38, 1.25)) + noise3(p, 3.5, 32) * .1, RES[1], .2)
+        rng2 = np.random.default_rng(71)
+        for i in range(15):  # the crown of spikes
+            a = i / 15 * 2 * np.pi + rng2.uniform(-.1, .1); rb = 1.3 + rng2.uniform(0, .25); L = .9 + rng2.uniform(0, .7)
+            b_ = (np.cos(a) * rb, 1.2 + rng2.uniform(0, .2), np.sin(a) * rb); d = norm((np.cos(a) * .3, 1, np.sin(a) * .3))
+            M.add(f'cs{i}', lambda p, b_=b_, d=d, L=L, r0=.16 + rng2.uniform(0, .06): spike(p, b_, tuple(np.array(b_) + np.array(d) * L), r0), RES[i % 3])
+        for i in range(5): a = i / 5 * 2 * np.pi + .4; M.add(f'ct{i}', lambda p, a=a, i=i: spike(p, (np.cos(a) * .5, 1.6, np.sin(a) * .5), (np.cos(a) * .7, 2.9 - (i % 2) * .5, np.sin(a) * .7), .2), RES[1])
+        for i in range(18):  # resin dripping from the crown down the comb
+            a = i / 18 * 2 * np.pi + .17; rb = 1.55 - (i % 3) * .08; L = .7 + (i % 4) * .28; b_ = (np.cos(a) * rb, .85, np.sin(a) * rb)
+            M.add(f'dr{i}', lambda p, b_=b_, a=a, L=L, rb=rb: spike(p, b_, (np.cos(a) * (rb - L * .45), .85 - L, np.sin(a) * (rb - L * .45)), .13), RES[i % 3])
+        M.add('tip', lambda p: spike(p, (0, YB + .35, 0), (0, YB - .35, 0), .2), RES[0])
     if part == 'nest': return
     # the swarm: nine golden wasps the size of fighters, as in the painting (the wave carries everything beyond r 1.95 round the nest)
     for i in range(9):
@@ -132,12 +134,12 @@ def ghostwhale(M, G):
 
 # ---------------------------------------------------------------- the Rock Eaters: three worms armoured in stone slabs, round toothed maws on fire
 def rockeaters(M, G):
-    CORE = M_((.04, .025, .02), .9, 0); SLAB = [M_(c, .9, 0) for c in ((.09, .075, .06), (.12, .1, .075), (.07, .055, .045), (.14, .115, .09))]; ROCK = M_((.06, .05, .045), .95, 0)
-    MAW = M_((.25, .05, .02), .5, 0, (.55, .12, .02)); TOOTH = M_((.75, .68, .55), .4, 0); GLOW = M_((.5, .2, .02), .2, 0, (1.0, .55, .12)); rng = np.random.default_rng(63)
+    CORE = M_((.03, .016, .01), .9, 0); SLAB = [M_(c, .85, 0) for c in ((.06, .035, .018), (.085, .05, .026), (.045, .027, .015), (.1, .062, .032))]; ROCK = M_((.035, .028, .024), .95, 0)  # v819 darker, warmer stone
+    MAW = M_((.25, .07, .02), .5, 0, (.95, .38, .06)); TOOTH = M_((.6, .5, .36), .4, 0); GLOW = M_((.5, .2, .02), .2, 0, (1.0, .62, .16)); rng = np.random.default_rng(63)  # v819 a furnace in every throat
     def worm(n, pts, R):
         P = bez3(*pts[:4], 6) if len(pts) == 4 else path_pts(pts, 10)
         P = path_pts(pts, 14); pf = lambda t: R * (.9 + t * 1.7 if t < .06 else 1 - (t - .7) * 1.7 if t > .7 else 1)
-        ts = np.linspace(0, 1, len(P)); chain(M, f'{n}c', P[2:], [pf(t) * .9 for t in ts[2:]], CORE, .08)
+        ts = np.linspace(0, 1, len(P)); chain(M, f'{n}c', P[4:], [pf(t) * .9 for t in ts[4:]], CORE, .08)  # v819 the core starts behind the throat
         for i in range(1, len(P) - 1):  # rings of stone slabs
             q = np.array(P[i]); tg = np.array(P[i + 1]) - np.array(P[i - 1]); tg /= np.linalg.norm(tg); up = np.array((0, 1., 0)) - tg * tg[1]; up /= np.linalg.norm(up); sd = np.cross(tg, up); rr = pf(ts[i])
             for j in range(9):
@@ -148,31 +150,36 @@ def rockeaters(M, G):
         M.add(f'{n}lip', lambda p: torus((p - V(*q0)) @ np.array([sd, ax, up], f32).T, (0, R * .1, 0), 'y', R * .9, R * .1), CORE)
         M.add(f'{n}g', lambda p: np.maximum(np.abs(rcone(p, tuple(q0 + ax * R * .05), tuple(q0 - ax * R * 1.7), R * .9, R * .3)) - R * .06, (p - V(*q0)) @ ax.astype(f32) - R * .02), MAW)  # the open gullet, ribbed and lit
         M.add(f'{n}mw', lambda p: sphere(p, tuple(q0 - ax * R * 1.15), R * .5), GLOW)  # the furnace at its back
+        for j in range(18):  # ribs running down into it, glowing, as in the painting
+            a_ = j / 18 * 2 * np.pi; out = up * np.cos(a_) + sd * np.sin(a_)
+            M.add(f'{n}rb{j}', lambda p, A=tuple(q0 + out * R * .8 - ax * R * .05), B=tuple(q0 - ax * R * 1.35 + out * R * .14): cap(p, A, B, R * .045), GLOW)
         for rr_, d, Lt, cnt in ((.86, .05, .5, 22), (.68, -.25, .42, 18), (.5, -.55, .34, 14)):
             for j in range(cnt):
                 a = (j + rr_ * 7) / cnt * 2 * np.pi; out = up * np.cos(a) + sd * np.sin(a); b = q0 + ax * d * R + out * rr_ * R
                 spk(M, f'{n}t{rr_}{j}', tuple(b), tuple(-out * .8 + ax * .45), Lt * R, R * .05, TOOTH)
-    worm('a', [(1.9, .95, 1.0), (1.2, 1.0, .5), (.2, .9, -.1), (-.9, .55, -.5), (-2.0, .1, -.6), (-2.9, -.3, -.3)], .98)
-    worm('b', [(.1, -.35, 2.3), (-.5, -.3, 1.7), (-1.4, -.2, 1.2), (-2.3, -.1, .9), (-3.1, -.3, .9)], .74)
-    worm('c', [(2.5, -.75, .7), (2.0, -.85, .1), (1.3, -.9, -.6), (.5, -1.0, -1.2), (-.3, -1.3, -1.6)], .58)
-    M.add('ast', lambda p: crag(p, (-.6, -1.8, -.1), (3.3, 1.0, 2.4), 7, .3, 1.3), ROCK)
-    for i in range(16):
+    # v819 four worms apart from one another, as in the painting, mouths turned out to the viewer; no slab under them
+    worm('a', [(2.0, 1.15, 1.2), (1.3, 1.2, .6), (.3, 1.1, -.1), (-.8, .8, -.6), (-1.9, .45, -.9), (-2.9, .2, -.8)], 1.1)
+    worm('b', [(.6, -.25, 2.55), (-.1, -.2, 1.95), (-1.1, -.1, 1.55), (-2.1, 0., 1.4), (-3.0, -.15, 1.5)], .9)
+    worm('c', [(2.55, -1.05, .25), (2.0, -1.15, -.45), (1.2, -1.2, -1.1), (.3, -1.3, -1.6), (-.6, -1.5, -1.9)], .78)
+    worm('d', [(-1.1, 1.75, 1.9), (-1.6, 1.6, 1.25), (-2.3, 1.35, .7), (-3.1, 1.1, .45)], .62)
+    for i in range(22):  # chewed rock drifting round them
         a = rng.uniform(0, 2 * np.pi); R0 = 2.2 + rng.uniform(0, 1.6)
         M.add(f'ch{i}', lambda p, c=(np.cos(a) * R0 - .3, -1.2 + rng.uniform(0, 2.6), np.sin(a) * R0 * .75), r0=.08 + rng.uniform(0, .2): sphere(p, c, r0) + noise3(p, 8, i) * r0 * .5, ROCK)
 
 # ---------------------------------------------------------------- the Celestial Serpent: midnight scales rimmed with gold, violet fire beneath
 def serpent(M, G):
-    SC = M_((.03, .04, .1), .3, .5); GOLD = M_((.6, .42, .12), .25, .9); UND = M_((.2, .05, .35), .2, .1, (.65, .2, 1.0)); EYE = M_((.3, .1, .5), .1, .1, (.85, .4, 1.0))
+    SC = M_((.03, .04, .1), .3, .5); GOLD = M_((.6, .42, .12), .25, .9); UND = M_((.12, .03, .25), .2, .1, (.42, .12, .9)); EYE = M_((.3, .1, .5), .1, .1, (.85, .4, 1.0))
     CRY = M_((.2, .1, .35), .05, .2, (.55, .3, .95)); HEAD = M_((.04, .05, .12), .3, .55); rng = np.random.default_rng(65)
-    pts = [(2.6, 1.55, .01), (2.1, 1.35, .03), (1.5, .62, .06), (.7, -.05, .04), (0, -.12, -.04), (-.8, .12, -.06), (-1.6, .2, 0), (-2.2, .02, .06), (-2.9, -.1, .02), (-3.5, .04, -.04), (-4.1, .06, -.01), (-4.6, 0, .02), (-4.95, -.02, .02)]
+    # v819 coiled as in the painting: the body rises and falls in great S-loops (the swim wave adds the side-to-side)
+    pts = [(2.6, 1.75, .01), (2.1, 1.5, .03), (1.6, .7, .06), (1.0, -.35, .04), (.3, -.95, -.04), (-.4, -.8, -.06), (-1.1, .05, 0), (-1.7, .95, .06), (-2.4, 1.2, .02), (-3.1, .55, -.04), (-3.7, -.35, -.01), (-4.3, -.75, .02), (-4.95, -.55, .02)]
     from scipy.interpolate import CubicSpline
     P0 = np.array(pts); d = np.r_[0, np.cumsum(np.linalg.norm(np.diff(P0, axis=0), axis=1))]; cs = CubicSpline(d / d[-1], P0); dc = cs.derivative()
-    pf = lambda t: .42 + t * 1.3 if t < .12 else .58 if t < .3 else .58 * (1 - (t - .3) / .7) ** .8 + .03
+    pf = lambda t: .38 + t * 1.1 if t < .12 else .5 if t < .3 else .5 * (1 - (t - .3) / .7) ** .8 + .03  # v819 slimmer
     ts = np.linspace(0, 1, 26); chain(M, 'body', [tuple(cs(t)) for t in ts], [pf(t) for t in ts], SC, .1)
-    for i in range(44):
-        t = .015 + i / 43 * .95; q = cs(t); tg = dc(t); tg /= np.linalg.norm(tg); up = np.array((0, 1., 0)) - tg * tg[1]; up /= np.linalg.norm(up); sd = np.cross(tg, up); rr = pf(t)
-        h = (.24 + .62 * (1 - t) ** 1.5) * (.78 if i % 2 else 1)
-        blade(M, f'dr{i}', tuple(q + up * rr * .85), tuple(up * .9 - tg * .6), h, .07 + h * .1, GOLD, flat=3, up=tuple(sd))
+    for i in range(60):  # v819 more blades, taller
+        t = .015 + i / 59 * .95; q = cs(t); tg = dc(t); tg /= np.linalg.norm(tg); up = np.array((0, 1., 0)) - tg * tg[1]; up /= np.linalg.norm(up); sd = np.cross(tg, up); rr = pf(t)
+        h = (.34 + .75 * (1 - t) ** 1.3) * (.72 if i % 2 else 1)
+        blade(M, f'dr{i}', tuple(q + up * rr * .85), tuple(up * .9 - tg * .6), h, .1 + h * .16, GOLD, flat=3, up=tuple(sd))
         for s in (1, -1):  # gold-rimmed scale plates down the flanks and side spines
             out = sd * s * .9 + up * .3; out /= np.linalg.norm(out); c = q + out * rr * .9; Rm = np.array([tg, np.cross(out, tg), out], f32)
             M.add(f'sc{i}{s}', lambda p, c=tuple(c), Rm=Rm, r=(rr * .38, rr * .32, .05): oell(p, c, Rm, r), SC)
@@ -180,16 +187,16 @@ def serpent(M, G):
             if t < .92 and i % 2: spk(M, f'ss{i}{s}', tuple(q + sd * s * rr * .9), tuple(sd * s + tg * -1.5), h * .55 + .08, (h * .55 + .08) * .13, GOLD)
     for t in np.linspace(.05, .97, 30):  # violet fire under the belly
         q = cs(t); tg = dc(t); tg /= np.linalg.norm(tg); up = np.array((0, 1., 0)) - tg * tg[1]; up /= np.linalg.norm(up)
-        M.add(f'ub{t:.3f}', lambda p, c=tuple(q - up * pf(t) * .85), r=pf(t) * .34: sphere(p, c, r), UND, .1)
+        M.add(f'ub{t:.3f}', lambda p, c=tuple(q - up * pf(t) * .85), r=pf(t) * .26: sphere(p, c, r), UND, .1)
     # the head: a wedge skull, brow ridges, open jaw of gold teeth over violet glow, two long horns and two short, a spiked frill
     f0t = -dc(0); f0t /= np.linalg.norm(f0t); hx = f0t + np.array((0, -.42, 0)); hx /= np.linalg.norm(hx); hz = np.cross(hx, (0, 1, 0)); hz /= np.linalg.norm(hz); hy = np.cross(hz, hx)
-    H0 = cs(0); Hs = 1.35; W = lambda v: tuple(H0 + (hx * v[0] + hy * v[1] + hz * v[2]) * Hs); RH = np.array([hx, hy, hz], f32)
+    H0 = cs(0); Hs = 1.6; W = lambda v: tuple(H0 + (hx * v[0] + hy * v[1] + hz * v[2]) * Hs); RH = np.array([hx, hy, hz], f32)
     hq = lambda p: ((p - V(*H0)) @ RH.T) / Hs
     sk = [(-.42, .3), (-.1, .38), (.35, .4), (.75, .27), (1.15, .18), (1.5, .13), (1.7, .08), (1.78, .02)]
     M.add('skull', lambda p: lathe_x(hq(p), sk, .85, 1.05, (0, .04, 0)) * Hs, HEAD, .05)
     jq = lambda p: (lambda q: np.stack([q[..., 0] * np.cos(.3) - (q[..., 1] + .16) * np.sin(.3), q[..., 0] * np.sin(.3) + (q[..., 1] + .16) * np.cos(.3), q[..., 2]], -1))(hq(p))
     M.add('jaw', lambda p: lathe_x(jq(p), [(-.2, .25), (.4, .22), (.95, .15), (1.4, .1), (1.62, .02)], .45, 1.2) * Hs, HEAD, .03)
-    M.add('mglow', lambda p: ell(hq(p), (.8, -.2, 0), (.6, .1, .2)) * Hs, UND)
+    M.add('mglow', lambda p: ell(hq(p), (.8, -.13, 0), (.28, .025, .07)) * Hs, UND)  # v819 a glow inside the jaw, not hanging out of it
     for s in (1, -1):
         M.add(f'eye{s}', lambda p, s=s: ell(hq(p), (.52, .2, s * .37), (.11, .06, .05)) * Hs, EYE)
         M.add(f'brow{s}', lambda p, s=s: ell(hq(p), (.5, .32, s * .34), (.45, .06, .08)) * Hs, GOLD)
@@ -205,7 +212,7 @@ def serpent(M, G):
 
 # ---------------------------------------------------------------- the Petrified Sentinel: a colossus of fitted stone, moss in the seams, a star-rune in its chest
 def sentinel(M, G):
-    ST = [M_(c, .95, 0) for c in ((.075, .075, .075), (.095, .09, .08), (.06, .06, .065), (.11, .105, .095))]; MOSS = M_((.04, .09, .02), 1, 0); RUNE = M_((.05, .35, .2), .2, 0, (.3, 1.0, .6)); EYE = M_((.05, .3, .2), .2, 0, (.4, 1.0, .7))
+    ST = [M_(c, .95, 0) for c in ((.075, .075, .075), (.095, .09, .08), (.06, .06, .065), (.11, .105, .095))]; MOSS = M_((.04, .09, .02), 1, 0); RUNE = M_((.03, .25, .3), .2, 0, (.2, .9, 1.0)); EYE = M_((.03, .25, .3), .2, 0, (.35, .95, 1.0))
     Ry0 = rot('y', -.62)  # the whole figure turned .62 about y, as before (rows of Ry0 map world into its frame)
     bn = [0]
     def B(w, h, d, x, y, z, rx=0, ry=0, rz=0, par=None):
@@ -229,8 +236,11 @@ def sentinel(M, G):
     B(.5, .34, .22, 0, 1.36, .86); B(.42, .3, .22, 0, -.3, .7); B(.9, .42, .2, 0, -.86, .8)
     rw = lambda v: tuple(np.array(rot('y', .62), float) @ np.array(v))
     M.add('ring', lambda p: torus((p - V(*rw((0, .72, .82)))) @ np.array(rot('y', .62), f32), (0, 0, 0), 'z', .46, .1), ST[0])
-    M.add('rune', lambda p: (lambda q: np.maximum(np.sqrt(q[..., 0] ** 2 + q[..., 1] ** 2) - .5, np.abs(q[..., 2]) - .05))((p - V(*rw((0, .72, .9)))) @ np.array(rot('y', .62), f32)), RUNE)
-    M.add('star', lambda p: (lambda q: np.abs(q[..., 0]) + np.abs(q[..., 1]) + np.abs(q[..., 2]) * 2 - .3)((p - V(*rw((0, .72, 1.0)))) @ np.array(rot('y', .62), f32)) * .5, RUNE)
+    # v819 the chest star as in the painting: a small bright core, four long thin rays and four short, not a solid disc
+    M.add('star', lambda p: (lambda q: np.abs(q[..., 0]) + np.abs(q[..., 1]) + np.abs(q[..., 2]) * 2 - .26)((p - V(*rw((0, .72, 1.0)))) @ np.array(rot('y', .62), f32)) * .5, RUNE)
+    for i in range(8):
+        a_ = i * np.pi / 4; L_ = .62 if i % 2 == 0 else .3
+        M.add(f'ray{i}', lambda p, a_=a_, L_=L_: (lambda q: cap(q, (0, 0, 0), (np.cos(a_) * L_, np.sin(a_) * L_, 0), .045))((p - V(*rw((0, .72, .99)))) @ np.array(rot('y', .62), f32)), RUNE)
     HD = ((0, 1.75, 0), np.eye(3), 1.3)  # head and helm
     hB = lambda w, h, d, x, y, z, rx=0, ry=0, rz=0: B(w, h, d, x, y - 1.75, z, rx, ry, rz, HD)
     B(.95, .38, .85, 0, 1.86, -.02); hB(.98, 1.0, .95, 0, 2.5, -.05); hB(.84, .34, .3, 0, 2.08, .42, .1); hB(1.1, .2, .34, 0, 2.74, .44, .32); hB(.17, .36, .2, 0, 2.42, .5, -.1); hB(.5, .14, .12, 0, 2.2, .56)
@@ -238,6 +248,10 @@ def sentinel(M, G):
         hB(.3, .5, .2, s * .36, 2.32, .46, 0, s * -.25, s * -.1); hB(.2, 1.05, 1.0, s * .6, 2.52, -.05, 0, 0, s * -.05); hB(.26, .34, .5, s * .7, 2.98, -.05, 0, 0, s * .3)
         M.add(f'eye{s}', lambda p, c=rw(tuple(np.array((0, 1.75, 0)) + 1.3 * np.array((s * .26, 2.56 - 1.75, .48)))): ell((p - V(*c)) @ np.array(rot('y', .62), f32), (0, 0, 0), (.16, .06, .05)), EYE)
     hB(1.0, .22, 1.0, 0, 3.08, -.05)
+    # v819 the stone crest arching over the head, as in the painting
+    M.add('crest', lambda p: (lambda q: np.maximum(torus(q, (0, 0, 0), 'z', 1.25, .2) + noise3(p, 4, 77) * .05, -q[..., 1] + .1))((p - V(*rw((0, 2.75, -.45)))) @ np.array(rot('y', .62), f32)), ST[3])
+    for i in range(7):
+        a_ = .25 + i / 6 * (np.pi - .5); M.add(f'cr{i}', lambda p, a_=a_: (lambda q: box(q, (np.cos(a_) * 1.25, np.sin(a_) * 1.25, 0), (.17, .26, .27), .03, rot('z', a_ - np.pi / 2)))((p - V(*rw((0, 2.75, -.45)))) @ np.array(rot('y', .62), f32)), ST[i % 4])
     for i in range(11): a = -.35 + i / 10 * (np.pi + .7); hB(.4, .44, .34, np.cos(a) * .92, 2.78 + np.sin(a) * .78, -.12, 0, 0, a - np.pi / 2)
     for s in (1, -1):  # shoulders like fortress walls, arms, fists
         A = ((s * 2.05, 1.5, -.05), rot('z', s * -.2))
@@ -250,7 +264,7 @@ def sentinel(M, G):
         B(1.12, .85, 1.1, s * 2.32, -2.2, .98, -.2, s * .1, 0)
         for i in range(4): B(.24, .4, .34, s * 2.32 + (i - 1.5) * .28, -2.36, 1.56, .25)
         B(.3, .5, .4, s * (2.32 - .62), -2.1, 1.25, 0, s * .3, 0)
-    for (x, y, z, s_) in ((0, 3.75, -.1, .3), (.5, 1.74, .3, .28), (-.6, 1.74, -.3, .3), (.3, -.62, .72, .24), (-1.3, -1.95, 1.0, .5), (1.5, -2.0, .4, .55), (.2, -1.9, 1.5, .4), (-.4, -1.95, -1.7, .5)): moss(x, y, z, s_)
+    for (x, y, z, s_) in ((0, 3.75, -.1, .3), (.5, 1.74, .3, .28), (-.6, 1.74, -.3, .3), (.3, -.62, .72, .24), (.9, .6, .7, .3), (-.9, .2, .75, .28), (1.2, 1.4, .4, .3), (-1.1, 1.3, .5, .32), (.6, -1.4, .75, .3), (0, 2.95, .5, .22), (-.4, 3.5, -.4, .28), (-1.3, -1.95, 1.0, .5), (1.5, -2.0, .4, .55), (.2, -1.9, 1.5, .4), (-.4, -1.95, -1.7, .5)): moss(x, y, z, s_)
     for i in range(18):  # shards of the mountain still circling its foot (the wave turns everything beyond r 3.5)
         a = i / 18 * 2 * np.pi + rng.uniform(0, .3); R0 = 3.8 + rng.uniform(0, .4)
         M.add(f'sh{i}', lambda p, c=(np.cos(a) * R0, -3.0 + rng.uniform(0, 1.5), np.sin(a) * R0), r0=.12 + rng.uniform(0, .2), i=i: (lambda q: np.abs(q[..., 0]) + np.abs(q[..., 1]) + np.abs(q[..., 2]) - r0)(p - V(*c)) * .58 + noise3(p, 9, i) * .02, ST[i % 4])
@@ -312,10 +326,10 @@ def nexus(M, G):
         for j in range(4):
             off = rng.uniform(-.2, .2, 3); taper(M, f'ab{i}{j}', [tuple(np.array(c) + (0, -.8, 0) + off), tuple(np.array(c) + np.array((np.cos(a) * .4, -.6, np.sin(a) * .4)) + off), tuple(np.array(c) + np.array((np.cos(a) * .9, -.85, np.sin(a) * .9)) + off)], .09, .05, C['CAB'])
 
-SPEC = {'swasp': (starhive, (-4.0, -2.0, -4.0), (4.0, 3.0, 4.0)), 'swasp_nest': (lambda M, G: starhive(M, G, 'nest'), (-2.2, -2.0, -2.2), (2.2, 3.0, 2.2)),
+SPEC = {'swasp': (starhive, (-4.0, -2.8, -4.0), (4.0, 3.1, 4.0)), 'swasp_nest': (lambda M, G: starhive(M, G, 'nest'), (-2.2, -2.8, -2.2), (2.2, 3.1, 2.2)),
         'swasp_swarm': (lambda M, G: starhive(M, G, 'swarm'), (-4.0, -2.0, -4.0), (4.0, 2.0, 4.0)), 'kegg': (eggs, (-3.0, -3.5, -2.6), (3.0, 2.0, 2.9)),
-        'gwhale': (ghostwhale, (-5.8, -2.6, -4.0), (4.8, 1.5, 4.0)), 'reat': (rockeaters, (-4.4, -3.0, -3.0), (3.6, 2.4, 3.4)),
-        'cserp': (serpent, (-5.3, -1.2, -2.2), (5.6, 3.2, 2.2)), 'sent': (sentinel, (-4.5, -4.0, -4.5), (4.5, 4.7, 4.5)),
+        'gwhale': (ghostwhale, (-5.8, -2.6, -4.0), (4.8, 1.5, 4.0)), 'reat': (rockeaters, (-4.4, -3.0, -3.2), (3.8, 3.0, 3.6)),
+        'cserp': (serpent, (-5.6, -2.4, -2.4), (5.9, 3.7, 2.4)), 'sent': (sentinel, (-4.5, -4.0, -4.5), (4.5, 4.7, 4.5)),
         'mnest': (hive, (-4.6, -2.0, -4.6), (4.6, 3.1, 4.6)), 'mnexus': (nexus, (-5.6, -2.1, -5.6), (5.6, 5.6, 5.6))}
 def paint(P, N, A, E, idx):
     glowing = E[:, 0] + E[:, 1] + E[:, 2] > .05; top = np.clip(N[:, 1], 0, 1); A[~glowing, :3] *= (1 + .3 * top[~glowing])[:, None]
