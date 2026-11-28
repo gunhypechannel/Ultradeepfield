@@ -15343,7 +15343,7 @@ function bgDiet(on) { try {
     for (const W of [G3, C3]) { if (!W || !W.renderer) continue; try { W.renderer.setSize(1, 1, false); W.size = [1, 1]; n++; const B = W.bloom; if (B) { for (const k of ["S", "A", "A2", "C", "C2"]) if (B[k]) { B[k].dispose(); B[k] = null; } B.size = [0, 0]; } } catch (e) {} }
     try { wbArtFree(); } catch (e) {}
     if (MOBILE && G3) { try { const X = G3.wbWk; if (X) { for (const S of X.sets) wreckDispose(S.grp); X.sets = []; X.at = 0; } } catch (e) {} try { if (G3.dv && !G.dvSim && !dvNow(now())) dvFree(G3); } catch (e) {} } /* v446 */
-    if (ANDROID && !battle) { try { worldDrop("gal", "background, not on screen"); worldDrop("col", "background, not on screen"); } catch (e) {} } /* fb-20261125 Android (app and Chrome): off-screen worlds go while hidden */
+    if ((ANDROID || IOS) && !battle) { try { worldDrop("gal", "background, not on screen"); worldDrop("col", "background, not on screen"); } catch (e) {} } /* fb-20261125 Android (app and Chrome): off-screen worlds go while hidden */
     if (MOBILE) { try { worldDrop("stu", "background"); } catch (e) {} if (!battle && G.stuCache) for (const k in G.stuCache) if (/\|side$/.test(k)) delete G.stuCache[k]; }
     try { crumb("background: " + n + " drawing buffers released"); CRUMBS.open = false; crumbSave(); } catch (e) {} } /* fb-20261112: the crumb must not reopen a session that just went to the background */
   else if (G.bgDiet) { G.bgDiet = 0; try { crumb("back from the background (" + Math.round((Date.now() - (G.bgDietT || Date.now())) / 1000) + " s)"); } catch (e) {} /* fb-20261119 */ for (const W of [G3, C3]) if (W) W.size = [0, 0]; if (battle) try { gpuNap(true); } catch (e) {} try { startAnim(); } catch (e) {} }
@@ -22732,6 +22732,7 @@ setInterval(() => { try { if (!IOS || !G.ready || document.hidden) return; const
   if (!battle) { const lg = G.lastGal || 0, lc = G.lastCol || 0;
     if (G3 && view !== "galaxy" && T - lg > 8000 && (view === "base" || lc > lg)) worldDrop("gal", "one world on iPhone");
     if (C3 && view !== "base" && T - lc > 8000 && (view === "galaxy" || lg > lc)) worldDrop("col", "one world on iPhone");
+    if ((G3 || C3) && view !== "galaxy" && view !== "base" && T - Math.max(lg, lc) > 15000) { worldDrop("gal", "away from both worlds"); worldDrop("col", "away from both worlds"); } /* fb-20261128 iPhone: no world kept behind Mail and other screens */
     if (typeof WBR !== "undefined" && WBR.r) wbArtFree(); }
   if (STU && !battle && T - (G.stuT || 0) > 15000) worldDrop("stu", "idle"); } catch (e) {} }, 2000);
 setInterval(() => { try { if (!S || !G.ready || S.pushAsk || pushOn() || !pushCan() || tutOn() || sheet || battle || advLines || !S.tut || S.tut.k !== "done" || $("#pushask")) return;
