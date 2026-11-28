@@ -5216,7 +5216,7 @@ function shMimic() { const T = now(), M = mimS(), w = mimWeek(T), c = mimClock(T
   ${mimHubBoss(T, w)}
   <h3>Season materials</h3><div class="mimmats">${mats}</div><p class="note" style="margin-top:6px">Invasion points: <b>${fmt(M.pts)}</b>. Every hive pays Mimic Tissue; mature hives also give up Assimilated Alloy and Neural Core Fragments.</p>
   ${S.medals && S.medals.omega ? `<div class="mimmedal"><span>🏆 Omega Slayer ×${S.medals.omega}</span></div>` : ""}${mimForgeHTML()}${mimTrackHTML()}
-  <h3>The swarm</h3><div class="mimcls">${cls.map(k => `<div class="mimcl">${MIM_ART[k] ? `<img src="art/mimic/${MIM_ART[k]}.webp" alt="" loading="lazy" style="width:112px;height:72px;flex:none;border-radius:7px;object-fit:cover;object-position:50% 30%">` : `<canvas data-ship="${k}" width="224" height="112"></canvas>`}<div><b>${AL[k].n}</b><small>${CD[k]}</small><em>From Stage ${CS[k]}</em>${MIM_LORE[k] ? `<details class="mxcod"><summary>Codex</summary><p>${MIM_LORE[k][0]}</p><button class="btn" data-act="mimLore" data-k="${k}">🔊 Her assessment</button></details>` : ""}</div></div>`).join("")}</div>
+  <h3>The swarm</h3><div class="mimcls">${cls.map(k => `<div class="mimcl">${MIM_ART[k] ? `<img src="art/mimic/${MIM_ART[k]}.webp" alt="" loading="lazy" style="width:112px;height:72px;flex:none;border-radius:7px;object-fit:cover;object-position:50% 30%">` : `<canvas data-ship="${k}" width="224" height="112"></canvas>`}<div><b>${AL[k].n}</b><small>${CD[k]}</small><em>From Stage ${CS[k]}</em>${MIM_LORE[k] ? `<details class="mxcod"><summary>Codex</summary><p>${MIM_LORE[k][0]}</p><button class="btn" data-act="mimLore" data-k="${k}">🔊 Her assessment</button></details>` : ""}</div></div>`).join("")}</div><h3>The hive's structures</h3><div class="mimcls">${["mnode", "mnexus", "mpylon"].map(k => `<div class="mimcl"><canvas data-ship="${k}" width="224" height="112"></canvas><div><b>${(AL[k] || {}).n || k}</b><small>${MIM_LORE[k][0]}</small><details class="mxcod"><summary>Codex</summary><button class="btn" data-act="mimLore" data-k="${k}">🔊 Her assessment</button></details></div></div>`).join("")}</div>
   ${own ? `<div class="mimown"><small>Owner preview: see the invasion as it will look in a given week.</small><div>${[0, 1, 2, 3, 4].map(n => `<button class="btn${((S.mimPrev || {}).w || 0) === n ? " pri" : ""}" data-act="mimPrev" data-w="${n}">${n ? "Week " + n : "Off"}</button>`).join("")}<button class="btn${(S.mimPrev || {}).om ? " pri" : ""}" data-act="mimPrev" data-w="4" data-om="1">Omega</button></div></div>` : ""}`; }
 function mimGo(x) { closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); }
   setTimeout(() => { try { const c = G3 && G3.cam, q = P3(x, now()); if (c) { c.follow = null; c.followFleet = null; c.goal = { tx: q.x, ty: q.y, tz: q.z, dist: 26, th: .8 }; } } catch (e) {} }, 300);
@@ -8446,7 +8446,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 845;
+const GAME_V = 846;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -20033,12 +20033,8 @@ function mimSculpted(k) { const g = new TH.Group(), m = new TH.Mesh(MIM_GEO[k], 
 const MIM_RG = { mguard: "smoothstep(1.4, 1.7, abs(p.z))", massim: "max(smoothstep(1.4, 1.55, abs(p.z)) * (1. - smoothstep(1.35, 1.6, length(vec2(p.x - .17, p.y - 1.66)))), smoothstep(2.05, 2.25, p.y) * (1. - smoothstep(1.1, 1.4, abs(p.x + .6))) * (1. - smoothstep(.75, .95, abs(p.z - .15))))", mhunt: "smoothstep(1.9, 2.3, p.x) * (1. - smoothstep(.3, .6, p.y))" };
 const MIM_RGJ = { mhunt: "smoothstep(.72, .86, abs(p.z))" };
 function mimWave(k) { const D = MIM_D[k], f = v => (+v).toFixed(4), W1 = "2.0944", W2 = "4.18879";
-  if (k === "mnode" || k === "mpylon") return `vec3 p = position; transformed.y += .12 * sin(mt * 2.0944) * smoothstep(-1., 2., p.y); transformed.x += .05 * sin(mt * 2.0944 + p.y) * smoothstep(0., 3., p.y);`; /* v667 */
-  if (k === "mnexus") return `vec3 p = position; float rr = length(p.xz), hc = (1. - smoothstep(2.75, 2.95, rr)) * step(-.35, p.y) * (1. - step(3.15, p.y)), th = mt * .349066, c = cos(th), s = sin(th);
-    transformed.xz = mix(transformed.xz, vec2(c * transformed.x - s * transformed.z, s * transformed.x + c * transformed.z), hc);
-    float ob = step(3.0, p.y) * (1. - smoothstep(1.7, 2.3, rr)); transformed.y += ob * .2 * sin(mt * 2.0944);
-    float sp = smoothstep(-1., 4.5, p.y) * step(2.95, rr) * step(-1.3, p.y); transformed.x += sp * .07 * sin(mt * 2.0944 + atan(p.z, p.x) * 2.); transformed.z += sp * .07 * cos(mt * 2.0944 + atan(p.z, p.x) * 2.);
-    float rt = smoothstep(3.3, 4.2, rr) * step(p.y, -1.3); transformed.y += rt * .14 * sin(mt * 4.18879 - rr * 2.2 + atan(p.z, p.x));`;
+  if (k === "mnode" || k === "mpylon") return `vec3 p = position; transformed.y += .05 * sin(mt * 1.0472) * smoothstep(-1., 2., p.y);`; /* v846 a slow float, no sway */ /* v667 */
+  if (k === "mnexus") return `vec3 p = position; float e = 1. - smoothstep(2.3, 2.7, length(p - vec3(0., 3.6, 0.))); transformed.y += e * .07 * sin(mt * 1.0472);`; /* v846 the eye and its rings drift; nothing turns */
   if (k === "mnest") return `vec3 p = position; float an = atan(p.z, p.x), sp = smoothstep(-1.1, 2.6, p.y) * step(.35, length(p.xz));
     transformed.x += sp * .1 * sin(mt * ${W1} + an * 2.); transformed.z += sp * .1 * cos(mt * ${W1} + an * 2.);
     float rt = smoothstep(1.3, 2.4, length(p.xz)) * step(p.y, -1.05); transformed.y += rt * .14 * sin(mt * ${W2} - length(p.xz) * 2.2 + an);
@@ -22271,6 +22267,9 @@ const MIM_LORE = {
   mharv: ["The hive's stomach. Its canisters carry biomass and salvage home to the nests, and a hive without its Harvesters starves.", "Kill the Harvesters first and the hive goes hungry. Hungry hives grow slowly."],
   massim: ["It wears the ships it takes. The wheel in its flank is a stolen reactor it keeps alive, and the Echoes are born inside it.", "That reactor on its side is still running, Commander. It used to be ours."],
   mguard: ["The hive's shield-bearer. Its shields are its own nervous system hardened into hexagonal crystal, and it raises them over every Mimic near it.", "Break the Guardian and the whole pack loses its cover."],
+  mnode: ["A living brain-lantern rooted in rock. Three Neural Nodes feed Omega's regeneration, and every one you break slows it.", "Every Node you burn is one less heartbeat for Omega, Commander."],
+  mnexus: ["The relay an Alpha speaks through. It commands every hive in its quarter; break its four anchors and the Alpha stands alone.", "Break the Nexus and the Alpha stands alone. That's when it bleeds."],
+  mpylon: ["An obelisk of stolen plating. While any Pylon stands Omega takes only half the damage, and it adapts to the ships that hurt it most.", "It's learning which of our ships hurt it most, Commander. Change the fleet, and break the Pylons."],
   mtitan: ["A living nursery. Every glowing sac on its flanks is a swarm waiting to hatch, and when it fights, they hatch.", "Every one of those sacs is another swarm, Commander. Don't let it reach the line."] };
 Object.assign(ARCH, { m_alloy: { cat: "mimic", t: "The Living Alloy", era: "The invasion", civ: "The swarm", loc: "Every hive", img: "art/mimic/hunter.webp", th: "Extreme",
   frag: "…not flesh, not machine. It grows metal the way we grow bone…",
@@ -27606,6 +27605,7 @@ function mimLK(a, u) {
   if (a === "rend") return u < .25 ? -mimEase(u / .25) * .3 : u < .42 ? -.3 + 1.2 * mimEase((u - .25) / .17) : u < .55 ? .9 : .9 * (1 - mimEase((u - .55) / .45));
   if (a === "drain") return u < .3 ? 0 : u < .9 ? -.12 * Math.sin(Math.PI * (u - .3) / .6) : 0;
   if (a === "absorb") return u < .4 ? -.06 * Math.sin(u * 60) * (u / .4) : 0;
+  if (a === "synapse" || a === "command" || a === "adapt") return 0;
   return 0; }
 function mimLR(a, dl, Lg) { return a === "reap" ? Math.min(dl * .62, Lg * 2.4) : a === "pounce" ? Math.min(dl * .55, Lg * 1.6) : a === "bulwark" ? Math.min(dl * .45, Lg * 1.2) : a === "rend" ? Math.min(dl * .45, Lg * 1.1) : Math.min(dl * .35, Lg * .6); }
 function mimHex(ctx, x, y, r) { ctx.moveTo(x + r, y); for (let i = 1; i <= 6; i++) ctx.lineTo(x + Math.cos(i * TAU / 6) * r, y + Math.sin(i * TAU / 6) * r); }
@@ -27627,7 +27627,52 @@ function mimAmbient(ctx, b, scr, T, d) { if (!b || !b.Q) return; let n = 0; ctx.
     for (let j = 0; j < 4; j++) { const ph = T * .32 + j / 4 + i * .37, k = ph % 1, c = Math.floor(ph), x = P.x + Math.sin(i * 7.1 + j * 3.3 + c * 12.9) * Lg * .45, y = P.y + Lg * .05 + k * k * Lg * .55, r = Math.max(1.2 * d, Lg * .028) * (1 - k * .5);
       ctx.globalAlpha = (1 - k) * .75; ctx.fillStyle = `rgba(${col},1)`; ctx.beginPath(); ctx.ellipse(x, y, r * .7, r * 1.6, 0, 0, TAU); ctx.fill(); ctx.globalAlpha = (1 - k) * .35; ctx.drawImage(gs, x - r * 3, y - r * 3, r * 6, r * 6); } } /* the drips */
   ctx.restore(); }
-function mimAtkX(ctx, b, m, u, S0, E0, Lg, C, gl, d, T, t, scr, hit, pan) {
+/* ---------- v846 Omega's structures remastered (owner: "upgrade and remaster the mimic neural node, neural nexus and the assimilation
+   pylon ... what kind of unique attacks can we give them", then "build it all") ----------
+   Neural Node  synapse : its brain flares, then branching nerve lightning leaps from ship to ship, static crawling over each one it hits.
+   Neural Nexus command : it marks a ship with a turning hex sigil, lines of command run to it from every Mimic near it, then its halo
+                          rings align and fire the Overmind Lance.
+   Assimilation Pylon adapt : its crystal flickers through colours, settles on the colour of its target's own weapon, and fires that back.
+   In a battle with Omega, every Node and Pylon is tethered to it: pulses run up a Node's line (the regeneration it feeds) and a Pylon's
+   line carries its crystal's colour (the damage it soaks); when a Pylon dies its line snaps and a crack flashes across Omega's shield. */
+Object.assign(MIM_DUR, { synapse: 1.25, command: 1.7, adapt: 1.35 }); Object.assign(MIMX_DUR, { synapse: 1.25, command: 1.7, adapt: 1.35 });
+Object.assign(MIMX_SND, { synapse: "hum", command: "hum", adapt: "hum" }); Object.assign(MIM_ATK, { mnode: "synapse", mnexus: "command", mpylon: "adapt" });
+const MIM_WCOL = { laser: "255,90,100", beam: "255,205,90", plasma: "120,255,150", ion: "140,170,255", missile: "255,150,70", torpedo: "255,120,50", mass: "235,235,245", flak: "255,220,130", acid: "160,255,90" };
+const mimWcol = k => MIM_WCOL[(CPROF[k] || [])[1]] || "127,240,255";
+function mimStructX(ctx, b, m, u, S0, E0, Lg, C, gl, d, T, t, scr, hit, pan) {
+  const side = b.Q[m.s].side; ctx.save(); ctx.globalCompositeOperation = "lighter";
+  if (m.a === "synapse") { const top = { x: S0.x, y: S0.y - Lg * .1 };
+    if (!m.fo) { m.fo = [m.e]; for (let j = 0; j < b.Q.length && m.fo.length < 4; j++) if (j !== m.e && b.Q[j] && b.Q[j].side !== side && b.n[j] > 0) m.fo.push(j); }
+    const ch = Math.min(1, u / .32), r = Lg * (.15 + .3 * ch); ctx.globalAlpha = u < .32 ? .5 + .5 * ch : Math.max(0, 1 - (u - .32) * 1.6); ctx.drawImage(gl, top.x - r, top.y - r, r * 2, r * 2); ctx.drawImage(glowSprite("#ffffff"), top.x - r * .3, top.y - r * .3, r * .6, r * .6);
+    if (u >= .32 && u < .95) { hit(m, E0.x, E0.y, false); let px = top.x, py = top.y; const n = Math.min(m.fo.length, 1 + Math.floor((u - .32) / .1));
+      for (let j = 0; j < n; j++) { const F = scr[m.fo[j]]; if (!F) continue; ctx.globalAlpha = .95 * (1 - Math.max(0, u - .8) * 5); if ((T * 24 | 0) % 4) mimBolt(ctx, px, py, F.x, F.y, 2.6 * d, C(1), m.seed + j * 5 + (T * 18 | 0)); /* the leap */
+        for (let s2 = 0; s2 < 5; s2++) { const a = s2 * 1.3 + T * 9 + j, rr = Lg * .25; ctx.fillStyle = "rgba(220,250,255,1)"; ctx.globalAlpha = .7; ctx.fillRect(F.x + Math.cos(a) * rr, F.y + Math.sin(a * 1.3) * rr * .5, 2 * d, 2 * d); } /* static crawling over it */
+        px = F.x; py = F.y; } } }
+  else if (m.a === "command") { const al = []; for (let j = 0; j < b.Q.length && al.length < 6; j++) if (j !== m.s && b.Q[j] && b.Q[j].side === side && b.n[j] > 0 && scr[j] && MIM_D[b.Q[j].k]) al.push(scr[j]);
+    if (u > .08 && u < .98) { const k = Math.min(1, (u - .08) / .15), f = u < .85 ? 1 : (.98 - u) / .13, rr = Lg * (.55 - .15 * k); ctx.globalAlpha = f; ctx.strokeStyle = C(1); ctx.lineWidth = 2.2 * d; ctx.save(); ctx.translate(E0.x, E0.y); ctx.rotate(T * .8); ctx.beginPath(); mimHex(ctx, 0, 0, rr); ctx.stroke(); ctx.rotate(-T * 1.6); ctx.globalAlpha = f * .6; ctx.beginPath(); mimHex(ctx, 0, 0, rr * .62); ctx.stroke(); ctx.restore(); } /* the sigil */
+    if (u > .22 && u < .85) { const f = Math.min(1, (u - .22) / .1) * Math.min(1, (.85 - u) / .1); ctx.setLineDash([5 * d, 6 * d]); ctx.lineDashOffset = -T * 60 * d; ctx.lineWidth = 1.4 * d; ctx.strokeStyle = C(1); for (const A of al) { ctx.globalAlpha = .7 * f; ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(E0.x, E0.y); ctx.stroke(); } ctx.setLineDash([]); } /* every Mimic near it turns to the mark */
+    for (let j = 0; j < 3; j++) { const k = Math.min(1, Math.max(0, (u - .3) / .3)), R = Lg * (.45 + j * .14), tilt = (1 - k) * (j - 1) * .9; ctx.globalAlpha = .55 * (u < .9 ? 1 : (1 - u) * 10); ctx.strokeStyle = C(1); ctx.lineWidth = 2 * d; ctx.beginPath(); ctx.ellipse(S0.x, S0.y - Lg * .25, R, R * (.25 + .2 * Math.abs(Math.sin(tilt + j))), tilt, 0, TAU); ctx.stroke(); } /* the rings come into line */
+    if (u >= .6 && u < .95) { hit(m, E0.x, E0.y, true); const k = (u - .6) / .35, wd = 14 * d * (1 - k * .6); ctx.globalAlpha = 1 - k; ctx.strokeStyle = C(1); ctx.lineWidth = wd; ctx.beginPath(); ctx.moveTo(S0.x, S0.y - Lg * .25); ctx.lineTo(E0.x, E0.y); ctx.stroke(); ctx.strokeStyle = "rgba(255,255,255,1)"; ctx.lineWidth = wd * .35; ctx.stroke(); const r = Lg * (.4 + k * .6); ctx.drawImage(gl, E0.x - r, E0.y - r, r * 2, r * 2); } }
+  else if (m.a === "adapt") { const cy = { x: S0.x, y: S0.y - Lg * .38 }, wc = mimWcol((b.Q[m.e] || {}).k), CY = ["127,240,255", "255,150,70", "190,120,255", "120,255,150"];
+    (b.pylC || (b.pylC = {}))[m.s] = wc;
+    const col = u < .38 ? CY[Math.floor(u * 22) % 4] : wc, gs = glowSprite(`rgba(${col},1)`), r = Lg * (u < .38 ? .2 + .25 * (u / .38) : .4); ctx.globalAlpha = u < .38 ? .9 : Math.max(0, 1 - (u - .38) * 1.4); ctx.drawImage(gs, cy.x - r, cy.y - r, r * 2, r * 2); /* the crystal flickers, then settles */
+    if (u >= .42 && u < .9) { hit(m, E0.x, E0.y, false); const k = (u - .42) / .48, wd = 8 * d * (1 - k * .5); ctx.globalAlpha = 1 - k; ctx.strokeStyle = `rgba(${col},1)`; ctx.lineWidth = wd; ctx.beginPath(); ctx.moveTo(cy.x, cy.y); ctx.lineTo(E0.x, E0.y); ctx.stroke(); ctx.strokeStyle = "rgba(255,255,255,1)"; ctx.lineWidth = wd * .3; ctx.stroke();
+      for (let j = 0; j < 6; j++) { const a = j * 1.05 + m.seed, rr = Lg * .5 * k; ctx.fillStyle = `rgba(${CY[j % 4]},1)`; ctx.fillRect(E0.x + Math.cos(a) * rr, E0.y + Math.sin(a) * rr * .6, 3 * d, 3 * d); } } } /* its own fire, returned, scattering prismatic shards */
+  ctx.restore(); }
+/* the tethers to Omega, and a Pylon's dying snap */
+function mimTethers(ctx, b, scr, T, d) { if (!b || !b.Q) return; let om = -1; for (let i = 0; i < b.Q.length; i++) if (b.Q[i] && /^momega/.test(b.Q[i].k) && b.n[i] > 0 && scr[i]) { om = i; break; } if (om < 0) return; const O = scr[om], gO = b.geo && b.geo[om], LO = gO ? gO.L : 80;
+  const was = b.tAlive || (b.tAlive = {}); ctx.save(); ctx.globalCompositeOperation = "lighter";
+  for (let i = 0; i < b.Q.length; i++) { const q = b.Q[i]; if (!q || (q.k !== "mnode" && q.k !== "mpylon")) continue; const P = scr[i], alive = b.n[i] > 0;
+    if (!alive) { if (was[i] && q.k === "mpylon") (b.snaps || (b.snaps = [])).push({ x: P ? P.x : O.x, y: P ? P.y : O.y, t: T }); was[i] = 0; continue; } was[i] = 1; if (!P) continue;
+    const g = b.geo && b.geo[i], Lg = g ? g.L : 40, sx = P.x, sy = P.y - Lg * (q.k === "mpylon" ? .38 : .1), col = q.k === "mpylon" ? ((b.pylC || {})[i] || "127,240,255") : "127,240,255";
+    ctx.globalAlpha = .28; ctx.strokeStyle = `rgba(${col},1)`; ctx.lineWidth = 1.6 * d; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo((sx + O.x) / 2, Math.min(sy, O.y) - LO * .3, O.x, O.y); ctx.stroke();
+    for (let j = 0; j < 2; j++) { const k = ((T * .35 + j * .5 + i * .13) % 1), x = (1 - k) * (1 - k) * sx + 2 * (1 - k) * k * ((sx + O.x) / 2) + k * k * O.x, y = (1 - k) * (1 - k) * sy + 2 * (1 - k) * k * (Math.min(sy, O.y) - LO * .3) + k * k * O.y, r = Math.max(3 * d, Lg * .08);
+      ctx.globalAlpha = .8 * Math.sin(Math.PI * k); ctx.drawImage(glowSprite(`rgba(${col},1)`), x - r, y - r, r * 2, r * 2); } } /* the pulses run toward Omega, slowly */
+  for (const s of b.snaps || []) { const k = (T - s.t) / 1.5; if (k < 0 || k > 1) continue; ctx.globalAlpha = 1 - k; ctx.strokeStyle = "rgba(200,245,255,1)"; ctx.lineWidth = 2 * d; ctx.beginPath(); let x = O.x - LO * .4, y = O.y - LO * .1; ctx.moveTo(x, y); for (let j = 1; j <= 7; j++) { x = O.x - LO * .4 + j * LO * .12; y = O.y - LO * .1 + Math.sin(j * 2.7 + s.t) * LO * .12; ctx.lineTo(x, y); } ctx.stroke(); /* the crack across its shield */
+    ctx.globalAlpha = (1 - k) * .6; ctx.beginPath(); ctx.ellipse(O.x, O.y, LO * .7 * (1 + k * .3), LO * .4 * (1 + k * .3), 0, 0, TAU); ctx.stroke(); }
+  ctx.restore(); }
+
+function mimAtkX(ctx, b, m, u, S0, E0, Lg, C, gl, d, T, t, scr, hit, pan) { if (m.a === "synapse" || m.a === "command" || m.a === "adapt") return mimStructX(ctx, b, m, u, S0, E0, Lg, C, gl, d, T, t, scr, hit, pan);
   const dx = E0.x - S0.x, dy = E0.y - S0.y, dl = Math.hypot(dx, dy) || 1, ux = dx / dl, uy = dy / dl, nx = -uy, ny = ux, an = Math.atan2(dy, dx);
   ctx.save(); ctx.globalCompositeOperation = "lighter";
   if (m.a === "pounce") {
@@ -30201,7 +30246,7 @@ function drawBattle(t) {
     for (let i = 0; i < s.n; i++) { const o = (i - (s.n - 1) / 2) * 5 * d + Math.sin(i * 12.9 + s.t0) * 2 * d, x0 = sx + nx * o + ux * 6 * d, y0 = sy + ny * o, x1 = x0 + ux * reach, y1 = y0 + uy * reach;
       ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.strokeStyle = col; ctx.globalAlpha = al * .22 * dim; ctx.lineWidth = w * 7; ctx.stroke(); ctx.globalAlpha = al * .85 * dim; ctx.lineWidth = w * 2.3; ctx.stroke(); ctx.strokeStyle = "#fff"; ctx.globalAlpha = al * dim; ctx.lineWidth = w * .9; ctx.stroke(); }
     const mr = (8 + s.w * 5) * d * al; ctx.globalAlpha = al; ctx.drawImage(glowSprite(col), sx - mr, sy - mr, mr * 2, mr * 2); }
-  try { wbStrike(ctx, b, scr, Q, W, H, t, d, lo); } catch (e) {} try { mimAtkDraw(ctx, b, scr, T, W, d, lo, t, H); } catch (e) {} if (!lo) try { mimAmbient(ctx, b, scr, T, d); } catch (e) {} /* v676, v677 */ try { beastAtkDraw(ctx, b, scr, T, W, d, lo, t); } catch (e) {} /* v721 */ try { if (b.serpK && b.serpK.length) { const E = b.serpEp || (b.serpEp = {}); for (const m of b.bAtk || []) if (scr[m.e]) E[m.e] = [scr[m.e].x, scr[m.e].y]; } serpDraw(ctx, b, scr, T, W, d, lo, t); } catch (e) {} /* v722 */ try { serpFx(ctx, b, T, d, lo, t); } catch (e) {} /* v828 */ try { compBattle(ctx, b, scr, T, W, d, lo, t); } catch (e) {} /* v725 */ try { crcAtkDraw(ctx, b, scr, T, W, d, lo, t); } catch (e) {} /* v704 */ try { aexwDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} try { aexDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v680 */ try { aexdDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} try { bShDraw(ctx, b, W, H, d, T, t); } catch (e) {} /* v683 */ try { bShHits(ctx, b, W, H, d, t); } catch (e) {} /* v685 */ try { bmvDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v681 */ // v407 the boss's attack across the whole field
+  try { wbStrike(ctx, b, scr, Q, W, H, t, d, lo); } catch (e) {} try { mimAtkDraw(ctx, b, scr, T, W, d, lo, t, H); } catch (e) {} if (!lo) try { mimAmbient(ctx, b, scr, T, d); } catch (e) {} try { mimTethers(ctx, b, scr, T, d); } catch (e) {} /* v676, v677 */ try { beastAtkDraw(ctx, b, scr, T, W, d, lo, t); } catch (e) {} /* v721 */ try { if (b.serpK && b.serpK.length) { const E = b.serpEp || (b.serpEp = {}); for (const m of b.bAtk || []) if (scr[m.e]) E[m.e] = [scr[m.e].x, scr[m.e].y]; } serpDraw(ctx, b, scr, T, W, d, lo, t); } catch (e) {} /* v722 */ try { serpFx(ctx, b, T, d, lo, t); } catch (e) {} /* v828 */ try { compBattle(ctx, b, scr, T, W, d, lo, t); } catch (e) {} /* v725 */ try { crcAtkDraw(ctx, b, scr, T, W, d, lo, t); } catch (e) {} /* v704 */ try { aexwDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} try { aexDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v680 */ try { aexdDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} try { bShDraw(ctx, b, W, H, d, T, t); } catch (e) {} /* v683 */ try { bShHits(ctx, b, W, H, d, t); } catch (e) {} /* v685 */ try { bmvDraw(ctx, b, scr, T, W, H, d, lo, t); } catch (e) {} /* v681 */ // v407 the boss's attack across the whole field
   // mega beams from stations, titans and beam batteries: a charge-up glow, then a roaring column with a blinding impact
   if (!b.cdQ) b.cdQ = cdPlan(b); while (b.cdQ.length && b.cdQ[0].t0 - 2.4 <= T) b.beams.push(b.cdQ.shift()); // v418 a staged shot joins 2.4 s ahead, so the station can turn onto it
   b.beams = b.beams.filter(m => T - m.t0 <= m.charge + m.life + (m.wb ? 3 : 0)); // v410: the Cube Destroyer's splash outlives its beam

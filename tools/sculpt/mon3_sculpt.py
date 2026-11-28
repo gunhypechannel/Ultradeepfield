@@ -356,20 +356,34 @@ def nexus(M, G):
         taper(M, f'rt{i}', bez3((np.cos(a) * 1.5, -1.42, np.sin(a) * 1.5), (np.cos(a) * 3.2, -1.5, np.sin(a) * 3.2), (np.cos(a + .25) * R, -1.75, np.sin(a + .25) * R), (np.cos(a + .4) * (R + .9), -1.6, np.sin(a + .4) * (R + .9)), 8), .2, .06, C['CAB'])
     for i in range(6):
         a = i / 6 * 2 * np.pi + .5; _spire(M, C, f'sp{i}', (np.cos(a) * 3.15, -1.4, np.sin(a) * 3.15), (np.cos(a) * 1.9, 3.7 + (i % 2) * .9, np.sin(a) * 1.9), a, .42, 1.0)
-    top, bot = 2.6, 1.05
-    G.add('prism', lambda p: (lambda rr, y: np.maximum(np.abs(rr - (bot + (top - bot) * np.clip(y / 2.4, 0, 1))) - .02, np.maximum(y - 2.4, -y)))(np.sqrt(p[..., 0] ** 2 + p[..., 2] ** 2) * np.cos(np.pi / 6) / np.maximum(np.cos(((np.arctan2(p[..., 2], p[..., 0]) % (np.pi / 3)) - np.pi / 6)), .5), p[..., 1] - 0), C['HOLO'])
-    for i in range(6):
-        a = i / 6 * 2 * np.pi; a2 = a + np.pi / 3
-        for A_, B_, r in (((np.cos(a) * bot, 0, np.sin(a) * bot), (np.cos(a) * top, 2.4, np.sin(a) * top), .03), ((np.cos(a) * top, 2.4, np.sin(a) * top), (np.cos(a2) * top, 2.4, np.sin(a2) * top), .03), ((np.cos(a) * bot, 0, np.sin(a) * bot), (np.cos(a2) * bot, 0, np.sin(a2) * bot), .025)):
-            M.add(f'be{i}{A_[1]}{B_[1]}{r}', lambda p, A_=A_, B_=B_, r=r: cap(p, A_, B_, r), C['GLOW'])
-    for j, (rr, y, tx) in enumerate(((2.9, 2.45, 0), (1.75, 1.0, .25), (3.3, 2.1, -.12), (2.2, 3.9, .4))):
-        R = rot('x', tx).astype(f32); G.add(f'rg{j}', lambda p, R=R, rr=rr, y=y: torus((p - V(0, y, 0)) @ R, (0, 0, 0), 'y', rr, .025), C['HOLO'])
-    M.add('orb', lambda p: sphere(p, (0, 3.95, 0), .95), C['SAC']); G.add('orbg', lambda p: np.abs(sphere(p, (0, 3.95, 0), 1.4)) - .02, C['HOLO'])
-    M.add('beam', lambda p: cap(p, (0, -1.3, 0), (0, 3.2, 0), .045), C['GLOW']); G.add('beamg', lambda p: cap(p, (0, -1.3, 0), (0, 3.2, 0), .12), C['HOLO'])
-    M.add('star', lambda p: sphere(p, (0, 1.35, 0), .24), C['GLOW'])
-    for i in range(10):
-        a = i / 10 * 2 * np.pi; d = norm((np.cos(a), .25 if i % 2 else -.2, np.sin(a))); b = tuple(np.array((0, 1.35, 0)) + np.array(d) * .12)
-        spk(M, f'cl{i}', b, d, 1.15 + (i % 2) * .35, .08, C['CLAW'])
+    # v846 remastered after the Mimics' design legends: a hex dome of light over the platform, a giant slit-pupilled eye inside three
+    # segmented chrome halo rings, claws gripping the platform's rim, conduits running down into the hive
+    CHRX = M_((.28, .31, .36), .16, 1.); ec = (0, 3.6, 0)
+    def hexdome(p):  # a hexagon lattice on a dome of light (azimuth x height coordinates)
+        q = p - V(0, -1.3, 0); rr = np.sqrt((q * q).sum(-1)); az = np.arctan2(q[..., 2], q[..., 0]) * 3.1; el = np.arcsin(np.clip(q[..., 1] / np.maximum(rr, 1e-6), -1, 1)) * 3.1
+        X, Y = az / .55, el / .55; ax = np.mod(X, 1.0) - .5; ay = np.mod(Y, 1.7320508) - .8660254; bx = np.mod(X - .5, 1.0) - .5; by = np.mod(Y - .8660254, 1.7320508) - .8660254
+        pa = ax * ax + ay * ay < bx * bx + by * by; gx = np.where(pa, ax, bx); gy = np.where(pa, ay, by); e = (.5 - np.maximum(np.abs(gx), np.abs(gx) * .5 + np.abs(gy) * .8660254)) * .55
+        return np.maximum(np.maximum(np.abs(rr - 3.1) - .03, e - .025), -q[..., 1])
+    G.add('dome', hexdome, C['HOLO']); G.add('domef', lambda p: np.maximum(np.abs(np.sqrt(((p - V(0, -1.3, 0)) ** 2).sum(-1)) - 3.1) - .01, -(p[..., 1] + 1.3)), M_((0, 0, 0), .1, 0, (.03, .12, .16)))
+    M.add('eye', lambda p: sphere(p, ec, .92), C['SHELL'], .02)
+    M.add('iris', lambda p: ell(p, (0, ec[1], .74), (.42, .55, .24)), M_((.05, .25, .3), .1, .2, (.4, 1.2, 1.5)))
+    M.add('pupil', lambda p: ell(p, (0, ec[1], .95), (.07, .4, .06)), M_((.0, .0, .0), .9, 0))
+    G.add('geye', lambda p: ell(p, (0, ec[1], .75), (.75, .85, .5)), C['GLOW'])
+    for s_ in (1, -1):  # chrome lids hooked over the eye
+        pts = bez3((-.95, ec[1] + s_ * .2, .2), (-.2, ec[1] + s_ * 1.0, .55), (.6, ec[1] + s_ * .9, .45), (1.05, ec[1] + s_ * .3, .25), 8); taper(M, f'lid{s_}', pts, .12, .03, CHRX)
+    for j, (R0, tilt, n) in enumerate(((1.45, (.35, 0), 18), (1.8, (-.3, .5), 22), (2.15, (.1, -.45), 26))):  # three segmented halo rings
+        Rm = (rot('x', tilt[0]) @ rot('z', tilt[1])).astype(f32)
+        def seg(p, R0=R0, Rm=Rm, n=n):
+            q = (p - V(*ec)) @ Rm; rr = np.sqrt(q[..., 0] ** 2 + q[..., 2] ** 2); an = np.arctan2(q[..., 2], q[..., 0]); g = np.abs(np.mod(an * n / (2 * np.pi) + .5, 1) - .5) * 2 * np.pi * rr / n
+            return np.maximum(np.maximum(np.abs(rr - R0) - .1, np.abs(q[..., 1]) - .06), .05 - g)
+        M.add(f'hr{j}', seg, CHRX); G.add(f'ghr{j}', lambda p, R0=R0, Rm=Rm: (lambda q: np.sqrt((np.sqrt(q[..., 0] ** 2 + q[..., 2] ** 2) - R0) ** 2 + q[..., 1] ** 2) - .14)((p - V(*ec)) @ Rm), C['HOLO'])
+    for i in range(6):  # claws gripping the platform's rim
+        a = i / 6 * 2 * np.pi + .26; pts = bez3((np.cos(a) * 2.9, -1.2, np.sin(a) * 2.9), (np.cos(a) * 3.7, -.9, np.sin(a) * 3.7), (np.cos(a) * 3.85, -1.5, np.sin(a) * 3.85), (np.cos(a) * 3.55, -2.0, np.sin(a) * 3.55), 7)
+        taper(M, f'gc{i}', pts, .16, .03, CHRX)
+    for i in range(5):  # conduits from the eye down into the hive
+        a = i / 5 * 2 * np.pi; pts = bez3((np.cos(a) * .5, ec[1] - .7, np.sin(a) * .5), (np.cos(a) * 1.1, 1.8, np.sin(a) * 1.1), (np.cos(a) * 1.6, 0, np.sin(a) * 1.6), (np.cos(a) * 1.9, -1.3, np.sin(a) * 1.9), 9)
+        taper(M, f'nc{i}', pts, .11, .08, C['CABL'] if i % 2 else C['CAB'])
+        if i % 2: M.add(f'ncg{i}', lambda p, q=pts[4]: sphere(p, q, .13), C['GLOW'])
     for i in range(4):  # the four crystal anchors fleets break
         a = i / 4 * 2 * np.pi + np.pi / 4; c = (np.cos(a) * 3.05, -.75, np.sin(a) * 3.05)
         M.add(f'an{i}', lambda p, c=c: (lambda q: np.abs(q[..., 0]) + np.abs(q[..., 1]) / 2.5 + np.abs(q[..., 2]) - .38)(p - V(*c)) * .5, M_((.05, .2, .25), .05, .2, (.3, .85, 1.0)))
