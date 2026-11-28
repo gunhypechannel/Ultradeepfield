@@ -42,3 +42,15 @@ def ring_windows(c, R, h, y, pitch=.3, w=.07, hh=.03):
         dash = np.abs(np.mod(s + 40, pitch) - pitch / 2) - w
         return np.maximum(np.maximum(dash, np.abs(q[..., 1] - y) - hh), np.abs(rr - (R + h)) - .05)
     return f
+# v856 every Continuum hull gets a glow layer: each crimson part (and every crimson cut) grown a little and baked to <path>_g, which the
+# game draws additively over the hull, so the red light blooms like the paintings'
+_cnt_bake = Model.bake
+def _cnt_bake_g(self, path, paint=None):
+    _cnt_bake(self, path, paint)
+    if getattr(self, 'noghost', False) or path.endswith('_g'): return
+    G = Model(self.lo, self.hi, max(self.vox * 2, .05)); GG = {'c': (0, 0, 0), 'r': .2, 'm': 0, 'e': (.34, .012, .016)}
+    for (n, f, m, k) in self.parts + self.carves:
+        e = m.get('e')
+        if e and e[0] > .3 and e[1] < .15: G.add(n, lambda p, f=f: f(p) - .07, GG)
+    if G.parts: _cnt_bake(G, path + '_g', None)
+Model.bake = _cnt_bake_g
