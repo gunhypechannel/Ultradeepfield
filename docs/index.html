@@ -8446,7 +8446,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 840;
+const GAME_V = 841;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8596,7 +8596,7 @@ function ownerCheck(user) { try { Promise.resolve(user && user.isOwner && user.i
 /* v210: pre-release, every player on the server can wear every premium skin for free. At release this flag goes false and skins become a paid unlock. */
 const FREE_SKINS = false; /* v637: shop skins cost shards again (◆200 and up) */
 const FAC_COST = 100; /* v637: changing faction (was ◆10) */
-const pxOwned = k => PXS[k] && PXS[k].prem ? premT() >= PXS[k].prem : !!(FREE_SKINS || (S && S.pxOwn || {})[k] || pxKeep(k)); /* v838 no free planets, the owner included */
+const pxOwned = k => PXS[k] && PXS[k].prem ? !!(premT() >= PXS[k].prem || (S && S.pxOwn || {})[k] || pxPremKeep(k)) : !!(FREE_SKINS || (S && S.pxOwn || {})[k] || pxKeep(k) || pxPremKeep(k)); /* v838 no free planets, the owner included */
 /* v637: a skin a world already wore while skins were free stays the player's own */
 function pxKeep(k) { try { if (!S || !G.me || typeof myPlanets !== "function" || !myPlanets().some(p => p && p.px === k)) return false; (S.pxOwn = S.pxOwn || {})[k] = 1; dirty(); return true; } catch (e) { return false; } } /* v626 premium skins come only with the tier */
 const pxMul = (p, r) => { const s = pxOf(p); return s && (s.r === r || s.r === "all") ? 1 + s.b : 1; };
@@ -8823,7 +8823,7 @@ for (const [k, f, n, d, g] of PS_SKINS) { const F = HULL_F[f]; PXS[k] = { n, cos
 const premSkinsAt = t => PS_SKINS.filter(([k]) => PXS[k] && PXS[k].prem === t).map(x => x[2]);
 /* v838 hull colours only for the top premium tiers (owner: "I want the hull color upgrades to be only for the last premium player levels") */
 const HULL_T0 = {}; for (const k in HULL_F) HULL_T0[k] = HULL_F[k].t;
-Object.entries({ copper: 12, silver: 12, cobalt: 13, gold: 13, pink: 14, amethyst: 14, diamond: 15, ruby: 15, emerald: 16, obsidian: 16, glyph: 16 }).forEach(([k, t]) => { if (HULL_F[k]) HULL_F[k].t = t; }); /* v840 the last five tiers, two each, the rest at the top */
+Object.entries({ ruby: 12, copper: 12, gold: 13, silver: 13, emerald: 14, amethyst: 14, pink: 15, cobalt: 15, diamond: 16, obsidian: 16, glyph: 16 }).forEach(([k, t]) => { if (HULL_F[k]) HULL_F[k].t = t; }); /* v840 the last five tiers, two each, the rest at the top */
 /* every colour a player could already use stays theirs: the tier they had when this first runs, and anything already painted on */
 function hullKeep(f) { if (!S) return false; if (!S.hullKeepV) { try { const t0 = premT(), K = {}; for (const k in HULL_T0) if (HULL_T0[k] < 99 && t0 >= HULL_T0[k]) K[k] = 1; for (const v of Object.values(S.hullF || {})) if (v && HULL_T0[v]) K[v] = 1; S.hullKeep = Object.assign({}, S.hullKeep, K); S.hullKeepV = 1; dirty(); } catch (e) {} } return !!(S.hullKeep || {})[f]; }
 const hullsAt = t => Object.entries(HULL_F).filter(([, F]) => F.t <= t).map(([, F]) => F.n);
@@ -9056,6 +9056,21 @@ const PX_IMG = { warsphere: 0, shatter: ["Shattered Bastion", "A white fortress 
 /* v237: the other 31 skins are painted too (upscaled 4x from your reference sheet) */
 for (const k of ["bloom", "ember", "abyss", "aurora", "dune", "forge", "pearl", "obsidian", "solar", "eden", "frostfire", "stormtitan", "ruby", "sapphire", "metropolis", "plague", "mirror", "lattice", "phoenix", "reef", "hive", "blacksun", "magnetar", "ruins", "rust", "cosmicegg", "kraken", "lavalamp", "ghost", "clockwork", "saturn"]) if (!(k in PX_IMG)) PX_IMG[k] = 0;
 for (const k in PX_IMG) if (PXS[k]) { PXS[k].img = 1; if (PX_IMG[k]) { PXS[k].n = PX_IMG[k][0]; PXS[k].d = PX_IMG[k][1]; } }
+/* ---------- v841 the premium worlds reshuffled (owner: "Replace aurora veil, frost fire, and celestial tide Molton core, nebula heart, void
+   emperor out of premium planet skin zone and replace them with a more unique replacement from of the other tiers like upgrade its status
+   and create a better premium planet combination for the last 6 levels"). Six tiers take the most unique shop worlds instead; the worlds
+   they replace go to the shop (the premium Frostfire is retired: the shop has its own). The gold-jewel worlds all move up to tiers 11-16,
+   each with the hull colours of its tier. Whatever a player could already use stays theirs (pxPremKeep). ---------- */
+const PREM_OLD = {}; for (const k in PXS) if (PXS[k].prem) PREM_OLD[k] = PXS[k].prem;
+for (const [t, k] of [[1, "cosmicegg"], [2, "dragon"], [3, "voidbloom"], [4, "metropolis"], [6, "magnetar"], [8, "blacksun"]]) { const P = PREM[t], old = P.k, s = PXS[k], o = PXS[old]; if (!s || !o) continue;
+  delete o.prem; o.cost = 1; o.r = "all"; if (old === "pr3") o.retired = 1; s.prem = t; s.cost = 0; s.r = "all"; s.b = +(.12 + .012 * t).toFixed(3); P.k = k; P.n = s.n; P.col = s.glow || P.col; }
+for (const [k, t] of Object.entries({ ps8: 11, ps12: 11, ps2: 12, ps10: 12, ps6: 12, ps14: 12, ps1: 13, ps9: 13, ps7: 14, ps15: 14, ps16: 14, ps5: 15, ps13: 15, ps3: 15, ps11: 15, ps4: 16, ps17: 16 })) if (PXS[k]) { PXS[k].prem = t; PXS[k].b = +(.12 + .012 * t).toFixed(3); }
+/* the shop's six levels, by how unique each world is (owner: "Common planet skins are: aurora glacier, crimson dune, lava lamp, abyssal ocean,
+   plague world, ancient ruins, kraken deep, storm titan, frost fire, spectral ghost, move the rest out and scale them") */
+const PX_BAND_OF = {}; [["aurora dune lavalamp abyss plague ruins kraken stormtitan frostfire ghost"], ["warsphere rust bonemoon dread spire colossus thunder tidal reef glacier nigiri watcher"],
+  ["ruby sapphire emerald amethyst garden clockwork cyber venom bloom shatter ember obsidian pr1 pr2"], ["atoll aurum inferno magma forge pearl eden mirror lattice phoenix hive hellgate saturn singular pr4"],
+  ["solar pr6 pr8"], ["aeon ruin sphinx petrified omen countdown signal abyssreef cntdebris mimichive pr3"]].forEach(([l], i) => l.split(" ").forEach(k => PX_BAND_OF[k] = i));
+function pxPremKeep(k) { if (!S) return false; if (!S.pxPKV) { try { const t0 = premT(), K = {}; for (const q in PREM_OLD) if (t0 >= PREM_OLD[q]) K[q] = 1; if (typeof myPlanets === "function") for (const p of myPlanets()) if (p && p.px) K[p.px] = 1; S.pxPK = Object.assign({}, S.pxPK, K); S.pxPKV = 1; dirty(); } catch (e) {} } return !!(S.pxPK || {})[k]; }
 const PX_DIR = "skins/";
 /* v238: how much of a painting the world fills (its radius over the frame). Ringed skins paint the world smaller so the whole ring fits */
 const PX_RING = { dragon: .28, glacier: .28, /* v339: the dragons' wings need room */ forge: .25, pearl: .25, metropolis: .25, lattice: .25, clockwork: .25, saturn: .25 };
@@ -9161,9 +9176,9 @@ function pxPortrait2(id, Z, lay) {
 /* [price, name, colour, bonus to one resource, bonus to all three] */
 const PX_BANDS = [[200, "Common", "#9fb3c8", .04, .02], [300, "Uncommon", "#6fe08a", .06, .03], [450, "Rare", "#5fb8ff", .08, .04], [600, "Epic", "#c07aff", .10, .05], [800, "Legendary", "#ffb347", .12, .06], [1000, "Mythic", "#ff5a7a", .15, .08]];
 const PX_MYTHIC = new Set(["aeon", "ruin", "sphinx", "petrified", "omen", "abyssreef", "cntdebris", "mimichive", "countdown", "signal"]);
-function pxBandOf(c, k) { return PX_MYTHIC.has(k) || c >= 2400 ? 5 : c <= 400 ? 0 : c <= 800 ? 1 : c <= 1200 ? 2 : c <= 1600 ? 3 : 4; }
+function pxBandOf(c, k) { if (PX_BAND_OF[k] != null) return PX_BAND_OF[k]; return PX_MYTHIC.has(k) || c >= 2400 ? 5 : c <= 400 ? 0 : c <= 800 ? 1 : c <= 1200 ? 2 : c <= 1600 ? 3 : 4; }
 function pxPrice() { if (pxPrice.done) return; pxPrice.done = 1; for (const k in PXS) { const s = PXS[k]; if (s.prem || !s.cost) continue; s.band = pxBandOf(s.cost, k); const B = PX_BANDS[s.band]; s.cost = B[0]; s.b = s.r === "all" ? B[4] : B[3]; } }
-function pxSorted() { pxPrice(); const E = Object.entries(PXS), shop = E.filter(([, s]) => !s.prem).sort((a, b) => a[1].cost - b[1].cost || a[1].n.localeCompare(b[1].n)), prem = E.filter(([, s]) => s.prem).sort((a, b) => a[1].prem - b[1].prem || a[1].n.localeCompare(b[1].n)), out = []; let last = -1;
+function pxSorted() { pxPrice(); const E = Object.entries(PXS), shop = E.filter(([k, s]) => !s.prem && !(s.retired && !pxOwned(k))).sort((a, b) => a[1].cost - b[1].cost || a[1].n.localeCompare(b[1].n)), prem = E.filter(([, s]) => s.prem).sort((a, b) => a[1].prem - b[1].prem || a[1].n.localeCompare(b[1].n)), out = []; let last = -1;
   for (const e of shop) { const bd = e[1].band != null ? e[1].band : 0; if (bd !== last) { last = bd; const [c, n, col] = PX_BANDS[bd]; out.push(["~h", `<div class="pxband" style="--bc:${col}"><b>${n}</b><small><span class="shard">◆</span>${fmt(c)} each · +${Math.round(PX_BANDS[bd][3] * 100)}% to one resource or +${Math.round(PX_BANDS[bd][4] * 100)}% to all</small></div>`]); } out.push(e); }
   if (prem.length) out.push(["~h", `<div class="pxband" style="--bc:#ffd25a"><b>Premium worlds</b><small>Unlocked by Premium tier</small></div>`]); return out.concat(prem); }
 setTimeout(() => { try { pxPrice(); const st = document.createElement("style"); st.textContent = ".pxband{grid-column:1/-1;display:flex;align-items:baseline;gap:10px;margin:10px 2px 0;padding:6px 10px;border-radius:9px;border-left:3px solid var(--bc);background:linear-gradient(90deg,color-mix(in srgb,var(--bc) 22%,transparent),transparent)}.pxband b{font:800 13px/1.2 Oxanium,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--bc);text-shadow:0 0 10px var(--bc)}.pxband small{color:#cfe0ee}"; document.head.appendChild(st); } catch (e) {} }, 0);
