@@ -8446,7 +8446,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 838;
+const GAME_V = 839;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9158,12 +9158,13 @@ function pxPortrait2(id, Z, lay) {
 }
 /* the skin catalogue: in the Void Shop ("shop") to buy, in Rename & reskin ("sheet") to buy or put on that world */
 /* v838 the price levels: every shop planet sits on one of six; the story worlds are Mythic */
-const PX_BANDS = [[300, "Common", "#9fb3c8"], [600, "Uncommon", "#6fe08a"], [1000, "Rare", "#5fb8ff"], [1500, "Epic", "#c07aff"], [2200, "Legendary", "#ffb347"], [3000, "Mythic", "#ff5a7a"]];
+/* [price, name, colour, bonus to one resource, bonus to all three] */
+const PX_BANDS = [[200, "Common", "#9fb3c8", .04, .02], [300, "Uncommon", "#6fe08a", .06, .03], [450, "Rare", "#5fb8ff", .08, .04], [600, "Epic", "#c07aff", .10, .05], [800, "Legendary", "#ffb347", .12, .06], [1000, "Mythic", "#ff5a7a", .15, .08]];
 const PX_MYTHIC = new Set(["aeon", "ruin", "sphinx", "petrified", "omen", "abyssreef", "cntdebris", "mimichive", "countdown", "signal"]);
 function pxBandOf(c, k) { return PX_MYTHIC.has(k) || c >= 2400 ? 5 : c <= 400 ? 0 : c <= 800 ? 1 : c <= 1200 ? 2 : c <= 1600 ? 3 : 4; }
-function pxPrice() { if (pxPrice.done) return; pxPrice.done = 1; for (const k in PXS) { const s = PXS[k]; if (s.prem || !s.cost) continue; s.band = pxBandOf(s.cost, k); s.cost = PX_BANDS[s.band][0]; } }
+function pxPrice() { if (pxPrice.done) return; pxPrice.done = 1; for (const k in PXS) { const s = PXS[k]; if (s.prem || !s.cost) continue; s.band = pxBandOf(s.cost, k); const B = PX_BANDS[s.band]; s.cost = B[0]; s.b = s.r === "all" ? B[4] : B[3]; } }
 function pxSorted() { pxPrice(); const E = Object.entries(PXS), shop = E.filter(([, s]) => !s.prem).sort((a, b) => a[1].cost - b[1].cost || a[1].n.localeCompare(b[1].n)), prem = E.filter(([, s]) => s.prem).sort((a, b) => a[1].prem - b[1].prem || a[1].n.localeCompare(b[1].n)), out = []; let last = -1;
-  for (const e of shop) { const bd = e[1].band != null ? e[1].band : 0; if (bd !== last) { last = bd; const [c, n, col] = PX_BANDS[bd]; out.push(["~h", `<div class="pxband" style="--bc:${col}"><b>${n}</b><small><span class="shard">◆</span>${fmt(c)} each</small></div>`]); } out.push(e); }
+  for (const e of shop) { const bd = e[1].band != null ? e[1].band : 0; if (bd !== last) { last = bd; const [c, n, col] = PX_BANDS[bd]; out.push(["~h", `<div class="pxband" style="--bc:${col}"><b>${n}</b><small><span class="shard">◆</span>${fmt(c)} each · +${Math.round(PX_BANDS[bd][3] * 100)}% to one resource or +${Math.round(PX_BANDS[bd][4] * 100)}% to all</small></div>`]); } out.push(e); }
   if (prem.length) out.push(["~h", `<div class="pxband" style="--bc:#ffd25a"><b>Premium worlds</b><small>Unlocked by Premium tier</small></div>`]); return out.concat(prem); }
 setTimeout(() => { try { pxPrice(); const st = document.createElement("style"); st.textContent = ".pxband{grid-column:1/-1;display:flex;align-items:baseline;gap:10px;margin:10px 2px 0;padding:6px 10px;border-radius:9px;border-left:3px solid var(--bc);background:linear-gradient(90deg,color-mix(in srgb,var(--bc) 22%,transparent),transparent)}.pxband b{font:800 13px/1.2 Oxanium,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--bc);text-shadow:0 0 10px var(--bc)}.pxband small{color:#cfe0ee}"; document.head.appendChild(st); } catch (e) {} }, 0);
 function pxGrid(mode) {
