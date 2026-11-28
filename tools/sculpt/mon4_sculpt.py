@@ -148,21 +148,62 @@ def sphere_(M, G):
     M.add('emd', lambda p: np.maximum(sphere(p, (0, 0, 0), R + .015), R * .72 - p[..., 0]), DK)  # the dark dish face behind the rings
     M.add('belt', lambda p: np.maximum(torus(p, (0, 0, 0), 'y', R * 1.0, .045), p[..., 0] - .3), MET)
 # ---------------------------------------------------------------- Omega's Neural Node and Assimilation Pylon (Mimic frame)
+# v846 remastered after the Mimics' design legends: chrome, ribbed conduits, hooked claws and cyan light; legless, rooted in rock
+CHRN = M_((.28, .31, .36), .16, 1.); ROCKN = M_((.06, .055, .06), .9, .1)
+def _ring_bands(M, C, n, pts, rr):  # three lit bands on a conduit
+    P = np.array(pts, np.float32)
+    for j, f in enumerate((.3, .55, .8)):
+        i = int(f * (len(P) - 1)); c = P[i]; d = P[min(i + 1, len(P) - 1)] - P[max(i - 1, 0)]; d = d / (np.linalg.norm(d) + 1e-6)
+        M.add(f'{n}b{j}', lambda p, c=c, d=d, r=rr: (lambda q: np.sqrt((np.sqrt(np.maximum((q * q).sum(-1) - (q @ d) ** 2, 0)) - r) ** 2 + (q @ d) ** 2) - r * .3)(p - c), C['GLOW'])
 def mnode(M, G):
-    C = _mats(); cp = (0, .9, 0)
-    M.add('core', lambda p: ell(p, cp, (.55, 1.1, .55)), M_((.05, .2, .25), .05, .2, (.35, .95, 1.0)))
-    for i in range(6):
-        a = i / 6 * 2 * np.pi; taper(M, f'cg{i}', bez3((np.cos(a) * 1.4, -1.3, np.sin(a) * 1.4), (np.cos(a) * 1.3, 0, np.sin(a) * 1.3), (np.cos(a) * 1.1, 1.8, np.sin(a) * 1.1), (np.cos(a) * .3, 2.8, np.sin(a) * .3), 8), .14, .04, C['CABL'] if i % 2 else C['CAB'])
-    for j, (rr, y) in enumerate(((1.3, .2), (1.0, 1.7))): G.add(f'hr{j}', lambda p, rr=rr, y=y: torus(p, (0, y, 0), 'y', rr, .03), C['HOLO'])
-    G.add('halo', lambda p: np.abs(ell(p, cp, (1.0, 1.6, 1.0))) - .02, C['HOLO'])
-    _roots(M, C, 9, 1.8)
+    """the Neural Node: a living brain-lantern. A folded glowing brain in a cage of hooked chrome ribs, rooted in a broken asteroid,
+    three antenna spines lit at the tips"""
+    C = _mats(); cp = (0, .95, 0); BR = M_((.05, .2, .26), .3, .2, (.22, .8, 1.0))
+    M.add('rock', lambda p: crag(p, (0, -2.05, 0), (1.9, .72, 1.6), 5, .3, 1.4), ROCKN)
+    def brain(p):
+        q = p - V(*cp); d = ell(p, cp, (.78, .66, .62))
+        fold = np.abs(np.sin(q[..., 0] * 11 + np.sin(q[..., 1] * 8) * 1.6) * np.sin(q[..., 2] * 10 + np.sin(q[..., 0] * 6)))
+        return np.maximum(d + .045 * fold, np.where(q[..., 1] > 0, -(np.abs(q[..., 2]) - .025), -1e3))  # the folds, and the split between the halves
+    M.add('brain', brain, BR, .02)
+    M.add('stem', lambda p: rcone(p, (0, -1.3, 0), (0, .5, 0), .32, .2), C['SHELL'], .1)
+    G.add('gbrain', lambda p: ell(p, cp, (1.05, .92, .9)), C['GLOW'])
+    for i in range(7):  # the cage: chrome ribs from the stem rising round the brain, hooked outward at the top
+        a = i / 7 * 2 * np.pi; pts = bez3((np.cos(a) * .45, -.5, np.sin(a) * .45), (np.cos(a) * 1.35, .4, np.sin(a) * 1.35), (np.cos(a) * 1.25, 1.75, np.sin(a) * 1.25), (np.cos(a) * .55, 2.35, np.sin(a) * .55), 9)
+        taper(M, f'rib{i}', pts, .11, .04, CHRN); hk = np.array(pts[-1]); spk(M, f'rh{i}', tuple(hk), norm((np.cos(a) * .7, .9, np.sin(a) * .7)), .45, .05, CHRN)
+    M.add('crown', lambda p: torus(p, (0, 2.3, 0), 'y', .6, .06), CHRN)
+    for i in range(3):  # three antenna spines, lit at the tips
+        a = i / 3 * 2 * np.pi + .3; b = (np.cos(a) * .5, 2.2, np.sin(a) * .5); t = (np.cos(a) * 1.2, 3.6 + .25 * i, np.sin(a) * 1.2)
+        pts = bez3(b, (b[0] * 1.2, 2.8, b[2] * 1.2), (t[0] * .9, 3.3, t[2] * .9), t, 7); taper(M, f'an{i}', pts, .07, .025, C['CABL']); _ring_bands(M, C, f'an{i}', pts, .06)
+        M.add(f'bulb{i}', lambda p, t=t: sphere(p, t, .16), C['GLOW']); G.add(f'gb{i}', lambda p, t=t: sphere(p, t, .38), C['GLOW'])
+    for i in range(6):  # ribbed conduits from the rock up into the stem
+        a = i / 6 * 2 * np.pi + .4; pts = bez3((np.cos(a) * 1.4, -1.55, np.sin(a) * 1.4), (np.cos(a) * 1.0, -1.1, np.sin(a) * 1.0), (np.cos(a) * .5, -.7, np.sin(a) * .5), (0, -.2, 0), 7)
+        taper(M, f'cd{i}', pts, .12, .07, C['CABL'] if i % 2 else C['CAB']); (_ring_bands(M, C, f'cd{i}', pts, .11) if i % 2 else None)
+    _roots(M, C, 9, 1.9)
 def mpylon(M, G):
-    C = _mats(); b, mid, tip = (0, -1.4, 0), (.7, 1.2, 0), (-.1, 3.6, 0)
-    taper(M, 'sp', bez3(b, (.4, -.2, 0), mid, tip, 10), .55, .04, C['SHELL'], .02, .8)
-    for j in range(5): taper(M, f'cb{j}', [tuple(np.array(q) + np.array((np.cos(j * 1.3), 0, np.sin(j * 1.3))) * .4 * (1 - i / 8)) for i, q in enumerate(bez3(b, (.4, -.2, 0), mid, tip, 9)[:7])], .08, .04, C['CABL'] if j % 2 else C['CAB'])
-    M.add('tip', lambda p: sphere(p, tip, .3), C['GLOW']); G.add('tipg', lambda p: np.abs(sphere(p, tip, .7)) - .02, C['HOLO'])
-    G.add('ring', lambda p: torus(p, (.5, 1.0, 0), 'y', 1.1, .03), C['HOLO'])
-    _roots(M, C, 9, 1.8)
+    """the Assimilation Pylon: an obelisk fused from stolen ship plating and chrome fins, conduits spiralling up it, lit panels, and on
+    top an adaptation crystal held in three chrome claws (the battle tints its light to what Omega has adapted to)"""
+    C = _mats(); PLT = M_((.13, .14, .16), .34, .9); PNL = M_((.04, .15, .2), .2, .2, (.25, .85, 1.0))
+    M.add('rock', lambda p: crag(p, (0, -2.05, 0), (1.8, .7, 1.6), 9, .3, 1.4), ROCKN)
+    rng = np.random.default_rng(46)
+    for i in range(9):  # stacked hull plates, each narrower, each a little turned
+        y = -1.3 + i * .48; w = .72 - i * .055; R = rot('y', rng.uniform(-.35, .35)) @ rot('z', rng.uniform(-.05, .05))
+        M.add(f'pl{i}', lambda p, y=y, w=w, R=R: box(p, (0, y, 0), (w, .25, w * .8), .04, R), PLT, .03)
+        for s in (1, -1): M.add(f'pn{i}{s}', lambda p, y=y, w=w, R=R, s=s: box(p, (0, y, s * w * .8), (w * .55, .05, .03), .01, R), PNL)
+    M.add('neck', lambda p: rcone(p, (0, 2.9, 0), (0, 3.55, 0), .22, .12), CHRN)
+    for i in range(4):  # chrome fins hooked back down the sides
+        a = i / 4 * 2 * np.pi + np.pi / 4; base = (np.cos(a) * .62, 1.6, np.sin(a) * .62)
+        pts = bez3(base, (np.cos(a) * 1.3, 2.1, np.sin(a) * 1.3), (np.cos(a) * 1.4, 1.0, np.sin(a) * 1.4), (np.cos(a) * 1.15, .1, np.sin(a) * 1.15), 8)
+        taper(M, f'fn{i}', pts, .13, .02, CHRN)
+    for j in range(3):  # conduits spiralling up the obelisk
+        pts = [(np.cos(j * 2.1 + t * 5.5) * (.95 - t * .5), -1.4 + t * 4.2, np.sin(j * 2.1 + t * 5.5) * (.85 - t * .45)) for t in np.linspace(0, 1, 14)]
+        taper(M, f'sc{j}', pts, .1, .05, C['CABL']); _ring_bands(M, C, f'sc{j}', pts, .09)
+    cr = (0, 4.15, 0); CRY = M_((.55, .65, .7), .05, .3, (.7, 1.1, 1.3))
+    M.add('cry', lambda p: (lambda q: np.abs(q[..., 0]) + np.abs(q[..., 1]) * .55 + np.abs(q[..., 2]) - .48)(p - V(*cr)) * .55, CRY)
+    G.add('gcry', lambda p: sphere(p, cr, .95), C['GLOW'])
+    for i in range(3):  # the cradle of claws
+        a = i / 3 * 2 * np.pi; b = (np.cos(a) * .2, 3.5, np.sin(a) * .2)
+        pts = bez3(b, (np.cos(a) * .75, 3.7, np.sin(a) * .75), (np.cos(a) * .7, 4.35, np.sin(a) * .7), (np.cos(a) * .25, 4.75, np.sin(a) * .25), 7); taper(M, f'cl{i}', pts, .08, .015, CHRN)
+    _roots(M, C, 9, 1.9)
 def _roots(M, C, n, R0):
     rng = np.random.default_rng(n * 7)
     for i in range(n):
@@ -213,7 +254,7 @@ def fallen(M, G):
 SPEC = {'drone': (hdrone, (-1.8, -.8, -1.8), (2.0, 1.2, 1.8)), 'spitter': (hspitter, (-1.6, -.9, -1.0), (2.2, 1.0, 1.0)), 'brute': (hbrute, (-2.0, -1.1, -1.3), (2.3, 1.4, 1.3)),
         'lord': (hlord, (-3.2, -.8, -2.6), (2.6, 1.6, 2.6)), 'leviathan': (hleviathan, (-5.8, -1.6, -2.2), (6.0, 2.2, 2.2)), 'cdrone': (cdrone, (-1.85, -1.05, -1.85), (1.85, .85, 1.85)),
         'cube': (cube, (-1.5, -1.5, -1.5), (1.5, 1.5, 1.5)), 'sphere': (sphere_, (-1.3, -1.3, -1.3), (1.3, 1.3, 1.3)),
-        'mnode': (mnode, (-3.6, -2.0, -3.6), (3.6, 3.2, 3.6)), 'mpylon': (mpylon, (-3.4, -2.0, -3.4), (3.4, 4.6, 3.4)),
+        'mnode': (mnode, (-3.8, -2.9, -3.8), (3.8, 4.4, 3.8)), 'mpylon': (mpylon, (-3.6, -2.9, -3.6), (3.6, 5.3, 3.6)),
         'cnest': (bnest, (-3.5, -2.6, -3.2), (3.5, 4.2, 3.2)), 'clevd': (fallen, (-9.6, -1.6, -2.2), (6.2, 2.4, 2.2))}
 def paint(P, N, A, E, idx):
     glowing = E[:, 0] + E[:, 1] + E[:, 2] > .05; top = np.clip(N[:, 1], 0, 1); A[~glowing, :3] *= (1 + .3 * top[~glowing])[:, None]
