@@ -8446,7 +8446,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 837;
+const GAME_V = 838;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -8596,7 +8596,7 @@ function ownerCheck(user) { try { Promise.resolve(user && user.isOwner && user.i
 /* v210: pre-release, every player on the server can wear every premium skin for free. At release this flag goes false and skins become a paid unlock. */
 const FREE_SKINS = false; /* v637: shop skins cost shards again (◆200 and up) */
 const FAC_COST = 100; /* v637: changing faction (was ◆10) */
-const pxOwned = k => PXS[k] && PXS[k].prem ? !!(ownerFree() || premT() >= PXS[k].prem) : !!(FREE_SKINS || ownerFree() || (S && S.pxOwn || {})[k] || pxKeep(k));
+const pxOwned = k => PXS[k] && PXS[k].prem ? premT() >= PXS[k].prem : !!(FREE_SKINS || (S && S.pxOwn || {})[k] || pxKeep(k)); /* v838 no free planets, the owner included */
 /* v637: a skin a world already wore while skins were free stays the player's own */
 function pxKeep(k) { try { if (!S || !G.me || typeof myPlanets !== "function" || !myPlanets().some(p => p && p.px === k)) return false; (S.pxOwn = S.pxOwn || {})[k] = 1; dirty(); return true; } catch (e) { return false; } } /* v626 premium skins come only with the tier */
 const pxMul = (p, r) => { const s = pxOf(p); return s && (s.r === r || s.r === "all") ? 1 + s.b : 1; };
@@ -8667,7 +8667,7 @@ function hullTex(f) { const e = HULL_TEX[f]; if (e) return e.t || null; if (!TH)
     try { if (G3 && G3.fkm) for (const key of Object.keys(G3.fkm)) if (finHas(key, f)) delete G3.fkm[key]; } catch (er) {}
     clearTimeout(hullTex.t); hullTex.t = setTimeout(() => { try { document.querySelectorAll("canvas[data-ship]").forEach(c => { c._dk = null; c._pend = null; }); if (!battle) render(true); } catch (er) {} }, 200); }, undefined, () => { HULL_TEX[f].fail = 1; });
   return null; }
-const hullOk = f => !!HULL_F[f] && (premT() >= HULL_F[f].t || !!G.owner || (f === "mimic" && !!((S && S.hullOwn) || {}).mimic) || (f === "carcinid" && !!((S && S.hullOwn) || {}).carcinid) || (f === "continuum" && !!((S && S.hullOwn) || {}).continuum));
+const hullOk = f => !!HULL_F[f] && (premT() >= HULL_F[f].t || !!G.owner || hullKeep(f) || (f === "mimic" && !!((S && S.hullOwn) || {}).mimic) || (f === "carcinid" && !!((S && S.hullOwn) || {}).carcinid) || (f === "continuum" && !!((S && S.hullOwn) || {}).continuum));
 const hullOf = k => { const f = ((S && S.hullF) || {})[k]; return f && hullOk(f) ? f : null; };
 /* v638 two-tone: a trim finish on fins, wings and dark plating. A finish travels as a spec, "obsidian" or "obsidian.gold" */
 const hullTrimOf = k => { const t = ((S && S.hullT) || {})[k], f = hullOf(k); return f && t && t !== f && hullOk(t) ? t : null; };
@@ -8820,7 +8820,12 @@ const PS_SKINS = [["ps1", "gold", "Aurum Spire", "A golden world of cathedral sp
   ["ps12", "diamond", "Prismheart", "Diamond facets throwing rainbows across the dark.", 1], ["ps13", "pink", "Blossom Quartz", "Rose quartz gardens and pink crystal peaks.", 0], ["ps14", "copper", "Forgeworld", "A copper machine-city of glowing furnaces.", 0],
   ["ps15", "emerald", "Verdant Cascade", "Emerald cliffs and gold rivers falling into green light.", 1], ["ps16", "amethyst", "Amethyst Halo", "Amethyst spires inside a violet ring.", 0], ["ps17", "obsidian", "Obsidian Gilt", "A night-black world of starlight veined in gold.", 1]];
 for (const [k, f, n, d, g] of PS_SKINS) { const F = HULL_F[f]; PXS[k] = { n, cost: 0, prem: F.t, img: 1, r: "all", b: +(.12 + .012 * F.t).toFixed(3), glow: F.rim, ec: [1, 3, 5].map(i => parseInt(F.col.slice(i, i + 2), 16)), d, gold: !!g, fin: f }; }
-const premSkinsAt = t => PS_SKINS.filter(([, f]) => HULL_F[f].t === t).map(x => x[2]);
+const premSkinsAt = t => PS_SKINS.filter(([k]) => PXS[k] && PXS[k].prem === t).map(x => x[2]);
+/* v838 hull colours only for the top premium tiers (owner: "I want the hull color upgrades to be only for the last premium player levels") */
+const HULL_T0 = {}; for (const k in HULL_F) HULL_T0[k] = HULL_F[k].t;
+Object.entries({ copper: 11, silver: 11, diamond: 11, cobalt: 12, ruby: 12, gold: 13, pink: 13, emerald: 14, amethyst: 14, obsidian: 15 }).forEach(([k, t]) => { if (HULL_F[k]) HULL_F[k].t = t; });
+/* every colour a player could already use stays theirs: the tier they had when this first runs, and anything already painted on */
+function hullKeep(f) { if (!S) return false; if (!S.hullKeepV) { try { const t0 = premT(), K = {}; for (const k in HULL_T0) if (HULL_T0[k] < 99 && t0 >= HULL_T0[k]) K[k] = 1; for (const v of Object.values(S.hullF || {})) if (v && HULL_T0[v]) K[v] = 1; S.hullKeep = Object.assign({}, S.hullKeep, K); S.hullKeepV = 1; dirty(); } catch (e) {} } return !!(S.hullKeep || {})[f]; }
 const hullsAt = t => Object.entries(HULL_F).filter(([, F]) => F.t <= t).map(([, F]) => F.n);
 const PXG_FX = `<i class="pxglint"></i><i class="pxspk">${"<s></s>".repeat(8)}</i>`;
 const pxArmed = k => !!(G.pxArm && G.pxArm.k === k && Date.now() - G.pxArm.t < 8000); /* v637 */
@@ -9152,9 +9157,18 @@ function pxPortrait2(id, Z, lay) {
   return c;
 }
 /* the skin catalogue: in the Void Shop ("shop") to buy, in Rename & reskin ("sheet") to buy or put on that world */
+/* v838 the price levels: every shop planet sits on one of six; the story worlds are Mythic */
+const PX_BANDS = [[300, "Common", "#9fb3c8"], [600, "Uncommon", "#6fe08a"], [1000, "Rare", "#5fb8ff"], [1500, "Epic", "#c07aff"], [2200, "Legendary", "#ffb347"], [3000, "Mythic", "#ff5a7a"]];
+const PX_MYTHIC = new Set(["aeon", "ruin", "sphinx", "petrified", "omen", "abyssreef", "cntdebris", "mimichive", "countdown", "signal"]);
+function pxBandOf(c, k) { return PX_MYTHIC.has(k) || c >= 2400 ? 5 : c <= 400 ? 0 : c <= 800 ? 1 : c <= 1200 ? 2 : c <= 1600 ? 3 : 4; }
+function pxPrice() { if (pxPrice.done) return; pxPrice.done = 1; for (const k in PXS) { const s = PXS[k]; if (s.prem || !s.cost) continue; s.band = pxBandOf(s.cost, k); s.cost = PX_BANDS[s.band][0]; } }
+function pxSorted() { pxPrice(); const E = Object.entries(PXS), shop = E.filter(([, s]) => !s.prem).sort((a, b) => a[1].cost - b[1].cost || a[1].n.localeCompare(b[1].n)), prem = E.filter(([, s]) => s.prem).sort((a, b) => a[1].prem - b[1].prem || a[1].n.localeCompare(b[1].n)), out = []; let last = -1;
+  for (const e of shop) { const bd = e[1].band != null ? e[1].band : 0; if (bd !== last) { last = bd; const [c, n, col] = PX_BANDS[bd]; out.push(["~h", `<div class="pxband" style="--bc:${col}"><b>${n}</b><small><span class="shard">◆</span>${fmt(c)} each</small></div>`]); } out.push(e); }
+  if (prem.length) out.push(["~h", `<div class="pxband" style="--bc:#ffd25a"><b>Premium worlds</b><small>Unlocked by Premium tier</small></div>`]); return out.concat(prem); }
+setTimeout(() => { try { pxPrice(); const st = document.createElement("style"); st.textContent = ".pxband{grid-column:1/-1;display:flex;align-items:baseline;gap:10px;margin:10px 2px 0;padding:6px 10px;border-radius:9px;border-left:3px solid var(--bc);background:linear-gradient(90deg,color-mix(in srgb,var(--bc) 22%,transparent),transparent)}.pxband b{font:800 13px/1.2 Oxanium,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--bc);text-shadow:0 0 10px var(--bc)}.pxband small{color:#cfe0ee}"; document.head.appendChild(st); } catch (e) {} }, 0);
 function pxGrid(mode) {
   const p = mode === "sheet" && sheet ? G.byId[sheet.id] : null, sel = mode === "sheet" ? (sheet.px != null ? sheet.px : (p && p.px) || "") : null;
-  return `${FREE_SKINS ? `<p class="note" style="color:#8affb4">Pre-release: every premium skin is free for everyone on this server. After release they become a paid unlock.</p>` : ownerFree() ? `<p class="note" style="color:#8affb4">Every premium skin is unlocked for you, free${G.mode === "offline" ? " in your solo galaxy" : ", as the game's owner"}.</p>` : ""}<p class="note pxdiag">Skin status · ${G.mode === "online" ? "shared galaxy" : G.mode === "offline" ? "solo galaxy" : G.mode} · owner ${G.owner ? "confirmed on this device" : S && S.ownerFree ? "remembered from another device" : "not confirmed"} · ${Object.keys(PXC).filter(k => PXC[k] && PXC[k].art).length}/${Object.keys(PXS).length} skins rendered</p><div class="pxlist">${Object.entries(PXS).map(([k, s]) => { const o = pxOwned(k), on = sel === k;
+  return `${FREE_SKINS ? `<p class="note" style="color:#8affb4">Pre-release: every premium skin is free for everyone on this server. After release they become a paid unlock.</p>` : false ? `<p class="note" style="color:#8affb4">Every premium skin is unlocked for you, free${G.mode === "offline" ? " in your solo galaxy" : ", as the game's owner"}.</p>` : ""}<p class="note pxdiag">Skin status · ${G.mode === "online" ? "shared galaxy" : G.mode === "offline" ? "solo galaxy" : G.mode} · owner ${G.owner ? "confirmed on this device" : S && S.ownerFree ? "remembered from another device" : "not confirmed"} · ${Object.keys(PXC).filter(k => PXC[k] && PXC[k].art).length}/${Object.keys(PXS).length} skins rendered</p><div class="pxlist">${pxSorted().map(([k, s]) => { if (k === "~h") return s; const o = pxOwned(k), on = sel === k;
     const btn = o ? (mode === "sheet" ? `<button class="btn sm${on ? " amber" : ""}" data-act="pxPick" data-k="${k}">${on ? "✓ Selected" : "Apply"}</button>` : `<span class="own">${(S.pxOwn || {})[k] ? "Owned" : FREE_SKINS ? "Free in pre-release" : "Free for you"}</span><button class="btn sm" data-act="skin">Apply</button>`)
       : s.prem ? `<button class="btn ghost sm" data-act="premOpen">🔒 Premium Tier ${s.prem}</button>` : `<button class="btn amber sm${pxArmed(k) ? " pxarm" : ""}" data-act="pxBuy" data-k="${k}" ${(S.shards || 0) >= s.cost ? "" : "disabled"}>${pxArmed(k) ? "Confirm " : ""}<span class="shard">◆</span>${fmt(s.cost)}</button>`;
     return `<div class="pxcard${on ? " on" : ""}${s.gold ? " gold" : ""}" style="--pc:${s.glow}">${pxGoldWrap(k, `<canvas data-px="${k}" role="img" aria-label="${esc(s.n)}"></canvas>`)}<div class="pxt"><b>${esc(s.n)}</b><small>${esc(s.d)}</small><em>${pxPerk(s)}</em><div class="pxb">${btn}</div></div></div>`; }).join("")}</div>`;
