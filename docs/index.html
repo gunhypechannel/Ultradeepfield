@@ -5787,7 +5787,7 @@ function crcBand(T) { try { if (!G.crcCC || Date.now() - G.crcCC > 4000) { G.crc
 function crcInfo(x, T) { const L = crcLoot(x, crcStage(x, T)), sal = crcMatTxt(L).replace(/, /g, " · ") + (crcWeek(T) >= 1 && crcWeek(T) <= 4 ? ` · +${L.pts} tide points` : "");
   return (x.mon === "wkraken" ? `A wild creature</dd><dt>Breaks</dt><dd>Korvax's Monster Resonance against you, for 12 hours` : x.mon === "crcpat" ? `War patrol</dd><dt>The patrol</dt><dd>${crcForceTxt(x)}` : `Stage ${crcStage(x, T)} · ${CRC_STAGE[crcStage(x, T)]}</dd><dt>The garrison</dt><dd>${crcForceTxt(x)}`) + `</dd><dt>${x.mon === "wkraken" ? "Salvage" : "Tide salvage"}</dt><dd>${sal}`; }
 /* the owner's paintings */
-const MIM_ART = { mstalk: "stalker", mtitan: "titan" };
+const MIM_ART = { mstalk: "stalker", mtitan: "titan", mhunt: "hunter", mharv: "harvester", massim: "assimilator", mguard: "guardian" };
 const CRC_ART = { ckrak: "../boss/kraken-skin", cscut: "drone", cspit: "spitter", charv: "harvester", cguard: "guardian", cbrood: "broodmother", cwar: "warrior", ccrys: "crystal", clanc: "spitter_b", cmolt: "crownbrood", cfrig: "frigate", cint: "interceptor", cdest: "s_lance", cvang: "s_war", ccarr: "s_brood", cpearl: "s_eye", cmint: "s_crown", cregent: "s_citadel", cempr: "s_shell", cbrlord: "s_brood2",
   carcinid: "s_reef", crcpat: "frigate", crcmar: "marshal", crcmat: "matron", crctyr: "tyrant", crcora: "oracle", crckor: "korvax", crcbeh: "behemoth", crckbr: "krakenbreaker", crcpal: "pale", crccrown: "s_crownship" };
 const CRC_CD = { cscut: ["The Empire's foot soldier. Small, fast, and never alone.", "Stage 1"], cspit: ["A living coral battery that lobs searing spore-shot from its back.", "Stage 1"], charv: ["Strips wrecks and asteroids for the brood, its resin sacs glowing.", "Stage 1"], cguard: ["A walking bulwark. Its shell turns aside what our guns throw at it.", "Stage 2"],
@@ -8446,7 +8446,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 835;
+const GAME_V = 836;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -19997,6 +19997,8 @@ function mimSculpted(k) { const g = new TH.Group(), m = new TH.Mesh(MIM_GEO[k], 
   if (k === "mnest") { /* v782 the hive's neural core inside a holographic hex dome */ const dm = new TH.Mesh(new TH.IcosahedronGeometry(2.05, 1), new TH.MeshBasicMaterial({ color: 0x5fd8ff, wireframe: true, transparent: true, opacity: .55, blending: TH.AdditiveBlending, depthWrite: false, toneMapped: false })); dm.position.set(0, 1.2, 0); g.add(dm);
     const sh = new TH.Mesh(new TH.SphereGeometry(2.0, 32, 20), new TH.MeshBasicMaterial({ color: 0x1a8ab8, transparent: true, opacity: .16, blending: TH.AdditiveBlending, depthWrite: false, side: TH.DoubleSide, toneMapped: false })); sh.position.copy(dm.position); g.add(sh); }
   g.userData.eng = []; g.userData.keepGeo = 1; return g; }
+const MIM_RG = { mguard: "smoothstep(1.4, 1.7, abs(p.z))", massim: "max(smoothstep(1.4, 1.55, abs(p.z)) * (1. - smoothstep(1.35, 1.6, length(vec2(p.x - .17, p.y - 1.66)))), smoothstep(2.05, 2.25, p.y) * (1. - smoothstep(1.1, 1.4, abs(p.x + .6))) * (1. - smoothstep(.75, .95, abs(p.z - .15))))", mhunt: "smoothstep(1.9, 2.3, p.x) * (1. - smoothstep(.3, .6, p.y))" };
+const MIM_RGJ = { mhunt: "smoothstep(.72, .86, abs(p.z))" };
 function mimWave(k) { const D = MIM_D[k], f = v => (+v).toFixed(4), W1 = "2.0944", W2 = "4.18879";
   if (k === "mnode" || k === "mpylon") return `vec3 p = position; transformed.y += .12 * sin(mt * 2.0944) * smoothstep(-1., 2., p.y); transformed.x += .05 * sin(mt * 2.0944 + p.y) * smoothstep(0., 3., p.y);`; /* v667 */
   if (k === "mnexus") return `vec3 p = position; float rr = length(p.xz), hc = (1. - smoothstep(2.75, 2.95, rr)) * step(-.35, p.y) * (1. - step(3.15, p.y)), th = mt * .349066, c = cos(th), s = sin(th);
@@ -20009,7 +20011,7 @@ function mimWave(k) { const D = MIM_D[k], f = v => (+v).toFixed(4), W1 = "2.0944
     float rt = smoothstep(1.3, 2.4, length(p.xz)) * step(p.y, -1.05); transformed.y += rt * .14 * sin(mt * ${W2} - length(p.xz) * 2.2 + an);
     float ob = 1. - smoothstep(1.3, 1.8, length(p - vec3(0., 1.15, 0.))); transformed.y += ob * .14 * sin(mt * ${W1}); transformed.xz *= 1. + ob * .03 * sin(mt * ${W2});`;
   const L = D.len, mid = f(-.25 * L), hx = f(1.85 * L), cy = f(.82 + D.hump * .6), tl = f(-2.35 * L), te = f(-4.3 * L);
-  let w = `vec3 p = position; float ph = mt * ${W2};`;
+  let w = `vec3 p = position; float ph = mt * ${W2}; float rg = ${(MIM_SC[k] && MIM_RG[k]) || "0."}, rgj = ${(MIM_SC[k] && MIM_RGJ[k]) || "0."};`;
   if (MIM_SC[k]) w += ` float lw = 0.; transformed.y += .1 * sin(mt * ${W1}); transformed.z += .04 * sin(mt * ${W1} + p.x * .7);`; /* v753 a sculpted Mimic has no legs: it floats like a ship */
   else if (D.sac) w += ` float lw = smoothstep(-.35, -2.4, p.y); transformed.x += lw * .32 * sin(ph + p.z * 2.1 + p.x); transformed.z += lw * .2 * sin(mt * ${W1} + p.x * 1.7);
     vec3 sc = p - vec3(-.4, .45, 0.); float sw = 1. - smoothstep(1.3, 1.6, length(sc)); transformed += sc * sw * .05 * sin(mt * ${W1}); transformed.y += (1. - lw) * .1 * sin(mt * ${W1});`;
@@ -20017,8 +20019,8 @@ function mimWave(k) { const D = MIM_D[k], f = v => (+v).toFixed(4), W1 = "2.0944
     transformed.x += d2 * d2 * .55 * sin(mt * ${W1} + p.z * 2.3 + p.x * 1.1); transformed.z += d2 * d2 * .4 * cos(mt * ${W1} + p.x * 1.7 + p.z); transformed.y += d2 * .12 * sin(mt * ${W2} + p.x * 2.);
     float bw = 1. - lw; transformed.y += .1 * sin(mt * ${W1}); transformed.z += bw * .04 * sin(mt * ${W1} + p.x * .7);`; /* v677 a float, the tentacles swaying (was a trot) */
   w += ` float hw = smoothstep(${f(1.25 * L)}, ${f(1.95 * L)}, p.x) * (1. - lw); transformed.y += hw * .09 * sin(ph + 1.2); transformed.z += hw * .06 * sin(mt * ${W1});
-    float jw = smoothstep(${hx}, ${f(1.85 * L + .5)}, p.x) * step(p.y, ${f(.6 + (D.sac ? -.1 : 0))}) * (1. - lw); transformed.y -= jw * (p.x - ${hx}) * (.1 + .12 * sin(mt * ${W1} * 2.));
-    float dd = length(vec2(p.y - ${cy}, p.z)), tw = max(smoothstep(1.0, 2.5, dd) * step(-.05, p.y), smoothstep(${tl}, ${te}, p.x)) * (1. - lw) * (1. - hw);
+    float jw = smoothstep(${hx}, ${f(1.85 * L + .5)}, p.x) * step(p.y, ${f(.6 + (D.sac ? -.1 : 0))}) * (1. - lw); transformed.y -= jw * (1. - rgj) * (p.x - ${hx}) * (.1 + .12 * sin(mt * ${W1} * 2.));
+    float dd = length(vec2(p.y - ${cy}, p.z)), tw = max(smoothstep(1.0, 2.5, dd) * step(-.05, p.y), smoothstep(${tl}, ${te}, p.x)) * (1. - lw) * (1. - hw) * (1. - rg);
     transformed.z += tw * .48 * sin(mt * ${W1} - dd * 1.6 + p.x * .6); transformed.y += tw * .34 * sin(mt * ${W2} - dd * 1.3 + p.z * 1.2); transformed.x += tw * .18 * sin(mt * ${W1} - dd); /* v782 writhe harder */`;
   return w; }
 for (const k in MIM_U) MON_WAVE[k] = mimWave(k);
@@ -27525,6 +27527,108 @@ function mimAnimOK(b, k) { let S = b.mAnim; if (!S) { const ks = [...new Set(b.Q
 const MIM_ATK = { mstalk: "bite", mhunt: "spit", mharv: "grab", massim: "link", mguard: "slam", mtitan: "claw", malpha1: "storm", malpha2: "storm", malpha3: "storm", malpha4: "storm", mnexus: "pulse", mnode: "pulse", mpylon: "lance", momega: "omega", momegax: "omega", mnest: "brood" };
 const MIM_DUR = { bite: .7, spit: .8, grab: 1.3, link: 1.4, slam: .7, claw: .7, storm: 1.5, pulse: .9, brood: .8, lance: .8, omega: 1.4, omegaX: 2.6 };
 const MIM_TENT = { bite: 1, grab: 3, claw: 2, storm: 3 }; /* how many tentacles each attack throws */
+/* ---------- v836 every Mimic class its own signature attack (owner: "all Mimics have ultra unique attack animations for each of them") ----------
+   Stalker  pounce : crouches, springs at the prey on an afterimage trail, three hooked grapples bite in, then the jaws snap shut over it.
+   Hunter   reap   : its scythes glint, it dashes clean through the prey, two scythe cuts cross in an X, then the tail stinger arcs over and
+                     stabs down in a burst of venom.
+   Harvester drain : canister-tipped tendrils latch on and the prey's light is pumped back along them into its glowing sac.
+   Assimilator absorb : its reactor wheels spin up, then a double-helix beam locks on and circuitry crawls over the prey (ASSIMILATED if it dies).
+   Guardian bulwark : its two hex shields flare, it charges behind them and bashes the prey, then throws a hex dome over itself and its allies.
+   Brood Titan rend : its brood sacs swell, three huge claws rake the prey, and the sacs burst into a swarm of larvae that hunt the enemy line. */
+const MIMX_DUR = { pounce: 1.05, reap: 1.0, drain: 1.7, absorb: 1.7, bulwark: 1.2, rend: 1.45 };
+const MIMX_SND = { pounce: "whip", reap: "whip", drain: "hum", absorb: "hum", bulwark: "slam", rend: "whip" };
+Object.assign(MIM_DUR, MIMX_DUR); Object.assign(MIM_ATK, { mstalk: "pounce", mhunt: "reap", mharv: "drain", massim: "absorb", mguard: "bulwark", mtitan: "rend" });
+const mimEase = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
+/* how far toward the prey the body moves (negative: away), and how far that is */
+function mimLK(a, u) {
+  if (a === "pounce") return u < .2 ? -mimEase(u / .2) * .35 : u < .45 ? -.35 + 1.35 * mimEase((u - .2) / .25) : u < .7 ? 1 : 1 - mimEase((u - .7) / .3);
+  if (a === "reap") return u < .15 ? -mimEase(u / .15) * .25 : u < .4 ? -.25 + 1.55 * mimEase((u - .15) / .25) : u < .55 ? 1.3 : 1.3 * (1 - mimEase((u - .55) / .45));
+  if (a === "bulwark") return u < .3 ? -mimEase(u / .3) * .15 : u < .52 ? -.15 + 1.05 * mimEase((u - .3) / .22) : u < .65 ? .9 : .9 * (1 - mimEase((u - .65) / .35));
+  if (a === "rend") return u < .25 ? -mimEase(u / .25) * .3 : u < .42 ? -.3 + 1.2 * mimEase((u - .25) / .17) : u < .55 ? .9 : .9 * (1 - mimEase((u - .55) / .45));
+  if (a === "drain") return u < .3 ? 0 : u < .9 ? -.12 * Math.sin(Math.PI * (u - .3) / .6) : 0;
+  if (a === "absorb") return u < .4 ? -.06 * Math.sin(u * 60) * (u / .4) : 0;
+  return 0; }
+function mimLR(a, dl, Lg) { return a === "reap" ? Math.min(dl * .62, Lg * 2.4) : a === "pounce" ? Math.min(dl * .55, Lg * 1.6) : a === "bulwark" ? Math.min(dl * .45, Lg * 1.2) : a === "rend" ? Math.min(dl * .45, Lg * 1.1) : Math.min(dl * .35, Lg * .6); }
+function mimHex(ctx, x, y, r) { ctx.moveTo(x + r, y); for (let i = 1; i <= 6; i++) ctx.lineTo(x + Math.cos(i * TAU / 6) * r, y + Math.sin(i * TAU / 6) * r); }
+/* a hexagon-latticed shield: an upright ellipse at (x, y), lit by k */
+function mimShield(ctx, x, y, rx, ry, col, k, d, T, cell, rim = 1) { ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.clip();
+  ctx.globalAlpha = .18 * k; ctx.fillStyle = col(1); ctx.fillRect(x - rx, y - ry, rx * 2, ry * 2);
+  const h = cell || Math.max(4 * d, ry * .22); ctx.globalAlpha = .75 * k; ctx.strokeStyle = col(1); ctx.lineWidth = 1.3 * d; ctx.beginPath();
+  const nj = Math.ceil(ry / (h * 1.7)) + 1, ni = Math.ceil(rx / (h * 1.5)) + 1; for (let j = -nj; j <= nj; j++) for (let i = -ni; i <= ni; i++) { const cx = x + i * h * 1.5, cy = y + j * h * 1.732 + (i % 2 ? h * .866 : 0); mimHex(ctx, cx, cy, h * .92); } ctx.stroke();
+  const sw = ((T * .9) % 1) * ry * 2.6 - ry * 1.3; const g = ctx.createLinearGradient(0, y + sw - h, 0, y + sw + h); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(.5, "rgba(255,255,255,.55)"); g.addColorStop(1, "rgba(255,255,255,0)"); ctx.globalAlpha = k; ctx.fillStyle = g; ctx.fillRect(x - rx, y + sw - h, rx * 2, h * 2); ctx.restore();
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = k * (rim ? 1 : .5); ctx.strokeStyle = rim ? "rgba(255,214,120,1)" : col(1); ctx.lineWidth = (rim ? 3 : 1.5) * d; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.stroke(); ctx.restore(); }
+/* a scythe crescent through (x, y) at angle a, drawn up to fraction k, fading by f */
+function mimCrescent(ctx, x, y, R, a, k, f, col, d) { if (k <= 0 || f <= 0) return; ctx.save(); ctx.globalCompositeOperation = "lighter"; const a0 = a - 1.1, a1 = a0 + 2.2 * k;
+  for (const [w, c, al] of [[16, col(1), .35], [8, col(1), .7], [3, "rgba(255,255,255,1)", 1]]) { ctx.globalAlpha = al * f; ctx.strokeStyle = c; ctx.lineWidth = w * d * (.6 + .4 * f); ctx.beginPath(); ctx.arc(x - Math.cos(a) * R * .55, y - Math.sin(a) * R * .55, R, a0, a1); ctx.stroke(); } ctx.restore(); }
+function mimAtkX(ctx, b, m, u, S0, E0, Lg, C, gl, d, T, t, scr, hit, pan) {
+  const dx = E0.x - S0.x, dy = E0.y - S0.y, dl = Math.hypot(dx, dy) || 1, ux = dx / dl, uy = dy / dl, nx = -uy, ny = ux, an = Math.atan2(dy, dx);
+  ctx.save(); ctx.globalCompositeOperation = "lighter";
+  if (m.a === "pounce") {
+    if (u < .22) { const k = u / .22; ctx.globalAlpha = .5 + .5 * k; for (const s of [-1, 1]) { const r = Lg * (.08 + .06 * k); ctx.drawImage(gl, S0.x + ux * Lg * .45 + nx * s * Lg * .1 - r, S0.y + uy * Lg * .45 + ny * s * Lg * .1 - r, r * 2, r * 2); } /* the eyes flare as it crouches */
+      ctx.globalAlpha = k * .6; ctx.strokeStyle = C(1); ctx.lineWidth = 2 * d; ctx.beginPath(); ctx.ellipse(S0.x, S0.y, Lg * (1.1 - .6 * k), Lg * (.55 - .3 * k), an, 0, TAU); ctx.stroke(); m.ox = S0.x; m.oy = S0.y; }
+    if (u >= .2 && u < .75 && m.ox != null) { const k = Math.min(1, (u - .2) / .25), f = u < .55 ? 1 : 1 - (u - .55) / .2; for (let j = 1; j <= 4; j++) { const q = 1 - j * .22; if (q <= 0) continue; const x = m.ox + (S0.x - m.ox) * q * k, y = m.oy + (S0.y - m.oy) * q * k, r = Lg * .5 * (1 - j * .15); ctx.globalAlpha = .28 * f * (1 - j * .2); ctx.drawImage(gl, x - r, y - r * .6, r * 2, r * 1.2); } /* afterimages */
+      ctx.globalAlpha = .5 * f; ctx.strokeStyle = C(1); ctx.lineWidth = 5 * d; ctx.beginPath(); ctx.moveTo(m.ox, m.oy); ctx.lineTo(m.ox + (S0.x - m.ox) * k, m.oy + (S0.y - m.oy) * k); ctx.stroke(); }
+    if (u > .25 && u < .9) { const reach = u < .42 ? (u - .25) / .17 : u < .7 ? 1 : 1 - (u - .7) / .2; ctx.globalCompositeOperation = "source-over";
+      for (let j = 0; j < 3; j++) { const off = (j - 1) * Lg * .28, sx = S0.x + ux * Lg * .3 + nx * off * .4, sy = S0.y + uy * Lg * .3 + ny * off * .4, tx = E0.x + nx * off * .5, ty = E0.y + ny * off * .5, ex = sx + (tx - sx) * reach, ey = sy + (ty - sy) * reach;
+        mimTent(ctx, sx, sy, ex, ey, Lg * .14, Lg * .25 * (j - 1 || .6), T * 7 + j * 2, C(1));
+        ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.strokeStyle = "rgba(230,250,255,1)"; ctx.lineWidth = 2.2 * d; ctx.beginPath(); for (const s of [-1, 1]) { ctx.moveTo(ex, ey); ctx.quadraticCurveTo(ex + ux * Lg * .12 + nx * s * Lg * .12, ey + uy * Lg * .12 + ny * s * Lg * .12, ex - ux * Lg * .02 + nx * s * Lg * .2, ey - uy * Lg * .02 + ny * s * Lg * .2); } ctx.stroke(); ctx.restore(); } /* the hooks */
+      ctx.globalCompositeOperation = "lighter"; }
+    if (u >= .45 && u < .8) { const k = Math.min(1, (u - .45) / .12), f = u < .62 ? 1 : 1 - (u - .62) / .18, R = Lg * .75, gap = R * .9 * (1 - k); if (k >= 1) { hit(m, E0.x, E0.y, true); if (!m.s2) { m.s2 = 1; mimSfx("slam", pan); } }
+      for (const s of [-1, 1]) { const cy = s * (gap + R * .12); ctx.globalAlpha = f; ctx.strokeStyle = C(1); ctx.lineWidth = 4 * d; ctx.beginPath(); const x0 = E0.x - ux * R * .2, y0 = E0.y - uy * R * .2; ctx.ellipse(x0 + nx * cy, y0 + ny * cy, R, R * .32, an, s > 0 ? Math.PI : 0, s > 0 ? TAU : Math.PI); ctx.stroke();
+        ctx.fillStyle = "rgba(235,250,255,1)"; for (let i = 0; i < 7; i++) { const a = (s > 0 ? Math.PI : 0) + (i + .5) / 7 * Math.PI, ex = Math.cos(a) * R, ey = Math.sin(a) * R * .32, px = x0 + nx * cy + ex * ux + ey * nx, py = y0 + ny * cy + ex * uy + ey * ny, L2 = Lg * (.13 - Math.abs(i - 3) * .02); ctx.beginPath(); ctx.moveTo(px + ux * L2 * .25, py + uy * L2 * .25); ctx.lineTo(px - ux * L2 * .25, py - uy * L2 * .25); ctx.lineTo(px - nx * s * L2, py - ny * s * L2); ctx.fill(); } } /* fanged jaws closing */
+      if (k >= 1) { const r = Lg * (.4 + .6 * (1 - f)); ctx.globalAlpha = f; ctx.drawImage(glowSprite("#ffffff"), E0.x - r * .5, E0.y - r * .5, r, r); } } }
+  else if (m.a === "reap") {
+    if (u < .18) { const k = u / .18; for (const s of [-1, 1]) mimCrescent(ctx, S0.x + ux * Lg * .5 + nx * s * Lg * .25, S0.y + uy * Lg * .5 + ny * s * Lg * .25, Lg * .45, an + s * .9, 1, k * .6, C, d); m.ox = S0.x; m.oy = S0.y; } /* the scythes glint, raised */
+    if (u >= .15 && u < .6 && m.ox != null) { const f = u < .45 ? 1 : 1 - (u - .45) / .15; ctx.globalAlpha = .55 * f; ctx.strokeStyle = C(1); for (let j = -2; j <= 2; j++) { ctx.lineWidth = (3 - Math.abs(j)) * d; ctx.beginPath(); ctx.moveTo(m.ox + nx * j * Lg * .15, m.oy + ny * j * Lg * .15); ctx.lineTo(S0.x - ux * Lg * .3 + nx * j * Lg * .15, S0.y - uy * Lg * .3 + ny * j * Lg * .15); ctx.stroke(); } } /* the dash's speed lines */
+    if (u >= .32) { const k = clamp((u - .32) / .12, 0, 1), f = u < .6 ? 1 : Math.max(0, 1 - (u - .6) / .3); if (k > .5) { hit(m, E0.x, E0.y, true); if (!m.s2) { m.s2 = 1; mimSfx("slam", pan); } }
+      mimCrescent(ctx, E0.x, E0.y, Lg * .7, an - .8, k, f, C, d); mimCrescent(ctx, E0.x, E0.y, Lg * .7, an + .8 + Math.PI, clamp(k * 1.4 - .4, 0, 1), f, C, d); /* the X */
+      if (k > .5 && f > 0) for (let j = 0; j < 10; j++) { const a = j * 2.4 + m.seed, q = (u - .38) * 3, r = Lg * (.2 + q * .9); ctx.globalAlpha = f * .8; ctx.fillStyle = "rgba(240,252,255,1)"; ctx.fillRect(E0.x + Math.cos(a) * r, E0.y + Math.sin(a) * r * .7, 2.4 * d, 2.4 * d); } }
+    if (u >= .55 && u < 1) { const k = clamp((u - .55) / .18, 0, 1), hx = S0.x - ux * Lg * .6, hy = S0.y - Lg * 1.5, cx = (hx + E0.x) / 2, cy = Math.min(hy, E0.y) - Lg * 1.1, x = (1 - k) * (1 - k) * hx + 2 * (1 - k) * k * cx + k * k * E0.x, y = (1 - k) * (1 - k) * hy + 2 * (1 - k) * k * cy + k * k * E0.y; /* the tail stinger */
+      if (k < 1) { ctx.globalAlpha = .9; ctx.strokeStyle = "rgba(150,255,190,1)"; ctx.lineWidth = 3 * d; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.quadraticCurveTo(hx + (cx - hx) * k, hy + (cy - hy) * k, x, y); ctx.stroke(); const r = Lg * .2; ctx.drawImage(glowSprite("rgba(150,255,190,1)"), x - r, y - r, r * 2, r * 2); }
+      else { if (!m.s3) { m.s3 = 1; b.shake = Math.max(b.shake || 0, 6 * d); mimSfx("hiss", pan); } const q = (u - .73) / .27; for (let j = 0; j < 9; j++) { const a = j * .7 + m.seed - Math.PI / 2, r = Lg * .6 * q; ctx.globalAlpha = (1 - q) * .9; ctx.drawImage(glowSprite("rgba(150,255,190,1)"), E0.x + Math.cos(a) * r - 4 * d, E0.y + Math.sin(a) * r * .6 + q * q * 14 * d - 4 * d, 8 * d, 8 * d); } } } }
+  else if (m.a === "drain") { const n = 4, reach = u < .28 ? mimEase(u / .28) : u < .88 ? 1 : 1 - mimEase((u - .88) / .12); if (u >= .28) hit(m, E0.x, E0.y, false);
+    const P = []; ctx.globalCompositeOperation = "source-over";
+    for (let j = 0; j < n; j++) { const off = (j - (n - 1) / 2) * Lg * .22, sx = S0.x + ux * Lg * .4 + nx * off * .5, sy = S0.y + uy * Lg * .4 + ny * off * .5 + Lg * .12, tx = E0.x + nx * off * .6, ty = E0.y + ny * off * .6, ex = sx + (tx - sx) * reach, ey = sy + (ty - sy) * reach;
+      mimTent(ctx, sx, sy, ex, ey, Lg * .12, Lg * .18 * (j % 2 ? -1 : 1), T * 3 + j, C(1)); P.push([sx, sy, ex, ey]);
+      ctx.save(); ctx.translate(ex, ey); ctx.rotate(an); ctx.fillStyle = "rgba(10,18,26,.95)"; ctx.fillRect(-Lg * .1, -Lg * .06, Lg * .2, Lg * .12); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .5 + .5 * Math.min(1, u * 1.5); ctx.fillStyle = C(1); ctx.fillRect(-Lg * .08, -Lg * .04, Lg * .16, Lg * .08); ctx.strokeStyle = "rgba(220,230,240,1)"; ctx.lineWidth = 1.2 * d; for (const xx of [-.09, 0, .09]) { ctx.beginPath(); ctx.moveTo(xx * Lg, -Lg * .07); ctx.lineTo(xx * Lg, Lg * .07); ctx.stroke(); } ctx.restore(); } /* the canisters */
+    ctx.globalCompositeOperation = "lighter";
+    if (u > .32 && u < .92) { const fl = Math.min(1, (u - .32) / .1) * Math.min(1, (.92 - u) / .1); for (const [sx, sy, ex, ey] of P) for (let i = 0; i < 5; i++) { const q = 1 - (((u - .32) * 2.2 + i / 5) % 1), x = sx + (ex - sx) * q, y = sy + (ey - sy) * q + Math.sin(q * 9 + i) * Lg * .04, r = Lg * .07; ctx.globalAlpha = fl; ctx.drawImage(gl, x - r, y - r, r * 2, r * 2); } /* the prey's light, pumped home */
+      ctx.globalAlpha = fl * .7; ctx.strokeStyle = C(1); ctx.lineWidth = 2 * d; const rr = Lg * (.7 - .4 * ((u * 2.5) % 1)); ctx.beginPath(); ctx.ellipse(E0.x, E0.y, rr, rr * .5, 0, 0, TAU); ctx.stroke();
+      const sw = Lg * (.35 + .35 * (u - .32) / .6); ctx.globalAlpha = .4 + .5 * fl; ctx.drawImage(gl, S0.x - sw, S0.y - sw, sw * 2, sw * 2); } /* the sac swells */ }
+  else if (m.a === "absorb") {
+    const sp = u < .4 ? u / .4 : 1, f = u < .85 ? 1 : 1 - (u - .85) / .15;
+    for (const [R, n, dir] of [[Lg * .55, 14, 1], [Lg * .35, 9, -1]]) { ctx.globalAlpha = (.4 + .6 * sp) * f; ctx.strokeStyle = C(1); ctx.lineWidth = 3 * d; const rot = dir * T * (2 + 10 * sp * sp);
+      for (let i = 0; i < n; i++) { const a = rot + i / n * TAU; ctx.beginPath(); ctx.arc(S0.x, S0.y, R, a, a + TAU / n * .62); ctx.stroke(); } } /* the reactor wheel spinning up */
+    const cr = Lg * (.15 + .25 * sp); ctx.globalAlpha = f; ctx.drawImage(gl, S0.x - cr * 2, S0.y - cr * 2, cr * 4, cr * 4); ctx.drawImage(glowSprite("#ffffff"), S0.x - cr * .5, S0.y - cr * .5, cr, cr);
+    if (u < .4) for (let j = 0; j < 12; j++) { const a = j * 2.39996 + m.seed + T * 3, q = 1 - ((u * 3 + j / 12) % 1), R = Lg * 1.3 * q; ctx.globalAlpha = .8 * (1 - q); ctx.fillStyle = C(1); ctx.fillRect(S0.x + Math.cos(a) * R, S0.y + Math.sin(a) * R * .7, 2.5 * d, 2.5 * d); }
+    if (u >= .4) { hit(m, E0.x, E0.y, false); const k = Math.min(1, (u - .4) / .1); const ex = S0.x + dx * k, ey = S0.y + dy * k;
+      ctx.globalAlpha = .9 * f; ctx.strokeStyle = "rgba(255,255,255,1)"; ctx.lineWidth = 2 * d; ctx.beginPath(); ctx.moveTo(S0.x, S0.y); ctx.lineTo(ex, ey); ctx.stroke();
+      for (const s of [-1, 1]) { ctx.strokeStyle = C(1); ctx.lineWidth = 3 * d; ctx.beginPath(); for (let i = 0; i <= 30; i++) { const q = i / 30 * k, w = Math.sin(q * dl / (Lg * .35) - T * 14) * Lg * .14 * s * Math.sin(Math.PI * Math.min(1, q * 1.2)), x = S0.x + dx * q + nx * w, y = S0.y + dy * q + ny * w; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); } /* the double helix */
+      if (k >= 1) { const gr = Lg * .9 * Math.min(1, (u - .5) / .3), rnd2 = j => (Math.sin(m.seed * 9.1 + j * 37.7) * 43758.5) % 1; ctx.lineWidth = 1.6 * d; ctx.strokeStyle = C(1); ctx.globalAlpha = .9 * f; ctx.beginPath();
+        for (let j = 0; j < 18; j++) { let x = E0.x + rnd2(j) * gr, y = E0.y + rnd2(j + 50) * gr * .45; ctx.moveTo(x, y); for (let s2 = 0; s2 < 3; s2++) { if ((j + s2) % 2) x += (rnd2(j * 3 + s2) > 0 ? 1 : -1) * gr * .2; else y += (rnd2(j * 5 + s2) > 0 ? 1 : -1) * gr * .12; ctx.lineTo(x, y); } } ctx.stroke();
+        for (let j = 0; j < 6; j++) { const x = E0.x + rnd2(j + 90) * gr, y = E0.y + rnd2(j + 120) * gr * .45; ctx.fillStyle = C(1); ctx.fillRect(x - 2 * d, y - 2 * d, 4 * d, 4 * d); } /* data nodes lighting */
+        if (!(b.n[m.e] > 0) && !m.as) { m.as = 1; m.asT = t; } } } }
+  else if (m.a === "bulwark") {
+    const up = u < .3 ? mimEase(u / .3) : u < .7 ? 1 : 1 - mimEase((u - .7) / .3);
+    for (const s of [-1, 1]) mimShield(ctx, S0.x - ux * Lg * .1 + nx * s * Lg * .55, S0.y - uy * Lg * .1 + ny * s * Lg * .55 - Lg * .1, Lg * .27, Lg * .42, C, up * .85, d, T); /* the shields flare at its flanks */
+    if (u > .3 && u < .7) { const k = (u - .3) / .4, f = Math.min(1, k * 4) * (u < .6 ? 1 : 1 - (u - .6) / .1); ctx.globalAlpha = f; ctx.strokeStyle = C(1); ctx.lineWidth = 2 * d; ctx.beginPath(); const fx = S0.x + ux * Lg * .7, fy = S0.y + uy * Lg * .7; for (let j = -3; j <= 3; j++) { const bend = Math.abs(j) * Lg * .06; mimHex(ctx, fx - ux * bend + nx * j * Lg * .16, fy - uy * bend + ny * j * Lg * .16, Lg * .09); } ctx.stroke(); ctx.globalAlpha = f * .35; ctx.fillStyle = C(1); ctx.fill(); } /* the shield wall in front as it charges */
+    if (u >= .5) { hit(m, E0.x, E0.y, true); if (!m.s2) { m.s2 = 1; b.shake = Math.max(b.shake || 0, 16 * d); } const q = (u - .5) / .4; if (q < 1) for (let j = 0; j < 12; j++) { const a = j * .52 + m.seed, r = Lg * (.2 + q * 1.2); ctx.globalAlpha = 1 - q; ctx.strokeStyle = C(1); ctx.lineWidth = 1.5 * d; ctx.beginPath(); mimHex(ctx, E0.x + Math.cos(a) * r, E0.y + Math.sin(a) * r * .6, Lg * .06 * (1 - q * .5)); ctx.stroke(); } } /* hex shards */
+    if (u >= .62) { const q = (u - .62) / .38, f = Math.sin(Math.PI * q), side = b.Q[m.s].side; const al = [m.s]; for (let j = 0; j < b.Q.length && al.length < 3; j++) if (j !== m.s && b.Q[j] && b.Q[j].side === side && b.n[j] > 0 && scr[j] && scr[j] !== S0) al.push(j);
+      for (const j of al) { const P = scr[j]; if (!P) continue; const g2 = b.geo && b.geo[j], r = (g2 ? g2.L : Lg) * .7; mimShield(ctx, P.x, P.y, r, r * .62, C, f * .55, d, T, Math.max(5 * d, Lg * .07), 0); } } /* the hex dome over the hive's own */ }
+  else if (m.a === "rend") { const V = "rgba(190,120,255,1)", vg = glowSprite(V);
+    if (u < .3) { const k = u / .3; for (let j = 0; j < 6; j++) { const a = j * 1.05 + m.seed, r = Lg * (.12 + .08 * Math.sin(T * 9 + j)) * (.6 + .6 * k); ctx.globalAlpha = .4 + .6 * k; ctx.drawImage(vg, S0.x + Math.cos(a) * Lg * .5 - r, S0.y + Math.sin(a) * Lg * .25 - r, r * 2, r * 2); } } /* the brood sacs swell */
+    if (u >= .38 && u < .75) { const k = clamp((u - .38) / .12, 0, 1), f = u < .6 ? 1 : 1 - (u - .6) / .15; if (k >= .6) { hit(m, E0.x, E0.y, true); if (!m.s2) { m.s2 = 1; mimSfx("slam", pan); } }
+      const gp = b.geo && b.geo[m.e], R = clamp((gp ? gp.L : Lg * .5) * 1.1, 26 * d, Lg * .55), ca = -.6 * Math.sign(ux || 1), cx_ = Math.cos(ca), cy_ = Math.sin(ca), px_ = -cy_, py_ = cx_;
+      for (let j = -1; j <= 1; j++) { const ox = E0.x + px_ * j * R * .32, oy = E0.y + py_ * j * R * .32; for (const [w, c, al] of [[10, C(1), .35], [5, C(1), .7], [2, "rgba(255,255,255,1)", 1]]) { ctx.globalAlpha = al * f; ctx.strokeStyle = c; ctx.lineWidth = w * d * (1 - Math.abs(j) * .2); ctx.beginPath();
+        const x0 = ox - cx_ * R, y0 = oy - cy_ * R, x1 = ox + cx_ * R, y1 = oy + cy_ * R, q = k, mx = ox + px_ * R * .25, my = oy + py_ * R * .25, ex = (1 - q) * (1 - q) * x0 + 2 * (1 - q) * q * mx + q * q * x1, ey = (1 - q) * (1 - q) * y0 + 2 * (1 - q) * q * my + q * q * y1;
+        ctx.moveTo(x0, y0); ctx.quadraticCurveTo(x0 + (mx - x0) * q, y0 + (my - y0) * q, ex, ey); ctx.stroke(); } } } /* three great claws rake it */
+    if (u >= .5) { if (!m.fo) { m.fo = [m.e]; const side = b.Q[m.s].side; for (let j = 0; j < b.Q.length && m.fo.length < 3; j++) if (j !== m.e && b.Q[j] && b.Q[j].side !== side && b.n[j] > 0) m.fo.push(j); if (!m.s3) { m.s3 = 1; mimSfx("hum", pan); } }
+      for (let i = 0; i < 15; i++) { const tg = scr[m.fo[i % m.fo.length]] || E0, st = .5 + (i % 5) * .04, q = clamp((u - st) / .35, 0, 1); if (q <= 0) continue; const ox = S0.x + Math.cos(i * 2.1 + m.seed) * Lg * .45, oy = S0.y + Math.sin(i * 2.1 + m.seed) * Lg * .22, cx = (ox + tg.x) / 2 + Math.sin(i * 1.7) * Lg * 1.2, cy = (oy + tg.y) / 2 + Math.cos(i * 2.3) * Lg * .9;
+        if (q < 1) { const x = (1 - q) * (1 - q) * ox + 2 * (1 - q) * q * cx + q * q * tg.x, y = (1 - q) * (1 - q) * oy + 2 * (1 - q) * q * cy + q * q * tg.y, q2 = Math.max(0, q - .08), x2 = (1 - q2) * (1 - q2) * ox + 2 * (1 - q2) * q2 * cx + q2 * q2 * tg.x, y2 = (1 - q2) * (1 - q2) * oy + 2 * (1 - q2) * q2 * cy + q2 * q2 * tg.y;
+          ctx.globalAlpha = .9; ctx.strokeStyle = V; ctx.lineWidth = 2 * d; ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x, y); ctx.stroke(); const r = Lg * .08; ctx.drawImage(vg, x - r, y - r, r * 2, r * 2); }
+        else { const p = clamp((u - st - .35) / .15, 0, 1); if (p < 1) { const r = Lg * (.08 + .25 * p); ctx.globalAlpha = 1 - p; ctx.strokeStyle = V; ctx.lineWidth = 2 * d; ctx.beginPath(); ctx.arc(tg.x + Math.sin(i * 3.1) * Lg * .2, tg.y + Math.cos(i * 2.7) * Lg * .12, r, 0, TAU); ctx.stroke(); } } } } /* the larvae swarm and pop */ }
+  ctx.restore(); }
+
 /* ---------- v703/v704 the Carcinid on the battle screen and the map: profiles, sizes, weapons, and their 3D models (built in code) ----------
    v704 rebuilt after the owner's paintings. The shape language they share:
    - crabs: a wide carapace with a pointed brow, gilded plate rims, curved horns rising off the back, a fringe of hooked fangs under the
@@ -28511,9 +28615,9 @@ function mimAtkAdd(b, v) { const q = b.Q[v.s]; if (!q) return; let a = MIM_ATK[q
 function mimLunge(b, scr, T) { const done = new Set();
   for (const m of b.mAtk || []) { const u = (T - m.t0) / MIM_DUR[m.a]; if (u < 0 || u > 1) continue; const S0 = scr[m.s], E0 = scr[m.e]; if (!S0 || !E0) continue;
     const g = b.geo && b.geo[m.s], Lg = g ? g.L : 40, dx = E0.x - S0.x, dy = E0.y - S0.y, dl = Math.hypot(dx, dy) || 1;
-    if (!done.has(S0)) { const k = m.a === "bite" || m.a === "slam" || m.a === "claw" ? (u < .62 ? Math.sin(Math.PI * Math.min(1, u * 1.6)) : 0) : m.a === "spit" ? Math.sin(Math.PI * u) * .5 : m.a === "storm" ? (u < .25 ? -u / .25 * .35 : u < .6 ? .25 : 0) : 0;
-      if (k) { const reach = Math.min(dl * .35, Lg * .6); S0.x += dx / dl * reach * k; S0.y += dy / dl * reach * k; done.add(S0); } }
-    if (MIM_TENT[m.a] && u > .3 && !done.has(E0)) { const dead = !(b.n[m.e] > 0), big = BOSSK[(b.Q[m.e] || {}).k] || bBig((b.Q[m.e] || {}).k), pull = dead ? clamp((u - .3) / .55, 0, 1) * .92 : big ? 0 : (u < .65 ? (u - .3) / .35 : (1 - u) / .35) * Math.min(.25, Lg * 1.2 / dl) * (m.a === "grab" ? 1.5 : 1);
+    if (!done.has(S0)) { const k = MIMX_DUR[m.a] ? mimLK(m.a, u) : m.a === "bite" || m.a === "slam" || m.a === "claw" ? (u < .62 ? Math.sin(Math.PI * Math.min(1, u * 1.6)) : 0) : m.a === "spit" ? Math.sin(Math.PI * u) * .5 : m.a === "storm" ? (u < .25 ? -u / .25 * .35 : u < .6 ? .25 : 0) : 0;
+      if (k) { const reach = MIMX_DUR[m.a] ? mimLR(m.a, dl, Lg) : Math.min(dl * .35, Lg * .6); S0.x += dx / dl * reach * k; S0.y += dy / dl * reach * k; done.add(S0); } }
+    if ((MIM_TENT[m.a] || m.a === "drain") && u > .3 && !done.has(E0)) { const dead = !(b.n[m.e] > 0), big = BOSSK[(b.Q[m.e] || {}).k] || bBig((b.Q[m.e] || {}).k), pull = dead ? clamp((u - .3) / .55, 0, 1) * .92 : big ? 0 : (u < .65 ? (u - .3) / .35 : (1 - u) / .35) * Math.min(.25, Lg * 1.2 / dl) * (m.a === "grab" ? 1.5 : 1);
       if (pull > 0) { E0.x -= dx * pull; E0.y -= dy * pull; done.add(E0); m.dev = dead; } } } }
 /* a tentacle: a tapered dark cable with a glowing rim, curling as it reaches, from (x0, y0) toward (x1, y1) */
 function mimTent(ctx, x0, y0, x1, y1, w0, wav, ph, col) { const n = 14, nx = -(y1 - y0), ny = x1 - x0, nl = Math.hypot(nx, ny) || 1, P = [];
@@ -28538,12 +28642,13 @@ function mimAtkDraw(ctx, b, scr, T, W, d, lo, t, H) { const A = b.mAtk; if (!A |
   const hit = (m, x, y, big) => { if (m.hit) return; m.hit = 1; b.slowUntil = Math.max(b.slowUntil || 0, t + (big ? 260 : 150)); b.shake = Math.max(b.shake || 0, (big ? 14 : 7) * d); b.flash = Math.max(b.flash || 0, big ? .28 : .1); m.hx = x; m.hy = y; m.ht = T; };
   for (const m of A) { const D = MIM_DUR[m.a], u = (T - m.t0) / D; if (u < 0 || u > 1.25) continue; const S0 = scr[m.s], E0 = scr[m.e]; if (!S0 || !E0) continue; const alive = b.n[m.s] > 0;
     const g = b.geo && b.geo[m.s], Lg = g ? g.L : 40, fade = Math.min(1, u / .1, Math.max(0, 1 - u) / .2), col = BOSS_GLOW[b.Q[m.s].k] || "95,216,255", C = a => `rgba(${col},${a})`, gl = glowSprite(C(1)), pan = clamp(S0.x / W * 2 - 1, -1, 1);
-    if (!m.snd && u >= 0 && (m.a === "omegaX" || m.a === "storm")) bVoice(b, "sig"); /* v681 */ if (!m.snd && u >= 0) { m.snd = 1; mimSfx(m.a === "spit" ? "hiss" : m.a === "link" || m.a === "pulse" || m.a === "brood" || m.a === "storm" ? "hum" : m.a === "omegaX" ? "omega" : m.a === "slam" ? "slam" : MIM_TENT[m.a] ? "whip" : "hum", pan); }
+    if (!m.snd && u >= 0 && MIMX_SND[m.a]) { m.snd = 1; mimSfx(MIMX_SND[m.a], pan); } if (!m.snd && u >= 0 && (m.a === "omegaX" || m.a === "storm")) bVoice(b, "sig"); /* v681 */ if (!m.snd && u >= 0) { m.snd = 1; mimSfx(m.a === "spit" ? "hiss" : m.a === "link" || m.a === "pulse" || m.a === "brood" || m.a === "storm" ? "hum" : m.a === "omegaX" ? "omega" : m.a === "slam" ? "slam" : MIM_TENT[m.a] ? "whip" : "hum", pan); }
     /* the shockwave of a landed hit, after the hit itself */
     if (m.ht != null) { const k = (T - m.ht) / .45; if (k >= 0 && k < 1) { ctx.save(); ctx.globalCompositeOperation = "lighter"; const r = Lg * (m.a === "slam" || m.a === "omegaX" ? 1.6 : 1) * (.3 + k); ctx.globalAlpha = (1 - k) * .85; ctx.strokeStyle = C(1); ctx.lineWidth = (6 - 4 * k) * d; ctx.beginPath(); ctx.ellipse(m.hx, m.hy, r, r * .5, 0, 0, TAU); ctx.stroke(); ctx.globalAlpha = (1 - k) * .7; ctx.drawImage(gl, m.hx - r * .4, m.hy - r * .4, r * .8, r * .8); ctx.restore(); } }
     if (m.asT && t - m.asT < 1500) { const k = (t - m.asT) / 1500; ctx.save(); ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = Math.min(1, (1 - k) * 2); ctx.font = `italic 800 ${13 * d}px Oxanium, sans-serif`; ctx.textAlign = "center"; ctx.fillStyle = "#5fd8ff"; ctx.strokeStyle = "rgba(0,0,0,.8)"; ctx.lineWidth = 3 * d; ctx.strokeText("ASSIMILATED", E0.x, E0.y - (26 + 16 * k) * d); ctx.fillText("ASSIMILATED", E0.x, E0.y - (26 + 16 * k) * d); ctx.restore(); } /* v678 */
     if (u > 1) continue;
-    if (MIM_TENT[m.a] && alive) { /* tentacles: reach (0-.3), spear and hold (.3-.65), retract */ const n = MIM_TENT[m.a], reach = u < .3 ? u / .3 : u < .65 ? 1 : 1 - (u - .65) / .35, w0 = Lg * (m.a === "grab" ? .2 : .24) * (n === 1 ? 1.2 : 1);
+    if (MIMX_DUR[m.a]) { if (alive) mimAtkX(ctx, b, m, u, S0, E0, Lg, C, gl, d, T, t, scr, hit, pan); }
+    else if (MIM_TENT[m.a] && alive) { /* tentacles: reach (0-.3), spear and hold (.3-.65), retract */ const n = MIM_TENT[m.a], reach = u < .3 ? u / .3 : u < .65 ? 1 : 1 - (u - .65) / .35, w0 = Lg * (m.a === "grab" ? .2 : .24) * (n === 1 ? 1.2 : 1);
       for (let j = 0; j < n; j++) { const off = (j - (n - 1) / 2) * Lg * .25, sx = S0.x + off * .3, sy = S0.y + off, tx = E0.x + off * .15, ty = E0.y + off * .25, ex = sx + (tx - sx) * reach, ey = sy + (ty - sy) * reach;
         ctx.globalAlpha = fade; mimTent(ctx, sx, sy, ex, ey, w0 * (.8 + .2 * Math.cos(j)), Lg * .35 * (u < .3 ? 1 - u / .3 * .6 : .4) * (j % 2 ? -1 : 1), T * 6 + j * 2 + m.seed, C(1)); }
       if (u >= .3) hit(m, E0.x, E0.y, m.a !== "bite");

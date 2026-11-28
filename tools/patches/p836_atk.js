@@ -1,0 +1,101 @@
+/* ---------- v836 every Mimic class its own signature attack (owner: "all Mimics have ultra unique attack animations for each of them") ----------
+   Stalker  pounce : crouches, springs at the prey on an afterimage trail, three hooked grapples bite in, then the jaws snap shut over it.
+   Hunter   reap   : its scythes glint, it dashes clean through the prey, two scythe cuts cross in an X, then the tail stinger arcs over and
+                     stabs down in a burst of venom.
+   Harvester drain : canister-tipped tendrils latch on and the prey's light is pumped back along them into its glowing sac.
+   Assimilator absorb : its reactor wheels spin up, then a double-helix beam locks on and circuitry crawls over the prey (ASSIMILATED if it dies).
+   Guardian bulwark : its two hex shields flare, it charges behind them and bashes the prey, then throws a hex dome over itself and its allies.
+   Brood Titan rend : its brood sacs swell, three huge claws rake the prey, and the sacs burst into a swarm of larvae that hunt the enemy line. */
+const MIMX_DUR = { pounce: 1.05, reap: 1.0, drain: 1.7, absorb: 1.7, bulwark: 1.2, rend: 1.45 };
+const MIMX_SND = { pounce: "whip", reap: "whip", drain: "hum", absorb: "hum", bulwark: "slam", rend: "whip" };
+Object.assign(MIM_DUR, MIMX_DUR); Object.assign(MIM_ATK, { mstalk: "pounce", mhunt: "reap", mharv: "drain", massim: "absorb", mguard: "bulwark", mtitan: "rend" });
+const mimEase = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
+/* how far toward the prey the body moves (negative: away), and how far that is */
+function mimLK(a, u) {
+  if (a === "pounce") return u < .2 ? -mimEase(u / .2) * .35 : u < .45 ? -.35 + 1.35 * mimEase((u - .2) / .25) : u < .7 ? 1 : 1 - mimEase((u - .7) / .3);
+  if (a === "reap") return u < .15 ? -mimEase(u / .15) * .25 : u < .4 ? -.25 + 1.55 * mimEase((u - .15) / .25) : u < .55 ? 1.3 : 1.3 * (1 - mimEase((u - .55) / .45));
+  if (a === "bulwark") return u < .3 ? -mimEase(u / .3) * .15 : u < .52 ? -.15 + 1.05 * mimEase((u - .3) / .22) : u < .65 ? .9 : .9 * (1 - mimEase((u - .65) / .35));
+  if (a === "rend") return u < .25 ? -mimEase(u / .25) * .3 : u < .42 ? -.3 + 1.2 * mimEase((u - .25) / .17) : u < .55 ? .9 : .9 * (1 - mimEase((u - .55) / .45));
+  if (a === "drain") return u < .3 ? 0 : u < .9 ? -.12 * Math.sin(Math.PI * (u - .3) / .6) : 0;
+  if (a === "absorb") return u < .4 ? -.06 * Math.sin(u * 60) * (u / .4) : 0;
+  return 0; }
+function mimLR(a, dl, Lg) { return a === "reap" ? Math.min(dl * .62, Lg * 2.4) : a === "pounce" ? Math.min(dl * .55, Lg * 1.6) : a === "bulwark" ? Math.min(dl * .45, Lg * 1.2) : a === "rend" ? Math.min(dl * .45, Lg * 1.1) : Math.min(dl * .35, Lg * .6); }
+function mimHex(ctx, x, y, r) { ctx.moveTo(x + r, y); for (let i = 1; i <= 6; i++) ctx.lineTo(x + Math.cos(i * TAU / 6) * r, y + Math.sin(i * TAU / 6) * r); }
+/* a hexagon-latticed shield: an upright ellipse at (x, y), lit by k */
+function mimShield(ctx, x, y, rx, ry, col, k, d, T, cell, rim = 1) { ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.clip();
+  ctx.globalAlpha = .18 * k; ctx.fillStyle = col(1); ctx.fillRect(x - rx, y - ry, rx * 2, ry * 2);
+  const h = cell || Math.max(4 * d, ry * .22); ctx.globalAlpha = .75 * k; ctx.strokeStyle = col(1); ctx.lineWidth = 1.3 * d; ctx.beginPath();
+  const nj = Math.ceil(ry / (h * 1.7)) + 1, ni = Math.ceil(rx / (h * 1.5)) + 1; for (let j = -nj; j <= nj; j++) for (let i = -ni; i <= ni; i++) { const cx = x + i * h * 1.5, cy = y + j * h * 1.732 + (i % 2 ? h * .866 : 0); mimHex(ctx, cx, cy, h * .92); } ctx.stroke();
+  const sw = ((T * .9) % 1) * ry * 2.6 - ry * 1.3; const g = ctx.createLinearGradient(0, y + sw - h, 0, y + sw + h); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(.5, "rgba(255,255,255,.55)"); g.addColorStop(1, "rgba(255,255,255,0)"); ctx.globalAlpha = k; ctx.fillStyle = g; ctx.fillRect(x - rx, y + sw - h, rx * 2, h * 2); ctx.restore();
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = k * (rim ? 1 : .5); ctx.strokeStyle = rim ? "rgba(255,214,120,1)" : col(1); ctx.lineWidth = (rim ? 3 : 1.5) * d; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.stroke(); ctx.restore(); }
+/* a scythe crescent through (x, y) at angle a, drawn up to fraction k, fading by f */
+function mimCrescent(ctx, x, y, R, a, k, f, col, d) { if (k <= 0 || f <= 0) return; ctx.save(); ctx.globalCompositeOperation = "lighter"; const a0 = a - 1.1, a1 = a0 + 2.2 * k;
+  for (const [w, c, al] of [[16, col(1), .35], [8, col(1), .7], [3, "rgba(255,255,255,1)", 1]]) { ctx.globalAlpha = al * f; ctx.strokeStyle = c; ctx.lineWidth = w * d * (.6 + .4 * f); ctx.beginPath(); ctx.arc(x - Math.cos(a) * R * .55, y - Math.sin(a) * R * .55, R, a0, a1); ctx.stroke(); } ctx.restore(); }
+function mimAtkX(ctx, b, m, u, S0, E0, Lg, C, gl, d, T, t, scr, hit, pan) {
+  const dx = E0.x - S0.x, dy = E0.y - S0.y, dl = Math.hypot(dx, dy) || 1, ux = dx / dl, uy = dy / dl, nx = -uy, ny = ux, an = Math.atan2(dy, dx);
+  ctx.save(); ctx.globalCompositeOperation = "lighter";
+  if (m.a === "pounce") {
+    if (u < .22) { const k = u / .22; ctx.globalAlpha = .5 + .5 * k; for (const s of [-1, 1]) { const r = Lg * (.08 + .06 * k); ctx.drawImage(gl, S0.x + ux * Lg * .45 + nx * s * Lg * .1 - r, S0.y + uy * Lg * .45 + ny * s * Lg * .1 - r, r * 2, r * 2); } /* the eyes flare as it crouches */
+      ctx.globalAlpha = k * .6; ctx.strokeStyle = C(1); ctx.lineWidth = 2 * d; ctx.beginPath(); ctx.ellipse(S0.x, S0.y, Lg * (1.1 - .6 * k), Lg * (.55 - .3 * k), an, 0, TAU); ctx.stroke(); m.ox = S0.x; m.oy = S0.y; }
+    if (u >= .2 && u < .75 && m.ox != null) { const k = Math.min(1, (u - .2) / .25), f = u < .55 ? 1 : 1 - (u - .55) / .2; for (let j = 1; j <= 4; j++) { const q = 1 - j * .22; if (q <= 0) continue; const x = m.ox + (S0.x - m.ox) * q * k, y = m.oy + (S0.y - m.oy) * q * k, r = Lg * .5 * (1 - j * .15); ctx.globalAlpha = .28 * f * (1 - j * .2); ctx.drawImage(gl, x - r, y - r * .6, r * 2, r * 1.2); } /* afterimages */
+      ctx.globalAlpha = .5 * f; ctx.strokeStyle = C(1); ctx.lineWidth = 5 * d; ctx.beginPath(); ctx.moveTo(m.ox, m.oy); ctx.lineTo(m.ox + (S0.x - m.ox) * k, m.oy + (S0.y - m.oy) * k); ctx.stroke(); }
+    if (u > .25 && u < .9) { const reach = u < .42 ? (u - .25) / .17 : u < .7 ? 1 : 1 - (u - .7) / .2; ctx.globalCompositeOperation = "source-over";
+      for (let j = 0; j < 3; j++) { const off = (j - 1) * Lg * .28, sx = S0.x + ux * Lg * .3 + nx * off * .4, sy = S0.y + uy * Lg * .3 + ny * off * .4, tx = E0.x + nx * off * .5, ty = E0.y + ny * off * .5, ex = sx + (tx - sx) * reach, ey = sy + (ty - sy) * reach;
+        mimTent(ctx, sx, sy, ex, ey, Lg * .14, Lg * .25 * (j - 1 || .6), T * 7 + j * 2, C(1));
+        ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.strokeStyle = "rgba(230,250,255,1)"; ctx.lineWidth = 2.2 * d; ctx.beginPath(); for (const s of [-1, 1]) { ctx.moveTo(ex, ey); ctx.quadraticCurveTo(ex + ux * Lg * .12 + nx * s * Lg * .12, ey + uy * Lg * .12 + ny * s * Lg * .12, ex - ux * Lg * .02 + nx * s * Lg * .2, ey - uy * Lg * .02 + ny * s * Lg * .2); } ctx.stroke(); ctx.restore(); } /* the hooks */
+      ctx.globalCompositeOperation = "lighter"; }
+    if (u >= .45 && u < .8) { const k = Math.min(1, (u - .45) / .12), f = u < .62 ? 1 : 1 - (u - .62) / .18, R = Lg * .75, gap = R * .9 * (1 - k); if (k >= 1) { hit(m, E0.x, E0.y, true); if (!m.s2) { m.s2 = 1; mimSfx("slam", pan); } }
+      for (const s of [-1, 1]) { const cy = s * (gap + R * .12); ctx.globalAlpha = f; ctx.strokeStyle = C(1); ctx.lineWidth = 4 * d; ctx.beginPath(); const x0 = E0.x - ux * R * .2, y0 = E0.y - uy * R * .2; ctx.ellipse(x0 + nx * cy, y0 + ny * cy, R, R * .32, an, s > 0 ? Math.PI : 0, s > 0 ? TAU : Math.PI); ctx.stroke();
+        ctx.fillStyle = "rgba(235,250,255,1)"; for (let i = 0; i < 7; i++) { const a = (s > 0 ? Math.PI : 0) + (i + .5) / 7 * Math.PI, ex = Math.cos(a) * R, ey = Math.sin(a) * R * .32, px = x0 + nx * cy + ex * ux + ey * nx, py = y0 + ny * cy + ex * uy + ey * ny, L2 = Lg * (.13 - Math.abs(i - 3) * .02); ctx.beginPath(); ctx.moveTo(px + ux * L2 * .25, py + uy * L2 * .25); ctx.lineTo(px - ux * L2 * .25, py - uy * L2 * .25); ctx.lineTo(px - nx * s * L2, py - ny * s * L2); ctx.fill(); } } /* fanged jaws closing */
+      if (k >= 1) { const r = Lg * (.4 + .6 * (1 - f)); ctx.globalAlpha = f; ctx.drawImage(glowSprite("#ffffff"), E0.x - r * .5, E0.y - r * .5, r, r); } } }
+  else if (m.a === "reap") {
+    if (u < .18) { const k = u / .18; for (const s of [-1, 1]) mimCrescent(ctx, S0.x + ux * Lg * .5 + nx * s * Lg * .25, S0.y + uy * Lg * .5 + ny * s * Lg * .25, Lg * .45, an + s * .9, 1, k * .6, C, d); m.ox = S0.x; m.oy = S0.y; } /* the scythes glint, raised */
+    if (u >= .15 && u < .6 && m.ox != null) { const f = u < .45 ? 1 : 1 - (u - .45) / .15; ctx.globalAlpha = .55 * f; ctx.strokeStyle = C(1); for (let j = -2; j <= 2; j++) { ctx.lineWidth = (3 - Math.abs(j)) * d; ctx.beginPath(); ctx.moveTo(m.ox + nx * j * Lg * .15, m.oy + ny * j * Lg * .15); ctx.lineTo(S0.x - ux * Lg * .3 + nx * j * Lg * .15, S0.y - uy * Lg * .3 + ny * j * Lg * .15); ctx.stroke(); } } /* the dash's speed lines */
+    if (u >= .32) { const k = clamp((u - .32) / .12, 0, 1), f = u < .6 ? 1 : Math.max(0, 1 - (u - .6) / .3); if (k > .5) { hit(m, E0.x, E0.y, true); if (!m.s2) { m.s2 = 1; mimSfx("slam", pan); } }
+      mimCrescent(ctx, E0.x, E0.y, Lg * .7, an - .8, k, f, C, d); mimCrescent(ctx, E0.x, E0.y, Lg * .7, an + .8 + Math.PI, clamp(k * 1.4 - .4, 0, 1), f, C, d); /* the X */
+      if (k > .5 && f > 0) for (let j = 0; j < 10; j++) { const a = j * 2.4 + m.seed, q = (u - .38) * 3, r = Lg * (.2 + q * .9); ctx.globalAlpha = f * .8; ctx.fillStyle = "rgba(240,252,255,1)"; ctx.fillRect(E0.x + Math.cos(a) * r, E0.y + Math.sin(a) * r * .7, 2.4 * d, 2.4 * d); } }
+    if (u >= .55 && u < 1) { const k = clamp((u - .55) / .18, 0, 1), hx = S0.x - ux * Lg * .6, hy = S0.y - Lg * 1.5, cx = (hx + E0.x) / 2, cy = Math.min(hy, E0.y) - Lg * 1.1, x = (1 - k) * (1 - k) * hx + 2 * (1 - k) * k * cx + k * k * E0.x, y = (1 - k) * (1 - k) * hy + 2 * (1 - k) * k * cy + k * k * E0.y; /* the tail stinger */
+      if (k < 1) { ctx.globalAlpha = .9; ctx.strokeStyle = "rgba(150,255,190,1)"; ctx.lineWidth = 3 * d; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.quadraticCurveTo(hx + (cx - hx) * k, hy + (cy - hy) * k, x, y); ctx.stroke(); const r = Lg * .2; ctx.drawImage(glowSprite("rgba(150,255,190,1)"), x - r, y - r, r * 2, r * 2); }
+      else { if (!m.s3) { m.s3 = 1; b.shake = Math.max(b.shake || 0, 6 * d); mimSfx("hiss", pan); } const q = (u - .73) / .27; for (let j = 0; j < 9; j++) { const a = j * .7 + m.seed - Math.PI / 2, r = Lg * .6 * q; ctx.globalAlpha = (1 - q) * .9; ctx.drawImage(glowSprite("rgba(150,255,190,1)"), E0.x + Math.cos(a) * r - 4 * d, E0.y + Math.sin(a) * r * .6 + q * q * 14 * d - 4 * d, 8 * d, 8 * d); } } } }
+  else if (m.a === "drain") { const n = 4, reach = u < .28 ? mimEase(u / .28) : u < .88 ? 1 : 1 - mimEase((u - .88) / .12); if (u >= .28) hit(m, E0.x, E0.y, false);
+    const P = []; ctx.globalCompositeOperation = "source-over";
+    for (let j = 0; j < n; j++) { const off = (j - (n - 1) / 2) * Lg * .22, sx = S0.x + ux * Lg * .4 + nx * off * .5, sy = S0.y + uy * Lg * .4 + ny * off * .5 + Lg * .12, tx = E0.x + nx * off * .6, ty = E0.y + ny * off * .6, ex = sx + (tx - sx) * reach, ey = sy + (ty - sy) * reach;
+      mimTent(ctx, sx, sy, ex, ey, Lg * .12, Lg * .18 * (j % 2 ? -1 : 1), T * 3 + j, C(1)); P.push([sx, sy, ex, ey]);
+      ctx.save(); ctx.translate(ex, ey); ctx.rotate(an); ctx.fillStyle = "rgba(10,18,26,.95)"; ctx.fillRect(-Lg * .1, -Lg * .06, Lg * .2, Lg * .12); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .5 + .5 * Math.min(1, u * 1.5); ctx.fillStyle = C(1); ctx.fillRect(-Lg * .08, -Lg * .04, Lg * .16, Lg * .08); ctx.strokeStyle = "rgba(220,230,240,1)"; ctx.lineWidth = 1.2 * d; for (const xx of [-.09, 0, .09]) { ctx.beginPath(); ctx.moveTo(xx * Lg, -Lg * .07); ctx.lineTo(xx * Lg, Lg * .07); ctx.stroke(); } ctx.restore(); } /* the canisters */
+    ctx.globalCompositeOperation = "lighter";
+    if (u > .32 && u < .92) { const fl = Math.min(1, (u - .32) / .1) * Math.min(1, (.92 - u) / .1); for (const [sx, sy, ex, ey] of P) for (let i = 0; i < 5; i++) { const q = 1 - (((u - .32) * 2.2 + i / 5) % 1), x = sx + (ex - sx) * q, y = sy + (ey - sy) * q + Math.sin(q * 9 + i) * Lg * .04, r = Lg * .07; ctx.globalAlpha = fl; ctx.drawImage(gl, x - r, y - r, r * 2, r * 2); } /* the prey's light, pumped home */
+      ctx.globalAlpha = fl * .7; ctx.strokeStyle = C(1); ctx.lineWidth = 2 * d; const rr = Lg * (.7 - .4 * ((u * 2.5) % 1)); ctx.beginPath(); ctx.ellipse(E0.x, E0.y, rr, rr * .5, 0, 0, TAU); ctx.stroke();
+      const sw = Lg * (.35 + .35 * (u - .32) / .6); ctx.globalAlpha = .4 + .5 * fl; ctx.drawImage(gl, S0.x - sw, S0.y - sw, sw * 2, sw * 2); } /* the sac swells */ }
+  else if (m.a === "absorb") {
+    const sp = u < .4 ? u / .4 : 1, f = u < .85 ? 1 : 1 - (u - .85) / .15;
+    for (const [R, n, dir] of [[Lg * .55, 14, 1], [Lg * .35, 9, -1]]) { ctx.globalAlpha = (.4 + .6 * sp) * f; ctx.strokeStyle = C(1); ctx.lineWidth = 3 * d; const rot = dir * T * (2 + 10 * sp * sp);
+      for (let i = 0; i < n; i++) { const a = rot + i / n * TAU; ctx.beginPath(); ctx.arc(S0.x, S0.y, R, a, a + TAU / n * .62); ctx.stroke(); } } /* the reactor wheel spinning up */
+    const cr = Lg * (.15 + .25 * sp); ctx.globalAlpha = f; ctx.drawImage(gl, S0.x - cr * 2, S0.y - cr * 2, cr * 4, cr * 4); ctx.drawImage(glowSprite("#ffffff"), S0.x - cr * .5, S0.y - cr * .5, cr, cr);
+    if (u < .4) for (let j = 0; j < 12; j++) { const a = j * 2.39996 + m.seed + T * 3, q = 1 - ((u * 3 + j / 12) % 1), R = Lg * 1.3 * q; ctx.globalAlpha = .8 * (1 - q); ctx.fillStyle = C(1); ctx.fillRect(S0.x + Math.cos(a) * R, S0.y + Math.sin(a) * R * .7, 2.5 * d, 2.5 * d); }
+    if (u >= .4) { hit(m, E0.x, E0.y, false); const k = Math.min(1, (u - .4) / .1); const ex = S0.x + dx * k, ey = S0.y + dy * k;
+      ctx.globalAlpha = .9 * f; ctx.strokeStyle = "rgba(255,255,255,1)"; ctx.lineWidth = 2 * d; ctx.beginPath(); ctx.moveTo(S0.x, S0.y); ctx.lineTo(ex, ey); ctx.stroke();
+      for (const s of [-1, 1]) { ctx.strokeStyle = C(1); ctx.lineWidth = 3 * d; ctx.beginPath(); for (let i = 0; i <= 30; i++) { const q = i / 30 * k, w = Math.sin(q * dl / (Lg * .35) - T * 14) * Lg * .14 * s * Math.sin(Math.PI * Math.min(1, q * 1.2)), x = S0.x + dx * q + nx * w, y = S0.y + dy * q + ny * w; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); } /* the double helix */
+      if (k >= 1) { const gr = Lg * .9 * Math.min(1, (u - .5) / .3), rnd2 = j => (Math.sin(m.seed * 9.1 + j * 37.7) * 43758.5) % 1; ctx.lineWidth = 1.6 * d; ctx.strokeStyle = C(1); ctx.globalAlpha = .9 * f; ctx.beginPath();
+        for (let j = 0; j < 18; j++) { let x = E0.x + rnd2(j) * gr, y = E0.y + rnd2(j + 50) * gr * .45; ctx.moveTo(x, y); for (let s2 = 0; s2 < 3; s2++) { if ((j + s2) % 2) x += (rnd2(j * 3 + s2) > 0 ? 1 : -1) * gr * .2; else y += (rnd2(j * 5 + s2) > 0 ? 1 : -1) * gr * .12; ctx.lineTo(x, y); } } ctx.stroke();
+        for (let j = 0; j < 6; j++) { const x = E0.x + rnd2(j + 90) * gr, y = E0.y + rnd2(j + 120) * gr * .45; ctx.fillStyle = C(1); ctx.fillRect(x - 2 * d, y - 2 * d, 4 * d, 4 * d); } /* data nodes lighting */
+        if (!(b.n[m.e] > 0) && !m.as) { m.as = 1; m.asT = t; } } } }
+  else if (m.a === "bulwark") {
+    const up = u < .3 ? mimEase(u / .3) : u < .7 ? 1 : 1 - mimEase((u - .7) / .3);
+    for (const s of [-1, 1]) mimShield(ctx, S0.x - ux * Lg * .1 + nx * s * Lg * .55, S0.y - uy * Lg * .1 + ny * s * Lg * .55 - Lg * .1, Lg * .27, Lg * .42, C, up * .85, d, T); /* the shields flare at its flanks */
+    if (u > .3 && u < .7) { const k = (u - .3) / .4, f = Math.min(1, k * 4) * (u < .6 ? 1 : 1 - (u - .6) / .1); ctx.globalAlpha = f; ctx.strokeStyle = C(1); ctx.lineWidth = 2 * d; ctx.beginPath(); const fx = S0.x + ux * Lg * .7, fy = S0.y + uy * Lg * .7; for (let j = -3; j <= 3; j++) { const bend = Math.abs(j) * Lg * .06; mimHex(ctx, fx - ux * bend + nx * j * Lg * .16, fy - uy * bend + ny * j * Lg * .16, Lg * .09); } ctx.stroke(); ctx.globalAlpha = f * .35; ctx.fillStyle = C(1); ctx.fill(); } /* the shield wall in front as it charges */
+    if (u >= .5) { hit(m, E0.x, E0.y, true); if (!m.s2) { m.s2 = 1; b.shake = Math.max(b.shake || 0, 16 * d); } const q = (u - .5) / .4; if (q < 1) for (let j = 0; j < 12; j++) { const a = j * .52 + m.seed, r = Lg * (.2 + q * 1.2); ctx.globalAlpha = 1 - q; ctx.strokeStyle = C(1); ctx.lineWidth = 1.5 * d; ctx.beginPath(); mimHex(ctx, E0.x + Math.cos(a) * r, E0.y + Math.sin(a) * r * .6, Lg * .06 * (1 - q * .5)); ctx.stroke(); } } /* hex shards */
+    if (u >= .62) { const q = (u - .62) / .38, f = Math.sin(Math.PI * q), side = b.Q[m.s].side; const al = [m.s]; for (let j = 0; j < b.Q.length && al.length < 3; j++) if (j !== m.s && b.Q[j] && b.Q[j].side === side && b.n[j] > 0 && scr[j] && scr[j] !== S0) al.push(j);
+      for (const j of al) { const P = scr[j]; if (!P) continue; const g2 = b.geo && b.geo[j], r = (g2 ? g2.L : Lg) * .7; mimShield(ctx, P.x, P.y, r, r * .62, C, f * .55, d, T, Math.max(5 * d, Lg * .07), 0); } } /* the hex dome over the hive's own */ }
+  else if (m.a === "rend") { const V = "rgba(190,120,255,1)", vg = glowSprite(V);
+    if (u < .3) { const k = u / .3; for (let j = 0; j < 6; j++) { const a = j * 1.05 + m.seed, r = Lg * (.12 + .08 * Math.sin(T * 9 + j)) * (.6 + .6 * k); ctx.globalAlpha = .4 + .6 * k; ctx.drawImage(vg, S0.x + Math.cos(a) * Lg * .5 - r, S0.y + Math.sin(a) * Lg * .25 - r, r * 2, r * 2); } } /* the brood sacs swell */
+    if (u >= .38 && u < .75) { const k = clamp((u - .38) / .12, 0, 1), f = u < .6 ? 1 : 1 - (u - .6) / .15; if (k >= .6) { hit(m, E0.x, E0.y, true); if (!m.s2) { m.s2 = 1; mimSfx("slam", pan); } }
+      const gp = b.geo && b.geo[m.e], R = clamp((gp ? gp.L : Lg * .5) * 1.1, 26 * d, Lg * .55), ca = -.6 * Math.sign(ux || 1), cx_ = Math.cos(ca), cy_ = Math.sin(ca), px_ = -cy_, py_ = cx_;
+      for (let j = -1; j <= 1; j++) { const ox = E0.x + px_ * j * R * .32, oy = E0.y + py_ * j * R * .32; for (const [w, c, al] of [[10, C(1), .35], [5, C(1), .7], [2, "rgba(255,255,255,1)", 1]]) { ctx.globalAlpha = al * f; ctx.strokeStyle = c; ctx.lineWidth = w * d * (1 - Math.abs(j) * .2); ctx.beginPath();
+        const x0 = ox - cx_ * R, y0 = oy - cy_ * R, x1 = ox + cx_ * R, y1 = oy + cy_ * R, q = k, mx = ox + px_ * R * .25, my = oy + py_ * R * .25, ex = (1 - q) * (1 - q) * x0 + 2 * (1 - q) * q * mx + q * q * x1, ey = (1 - q) * (1 - q) * y0 + 2 * (1 - q) * q * my + q * q * y1;
+        ctx.moveTo(x0, y0); ctx.quadraticCurveTo(x0 + (mx - x0) * q, y0 + (my - y0) * q, ex, ey); ctx.stroke(); } } } /* three great claws rake it */
+    if (u >= .5) { if (!m.fo) { m.fo = [m.e]; const side = b.Q[m.s].side; for (let j = 0; j < b.Q.length && m.fo.length < 3; j++) if (j !== m.e && b.Q[j] && b.Q[j].side !== side && b.n[j] > 0) m.fo.push(j); if (!m.s3) { m.s3 = 1; mimSfx("hum", pan); } }
+      for (let i = 0; i < 15; i++) { const tg = scr[m.fo[i % m.fo.length]] || E0, st = .5 + (i % 5) * .04, q = clamp((u - st) / .35, 0, 1); if (q <= 0) continue; const ox = S0.x + Math.cos(i * 2.1 + m.seed) * Lg * .45, oy = S0.y + Math.sin(i * 2.1 + m.seed) * Lg * .22, cx = (ox + tg.x) / 2 + Math.sin(i * 1.7) * Lg * 1.2, cy = (oy + tg.y) / 2 + Math.cos(i * 2.3) * Lg * .9;
+        if (q < 1) { const x = (1 - q) * (1 - q) * ox + 2 * (1 - q) * q * cx + q * q * tg.x, y = (1 - q) * (1 - q) * oy + 2 * (1 - q) * q * cy + q * q * tg.y, q2 = Math.max(0, q - .08), x2 = (1 - q2) * (1 - q2) * ox + 2 * (1 - q2) * q2 * cx + q2 * q2 * tg.x, y2 = (1 - q2) * (1 - q2) * oy + 2 * (1 - q2) * q2 * cy + q2 * q2 * tg.y;
+          ctx.globalAlpha = .9; ctx.strokeStyle = V; ctx.lineWidth = 2 * d; ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x, y); ctx.stroke(); const r = Lg * .08; ctx.drawImage(vg, x - r, y - r, r * 2, r * 2); }
+        else { const p = clamp((u - st - .35) / .15, 0, 1); if (p < 1) { const r = Lg * (.08 + .25 * p); ctx.globalAlpha = 1 - p; ctx.strokeStyle = V; ctx.lineWidth = 2 * d; ctx.beginPath(); ctx.arc(tg.x + Math.sin(i * 3.1) * Lg * .2, tg.y + Math.cos(i * 2.7) * Lg * .12, r, 0, TAU); ctx.stroke(); } } } } /* the larvae swarm and pop */ }
+  ctx.restore(); }
