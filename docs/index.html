@@ -8446,7 +8446,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 842;
+const GAME_V = 843;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9070,9 +9070,9 @@ for (const [k, t] of Object.entries({ ps8: 11, ps12: 11, ps2: 12, ps10: 12, ps6:
 /* v842 by silhouette: plain spheres are Uncommon; the more a world breaks out of its sphere (spikes, rings, cannons, faces, a dragon,
    floating islands), the higher it sits. The four forged event worlds (drawn in code, no painting yet) stay Mythic. */
 const PX_BAND_OF = {}; [["aurora dune lavalamp abyss plague ruins kraken stormtitan frostfire ghost"],
-  ["atoll singular magma obsidian eden mirror hive tidal rust reef hellgate pr1 pr2 pr4 pr6 pr8 aeon ruin sphinx petrified omen"],
-  ["venom bonemoon ruby phoenix solar"], ["spire sapphire ember forge pearl saturn lattice clockwork countdown"],
-  ["dread warsphere cyber colossus amethyst aurum inferno watcher bloom nigiri"], ["glacier shatter thunder garden emerald abyssreef cntdebris mimichive signal pr3"]].forEach(([l], i) => l.split(" ").forEach(k => PX_BAND_OF[k] = i));
+  ["atoll singular obsidian eden mirror hive tidal rust reef pr1 pr2 pr4 pr6 pr8 aeon ruin sphinx petrified omen"],
+  ["venom bonemoon ruby phoenix solar"], ["spire sapphire ember forge pearl saturn lattice clockwork countdown magma"],
+  ["dread warsphere cyber colossus amethyst aurum inferno watcher bloom nigiri"], ["glacier shatter thunder garden emerald hellgate abyssreef cntdebris mimichive signal pr3"]].forEach(([l], i) => l.split(" ").forEach(k => PX_BAND_OF[k] = i));
 function pxPremKeep(k) { if (!S) return false; if (!S.pxPKV) { try { const t0 = premT(), K = {}; for (const q in PREM_OLD) if (t0 >= PREM_OLD[q]) K[q] = 1; if (typeof myPlanets === "function") for (const p of myPlanets()) if (p && p.px) K[p.px] = 1; S.pxPK = Object.assign({}, S.pxPK, K); S.pxPKV = 1; dirty(); } catch (e) {} } return !!(S.pxPK || {})[k]; }
 const PX_DIR = "skins/";
 /* v238: how much of a painting the world fills (its radius over the frame). Ringed skins paint the world smaller so the whole ring fits */
