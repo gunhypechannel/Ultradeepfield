@@ -195,6 +195,20 @@ def kraken(M):
     M.add('beak', lambda p: spike(p, (.2, 0, 0), (.75, 0, 0), .18), C['TIP'])
 
 if __name__ == '__main__':
+    # v859 every ship: a glow layer (its lit parts grown a little, baked to <path>_g) and faint light in the cracks between its plates
+    from crc_boss import worley
+    _bk = Model.bake
+    def _bake(self, path, pt=None):
+        def pt2(P, N, A, E, idx):
+            pt(P, N, A, E, idx); lit = E[:, :3].sum(1) > .05; cv = worley(P, .55); g = (cv < .008) & ~lit & (N[:, 1] > -.3)
+            gc = np.array(TINT.get(SHIP.get(sys.argv[1], {}).get('t', 'steel'), TINT['steel'])[3], np.float32); E[g, :3] = gc * .35; A[g, :3] *= .3
+        _bk(self, path, pt2 if pt else None)
+        G = Model(self.lo, self.hi, self.vox * 2)
+        for (n, f, m, kk) in self.parts + self.carves:
+            e = m.get('e')
+            if e and sum(e) > .5: G.add(n, lambda p, f=f: f(p) - .05, {'c': (0, 0, 0), 'r': .2, 'm': 0, 'e': tuple(x * .14 for x in e)})
+        if G.parts: _bk(G, path + '_g', None)
+    Model.bake = _bake
     if sys.argv[1] == 'ckrak':
         M = Model((-3.8, -2.6, -2.8), (4.8, 2.6, 2.8), float(sys.argv[3]) if len(sys.argv) > 3 else .035); kraken(M); M.bake(sys.argv[2], paint); sys.exit()
     k = sys.argv[1]; P = dict(SHIP[k]); P['k'] = k; vox = float(sys.argv[3]) if len(sys.argv) > 3 else .035

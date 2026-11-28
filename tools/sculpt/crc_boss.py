@@ -26,6 +26,16 @@ BT = {
     'cpal': ((.1, .14, .17), (.78, .9, .95), (.85, .97, 1.0), (.3, 1.7, 2.2), (.95, 1.0, 1.0)),
     'ccrown': ((.03, .02, .01), (.5, .34, .08), (1.0, .78, .3), (.25, 1.7, 2.0), (1.0, .88, .5)),
     'ccrownm': ((.08, .1, .12), (.6, .7, .76), (.8, .92, .98), (.3, 1.6, 2.0), (.95, 1.0, 1.0)),
+    # v859 the wave crabs, after their paintings (docs/art/carcinid/drone, spitter, harvester ...): bronze and copper armour, cyan light
+    'cscut': ((.03, .025, .03), (.3, .17, .08), (.85, .6, .3), (.15, 1.6, 1.8), (.95, .8, .5)),
+    'cspit': ((.04, .02, .05), (.32, .14, .18), (.85, .55, .35), (.2, 1.5, 1.8), (.95, .8, .6)),
+    'charv': ((.03, .03, .04), (.25, .2, .12), (.85, .65, .3), (.2, 1.7, 1.6), (.95, .85, .5)),
+    'cguard': ((.02, .025, .04), (.12, .14, .2), (.7, .6, .45), (.15, 1.4, 2.0), (.9, .85, .7)),
+    'cbrood': ((.05, .01, .05), (.45, .12, .4), (.9, .55, .7), (1.6, .35, 1.9), (.98, .8, .9)),
+    'cwar': ((.04, .02, .02), (.38, .16, .08), (.9, .55, .25), (.2, 1.5, 1.7), (.95, .75, .45)),
+    'ccrys': ((.03, .03, .05), (.3, .22, .16), (.85, .7, .45), (.25, 1.8, 2.1), (.9, .95, 1.0)),
+    'clanc': ((.04, .02, .03), (.4, .2, .12), (.9, .6, .3), (.9, 1.6, .4), (.95, .8, .5)),
+    'cmolt': ((.05, .02, .05), (.4, .15, .35), (.9, .6, .5), (1.7, .6, .9), (.98, .85, .8)),
 }
 def bmats(k, t):
     sh, pl, rim, gl, ac = BT[k]; gl = tuple(x * .5 for x in gl); C = mats(t)
@@ -102,7 +112,7 @@ def claw(M, G, n, c, fwd, kk, C, GL, GG, s):
 
 def boss(M, G, P, k):
     C = bmats(k, P.get('t')); w, l, h, kk, th = P['w'], P['l'], P['h'], P['kk'], P['th']; yb = .1
-    GL = C['GLOW']; GG = M_((0, 0, 0), .2, 0, tuple(x * .22 for x in BT[k][3]))
+    GL = C['GLOW']; GG = M_((0, 0, 0), .2, 0, tuple(x * .12 for x in BT[k][3]))
     # the carapace: a broad armoured dome over a dark core lit from within; the dome is cracked into plates (Voronoi cells over its
     # surface) and light burns in every crack; each plate's rear edge lifts a little, and a keel of blades runs down the middle
     top = yb + h * 1.08; SC = (-.05, yb + h * .15, 0); SR = (l * 1.08, top - yb - h * .15, w * 1.06)
@@ -119,7 +129,7 @@ def boss(M, G, P, k):
     pts = np.array(pts, np.float32)
     def cells(p):  # half the gap between the nearest two cell centres, measured over the dome's plan
         q = p[..., [0, 2]]; d = np.sqrt(((q[..., None, :] - pts) ** 2).sum(-1)); d.sort(-1); return (d[..., 1] - d[..., 0]) * .5
-    CRK.update(pl=C['PLATE'], cells=cells, shell=len(M.parts) - 1, glow=tuple(x * .4 for x in BT[k][3]), gcol=tuple(x * .08 for x in BT[k][3]))  # the cracks are painted (bpaint)
+    CRK.update(pl=C['PLATE'], cells=cells, shell=len(M.parts) - 1, glow=tuple(x * .28 for x in BT[k][3]), gcol=tuple(x * .08 for x in BT[k][3]))  # the cracks are painted (bpaint)
     # the rim: long blades all round the shield's edge, the front corners curling forward like horns
     nr = P.get('rim', 16)
     for j in range(nr):
@@ -171,7 +181,7 @@ def boss(M, G, P, k):
             mid = lerp(a, kn, .5); blade(M, f'ls{s}{i}', (mid[0], mid[1] + .05, mid[2]), norm((-.2, 1, s * .5)), .26, .05 * th, C['RIM'], flat=3)
             mid = lerp(kn, an, .45); blade(M, f'ls2{s}{i}', mid, norm((-.4, .3, s)), .22, .045 * th, C['RIM'], flat=3)
     # a heart of light under the shell (the glow layer carries it through the seams)
-    G.add('gcore', lambda p: ell(p, (0, yb + h * .35, 0), (l * .7, h * .5, w * .6)), M_((0, 0, 0), .2, 0, tuple(x * .08 for x in BT[k][3])))
+    G.add('gcore', lambda p: ell(p, (0, yb + h * .35, 0), (l * .7, h * .5, w * .6)), M_((0, 0, 0), .2, 0, tuple(x * .04 for x in BT[k][3])))
     sig(M, G, P, C, k, yb, top, dome, GG)
     extras(M, P, C, yb)
     return C
