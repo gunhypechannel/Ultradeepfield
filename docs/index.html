@@ -8449,7 +8449,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 850;
+const GAME_V = 851;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9073,9 +9073,9 @@ for (const [k, t] of Object.entries({ ps8: 11, ps12: 11, ps2: 12, ps10: 12, ps6:
 /* v842 by silhouette: plain spheres are Uncommon; the more a world breaks out of its sphere (spikes, rings, cannons, faces, a dragon,
    floating islands), the higher it sits. The four forged event worlds (drawn in code, no painting yet) stay Mythic. */
 const PX_BAND_OF = {}; [["aurora dune lavalamp abyss plague ruins kraken stormtitan frostfire ghost"],
-  ["atoll singular obsidian eden mirror hive tidal rust reef pr1 pr2 pr4 pr6 pr8 aeon ruin sphinx petrified omen"],
-  ["venom bonemoon ruby phoenix solar"], ["spire sapphire ember forge pearl saturn lattice clockwork countdown magma"],
-  ["dread warsphere cyber colossus amethyst aurum inferno watcher bloom nigiri"], ["glacier shatter thunder garden emerald hellgate abyssreef cntdebris mimichive signal pr3"]].forEach(([l], i) => l.split(" ").forEach(k => PX_BAND_OF[k] = i));
+  ["atoll obsidian eden mirror reef pr1 pr2 pr4 pr6 aeon omen"],
+  ["venom ruby phoenix solar pr8 tidal rust hive petrified ruin sphinx singular"], ["spire sapphire ember forge pearl saturn lattice clockwork countdown magma bonemoon"],
+  ["dread warsphere cyber colossus amethyst aurum inferno watcher bloom nigiri"], ["glacier shatter thunder garden emerald hellgate abyssreef cntdebris mimichive signal"]].forEach(([l], i) => l.split(" ").forEach(k => PX_BAND_OF[k] = i));
 function pxPremKeep(k) { if (!S) return false; if (!S.pxPKV) { try { const t0 = premT(), K = {}; for (const q in PREM_OLD) if (t0 >= PREM_OLD[q]) K[q] = 1; if (typeof myPlanets === "function") for (const p of myPlanets()) if (p && p.px) K[p.px] = 1; S.pxPK = Object.assign({}, S.pxPK, K); S.pxPKV = 1; dirty(); } catch (e) {} } return !!(S.pxPK || {})[k]; }
 const PX_DIR = "skins/";
 /* v238: how much of a painting the world fills (its radius over the frame). Ringed skins paint the world smaller so the whole ring fits */
@@ -9183,7 +9183,7 @@ function pxPortrait2(id, Z, lay) {
 const PX_BANDS = [[200, "Common", "#9fb3c8", .04, .02], [300, "Uncommon", "#6fe08a", .06, .03], [450, "Rare", "#5fb8ff", .08, .04], [600, "Epic", "#c07aff", .10, .05], [800, "Legendary", "#ffb347", .12, .06], [1000, "Mythic", "#ff5a7a", .15, .08]];
 const PX_MYTHIC = new Set(["aeon", "ruin", "sphinx", "petrified", "omen", "abyssreef", "cntdebris", "mimichive", "countdown", "signal"]);
 function pxBandOf(c, k) { if (PX_BAND_OF[k] != null) return PX_BAND_OF[k]; return PX_MYTHIC.has(k) || c >= 2400 ? 5 : c <= 400 ? 0 : c <= 800 ? 1 : c <= 1200 ? 2 : c <= 1600 ? 3 : 4; }
-function pxPrice() { if (pxPrice.done) return; pxPrice.done = 1; for (const k in PXS) { const s = PXS[k]; if (s.prem || !s.cost) continue; s.band = pxBandOf(s.cost, k); const B = PX_BANDS[s.band]; s.cost = B[0]; s.b = s.r === "all" ? B[4] : B[3]; } }
+function pxPrice() { if (pxPrice.done) return; pxPrice.done = 1; if (PXS.pr3) PXS.pr3.retired = 1; /* v851 a second Frostfire */ for (const k in PXS) { const s = PXS[k]; if (s.prem || !s.cost) continue; s.band = pxBandOf(s.cost, k); const B = PX_BANDS[s.band]; s.cost = B[0]; s.b = s.r === "all" ? B[4] : B[3]; } }
 function pxSorted() { pxPrice(); const E = Object.entries(PXS), shop = E.filter(([k, s]) => !s.prem && !(s.retired && !pxOwned(k))).sort((a, b) => a[1].cost - b[1].cost || a[1].n.localeCompare(b[1].n)), prem = E.filter(([, s]) => s.prem).sort((a, b) => a[1].prem - b[1].prem || a[1].n.localeCompare(b[1].n)), out = []; let last = -1;
   for (const e of shop) { const bd = e[1].band != null ? e[1].band : 0; if (bd !== last) { last = bd; const [c, n, col] = PX_BANDS[bd]; out.push(["~h", `<div class="pxband" style="--bc:${col}"><b>${n}</b><small><span class="shard">◆</span>${fmt(c)} each · +${Math.round(PX_BANDS[bd][3] * 100)}% to one resource or +${Math.round(PX_BANDS[bd][4] * 100)}% to all</small></div>`]); } out.push(e); }
   if (prem.length) out.push(["~h", `<div class="pxband" style="--bc:#ffd25a"><b>Premium worlds</b><small>Unlocked by Premium tier</small></div>`]); return out.concat(prem); }
@@ -24520,11 +24520,11 @@ function cubeSalvage(f) {
    It launches from the nearest world that has enough, or else the one with the most. */
 const recCap = n => cargoOf(n.recycler ? { recycler: n.recycler } : {}) + cargoOf(Object.fromEntries(Object.entries(n).filter(([k]) => k !== "recycler"))) * .5;
 function recPlan(tg, deb) { const T = now(), q = pos(tg, T), one = Math.max(1, cargoOf({ recycler: 1 })), coming = S.fleets.filter(f => f.mission === "recycle" && f.phase === "out" && f.pid === tg.id).reduce((a, f) => a + recCap(f.n), 0), left = Math.max(0, (deb.m || 0) + (deb.c || 0) - coming), need = Math.ceil(left / one);
-  const worlds = myPlanets().map(p => ({ id: p.kind === "home" ? "home" : p.id, p, have: p.kind === "home" ? S.ships.recycler || 0 : (p.garrison || {}).recycler || 0 })).filter(w => w.have > 0 && w.p.id !== tg.id).map(w => { const a = pos(w.p, T); return Object.assign(w, { d: Math.hypot(a.x - q.x, a.y - q.y) }); });
+  const worlds = myPlanets().map(p => ({ id: p.kind === "home" ? "home" : p.id, p, have: p.kind === "home" ? S.ships.recycler || 0 : (p.garrison || {}).recycler || 0 })).filter(w => w.have > 0).map(w => { const a = pos(w.p, T); return Object.assign(w, { d: Math.hypot(a.x - q.x, a.y - q.y) }); });
   const enough = worlds.filter(w => w.have >= need).sort((a, b) => a.d - b.d)[0], best = enough || worlds.sort((a, b) => b.have - a.have)[0]; return { need, coming, from: best || null, n: best ? Math.min(best.have, need) : 0 }; }
 const recBtn = (act, id, tg, deb) => { const r = recPlan(tg, deb); return r.coming && !r.need ? `<button class="btn wide" disabled>Recyclers on the way</button>` : !r.n ? `<button class="btn wide" disabled>No Recyclers · need ${fmt(r.need)}</button><p class="note">Recyclers are built at the Shipyard (Shipyard Lv.4, Combustion Drive Lv.6, Shields Lv.2).</p>` : `<button class="btn wide" data-act="${act}" data-id="${id}" ${canPlay() ? "" : "disabled"}>Send ${fmt(r.n)} Recycler${r.n > 1 ? "s" : ""}${r.n < r.need ? ` of ${fmt(r.need)} needed` : ""} · from ${esc(r.from.p.name)}</button>`; };
 function recycleGo(tg, deb, extra) { if (!canPlay() || slotsFull()) return; const r = recPlan(tg, deb); if (r.coming && !r.need) return toast("Recyclers with enough room are already on the way.");
-  if (!r.n) return toast(`No Recyclers on your other worlds. This field needs ${fmt(r.need)}.`, "warn"); sheet.from = r.from.id; sheet.speed = 100; const n = { recycler: r.n }, f = sendFleet(tg, n, "recycle", extra); if (!f) return; closeSheet();
+  if (!r.n) return toast(`No Recyclers on any of your worlds. This field needs ${fmt(r.need)}.`, "warn"); sheet.from = r.from.id; sheet.speed = 100; const n = { recycler: r.n }, f = sendFleet(tg, n, "recycle", extra); if (!f) return; closeSheet();
   toast(`${fmt(r.n)} Recycler${r.n > 1 ? "s" : ""} launched from ${r.from.p.name}, arriving in ${ftime(f.tt)}.${r.n < r.need ? ` ${fmt(r.need - r.n)} more would clear the field.` : ""}`); }
 const debXCard = x => { const d = x && x.boss && xDeb(x); if (!d) return "";
   return `<div class="card"><b style="font-family:var(--f-display);letter-spacing:.08em">⚙ WRECKAGE FIELD</b><p class="note" style="margin:4px 0">Hulls from the battles here, Collective and ours. It drifts apart in <b data-end="${d.until}">${ftime(d.until - now())}</b>. Send Recyclers to recover it.</p>
