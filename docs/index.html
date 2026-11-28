@@ -8446,7 +8446,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 833;
+const GAME_V = 834;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -27640,7 +27640,7 @@ function cntNetRow(st, T, i) { const [id, nm] = CNT_ARKS[i], a = st.ark[id], B =
   const cmdH = cmds.map(b => { const c = st.cmd[b.id]; return `<span class="${c.dead ? "dn" : c.back > T ? "rb" : ""}">${esc(b.name)}<em>${c.dead ? "gone for good" : c.back > T ? `rebuilt in ${ftime(c.back - T)}` : `${c.res ? `rebuilt ${c.res}×` : "active"}`}</em></span>`; }).join("");
   return `<div class="cntark${a.dead ? " dead" : ""}"><div class="cnth"><b>${esc(nm)}</b><small>${a.dead ? "Destroyed" : `${a.hp}/${B.hp} · ${up ? `shielded by ${up} relay${up > 1 ? "s" : ""}` : "SHIELD DOWN"} · ${a.cap} rebuilds left`}</small>${!a.dead && s >= 3 ? `<button class="btn sm" data-act="cntGo" data-id="${id}">Go</button>` : ""}</div>
     <div class="mimbar cntbar"><i style="width:${a.dead ? 0 : Math.round(a.hp / B.hp * 100)}%"></i></div><div class="cntrel"><small>Relays</small>${relH}</div><div class="cntcmd">${cmdH}</div></div>`; }
-const CNT_ART = { cnint: "interceptor", cnexe: "destroyer", cnasm: "c_cruiser", cndre: "c_dreadnought", cnrel: "c_relay", cnark: "ark_side", cnprime: "c_prime", cneter: "c_eternal" };
+const CNT_ART = { cncor: "c_corvette", cnfab: "c_fabcarrier", cnint: "interceptor", cnexe: "destroyer", cnasm: "c_cruiser", cndre: "c_dreadnought", cnrel: "c_relay", cnark: "ark_side", cnprime: "c_prime", cneter: "c_eternal" };
 const CNT_CD = { cnint: ["A fast machine fighter with one red sensor eye. Patrols and first strikes.", "Stage 1"], cncor: ["Electronic warfare: its dishes jam our shields (Signal Jamming).", "Stage 1"], cnexe: ["Heavy energy guns on synchronised mounts (Coordinated Fire).", "Stage 2"],
   cnfab: ["A shipyard that fights: each one launches three more Interceptors (Drone Fabrication).", "Stage 2"], cnasm: ["Salvage arms and neural processors; it patches its allies (Repair Swarm).", "Stage 4"], cndre: ["A wedge of armour around a crimson reactor that pulses when it dies (Neural Overload).", "Stage 6"],
   cnrel: ["A neural transmission tower that links commanders to their Ark.", "Stage 3"], cnark: ["Reconstruction chambers and fabrication bays: it rebuilds the dead.", "Stage 3"], cneter: ["The elite commander: a flagship that transforms, and has never stayed dead.", "Stage 6"], cnprime: ["The largest machine ever built. The final battle.", "Stage 7"] };
