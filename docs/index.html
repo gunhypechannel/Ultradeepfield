@@ -5828,12 +5828,14 @@ function shCarcinid() { const T = now(), M = crcS(), w = crcWeek(T), c = crcCloc
 /* the Battle Lab */
 const CRC_LAB = [["crc1", "Breach Zone · Stage 1", () => ({ cnest: 1, cscut: 7, charv: 1, cspit: 1 })], ["crc2", "Breach Zone · Stage 2", () => ({ cnest: 1, cscut: 8, charv: 1, cspit: 3, cguard: 2, cfrig: 1 })],
   ["crc3", "Breach Zone · Stage 3", () => ({ cnest: 1, cscut: 11, charv: 1, cspit: 3, cguard: 2, cfrig: 1, cbrood: 1, cwar: 2, ccrys: 1, cdest: 1 })], ["crc4", "Breach Zone · Stage 4", () => ({ cnest: 1, cscut: 11, cspit: 3, cguard: 3, cbrood: 1, cwar: 2, ccrys: 1, cmolt: 1, clanc: 2, cvang: 1 })],
+  ["crcp1", "Carcinid patrol (week 1)", () => ({ cfrig: 3, cint: 5 })], ["crcp2", "Carcinid patrol (week 2)", () => ({ cfrig: 3, cint: 5, cpearl: 2 })],
+  ["crcp3", "Carcinid patrol (week 3)", () => ({ cfrig: 3, cint: 5, cpearl: 2, cdest: 1, cmint: 2 })],
   ["crcp", "Carcinid patrol (week 4)", () => ({ cfrig: 2, cint: 5, cpearl: 2, cdest: 1, cmint: 2, cvang: 1, ccarr: 1 })], ["crck", "The wild Kraken", () => ({ ckrak: 2 })],
   ...CRC_BOSSES.map(B => ["b" + B.id, B.name, () => { const A = { hp: B.hp }, Z = crcBossSet(B, A, now()); return Object.assign({ [Z.u]: 20 }, Z.esc); }]),
   ["bcc3", "The Abyssal Crown · Phase 3, molting", () => ({ ccrownm: 20, cmolt: 2, cmint: 4 })]];
 function crcLabFight(k) { const L = CRC_LAB.find(x => x[0] === k); if (!L) return; const D0 = L[2](), big = /^b/.test(k), A0 = big ? MIM_LAB_FLEET : { battleship: 20, destroyer: 20, fighter: 60, corvette: 20 }, lvl = 20;
   const res = simulate(stacksOf(A0, techOf(null), G.me), stacksOf(D0, { mon: lvl }, "monster")), B = big ? CRC_BOSS[k.slice(1)] || CRC_BOSS.cc : null;
-  const rep = mkRep({ at: now(), kind: "attack", test: 1, title: `Battle Lab · ${L[1]}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: L[1], mon: B ? B.mon : k === "crcp" ? "crcpat" : k === "crck" ? "wkraken" : "carcinid", lvl, ptype: "terran", fortL: 0, alien: true, pirate: true,
+  const rep = mkRep({ at: now(), kind: "attack", test: 1, title: `Battle Lab · ${L[1]}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: L[1], mon: B ? B.mon : /^crcp/.test(k) ? "crcpat" : k === "crck" ? "wkraken" : "carcinid", lvl, ptype: "terran", fortL: 0, alien: true, pirate: true,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
   closeSheet(); playBattle(rep); }
 function crcLabHTML(row0, b) { const p = S.crcPrev || {}, row = (ic, n, sub, btns) => `<div class="strow" style="flex-wrap:wrap"><div style="flex:1 1 100%;min-width:0"><b>${ic} ${esc(n)}</b>${sub ? `<div class="note">${sub}</div>` : ""}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div></div>`;
@@ -8446,7 +8448,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 846;
+const GAME_V = 847;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -27895,18 +27897,20 @@ function cntInfo(x, T) { const L = cntLoot(x); return `${x.mon === "cnpat" ? "Ma
 function cntNearest(T, mon) { const h = originPlanet() || myPlanets()[0]; if (!h) return null; const hp = pos(h, T); let best = null, bd = 1e9;
   for (const x of mon === "cnplat" ? CNT_PLATS : CNT_PATS) { if (!cntLive(x, T) || pirDown(x) > T) continue; const q = pos(x, T), d = Math.hypot(q.x - hp.x, q.y - hp.y); if (d < bd) { bd = d; best = x; } } return best; }
 /* the Battle Lab */
-const CNT_LAB = [["kp", "Continuum patrol (stage 6)", () => ({ cnint: 6, cncor: 2, cnexe: 1, cnasm: 1 })], ["kf", "Fabrication platform (stage 6)", () => ({ cnfab: 1, cnint: 9, cnexe: 2, cnasm: 1, cndre: 1 })],
+const CNT_LAB = [["kp1", "Continuum patrol (stages 1-3)", () => ({ cnint: 5, cncor: 2 })], ["kp4", "Continuum patrol (stages 4-5)", () => ({ cnint: 5, cncor: 2, cnexe: 1 })], ["kp", "Continuum patrol (stage 6)", () => ({ cnint: 6, cncor: 2, cnexe: 1, cnasm: 1 })],
+  ["kf1", "Fabrication platform (stages 1-3)", () => ({ cnfab: 1, cnint: 8, cnexe: 2 })], ["kf4", "Fabrication platform (stages 4-5)", () => ({ cnfab: 1, cnint: 8, cnexe: 2, cnasm: 1 })], ["kf", "Fabrication platform (stage 6)", () => ({ cnfab: 1, cnint: 9, cnexe: 2, cnasm: 1, cndre: 1 })],
   ["krel", "A Resurrection Relay", () => ({ cnrel: 20, cncor: 2, cnexe: 3, cnint: 4 })], ["kark", "A Resurrection Ark", () => ({ cnark: 20, cnasm: 2, cnexe: 3, cnint: 7, cnfab: 1, cndre: 1 })],
-  ["kcmd", "A Continuum commander", () => ({ cncom: 20, cnexe: 3, cncor: 2, cnint: 6, cnasm: 1 })], ["ketr", "The Eternal Commander", () => ({ cneter: 20, cndre: 2, cnasm: 2, cnexe: 4, cncor: 2 })]];
-function cntLabFight(k) { const L = CNT_LAB.find(x => x[0] === k); if (!L) return; const D0 = L[2](), big = k.length > 2, A0 = big ? MIM_LAB_FLEET : { battleship: 20, destroyer: 20, fighter: 60, corvette: 20 }, lvl = 20, Z = cntMods(D0, big && k !== "krel" && k !== "kark" ? { cnt: "cmd" } : null);
+  ["kcmd", "A Continuum commander", () => ({ cncom: 20, cnexe: 3, cncor: 2, cnint: 6, cnasm: 1 })], ["ketr", "The Eternal Commander", () => ({ cneter: 20, cndre: 2, cnasm: 2, cnexe: 4, cncor: 2 })], ["kprime", "The Prime Resurrection Ark (finale)", () => ({ cnprime: 20, cneter: 1, cndre: 2, cnasm: 2, cnexe: 4, cncor: 2, cnint: 6 })]];
+const cntLabBig = k => /^k(rel|ark|cmd|etr|prime)$/.test(k);
+function cntLabFight(k) { const L = CNT_LAB.find(x => x[0] === k); if (!L) return; const D0 = L[2](), big = cntLabBig(k), A0 = big ? MIM_LAB_FLEET : { battleship: 20, destroyer: 20, fighter: 60, corvette: 20 }, lvl = 20, Z = cntMods(D0, big && k !== "krel" && k !== "kark" ? { cnt: "cmd" } : null);
   const A = stacksOf(A0, techOf(null), G.me); for (const s of A) { s.atk *= Z.m.pA; s.sh *= Z.m.pS; } const D = stacksOf(D0, { mon: lvl }, "monster"); for (const s of D) { s.atk *= Z.m.bA; s.hull *= Z.m.bH; }
-  const res = simulate(A, D), mon = k === "kp" ? "cnpat" : k === "kf" ? "cnplat" : k === "krel" ? "cnrelay" : k === "kark" ? "cnarkm" : k === "ketr" ? "cneterm" : "cncmd";
+  const res = simulate(A, D), mon = /^kp(\d|$)/.test(k) ? "cnpat" : /^kf/.test(k) ? "cnplat" : k === "kprime" ? "cnprimem" : k === "krel" ? "cnrelay" : k === "kark" ? "cnarkm" : k === "ketr" ? "cneterm" : "cncmd";
   const rep = mkRep({ at: now(), kind: "attack", test: 1, title: `Battle Lab · ${L[1]}`, aUids: [G.me], aName: S.homeName + " Fleet", dName: L[1], mon, lvl, ptype: "terran", fortL: 0, alien: true, pirate: true, cntTac: Z.tac,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
   closeSheet(); playBattle(rep); }
 function cntLabHTML(row0, b) { const p = S.cntPrev || {}, row = (ic, n, sub, btns) => `<div class="strow" style="flex-wrap:wrap"><div style="flex:1 1 100%;min-width:0"><b>${ic} ${esc(n)}</b>${sub ? `<div class="note">${sub}</div>` : ""}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${btns}</div></div>`;
   return row("⬢", "The war, stage by stage", `Patrols, platforms, the network and War Command as they will be · ${p.s ? `previewing stage ${p.s}, ${CNT_STN[p.s]}` : "off"}`, [1, 2, 3, 4, 5, 6, 7].map(s => b("cntLabStage", String(s), "S" + s)).join("") + b("cntFinPrev", "", "Finale ×4") + b("cntLabStage", "0", "Off") + b("cntOpen", "", "War Command"))
-    + CNT_LAB.map(([k, n]) => row0("⬢", n, k.length > 2 ? "A demo fleet of 1,400 warships" : "A small fleet against it", b("cntLabFight", k, "⚔ Watch"))).join(""); }
+    + CNT_LAB.map(([k, n]) => row0("⬢", n, cntLabBig(k) ? "A demo fleet of 1,400 warships" : "A small fleet against it", b("cntLabFight", k, "⚔ Watch"))).join(""); }
 
 /* v744 the Continuum Records (drafts awaiting the owner's approval) */
 Object.assign(ARCH, {
