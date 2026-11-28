@@ -1,0 +1,10 @@
+/* v858 the Eternal Commander's sixth: the Swarm (owner: "should also launch its own kind of drone swarm that targets multiple targets at
+   once up to 8"). Sixteen red drones pour out of its hub, fan out in an arc, then each pair curves in on its own target, up to eight of our
+   ships at once, trailing red light, and burst on them together. */
+function cntEterSwarm(ctx, b, m, u, S0, E0, Lg, d, T, scr, hit, rs) { const tg = m.fo || (m.fo = [m.e].concat(kFoes(b, m.s).filter(j => j !== m.e && scr[j]).sort((x, y) => (bLen(b.Q[y].k) || 1) - (bLen(b.Q[x].k) || 1))).slice(0, 8));
+  for (let j = 0; j < tg.length * 2; j++) { const P = scr[tg[j >> 1]]; if (!P) continue; const k = clamp((u - .05 - j * .015) / .7, 0, 1); if (k <= 0) continue;
+    const a = (j / (tg.length * 2) - .5) * 2.6 + (P.x < S0.x ? Math.PI : 0), cx = S0.x + Math.cos(a) * Lg * 1.1, cy = S0.y + Math.sin(a) * Lg * .7, p = q => ({ x: (1 - q) * (1 - q) * S0.x + 2 * (1 - q) * q * cx + q * q * (P.x + (j % 2 ? 6 : -6) * d), y: (1 - q) * (1 - q) * S0.y + 2 * (1 - q) * q * cy + q * q * P.y });
+    if (k < 1) { const h = p(k), tl = p(Math.max(0, k - .08)); ctx.globalAlpha = .75; ctx.strokeStyle = `rgba(${CNT_RED},1)`; ctx.lineWidth = 2.2 * d; ctx.beginPath(); ctx.moveTo(tl.x, tl.y); ctx.lineTo(h.x, h.y); ctx.stroke();
+      const an = Math.atan2(h.y - tl.y, h.x - tl.x); ctx.save(); ctx.translate(h.x, h.y); ctx.rotate(an); ctx.globalAlpha = 1; ctx.fillStyle = "rgba(255,210,210,1)"; ctx.beginPath(); ctx.moveTo(6 * d, 0); ctx.lineTo(-4 * d, 3.2 * d); ctx.lineTo(-4 * d, -3.2 * d); ctx.closePath(); ctx.fill(); ctx.restore(); ctx.drawImage(rs, h.x - 9 * d, h.y - 9 * d, 18 * d, 18 * d); }
+    else { const kk = clamp((u - .05 - j * .015 - .7) / .2, 0, 1); if (kk < 1) { const R = (10 + 30 * kk) * d; ctx.globalAlpha = 1 - kk; ctx.drawImage(rs, P.x - R, P.y - R, R * 2, R * 2); } hit(m, E0.x, E0.y, true); } }
+  if (u < .2) { const r = Lg * (.1 + .4 * u / .2); ctx.globalAlpha = .7; ctx.drawImage(rs, S0.x - r, S0.y - r, r * 2, r * 2); } }
