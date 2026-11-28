@@ -8449,7 +8449,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 852;
+const GAME_V = 853;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -9074,9 +9074,10 @@ for (const [k, t] of Object.entries({ ps8: 11, ps12: 11, ps2: 12, ps10: 12, ps6:
    floating islands), the higher it sits. The four forged event worlds (drawn in code, no painting yet) stay Mythic. */
 const PX_BAND_OF = {}; [["aurora dune lavalamp abyss plague ruins kraken stormtitan frostfire ghost"],
   ["atoll obsidian eden mirror reef pr1 pr2 pr4 pr6 aeon omen"],
-  ["venom ruby phoenix solar pr8 tidal rust hive petrified ruin sphinx singular shatter"], ["spire sapphire ember forge pearl saturn lattice clockwork countdown magma bonemoon abyssreef cntdebris mimichive signal"],
-  ["dread warsphere cyber colossus amethyst aurum inferno watcher bloom nigiri"], ["glacier thunder garden emerald hellgate"]].forEach(([l], i) => l.split(" ").forEach(k => PX_BAND_OF[k] = i));
-function pxPremKeep(k) { if (!S) return false; if (!S.pxPKV) { try { const t0 = premT(), K = {}; for (const q in PREM_OLD) if (t0 >= PREM_OLD[q]) K[q] = 1; if (typeof myPlanets === "function") for (const p of myPlanets()) if (p && p.px) K[p.px] = 1; S.pxPK = Object.assign({}, S.pxPK, K); S.pxPKV = 1; dirty(); } catch (e) {} } return !!(S.pxPK || {})[k]; }
+  ["venom ruby phoenix solar pr8 tidal rust hive petrified ruin sphinx singular shatter"], ["sapphire ember forge pearl saturn lattice clockwork countdown abyssreef cntdebris mimichive signal"],
+  ["warsphere cyber aurum bloom nigiri spire magma bonemoon"], ["glacier thunder garden emerald hellgate dread colossus amethyst inferno dragon"]].forEach(([l], i) => l.split(" ").forEach(k => PX_BAND_OF[k] = i));
+{ const P = PREM[2], s = PXS.watcher, o = PXS.dragon; if (P && s && o && P.k === "dragon") { delete o.prem; o.cost = 1; o.r = "all"; s.prem = 2; s.cost = 0; s.r = "all"; s.b = +(.12 + .012 * 2).toFixed(3); P.k = "watcher"; P.n = s.n; P.col = s.glow || P.col; PREM_OLD.dragon = 2; } } /* v853 */
+function pxPremKeep(k) { if (!S) return false; if (S.pxPKV !== 2) { try { const t0 = premT(), K = {}; for (const q in PREM_OLD) if (t0 >= PREM_OLD[q]) K[q] = 1; if (typeof myPlanets === "function") for (const p of myPlanets()) if (p && p.px) K[p.px] = 1; S.pxPK = Object.assign({}, S.pxPK, K); S.pxPKV = 2; dirty(); } catch (e) {} } return !!(S.pxPK || {})[k]; }
 const PX_DIR = "skins/";
 /* v238: how much of a painting the world fills (its radius over the frame). Ringed skins paint the world smaller so the whole ring fits */
 const PX_RING = { dragon: .28, glacier: .28, /* v339: the dragons' wings need room */ forge: .25, pearl: .25, metropolis: .25, lattice: .25, clockwork: .25, saturn: .25 };
