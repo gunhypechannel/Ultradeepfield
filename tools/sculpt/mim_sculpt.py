@@ -34,7 +34,17 @@ def bez3(a, b, c, d, n=7):
 def mimic(M, k, MH=None, G=None):
     D = MIM_D[k]; L = D['len']; hump = D['hump']; rng = np.random.default_rng(sum(map(ord, k)) * 7)
     gl = D.get('tint', (.2, .85, 1.0)); GLOW = M_(tuple(x * .15 for x in gl), .2, .1, gl); GLOWS = M_(tuple(x * .1 for x in gl), .2, .1, tuple(x * .55 for x in gl))
-    CAB = M_((.018, .02, .026), .18, .65); CABL = M_((.04, .05, .065), .15, .75); SHELL = M_((.03, .034, .042), .25, .7); FANG = M_((.42, .46, .52), .15, .6)
+    CAB = M_((.018, .02, .026), .18, .65); CABL = M_((.04, .05, .065), .15, .75);
+    GBAND = M_(tuple(x * .15 for x in gl), .2, .1, tuple(x * 1.3 for x in gl))
+    def cable(Mx, n, pts, r0, r1, mat, k=.015, rings=True):  # v838 lit cables carry three bands of cyan light, as in the design legends
+        globals()['cable'](Mx, n, pts, r0, r1, mat, k, rings)
+        if mat is not CABL or r0 < .06: return
+        P = np.array(pts, np.float32); seg = np.linalg.norm(P[1:] - P[:-1], axis=1); cum = np.concatenate([[0], np.cumsum(seg)]); tot = cum[-1]
+        for j, f in enumerate((.3, .55, .8)):
+            t = f * tot; i = min(len(seg) - 1, int(np.searchsorted(cum, t) - 1)); u = (t - cum[i]) / max(seg[i], 1e-6); c = P[i] + (P[i + 1] - P[i]) * u; d = (P[i + 1] - P[i]) / max(seg[i], 1e-6)
+            rr = (r0 + (r1 - r0) * f) * 1.12
+            Mx.add(f'{n}b{j}', lambda p, c=c, d=d, rr=rr: (lambda q: np.sqrt((np.sqrt(np.maximum((q * q).sum(-1) - (q @ d) ** 2, 0)) - rr) ** 2 + (q @ d) ** 2) - rr * .32)(p - c), GBAND)
+    SHELL = M_((.03, .034, .042), .25, .7); FANG = M_((.42, .46, .52), .15, .6)
     EGG = M_((.08, .03, .14), .12, .3, (.3, .08, .5)); PLATE = M_((.14, .15, .17), .4, .85); PLL = M_((.4, .1, .05), .2, .2, (1., .5, .15))
     sp = np.array([(-2.6 * L, .35), (-1.6 * L, .55 + hump * .5), (-.4 * L, .72 + hump), (.8 * L, .9 + hump * .8), (1.75 * L, .8)])
     yc = lambda x: np.interp(x, sp[:, 0], sp[:, 1])
@@ -106,6 +116,28 @@ def mimic(M, k, MH=None, G=None):
         for i in range(4):  # small crescent spines along the keel
             x = (.6 - i * .6) * L; base = (x, yc(x) - rad(x) * .68, s_ * .25)
             hook(M, f'ks{s_}{i}', base, (-.4, -1, s_ * .3), (-1, .2, 0), .45, .07, CHRB)
+    # ------------------------------------------------ v838 after the new design legends: a deep armoured chest (chrome ribs over a cyan
+    # core that blazes between them), heavy shoulders, and hooked claws for tentacle tips
+    CHRR = M_((.3, .33, .38), .16, 1.); CORE = M_(tuple(x * .2 for x in gl), .1, .1, tuple(x * 1.7 for x in gl))
+    cx0 = (1.05 if not D.get('sac') else .9) * L; cr0 = rad(cx0)
+    M.add('chest', lambda p: ell(p, (cx0, yc(cx0) - .1, 0), (1.0 * L, cr0 * .93, cr0 * 1.2)), CORE, .05)
+    if G is not None: G.add('gchest', lambda p: ell(p, (cx0, yc(cx0) - .15, 0), (1.25 * L, cr0 * 1.15, cr0 * 1.55)), GLOW)
+    for i in range(6):
+        xr = cx0 + (i - 2.5) * .3 * L; rr_ = rad(xr) * 1.25 + .05
+        def rib(p, xr=xr, rr_=rr_):
+            q = p - V(xr, yc(xr) - .05, 0); ra = np.sqrt((q[..., 1] / .82) ** 2 + q[..., 2] ** 2); d = np.sqrt((ra - rr_) ** 2 + (q[..., 0] * 1.1) ** 2) - .07
+            return np.maximum(d, q[..., 1] - rr_ * .5)  # open over the spine
+        M.add(f'rib{i}', rib, CHRR, .02)
+    for s_ in (1, -1):
+        sc_ = (1.35 * L, yc(1.35 * L) + .3, s_ * rad(1.35 * L) * 1.0)
+        M.add(f'shd{s_}', lambda p, c=sc_: ell(p, c, (.5, .2, .34)), M_((.12, .13, .15), .2, 1.), .05)
+        for j in range(3): hook(M, f'shs{s_}{j}', (sc_[0] - .3 + j * .28, sc_[1] + .2, sc_[2] * 1.05), (-.7, 1, s_ * .5), (-1, -.2, s_ * .2), .75 - .12 * j, .1, CHRR)
+    def claw(Mx, n, tip, d, sz=1.0):  # three hooked chrome claws round a cyan-lit palm
+        d = np.array(norm(d)); up = np.array((0, 1, 0)) if abs(d[1]) < .9 else np.array((1, 0, 0)); a1 = np.cross(d, up); a1 /= np.linalg.norm(a1); a2 = np.cross(d, a1)
+        Mx.add(n + 'p', lambda p, c=tuple(tip): sphere(p, c, .1 * sz), CORE)
+        for u in range(3):
+            an = u * 2 * np.pi / 3; o = a1 * np.cos(an) + a2 * np.sin(an)
+            hook(Mx, f'{n}{u}', tuple(np.array(tip) + o * .06 * sz), tuple(d + o * .7), tuple(d * .4 - o), .55 * sz, .06 * sz, CHRR)
     # ------------------------------------------------ v837 the head, remastered after the paintings, sculpted on its own finer grid (MH):
     # a long armoured xeno skull swept back into a crest, faceted snout with nostril ridges, heavy blade brows over two pairs of slit eyes,
     # chrome cheek plates hooked back, a hinged lower jaw with a chin spike and mandible plates, two rows of curved fangs, cyan light
@@ -146,8 +178,8 @@ def mimic(M, k, MH=None, G=None):
     jaw = lambda p: lathe(jq(p), jp, (0, 0, 0), JY, JZ) * hs
     H.add('jaw', jaw, SHELL, .04)
     H.add('chin', lambda p: rcone(jq(p), (1.45, -.04, 0), (1.95, -.2, 0), .07, .008) * hs, CHR2)  # the chin spike
-    H.add('throat', lambda p: ell(hq(p), (.2, -.08, 0), (.55, .17, .3)) * hs, GLOW)
-    H.add('maw', lambda p: ell(jq(p), (.55, .1, 0), (.85, .06, .24)) * hs, GLOW)
+    H.add('throat', lambda p: ell(hq(p), (.2, -.08, 0), (.55, .17, .3)) * hs, CORE)
+    H.add('maw', lambda p: ell(jq(p), (.55, .1, 0), (.85, .06, .24)) * hs, CORE)
     H.add('gum', lambda p: ell(hq(p), (.8, .02, 0), (.95, .06, .34)) * hs, M_((.06, .02, .03), .3, .4, tuple(x * .35 for x in gl)))
     if G is not None:
         G.add('gthroat', lambda p: ell(hq(p), (.35, -.1, 0), (.95, .32, .45)) * hs, GLOW)
@@ -212,13 +244,20 @@ def mimic(M, k, MH=None, G=None):
         for i, (z, Lg, drop) in enumerate(((-1.0, 1.8, .8), (-.5, 2.2, 1.05), (.0, 2.5, .9), (.5, 2.2, 1.05), (1.0, 1.8, .8), (-1.4, 1.4, .55), (1.4, 1.4, .55))):
             a = (1.2, .05, z * .45); e = (1.3 + Lg, -.1 - drop, z * 1.5)
             pts = bez3(a, (a[0] + Lg * .35, .45, z * .8), (a[0] + Lg * .75, -.4, z * 1.1), e, 8); cable(M, f'ht{i}', pts, .12, .07, CABL if i % 2 else CAB)
-            d = np.array(norm(np.array(e) - np.array(pts[-2]))); c = np.array(e) + d * .3
-            M.add(f'cg{i}', lambda p, c=tuple(c), d=tuple(d): rcone(p, tuple(np.array(c) - np.array(d) * .26), tuple(np.array(c) + np.array(d) * .26), .17, .15), CAN)
-            for u in (-1, 0, 1):
-                rc = tuple(c + d * u * .24); M.add(f'cr{i}{u}', lambda p, rc=rc, d=tuple(d): np.maximum(np.abs(np.sqrt(((p - V(*rc)) ** 2).sum(-1)) - .2) - .035, np.abs((p - V(*rc)) @ V(*d)) - .035), CHR)
-            for u in range(4):
-                ang = u * np.pi / 2; perp = np.array(norm(np.cross(d, (0, 1, 0)) * np.cos(ang) + np.array((0, 1, 0)) * np.sin(ang)))
-                spk(M, f'cs{i}{u}', tuple(c + d * .22 + perp * .17), tuple(norm(d + perp * .5)), .28, .045, CHR)
+            claw(M, f'hc{i}', e, np.array(e) - np.array(pts[-2]), .9)
+        # v838 after the design legend: a rig of glass canisters on its back, brass-banded, full of glowing biomass, piped into the body
+        for i, (x, z, h) in enumerate(((-.25, .3, 1.15), (-.7, -.25, 1.3), (-1.15, .25, 1.0), (.2, -.35, .9))):
+            y0 = 1.15; c = (x, y0 + h / 2, z)
+            M.add(f'can{i}', lambda p, c=c, h=h: cyl(p, c, 'y', .2, h / 2, .03), CAN)
+            for u in (-.5, 0, .5): M.add(f'cnb{i}{u}', lambda p, c=c, h=h, u=u: np.maximum(np.abs(np.sqrt((p[..., 0] - c[0]) ** 2 + (p[..., 2] - c[2]) ** 2) - .215) - .035, np.abs(p[..., 1] - c[1] - u * h * .9) - .05), GOLD)
+            M.add(f'cnc{i}', lambda p, c=c, h=h: cyl(p, (c[0], c[1] + h / 2 + .05, c[2]), 'y', .17, .07, .02), CHR)
+            cable(M, f'cnp{i}', [(c[0], c[1] + h / 2 + .1, c[2]), (c[0] - .3, c[1] + h / 2 + .5, c[2] * 1.4), (c[0] - .9, y0 + .2, c[2] * 1.6)], .06, .05, CABL)
+        # the clamp: two great brass-and-chrome jaws under the head, a stream of light pouring from between them
+        for s_ in (1, -1):
+            hook(M, f'clp{s_}', (hx - .1, hy - .55, s_ * .32), (1, -.6, s_ * .45), (.3, -.4, -s_ * 1), 1.25, .16, GOLD)
+            hook(M, f'clq{s_}', (hx - .3, hy - .5, s_ * .5), (.8, -.9, s_ * .55), (.2, -.5, -s_ * .9), 1.0, .12, CHR)
+        M.add('clh', lambda p: cyl(p, (hx - .15, hy - .45, 0), 'y', .22, .1, .03), GOLD)
+        if G is not None: G.add('gstr', lambda p: rcone(p, (hx + .35, hy - .9, 0), (hx + .5, hy - 2.3, 0), .14, .3), GLOW)
     if D.get('armour'):  # v836 the Guardian, after its painting: silver-plated shoulders trimmed in gold, the carapace down its back, and
         # two great round energy shields held at its flanks like wings, gold-rimmed, a cyan hexagon lattice of light across each face
         for i in range(5):
@@ -228,28 +267,36 @@ def mimic(M, k, MH=None, G=None):
         HEX = M_((.012, .04, .06), .08, .3, (.02, .12, .22)); HEXL = M_((.06, .2, .26), .1, .2, (.3, 1.0, 1.3))
         for s in (1, -1):
             sh = (.55 * L, .95, s * 1.05)
-            M.add(f'sp{s}', lambda p, c=sh, s=s: ell(p, c, (.75, .45, .55)), CHR, .05)  # the pauldron
-            M.add(f'spg{s}', lambda p, c=sh: np.maximum(np.abs(ell(p, c, (.78, .48, .58))) - .025, -(p[..., 1] - c[1] - .1)), GOLD)
-            for j in range(3): spk(M, f'pk{s}{j}', (sh[0] - .3 + j * .3, sh[1] + .35, sh[2] * 1.05), norm((-.6, 1, s * .4)), .55 - .1 * j, .1, CHR)
-            cen = np.array((-.35 * L, 1.7, s * 2.05)); R = rot('y', -s * .8) @ rot('x', s * .5)  # the shield's frame: its face looks out to the side
-            nrm = R @ np.array((0, 0, 1.0), f32)
-            def disc(p, cen=cen, R=R, r=1.55, t=.06):
-                q = (p - cen) @ R; return np.maximum(np.sqrt(q[..., 0] ** 2 + q[..., 1] ** 2) - r, np.abs(q[..., 2]) - t)
-            def rim(p, cen=cen, R=R):
-                q = (p - cen) @ R; rr = np.sqrt(q[..., 0] ** 2 + q[..., 1] ** 2); return np.sqrt((rr - 1.58) ** 2 + (q[..., 2] * 1.0) ** 2) - .11
-            def rim2(p, cen=cen, R=R):
-                q = (p - cen) @ R; rr = np.sqrt(q[..., 0] ** 2 + q[..., 1] ** 2); return np.maximum(np.abs(rr - 1.36) - .035, np.abs(q[..., 2]) - .1)
-            def hexl(p, cen=cen, R=R):  # a lattice of hexagon cells on both faces
-                q = (p - cen) @ R; X, Y = q[..., 0] / .42, q[..., 1] / .42
-                ax = np.mod(X, 1.0) - .5; ay = np.mod(Y, 1.7320508) - .8660254; bx = np.mod(X - .5, 1.0) - .5; by = np.mod(Y - .8660254, 1.7320508) - .8660254
-                pa = ax * ax + ay * ay < bx * bx + by * by; gx = np.where(pa, ax, bx); gy = np.where(pa, ay, by)
-                hd = np.maximum(np.abs(gx), np.abs(gx) * .5 + np.abs(gy) * .8660254); e = (.5 - hd) * .42
-                rr = np.sqrt(q[..., 0] ** 2 + q[..., 1] ** 2)
-                return np.maximum(np.maximum(e - .02, np.abs(q[..., 2]) - .1), rr - 1.34)
-            (G if G is not None else M).add(f'sd{s}', disc, M_((.05, .25, .4), .1, .2, (.15, .6, 1.0)) if G is not None else HEX); M.add(f'sh{s}', hexl, HEXL); M.add(f'sr{s}', rim, GOLD); M.add(f'sr2{s}', rim2, CHR)
-            M.add(f'sb{s}', lambda p, a=(sh[0] - .2, sh[1] - .1, sh[2] * .9), b=tuple(cen - nrm * .2 + np.array((0, .1, 0))): rcone(p, a, b, .16, .12), CHR)  # the arm that holds it
-            M.add(f'sc{s}', lambda p, c=tuple(cen + nrm * .12): sphere(p, c, .22), M_((.2, .7, .9), .1, .2, (.5, 1.2, 1.5)))
-            M.add(f'scr{s}', lambda p, c=tuple(cen + nrm * .1), R=R: (lambda q: np.sqrt((np.sqrt(q[..., 0] ** 2 + q[..., 1] ** 2) - .3) ** 2 + q[..., 2] ** 2) - .05)((p - V(*c)) @ R), GOLD)
+            M.add(f'sp{s}', lambda p, c=sh, s=s: ell(p, c, (.8, .5, .6)), CHR, .05)  # the pauldron
+            M.add(f'spg{s}', lambda p, c=sh: np.maximum(np.abs(ell(p, c, (.83, .53, .63))) - .025, -(p[..., 1] - c[1] - .1)), GOLD)
+            for j in range(4): hook(M, f'pk{s}{j}', (sh[0] - .45 + j * .3, sh[1] + .35, sh[2] * 1.05), (-.6, 1, s * .4), (-1, -.3, s * .2), .8 - .1 * j, .12, CHR)
+        # v838 after the design legend: one great crescent tower shield held forward on the near flank, hex glass in a chrome and gold frame
+        cen = np.array((1.15 * L, .75, 2.05)); RS_ = rot('y', -.45) @ rot('x', .12); nrm = RS_ @ np.array((0, 0, 1.0), f32)
+        def cres(q):  # the crescent, opening toward the back, bowed outward
+            x, y = q[..., 0], q[..., 1]; return np.maximum(np.sqrt(x * x + y * y) - 2.15, -(np.sqrt((x + 1.05) ** 2 + (y * .92) ** 2) - 1.75))
+        def sq(p):
+            q = (p - cen) @ RS_; q = q.copy(); q[..., 2] = q[..., 2] + (q[..., 0] ** 2 + q[..., 1] ** 2) * .07; return q
+        face = lambda p: (lambda q: np.maximum(cres(q), np.abs(q[..., 2]) - .05))(sq(p))
+        rimf = lambda p: (lambda q: np.maximum(np.abs(cres(q)) - .085, np.abs(q[..., 2]) - .14))(sq(p))
+        def hexc(p):
+            q = sq(p); X, Y = q[..., 0] / .4, q[..., 1] / .4
+            ax = np.mod(X, 1.0) - .5; ay = np.mod(Y, 1.7320508) - .8660254; bx = np.mod(X - .5, 1.0) - .5; by = np.mod(Y - .8660254, 1.7320508) - .8660254
+            pa = ax * ax + ay * ay < bx * bx + by * by; gx = np.where(pa, ax, bx); gy = np.where(pa, ay, by)
+            e = (.5 - np.maximum(np.abs(gx), np.abs(gx) * .5 + np.abs(gy) * .8660254)) * .4
+            return np.maximum(np.maximum(e - .02, np.abs(q[..., 2]) - .09), cres(q) + .14)
+        trim = lambda p: (lambda q: np.maximum(np.abs(cres(q) + .2) - .03, np.abs(q[..., 2]) - .11))(sq(p))
+        (G if G is not None else M).add('sd', face, M_((.05, .25, .4), .1, .2, (.15, .6, 1.0)) if G is not None else HEX)
+        M.add('shx', hexc, HEXL); M.add('srm', rimf, CHR); M.add('stm', trim, GOLD)
+        for j, (a0, a1) in enumerate(((.9, 1.6), (-.2, .5), (-1.3, -.6))):  # chrome straps with hooked tips across the face
+            pa_ = cen + RS_ @ np.array((np.cos(a0) * 2.15, np.sin(a0) * 2.15, .1)); pb_ = cen + RS_ @ np.array((np.cos(a1) * 1.6, np.sin(a1) * 1.6, .16))
+            M.add(f'sst{j}', lambda p, a=tuple(pa_), b=tuple(pb_): rcone(p, a, b, .09, .06), CHR)
+        boss = cen + RS_ @ np.array((1.15, 0, .2)); M.add('sbo', lambda p, c=tuple(boss): sphere(p, c, .24), M_((.2, .7, .9), .1, .2, (.5, 1.2, 1.5)))
+        M.add('sbr', lambda p, c=tuple(boss): (lambda q: np.sqrt((np.sqrt(q[..., 0] ** 2 + q[..., 1] ** 2) - .34) ** 2 + q[..., 2] ** 2) - .06)((p - V(*c)) @ RS_), GOLD)
+        M.add('sar', lambda p, a=(.55 * L, .7, 1.2), b=tuple(cen + RS_ @ np.array((.9, -.1, -.25))): rcone(p, a, b, .2, .15), CHR)  # the arm that holds it
+        if G is not None: G.add('gsh', lambda p: (lambda q: np.maximum(cres(q) - .1, np.abs(q[..., 2]) - .22))(sq(p)), GLOW)
+        HH = MH if MH is not None else M  # the hammerhead crest: two flat blades flaring sideways from the brow
+        for s in (1, -1):
+            blade(HH, f'hmr{s}', (hx + .2 * hs, hy + .42 * hs, s * .3 * hs), norm((-.35, .25, s * 1)), .95 * hs, .13 * hs, CHR, 3.0, (0, 1, 0))
     if D.get('plates'):  # v836 the Assimilator, after its painting: a stolen starship fused into its back (a grey hull with spires and
         # running lights), and a great reactor wheel set in each flank, its rings of segments around a blazing core
         hb = (-.6 * L, yc(-.6 * L) + rad(-.6 * L) * .62 + .25, .15)
@@ -282,7 +329,7 @@ def mimic(M, k, MH=None, G=None):
         for i in range(12):
             bx = (-1.6 + i * .24) * L; z = rng.uniform(-.7, .7); hgt = rng.uniform(1.4, 2.6); a = (bx, yc(bx) + rad(bx) * .6, z)
             pts = bez3(a, (bx + .3, a[1] + hgt, z * 1.4), (bx - 1.4, a[1] + hgt * 1.1, z * 2.0), (bx - 2.2, a[1] + hgt * .45, z * 2.4), 8)
-            cable(M, f'sw{i}', pts, .12, .03, CABL if i % 4 == 1 else CAB)
+            cable(M, f'sw{i}', pts, .12, .045, CABL if i % 3 == 1 else CAB); claw(M, f'swc{i}', pts[-1], np.array(pts[-1]) - np.array(pts[-2]), .8)
         for s_ in (1, -1):
             for j in range(3):
                 a = (hx - .4 * hs, hy - .45 * hs, s_ * (.25 + .2 * j) * hs); Lg = 1.6 + .4 * j
@@ -306,14 +353,21 @@ def mimic(M, k, MH=None, G=None):
                 return d / 3.4 * 1.6
             M.add(f'sy{s_}', scy, CHR)
             cable(M, f'sye{s_}', [tuple(np.array(q) + np.array((0, -.06, 0))) for q in pts], .035, .01, GLOW)
-        # the scorpion tail: from the stern, up and over the back, the blade hooked forward above its head
-        tp = bez3((x0 + .2, yc(x0) + .2, 0), (x0 - 1.4, 2.6, 0), (-.4 * L, 4.1, 0), (1.0 * L, 3.3, 0), 12)
-        for k_ in range(len(tp) - 1):
-            M.add(f'ts{k_}', lambda p, a=tp[k_], b=tp[k_ + 1], r=.24 - k_ * .013: rcone(p, a, b, r, r * .92), SHELL, .02)
-            M.add(f'tsr{k_}', lambda p, c=tp[k_ + 1], r=.24 - k_ * .013: sphere(p, c, r * 1.08), CHR if k_ % 2 else SHELL)
-            if k_ % 2 == 0: M.add(f'tsg{k_}', lambda p, c=tp[k_ + 1], r=.24 - k_ * .013: sphere(p, (c[0], c[1] - r * .7, c[2]), r * .35), GLOW)
-        tip = np.array(tp[-1]); M.add('tbl', lambda p: spike(p, tuple(tip), tuple(tip + np.array((.9, -.85, 0))), .2), CHR)
-        blade(M, 'tbl2', tuple(tip), norm((.4, -1, 0)), 1.1, .16, CHR, 2.8, (0, 0, 1))
+        # v838 after the design legend: blade spines swept back along the spine, a long whip tail ending in a glowing crescent blade,
+        # and two whip antennae curving back from the brow
+        for i_ in range(8):
+            x = (.9 - i_ * .38) * L; top = yc(x) + rad(x) * .7
+            hook(M, f'hsp{i_}', (x, top, (-1) ** i_ * .12), (-1.2, .9, (-1) ** i_ * .12), (-1, -.05, 0), 1.5 - abs(i_ - 3) * .1, .14, CHR)
+        tp = bez3((x0 + .2, yc(x0) + .1, 0), (x0 - 1.6, yc(x0) + .9, .2), (x0 - 3.2, yc(x0) + 1.2, -.2), (x0 - 4.6, yc(x0) + 1.9, 0), 12)
+        cable(M, 'whp', tp, .16, .05, CABL)
+        tip = np.array(tp[-1]); d_ = np.array(norm(tip - np.array(tp[-2])))
+        cb = bez3(tuple(tip), tuple(tip + np.array((-.5, .7, 0))), tuple(tip + np.array((.1, 1.3, 0))), tuple(tip + np.array((.8, 1.2, 0))), 8)
+        for k_ in range(len(cb) - 1):
+            M.add(f'tcr{k_}', lambda p, a=cb[k_], b=cb[k_ + 1], r=.13 * (1 - k_ / 8) + .01: (lambda q: rcone(q, a, b, r, r * .85))(p * V(1, 1, 3.2) - V(0, 0, 0)) / 1.6, CHR)
+        cable(M, 'tcrg', [tuple(np.array(q) + np.array((.03, -.04, 0))) for q in cb], .03, .012, GLOW, rings=False)
+        for s_ in (1, -1):
+            a = (hx - .05 * hs, hy + .5 * hs, s_ * .22 * hs)
+            cable(M, f'ant{s_}', bez3(a, (a[0] - 1.0, a[1] + 1.6, s_ * .5), (a[0] - 3.2, a[1] + 2.2, s_ * .9), (a[0] - 4.8, a[1] + .6, s_ * 1.1), 10), .05, .012, CAB, rings=False)
     if D.get('brood'):  # the Brood Titan: violet brood sacs swelling along its flanks
         for i in range(8):
             s = 1 if i % 2 else -1; x = (-1.8 + (i >> 1) * .8) * L
