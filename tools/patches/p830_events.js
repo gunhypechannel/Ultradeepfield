@@ -30,7 +30,7 @@ const EV_HOW = {
     tip: "You don't have to kill it, Commander. Every scratch you put on it counts." },
   tboss: { s: [["☣", "A titan arrives", "One titan each Monday at 18:00 UTC, for 48 hours."], ["🧠", "Learn its trick", "The Matriarch rebuilds her swarm, the Tyrant's bounty grows, the Wyrm opens its segments, the Colossus shatters."], ["🚀", "Attack it", "Every attack, win or lose, pays a bounty and forge materials."], ["🎁", "Share the spoils", "When it falls, everyone who damaged it claims a share."]],
     go: ["Find the titan", "evxGo", { k: "tboss" }], p: [["2.5% of its hull", "3"]],
-    tip: "Each titan has a weakness, Commander. Hit it when it's open and the points come twice as fast." },
+    tip: "Each titan has its own trick, Commander. Learn it before you send the fleet." },
   eboss: { s: [["✪", "The Elementals rise", "Every fourth Wednesday at 18:00 UTC, five Elementals tear into the galaxy for 24 hours."], ["⚔", "Slay them early", "Each one slain before the fusion leaves the Pentarch weaker. Slay all five for a Clean Sweep."], ["◉", "Break the Pentarch", "The survivors fuse at the black hole. Crack its five rune seals to expose its core."], ["💎", "Gather the shards", "When it falls its core shatters: gather the shards within ten minutes."]],
     go: ["Find an Elemental", "evxGo", { k: "eboss" }], p: [["2.5% hull, an Elemental", "3"], ["2.5% hull, the Pentarch", "6"], ["Ships it destroys", "come home damaged, never lost"]],
     tip: "Nothing you send against the Convergence is lost for good, Commander. Send everything." },
