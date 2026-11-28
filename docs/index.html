@@ -8446,7 +8446,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 834;
+const GAME_V = 835;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -28094,7 +28094,7 @@ const CNT_SC = { cnark: { s: .8, eng: [[-4.92, .04, .44, .34], [-4.92, .04, -.44
   cnint: { s: 1, eng: [[-2.35, .05, .28, .2], [-2.35, .05, -.28, .2]] }, cnexe: { s: 1, eng: [[-2.7, .05, .35, .27], [-2.7, .05, -.35, .27]] },
   cnasm: { s: 1, eng: [[-2.2, .05, .16, .14], [-2.2, .05, -.16, .14]] }, cndre: { s: 1, eng: [[-3.75, .1, .5, .34], [-3.75, .1, -.5, .34], [-3.75, .55, .25, .26], [-3.75, .55, -.25, .26], [-3.75, -.35, .25, .26], [-3.75, -.35, -.25, .26]] },
   cnrel: { s: 1, eng: [] }, cnprime: { s: 1, eng: [] }, cneter: { s: 1, eng: [[-1.7, 0, .38, .28], [-1.7, 0, -.38, .28]] },
-  cncor: { s: 1, eng: [[-2.3, 0, .2, .2], [-2.3, 0, -.2, .2]] }, cnfab: { s: 1, eng: [[-3.85, 0, .55, .32], [-3.85, 0, -.55, .32], [-3.85, .3, 0, .26]] },
+  cncor: { s: 1, eng: [[-2.55, 0, .2, .2], [-2.55, 0, -.2, .2]] }, cnfab: { s: 1, col: [0xc8e6ff, 0x3a9cff], eng: [[-3.85, 0, .55, .32], [-3.85, 0, -.55, .32], [-3.85, .3, 0, .26]] },
   cncom: { s: 1, eng: [[-3.75, .1, .5, .34], [-3.75, .1, -.5, .34], [-3.75, .55, .22, .24], [-3.75, .55, -.22, .24], [-3.75, -.35, .22, .24], [-3.75, -.35, -.22, .24]] } }, CNT_GEO = {};
 function cntSculptLoad(k) { if (!CNT_SC[k] || !TH || typeof fetch !== "function") return; const L = cntSculptLoad.L || (cntSculptLoad.L = {}); if (L[k]) return; L[k] = 1;
   fetch("art/rwar/m/" + k + ".bin").then(r => r.ok ? r.arrayBuffer() : Promise.reject(Error("HTTP " + r.status))).then(b => { CNT_GEO[k] = cntMeshGeo(b); cntSculptSwap(k); }).catch(e => console.warn("sculpt " + k, e && e.message)); }
@@ -28102,7 +28102,7 @@ function cntSculptSwap(k) { try { if (STU && STU.cache) for (const key in STU.ca
   const ms = Object.keys(CNT_M).filter(m => CNT_M[m] === k); if (G3) { if (G3.monMaster) for (const m of ms) delete G3.monMaster[m];
     if (G3.pirates) for (const [id, o] of [...G3.pirates]) { const x = PB[id]; if (x && ms.includes(x.mon)) { G3.scene.remove(o.grp); G3.pirates.delete(id); } } } } catch (e) { console.warn("sculpt swap", e); } }
 function cntSculpted(k) { const D = CNT_SC[k], g = new TH.Group(), m = new TH.Mesh(CNT_GEO[k], cntMeshMat()); m.userData.sculpt = 1; m.scale.setScalar(D.s); g.add(m);
-  g.userData.eng = D.eng.map(e => e.slice()); g.userData.engCol = [0xffc0c6, 0xff2a3a]; g.userData.cnt = 3; g.userData.keepGeo = 1; return g; }
+  g.userData.eng = D.eng.map(e => e.slice()); g.userData.engCol = D.col || [0xffc0c6, 0xff2a3a]; g.userData.cnt = 3; g.userData.keepGeo = 1; return g; }
 function buildCnt(k) { cntSculptLoad(k); if (CNT_GEO[k]) return cntSculpted(k); const C = cntMats(), g = new TH.Group(), r = rnd(hash("cnt2" + k)); g.userData.eng = []; g.userData.engCol = [0xffc0c6, 0xff2a3a];
   const V = (x, y, z) => new TH.Vector3(x, y, z), add = (m, x, y, z) => { m.position.set(x || 0, y || 0, z || 0); g.add(m); return m; };
   const box = (w, h, d, mat, x, y, z, rx, ry, rz) => { const m = add(new TH.Mesh(new TH.BoxGeometry(w, h, d), mat), x, y, z); m.rotation.set(rx || 0, ry || 0, rz || 0); return m; };
