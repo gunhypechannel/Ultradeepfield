@@ -5447,7 +5447,7 @@ const MO_CINE = { arr: [["art/mimic/hive.webp", "The surviving hives wake at onc
   p3: [["art/mimic/nexus.webp", "Phase 3 · Omega Unbound", "Its core is exposed and it is drawing in everything it has. Six hours, Commander. Then it's gone."]] };
 function moCine(key, done) { const L = MO_CINE[key]; if (!L || document.getElementById("omcine")) return; const w = document.createElement("div"); w.id = "omcine"; document.body.appendChild(w); let i = 0, tm = 0;
   const show = () => { if (i >= L.length) { w.classList.add("out"); setTimeout(() => { w.remove(); done && done(); }, 600); return; } const [img, t, s] = L[i];
-    w.innerHTML = `<div class="omcimg" style="background-image:url(${img})"></div><div class="omcrift"></div><div class="omctx${t === "OMEGA" ? " big" : ""}"><b>${esc(t)}</b><span>${esc(s)}</span></div><small>Tap to continue</small>`; try { (t === "OMEGA" ? SFX.megaBeam : i ? SFX.charge : SFX.alarm)(); } catch (e) {} i++; clearTimeout(tm); tm = setTimeout(show, t === "OMEGA" ? 5200 : 4200); };
+    w.innerHTML = `<div class="omcimg" style="background-image:url(${img})"></div><div class="omcrift"></div><div class="omctx${t === "OMEGA" ? " big" : ""}"><b>${esc(t)}</b><span>${esc(s)}</span></div><small>Tap to continue</small>`; try { (t === "OMEGA" ? SFX.megaBeam : i ? SFX.charge : SFX.alarm)(); } catch (e) {} i++; clearTimeout(tm); tm = setTimeout(show, cineVo(s, t === "OMEGA" ? 5200 : 4200)); }; /* v864 */
   w.addEventListener("click", () => { clearTimeout(tm); show(); }); show(); }
 function moFinal() { if (document.getElementById("omcine")) return; const T = now(), { o } = moSt(T), out = moOutcome(o), w = document.createElement("div"); w.id = "omcine"; w.className = "fin"; document.body.appendChild(w);
   const head = out === "win" ? "Omega is dead." : "Omega withdrew into the dark.";
@@ -5734,7 +5734,7 @@ const CRC_CINE = { arr: ["s_crownship", "THE GREAT MOLTING", "“The Crown rises
 function crcCine(k) { if (document.getElementById("omcine")) return; const D = CRC_CINE[k]; if (!D) return; const w = document.createElement("div"); w.id = "omcine"; w.className = "fin crccine"; document.body.appendChild(w);
   w.innerHTML = `<div class="omcimg" style="background-image:url(art/carcinid/${D[0]}.webp)"></div><div class="omctx tx"><small>${esc(D[1])}</small><b class="q"></b><span class="after">${esc(D[3])}</span></div><small>Tap to close</small>`;
   const q = D[2], el = w.querySelector(".q"); let n = 0; const tick = () => { if (!document.body.contains(w)) return; el.textContent = q.slice(0, ++n); if (n < q.length) setTimeout(tick, 45); else w.classList.add("done"); };
-  try { SFX.gong(); } catch (e) {} setTimeout(tick, 900); setTimeout(() => { try { if (document.body.contains(w)) sbSay(CRC_SAY["cine_" + k]); } catch (e) {} }, 2600); /* v705 */ w.addEventListener("click", () => { if (n < q.length) n = q.length - 1; else { w.classList.add("out"); setTimeout(() => w.remove(), 600); } }); }
+  try { SFX.gong(); } catch (e) {} let vo = 0; setTimeout(() => { tick(); vo = cineVo(q, 0); setTimeout(() => { try { if (document.body.contains(w)) sbSay(CRC_SAY["cine_" + k]); } catch (e) {} }, Math.max(1700, vo + 500)); }, 900); /* v705; v864 the Crown speaks its words first */ w.addEventListener("click", () => { if (n < q.length) n = q.length - 1; else { w.classList.add("out"); setTimeout(() => w.remove(), 600); } }); }
 function crcCineCheck() { if (!S || !G.ready || G.cineOn || battle || document.getElementById("omcine")) return; const T = now(), e = crcClock(T).e; if (e < CRC_CROWN0 || e >= CRC_LEN) return; const M = crcS(), C = crcStC(T).b.cc; M.cine = M.cine || {}; if (!C || C.dead) return;
   if (!M.cine.arr) { M.cine.arr = 1; dirty(); return crcCine("arr"); } const ph = crcPh(C.hp); for (const p of [2, 3, 4]) if (ph >= p && !M.cine["p" + p]) { M.cine["p" + p] = 1; dirty(); return crcCine("p" + p); } }
 function crcBossInfo(x, T) { const B = CRC_BOSS[x.id], st = crcStC(T), A = st.b[B.id], Z = crcBossSet(B, A, T), tot = Object.values(A.dmg || {}).reduce((a, b) => a + b, 0), my = (A.dmg || {})[G.me] || 0, pct = Math.round(A.hp / B.hp * 100);
@@ -5830,7 +5830,7 @@ const CRC_LAB = [["crc1", "Breach Zone · Stage 1", () => ({ cnest: 1, cscut: 7,
   ["crc3", "Breach Zone · Stage 3", () => ({ cnest: 1, cscut: 11, charv: 1, cspit: 3, cguard: 2, cfrig: 1, cbrood: 1, cwar: 2, ccrys: 1, cdest: 1 })], ["crc4", "Breach Zone · Stage 4", () => ({ cnest: 1, cscut: 11, cspit: 3, cguard: 3, cbrood: 1, cwar: 2, ccrys: 1, cmolt: 1, clanc: 2, cvang: 1 })],
   ["crcp1", "Carcinid patrol (week 1)", () => ({ cfrig: 3, cint: 5 })], ["crcp2", "Carcinid patrol (week 2)", () => ({ cfrig: 3, cint: 5, cpearl: 2 })],
   ["crcp3", "Carcinid patrol (week 3)", () => ({ cfrig: 3, cint: 5, cpearl: 2, cdest: 1, cmint: 2 })],
-  ["crcp", "Carcinid patrol (week 4)", () => ({ cfrig: 2, cint: 5, cpearl: 2, cdest: 1, cmint: 2, cvang: 1, ccarr: 1 })], ["crck", "The wild Kraken", () => ({ ckrak: 2 })],
+  ["crcp", "Carcinid patrol (week 4)", () => ({ cfrig: 2, cint: 5, cpearl: 2, cdest: 1, cmint: 2, cvang: 1, ccarr: 1 })], ["crck", "The Kraken", () => ({ ckrak: 2 })],
   ...CRC_BOSSES.map(B => ["b" + B.id, B.name, () => { const A = { hp: B.hp }, Z = crcBossSet(B, A, now()); return Object.assign({ [Z.u]: 20 }, Z.esc); }]),
   ["bcc3", "The Abyssal Crown · Phase 3, molting", () => ({ ccrownm: 20, cmolt: 2, cmint: 4 })]];
 function crcLabMon(k) { const B = /^b/.test(k) ? CRC_BOSS[k.slice(1)] || CRC_BOSS.cc : null; return B ? B.mon : /^crcp/.test(k) ? "crcpat" : k === "crck" ? "wkraken" : "carcinid"; }
@@ -7697,7 +7697,7 @@ function trialRun() { const e = trialEl(); if (S.trialD === elDay()) return toas
   if (!Object.keys(mine).length) return toast("Build some warships at home first: the Trial uses your home fleet.", "warn");
   const foe = {}; for (const k in mine) foe[k] = Math.max(1, Math.round(mine[k] * .75));
   const res = simulate(stacksOf(mine, techEl(e), G.me), stacksOf(foe, t0, "hive")), win = res.winner === "a", n = win ? 2 : 1;
-  const rep = mkRep({ at: now(), kind: "attack", test: true, trial: e, title: `Elemental Trial · ${ELEM[e].n} Echo`, aUids: [G.me], aName: S.homeName + " Fleet", dName: `${ELEM[e].n} Echo`, lvl: myCmdLv(), ptype: EL_PTYPE[e], fortL: 0, alien: true, elAff: elAffRep(e),
+  const rep = mkRep({ at: now(), kind: "attack", test: true, trial: e, title: `Elemental Trial · ${ELEM[e].n} Echo`, aUids: [G.me], aName: S.homeName + " Fleet", dName: `${ELEM[e].n} Echo`, lvl: myCmdLv(), site: "planet", ptype: EL_PTYPE[e], fortL: 0, alien: true, elAff: elAffRep(e),
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: {}, lossD: lossesOf(res.start.d, res.dLeft) });
   S.trialD = elDay(); try { advBattle(rep); } catch (e) {} S.reports.unshift(rep); if (S.reports.length > 25) S.reports.length = 25;
   grantShards(n, win ? `Elemental Trial won` : `Elemental Trial`, e, { nocap: 1 }); dirty(); playBattle(rep); }
@@ -8449,7 +8449,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 863;
+const GAME_V = 864;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -10128,7 +10128,7 @@ function pyramidArrive(f) {
   const g = pyrGuards(y.lvl), mine0 = Object.assign({}, f.n);
   if (Object.keys(g).length) {
     const res = simulate(stacksOf(f.n, techOf(null), G.me), stacksOf(g, { hive: y.lvl * 2 }, "hive"));
-    const rep = mkRep({ at: f.arrive, kind: "attack", title: `Guardians of ${y.name} (Lv.${y.lvl})`, aUids: [G.me], aName: S.homeName + " Expedition", dName: `${y.name} Guardians`, lvl: y.lvl * 2, ptype: "desert", fortL: 0, alien: true,
+    const rep = mkRep({ at: f.arrive, kind: "attack", title: `Guardians of ${y.name} (Lv.${y.lvl})`, aUids: [G.me], aName: S.homeName + " Expedition", dName: `${y.name} Guardians`, lvl: y.lvl * 2, site: "planet", ptype: "desert", fortL: 0, alien: true,
       start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
     f.n = Object.assign({}, res.aLeft); addReport(rep); mapClash(y, rep);
     if (res.winner !== "a") { note(`The guardians of ${y.name} drove our expedition off.`, "loss"); if (!Object.values(f.n).some(v => v > 0)) S.fleets = S.fleets.filter(x => x !== f); return; }
@@ -10341,6 +10341,7 @@ function wbSep(T) { if (WB_SEPC && WB_SEPC.T === T) return WB_SEPC.o; const o = 
   WB_SEPC = { T, o }; return o; }
 function wbPos(key, T, out) { const o = wbPosRaw(key, T, out), s = wbSep(T)[WB[key] && WB[key].con != null ? "ovl" : key]; if (s) o.y += s; return o; }
 function wbPosRaw(key, T, out) { const o = out || {};
+  if (WB[key] && WB[key].con != null && wbG2(key)) { wbPosRaw("ovl", T, o); const r = Math.hypot(o.x, o.z) || 1, ux = o.x / r, uz = o.z / r, f = WB_OFF[key]; o.x += ux * f[0] - uz * f[1]; o.z += uz * f[0] + ux * f[1]; return o; } /* v864 */
   if (wbG2(key)) { const c2 = wbCyc2(T);
     if (WB_EL.includes(key)) { const L = LAYERS[2], r = (L.r0 + L.r1) / 2, i = WB_EL.indexOf(key), a = (hash("conv" + c2) % 6283) / 1000 + i * TAU / 5 + TAU * T / period(r); o.x = Math.cos(a) * r; o.z = Math.sin(a) * r; o.y = 34 + 4 * Math.sin(T / 7e5 + i); return o; }
     if (key === "epx") { o.x = 0; o.z = 0; o.y = 70 + 3 * Math.sin(T / 9e5); return o; }
@@ -10706,7 +10707,7 @@ function wbArt(key, w, h, t, b) { if (typeof BOSS3D === "undefined" || !wbD(key)
     if (WBR.key !== key) { if (WBR.b) { WBR.sc.remove(WBR.b.grp); WBR.b.grp.traverse(o => { if (o.geometry) o.geometry.dispose(); }); } BOSS3D.init(TH); BOSS3D.lod = MOBILE ? 2 : 0; BOSS3D.paint = 0; const m3 = wbD(key).m3, V0 = m3 === "aexion" && battle && battle.r && battle.r.sbForm ? WB_VIEW.aexW : WB_VIEW[m3], tall = true; /* v480: every boss faces the fleet, and turns to its target as it attacks */ // phones: simpler tentacles; a portrait replay has the attackers above, so the boss faces the camera
       WBR.b = m3 === "supercube" ? BOSS3D.prep(superCube3D(), wbEnv(WBR.r)) : BOSS3D.prep(BOSS3D[m3]((WB[key] || {}).el || (key === "epx" ? ((battle && battle.r && battle.r.pent) || wbPentAlive(now())) : undefined)), wbEnv(WBR.r)); BOSS3D.paint = 0; if (key === "epx") { WBR.b.ground = 16; WBR.shedQ = battle && battle.r && battle.r.shed ? battle.r.shed.map(k => WB[k].el) : null; } if (WBR.b.debris) { WBR.b.debris.visible = false; WBR.b.noDeb = 1; } if (key === "khz" && battle && battle.r) { const h = (battle.r.sbSeg || [100])[0]; WBR.b.anchOn = h <= 75 && h > 25 ? 1 : 0; if (h <= 25) WBR.b.drive("heart", 1); } if (key === "med" && battle && battle.r) { const h = (battle.r.sbSeg || [100])[0]; if (h <= 25) WBR.b.drive("shatter", 1); if (battle.r.sbT === "snk") WBR.b.snk = [0, 0, 1, 1, 1, 1, 1, 1]; } /* v486, v488 */ WBR.b.grp.rotation.y = WBR.y0 = WB_FRONT[m3] != null ? WB_FRONT[m3] : V0[0]; WBR.yaw = WBR.y0; WBR.lt = 0; WBR.sc.add(WBR.b.grp); WBR.key = key; WBR.tall = tall; WBR.swing = !!WB_SWING[m3]; WBR.cam.position.set(...(tall ? [WBR.swing ? V0[1][0] * .2 : 0, V0[1][1] * .6, Math.hypot(V0[1][0], V0[1][2])] : V0[1])); WBR.cam.lookAt(new TH.Vector3(WBR.swing ? V0[2][0] : 0, V0[2][1], V0[2][2])); WBR.hp = null; WBR.next = 0; }
     const W2 = Math.min(Math.round((MOBILE ? 820 : 1100) * (WBR.slow ? .75 : 1)), Math.round(w)), H2 = Math.round(W2 * h / w); if (WBR.w !== W2 || WBR.h !== H2) { WBR.r.setSize(W2, H2, false); WBR.cam.aspect = W2 / H2; WBR.cam.updateProjectionMatrix(); WBR.w = W2; WBR.h = H2; }
-    if (b) { if (WBR.hp != null && b.hp < WBR.hp - .004 && t > (WBR.hitT || 0)) { WBR.b.act("hit"); WBR.hitT = t + 700; } WBR.hp = b.hp; if (WBR.b.setHp) WBR.b.setHp(b.hp); if (WB_EL.includes(key) && battle && battle.r) WBR.b.mech = { s: battle.r.wbSh || 1, k: 0 }; if (key === "brd" && battle && battle.r && battle.r.wbSeg) WBR.b.pods = brdPods({ hp: { brd: battle.r.wbSeg[0] } }); if (key === "wym" && battle && battle.r) WBR.b.open = (battle.r.wbSh || 1) < 1.3; if (key === "col" && battle && battle.r && battle.r.wbSeg) { const h = battle.r.wbSeg[0]; WBR.b.phase = h <= 10 ? 2 : h <= 20 ? 1 : 0; WBR.b.heart = h <= 20 && (battle.r.wbSh || 1) <= 1 ? 1 : 0; } if (key === "tyr" && battle && battle.r) WBR.b.vault = wbVault(battle.r.at || now());
+    if (b) { if (WBR.hp != null && b.hp < WBR.hp - .004 && t > (WBR.hitT || 0)) { WBR.b.act("hit"); WBR.hitT = t + 700; } WBR.hp = b.hp; if (WBR.b.setHp) WBR.b.setHp(b.hp); if (WB_EL.includes(key) && battle && battle.r) WBR.b.mech = { s: battle.r.wbSh || 1, k: 0 }; if (key === "ovl" && battle && battle.r) WBR.b.cons = ovlCons(battle.r); /* v864 */ if (key === "brd" && battle && battle.r && battle.r.wbSeg) WBR.b.pods = brdPods({ hp: { brd: battle.r.wbSeg[0] } }); if (key === "wym" && battle && battle.r) WBR.b.open = (battle.r.wbSh || 1) < 1.3; if (key === "col" && battle && battle.r && battle.r.wbSeg) { const h = battle.r.wbSeg[0]; WBR.b.phase = h <= 10 ? 2 : h <= 20 ? 1 : 0; WBR.b.heart = h <= 20 && (battle.r.wbSh || 1) <= 1 ? 1 : 0; } if (key === "tyr" && battle && battle.r) WBR.b.vault = wbVault(battle.r.at || now());
       wbFend(key, b, t); } /* v407: the move, so its strike plays on the whole field */
     if (WBR.shedQ && b && b.hp < .5) { for (const el of WBR.shedQ) WBR.b.shed(el); WBR.shedQ = null; } /* v402: the wing this fight tore loose breaks mid-battle */
     if (!WB[key] && WBR.b.drive) WBR.b.drive("transform", battle && battle.r && battle.r.sbForm ? 1 : 0); /* v451 */
@@ -12538,7 +12539,7 @@ function arrive(f) {
   if (st === "shielded") { note(`${p.name} is under an occupation shield. Fleet returning.`, "warn"); return; }
   const D = defenders(p), defUid = p.owner, hadDef = D.stacks.length > 0, mine0 = Object.assign({}, f.n);
   const res = simulate(stacksOf(f.n, techOf(null), G.me).concat(allyStacks(f.allies, p.lvl)), D.stacks);
-  const rep = mkRep({ at: f.arrive, kind: "attack", title: `Attack on ${p.name} (Lv.${p.lvl})`, src: launchSrc(f), aUids: [G.me].concat(f.allies || []), aName: S.homeName + " Fleet", dName: p.name, dUid: defUid || null, lvl: p.lvl, ptype: p.type, fortL: D.fortL, alien: D.alien,
+  const rep = mkRep({ at: f.arrive, kind: "attack", title: `Attack on ${p.name} (Lv.${p.lvl})`, src: launchSrc(f), aUids: [G.me].concat(f.allies || []), aName: S.homeName + " Fleet", dName: p.name, dUid: defUid || null, lvl: p.lvl, site: "planet", ptype: p.type, fortL: D.fortL, alien: D.alien,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
   f.n = Object.assign({}, f.allies ? (res.aByOwn[G.me] || {}) : res.aLeft); fieldRepair(f, mine0, rep);
   repairDocks(rep, lossesOf(mine0, f.n)); // only our own losses get towed home
@@ -12589,7 +12590,7 @@ function repairDocks(rep, lost, all) { /* v510 all: every ship destroyed comes h
 function launchSrc(f) { const o = f && f.from ? G.byId[f.from] : homePlanet(); if (!o) return null; try { return { name: String(o.name || "").slice(0, 24), c: coordStr(o) }; } catch (e) { return null; } }
 const cleanSrc = s => s && typeof s === "object" && typeof s.c === "string" && /^\d{1,2}:\d{1,4}:\d{1,4}$/.test(s.c) ? { name: String(s.name || "").slice(0, 24), c: s.c } : null;
 function defenseItem(rep, p, captured) {
-  return { id: rep.id + "-" + hash(G.me || "x"), at: rep.at, kind: "defense", title: `Attack on ${p.name}`, aUids: rep.aUids, dName: p.name, lvl: p.lvl, pid: p.id, ptype: p.type, fortL: rep.fortL, src: rep.src || null,
+  return { id: rep.id + "-" + hash(G.me || "x"), at: rep.at, kind: "defense", title: `Attack on ${p.name}`, aUids: rep.aUids, dName: p.name, lvl: p.lvl, pid: p.id, site: "planet", ptype: p.type, fortL: rep.fortL, src: rep.src || null,
     start: rep.start, rounds: rep.rounds, winner: rep.winner, lossA: rep.lossA, lossD: rep.lossD, captured, sim: rep.sim ? { v: rep.sim.v, seed: rep.sim.seed, doc: rep.sim.doc, quick: rep.sim.quick, A: rep.sim.A, D: rep.sim.D } : null };
 }
 /* ---------- resource fields: one gatherer at a time ----------
@@ -12693,7 +12694,7 @@ function raidHits() {
   const aca = acadOn(), raiders = colonyForce(lvl, true); for (const k in raiders) raiders[k] = Math.max(1, Math.round(raiders[k] * (aca ? .35 : .6))); // Hive raids 40% lighter, and lighter still while the Academy is teaching you
   const hp = homePlanet(), res = simulate(stacksOf(intercept(raiders, { hive: lvl }, S.homeName, at, homePlanet()), { hive: lvl }, null), stacksOf(home, techOf(null), G.me, S.b.fortress).concat(hp ? guardStacks(hp) : []));
   const mineLeft = hp && hp.ag ? (res.dByOwn[G.me] || {}) : res.dLeft; // allied guards stationed on the homeworld fight the raid too
-  const rep = mkRep({ at, kind: "raid", title: `Hive raid on ${S.homeName} (Lv.${lvl})`, aName: "Hive Raiders", dName: S.homeName, lvl, ptype: hp ? hp.type : "terran", fortL: S.b.fortress, alien: true,
+  const rep = mkRep({ at, kind: "raid", title: `Hive raid on ${S.homeName} (Lv.${lvl})`, aName: "Hive Raiders", dName: S.homeName, lvl, site: "planet", ptype: hp ? hp.type : "terran", fortL: S.b.fortress, alien: true,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
   for (const k in S.ships) S.ships[k] = mineLeft[k] || 0;
   if (hp && hp.ag) { guardsAfter(hp, res, rep, false); putPlanet(hp); }
@@ -12731,7 +12732,7 @@ function botRaidHits() {
   const r = S.botRaid; S.botRaid = null; S.nextBotRaid = r.arrive + botRaidGap();
   const p = G.byId[r.pid], b = BOT_BY[r.bot]; if (!p || pStatus(p) !== "mine" || !b) return;
   const D = defenders(p), res = simulate(stacksOf(intercept(r.n, botTech(b), p.name, r.arrive, p, { x: r.ox, y: r.oy }), botTech(b), b.id), D.stacks);
-  const rep = mkRep({ at: r.arrive, kind: "defense", title: `Attack on ${p.name}`, aUids: [b.id], dName: p.name, lvl: p.lvl, ptype: p.type, fortL: D.fortL,
+  const rep = mkRep({ at: r.arrive, kind: "defense", title: `Attack on ${p.name}`, aUids: [b.id], dName: p.name, lvl: p.lvl, site: "planet", ptype: p.type, fortL: D.fortL,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft), captured: false });
   const g = Object.assign({}, p.ag ? (res.dByOwn[G.me] || {}) : res.dLeft); delete g.fortress; p.garrison = cleanShips(g); guardsAfter(p, res, rep, false);
   if (rep.lossD.fortress) p.b = Object.assign({}, p.b, { fortress: Math.max(0, (p.b.fortress || 0) - 1) });
@@ -12821,7 +12822,7 @@ async function resolveAssault(f) {
         result = { winner: "none", surv, loot: {}, captured: null, rep: null };
       } else {
         const D = defenders(p), res = simulate(A, D.stacks);
-        const rep = { at, kind: "attack", title: `${a.rally ? "Joint strike" : "Joint strike"} on ${p.name} (Lv.${p.lvl})`, aUids: uids, aName: a.rally ? "Alliance joint strike" : "Joint strike", dName: p.name, dUid: p.owner || null, lvl: p.lvl, ptype: p.type, fortL: D.fortL, alien: D.alien,
+        const rep = { at, kind: "attack", title: `${a.rally ? "Joint strike" : "Joint strike"} on ${p.name} (Lv.${p.lvl})`, aUids: uids, aName: a.rally ? "Alliance joint strike" : "Joint strike", dName: p.name, dUid: p.owner || null, lvl: p.lvl, site: "planet", ptype: p.type, fortL: D.fortL, alien: D.alien,
           start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) };
         const surv = {}; for (const u of uids) surv[u] = res.aByOwn[u] || {};
         const loot = {}; let captured = null;
@@ -14660,7 +14661,7 @@ function readInbox(d) {
   for (const it of fresh) {
     if (it.kind === "spy") { S.inboxSeen = Math.max(S.inboxSeen || 0, +it.at); const p0 = G.byId[it.pid]; note(`Counter-espionage: ships over ${p0 ? p0.name : "your world"} shot down ${okInt(it.n)} probe${okInt(it.n) > 1 ? "s" : ""}${typeof it.by === "string" ? ` from ${nameOf(it.by)}` : ""}.`, "win"); continue; } // v279
     const rep = mkRep({ at: +it.at, kind: "defense", title: String(it.title || "Attack").slice(0, 80), aUids: Array.isArray(it.aUids) ? it.aUids.filter(x => typeof x === "string").slice(0, 20) : [], dName: String(it.dName || "").slice(0, 40),
-      lvl: okInt(it.lvl), ptype: TYPES.includes(it.ptype) ? it.ptype : "terran", fortL: okInt(it.fortL),
+      lvl: okInt(it.lvl), site: it.kind === "tile" ? "space" : "planet", ptype: TYPES.includes(it.ptype) ? it.ptype : "terran", fortL: okInt(it.fortL),
       start: { a: cleanUnits((it.start || {}).a), d: cleanUnits((it.start || {}).d) }, sim: cleanSim(it.sim), rounds: (Array.isArray(it.rounds) ? it.rounds.slice(0, MAX_ROUNDS) : []).map(r => ({ a: cleanUnits(r && r.a), d: cleanUnits(r && r.d) })),
       winner: ["a", "d", "draw"].includes(it.winner) ? it.winner : "draw", lossA: cleanUnits(it.lossA), lossD: cleanUnits(it.lossD), captured: !!it.captured, src: cleanSrc(it.src) });
     if (it.kind === "tile") { // a rival hit one of our gathering fleets (or outposts)
@@ -17142,7 +17143,7 @@ function cubeStrikeHit(cs) {
   const home = {}; for (const k in S.ships) if (S.ships[k]) home[k] = S.ships[k]; for (const k in S.def) if (S.def[k]) home[k] = S.def[k]; if (S.b.fortress) home.fortress = 1;
   const hp = homePlanet(), att = cubeForce(cs.lvl), res = simulate(stacksOf(att, { cube: cs.lvl }, "cube"), stacksOf(home, techOf(null), G.me, S.b.fortress).concat(hp ? guardStacks(hp) : []));
   const mineLeft = hp && hp.ag ? (res.dByOwn[G.me] || {}) : res.dLeft;
-  const rep = mkRep({ at: cs.impact, kind: "raid", title: `Cube strike on ${S.homeName}`, aName: "The Cube", dName: S.homeName, lvl: cs.lvl, ptype: hp ? hp.type : "terran", fortL: S.b.fortress, alien: true,
+  const rep = mkRep({ at: cs.impact, kind: "raid", title: `Cube strike on ${S.homeName}`, aName: "The Cube", dName: S.homeName, lvl: cs.lvl, site: "planet", ptype: hp ? hp.type : "terran", fortL: S.b.fortress, alien: true,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) });
   for (const k in S.ships) S.ships[k] = mineLeft[k] || 0; if (hp && hp.ag) { guardsAfter(hp, res, rep, false); putPlanet(hp); }
   repairDocks(rep, lossesOf(Object.fromEntries(Object.entries(home).filter(([k]) => SH[k])), mineLeft));
@@ -22570,7 +22571,7 @@ function proLand(replay) { if (!replay) { S.proDone = 1; dirty(); } G.advThen = 
 function proScouts(replay) { const ours = { corvette: 12, heavyFighter: 30, battleship: 2 }, hive = colonyForce(1); let best = null;
   for (let i = 0; i < 6 && !best; i++) { const res = simulate(stacksOf(hive, { hive: 1 }, null), stacksOf(ours, { weapons: 0, shields: 0, armor: 0 }, G.me), { seed: 5100 + i }); if (res.winner === "d") best = res; }
   if (!best) return proWin(replay);
-  const rep = Object.assign(mkRep({ at: now(), kind: "raid", title: "The first defence", aName: "Hive Scouts", dName: S.homeName || "Our new world", lvl: 1, ptype: "terran", fortL: 0, alien: true, start: best.start, rounds: best.rounds, winner: best.winner, sim: best.sim, lossA: lossesOf(best.start.a, best.aLeft), lossD: lossesOf(best.start.d, best.dLeft) }), { id: "intro-scouts", recDone: 1 });
+  const rep = Object.assign(mkRep({ at: now(), kind: "raid", title: "The first defence", aName: "Hive Scouts", dName: S.homeName || "Our new world", lvl: 1, site: "planet", ptype: "terran", fortL: 0, alien: true, start: best.start, rounds: best.rounds, winner: best.winner, sim: best.sim, lossA: lossesOf(best.start.a, best.aLeft), lossD: lossesOf(best.start.d, best.dLeft) }), { id: "intro-scouts", recDone: 1 });
   G.proAfter = () => proWin(replay); try { playBattle(rep); } catch (e) { G.proAfter = null; proWin(replay); } }
 function proWin(replay) { if (!replay && !S.proWin) { S.proWin = 1; grantRw({ m: 3000, c: 2000, g: 800, shards: 5 }, "The first defence"); dirty();
     celebrate({ k: "firstwin", kick: "Your first victory", t: "This World Is Ours", art: "adv", s: "The Hive scouts are scrap. Your colony has its first victory, and its first spoils.", say: PRO_WIN, rw: "3,000 metal, 2,000 crystal, 800 gas and ◆5. Already in your stores.", go: "Let's build" }); }
@@ -25771,7 +25772,7 @@ function labBattle() {
   for (let i = 0; i < 10; i++) { const a = mix(.95 + i * .01, false), d = mix(.9 + i * .015, i === 0); for (const k in a) n += a[k]; for (const k in d) n += d[k];
     A = A.concat(stacksOf(a, { weapons: 12 + i % 4, shields: 12 + i % 3, armor: 12 + i % 5 }, "pa" + i)); D = D.concat(stacksOf(d, { weapons: 13 + i % 3, shields: 11 + i % 4, armor: 13 + i % 2 }, "pd" + i, i === 0 ? 3 : 0)); }
   const res = simulate(A, D, { doc: "assault", seed: 20250 });
-  const rep = Object.assign(mkRep({ at: S.labMail ? S.labMail.t : now(), kind: "attack", title: `Simulator test · 10 vs 10 · ${n.toLocaleString("en-US")} units`, aUids: [], aName: "Coalition of Ten", dName: "Fortress Kesh Prime", lvl: 30, ptype: "lava", fortL: 3, alien: false,
+  const rep = Object.assign(mkRep({ at: S.labMail ? S.labMail.t : now(), kind: "attack", title: `Simulator test · 10 vs 10 · ${n.toLocaleString("en-US")} units`, aUids: [], aName: "Coalition of Ten", dName: "Fortress Kesh Prime", lvl: 30, site: "planet", ptype: "lava", fortL: 3, alien: false,
     start: res.start, rounds: res.rounds, winner: res.winner, sim: res.sim, lossA: lossesOf(res.start.a, res.aLeft), lossD: lossesOf(res.start.d, res.dLeft) }), { id: LAB_ID, recDone: 1 });
   S.reports.unshift(rep); if (S.reports.length > 40) S.reports.length = 40; return rep;
 }
@@ -28172,10 +28173,13 @@ const CNT_CINE = { arr: [["art/rwar/relay.webp", "Every relay still standing fir
   p4: [["art/rwar/c_eternal.webp", "Phase 4 · The Final Continuity Transfer", "It is sending its mind to something hidden in the dark. Cut the transmitter array, then destroy the reactor."]],
   coll: [["art/rwar/c_prime.webp", "Its lights are failing.", "The shields go first. Then the reactor. Then everything that held it together."]],
   away: [["art/rwar/c_prime.webp", "The gateway is closing.", "The Prime Ark pulls back through it, wounded. We will see it again."]] };
+/* v864 a cinematic panel's line, spoken by the Advisor (or the Crown) when it is voiced; the panel holds until it is said */
+function cineVo(s, base) { try { if (!s || !voiceHas(s) || !VOICE.on || (typeof AU !== "undefined" && AU.muted)) return base; speak(s); const e = VENV && VENV[voiceKey(s)]; return e ? Math.max(base, e.length / 25 * 1000 + 900) : base; } catch (e) { return base; } }
 function cntCine(key, done) { const L = CNT_CINE[key]; if (!L || document.getElementById("omcine")) return; const w = document.createElement("div"); w.id = "omcine"; w.className = "cntc"; document.body.appendChild(w); let i = 0, tm = 0;
   const show = () => { if (i >= L.length) { w.classList.add("out"); setTimeout(() => { w.remove(); done && done(); }, 600); return; } const [img, t, s] = L[i], big = /^THE PRIME/.test(t);
-    w.innerHTML = `<div class="omcimg" style="background-image:url(${img})"></div><div class="omcrift"></div><div class="omctx${big ? " big" : ""}"><b>${esc(t)}</b><span>${esc(s)}</span></div><small>Tap to continue</small>`; try { (big ? SFX.megaBeam : i ? SFX.charge : SFX.alarm)(); } catch (e) {} i++; clearTimeout(tm); tm = setTimeout(show, big ? 5600 : 4400); };
+    w.innerHTML = `<div class="omcimg" style="background-image:url(${img})"></div><div class="omcrift"></div><div class="omctx${big ? " big" : ""}"><b>${esc(t)}</b><span>${esc(s)}</span></div><small>Tap to continue</small>`; try { (big ? SFX.megaBeam : i ? SFX.charge : SFX.alarm)(); } catch (e) {} i++; clearTimeout(tm); tm = setTimeout(show, cineVo(s, big ? 5600 : 4400)); }; /* v864 */
   w.addEventListener("click", () => { clearTimeout(tm); show(); }); show(); }
+const CNT_PRIME_LINE = "That's the Prime Ark, Commander. Every ship we've ever killed went through it. Bring it down and they stay dead."; /* v864, approved */
 const CNT_SIG = ["CONTINUITY TRANSFER: INCOMPLETE.", "UNKNOWN RECIPIENT DETECTED.", "OMEGA PROTOCOL: ACTIVE."]; /* the owner's own words */
 function cntFinal() { if (document.getElementById("omcine")) return; const T = now(), { o } = cntFinSt(T), w = document.createElement("div"); w.id = "omcine"; w.className = "fin cntc"; document.body.appendChild(w);
   const head = o.out === "win" ? "The Prime Ark is destroyed, and its mind went nowhere." : o.out === "part" ? "The Prime Ark is destroyed. Its mind reached somewhere first." : "The Prime Ark withdrew through its gateway.";
@@ -28608,6 +28612,7 @@ function cntPrimeAtk(ctx, b, m, u, S0, E0, Lg, LE, d, T, t, scr, hit, rs, ws, W,
 /* its turrets, its dome, its phases and its death: drawn every frame while it lives */
 function cntPrimeFx(ctx, b, scr, T, W, H, d, t) { if (!b || !b.Q) return; ctx.save(); ctx.globalCompositeOperation = "lighter"; const rs = glowSprite(`rgba(${CNT_RED},1)`);
   for (let i = 0; i < b.Q.length; i++) { const q = b.Q[i]; if (!q || q.k !== "cnprime") continue; const P = scr[i], g = b.geo && b.geo[i], Lg = g ? g.L : 150, alive = b.n[i] > 0;
+    if (alive && P && !(b.intro > 0) && !b.primeSaid) { b.primeSaid = 1; try { if (advOnce("primeArk")) sbSay(CNT_PRIME_LINE); } catch (e) {} } /* v864 */
     if (alive && P) { const ph = cntEterPh(b, i), fast = (ph >= 1 ? 2 : 1) * (b.kPrimeFast > T ? 1.5 : 1) * (ph >= 2 ? 1.5 : 1), fo = kFoes(b, i).filter(j => scr[j]).slice(0, 6), ringY = P.y - Lg * .15;
       fo.forEach((j, n) => { const a = n / 6 * TAU + .3, tx = P.x + Math.cos(a) * Lg * .55, ty = ringY + Math.sin(a) * Lg * .14, E = scr[j], f = (T * .9 * fast + n * .17) % 1;
         ctx.globalAlpha = .9; ctx.drawImage(rs, tx - 6 * d, ty - 6 * d, 12 * d, 12 * d); ctx.globalAlpha = .35; ctx.strokeStyle = `rgba(${CNT_RED},1)`; ctx.lineWidth = 1 * d; ctx.setLineDash([3 * d, 6 * d]); ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(E.x, E.y); ctx.stroke(); ctx.setLineDash([]); /* each locked on its own ship */
@@ -30361,6 +30366,65 @@ function bglFlush(b) { const G = b.gl; if (!G || !b.glOn) return;
   } catch (e) { b.glFail = 1; b.glOn = false; bglHide(b); try { errCrumb("battle GPU flush: " + (e && e.message)); } catch (er) {} } }
 function bglHide(b) { const G = b && b.gl; if (!G) return; for (const g of [G.o, G.u]) if (g && g.c && g.c.style.visibility !== "hidden") g.c.style.visibility = "hidden"; }
 function bglFree(b) { const G = b && b.gl; if (!G) return; for (const g of [G.o, G.u]) { if (!g) continue; g.freed = 1; try { const x = g.gl.getExtension("WEBGL_lose_context"); if (x) x.loseContext(); } catch (e) {} try { g.c.remove(); } catch (e) {} } b.gl = null; }
+const ovlCons = r => r && r.wb === "ovl" ? (r.wbSh ? Math.max(0, Math.min(4, Math.round((r.wbSh - 1) / .75))) : 4) : 0; /* v864 the conduits standing when the fight began */
+/* v864 the battle backdrop's world (owner: "some battles dont take place at a planet but the battle simulation still shows a planet for
+   every battle ... the planet in the background is so pixelated and uninteresting ... sharper or more eclipsed in the background").
+   A world shows only when the fight is at one (raids on a world, attacks on and defences of planets, joint strikes on a planet, the
+   Guardians of a ruin world, the Elemental trials, the fortress simulator); deep-space fights (expeditions, pirates, monsters, world
+   bosses, the Cube, gathering fields, the labs) get open space. The world is painted per pixel at close to the screen's resolution from
+   3D noise on its sphere, so it stays sharp, and it is mostly in eclipse: the sun sits behind it, so only a thin lit crescent and its
+   glowing air face the battle, with the night side barely visible (city lights on living worlds, glowing rifts on lava worlds). */
+const BP_RE = /^(Attack on |Hive raid on |Cube strike on |The first defence|Guardians of |Elemental Trial)/;
+function bpAt(r) { if (!r) return false; if (r.site) return r.site === "planet"; const t = r.title || "";
+  return !!(r.pid || BP_RE.test(t) || (r.kind === "defense" && !/battle at /.test(t)) || (/^Joint strike on /.test(t) && r.dUid) || /^Fortress /.test(r.dName || "")); }
+const bpH = (x, y, z) => { let h = Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(z, 1274126177) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+function bpN(x, y, z) { const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), xf = x - xi, yf = y - yi, zf = z - zi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf), w = zf * zf * (3 - 2 * zf);
+  const a = bpH(xi, yi, zi), b = bpH(xi + 1, yi, zi), c = bpH(xi, yi + 1, zi), d = bpH(xi + 1, yi + 1, zi), e = bpH(xi, yi, zi + 1), f = bpH(xi + 1, yi, zi + 1), g = bpH(xi, yi + 1, zi + 1), h = bpH(xi + 1, yi + 1, zi + 1);
+  const k0 = a + (b - a) * u, k1 = c + (d - c) * u, k2 = e + (f - e) * u, k3 = g + (h - g) * u, m0 = k0 + (k1 - k0) * v, m1 = k2 + (k3 - k2) * v; return m0 + (m1 - m0) * w; }
+function bpF(x, y, z, o) { let s = 0, a = .5, f = 1, n = 0; for (let i = 0; i < o; i++) { s += a * bpN(x * f, y * f, z * f); n += a; f *= 2.03; a *= .5; } return s / n; }
+const bpRGB = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const bpMix = (A, B, k) => [A[0] + (B[0] - A[0]) * k, A[1] + (B[1] - A[1]) * k, A[2] + (B[2] - A[2]) * k];
+const bpSS = (a, b, x) => { const u = Math.max(0, Math.min(1, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
+const BP_C = []; // the last couple of worlds painted (a battle repaints only when its size changes)
+// the surface colour of one point of the world (n: its unit normal, seeded), with its own glow; cheap when only the night side needs it
+function bpSurf(type, P, nx, ny, nz, full) { const o = full ? 5 : 3, h = bpF(nx * 3.1 + 11, ny * 3.1 + 3, nz * 3.1 + 7, o); let c, em = 0, emc = null, spec = 0;
+  if (type === "gas") { const band = ny * 7 + (bpF(nx * 1.4, ny * 5, nz * 1.4, full ? 4 : 2) - .5) * 3.2, s = .5 + .5 * Math.sin(band); c = bpMix(bpMix(P[2], P[0], s), bpMix(P[1], P[3], s), bpSS(.3, .8, h)); }
+  else if (type === "lava") { const r = Math.abs(bpF(nx * 3.2 + 5, ny * 3.2, nz * 3.2, o) - .5); c = bpMix(P[0], P[3], bpSS(.35, .7, h)); if (r < .045) { em = (1 - r / .045) ** 1.6; emc = bpMix(P[1], P[2], em); } }
+  else if (type === "ice") { const r = Math.abs(bpF(nx * 4 + 2, ny * 4, nz * 4, full ? 3 : 2) - .5); c = bpMix(bpMix(P[2], P[0], bpSS(.3, .6, h)), P[1], bpSS(.55, .8, h)); if (r < .02) c = bpMix(c, P[2], .6); }
+  else if (type === "desert") { const dn = .5 + .5 * Math.sin((nx * 9 + ny * 14 + h * 9)); c = bpMix(bpMix(P[2], P[0], bpSS(.3, .55, h)), bpMix(P[1], P[3], dn * .5), bpSS(.5, .8, h)); }
+  else if (type === "toxic") { c = bpMix(bpMix(P[2], P[0], bpSS(.3, .6, h)), P[1], bpSS(.6, .85, h)); if (full) c = bpMix(c, P[3], bpSS(.6, .9, bpF(nx * 3 + 9, ny * 3, nz * 3, 3)) * .35); }
+  else { const sea = type === "ocean" ? .64 : .52, land = h > sea; // terran / ocean
+    if (land) { c = bpMix(P[1], P[2], bpSS(.5, .75, bpF(nx * 5 + 1, ny * 5, nz * 5, full ? 3 : 1))); if (bpN(nx * 70, ny * 70, nz * 70) > .8 && type === "terran") { em = .55; emc = [255, 196, 128]; } }
+    else { c = bpMix(bpMix(P[0], [8, 20, 44], .45), P[0], bpSS(sea - .2, sea, h)); spec = 1; }
+    if (ny * .92 + nx * .3 > .86) c = bpMix(c, P[3], bpSS(.86, .93, ny * .92 + nx * .3)); }
+  if (full && (type === "terran" || type === "ocean" || type === "toxic" || type === "gas")) { const cl = bpSS(.56, .74, bpF(nx * 4.4 + 21, ny * 6 + 5, nz * 4.4 + 2, 4)) * (type === "gas" ? .25 : type === "toxic" ? .35 : .75); c = bpMix(c, type === "toxic" ? P[3] : [240, 246, 250], cl); spec *= 1 - cl; }
+  return [c, em, emc, spec]; }
+function bpPaint(x, r, W, H, pcx, pcy, pr) { const type = PAL[r.ptype] ? r.ptype : "terran", seed = hash(String(r.dName || type)) % 97, key = `${type}|${seed}|${W}|${H}`;
+  let hit = BP_C.find(e => e.k === key);
+  if (!hit) { const A = 1.075, x0 = Math.max(0, Math.floor(pcx - pr * A)), x1 = Math.min(W, Math.ceil(pcx + pr * A)), y0 = Math.max(0, Math.floor(pcy - pr * A)), y1 = Math.min(H, Math.ceil(pcy + pr * A)); if (x1 <= x0 || y1 <= y0) return;
+    const bw = x1 - x0, bh = y1 - y0, k = Math.min(1, Math.sqrt((MOBILE ? 240000 : 360000) / (bw * bh))), cw = Math.max(1, Math.round(bw * k)), ch = Math.max(1, Math.round(bh * k));
+    const cv = document.createElement("canvas"); cv.width = cw; cv.height = ch; const cx = cv.getContext("2d"), im = cx.createImageData(cw, ch), D = im.data, P = PAL[type].slice(0, 4).map(bpRGB), AT = bpRGB(PAL[type][4]);
+    const Lx = -.42, Ly = -.36, Lz = -.83, ll = Math.hypot(Lx, Ly, Lz), lx = Lx / ll, ly = Ly / ll, lz = Lz / ll, l2 = Math.hypot(lx, ly), sx = seed * 1.7, sz = seed * .9;
+    const ca = Math.cos(.35), sa = Math.sin(.35); // a tilt of its axis
+    for (let j = 0; j < ch; j++) { const py = y0 + (j + .5) / k, dy = (py - pcy) / pr;
+      for (let i = 0; i < cw; i++) { const px = x0 + (i + .5) / k, dx = (px - pcx) / pr, r2 = dx * dx + dy * dy, o = (j * cw + i) * 4; if (r2 > A * A) continue;
+        const rr = Math.sqrt(r2), facing = rr > 1e-6 ? (dx * lx + dy * ly) / (rr * l2) : 0; // how far round this point of the limb faces the sun
+        if (rr > 1) { // its air beyond the limb, glowing where the sun shines through it
+          const f = Math.exp(-(rr - 1) * 38) * Math.max(0, facing) ** 2.2 * .95 + Math.exp(-(rr - 1) * 70) * .08; if (f < .004) continue;
+          D[o] = AT[0]; D[o + 1] = AT[1]; D[o + 2] = AT[2]; D[o + 3] = Math.min(255, f * 255); continue; }
+        const nz = Math.sqrt(1 - r2), lam = dx * lx + dy * ly + nz * lz, lit = bpSS(-.02, .22, lam), full = lit > .002;
+        const tx = dx * ca - dy * sa, ty = dx * sa + dy * ca, [c, em, emc, spec] = bpSurf(type, P, tx + sx, ty, nz + sz, full);
+        const night = .045 + .03 * Math.max(0, facing), sh = night + (1.15 - night) * lit; let R = c[0] * sh, Gc = c[1] * sh, B = c[2] * sh;
+        const rim = (1 - nz) ** 2.6 * (.25 + .75 * Math.max(0, facing)) * (.2 + .8 * bpSS(-.25, .15, lam)); R += AT[0] * rim * .9; Gc += AT[1] * rim * .9; B += AT[2] * rim * .9; // its air seen edge-on
+        if (spec && lit > .05) { const hz = lz + 1, hl = Math.hypot(lx, ly, hz), sp = Math.max(0, (dx * lx + dy * ly + nz * hz) / hl) ** 60 * lit * .8; R += 255 * sp; Gc += 236 * sp; B += 210 * sp; }
+        if (em) { const e2 = em * (1 - lit * .85) * (type === "lava" ? 1 : .5); R += emc[0] * e2; Gc += emc[1] * e2; B += emc[2] * e2; }
+        const edge = Math.min(1, (1 - rr) * pr * k * 1.2 + .001); // a crisp, anti-aliased limb
+        D[o] = Math.min(255, R); D[o + 1] = Math.min(255, Gc); D[o + 2] = Math.min(255, B); D[o + 3] = 255 * Math.min(1, edge * 1.5 + 0); } }
+    cx.putImageData(im, 0, 0); hit = { k: key, cv, x0, y0, bw, bh }; BP_C.unshift(hit); BP_C.length = Math.min(BP_C.length, 2); }
+  x.save(); x.imageSmoothingEnabled = true; try { x.imageSmoothingQuality = "high"; } catch (e) {} x.drawImage(hit.cv, hit.x0, hit.y0, hit.bw, hit.bh); x.restore(); }
+// open space where the fight has no world: a far nebula and a faint dust lane where the world used to sit, so the frame stays balanced
+function bpSpace(x, W, H) { const g = x.createRadialGradient(W * .9, H * .92, 0, W * .9, H * .92, W * .7); g.addColorStop(0, "rgba(80,60,150,.2)"); g.addColorStop(.5, "rgba(40,50,120,.08)"); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const r = rnd(77); x.save(); x.globalCompositeOperation = "lighter"; for (let i = 0; i < 60; i++) { const u = r(), px = W * (.35 + u * .75), py = H * (1.05 - u * .55) + (r() - .5) * H * .12, s = W * (.03 + r() * .08), gg = x.createRadialGradient(px, py, 0, px, py, s); gg.addColorStop(0, `rgba(120,110,190,${.025 + r() * .03})`); gg.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = gg; x.fillRect(px - s, py - s, s * 2, s * 2); } x.restore(); }
 function drawBattle(t) {
   const b = battle, cv = $("#bcv"); if (!cv) return; try { harbBattle(b); } catch (e) {} /* v718 the Harbinger's heart under the fight */
   /* v66 adaptive quality: phones start at 1.5x resolution (not 2x); if frames run long the battle steps down to 1.25x then 1x */
@@ -30408,9 +30472,7 @@ function drawBattle(t) {
         x.fillStyle = g; x.beginPath(); x.moveTo(sx, sy); x.arc(sx, sy, L, a0 - wd, a0 + wd); x.closePath(); x.fill(); }
       const fs = W * .3, g2 = x.createLinearGradient(sx - fs, 0, sx + fs, 0); g2.addColorStop(0, "rgba(255,200,160,0)"); g2.addColorStop(.5, "rgba(255,220,190,.45)"); g2.addColorStop(1, "rgba(255,200,160,0)"); x.fillStyle = g2; x.fillRect(sx - fs, sy - 1.2 * d, fs * 2, 2.4 * d);
       x.fillStyle = "#fffaf0"; x.beginPath(); x.arc(sx, sy, 3.5 * d, 0, TAU); x.fill(); x.globalCompositeOperation = "source-over"; }
-    drawPlanetBody(x, { type: r.ptype || "terran", v: 0 }, pcx, pcy, pr, -.8, -.7);
-    const ag = x.createRadialGradient(pcx, pcy, pr * .96, pcx, pcy, pr * 1.09); ag.addColorStop(0, "rgba(90,170,255,0)"); ag.addColorStop(.35, "rgba(110,190,255,.55)"); ag.addColorStop(1, "rgba(60,120,255,0)");
-    x.fillStyle = ag; x.beginPath(); x.arc(pcx, pcy, pr * 1.09, 0, TAU); x.fill();
+    b.atP = bpAt(r); /* v864 */ if (b.atP) { try { bpPaint(x, r, W, H, pcx, pcy, pr); } catch (e) { drawPlanetBody(x, { type: r.ptype || "terran", v: 0 }, pcx, pcy, pr, -.8, -.7); } } else bpSpace(x, W, H);
     }
   b.shake *= .88; const shx = reduced ? 0 : (Math.random() - .5) * b.shake, shy = reduced ? 0 : (Math.random() - .5) * b.shake;
   /* v78 camera director: one view transform over the whole battlefield (backdrop, ships and every effect move together, so nothing
@@ -30428,7 +30490,7 @@ function drawBattle(t) {
   else { ctx.setTransform(vs, 0, 0, vs, vtx + shx, vty + shy); ctx.drawImage(b.bg, 0, 0); }
   // the planet burns as its defenders fall
   { let s0 = 0, s1 = 0; Q.forEach((q, i) => { if (q.side === "d") { s0 += q.n0 * q.pow; s1 += b.n[i] * q.pow; } }); const heat = s0 ? clamp(1 - s1 / s0, 0, 1) : 0;
-    if (heat > .03 && !lo) { ctx.globalCompositeOperation = "lighter"; const nF = Math.round(3 + heat * 16);
+    if (heat > .03 && !lo && b.atP) { ctx.globalCompositeOperation = "lighter"; const nF = Math.round(3 + heat * 16);
       for (let i = 0; i < nF; i++) { const a = Math.PI * 1.08 + (hash("pf" + i) % 100) / 100 * .5, rr = pr * (.9 + (hash("pr" + i) % 10) / 100), fx = pcx + Math.cos(a) * rr, fy = pcy + Math.sin(a) * rr, fl = (.6 + .4 * Math.sin(t * .011 + i * 1.7)) * W * .045 * (.4 + heat);
         ctx.globalAlpha = Math.min(1, heat * 1.1); ctx.drawImage(glowSprite("fire"), fx - fl, fy - fl, fl * 2, fl * 2); }
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over"; } }
