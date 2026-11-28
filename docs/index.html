@@ -8446,7 +8446,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 844;
+const GAME_V = 845;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -20044,6 +20044,12 @@ function mimWave(k) { const D = MIM_D[k], f = v => (+v).toFixed(4), W1 = "2.0944
     float rt = smoothstep(1.3, 2.4, length(p.xz)) * step(p.y, -1.05); transformed.y += rt * .14 * sin(mt * ${W2} - length(p.xz) * 2.2 + an);
     float ob = 1. - smoothstep(1.3, 1.8, length(p - vec3(0., 1.15, 0.))); transformed.y += ob * .14 * sin(mt * ${W1}); transformed.xz *= 1. + ob * .03 * sin(mt * ${W2});`;
   const L = D.len, mid = f(-.25 * L), hx = f(1.85 * L), cy = f(.82 + D.hump * .6), tl = f(-2.35 * L), te = f(-4.3 * L);
+  if (MIM_SC[k]) { const R0 = (MIM_SC[k] && MIM_RG[k]) || "0.", RJ = (MIM_SC[k] && MIM_RGJ[k]) || "0."; /* v845 rigid and heavy: no ripple along the body, no whipping cables */
+    return `vec3 p = position; float rg = ${R0}, rgj = ${RJ}; transformed.y += .06 * sin(mt * ${W1});
+    float hw = smoothstep(${f(1.25 * L)}, ${f(1.95 * L)}, p.x); transformed.y += hw * .025 * sin(mt * ${W1} + 1.2);
+    float jw = smoothstep(${hx}, ${f(1.85 * L + .5)}, p.x) * step(p.y, ${f(.6 + (D.sac ? -.1 : 0))}) * (1. - rgj); transformed.y -= jw * (p.x - ${hx}) * (.03 + .03 * sin(mt * ${W1}));
+    float dd = length(vec2(p.y - ${cy}, p.z)), tip = max(smoothstep(2.2, 3.6, dd) * step(-.05, p.y), smoothstep(${f(-4.0 * L)}, ${f(-6.0 * L)}, p.x)) * (1. - hw) * (1. - rg);
+    transformed.z += tip * .07 * sin(mt * ${W1} - dd * .45); transformed.y += tip * .05 * sin(mt * ${W1} - dd * .35 + 1.);`; }
   let w = `vec3 p = position; float ph = mt * ${W2}; float rg = ${(MIM_SC[k] && MIM_RG[k]) || "0."}, rgj = ${(MIM_SC[k] && MIM_RGJ[k]) || "0."};`;
   if (MIM_SC[k]) w += ` float lw = 0.; transformed.y += .1 * sin(mt * ${W1}); transformed.z += .04 * sin(mt * ${W1} + p.x * .7);`; /* v753 a sculpted Mimic has no legs: it floats like a ship */
   else if (D.sac) w += ` float lw = smoothstep(-.35, -2.4, p.y); transformed.x += lw * .32 * sin(ph + p.z * 2.1 + p.x); transformed.z += lw * .2 * sin(mt * ${W1} + p.x * 1.7);
