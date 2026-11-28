@@ -5216,7 +5216,7 @@ function shMimic() { const T = now(), M = mimS(), w = mimWeek(T), c = mimClock(T
   ${mimHubBoss(T, w)}
   <h3>Season materials</h3><div class="mimmats">${mats}</div><p class="note" style="margin-top:6px">Invasion points: <b>${fmt(M.pts)}</b>. Every hive pays Mimic Tissue; mature hives also give up Assimilated Alloy and Neural Core Fragments.</p>
   ${S.medals && S.medals.omega ? `<div class="mimmedal"><span>🏆 Omega Slayer ×${S.medals.omega}</span></div>` : ""}${mimForgeHTML()}${mimTrackHTML()}
-  <h3>The swarm</h3><div class="mimcls">${cls.map(k => `<div class="mimcl"><canvas data-ship="${k}" width="224" height="112"></canvas><div><b>${AL[k].n}</b><small>${CD[k]}</small><em>From Stage ${CS[k]}</em></div></div>`).join("")}</div>
+  <h3>The swarm</h3><div class="mimcls">${cls.map(k => `<div class="mimcl">${MIM_ART[k] ? `<img src="art/mimic/${MIM_ART[k]}.webp" alt="" loading="lazy" style="width:112px;height:72px;flex:none;border-radius:7px;object-fit:cover;object-position:50% 30%">` : `<canvas data-ship="${k}" width="224" height="112"></canvas>`}<div><b>${AL[k].n}</b><small>${CD[k]}</small><em>From Stage ${CS[k]}</em></div></div>`).join("")}</div>
   ${own ? `<div class="mimown"><small>Owner preview: see the invasion as it will look in a given week.</small><div>${[0, 1, 2, 3, 4].map(n => `<button class="btn${((S.mimPrev || {}).w || 0) === n ? " pri" : ""}" data-act="mimPrev" data-w="${n}">${n ? "Week " + n : "Off"}</button>`).join("")}<button class="btn${(S.mimPrev || {}).om ? " pri" : ""}" data-act="mimPrev" data-w="4" data-om="1">Omega</button></div></div>` : ""}`; }
 function mimGo(x) { closeSheet(); if (view !== "galaxy") { view = "galaxy"; render(); }
   setTimeout(() => { try { const c = G3 && G3.cam, q = P3(x, now()); if (c) { c.follow = null; c.followFleet = null; c.goal = { tx: q.x, ty: q.y, tz: q.z, dist: 26, th: .8 }; } } catch (e) {} }, 300);
@@ -5787,7 +5787,8 @@ function crcBand(T) { try { if (!G.crcCC || Date.now() - G.crcCC > 4000) { G.crc
 function crcInfo(x, T) { const L = crcLoot(x, crcStage(x, T)), sal = crcMatTxt(L).replace(/, /g, " · ") + (crcWeek(T) >= 1 && crcWeek(T) <= 4 ? ` · +${L.pts} tide points` : "");
   return (x.mon === "wkraken" ? `A wild creature</dd><dt>Breaks</dt><dd>Korvax's Monster Resonance against you, for 12 hours` : x.mon === "crcpat" ? `War patrol</dd><dt>The patrol</dt><dd>${crcForceTxt(x)}` : `Stage ${crcStage(x, T)} · ${CRC_STAGE[crcStage(x, T)]}</dd><dt>The garrison</dt><dd>${crcForceTxt(x)}`) + `</dd><dt>${x.mon === "wkraken" ? "Salvage" : "Tide salvage"}</dt><dd>${sal}`; }
 /* the owner's paintings */
-const CRC_ART = { cscut: "drone", cspit: "spitter", charv: "harvester", cguard: "guardian", cbrood: "broodmother", cwar: "warrior", ccrys: "crystal", clanc: "spitter_b", cmolt: "crownbrood", cfrig: "frigate", cint: "interceptor", cdest: "s_lance", cvang: "s_war", ccarr: "s_brood", cpearl: "s_eye", cmint: "s_crown", cregent: "s_citadel", cempr: "s_shell", cbrlord: "s_brood2",
+const MIM_ART = { mstalk: "stalker", mtitan: "titan" };
+const CRC_ART = { ckrak: "../boss/kraken-skin", cscut: "drone", cspit: "spitter", charv: "harvester", cguard: "guardian", cbrood: "broodmother", cwar: "warrior", ccrys: "crystal", clanc: "spitter_b", cmolt: "crownbrood", cfrig: "frigate", cint: "interceptor", cdest: "s_lance", cvang: "s_war", ccarr: "s_brood", cpearl: "s_eye", cmint: "s_crown", cregent: "s_citadel", cempr: "s_shell", cbrlord: "s_brood2",
   carcinid: "s_reef", crcpat: "frigate", crcmar: "marshal", crcmat: "matron", crctyr: "tyrant", crcora: "oracle", crckor: "korvax", crcbeh: "behemoth", crckbr: "krakenbreaker", crcpal: "pale", crccrown: "s_crownship" };
 const CRC_CD = { cscut: ["The Empire's foot soldier. Small, fast, and never alone.", "Stage 1"], cspit: ["A living coral battery that lobs searing spore-shot from its back.", "Stage 1"], charv: ["Strips wrecks and asteroids for the brood, its resin sacs glowing.", "Stage 1"], cguard: ["A walking bulwark. Its shell turns aside what our guns throw at it.", "Stage 2"],
   cbrood: ["Carries the next brood on its back; two more drones hatch into every fight.", "Stage 3"], cwar: ["Built around its pincers. It closes on a ship and does not let go.", "Stage 3"], ccrys: ["Grows Ancient Reef Crystal through its shell and fires it as light.", "Stage 3"], clanc: ["A long trench-hunter with lance-claws and a whip of a tail.", "Stage 4"], cmolt: ["A crab mid-molt, its soft new shell glowing through the old. Enormous.", "Stage 4"],
@@ -8445,7 +8446,7 @@ const BOT_EPOCH = Date.UTC(2026, 9, 19, 13, 40); // bot progression restarted fr
 /* v220 version check: the game knows its build number (shown in How to play › Game). On the website it asks version.json, never
    from a cache, a few seconds after opening, every 2 minutes and whenever you come back to the tab, and when a newer build is
    live it shows a one-tap "Update now" bar. Your game is saved first. Bump GAME_V and docs/version.json together on every release. */
-const GAME_V = 832;
+const GAME_V = 833;
 (() => { if (location.protocol !== "https:" && location.protocol !== "http:") return; let shown = false;
   const check = () => { if (shown || document.hidden) return; fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(j => { if (j && j.f) G.flags = j.f; /* v740 server switches */ const v = j && +j.v; if (!(v > GAME_V) || shown) return; shown = true;
     const b = document.createElement("div"); b.id = "updbar"; b.setAttribute("role", "status"); b.innerHTML = `<span><b>New version v${v}</b> is ready</span><button type="button">Update now</button>`;
@@ -13687,7 +13688,7 @@ const EV_HOW = {
     tip: "You don't have to kill it, Commander. Every scratch you put on it counts." },
   tboss: { s: [["☣", "A titan arrives", "One titan each Monday at 18:00 UTC, for 48 hours."], ["🧠", "Learn its trick", "The Matriarch rebuilds her swarm, the Tyrant's bounty grows, the Wyrm opens its segments, the Colossus shatters."], ["🚀", "Attack it", "Every attack, win or lose, pays a bounty and forge materials."], ["🎁", "Share the spoils", "When it falls, everyone who damaged it claims a share."]],
     go: ["Find the titan", "evxGo", { k: "tboss" }], p: [["2.5% of its hull", "3"]],
-    tip: "Each titan has a weakness, Commander. Hit it when it's open and the points come twice as fast." },
+    tip: "Each titan has its own trick, Commander. Learn it before you send the fleet." },
   eboss: { s: [["✪", "The Elementals rise", "Every fourth Wednesday at 18:00 UTC, five Elementals tear into the galaxy for 24 hours."], ["⚔", "Slay them early", "Each one slain before the fusion leaves the Pentarch weaker. Slay all five for a Clean Sweep."], ["◉", "Break the Pentarch", "The survivors fuse at the black hole. Crack its five rune seals to expose its core."], ["💎", "Gather the shards", "When it falls its core shatters: gather the shards within ten minutes."]],
     go: ["Find an Elemental", "evxGo", { k: "eboss" }], p: [["2.5% hull, an Elemental", "3"], ["2.5% hull, the Pentarch", "6"], ["Ships it destroys", "come home damaged, never lost"]],
     tip: "Nothing you send against the Convergence is lost for good, Commander. Send everything." },
